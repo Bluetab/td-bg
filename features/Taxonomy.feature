@@ -1,133 +1,193 @@
 Feature: Taxonomy administration
   This feature will allow to create all levels of taxonomy necessary to classify the content defined within the application.
-  We will have data domains as containers of content and Business Areas as grouping entities for domains or other Business Areas
+  We will have data domains as containers of content and Domain Groups as grouping entities for domains or other Domain Groups
 
-# BUSINESS AREA CREATION
-  Scenario: A super-admin user should be able to create a Business Area without any dependencies.
-    Given a logged user with super-admin privileges
-    When User creates a BA without dependencies
-    Then new BA is created
-      And succcess message is returned
+  Background:
+    Given a Domain Group called "Riesgos" with following data:
+      | Description |
+      | First version of Riesgos |
+    And a Data Domain called "Riesgos de Crédito" belonging to Domain Group "Riesgos" with following data:
+      | Description |
+      | First version of Riesgos de Crédito |
+    And a logged user "app-administrator" with the "super-admin" role in the application
+    And a logged user "group-administrator" with the "admin" role in in the "Riesgos" Domain Group
+    And a logged user "data-owner" with the "admin" role in the "Riesgos de crédito" domain
+    And a logged user "watcher" with the "watcher" role in the "Riesgos de crédito" domain
+    And a logged user "creator" with the "creation" role in the "Riesgos de crédito" domain
+    And a logged user "publisher" with the "publish" role in the "Riesgos de crédito" domain
 
-  Scenario: A user without super-admin privileges should not be able to create a Business Area without any dependencies
-    Given a logged user without super-admin privileges
-    When User creates a BA without dependencies
-    Then no BA is created
-      And error message is returned
+  Scenario Outline: Creating a Domain Group without any dependencies
+    When <user> tries to create a Domain Group with the name "Métricas Financieras"
+    Then the system returns a result with code <result>
+    And the user list <users> is <able> to see the Domain Group "Métricas Financieras"
 
-  Scenario: A BA admin should be able to create a new BA depending on this BA
-    Given an existing Business Area
-      And a logged user with admin privileges to this Business Area
-    When User creates a new BA depending on this Business Area
-    Then new BA is created
-      And succcess message is returned
+    Examples:
+      | user                 | result    | users                                                                           | able     |
+      | app-administrator    | Created   | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | group-administrator  | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | data-owner           | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | watcher              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | creator              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | publisher            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
 
-  Scenario: A user which is not admin of a BA should not be able to create a new BA depending on that BA
-    Given an existing Business Area
-      And a logged user without admin privileges to this Business Area
-    When User creates a new BA depending on this Business Area
-    Then no BA is created
-      And error message is returned
+  Scenario Outline: Creating a Domain Group depending on an existing Domain Group
+    When <user> tries to create a Domain Group with the name "Mercados" depending on Domain Group "Riesgos"
+    Then the system returns a result with code <result>
+    And the user list <users> is <able> to see the Domain Group "Mercados"
 
-# DATA DOMAIN CREATION
-  Scenario: A BA admin should be able to create a new Data Domain on this BA
-    Given an existing Business Area
-      And a logged user with admin privileges to this Business Area
-    When User creates a new Data Domain depending on this Business Area
-    Then new Data Domain is created
-      And succcess message is returned
+    Examples:
+      | user                 | result    | users                                                                           | able     |
+      | app-administrator    | Created   | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | group-administrator  | Created   | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | data-owner           | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | watcher              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | creator              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | publisher            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
 
-  Scenario: A user which is not admin of a BA admin should not be able to create a Data Domain on this BA
-    Given an existing Business Area
-      And a logged user without admin privileges to this Business Area
-    When User creates a new Data Domain depending on this Business Area
-    Then no Data Domain is created
-      And error message is returned
+  Scenario Outline: Creating a Data Domain depending on an existing Domain Group
+    When <user> tries to create a Data Domain with the name "Riesgo Operacional" depending on Domain Group "Riesgos"
+    Then the system returns a result with code <result>
+    And the user list <users> is <able> to see the Domain Group "Riesgo Operacional"
 
-# BUSINESS AREA MODIFICATION
-  Scenario: A BA admin should be able to modify his BA
-    Given an existing Business Area
-      And a logged user with admin privileges to this Business Area
-    When User modifies this BA
-    Then modifications are persisted
-      And success message is returned
+    Examples:
+      | user                 | result    | users                                                                           | able     |
+      | app-administrator    | Created   | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | group-administrator  | Created   | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | data-owner           | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | watcher              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | creator              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | publisher            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
 
-  Scenario: A BA admin should be able to modify any BA depending on his BA
-    Given an existing Business Area with depending Business Areas
-      And a logged user with admin privileges to this Business Area
-    When User modifies a depending Business Area
-    Then modifications are persisted
-      And success message is returned
+  Scenario Outline: Modifying a Domain Group and seeing the new version
+    When <user> tries to modify a Domain Group with the name "Riesgos" introducing following data:
+      | Description |
+      | Second version of Riesgos |
+    Then the system returns a result with code <result>
+    And the user list <users> is <able> to see the Domain Group "Riesgos" with following data:
+      | Description |
+      | Second version of Riesgos |
 
-  Scenario: A user which is not admin of a BA admin should not be able to modify it
-    Given an existing Business Area
-      And a logged user with no admin privileges to this Business Area
-    When User modifies a depending Business Area
-    Then modifications are not persisted
-      And error message is returned
+    Examples:
+      | user                 | result    | users                                                                           | able     |
+      | app-administrator    | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | group-administrator  | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | data-owner           | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | watcher              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | creator              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | publisher            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
 
-# DATA DOMAIN MODIFICATION
-  Scenario: A Data Owner should be able to modify his Domain
-    Given an existing Data Domain
-      And a logged user with admin privileges to this Data Domain
-    When User modifies this Data Domain
-    Then modifications are persisted
-      And success message is returned
+  Scenario Outline: Modifying a Domain Group and seeing the old version
+    When <user> tries to modify a Domain Group with the name "Riesgos" introducing following data:
+      | Description |
+      | Second version of Riesgos |
+    Then the system returns a result with code <result>
+    And the user list <users> is <able> to see the Domain Group "Riesgos" with following data:
+      | Description |
+      | First version of Riesgos |
 
-  Scenario: A BA admin should be able to modify any Domain depending on his BA
-    Given an existing Business Area with depending Data Domains
-      And a logged user with admin privileges to this Business Area
-    When User modifies a depending Data Domain
-    Then modifications are persisted
-      And success message is returned
+    Examples:
+      | user                 | result    | users                                                                           | able     |
+      | app-administrator    | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | group-administrator  | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+      | data-owner           | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | watcher              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | creator              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+      | publisher            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
 
-  Scenario: A user which is not Data Owner of a Domain should not be able to modify it
-    Given an existing Data Domain
-      And a logged user with no admin privileges to this Data Domain
-    When User modifies a depending Business Area
-    Then modifications are not persisted
-      And error message is returned
 
-#BUSINESS AREA DELETE
-  Scenario: A BA admin should be able to delete the Business Area without any dependencies
-    Given an existing Business Area without depending Business Areas and Data Domains
-      And a logged user with admin privileges to this Business Area
-    When User deletes this Business Area
-    Then Business Area is deleted (logically)
-      And success message is returned
 
-  Scenario: A BA admin should not be able to delete the Business Area with any dependencies
-    Given an existing Business Area with depending Business Areas and Data Domains
-      And a logged user with admin privileges to this Data Domain
-    When User deletes this Data Domains
-    Then Business Area is not deleted
-      And error message is returned
+    Scenario Outline: Modifying a Data Domain and seeing the new version
+      When <user> tries to modify a Data Domain with the name "Riesgos de Crédito" introducing following data:
+        | Description |
+        | Second version of Riesgos de Crédito |
+      Then the system returns a result with code <result>
+      And the user list <users> is <able> to see the Data Domain "Riesgos de Crédito" with following data:
+        | Description |
+        | Second version of Riesgos de Crédito |
 
-  Scenario: A user which is not business area admin should not be able to delete the business area
-    Given an existing Business Area without dependencies
-      And a logged user without admin privileges to this Business Area
-    When User deletes this Business Area
-    Then Business Area is not deleted
-      And error message is returned
+      Examples:
+        | user                 | result    | users                                                                           | able     |
+        | app-administrator    | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | group-administrator  | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | data-owner           | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | watcher              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | creator              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | publisher            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
 
-#DATA DOMAIN DELETE
-  Scenario: A Data Owner should be able to delete a Data Domain without any associated data content
-    Given an existing Data Domain without associated data content
-      And a logged user with admin privileges to this Data Domain
-    When User deletes this Data Domains
-    Then Data Domain is deleted (logically)
-      And success message is returned
+    Scenario Outline: Modifying a Data Domain and seeing the new version
+      When <user> tries to modify a Data Domain with the name "Riesgos de Crédito" introducing following data:
+        | Description |
+        | Second version of Riesgos de Crédito |
+      Then the system returns a result with code <result>
+      And the user list <users> is <able> to see the Data Domain "Riesgos de Crédito" with following data:
+        | Description |
+        | First version of Riesgos de Crédito |
 
-  Scenario: A domain admin should not be able to delete a Data Domain with associated data content
-    Given an existing Data Domain with associated data content
-      And a logged user with admin privileges to this Data Domain
-    When User deletes this Data Domains
-    Then Data Domain is not deleted
-      And error message is returned
+      Examples:
+        | user                 | result    | users                                                                           | able     |
+        | app-administrator    | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | group-administrator  | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | data-owner           | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | watcher              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | creator              | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | publisher            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
 
-  Scenario: A user which is not domain admin should not be able to delete a Domain
-    Given an existing Data Domain without associated data content
-      And a logged user without admin privileges to this Data Domain
-    When User deletes this Data Domains
-    Then Data Domain is not deleted
-      And error message is returned
+    Scenario Outline: Deleting a Domain Group without any Group or Domain pending on it
+      Given Domain Group "No-Data" that has no children
+      And a logged user "no-data-administrator" with the "admin" role in the "No-Data" Domain Group
+      When <user> tries to delete a Domain Group with the name "No-Data"
+      Then the system returns a result with code <result>
+      And the user list <users> is able to see the Data Domain "No-Data" with following data:
+
+      Examples:
+        | user                  | result    | users                                                                           | able     |
+        | app-administrator     | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | group-administrator   | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | no-data-administrator | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | data-owner            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | watcher               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | creator               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | publisher             | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+
+    Scenario Outline: Deleting a Domain Group with a Data Domain pending on it
+      When <user> tries to delete a Domain Group with the name "Riesgos"
+      Then the system returns a result with code <result>
+      And the user list <users> is able to see the Data Domain "Riesgos" with following data:
+
+      Examples:
+        | user                  | result    | users                                                                           | able     |
+        | app-administrator     | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | group-administrator   | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | data-owner            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | watcher               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | creator               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | publisher             | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+
+    Scenario Outline: User should be able to delete a Data Domain that has no business concepts pending on them
+      When <user> tries to delete a Domain Group with the name "Riesgos de Crédito"
+      Then the system returns a result with code <result>
+      And the user list <users> is able to see the Data Domain "Riesgos de Crédito" with following data:
+
+      Examples:
+        | user                  | result    | users                                                                           | able     |
+        | app-administrator     | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | group-administrator   | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | data-owner            | Ok        | app-administrator, group-administrator, data-owner, watcher, creator, publisher | not able |
+        | watcher               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | creator               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | publisher             | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+
+    Scenario Outline: User should not be able to delete a Data Domain that has business concepts pending on them
+      Given an existing business concept with the name "Riesgos Compuesto" in the "Riesgos de Crédito" domain in "Published" status
+      When <user> tries to delete a Domain Group with the name "Riesgos de Crédito"
+      Then the system returns a result with code <result>
+      And the user list <users> is able to see the Data Domain "Riesgos de Crédito" with following data:
+
+      Examples:
+        | user                  | result    | users                                                                           | able     |
+        | app-administrator     | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | group-administrator   | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | data-owner            | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | watcher               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | creator               | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
+        | publisher             | Forbidden | app-administrator, group-administrator, data-owner, watcher, creator, publisher | able     |
