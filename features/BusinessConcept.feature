@@ -72,12 +72,12 @@ Feature: Business Concepts administration
       | Description |
       | Second version of saldo medio |
     Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status with Following Data:
+    And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status with Following Data:
       | Description |
       | First version of saldo medio |
 
     Examples:
-      | user      | status         | result    | users                       | able       | status     |
+      | user      | status         | result    | users                       | able       | new_status |
       | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
       | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
       | creator   | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
@@ -97,12 +97,12 @@ Feature: Business Concepts administration
       | Description |
       | Second version of saldo medio |
     Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status with Following Data:
+    And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status with Following Data:
       | Description |
-      | First version of saldo medio |
+      | Second version of saldo medio |
 
     Examples:
-      | user      | status         | result    | users                       | able       | status     |
+      | user      | status         | result    | users                       | able       | new_status |
       | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
       | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
       | creator   | draft          | Ok        | watcher, creator, publisher | able       | draft      |
@@ -118,10 +118,10 @@ Feature: Business Concepts administration
     Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain with <status> status
     When <user> tries to deprecate a business concept with the name "Saldo medio" in the "Saldos" domain
     Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status
+    And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status
 
     Examples:
-      | user      | status         | result    | users                       | able       | status     |
+      | user      | status         | result    | users                       | able       | new_status |
       | watcher   | draft          | Forbidden | watcher, creator, publisher | not able   | deprecated |
       | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
       | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
