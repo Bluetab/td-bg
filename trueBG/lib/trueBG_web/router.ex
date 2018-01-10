@@ -7,5 +7,6 @@ defmodule TrueBGWeb.Router do
 
   scope "/api", TrueBGWeb do
     pipe_through :api
+    get "/ping", PingController, :ping
   end
 end
