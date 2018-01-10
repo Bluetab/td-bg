@@ -17,14 +17,7 @@ mix deps.clean --all
 echo "local rebar executed"
 echo "Downloading deps"
 mix deps.get
-echo "Starting credo linter"
-mix credo --strict || exit 1
 echo "Starting tests"
 mix test || exit 1
-echo "Test npm dependencies"
-cd assets
-npm i
-npm run lint
-
 
 echo "Test step finish successfully"
