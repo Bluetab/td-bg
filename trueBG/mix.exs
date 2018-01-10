@@ -41,6 +41,8 @@ defmodule TrueBG.Mixfile do
       {:cowboy, "~> 1.0"},
       {:cabbage, "~> 0.3.0"},
       {:httpoison, "~> 1.0"},
+      {:edeliver, "~> 1.4.4"},
+      {:exrm, "~> 1.0.8"},
     ]
   end
 

@@ -13,7 +13,7 @@ config :logger, level: :warn
 config :trueBG, TrueBG.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: System.get_env("DATABASE_PASSWD") || "postgres",
+  password: "postgres",
   database: "truebg_test",
-  hostname: System.get_env("DATABASE_HOST") || "localhost",
+  hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox

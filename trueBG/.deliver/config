@@ -1,0 +1,52 @@
+# .deliver/config
+
+APP="fastTag"
+
+BUILD_HOST="127.0.0.1"
+BUILD_USER="$USER"
+BUILD_AT="/tmp/edeliver/trueBG/builds"
+
+PRODUCTION_HOSTS="truedat.cqhoyzewdi6i.eu-west-1.rds.amazonaws.com"
+PRODUCTION_USER="ec2-user"
+DELIVER_TO="/home/ec2-user"
+
+# For *Phoenix* projects, symlink prod.secret.exs to our tmp source
+pre_erlang_get_and_update_deps() {
+  local _prod_secret_path="/home/deliver/truebg.prod.secret.exs"
+  if [ "$TARGET_MIX_ENV" = "prod" ]; then
+    __sync_remote "
+      ln -sfn '$_prod_secret_path' '$BUILD_AT/config/prod.secret.exs'
+    "
+  fi
+}
+
+pre_erlang_clean_compile() {
+  status "Preparing assets with: brunch build and phoenix.digest"
+  __sync_remote "
+    # runs the commands on the build host
+    # [ -f ~/.profile ] && source ~/.profile # load profile (optional)
+
+    export PATH=$PATH:/node-v6.11.1-linux-x64/bin
+
+    # fail if any command fails (recommended)
+    set -e
+
+    # enter the build directory on the build host (required)
+    cd '$BUILD_AT'
+
+    mkdir -p priv/static # required by the phoenix.digest task
+
+    cd assets
+
+    # installing npm dependencies
+    npm install
+
+    # building brunch
+    brunch build --production
+
+    cd ..
+
+    # run your custom task
+    APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phx.digest $SILENCE
+  "
+}

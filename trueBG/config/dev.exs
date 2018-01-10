@@ -41,7 +41,7 @@ config :phoenix, :stacktrace_depth, 20
 config :trueBG, TrueBG.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: System.get_env("DATABASE_PASSWD") || "postgres",
+  password: "postgres",
   database: "truebg_dev",
-  hostname: System.get_env("DATABASE_HOST") || "localhost",
+  hostname: "localhost",
   pool_size: 10

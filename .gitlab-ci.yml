@@ -1,0 +1,31 @@
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+  - docker run --rm -v $(pwd)/trueBG:/code:ro -w /code --entrypoint=/code/ci/build.sh kerlak/amazonlinux-phoenix-postgresql
+  artifacts:
+    untracked: true
+
+test:
+  stage: test
+  script:
+  - docker run --rm -v $(pwd)/trueBG:/code:ro -w /code --entrypoint=/code/ci/test.sh kerlak/amazonlinux-phoenix-postgresql
+  artifacts:
+    untracked: true
+
+deploy:
+  stage: deploy
+  script:
+    - git branch -f master HEAD
+    - export DB_PASSWORD=$(echo $DB_PASSWORD | sed -e "s/\//\\\\\//g")
+    - export DB_HOST=$(echo $DB_HOST | sed -e "s/\//\\\\\//g")
+    - export PRODUCTION_HOST=$(cat .deliver/config | grep PRODUCTION_HOSTS | cut -f2 -d"=" | sed -e 's/"//g')
+    - export PRODUCTION_USER=$(cat .deliver/config | grep PRODUCTION_USER | cut -f2 -d"=" | sed -e 's/"//g')
+    - docker run --rm -e DB_PASSWORD=$DB_PASSWORD -e DB_HOST=$DB_HOST -e PRODUCTION_HOST=$PRODUCTION_HOST -e PRODUCTION_USER=$PRODUCTION_USER -e USER=$USER -e TARGET_MIX_ENV=$TARGET_MIX_ENV -e BUILD_AT=$BUILD_AT -e TERM=$TERM -v $(pwd)/trueBG:/code:ro -w /code --entrypoint=/code/ci/deploy.sh kerlak/amazonlinux-phoenix-postgresql
+  when: manual
+  only:
+    - master
