@@ -44,6 +44,9 @@ defmodule TrueBG.Mixfile do
       {:edeliver, "~> 1.4.4"},
       {:exrm, "~> 1.0.8"},
       {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false},
+      {:guardian, "~> 1.0"},
+      {:comeonin, "~> 4.0"},
+      {:bcrypt_elixir, "~> 1.0"},
     ]
   end
 
