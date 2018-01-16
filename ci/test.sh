@@ -17,6 +17,8 @@ mix deps.clean --all
 echo "local rebar executed"
 echo "Downloading deps"
 mix deps.get
+echo "Executing credo"
+mix credo --strict || exit 1
 echo "Starting tests"
 mix test || exit 1
 
