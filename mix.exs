@@ -43,6 +43,7 @@ defmodule TrueBG.Mixfile do
       {:httpoison, "~> 1.0"},
       {:edeliver, "~> 1.4.4"},
       {:exrm, "~> 1.0.8"},
+      {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false},
     ]
   end
 
