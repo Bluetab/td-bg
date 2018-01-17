@@ -14,11 +14,9 @@ defmodule TrueBGWeb.SessionController do
 
   defp handle_sign_in(conn, user) do
     conn
-    |> GuardianPlug.sign_in(user, %{})
-    |> put_status(:created)
-    token = GuardianPlug.current_token(conn)
-    #token
-    "99999"
+      |> GuardianPlug.sign_in(user)
+      |> put_status(:created)
+      |> GuardianPlug.current_token
   end
 
   def create(conn, %{"user" => %{"user_name" => user_name,
