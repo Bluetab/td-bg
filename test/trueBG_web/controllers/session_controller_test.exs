@@ -4,7 +4,7 @@ defmodule TrueBGWeb.SessionControllerTest do
   alias TrueBG.Accounts
   alias Comeonin.Bcrypt
 
-  @create_attrs %{password_hash: Bcrypt.hashpwsalt("temporal"),
+  @create_attrs %{password: "temporal",
                  user_name: "usuariotemporal"}
   @valid_attrs %{password: "temporal",
                  user_name: "usuariotemporal"}
