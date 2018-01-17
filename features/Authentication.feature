@@ -8,11 +8,11 @@ Feature: User Authentication
 
   Scenario: logging error
     When user "app-admin" tries to log into the application with password "inventedpass"
-    Then returns a result with code "Forbidden"
+    Then the system returns a result with code "Forbidden"
 
   Scenario: logging error for non existing user
     When user "nobody" tries to log into the application with password "inventedpass"
-    Then returns a result with code "Forbidden"
+    Then the system returns a result with code "Forbidden"
 
   Scenario: Creating a New user in the application
     Given user "app-admin" is logged in the application
@@ -41,3 +41,44 @@ Feature: User Authentication
     When "nobody" tries to assign "super-admin" permission to "John Doe"
     Then the system returns a result with code "Forbidden"
     And user "John Doe" can be authenticated with password "mypass" without "super-admin" permission
+
+  Scenario: Error when creating a duplicated user
+    Given an existing user "uniqueuser" with password "mypass" with "super-admin" permission
+    And user "app-admin" is logged in the application
+    When "app-admin" tries to create a user "uniqueuser" with password "new-password"
+    Then the system returns a result with code "Forbidden"
+    And user "uniqueuser" can not be authenticated with password "new-password"
+    And user "uniqueuser" can be authenticated with password "mypass"
+
+  Scenario: Password modification
+    Given an existing user "johndoe" with password "secret" without "super-admin" permission
+    And user "johndoe" is logged in the application
+    When "johndoe" tries to modify his password with following data:
+      | old_password | new_password |
+      | secret       | newsecret    |
+    Then the system returns a result with code "Ok"
+    And user "johndoe" can not be authenticated with password "secret"
+    And user "johndoe" can be authenticated with password "newsecret"
+
+  Scenario: Password modification error
+    Given an existing user "johndoe" with password "secret" without "super-admin" permission
+    And user "johndoe" is logged in the application
+    When "johndoe" tries to modify his password with following data:
+      | old_password | new_password |
+      | dontknow     | newsecret    |
+    Then the system returns a result with code "Ok"
+    And user "johndoe" can not be authenticated with password "dontknow"
+    And user "johndoe" can be authenticated with password "secret"
+
+  Scenario: Loggout
+    Given an existing user "johndoe" with password "secret" without "super-admin" permission
+    And user "johndoe" is logged in the application
+    When "johndoe" signs out of the application
+    Then the system returns a result with code "Ok"
+    And user "johndoe" gets a "Forbidden" code when he pings the application
+
+  Scenario: Loggout for a user that is not logged
+    Given an existing user "johndoe" with password "secret" without "super-admin" permission
+    When "johndoe" signs out of the application
+    Then the system returns a result with code "Forbidden"
+    And user "johndoe" gets a "Forbidden" code when he pings the application
