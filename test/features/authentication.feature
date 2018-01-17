@@ -4,7 +4,7 @@ Feature: User Authentication
 
   Scenario: logging
     When user "app-admin" tries to log into the application with password "mypass"
-    # Then the system returns a token with code "Created"
+    Then the system returns a token with code "Created"
 
   # Scenario: logging error
   #   Given an existing user "app-admin" with the "super-admin" role in the application with password "mypass"
