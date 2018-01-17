@@ -1,5 +1,5 @@
 Feature: Roles Admin
-  Authenticated users will have a default "watcher" role for all Domain Groups and Data domains
+  Authenticated users will have a default "watch" role for all Domain Groups and Data domains
   - App-admin will have "admin" role in all Domain Groups and Data domains
   - An admin in a Domain Group or Data Domain can grant watch, create, publish or admin role in that Group/Domain or its children to any users
   - A user with a role in a Domain Group or Data Domain has that role as default for also for all its children
@@ -22,11 +22,11 @@ Feature: Roles Admin
     Examples:
       | role    | group   | parent_group_role  | child_group_role | domain_role |
       | admin   | Risks   | admin              | admin            | admin       |
-      | admin   | Markets | watcher            | admin            | admin       |
+      | admin   | Markets | watch              | admin            | admin       |
       | publish | Risks   | publish            | publish          | publish     |
-      | publish | Markets | watcher            | publish          | publish     |
+      | publish | Markets | watch              | publish          | publish     |
       | create  | Risks   | create             | create           | create      |
-      | create  | Markets | watcher            | create           | create      |
+      | create  | Markets | watch              | create           | create      |
 
   Scenario Outline: Granting roles to data domain
     Given an existing user "johndoe" with password "pas2w0rd" without "super-admin" permission
@@ -39,9 +39,9 @@ Feature: Roles Admin
 
     Examples:
       | role    | parent_group_role  | child_group_role | domain_role |
-      | admin   | watcher            | watcher          | admin       |
-      | publish | watcher            | watcher          | publish     |
-      | create  | watcher            | watcher          | create      |
+      | admin   | watch              | watch            | admin       |
+      | publish | watch              | watch            | publish     |
+      | create  | watch              | watch            | create      |
 
   Scenario Outline: Granting roles by non admin user to domain group
     Given an existing user "johndoe" with password "pas2w0rd" without "super-admin" permission
@@ -49,9 +49,9 @@ Feature: Roles Admin
     And user "johndoe" is logged in the application
     When "johndoe" grants <role> role to user "hariseldon" in Domain Group <group>
     Then the system returns a result with code "Forbidden"
-    And the user "hariseldon" has "watcher" role in Domain Group "Risks"
-    And the user "hariseldon" has "watcher" role in Domain Group "Markets"
-    And the user "hariseldon" has "watcher" role in Data Domain "Credit Risks"
+    And the user "hariseldon" has "watch" role in Domain Group "Risks"
+    And the user "hariseldon" has "watch" role in Domain Group "Markets"
+    And the user "hariseldon" has "watch" role in Data Domain "Credit Risks"
 
     Examples:
       | role    | group   |
@@ -74,6 +74,6 @@ Feature: Roles Admin
 
     Examples:
       | role    | parent_group_role  | child_group_role | domain_role |
-      | admin   | watcher            | watcher          | watcher     |
-      | publish | watcher            | watcher          | watcher     |
-      | create  | watcher            | watcher          | watcher     |
+      | admin   | watch              | watch            | watch       |
+      | publish | watch              | watch            | watch       |
+      | create  | watch              | watch            | watch       |
