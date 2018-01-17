@@ -3,8 +3,6 @@ defmodule TrueBGWeb.Router do
 
   pipeline :api do
     plug TrueBG.GuardianPipeline
-    # plug Guardian.Plug.VerifyHeader
-    # plug Guardian.Plug.LoadResource
 
     plug :accepts, ["json"]
   end

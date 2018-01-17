@@ -1,8 +1,9 @@
 defmodule TrueBG.Accounts.User do
+  @moduledoc false
+
   use Ecto.Schema
   import Ecto.Changeset
   alias TrueBG.Accounts.User
-
 
   schema "users" do
     field :password_hash, :string
@@ -31,7 +32,8 @@ defmodule TrueBG.Accounts.User do
   # defp put_password_hash(changeset) do
   #   case changeset do
   #     %Ecto.Changeset{valid?: true, changes: %{password: passwd}} ->
-  #       put_change(changeset, :password_hash, Comeonin.Bcrypt.hashpwsalt(passwd))
+  #       put_change(changeset, :password_hash,
+  #                  Comeonin.Bcrypt.hashpwsalt(passwd))
   #     _ ->
   #       changeset
   #   end

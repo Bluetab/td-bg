@@ -1,4 +1,5 @@
 defmodule TrueBG.GuardianPipeline do
+  @moduledoc false
   use Guardian.Plug.Pipeline,
     otp_app: :trueBG,
     error_handler: TrueBG.AuthErrorHandler,
