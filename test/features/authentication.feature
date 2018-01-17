@@ -6,10 +6,10 @@ Feature: User Authentication
     When user "app-admin" tries to log into the application with password "mypass"
     Then the system returns a token with code "Created"
 
-  # Scenario: logging error
-  #   Given an existing user "app-admin" with the "super-admin" role in the application with password "mypass"
-  #   When user "app-admin" tries to log into the application with password "inventedpass"
-  #   Then returns a result with code "Forbidden"
+  Scenario: logging error
+  #  Given an existing user "app-admin" with the "super-admin" role in the application with password "mypass"
+    When user "app-admin" tries to log into the application with password "inventedpass"
+    Then the system returns a result with code "Forbidden"
   #
   # Scenario: Creating a New user in the application
   #   Given an existing user "app-admin" with the "super-admin" role in the application

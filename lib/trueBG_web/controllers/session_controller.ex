@@ -28,7 +28,7 @@ defmodule TrueBGWeb.SessionController do
         token = handle_sign_in(conn, user)
         resp = %{token: token} |> JSON.encode!
         send_resp(conn, 201, resp)
-      _ -> send_resp(conn, 401, "Invalid credentials")
+      _ -> send_resp(conn, 401, %{msg: "Invalid credentials"} |> JSON.encode!)
     end
   end
 
