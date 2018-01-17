@@ -32,10 +32,13 @@ defmodule TrueBGWeb.UserControllerTest do
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get conn, user_path(conn, :show, id)
-      assert json_response(conn, 200)["data"] == %{
-        "id" => id,
-        "password_hash" => "some password_hash",
-        "user_name" => "some user_name"}
+      user_data = json_response(conn, 200)["data"]
+      assert user_data["id"] == id && user_data["user_name"] == "some user_name"
+
+      # assert json_response(conn, 200)["data"] == %{
+      #   "id" => id,
+      #   "password_hash" => "some password",
+      #   "user_name" => "some user_name"}
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -52,10 +55,13 @@ defmodule TrueBGWeb.UserControllerTest do
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = get conn, user_path(conn, :show, id)
-      assert json_response(conn, 200)["data"] == %{
-        "id" => id,
-        "password_hash" => "some updated password_hash",
-        "user_name" => "some updated user_name"}
+      user_data = json_response(conn, 200)["data"]
+      assert user_data["id"] == id && user_data["user_name"] == "some updated user_name"
+
+      # assert json_response(conn, 200)["data"] == %{
+      #   "id" => id,
+      #   "password" => "some updated password",
+      #   "user_name" => "some updated user_name"}
     end
 
     test "renders errors when data is invalid", %{conn: conn, user: user} do
