@@ -9,6 +9,7 @@ defmodule TrueBG.AccountsTest do
     @valid_attrs %{password_hash: "some password_hash", user_name: "some user_name"}
     @update_attrs %{password_hash: "some updated password_hash", user_name: "some updated user_name"}
     @invalid_attrs %{password_hash: nil, user_name: nil}
+    @admin_user_name "app-admin"
 
     def user_fixture(attrs \\ %{}) do
       {:ok, user} =
@@ -19,11 +20,10 @@ defmodule TrueBG.AccountsTest do
       user
     end
 
-    # TODO: list all users with admin user
-    # test "list_users/0 returns all users" do
-    #   user = user_fixture()
-    #   assert Accounts.list_users() == [user]
-    # end
+    test "list_users/0 returns all users" do
+      user = user_fixture()
+      assert Accounts.list_users() -- [user, Accounts.get_user_by_name(@admin_user_name)] == []
+    end
 
     test "get_user!/1 returns the user with given id" do
       user = user_fixture()

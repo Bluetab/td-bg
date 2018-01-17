@@ -7,6 +7,7 @@ defmodule TrueBGWeb.UserControllerTest do
   @create_attrs %{password_hash: "some password_hash", user_name: "some user_name"}
   @update_attrs %{password_hash: "some updated password_hash", user_name: "some updated user_name"}
   @invalid_attrs %{password_hash: nil, user_name: nil}
+  @admin_user_name "app-admin"
 
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(@create_attrs)
@@ -17,13 +18,13 @@ defmodule TrueBGWeb.UserControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  # TODO: list all users with admin user
-  # describe "index" do
-  #   test "lists all users", %{conn: conn} do
-  #     conn = get conn, user_path(conn, :index)
-  #     assert json_response(conn, 200)["data"] == []
-  #   end
-  # end
+  describe "index" do
+    test "lists all users", %{conn: conn} do
+      conn = get conn, user_path(conn, :index)
+      [admin_user|_tail] = json_response(conn, 200)["data"]
+      assert admin_user["user_name"] == @admin_user_name
+    end
+  end
 
   describe "create user" do
     test "renders user when data is valid", %{conn: conn} do
