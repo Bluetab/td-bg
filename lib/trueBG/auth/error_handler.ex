@@ -1,4 +1,4 @@
-defmodule TrueBG.AuthErrorHandler do
+defmodule TrueBG.Auth.ErrorHandler do
   @moduledoc false
   import Plug.Conn
 

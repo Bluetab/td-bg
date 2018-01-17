@@ -3,7 +3,7 @@ defmodule TrueBGWeb.SessionController do
 
   alias Comeonin.Bcrypt
   alias TrueBG.Accounts
-  alias TrueBG.Guardian.Plug, as: GuardianPlug
+  alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
   alias Poison, as: JSON
 
   # def create(conn, %{"user" => params}) do

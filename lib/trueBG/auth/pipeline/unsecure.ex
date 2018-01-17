@@ -1,9 +1,9 @@
-defmodule TrueBG.GuardianPipeline do
+defmodule TrueBG.Auth.Pipeline.Unsecure do
   @moduledoc false
   use Guardian.Plug.Pipeline,
     otp_app: :trueBG,
-    error_handler: TrueBG.AuthErrorHandler,
-    module: TrueBG.GuardianSerializer
+    error_handler: TrueBG.Auth.ErrorHandler,
+    module: TrueBG.Auth.Guardian
   # If there is a session token, validate it
   #plug Guardian.Plug.VerifySession, claims: %{"typ" => "access"}
   # If there is an authorization header, validate it

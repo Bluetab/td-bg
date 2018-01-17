@@ -22,7 +22,7 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-config :trueBG, TrueBG.Guardian,
+config :trueBG, TrueBG.Auth.Guardian,
   allowed_algos: ["HS512"], # optional
   issuer: "trueBG",
   ttl: { 1, :days },

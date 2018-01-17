@@ -1,4 +1,4 @@
-defmodule TrueBG.Guardian do
+defmodule TrueBG.Auth.Guardian do
   @moduledoc false
   use Guardian, otp_app: :trueBG
 

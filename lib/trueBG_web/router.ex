@@ -2,7 +2,7 @@ defmodule TrueBGWeb.Router do
   use TrueBGWeb, :router
 
   pipeline :api do
-    plug TrueBG.GuardianPipeline
+    plug TrueBG.Auth.Pipeline.Unsecure
 
     plug :accepts, ["json"]
   end
