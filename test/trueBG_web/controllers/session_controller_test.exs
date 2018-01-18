@@ -2,7 +2,6 @@ defmodule TrueBGWeb.SessionControllerTest do
   use TrueBGWeb.ConnCase
 
   alias TrueBG.Accounts
-  alias Comeonin.Bcrypt
 
   @create_attrs %{password: "temporal",
                  user_name: "usuariotemporal"}

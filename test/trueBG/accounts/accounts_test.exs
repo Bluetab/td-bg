@@ -9,20 +9,18 @@ defmodule TrueBG.AccountsTest do
     @valid_attrs %{password: "some password", user_name: "some user_name"}
     @update_attrs %{password: "some updated password", user_name: "some updated user_name"}
     @invalid_attrs %{password: nil, user_name: nil}
-    @admin_user_name "app-admin"
 
     def user_fixture(attrs \\ %{}) do
       {:ok, user} =
         attrs
         |> Enum.into(@valid_attrs)
         |> Accounts.create_user()
-
       user
     end
 
     test "list_users/0 returns all users" do
-      user = user_fixture()
-      assert Accounts.list_users() -- [user, Accounts.get_user_by_name(@admin_user_name)] == []
+      user_fixture()
+      assert length(Accounts.list_users()) == 2
     end
 
     test "get_user!/1 returns the user with given id" do

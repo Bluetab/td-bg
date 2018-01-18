@@ -27,7 +27,7 @@ defmodule TrueBG.AuthenticationTest do
 
   defgiven ~r/^user "(?<user_name>[^"]+)" is logged in the application$/, %{user_name: user_name}, state do
     body = %{user: %{user_name: user_name, password: "mypass"}} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
+    %HTTPoison.Response{status_code: _status_code, body: _resp} =
       HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
       {:ok, state}
   end
@@ -38,7 +38,6 @@ defmodule TrueBG.AuthenticationTest do
     body = %{user: %{user_name: new_user_name, password: new_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(user_url(@endpoint, :create), body, [@headers], [])
-      IO.inspect(resp)
       jsonResp = resp |> JSON.decode!
       {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
   end
@@ -47,7 +46,6 @@ defmodule TrueBG.AuthenticationTest do
     body = %{user: %{user_name: new_user_name, password: new_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
-      IO.inspect(resp)
       jsonResp = resp |> JSON.decode!
 
       # Check conditions
