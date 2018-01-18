@@ -21,5 +21,4 @@ defmodule TrueBGWeb.Router do
     resources "/users", UserController, except: [:new, :edit]
   end
 
-
 end

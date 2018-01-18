@@ -8,7 +8,6 @@ defmodule TrueBGWeb.UserControllerTest do
   @update_attrs %{password: "some updated password_hash", user_name: "some updated user_name"}
   @invalid_attrs %{password: nil, user_name: nil}
   @admin_user_name "app-admin"
-  @admin_attrs %{password: "mypass", user_name: @admin_user_name}
 
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(@create_attrs)

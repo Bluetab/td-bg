@@ -4,7 +4,7 @@ defmodule TrueBGWeb.SessionController do
   alias Comeonin.Bcrypt
   alias TrueBG.Accounts
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
-  alias Poison, as: JSON
+  alias TrueBGWeb.ErrorView
 
   # def create(conn, %{"user" => params}) do
   #   changeset = User.registration_changeset(%User{}, params)
@@ -15,7 +15,6 @@ defmodule TrueBGWeb.SessionController do
   defp handle_sign_in(conn, user) do
     conn
       |> GuardianPlug.sign_in(user)
-      |> put_status(:created)
   end
 
   def create(conn, %{"user" => %{"user_name" => user_name,
@@ -27,10 +26,12 @@ defmodule TrueBGWeb.SessionController do
         conn = handle_sign_in(conn, user)
         token = GuardianPlug.current_token(conn)
         conn
+          |> put_status(:created)
           |> render("show.json", token: token)
       _ ->
         conn
-          |> render("401.json")
+          |> put_status(:unauthorized)
+          |> render(ErrorView, :"401.json")
     end
   end
 
