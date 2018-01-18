@@ -16,7 +16,6 @@ defmodule TrueBGWeb.SessionController do
     conn
       |> GuardianPlug.sign_in(user)
       |> put_status(:created)
-      |> GuardianPlug.current_token
   end
 
   def create(conn, %{"user" => %{"user_name" => user_name,
@@ -25,10 +24,13 @@ defmodule TrueBGWeb.SessionController do
 
     case check_password(user, password) do
       true ->
-        token = handle_sign_in(conn, user)
-        resp = %{token: token} |> JSON.encode!
-        send_resp(conn, 201, resp)
-      _ -> send_resp(conn, 401, %{msg: "Invalid credentials"} |> JSON.encode!)
+        conn = handle_sign_in(conn, user)
+        token = GuardianPlug.current_token(conn)
+        conn
+          |> render("show.json", token: token)
+      _ ->
+        conn
+          |> render("401.json")
     end
   end
 

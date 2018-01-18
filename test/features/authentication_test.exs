@@ -27,17 +27,22 @@ defmodule TrueBG.AuthenticationTest do
 
   defgiven ~r/^user "(?<user_name>[^"]+)" is logged in the application$/, %{user_name: user_name}, state do
     body = %{user: %{user_name: user_name, password: "mypass"}} |> JSON.encode!
-    %HTTPoison.Response{status_code: _status_code, body: _resp} =
+    %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
-      {:ok, state}
+    assert "Created" == get_status(status_code)
+    jsonResp = (resp |> JSON.decode!)
+    {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
   end
 
   defwhen ~r/^"(?<user_name>[^"]+)" tries to create a user "(?<new_user_name>[^"]+)" with password "(?<new_password>[^"]+)"$/, %{user_name: _user_name, new_user_name: new_user_name, new_password: new_password}, state do
-    #token = state[:resp]["token"]
-    #headers = [{"Content-type", "application/json"}, {"Authorization: Bearer #{token}"}]
+    token = state[:resp]["token"]
+    headers = [@headers ,{"authorization", "Bearer #{token}"}]
+    #conn = conn()
+    #put_req_header(conn, "authorization", "Bearer #{token}")
+
     body = %{user: %{user_name: new_user_name, password: new_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(user_url(@endpoint, :create), body, [@headers], [])
+      HTTPoison.post!(user_url(@endpoint, :create), body, headers, [])
       jsonResp = resp |> JSON.decode!
       {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
   end

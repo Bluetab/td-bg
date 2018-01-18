@@ -14,6 +14,9 @@ defmodule TrueBGWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
+  alias TrueBG.Auth.Guardian
+  alias TrueBG.Accounts
+  alias TrueBG.Accounts.User
 
   using do
     quote do
@@ -26,13 +29,24 @@ defmodule TrueBGWeb.ConnCase do
     end
   end
 
+  @admin_user_name "app-admin"
+
 
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(TrueBG.Repo)
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(TrueBG.Repo, {:shared, self()})
     end
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+
+
+    {conn, user} = if tags[:admin_authenticated] do
+        user = Accounts.get_user_by_name(@admin_user_name)
+        {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
+        {:ok, %{user: user, conn: Phoenix.ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
+      else
+        {:ok, conn: Phoenix.ConnTest.build_conn()}
+    end
+
   end
 
 end
