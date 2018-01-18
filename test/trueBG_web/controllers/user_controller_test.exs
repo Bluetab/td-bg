@@ -4,6 +4,7 @@ defmodule TrueBGWeb.UserControllerTest do
   alias TrueBG.Accounts
   alias TrueBG.Accounts.User
 
+  @admin_user_name "app-admin"
   @create_attrs %{password: "some password", user_name: "some user_name"}
   @update_attrs %{password: "some updated password", user_name: "some updated user_name"}
   @invalid_attrs %{password: nil, user_name: nil}
@@ -17,13 +18,13 @@ defmodule TrueBGWeb.UserControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  # TODO: list all users with admin user
-  # describe "index" do
-  #   test "lists all users", %{conn: conn} do
-  #     conn = get conn, user_path(conn, :index)
-  #     assert json_response(conn, 200)["data"] == []
-  #   end
-  # end
+  describe "index" do
+    test "lists all users", %{conn: conn} do
+      conn = get conn, user_path(conn, :index)
+      [admin_user|_tail] = json_response(conn, 200)["data"]
+      assert admin_user["user_name"] == @admin_user_name
+    end
+  end
 
   describe "create user" do
     test "renders user when data is valid", %{conn: conn} do
