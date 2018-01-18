@@ -10,6 +10,7 @@ defmodule TrueBG.Accounts.User do
     field :password_hash, :string
     field :user_name, :string
     field :password, :string, virtual: true
+    field :is_admin, :boolean
 
     timestamps()
   end
@@ -17,7 +18,7 @@ defmodule TrueBG.Accounts.User do
   @doc false
   def changeset(%User{} = user, attrs) do
     user
-    |> cast(attrs, [:user_name, :password])
+    |> cast(attrs, [:user_name, :password, :is_admin])
     |> validate_required([:user_name, :password])
     |> put_pass_hash()
   end

@@ -103,6 +103,7 @@ defmodule TrueBGWeb.UserControllerTest do
 
      conn = recycle(conn)
        |> put_auth_headers(jwt)
+
      assert_error_sent 404, fn ->
        get conn, user_path(conn, :show, user)
      end

@@ -30,13 +30,11 @@ defmodule TrueBGWeb.ConnCase do
 
   @admin_user_name "app-admin"
 
-
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(TrueBG.Repo)
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(TrueBG.Repo, {:shared, self()})
     end
-
 
     {_conn, _user} = if tags[:admin_authenticated] do
         user = Accounts.get_user_by_name(@admin_user_name)

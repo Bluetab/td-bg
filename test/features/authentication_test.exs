@@ -58,6 +58,15 @@ defmodule TrueBG.AuthenticationTest do
       assert jsonResp["token"] != nil
   end
 
+  # Scenario: Error when creating a new user in the application by a non admin user
+
+  defgiven ~r/^an existing user "(?<nobody>[^"]+)" with password "(?<mypass>[^"]+)" without "(?<super_admin>[^"]+)" permission$/, %{nobody: nobody, mypass: mypass, super_admin: super_admin}, state do
+
+  end
+
+  defand ~r/^user "(?<newuser>[^"]+)" can not be authenticated with password "(?<newpass>[^"]+)"$/, %{newuser: newuser, newpass: newpass}, state do
+
+  end
 
   defp get_status(status_code) do
     case status_code do

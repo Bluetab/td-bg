@@ -15,14 +15,14 @@ Feature: User Authentication
     Then the system returns a result with code "Forbidden"
 
   Scenario: Creating a New user in the application
-    Given user "app-admin" is logged in the application
+    Given user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a user "newuser" with password "new-password"
     Then the system returns a result with code "Created"
     And user "newuser" can be authenticated with password "new-password"
 
   Scenario: Error when creating a new user in the application by a non admin user
-    Given an existing user "nobody" with password "mypass" without "super-admin" permission
-    And user "nobody" is logged in the application
+    Given an existing user "nobody" with password "inventedpass" without "super-admin" permission
+    And user "nobody" is logged in the application with password "inventedpass"
     When "nobody" tries to create a user "newuser" with password "newpass"
     Then the system returns a result with code "Forbidden"
     And user "newuser" can not be authenticated with password "newpass"
