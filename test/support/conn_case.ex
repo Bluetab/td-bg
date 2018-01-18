@@ -16,7 +16,6 @@ defmodule TrueBGWeb.ConnCase do
   use ExUnit.CaseTemplate
   alias TrueBG.Auth.Guardian
   alias TrueBG.Accounts
-  alias TrueBG.Accounts.User
 
   using do
     quote do
@@ -39,10 +38,10 @@ defmodule TrueBGWeb.ConnCase do
     end
 
 
-    {conn, user} = if tags[:admin_authenticated] do
+    {_conn, _user} = if tags[:admin_authenticated] do
         user = Accounts.get_user_by_name(@admin_user_name)
         {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
-        {:ok, %{user: user, conn: Phoenix.ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
+        {:ok, %{conn: Phoenix.ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
       else
         {:ok, conn: Phoenix.ConnTest.build_conn()}
     end

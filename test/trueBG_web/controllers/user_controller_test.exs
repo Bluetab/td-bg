@@ -14,12 +14,6 @@ defmodule TrueBGWeb.UserControllerTest do
     user
   end
 
-#  def login(conn) do
-#    conn
-#      |> json_response(201)
-#      |> Map.get("token")
-#  end
-
   def put_auth_headers(conn, jwt) do
     conn
       |> put_req_header("content-type", "application/json")
@@ -36,19 +30,6 @@ defmodule TrueBGWeb.UserControllerTest do
       assert admin_user["user_name"] == @admin_user_name
     end
   end
-
-#  describe "index" do
-#    test "lists all users", %{conn: conn} do
-#      token = login(conn)
-#      IO.puts "--TOKEN-"
-#      IO.inspect token
-#      conn = put_req_header(build_conn(), "authorization", "Bearer: #{token}")
-#      conn = get conn, user_path(conn, :index)
-#      [admin_user|_tail] = json_response(conn, 200)["data"]
-#      assert admin_user["user_name"] == @admin_user_name
-#    end
-#  end
-#
 
   describe "create user" do
     @tag :admin_authenticated
@@ -110,23 +91,26 @@ defmodule TrueBGWeb.UserControllerTest do
     end
   end
 
-#  describe "delete user" do
-#    setup [:create_user]
-#
-#    @tag :admin_authenticated
-#    test "deletes chosen user", %{conn: conn, jwt: jwt,  user: user} do
-#      conn = conn
-#             |> put_auth_headers(jwt)
-#      conn = delete conn, user_path(conn, :delete, user)
-#      assert response(conn, 204)
-#      assert_error_sent 404, fn ->
-#        get conn, user_path(conn, :show, user)
-#      end
-#    end
-#  end
+  describe "delete user" do
+   setup [:create_user]
+
+   @tag :admin_authenticated
+   test "deletes chosen user", %{conn: conn, jwt: jwt,  user: user} do
+     conn = conn
+       |> put_auth_headers(jwt)
+     conn = delete conn, user_path(conn, :delete, user)
+     assert response(conn, 204)
+
+     conn = recycle(conn)
+       |> put_auth_headers(jwt)
+     assert_error_sent 404, fn ->
+       get conn, user_path(conn, :show, user)
+     end
+   end
+  end
 
   defp create_user(_) do
-    user = fixture(:user)
+   user = fixture(:user)
     {:ok, user: user}
   end
 end
