@@ -4,9 +4,9 @@ defmodule TrueBGWeb.UserControllerTest do
   alias TrueBG.Accounts
   alias TrueBG.Accounts.User
 
-  @create_attrs %{password_hash: "some password_hash", user_name: "some user_name"}
-  @update_attrs %{password_hash: "some updated password_hash", user_name: "some updated user_name"}
-  @invalid_attrs %{password_hash: nil, user_name: nil}
+  @create_attrs %{password: "some password_hash", user_name: "some user_name"}
+  @update_attrs %{password: "some updated password_hash", user_name: "some updated user_name"}
+  @invalid_attrs %{password: nil, user_name: nil}
   @admin_user_name "app-admin"
 
   def fixture(:user) do

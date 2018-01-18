@@ -6,10 +6,9 @@ defmodule TrueBG.AccountsTest do
   describe "users" do
     alias TrueBG.Accounts.User
 
-    @valid_attrs %{password_hash: "some password_hash", user_name: "some user_name"}
-    @update_attrs %{password_hash: "some updated password_hash", user_name: "some updated user_name"}
-    @invalid_attrs %{password_hash: nil, user_name: nil}
-    @admin_user_name "app-admin"
+    @valid_attrs %{password: "some password", user_name: "some user_name"}
+    @update_attrs %{password: "some updated password", user_name: "some updated user_name"}
+    @invalid_attrs %{password: nil, user_name: nil}
 
     def user_fixture(attrs \\ %{}) do
       {:ok, user} =
