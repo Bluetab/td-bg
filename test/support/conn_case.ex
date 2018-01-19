@@ -36,14 +36,17 @@ defmodule TrueBGWeb.ConnCase do
       Ecto.Adapters.SQL.Sandbox.mode(TrueBG.Repo, {:shared, self()})
     end
 
-    {_conn, _user} = if tags[:admin_authenticated] do
+    cond do
+      tags[:admin_authenticated] ->
         user = Accounts.get_user_by_name(@admin_user_name)
         {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
         {:ok, %{conn: Phoenix.ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
-      else
-        {:ok, conn: Phoenix.ConnTest.build_conn()}
+      tags[:authenticated_user] ->
+        user = Accounts.get_user_by_name(tags[:authenticated_user])
+        {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
+        {:ok, %{conn: Phoenix.ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
+       true ->
+         {:ok, conn: Phoenix.ConnTest.build_conn()}
     end
-
   end
-
 end

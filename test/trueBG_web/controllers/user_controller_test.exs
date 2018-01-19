@@ -20,6 +20,17 @@ defmodule TrueBGWeb.UserControllerTest do
       |> put_req_header("authorization", "Bearer #{jwt}")
   end
 
+  describe "index with authenticated user tag" do
+    @tag authenticated_user: @admin_user_name
+    test "list all users with some user name", %{conn: conn, jwt: jwt} do
+      conn = conn
+             |> put_auth_headers(jwt)
+      conn = get conn, user_path(conn, :index)
+      [admin_user|_tail] = json_response(conn, 200)["data"]
+      assert admin_user["user_name"] == @admin_user_name
+    end
+  end
+
   describe "index" do
     @tag :admin_authenticated
     test "list all users", %{conn: conn, jwt: jwt} do
