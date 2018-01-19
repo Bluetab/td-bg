@@ -11,6 +11,14 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](http://www.phoenixframework.org/docs/deployment).
 
+Some currently defined mix task:
+
+  * `mix bg.code_analysis` Run code analysis 
+  * `mix bg.run_db` Run postgres container
+  * `mix bg.start_db` Start postgres container
+  * `mix bg.stop_db` Stop postgres container
+
+
 ## Learn more
 
   * Official website: http://www.phoenixframework.org/
