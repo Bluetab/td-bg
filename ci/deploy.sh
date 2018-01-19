@@ -19,17 +19,6 @@ cat /etc/ssh/sshd_config | sed "s/PasswordAuthentication no/PasswordAuthenticati
 chkconfig sshd on
 service sshd start
 
-# Install sshpass
-cd
-wget http://sourceforge.net/projects/sshpass/files/sshpass/1.05/sshpass-1.05.tar.gz/download
-mv download sshpass-1.05.tar.gz
-gunzip sshpass-1.05.tar.gz
-tar xvf sshpass-1.05.tar
-cd sshpass-1.05
-yum groupinstall "Development Tools" -y
-./configure
-make install
-
 chmod -R 777 /working_code
 chgrp -R deliver /working_code
 
