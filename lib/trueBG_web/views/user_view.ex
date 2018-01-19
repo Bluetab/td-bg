@@ -13,6 +13,7 @@ defmodule TrueBGWeb.UserView do
   def render("user.json", %{user: user}) do
     %{id: user.id,
       user_name: user.user_name,
-      password_hash: user.password_hash}
+      is_admin: user.is_admin
+    }
   end
 end
