@@ -3,6 +3,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   use TrueBGWeb.ConnCase
   import TrueBGWeb.Router.Helpers
   alias Poison, as: JSON
+  alias TrueBG.Taxonomies
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
 
@@ -32,6 +33,22 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     assert description == jsonResp["data"]["description"]
   end
 
+  #Scenario
+  defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
+    domain_group = Taxonomies.get_domain_group_by_name(name)
+    unless domain_group do
+      Taxonomies.create_domain_group(%{name: name})
+    end
+    {:ok, state}
+  end
+
+  defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" as child of Domain Group "(?<parent_name>[^"]+)" with following data:$/,
+          %{name: name, parent_name: parent_name, table: [%{Description: description}]}, state do
+
+    {_, status_code, jsonResp} = domain_group_create(state[:token], name, description, parent_name)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: jsonResp })}
+
+  end
 
   defp session_create(user_name, user_password) do
     body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
@@ -40,9 +57,9 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp domain_group_create(token, name, description) do
+  defp domain_group_create(token, name, description, parent \\ nil) do
     headers = [@headers ,{"authorization", "Bearer #{token}"}]
-    body = %{domain_group: %{name: name, description: description}} |> JSON.encode!
+    body = %{domain_group: %{name: name, description: description, parent: parent}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(domain_group_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}

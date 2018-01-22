@@ -15,12 +15,13 @@ Feature: Super-admin Taxonomy administration
       | Description |
       | First version of Financial Metrics |
 
-#  Scenario: Creating a Domain Group as child of an existing Domain Group
-#    Given an existing Domain Group called "Risks"
-#    When user "app-admin" tries to create a Domain Group with the name "Markets" as child of Domain Group "Risks" with following data:
-#      | Description |
-#      | First version of Markets |
-#    Then the system returns a result with code "ok"
+  Scenario: Creating a Domain Group as child of an existing Domain Group
+    Given user "app-admin" is logged in the application
+    And an existing Domain Group called "Risks"
+    When user "app-admin" tries to create a Domain Group with the name "Markets" as child of Domain Group "Risks" with following data:
+      | Description |
+      | First version of Markets |
+    Then the system returns a result with code "Created"
 #    And the user "app-admin" is able to see the Domain Group "Markets" with following data:
 #      | Description |
 #      | First version of Markets |

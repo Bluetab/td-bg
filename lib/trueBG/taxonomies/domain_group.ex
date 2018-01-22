@@ -7,6 +7,7 @@ defmodule TrueBG.Taxonomies.DomainGroup do
   schema "domain_groups" do
     field :description, :string
     field :name, :string
+    has_one :parent, DomainGroup
 
     timestamps()
   end
