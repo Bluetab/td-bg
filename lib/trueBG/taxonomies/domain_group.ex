@@ -3,7 +3,6 @@ defmodule TrueBG.Taxonomies.DomainGroup do
   import Ecto.Changeset
   alias TrueBG.Taxonomies.DomainGroup
 
-
   schema "domain_groups" do
     field :description, :string
     field :name, :string

@@ -7,7 +7,7 @@ config :trueBG, TrueBGWeb.Endpoint,
   server: true
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, handle_sasl_reports: true, level: :warn
 
 # Configure your database
 config :trueBG, TrueBG.Repo,
