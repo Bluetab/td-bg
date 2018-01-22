@@ -22,9 +22,9 @@ Feature: Super-admin Taxonomy administration
       | Description |
       | First version of Markets |
     Then the system returns a result with code "Created"
-#    And the user "app-admin" is able to see the Domain Group "Markets" with following data:
-#      | Description |
-#      | First version of Markets |
+    And the user "app-admin" is able to see the Domain Group "Markets" with following data:
+      | Description |
+      | First version of Markets |
 #
 #  Scenario: Creating a Domain Group as child of a non existing Domain Group
 #    When user "app-admin" tries to create a Domain Group with the name "Markets" as child of Domain Group "Imaginary Group"

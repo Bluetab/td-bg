@@ -51,8 +51,10 @@ defmodule TrueBGWeb.UserControllerTest do
       conn = post conn, user_path(conn, :create), user: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = recycle(conn)
+      conn = conn
+             |> recycle()
              |> put_auth_headers(jwt)
+
       conn = get conn, user_path(conn, :show, id)
       user_data = json_response(conn, 200)["data"]
       assert user_data["id"] == id && user_data["user_name"] == "some user_name"
@@ -82,8 +84,10 @@ defmodule TrueBGWeb.UserControllerTest do
       conn = put conn, user_path(conn, :update, user), user: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = recycle(conn)
-        |> put_auth_headers(jwt)
+      conn = conn
+             |> recycle()
+             |> put_auth_headers(jwt)
+
       conn = get conn, user_path(conn, :show, id)
       user_data = json_response(conn, 200)["data"]
       assert user_data["id"] == id && user_data["user_name"] == "some updated user_name"
@@ -126,8 +130,9 @@ defmodule TrueBGWeb.UserControllerTest do
      conn = delete conn, user_path(conn, :delete, user)
      assert response(conn, 204)
 
-     conn = recycle(conn)
-       |> put_auth_headers(jwt)
+     conn = conn
+        |> recycle()
+        |> put_auth_headers(jwt)
 
      assert_error_sent 404, fn ->
        get conn, user_path(conn, :show, user)

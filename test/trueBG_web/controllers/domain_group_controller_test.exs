@@ -41,7 +41,8 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
       conn = post conn, domain_group_path(conn, :create), domain_group: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = recycle(conn)
+      conn = conn
+             |> recycle()
              |> put_auth_headers(jwt)
 
       conn = get conn, domain_group_path(conn, :show, id)
@@ -70,7 +71,8 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
       conn = put conn, domain_group_path(conn, :update, domain_group), domain_group: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = recycle(conn)
+      conn = conn
+             |> recycle()
              |> put_auth_headers(jwt)
 
       conn = get conn, domain_group_path(conn, :show, id)
@@ -99,7 +101,8 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
       conn = delete conn, domain_group_path(conn, :delete, domain_group)
       assert response(conn, 204)
 
-      conn = recycle(conn)
+      conn = conn
+             |> recycle()
              |> put_auth_headers(jwt)
 
       assert_error_sent 404, fn ->

@@ -1,4 +1,5 @@
 defmodule TrueBG.Taxonomies.DomainGroup do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
   alias TrueBG.Taxonomies.DomainGroup

@@ -10,14 +10,14 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   # Scenario: Creating a Domain Group without any parent
 
   defgiven ~r/^user "app-admin" is logged in the application$/, %{}, state do
-    {_, status_code, jsonResp} = session_create("app-admin", "mypass")
+    {_, status_code, json_resp} = session_create("app-admin", "mypass")
     assert "Created" == get_status(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, token: jsonResp["token"], resp: jsonResp })}
+    {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
   end
 
   defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" and following data:$/, %{name: name, table: [%{Description: description}]}, state do
-    {_, status_code, jsonResp} = domain_group_create(state[:token], name, description)
-    {:ok, Map.merge(state, %{status_code: status_code,  resp: jsonResp })}
+    {_, status_code, json_resp} = domain_group_create(state[:token], name, description)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
   defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
@@ -27,10 +27,10 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   defand ~r/^the user "app-admin" is able to see the Domain Group "(?<name>[^"]+)" with following data:$/, %{name: name, table: [%{Description: description}]}, state do
     id = state[:resp]["data"]["id"]
     temporal = domain_group_show(state[:token], id)
-    {_, status_code, jsonResp} = temporal
+    {_, status_code, json_resp} = temporal
     assert "Ok" == get_status(status_code)
-    assert name == jsonResp["data"]["name"]
-    assert description == jsonResp["data"]["description"]
+    assert name == json_resp["data"]["name"]
+    assert description == json_resp["data"]["description"]
   end
 
   #Scenario
@@ -45,8 +45,8 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" as child of Domain Group "(?<parent_name>[^"]+)" with following data:$/,
           %{name: name, parent_name: parent_name, table: [%{Description: description}]}, state do
 
-    {_, status_code, jsonResp} = domain_group_create(state[:token], name, description, parent_name)
-    {:ok, Map.merge(state, %{status_code: status_code,  resp: jsonResp })}
+    {_, status_code, json_resp} = domain_group_create(state[:token], name, description, parent_name)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
 
   end
 
@@ -58,7 +58,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   end
 
   defp domain_group_create(token, name, description, parent \\ nil) do
-    headers = [@headers ,{"authorization", "Bearer #{token}"}]
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{domain_group: %{name: name, description: description, parent: parent}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(domain_group_url(@endpoint, :create), body, headers, [])
@@ -66,7 +66,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   end
 
   defp domain_group_show(token, id) do
-    headers = [@headers ,{"authorization", "Bearer #{token}"}]
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(domain_group_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}

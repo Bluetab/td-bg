@@ -10,14 +10,14 @@ defmodule TrueBG.AuthenticationTest do
   # Scenario: logging
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to log into the application with password "(?<user_passwd>[^"]+)"$/, %{user_name: user_name, user_passwd: user_passwd}, state do
-    {_, status_code, jsonResp} = session_create(user_name, user_passwd)
-    {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
+    {_, status_code, json_resp} = session_create(user_name, user_passwd)
+    {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
   end
 
   defthen ~r/^the system returns a token with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
     assert status_code == get_status(state[:status_code])
-    jsonR = state[:resp]
-    assert jsonR["token"] != nil
+    json_resp = state[:resp]
+    assert json_resp["token"] != nil
   end
 
   defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
@@ -27,20 +27,20 @@ defmodule TrueBG.AuthenticationTest do
   # Scenario: logging error
 
   defgiven ~r/^user "(?<user_name>[^"]+)" is logged in the application$/, %{user_name: user_name}, state do
-    {_, status_code, jsonResp} = session_create(user_name, "mypass")
+    {_, status_code, json_resp} = session_create(user_name, "mypass")
     assert "Created" == get_status(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
+    {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
   end
 
   defwhen ~r/^"(?<user_name>[^"]+)" tries to create a user "(?<new_user_name>[^"]+)" with password "(?<new_password>[^"]+)"$/, %{user_name: _user_name, new_user_name: new_user_name, new_password: new_password}, state do
-    {_, status_code, jsonResp} = user_create(state[:resp]["token"], new_user_name, new_password)
-    {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
+    {_, status_code, json_resp} = user_create(state[:resp]["token"], new_user_name, new_password)
+    {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
   end
 
   defand ~r/^user "(?<new_user_name>[^"]+)" can be authenticated with password "(?<new_password>[^"]+)"$/, %{new_user_name: new_user_name, new_password: new_password}, _state do
-    {_, status_code, jsonResp} = session_create(new_user_name, new_password)
+    {_, status_code, json_resp} = session_create(new_user_name, new_password)
       assert "Created" == get_status(status_code)
-      assert jsonResp["token"] != nil
+      assert json_resp["token"] != nil
   end
 
   # Scenario: logging error for non existing user
@@ -56,15 +56,15 @@ defmodule TrueBG.AuthenticationTest do
   end
 
   defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
-    {_, status_code, jsonResp} = session_create(user_name, password)
+    {_, status_code, json_resp} = session_create(user_name, password)
     assert "Created" == get_status(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
+    {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
   end
 
   defand ~r/^user "(?<user_name>[^"]+)" can not be authenticated with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, _state do
-    {_, status_code, jsonResp} = session_create(user_name, password)
+    {_, status_code, json_resp} = session_create(user_name, password)
     assert "Forbidden" == get_status(status_code)
-    assert jsonResp["token"] == nil
+    assert json_resp["token"] == nil
   end
 
   defp session_create(user_name, user_password) do
@@ -75,7 +75,7 @@ defmodule TrueBG.AuthenticationTest do
   end
 
   defp user_create(token, user_name, password) do
-    headers = [@headers ,{"authorization", "Bearer #{token}"}]
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{user: %{user_name: user_name, password: password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(user_url(@endpoint, :create), body, headers, [])
