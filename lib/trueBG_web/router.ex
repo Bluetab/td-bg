@@ -19,6 +19,7 @@ defmodule TrueBGWeb.Router do
   scope "/api", TrueBGWeb do
     pipe_through [:api, :api_secure]
     resources "/users", UserController, except: [:new, :edit]
+    resources "/domain_groups", DomainGroupController, except: [:new, :edit]
   end
 
 end
