@@ -3,6 +3,7 @@ defmodule TrueBGWeb.UserController do
 
   alias TrueBG.Accounts
   alias TrueBG.Accounts.User
+  alias Guardian.Plug
 
   alias TrueBGWeb.ErrorView
   action_fallback TrueBGWeb.FallbackController
@@ -13,7 +14,7 @@ defmodule TrueBGWeb.UserController do
   end
 
   def create(conn, %{"user" => user_params}) do
-    current_user = Guardian.Plug.current_resource(conn)
+    current_user = Plug.current_resource(conn)
     if current_user.is_admin do
       with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
         conn
