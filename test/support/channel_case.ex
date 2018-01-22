@@ -14,6 +14,7 @@ defmodule TrueBGWeb.ChannelCase do
   """
 
   use ExUnit.CaseTemplate
+  alias Ecto.Adapters.SQL.Sandbox
 
   using do
     quote do
@@ -27,9 +28,9 @@ defmodule TrueBGWeb.ChannelCase do
 
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(TrueBG.Repo)
+    :ok = Sandbox.checkout(TrueBG.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(TrueBG.Repo, {:shared, self()})
+      Sandbox.mode(TrueBG.Repo, {:shared, self()})
     end
     :ok
   end

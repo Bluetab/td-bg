@@ -16,6 +16,8 @@ defmodule TrueBGWeb.ConnCase do
   use ExUnit.CaseTemplate
   alias TrueBG.Auth.Guardian
   alias TrueBG.Accounts
+  alias Ecto.Adapters.SQL.Sandbox
+  alias Phoenix.ConnTest
 
   using do
     quote do
@@ -31,22 +33,22 @@ defmodule TrueBGWeb.ConnCase do
   @admin_user_name "app-admin"
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(TrueBG.Repo)
+    :ok = Sandbox.checkout(TrueBG.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(TrueBG.Repo, {:shared, self()})
+      Sandbox.mode(TrueBG.Repo, {:shared, self()})
     end
 
     cond do
       tags[:admin_authenticated] ->
         user = Accounts.get_user_by_name(@admin_user_name)
         {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
-        {:ok, %{conn: Phoenix.ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
+        {:ok, %{conn: ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
       tags[:authenticated_user] ->
         user = Accounts.get_user_by_name(tags[:authenticated_user])
         {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
-        {:ok, %{conn: Phoenix.ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
+        {:ok, %{conn: ConnTest.build_conn(), jwt: jwt, claims: full_claims}}
        true ->
-         {:ok, conn: Phoenix.ConnTest.build_conn()}
+         {:ok, conn: ConnTest.build_conn()}
     end
   end
 end

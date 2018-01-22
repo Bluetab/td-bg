@@ -13,6 +13,8 @@ defmodule TrueBG.DataCase do
   """
 
   use ExUnit.CaseTemplate
+  alias Ecto.Adapters.SQL.Sandbox
+  alias Ecto.Changeset
 
   using do
     quote do
@@ -26,16 +28,16 @@ defmodule TrueBG.DataCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(TrueBG.Repo)
+    :ok = Sandbox.checkout(TrueBG.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(TrueBG.Repo, {:shared, self()})
+      Sandbox.mode(TrueBG.Repo, {:shared, self()})
     end
 
     :ok
   end
 
-  @doc """
+  @doc ~S"""
   A helper that transform changeset errors to a map of messages.
 
       assert {:error, changeset} = Accounts.create_user(%{password: "short"})
@@ -44,7 +46,7 @@ defmodule TrueBG.DataCase do
 
   """
   def errors_on(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
+    Changeset.traverse_errors(changeset, fn {message, opts} ->
       Enum.reduce(opts, message, fn {key, value}, acc ->
         String.replace(acc, "%{#{key}}", to_string(value))
       end)
