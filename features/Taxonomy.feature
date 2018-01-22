@@ -12,27 +12,22 @@ Feature: Taxonomy administration
     And an existing Data Domain called "My Domain" as child of Domain Group "Child Group" with following data:
       | Description |
       | First version of My Domain |
-    And an existing user "pg-admin" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "pg-publisher" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "pg-creator" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "pg-watcher" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "cg-admin" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "cg-publisher" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "cg-creator" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "cg-watcher" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "d-admin" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "d-publisher" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "d-creator" with password "pas2w0rd" without "super-admin" permission
-    And an existing user "d-watcher" with password "pas2w0rd" without "super-admin" permission
-    And user "pg-admin" has been granted role "admin" to Domain Group "Parent Group"
-    And user "pg-publisher" has been granted role "publish" to Domain Group "Parent Group"
-    And user "pg-creator" has been granted role "create" to Domain Group "Parent Group"
-    And user "cg-admin" has been granted role "admin" to Domain Group "Child Group"
-    And user "cg-publisher" has been granted role "publish" to Domain Group "Child Group"
-    And user "cg-creator" has been granted role "create" to Domain Group "Child Group"
-    And user "d-admin" has been granted role "admin" to Data Domain "My Domain"
-    And user "d-publisher" has been granted role "publish" Data Domain "My Domain"
-    And user "d-creator" has been granted role "create" Data Domain "My Domain"
+    And following existing <users> with role <role> in Domain Group <group>:
+      | users        | role    | group        |
+      | pg-admin     | admin   | Parent Group |
+      | pg-publisher | publish | Parent Group |
+      | pg-creator   | create  | Parent Group |
+      | pg-watch     | watch   | Parent Group |
+      | cg-admin     | admin   | Child Group  |
+      | cg-publisher | publish | Child Group  |
+      | cg-creator   | create  | Child Group  |
+      | cg-watch     | watch   | Child Group  |
+    And following existing <users> with role <role> in Data Domain <domain>:
+      | users        | role    | domain    |
+      | d-admin      | admin   | My Domain |
+      | d-publisher  | publish | My Domain |
+      | d-creator    | create  | My Domain |
+      | d-watch      | watch   | My Domain |
 
   Scenario Outline: Creating a Domain Group without any parent is not allowed for any user but the super admins
     When user <user> tries to create a Domain Group with the name "Second Parent Group" and following data:
