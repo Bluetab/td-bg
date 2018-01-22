@@ -2,6 +2,7 @@ defmodule TrueBG.AuthenticationTest do
   use Cabbage.Feature, async: false, file: "authentication.feature"
   use TrueBGWeb.ConnCase
   import TrueBGWeb.Router.Helpers
+  alias TrueBG.Accounts
   alias Poison, as: JSON
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
@@ -46,12 +47,24 @@ defmodule TrueBG.AuthenticationTest do
 
   # Scenario: Error when creating a new user in the application by a non admin user
 
-  defgiven ~r/^an existing user "(?<nobody>[^"]+)" with password "(?<mypass>[^"]+)" without "(?<super_admin>[^"]+)" permission$/, %{nobody: nobody, mypass: mypass, super_admin: super_admin}, state do
-
+  defgiven ~r/^an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" without "super-admin" permission$/, %{user_name: user_name, password: password}, state do
+    user = Accounts.get_user_by_name(user_name)
+    unless user do
+      Accounts.create_user(%{user_name: user_name, password: password})
+    end
+    {:ok, state}
   end
 
-  defand ~r/^user "(?<newuser>[^"]+)" can not be authenticated with password "(?<newpass>[^"]+)"$/, %{newuser: newuser, newpass: newpass}, state do
+  defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
+    {_, status_code, jsonResp} = session_create(user_name, password)
+    assert "Created" == get_status(status_code)
+    {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
+  end
 
+  defand ~r/^user "(?<user_name>[^"]+)" can not be authenticated with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
+    {_, status_code, jsonResp} = session_create(user_name, password)
+    assert "Forbidden" == get_status(status_code)
+    assert jsonResp["token"] == nil
   end
 
   defp session_create(user_name, user_password) do

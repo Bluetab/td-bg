@@ -4,6 +4,7 @@ defmodule TrueBGWeb.UserController do
   alias TrueBG.Accounts
   alias TrueBG.Accounts.User
 
+  alias TrueBGWeb.ErrorView
   action_fallback TrueBGWeb.FallbackController
 
   def index(conn, _params) do
@@ -12,11 +13,18 @@ defmodule TrueBGWeb.UserController do
   end
 
   def create(conn, %{"user" => user_params}) do
-    with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
+    current_user = Guardian.Plug.current_resource(conn)
+    if current_user.is_admin do
+      with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", user_path(conn, :show, user))
+        |> render("show.json", user: user)
+      end
+    else
       conn
-      |> put_status(:created)
-      |> put_resp_header("location", user_path(conn, :show, user))
-      |> render("show.json", user: user)
+      |> put_status(:unauthorized)
+      |> render(ErrorView, :"401.json")
     end
   end
 
