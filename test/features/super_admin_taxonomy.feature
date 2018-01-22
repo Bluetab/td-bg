@@ -10,10 +10,10 @@ Feature: Super-admin Taxonomy administration
     When user "app-admin" tries to create a Domain Group with the name "Financial Metrics" and following data:
       | Description |
       | First version of Financial Metrics |
-#    Then the system returns a result with code "Created"
-#    And the user "app-admin" is able to see the Domain Group "Financial Metrics" with following data:
-#      | Description |
-#      | First version of Financial Metrics |
+    Then the system returns a result with code "Created"
+    And the user "app-admin" is able to see the Domain Group "Financial Metrics" with following data:
+      | Description |
+      | First version of Financial Metrics |
 
 #  Scenario: Creating a Domain Group as child of an existing Domain Group
 #    Given an existing Domain Group called "Risks"

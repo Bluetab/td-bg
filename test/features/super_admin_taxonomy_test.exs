@@ -9,22 +9,28 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   # Scenario: Creating a Domain Group without any parent
 
   defgiven ~r/^user "app-admin" is logged in the application$/, %{}, state do
-    IO.puts "Executing background"
     {_, status_code, jsonResp} = session_create("app-admin", "mypass")
     assert "Created" == get_status(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
+    {:ok, Map.merge(state, %{status_code: status_code, token: jsonResp["token"], resp: jsonResp })}
   end
 
-  # Scenario: Creating a Domain Group without any parent
-
-  defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<domain_group_name>[^"]+)" and following data:$/, %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-      IO.inspect(description)
-#      IO.inspect(Enum.at(table, 0)[:Description])
-#      IO.puts "Qué está pasando!"
+  defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" and following data:$/, %{name: name, table: [%{Description: description}]}, state do
+    {_, status_code, jsonResp} = domain_group_create(state[:token], name, description)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: jsonResp })}
   end
 
-#  Then the system returns a result with code "Created"
-#  And the user "app-admin" is able to see the Domain Group "Financial Metrics" with following data:
+  defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
+    assert status_code == get_status(state[:status_code])
+  end
+
+  defand ~r/^the user "app-admin" is able to see the Domain Group "(?<name>[^"]+)" with following data:$/, %{name: name, table: [%{Description: description}]}, state do
+    id = state[:resp]["data"]["id"]
+    temporal = domain_group_show(state[:token], id)
+    {_, status_code, jsonResp} = temporal
+    assert "Ok" == get_status(status_code)
+    assert name == jsonResp["data"]["name"]
+    assert description == jsonResp["data"]["description"]
+  end
 
 
   defp session_create(user_name, user_password) do
@@ -38,12 +44,20 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     headers = [@headers ,{"authorization", "Bearer #{token}"}]
     body = %{domain_group: %{name: name, description: description}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(user_url(@endpoint, :create), body, headers, [])
+        HTTPoison.post!(domain_group_url(@endpoint, :create), body, headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp domain_group_show(token, id) do
+    headers = [@headers ,{"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(domain_group_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp get_status(status_code) do
     case status_code do
+      200 -> "Ok"
       201 -> "Created"
       401 -> "Forbidden"
       _ -> "Unknown"

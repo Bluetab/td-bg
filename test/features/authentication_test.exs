@@ -61,7 +61,7 @@ defmodule TrueBG.AuthenticationTest do
     {:ok, Map.merge(state, %{status_code: status_code, resp: jsonResp })}
   end
 
-  defand ~r/^user "(?<user_name>[^"]+)" can not be authenticated with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
+  defand ~r/^user "(?<user_name>[^"]+)" can not be authenticated with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, _state do
     {_, status_code, jsonResp} = session_create(user_name, password)
     assert "Forbidden" == get_status(status_code)
     assert jsonResp["token"] == nil

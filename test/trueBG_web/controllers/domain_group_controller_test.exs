@@ -19,7 +19,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     |> put_req_header("authorization", "Bearer #{jwt}")
   end
 
-  setup %{conn: conn, jwt: jwt} do
+  setup %{conn: conn, jwt: _jwt} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
