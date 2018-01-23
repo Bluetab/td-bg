@@ -26,7 +26,6 @@ defmodule TrueBGWeb.ChannelCase do
     end
   end
 
-
   setup tags do
     :ok = Sandbox.checkout(TrueBG.Repo)
     unless tags[:async] do
