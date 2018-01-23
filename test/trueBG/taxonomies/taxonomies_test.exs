@@ -6,9 +6,14 @@ defmodule TrueBG.TaxonomiesTest do
   describe "domain_groups" do
     alias TrueBG.Taxonomies.DomainGroup
 
+
     @valid_attrs %{description: "some description", name: "some name"}
     @update_attrs %{description: "some updated description", name: "some updated name"}
     @invalid_attrs %{description: nil, name: nil}
+
+    @child_attrs %{description: "child of some name description", name: "child of some name"}
+
+    #@parent_attrs %{description: "parent description", name: "parent name"}
 
     def domain_group_fixture(attrs \\ %{}) do
       {:ok, domain_group} =
@@ -33,6 +38,16 @@ defmodule TrueBG.TaxonomiesTest do
       assert {:ok, %DomainGroup{} = domain_group} = Taxonomies.create_domain_group(@valid_attrs)
       assert domain_group.description == "some description"
       assert domain_group.name == "some name"
+    end
+
+    test "create_domain_group/2 child of a parent group" do
+      parent_domain_group = domain_group_fixture()
+      child_attrs = Map.put(@child_attrs, :parent_id, parent_domain_group.id)
+
+      assert {:ok, %DomainGroup{} = domain_group} = Taxonomies.create_domain_group(child_attrs)
+      assert domain_group.description == child_attrs.description
+      assert domain_group.name == child_attrs.name
+      assert domain_group.parent_id == parent_domain_group.id
     end
 
     test "create_domain_group/1 with invalid data returns error changeset" do

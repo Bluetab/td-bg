@@ -12,6 +12,7 @@ defmodule TrueBGWeb.DomainGroupView do
 
   def render("domain_group.json", %{domain_group: domain_group}) do
     %{id: domain_group.id,
+      parent_id: domain_group.parent_id,
       name: domain_group.name,
       description: domain_group.description}
   end

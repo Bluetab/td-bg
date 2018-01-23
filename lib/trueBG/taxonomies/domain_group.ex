@@ -7,15 +7,14 @@ defmodule TrueBG.Taxonomies.DomainGroup do
   schema "domain_groups" do
     field :description, :string
     field :name, :string
-    has_one :parent, DomainGroup
-
+    belongs_to :parent, DomainGroup
     timestamps()
   end
 
   @doc false
   def changeset(%DomainGroup{} = domain_group, attrs) do
     domain_group
-    |> cast(attrs, [:name, :description])
-    |> validate_required([:name, :description])
+    |> cast(attrs, [:name, :description, :parent_id])
+    |> validate_required([:name])
   end
 end

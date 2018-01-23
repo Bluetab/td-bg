@@ -37,6 +37,8 @@ defmodule TrueBG.Taxonomies do
   """
   def get_domain_group!(id), do: Repo.get!(DomainGroup, id)
 
+  def get_domain_group(id), do: Repo.get(DomainGroup, id)
+
   def get_domain_group_by_name(name) do
     Repo.get_by(DomainGroup, name: String.downcase(name))
   end

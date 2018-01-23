@@ -49,7 +49,8 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "description" => "some description",
-        "name" => "some name"}
+        "name" => "some name",
+        "parent_id" => nil}
     end
 
     @tag :admin_authenticated
@@ -79,7 +80,8 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "description" => "some updated description",
-        "name" => "some updated name"}
+        "name" => "some updated name",
+        "parent_id" => nil}
     end
 
     @tag :admin_authenticated

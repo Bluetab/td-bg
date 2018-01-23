@@ -37,17 +37,30 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
     domain_group = Taxonomies.get_domain_group_by_name(name)
     unless domain_group do
-      Taxonomies.create_domain_group(%{name: name})
+      {_ , domain_group} = Taxonomies.create_domain_group(%{name: name})
     end
-    {:ok, state}
+    {:ok, Map.merge(state, %{parent: domain_group})}
   end
 
   defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" as child of Domain Group "(?<parent_name>[^"]+)" with following data:$/,
           %{name: name, parent_name: parent_name, table: [%{Description: description}]}, state do
 
-    {_, status_code, json_resp} = domain_group_create(state[:token], name, description, parent_name)
-    {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
+    parent = state[:parent]
+    assert parent.name == parent_name
 
+    {_, status_code, json_resp} = domain_group_create(state[:token], name, description, parent.id)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
+  end
+
+  defand ~r/^Domain Group "Markets" is a child of Domain Group "(?<parent_name>[^"]+)"$/, %{parent_name: _parent_name }, state do
+    parent = state[:parent]
+    child = state[:resp]["data"]
+    assert child["parent_id"] == parent.id
+  end
+
+  # Scenario: Creating a Domain Group as child of a non existing Domain Group
+
+  defand ~r/^the user "app-admin" is not able to see the Domain Group "Imaginary Group"$/, %{}, state do
   end
 
   defp session_create(user_name, user_password) do
@@ -57,9 +70,9 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp domain_group_create(token, name, description, parent \\ nil) do
+  defp domain_group_create(token, name, description, parent_id \\ nil) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{domain_group: %{name: name, description: description, parent: parent}} |> JSON.encode!
+    body = %{domain_group: %{name: name, description: description, parent_id: parent_id}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(domain_group_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
@@ -77,6 +90,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
       200 -> "Ok"
       201 -> "Created"
       401 -> "Forbidden"
+      404 -> "NotFound"
       _ -> "Unknown"
     end
   end
