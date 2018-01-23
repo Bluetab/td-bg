@@ -9,6 +9,11 @@ defmodule TrueBGWeb.ErrorViewTest do
            %{errors: %{detail: "Not found"}}
   end
 
+  test "renders 422.json" do
+    assert render(TrueBGWeb.ErrorView, "422.json", []) ==
+             %{errors: %{detail: "Unprocessable Entity"}}
+  end
+
   test "render 500.json" do
     assert render(TrueBGWeb.ErrorView, "500.json", []) ==
            %{errors: %{detail: "Internal server error"}}

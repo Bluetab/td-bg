@@ -16,5 +16,6 @@ defmodule TrueBG.Taxonomies.DomainGroup do
     domain_group
     |> cast(attrs, [:name, :description, :parent_id])
     |> validate_required([:name])
+    |> unique_constraint(:name)
   end
 end

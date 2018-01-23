@@ -1,6 +1,7 @@
 defmodule TrueBGWeb.DomainGroupController do
   use TrueBGWeb, :controller
 
+  alias TrueBGWeb.ErrorView
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DomainGroup
 
@@ -29,11 +30,21 @@ defmodule TrueBGWeb.DomainGroupController do
     parent_info = get_parent_by_id(parent_id)
     case parent_info do
       {:ok, _parent} ->
-        with {:ok, %DomainGroup{} = domain_group} <- Taxonomies.create_domain_group(domain_group_params) do
-          conn
-          |> put_status(:created)
-          |> put_resp_header("location", domain_group_path(conn, :show, domain_group))
-          |> render("show.json", domain_group: domain_group)
+        create_domain_group =  Taxonomies.create_domain_group(domain_group_params)
+        case create_domain_group do
+          {:ok, %DomainGroup{} = domain_group} ->
+            conn
+            |> put_status(:created)
+            |> put_resp_header("location", domain_group_path(conn, :show, domain_group))
+            |> render("show.json", domain_group: domain_group)
+          {:error, %Ecto.Changeset{} = ecto_changeset} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(ErrorView, :"422.json")
+          _ ->
+            conn
+            |> put_status(:internal_server_error)
+            |> render(ErrorView, :"500.json")
         end
       {:error, _} ->
         conn
