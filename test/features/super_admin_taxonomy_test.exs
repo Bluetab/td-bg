@@ -35,10 +35,13 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
-    domain_group = Taxonomies.get_domain_group_by_name(name)
-    unless domain_group do
-      {_ , domain_group} = Taxonomies.create_domain_group(%{name: name})
-    end
+    existing_dg = Taxonomies.get_domain_group_by_name(name)
+    {_, domain_group} =
+      if existing_dg == nil do
+        Taxonomies.create_domain_group(%{name: name})
+      else
+        {:ok, existing_dg}
+      end
     {:ok, Map.merge(state, %{parent: domain_group})}
   end
 
@@ -52,7 +55,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
-  defand ~r/^Domain Group "Markets" is a child of Domain Group "(?<parent_name>[^"]+)"$/, %{parent_name: _parent_name }, state do
+  defand ~r/^Domain Group "Markets" is a child of Domain Group "(?<parent_name>[^"]+)"$/, %{parent_name: _parent_name}, state do
     parent = state[:parent]
     child = state[:resp]["data"]
     assert child["parent_id"] == parent.id
