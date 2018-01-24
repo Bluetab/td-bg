@@ -36,20 +36,20 @@ Feature: Super-admin Taxonomy administration
   #   And the user "app-admin" is not able to see the Domain Group "Imaginary Group"
   #
 
-   Scenario: Creating a duplicated Domain Group
-     Given user "app-admin" is logged in the application
-     And an existing Domain Group called "Risks"
-     When user "app-admin" tries to create a Domain Group with the name "Risks" and following data:
-       | Description |
-       | First version of Risks |
-     Then the system returns a result with code "Unprocessable Entity"
+  Scenario: Creating a duplicated Domain Group
+    Given user "app-admin" is logged in the application
+    And an existing Domain Group called "Risks"
+    When user "app-admin" tries to create a Domain Group with the name "Risks" and following data:
+      | Description |
+      | First version of Risks |
+    Then the system returns a result with code "Unprocessable Entity"
 
-  # Scenario: Creating a Data Domain depending on an existing Domain Group
-  #   Given user "app-admin" is logged in the application
-  #   And an existing Domain Group called "Risks"
-  #   When user "app-admin" tries to create a Data Domain with the name "Operational Risk" as child of Domain Group "Risks" with following data:
-  #     | Description |
-  #     | First version of Operational Risk |
+#  Scenario: Creating a Data Domain depending on an existing Domain Group
+#    Given user "app-admin" is logged in the application
+#    And an existing Domain Group called "Risks"
+#    When user "app-admin" tries to create a Data Domain with the name "Operational Risk" as child of Domain Group "Risks" with following data:
+#       | Description |
+#       | First version of Operational Risk |
   #   Then the system returns a result with code "ok"
   #   And the user "app-admin" is able to see the Data Domain "Operational Risk" with following data:
   #     | Description |

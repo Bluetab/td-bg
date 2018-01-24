@@ -5,7 +5,7 @@ defmodule TrueBG.Taxonomies do
 
   import Ecto.Query, warn: false
   alias TrueBG.Repo
-
+  alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
 
   @doc """
@@ -124,4 +124,97 @@ defmodule TrueBG.Taxonomies do
     {:ok, parent_id}
   end
 
+  @doc """
+  Returns the list of data_domains.
+
+  ## Examples
+
+      iex> list_data_domains()
+      [%DataDomain{}, ...]
+
+  """
+  def list_data_domains do
+    Repo.all(DataDomain)
+  end
+
+  @doc """
+  Gets a single data_domain.
+
+  Raises `Ecto.NoResultsError` if the Data domain does not exist.
+
+  ## Examples
+
+      iex> get_data_domain!(123)
+      %DataDomain{}
+
+      iex> get_data_domain!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_data_domain!(id), do: Repo.get!(DataDomain, id)
+
+  @doc """
+  Creates a data_domain.
+
+  ## Examples
+
+      iex> create_data_domain(%{field: value})
+      {:ok, %DataDomain{}}
+
+      iex> create_data_domain(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_data_domain(attrs \\ %{}) do
+    %DataDomain{}
+    |> DataDomain.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a data_domain.
+
+  ## Examples
+
+      iex> update_data_domain(data_domain, %{field: new_value})
+      {:ok, %DataDomain{}}
+
+      iex> update_data_domain(data_domain, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_data_domain(%DataDomain{} = data_domain, attrs) do
+    data_domain
+    |> DataDomain.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a DataDomain.
+
+  ## Examples
+
+      iex> delete_data_domain(data_domain)
+      {:ok, %DataDomain{}}
+
+      iex> delete_data_domain(data_domain)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_data_domain(%DataDomain{} = data_domain) do
+    Repo.delete(data_domain)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking data_domain changes.
+
+  ## Examples
+
+      iex> change_data_domain(data_domain)
+      %Ecto.Changeset{source: %DataDomain{}}
+
+  """
+  def change_data_domain(%DataDomain{} = data_domain) do
+    DataDomain.changeset(data_domain, %{})
+  end
 end

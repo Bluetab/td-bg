@@ -20,6 +20,7 @@ defmodule TrueBGWeb.Router do
     pipe_through [:api, :api_secure]
     resources "/users", UserController, except: [:new, :edit]
     resources "/domain_groups", DomainGroupController, except: [:new, :edit]
+    resources "/data_domains", DataDomainController, except: [:new, :edit]
   end
 
 end

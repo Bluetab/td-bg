@@ -78,4 +78,66 @@ defmodule TrueBG.TaxonomiesTest do
       assert %Ecto.Changeset{} = Taxonomies.change_domain_group(domain_group)
     end
   end
+
+  describe "data_domains" do
+    alias TrueBG.Taxonomies.DataDomain
+
+    @valid_attrs %{description: "some description", name: "some name"}
+    @update_attrs %{description: "some updated description", name: "some updated name"}
+    @invalid_attrs %{description: nil, name: nil}
+
+    def data_domain_fixture(attrs \\ %{}) do
+      {:ok, data_domain} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Taxonomies.create_data_domain()
+
+      data_domain
+    end
+
+    test "list_data_domains/0 returns all data_domains" do
+      data_domain = data_domain_fixture()
+      assert Taxonomies.list_data_domains() == [data_domain]
+    end
+
+    test "get_data_domain!/1 returns the data_domain with given id" do
+      data_domain = data_domain_fixture()
+      assert Taxonomies.get_data_domain!(data_domain.id) == data_domain
+    end
+
+    test "create_data_domain/1 with valid data creates a data_domain" do
+      assert {:ok, %DataDomain{} = data_domain} = Taxonomies.create_data_domain(@valid_attrs)
+      assert data_domain.description == "some description"
+      assert data_domain.name == "some name"
+    end
+
+    test "create_data_domain/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Taxonomies.create_data_domain(@invalid_attrs)
+    end
+
+    test "update_data_domain/2 with valid data updates the data_domain" do
+      data_domain = data_domain_fixture()
+      assert {:ok, data_domain} = Taxonomies.update_data_domain(data_domain, @update_attrs)
+      assert %DataDomain{} = data_domain
+      assert data_domain.description == "some updated description"
+      assert data_domain.name == "some updated name"
+    end
+
+    test "update_data_domain/2 with invalid data returns error changeset" do
+      data_domain = data_domain_fixture()
+      assert {:error, %Ecto.Changeset{}} = Taxonomies.update_data_domain(data_domain, @invalid_attrs)
+      assert data_domain == Taxonomies.get_data_domain!(data_domain.id)
+    end
+
+    test "delete_data_domain/1 deletes the data_domain" do
+      data_domain = data_domain_fixture()
+      assert {:ok, %DataDomain{}} = Taxonomies.delete_data_domain(data_domain)
+      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_data_domain!(data_domain.id) end
+    end
+
+    test "change_data_domain/1 returns a data_domain changeset" do
+      data_domain = data_domain_fixture()
+      assert %Ecto.Changeset{} = Taxonomies.change_data_domain(data_domain)
+    end
+  end
 end
