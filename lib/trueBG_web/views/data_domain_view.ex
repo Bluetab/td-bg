@@ -13,6 +13,8 @@ defmodule TrueBGWeb.DataDomainView do
   def render("data_domain.json", %{data_domain: data_domain}) do
     %{id: data_domain.id,
       name: data_domain.name,
-      description: data_domain.description}
+      description: data_domain.description,
+      domain_group_id: data_domain.domain_group_id
+    }
   end
 end

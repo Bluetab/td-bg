@@ -1,4 +1,5 @@
 defmodule TrueBG.Taxonomies.DataDomain do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
   alias TrueBG.Taxonomies.DataDomain
@@ -7,7 +8,6 @@ defmodule TrueBG.Taxonomies.DataDomain do
   schema "data_domains" do
     field :description, :string
     field :name, :string
-    #field :domain_group, :id
     belongs_to :domain_group, DomainGroup
 
     timestamps()
@@ -16,7 +16,7 @@ defmodule TrueBG.Taxonomies.DataDomain do
   @doc false
   def changeset(%DataDomain{} = data_domain, attrs) do
     data_domain
-    |> cast(attrs, [:name, :description])
+    |> cast(attrs, [:name, :description, :domain_group_id])
     |> validate_required([:name, :description])
   end
 end

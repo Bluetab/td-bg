@@ -5,8 +5,8 @@ defmodule TrueBGWeb.DataDomainControllerTest do
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DataDomain
 
-  @create_attrs %{description: "some description", name: "some name"}
-  @update_attrs %{description: "some updated description", name: "some updated name"}
+  @create_attrs %{description: "some description", name: "some name", "domain_group_id": nil}
+  @update_attrs %{description: "some updated description", name: "some updated name", "domain_group_id": nil}
   @invalid_attrs %{description: nil, name: nil}
 
   def fixture(:data_domain) do
@@ -39,7 +39,8 @@ defmodule TrueBGWeb.DataDomainControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "description" => "some description",
-        "name" => "some name"}
+        "name" => "some name",
+        "domain_group_id" => nil}
     end
 
     @tag :admin_authenticated
@@ -64,7 +65,8 @@ defmodule TrueBGWeb.DataDomainControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "description" => "some updated description",
-        "name" => "some updated name"}
+        "name" => "some updated name",
+        "domain_group_id" => nil}
     end
 
     @tag :admin_authenticated
