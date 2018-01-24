@@ -3,6 +3,7 @@ defmodule TrueBGWeb.SessionController do
 
   alias Comeonin.Bcrypt
   alias TrueBG.Accounts
+  alias TrueBG.Auth.Guardian
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
   alias TrueBGWeb.ErrorView
 
@@ -35,7 +36,8 @@ defmodule TrueBGWeb.SessionController do
   end
 
   def destroy(conn, _params) do
-    Guardian.revoke(TrueBG.Auth.Guardian, GuardianPlug.current_token(conn))
+    token = GuardianPlug.current_token(conn)
+    Guardian.revoke(token)
     send_resp(conn, :ok, "")
   end
 
