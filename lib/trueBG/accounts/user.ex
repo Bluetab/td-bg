@@ -20,6 +20,7 @@ defmodule TrueBG.Accounts.User do
     user
     |> cast(attrs, [:user_name, :password, :is_admin])
     |> validate_required([:user_name])
+    |> unique_constraint(:user_name)
     |> put_pass_hash()
   end
 

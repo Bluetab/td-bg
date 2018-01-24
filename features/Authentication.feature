@@ -46,7 +46,7 @@ Feature: User Authentication
     Given an existing user "uniqueuser" with password "mypass" with "super-admin" permission
     And user "app-admin" is logged in the application
     When "app-admin" tries to create a user "uniqueuser" with password "new-password"
-    Then the system returns a result with code "Forbidden"
+    Then the system returns a result with code "Unprocessable Entity"
     And user "uniqueuser" can not be authenticated with password "new-password"
     And user "uniqueuser" can be authenticated with password "mypass"
 

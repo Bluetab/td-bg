@@ -29,7 +29,7 @@ defmodule TrueBG.AuthenticationTest do
 
   defgiven ~r/^user "(?<user_name>[^"]+)" is logged in the application$/, %{user_name: user_name}, state do
     {_, status_code, json_resp} = session_create(user_name, "mypass")
-    assert rc_created() == to_response_code(http_status_code)
+    assert rc_created() == to_response_code(status_code)
     {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
   end
 
@@ -68,6 +68,13 @@ defmodule TrueBG.AuthenticationTest do
     assert json_resp["token"] == nil
   end
 
+  # Scenario: Error when creating a duplicated user
+
+  defgiven ~r/^an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" with "super-admin" permission$/, %{user_name: user_name, password: password}, state do
+    create_user(user_name, password, true)
+    {:ok, state}
+  end
+
   # Scenario: Loggout
 
   #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
@@ -88,6 +95,11 @@ defmodule TrueBG.AuthenticationTest do
   defand ~r/^user "johndoe" gets a "Forbidden" code when he pings the application$/, %{}, state do
     {_, status_code} = ping(state[:token])
     assert rc_forbidden() == to_response_code(status_code)
+  end
+
+  defp create_user(user_name, password, is_admin) do
+    found = Accounts.get_user_by_name(user_name)
+    if found, do: found, else: Accounts.create_user(%{user_name: user_name, password: password, is_admin: is_admin})
   end
 
   defp ping(token) do

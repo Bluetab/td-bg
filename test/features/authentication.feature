@@ -41,15 +41,15 @@ Feature: User Authentication
   #   When "nobody" tries to assign "super-admin" permission to "John Doe"
   #   Then the system returns a result with code "Forbidden"
   #   And user "John Doe" can be authenticated with password "mypass" without "super-admin" permission
-  #
-  # Scenario: Error when creating a duplicated user
-  #   Given an existing user "uniqueuser" with password "mypass" with "super-admin" permission
-  #   And user "app-admin" is logged in the application
-  #   When "app-admin" tries to create a user "uniqueuser" with password "new-password"
-  #   Then the system returns a result with code "Forbidden"
-  #   And user "uniqueuser" can not be authenticated with password "new-password"
-  #   And user "uniqueuser" can be authenticated with password "mypass"
-  #
+
+  Scenario: Error when creating a duplicated user
+    Given an existing user "uniqueuser" with password "mypass" with "super-admin" permission
+    And user "app-admin" is logged in the application
+    When "app-admin" tries to create a user "uniqueuser" with password "new-password"
+    Then the system returns a result with code "Unprocessable Entity"
+    And user "uniqueuser" can not be authenticated with password "new-password"
+    And user "uniqueuser" can be authenticated with password "mypass"
+
   # Scenario: Password modification
   #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
   #   And user "johndoe" is logged in the application
