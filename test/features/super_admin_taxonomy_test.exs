@@ -55,9 +55,11 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
-  defand ~r/^Domain Group "Markets" is a child of Domain Group "(?<parent_name>[^"]+)"$/, %{parent_name: _parent_name}, state do
+  defand ~r/^Domain Group "(?<name>[^"]+)" is a child of Domain Group "(?<parent_name>[^"]+)"$/, %{name: name, parent_name: parent_name}, state do
     parent = state[:domain_group]
     child = state[:resp]["data"]
+    assert child["name"] == name
+    assert parent.name == parent_name
     assert child["parent_id"] == parent.id
   end
 
