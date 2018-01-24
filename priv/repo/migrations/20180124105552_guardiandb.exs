@@ -11,7 +11,7 @@ defmodule TrueBG.Repo.Migrations.Guardian.DB do
       add(:exp, :bigint)
       add(:jwt, :text)
       add(:claims, :text) # json
-      add(:claims, :map)  # jsonb
+      #add(:claims, :map)  # jsonb
       timestamps()
     end
   end
