@@ -7,18 +7,69 @@ Feature: Business Concepts administration
   Relation between concept types is defined at a concept type level.
   Concepts must be unique by domain and name.
 
-  Background:
-    Given a data domain called "Saldos"
-    And a logged user "watcher" with the "watcher" role in the "Saldos" domain
-    And a logged user "creator" with the "creation" role in the "Saldos" domain
-    And a logged user "publisher" with the "publish" role in the "Saldos" domain
-    And a logged user "creator2" with the "creation" role in the "Saldos" domain
-    And a logged user "publisher2" with the "publish" role in the "Saldos" domain
+  # Background:
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And existing users with the correspoding role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with following data:
+  #    | Field            | Format           | Values                                       | Mandatory | Default Value |
+  #    | Name             | char(20)         |                                              |    YES    |               |
+  #    | Description      | char(500)        |                                              |    YES    |               |
+  #    | Formula          | char(100)        |                                              |    NO     |               |
+  #    | Format           | List of values   | Date, Numeric, Amount, Text                  |    YES    |               |
+  #    | List of Values   | List of char(100)|                                              |    NO     |               |
+  #    | Sensitve Data    | List of values   | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+  #    | Update Frequence | List of Values   | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+  #    | Related Area     | Char(100)        |                                              |    NO     |               |
+  #    | Default Value    | Char(100)        |                                              |    NO     |               |
+  #    | Additional Data  | char(500)        |                                              |    NO     |               |
 
-  Scenario Outline: Creating a business concept
-    When <user> tries to create a business concept with the name "Saldo medio" in the "Saldos" domain
+  Scenario Outline: Creating a simple date business concept
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And follwinig users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    And an existing Business Concept type called "Business Term" with following data:
+     | Field            | Format           | Values                                       | Mandatory | Default Value |
+     | Name             | char(40)         |                                              |    YES    |               |
+     | Description      | char(500)        |                                              |    YES    |               |
+     | Formula          | char(100)        |                                              |    NO     |               |
+     | Format           | List of values   | Date, Numeric, Amount, Text                  |    YES    |               |
+     | List of Values   | List of char(100)|                                              |    NO     |               |
+     | Sensitve Data    | List of values   | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+     | Update Frequence | List of Values   | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+     | Related Area     | Char(100)        |                                              |    NO     |               |
+     | Default Value    | Char(100)        |                                              |    NO     |               |
+     | Additional Data  | char(500)        |                                              |    NO     |               |
+    When <user> tries to create a business concept in the Data Domain "My Domain" with following data:
+      | Type          | Name                  | Description                                                       | Format |
+      | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
     Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status
+    And the user list <users> are <able> to see the business concept "My Date Business Term" with <status> status and following data:
+     | Field            | Value                                                              |
+     | Name             | My Date Business Term                                              |
+     | Type             | Business Term                                                      |
+     | Description      |  This is the first description of my business term which is a date |
+     | Formula          |                                                                    |
+     | Format           | Date                                                               |
+     | List of Values   |                                                                    |
+     | Sensitve Data    | N/A                                                                |
+     | Update Frequence | Not defined                                                        |
+     | Related Area     |                                                                    |
+     | Default Value    |                                                                    |
+     | Additional Data  |                                                                    |
+    And the business concept "My Date Business Term" is a child of Data Domain "My Domain"
 
     Examples:
       | user      | result    | users                       | able       | status |
