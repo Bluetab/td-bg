@@ -8,22 +8,41 @@ defmodule TrueBGWeb.UserController do
   alias TrueBGWeb.ErrorView
   action_fallback TrueBGWeb.FallbackController
 
+  @user_exist :user_exist
+
   def index(conn, _params) do
     users = Accounts.list_users()
     render(conn, "index.json", users: users)
   end
 
+  defp exist_user(user_params) do
+    case Accounts.exist_user?(user_params["user_name"]) do
+      false -> {:valid}
+      _ -> {:invalid, @user_exist}
+    end
+  end
+
+  defp create_user(user_params) do
+    Accounts.create_user(user_params)
+  end
+
   def create(conn, %{"user" => user_params}) do
     current_user = Plug.current_resource(conn)
     if current_user.is_admin do
-      with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
+      with  {:valid} <- exist_user(user_params),
+            {:ok, %User{} = user} <- create_user(user_params)
+      do
         conn
         |> put_status(:created)
         |> put_resp_header("location", user_path(conn, :show, user))
         |> render("show.json", user: user)
 
       else
-        _error ->
+        {:invalid, _error_code} ->
+          conn
+            |> put_status(:unprocessable_entity)
+            |> render(ErrorView, :"422.json")
+        _ ->
           conn
             |> put_status(:unprocessable_entity)
             |> render(ErrorView, :"422.json")

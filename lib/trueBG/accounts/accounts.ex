@@ -41,6 +41,10 @@ defmodule TrueBG.Accounts do
     Repo.get_by(User, user_name: String.downcase(user_name))
   end
 
+  def exist_user?(user_name) do
+    Repo.one(from u in User, select: count(u.id), where: u.user_name == ^user_name) > 0
+  end
+
   @doc """
   Creates a user.
 
