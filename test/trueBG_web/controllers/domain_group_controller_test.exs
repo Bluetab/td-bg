@@ -20,8 +20,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
 
   describe "index" do
     @tag :admin_authenticated
-    test "lists all domain_groups", %{conn: conn, jwt: jwt} do
-      conn = put_auth_headers(conn, jwt)
+    test "lists all domain_groups", %{conn: conn, jwt: _jwt} do
       conn = get conn, domain_group_path(conn, :index)
       assert json_response(conn, 200)["data"] == []
     end
@@ -30,7 +29,6 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
   describe "create domain_group" do
     @tag :admin_authenticated
     test "renders domain_group when data is valid", %{conn: conn, jwt: jwt} do
-      conn = put_auth_headers(conn, jwt)
       conn = post conn, domain_group_path(conn, :create), domain_group: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
@@ -44,8 +42,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     end
 
     @tag :admin_authenticated
-    test "renders errors when data is invalid", %{conn: conn, jwt: jwt} do
-      conn = put_auth_headers(conn, jwt)
+    test "renders errors when data is invalid", %{conn: conn, jwt: _jwt} do
       conn = post conn, domain_group_path(conn, :create), domain_group: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -56,7 +53,6 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
 
     @tag :admin_authenticated
     test "renders domain_group when data is valid", %{conn: conn, jwt: jwt, domain_group: %DomainGroup{id: id} = domain_group} do
-      conn = put_auth_headers(conn, jwt)
       conn = put conn, domain_group_path(conn, :update, domain_group), domain_group: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
@@ -70,9 +66,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     end
 
     @tag :admin_authenticated
-    test "renders errors when data is invalid", %{conn: conn, jwt: jwt,  domain_group: domain_group} do
-      conn = conn
-             |> put_auth_headers(jwt)
+    test "renders errors when data is invalid", %{conn: conn, jwt: _jwt,  domain_group: domain_group} do
       conn = put conn, domain_group_path(conn, :update, domain_group), domain_group: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -83,7 +77,6 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
 
     @tag :admin_authenticated
     test "deletes chosen domain_group", %{conn: conn, jwt: jwt,  domain_group: domain_group} do
-      conn = put_auth_headers(conn, jwt)
       conn = delete conn, domain_group_path(conn, :delete, domain_group)
       assert response(conn, 204)
 
