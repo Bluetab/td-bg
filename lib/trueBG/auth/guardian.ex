@@ -3,6 +3,7 @@ defmodule TrueBG.Auth.Guardian do
   use Guardian, otp_app: :trueBG
 
   alias TrueBG.Accounts
+  alias Guardian.DB , as: GuardianDB
 
   def subject_for_token(resource, _claims) do
     # You can use any value for the subject of your token but
@@ -21,5 +22,23 @@ defmodule TrueBG.Auth.Guardian do
     id = claims["sub"]
     resource = Accounts.get_user!(id)
     {:ok,  resource}
+  end
+
+  def after_encode_and_sign(resource, claims, token, _options) do
+    with {:ok, _} <- GuardianDB.after_encode_and_sign(resource, claims["typ"], claims, token) do
+      {:ok, token}
+    end
+  end
+
+  def on_verify(claims, token, _options) do
+    with {:ok, _} <- GuardianDB.on_verify(claims, token) do
+      {:ok, claims}
+    end
+  end
+
+  def on_revoke(claims, token, _options) do
+    with {:ok, _} <- GuardianDB.on_revoke(claims, token) do
+      {:ok, claims}
+    end
   end
 end

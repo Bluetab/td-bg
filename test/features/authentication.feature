@@ -15,7 +15,7 @@ Feature: User Authentication
     Then the system returns a result with code "Forbidden"
 
   Scenario: Creating a New user in the application
-    Given user "app-admin" is logged in the application
+    Given user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a user "newuser" with password "new-password"
     Then the system returns a result with code "Created"
     And user "newuser" can be authenticated with password "new-password"
@@ -71,11 +71,11 @@ Feature: User Authentication
   #   And user "johndoe" can be authenticated with password "secret"
   #
   # Scenario: Loggout
-  #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
-  #   And user "johndoe" is logged in the application
-  #   When "johndoe" signs out of the application
-  #   Then the system returns a result with code "Ok"
-  #   And user "johndoe" gets a "Forbidden" code when he pings the application
+    Given an existing user "johndoe" with password "secret" without "super-admin" permission
+    And user "johndoe" is logged in the application with password "secret"
+    When "johndoe" signs out of the application
+    Then the system returns a result with code "Ok"
+    And user "johndoe" gets a "Forbidden" code when he pings the application
   #
   # Scenario: Loggout for a user that is not logged
   #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
