@@ -2,6 +2,7 @@ defmodule TrueBG.AuthenticationTest do
   use Cabbage.Feature, async: false, file: "authentication.feature"
   use TrueBGWeb.ConnCase
   import TrueBGWeb.Router.Helpers
+  import TrueBGWeb.ResponseCode
   alias TrueBG.Accounts
   alias Poison, as: JSON
   @endpoint TrueBGWeb.Endpoint
@@ -119,11 +120,6 @@ defmodule TrueBG.AuthenticationTest do
   end
 
   defp get_status(status_code) do
-    case status_code do
-      200 -> "Ok"
-      201 -> "Created"
-      401 -> "Forbidden"
-      _ -> "Unknown"
-    end
+    to_response_code(status_code)
   end
 end

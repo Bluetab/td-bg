@@ -2,6 +2,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   use Cabbage.Feature, async: false, file: "super_admin_taxonomy.feature"
   use TrueBGWeb.ConnCase
   import TrueBGWeb.Router.Helpers
+  import TrueBGWeb.ResponseCode
   alias Poison, as: JSON
   alias TrueBG.Taxonomies
   @endpoint TrueBGWeb.Endpoint
@@ -131,13 +132,6 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   end
 
   defp get_status(status_code) do
-    case status_code do
-      200 -> "Ok"
-      201 -> "Created"
-      401 -> "Forbidden"
-      404 -> "NotFound"
-      422 -> "Unprocessable Entity"
-      _ -> "Unknown"
-    end
+    to_response_code(status_code)
   end
 end
