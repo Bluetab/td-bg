@@ -137,6 +137,10 @@ defmodule TrueBG.Taxonomies do
     Repo.all(DataDomain)
   end
 
+  def get_data_domain_by_name(name) do
+    Repo.get_by(DataDomain, name: String.downcase(name))
+  end
+
   @doc """
   Gets a single data_domain.
 
