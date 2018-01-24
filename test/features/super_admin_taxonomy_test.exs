@@ -12,7 +12,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   defgiven ~r/^user "app-admin" is logged in the application$/, %{}, state do
     {_, status_code, json_resp} = session_create("app-admin", "mypass")
-    assert "Created" == get_status(status_code)
+    assert rc_created() == to_response_code(status_code)
     {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
   end
 
@@ -22,14 +22,14 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   end
 
   defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
-    assert status_code == get_status(state[:status_code])
+    assert status_code == to_response_code(state[:status_code])
   end
 
   defand ~r/^the user "app-admin" is able to see the Domain Group "(?<name>[^"]+)" with following data:$/, %{name: name, table: [%{Description: description}]}, state do
     id = state[:resp]["data"]["id"]
     temporal = domain_group_show(state[:token], id)
     {_, status_code, json_resp} = temporal
-    assert "Ok" == get_status(status_code)
+    assert rc_ok() == to_response_code(status_code)
     assert name == json_resp["data"]["name"]
     assert description == json_resp["data"]["description"]
   end
@@ -80,7 +80,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     data_domain_info = state[:resp]["data"]
     assert name == data_domain_info["name"]
     {_, status_code, json_resp} = data_domain_show(state[:token], data_domain_info["id"])
-    assert "Ok" == get_status(status_code)
+    assert rc_ok() == to_response_code(status_code)
     assert json_resp["data"]["name"]
     assert description == json_resp["data"]["description"]
     {:ok, %{state | status_code: nil}}
@@ -129,9 +129,5 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(data_domain_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp get_status(status_code) do
-    to_response_code(status_code)
   end
 end

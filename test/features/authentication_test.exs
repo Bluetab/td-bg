@@ -16,20 +16,20 @@ defmodule TrueBG.AuthenticationTest do
   end
 
   defthen ~r/^the system returns a token with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
-    assert status_code == get_status(state[:status_code])
+    assert status_code == to_response_code(state[:status_code])
     json_resp = state[:resp]
     assert json_resp["token"] != nil
   end
 
   defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
-    assert status_code == get_status(state[:status_code])
+    assert status_code == to_response_code(state[:status_code])
   end
 
   # Scenario: logging error
 
   defgiven ~r/^user "(?<user_name>[^"]+)" is logged in the application$/, %{user_name: user_name}, state do
     {_, status_code, json_resp} = session_create(user_name, "mypass")
-    assert "Created" == get_status(status_code)
+    assert rc_created() == to_response_code(http_status_code)
     {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
   end
 
@@ -40,7 +40,7 @@ defmodule TrueBG.AuthenticationTest do
 
   defand ~r/^user "(?<new_user_name>[^"]+)" can be authenticated with password "(?<new_password>[^"]+)"$/, %{new_user_name: new_user_name, new_password: new_password}, _state do
     {_, status_code, json_resp} = session_create(new_user_name, new_password)
-      assert "Created" == get_status(status_code)
+      assert rc_created() == to_response_code(status_code)
       assert json_resp["token"] != nil
   end
 
@@ -58,13 +58,13 @@ defmodule TrueBG.AuthenticationTest do
 
   defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
     {_, status_code, json_resp} = session_create(user_name, password)
-    assert "Created" == get_status(status_code)
+    assert rc_created() == to_response_code(status_code)
     {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
   end
 
   defand ~r/^user "(?<user_name>[^"]+)" can not be authenticated with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, _state do
     {_, status_code, json_resp} = session_create(user_name, password)
-    assert "Forbidden" == get_status(status_code)
+    assert rc_forbidden() == to_response_code(status_code)
     assert json_resp["token"] == nil
   end
 
@@ -87,7 +87,7 @@ defmodule TrueBG.AuthenticationTest do
 
   defand ~r/^user "johndoe" gets a "Forbidden" code when he pings the application$/, %{}, state do
     {_, status_code} = ping(state[:token])
-    assert "Forbidden" == get_status(status_code)
+    assert rc_forbidden() == to_response_code(status_code)
   end
 
   defp ping(token) do
@@ -117,9 +117,5 @@ defmodule TrueBG.AuthenticationTest do
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(user_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp get_status(status_code) do
-    to_response_code(status_code)
   end
 end
