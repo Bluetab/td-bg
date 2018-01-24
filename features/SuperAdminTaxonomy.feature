@@ -25,6 +25,7 @@ Feature: Super-admin Taxonomy administration
     And the user "app-admin" is able to see the Domain Group "Markets" with following data:
       | Description |
       | First version of Markets |
+    And Domain Group "Markets" is a child of Domain Group "Risks"
 
   Scenario: Creating a Domain Group as child of a non existing Domain Group
     Given user "app-admin" is logged in the application
@@ -46,16 +47,17 @@ Feature: Super-admin Taxonomy administration
     When user "app-admin" tries to create a Data Domain with the name "Operational Risk" as child of Domain Group "Risks" with following data:
       | Description |
       | First version of Operational Risk |
-    Then the system returns a result with code "ok"
+    Then the system returns a result with code "Ok"
     And the user "app-admin" is able to see the Data Domain "Operational Risk" with following data:
       | Description |
       | First version of Operational Risk |
+    And Data Domain "Operational Risk" is a child of Domain Group "Risks"
 
   Scenario: Creating a Data Domain depending on a non existing Domain Group
     Given user "app-admin" is logged in the application
     When user "app-admin" tries to create a Data Domain with the name "Operational Risk" as child of Domain Group "Imaginary Group" with following data:
       | Description |
-      | First version of Operational Risk |
+      | First version of Operational Risk |s
     Then the system returns a result with code "Forbidden"
     And the user "app-admin" is not able to see the Domain Group "Imaginary Group"
 
@@ -76,7 +78,7 @@ Feature: Super-admin Taxonomy administration
     When user "app-admin" tries to modify a Domain Group with the name "Risks" introducing following data:
       | Description |
       | Second version of Risks |
-    Then the system returns a result with code "ok"
+    Then the system returns a result with code "Ok"
     And the user "app-admin" is able to see the Domain Group "Risks" with following data:
       | Description |
       | Second version of Riesgos |
@@ -98,7 +100,7 @@ Feature: Super-admin Taxonomy administration
     When user "app-admin" tries to modify a Data Domain with the name "Credit Risks" introducing following data:
       | Description |
       | Second version of Credit Risks |
-    Then the system returns a result with code "ok"
+    Then the system returns a result with code "Ok"
     And the user "app-admin" is able to see the Data Domain "Credit Risks" with following data:
       | Description |
       | Second version of Credit Risks |
@@ -115,7 +117,7 @@ Feature: Super-admin Taxonomy administration
     Given user "app-admin" is logged in the application
     And and existing Domain Group called "No-Data"
     When "app-admin" tries to delete a Domain Group with the name "No-Data"
-    Then the system returns a result with code "ok"
+    Then the system returns a result with code "Ok"
     And the user "app-admin" is not able to see the Domain Group "Risks"
 
   Scenario: Deleting a Data Domain
@@ -123,7 +125,7 @@ Feature: Super-admin Taxonomy administration
     And an existing Domain Group called "Risks"
     And an existing Data Domain called "Credit Risks" as child of Domain Group "Risks"
     When "app-admin" tries to delete a Data Domain with the name "Credit Risks"
-    Then the system returns a result with code "ok"
+    Then the system returns a result with code "Ok"
     And the user "app-admin" is not able to see the Data Domain "Credit Risks"
 
   Scenario: Deleting a non existing Data Domain
