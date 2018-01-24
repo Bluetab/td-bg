@@ -1,5 +1,6 @@
 defmodule TrueBGWeb.UserControllerTest do
   use TrueBGWeb.ConnCase
+  import TrueBGWeb.Authentication, only: :functions
 
   alias TrueBG.Accounts
   alias TrueBG.Accounts.User
@@ -13,12 +14,6 @@ defmodule TrueBGWeb.UserControllerTest do
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(@create_attrs)
     user
-  end
-
-  def put_auth_headers(conn, jwt) do
-    conn
-      |> put_req_header("content-type", "application/json")
-      |> put_req_header("authorization", "Bearer #{jwt}")
   end
 
   describe "index with authenticated user tag" do
@@ -51,9 +46,7 @@ defmodule TrueBGWeb.UserControllerTest do
       conn = post conn, user_path(conn, :create), user: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = conn
-             |> recycle()
-             |> put_auth_headers(jwt)
+      conn = recycle_and_put_headers(conn, jwt)
 
       conn = get conn, user_path(conn, :show, id)
       user_data = json_response(conn, 200)["data"]
@@ -84,9 +77,7 @@ defmodule TrueBGWeb.UserControllerTest do
       conn = put conn, user_path(conn, :update, user), user: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = conn
-             |> recycle()
-             |> put_auth_headers(jwt)
+      conn = recycle_and_put_headers(conn, jwt)
 
       conn = get conn, user_path(conn, :show, id)
       user_data = json_response(conn, 200)["data"]
@@ -129,9 +120,7 @@ defmodule TrueBGWeb.UserControllerTest do
      conn = delete conn, user_path(conn, :delete, user)
      assert response(conn, 204)
 
-     conn = conn
-        |> recycle()
-        |> put_auth_headers(jwt)
+     conn = recycle_and_put_headers(conn, jwt)
 
      assert_error_sent 404, fn ->
        get conn, user_path(conn, :show, user)

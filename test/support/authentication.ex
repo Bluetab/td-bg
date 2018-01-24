@@ -12,7 +12,7 @@ defmodule TrueBGWeb.Authentication do
     |> put_req_header("authorization", "Bearer #{jwt}")
   end
 
-  def recycle_and_set_headers(conn, jwt) do
+  def recycle_and_put_headers(conn, jwt) do
     conn
     |> recycle()
     |> put_auth_headers(jwt)

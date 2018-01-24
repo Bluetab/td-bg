@@ -34,7 +34,7 @@ defmodule TrueBGWeb.DataDomainControllerTest do
       conn = post conn, data_domain_path(conn, :create), data_domain: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = recycle_and_set_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn, jwt)
       conn = get conn, data_domain_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
@@ -60,7 +60,7 @@ defmodule TrueBGWeb.DataDomainControllerTest do
       conn = put conn, data_domain_path(conn, :update, data_domain), data_domain: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = recycle_and_set_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn, jwt)
       conn = get conn, data_domain_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
@@ -85,7 +85,7 @@ defmodule TrueBGWeb.DataDomainControllerTest do
       conn = put_auth_headers(conn, jwt)
       conn = delete conn, data_domain_path(conn, :delete, data_domain)
       assert response(conn, 204)
-      conn = recycle_and_set_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn, jwt)
       assert_error_sent 404, fn ->
         get conn, data_domain_path(conn, :show, data_domain)
       end
