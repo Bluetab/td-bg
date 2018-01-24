@@ -6,7 +6,6 @@ defmodule TrueBG.TaxonomiesTest do
   describe "domain_groups" do
     alias TrueBG.Taxonomies.DomainGroup
 
-
     @valid_attrs %{description: "some description", name: "some name"}
     @update_attrs %{description: "some updated description", name: "some updated name"}
     @invalid_attrs %{description: nil, name: nil}

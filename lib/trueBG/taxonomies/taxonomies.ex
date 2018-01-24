@@ -107,4 +107,21 @@ defmodule TrueBG.Taxonomies do
   def change_domain_group(%DomainGroup{} = domain_group) do
     DomainGroup.changeset(domain_group, %{})
   end
+
+  @doc """
+
+  """
+  def get_parent_id(nil) do
+    {:error, nil}
+  end
+  def get_parent_id(%{"parent_id": nil}) do
+    {:ok, nil}
+  end
+  def get_parent_id(%{"parent_id": parent_id}) do
+    get_parent_id(Taxonomies.get_domain_group(parent_id))
+  end
+  def get_parent_id(parent_id) do
+    {:ok, parent_id}
+  end
+
 end
