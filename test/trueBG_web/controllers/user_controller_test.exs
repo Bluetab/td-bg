@@ -36,11 +36,11 @@ defmodule TrueBGWeb.UserControllerTest do
 
   describe "create user" do
     @tag :admin_authenticated
-    test "renders user when data is valid", %{conn: conn, jwt: jwt} do
+    test "renders user when data is valid", %{conn: conn} do
       conn = post conn, user_path(conn, :create), user: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = recycle_and_put_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn)
 
       conn = get conn, user_path(conn, :show, id)
       user_data = json_response(conn, 200)["data"]
@@ -58,11 +58,11 @@ defmodule TrueBGWeb.UserControllerTest do
     setup [:create_user]
 
     @tag :admin_authenticated
-    test "renders user when data is valid", %{conn: conn, jwt: jwt, user: %User{id: id} = user} do
+    test "renders user when data is valid", %{conn: conn, user: %User{id: id} = user} do
       conn = put conn, user_path(conn, :update, user), user: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = recycle_and_put_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn)
 
       conn = get conn, user_path(conn, :show, id)
       user_data = json_response(conn, 200)["data"]
@@ -89,11 +89,11 @@ defmodule TrueBGWeb.UserControllerTest do
    setup [:create_user]
 
    @tag :admin_authenticated
-   test "deletes chosen user", %{conn: conn, jwt: jwt,  user: user} do
+   test "deletes chosen user", %{conn: conn, user: user} do
      conn = delete conn, user_path(conn, :delete, user)
      assert response(conn, 204)
 
-     conn = recycle_and_put_headers(conn, jwt)
+     conn = recycle_and_put_headers(conn)
 
      assert_error_sent 404, fn ->
        get conn, user_path(conn, :show, user)

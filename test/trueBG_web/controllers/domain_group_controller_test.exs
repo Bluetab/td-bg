@@ -20,7 +20,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
 
   describe "index" do
     @tag :admin_authenticated
-    test "lists all domain_groups", %{conn: conn, jwt: _jwt} do
+    test "lists all domain_groups", %{conn: conn} do
       conn = get conn, domain_group_path(conn, :index)
       assert json_response(conn, 200)["data"] == []
     end
@@ -28,11 +28,11 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
 
   describe "create domain_group" do
     @tag :admin_authenticated
-    test "renders domain_group when data is valid", %{conn: conn, jwt: jwt} do
+    test "renders domain_group when data is valid", %{conn: conn} do
       conn = post conn, domain_group_path(conn, :create), domain_group: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = recycle_and_put_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn)
       conn = get conn, domain_group_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
@@ -42,7 +42,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     end
 
     @tag :admin_authenticated
-    test "renders errors when data is invalid", %{conn: conn, jwt: _jwt} do
+    test "renders errors when data is invalid", %{conn: conn} do
       conn = post conn, domain_group_path(conn, :create), domain_group: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -52,11 +52,11 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     setup [:create_domain_group]
 
     @tag :admin_authenticated
-    test "renders domain_group when data is valid", %{conn: conn, jwt: jwt, domain_group: %DomainGroup{id: id} = domain_group} do
+    test "renders domain_group when data is valid", %{conn: conn, domain_group: %DomainGroup{id: id} = domain_group} do
       conn = put conn, domain_group_path(conn, :update, domain_group), domain_group: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = recycle_and_put_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn)
       conn = get conn, domain_group_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
@@ -66,7 +66,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     end
 
     @tag :admin_authenticated
-    test "renders errors when data is invalid", %{conn: conn, jwt: _jwt,  domain_group: domain_group} do
+    test "renders errors when data is invalid", %{conn: conn, domain_group: domain_group} do
       conn = put conn, domain_group_path(conn, :update, domain_group), domain_group: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -76,11 +76,11 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     setup [:create_domain_group]
 
     @tag :admin_authenticated
-    test "deletes chosen domain_group", %{conn: conn, jwt: jwt,  domain_group: domain_group} do
+    test "deletes chosen domain_group", %{conn: conn, domain_group: domain_group} do
       conn = delete conn, domain_group_path(conn, :delete, domain_group)
       assert response(conn, 204)
 
-      conn = recycle_and_put_headers(conn, jwt)
+      conn = recycle_and_put_headers(conn)
 
       assert_error_sent 404, fn ->
         get conn, domain_group_path(conn, :show, domain_group)
