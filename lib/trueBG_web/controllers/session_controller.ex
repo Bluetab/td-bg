@@ -6,17 +6,11 @@ defmodule TrueBGWeb.SessionController do
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
   alias TrueBGWeb.ErrorView
 
-  # def create(conn, %{"user" => params}) do
-  #   changeset = User.registration_changeset(%User{}, params)
-  #   handle_sign_in(conn, changeset)
-  # end
-  #
-
   defp handle_sign_in(conn, user) do
     conn
       |> GuardianPlug.sign_in(user)
   end
-
+  
   def create(conn, %{"user" => %{"user_name" => user_name,
                      "password" => password}}) do
     user = Accounts.get_user_by_name(user_name)
@@ -33,6 +27,17 @@ defmodule TrueBGWeb.SessionController do
           |> put_status(:unauthorized)
           |> render(ErrorView, :"401.json")
     end
+  end
+
+  def ping(conn, _params) do
+    conn
+      |> send_resp(:ok, "")
+  end
+
+  def destroy(conn, _params) do
+    conn
+      |> GuardianPlug.sign_out()
+      |> send_resp(:ok, "")
   end
 
   defp check_password(user, password) do

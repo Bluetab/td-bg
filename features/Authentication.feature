@@ -72,7 +72,7 @@ Feature: User Authentication
 
   Scenario: Loggout
     Given an existing user "johndoe" with password "secret" without "super-admin" permission
-    And user "johndoe" is logged in the application
+    And user "johndoe" is logged in the application with password "secret"
     When "johndoe" signs out of the application
     Then the system returns a result with code "Ok"
     And user "johndoe" gets a "Forbidden" code when he pings the application

@@ -58,7 +58,7 @@ defmodule TrueBG.AuthenticationTest do
   defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
     {_, status_code, json_resp} = session_create(user_name, password)
     assert "Created" == get_status(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
+    {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
   end
 
   defand ~r/^user "(?<user_name>[^"]+)" can not be authenticated with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, _state do
@@ -67,11 +67,49 @@ defmodule TrueBG.AuthenticationTest do
     assert json_resp["token"] == nil
   end
 
+
+  # Scenario: Loggout
+
+  #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
+
+  defgiven ~r/^Given an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" without "super-admin" permission$/, %{user_name: user_name, password: password}, state do
+    user = Accounts.get_user_by_name(user_name)
+    unless user do
+      Accounts.create_user(%{user_name: user_name, password: password})
+    end
+    {:ok, state}
+  end
+
+  defwhen ~r/^"johndoe" signs out of the application$/, %{}, state do
+    {_, status_code} = session_destroy(state[:token])
+    {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defand ~r/^user "johndoe" gets a "Forbidden" code when he pings the application$/, %{}, state do
+    {_, status_code} = ping(state[:token])
+    assert "Forbidden" == get_status(status_code)
+  end
+
+  defp ping(_token) do
+    #headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = [@headers]
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+      HTTPoison.get!(session_url(@endpoint, :ping), headers)
+    {:ok, status_code}
+  end
+
   defp session_create(user_name, user_password) do
     body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
     {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp session_destroy(token) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.delete!(session_url(@endpoint, :destroy), headers, [])
+    {:ok, status_code}
   end
 
   defp user_create(token, user_name, password) do
@@ -84,6 +122,7 @@ defmodule TrueBG.AuthenticationTest do
 
   defp get_status(status_code) do
     case status_code do
+      200 -> "Ok"
       201 -> "Created"
       401 -> "Forbidden"
       _ -> "Unknown"

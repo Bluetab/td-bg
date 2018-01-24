@@ -10,7 +10,6 @@ defmodule TrueBGWeb.SessionControllerTest do
   @invalid_attrs %{password: "invalido",
                  user_name: "usuariotemporal"}
 
-
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(@create_attrs)
     user
