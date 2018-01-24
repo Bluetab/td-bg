@@ -94,6 +94,20 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     assert data_domain_info["domain_group_id"] == domain_group_info.id
   end
 
+  defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/, %{name: name, domain_group_name: domain_group_name}, state do
+    domain_group_info = state[:domain_group]
+    assert domain_group_info.name == domain_group_name
+    existing_dd = Taxonomies.get_data_domain_by_name(name)
+    {_, data_domain} =
+      if existing_dd == nil do
+        Taxonomies.create_data_domain(%{name: name, domain_group_id: domain_group_info.id})
+      else
+        {:ok, existing_dd}
+      end
+    assert data_domain.domain_group_id == domain_group_info.id
+    {:ok, Map.merge(state, %{data_domain: data_domain})}
+  end
+
   defp session_create(user_name, user_password) do
     body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
