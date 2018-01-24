@@ -10,7 +10,7 @@ defmodule TrueBGWeb.SessionController do
     conn
       |> GuardianPlug.sign_in(user)
   end
-  
+
   def create(conn, %{"user" => %{"user_name" => user_name,
                      "password" => password}}) do
     user = Accounts.get_user_by_name(user_name)
@@ -35,9 +35,8 @@ defmodule TrueBGWeb.SessionController do
   end
 
   def destroy(conn, _params) do
-    conn
-      |> GuardianPlug.sign_out()
-      |> send_resp(:ok, "")
+    Guardian.revoke(TrueBG.Auth.Guardian, GuardianPlug.current_token(conn))
+    send_resp(conn, :ok, "")
   end
 
   defp check_password(user, password) do

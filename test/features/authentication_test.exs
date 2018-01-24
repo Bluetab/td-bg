@@ -67,7 +67,6 @@ defmodule TrueBG.AuthenticationTest do
     assert json_resp["token"] == nil
   end
 
-
   # Scenario: Loggout
 
   #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
@@ -90,9 +89,8 @@ defmodule TrueBG.AuthenticationTest do
     assert "Forbidden" == get_status(status_code)
   end
 
-  defp ping(_token) do
-    #headers = [@headers, {"authorization", "Bearer #{token}"}]
-    headers = [@headers]
+  defp ping(token) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: _resp} =
       HTTPoison.get!(session_url(@endpoint, :ping), headers)
     {:ok, status_code}

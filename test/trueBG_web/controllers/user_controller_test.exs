@@ -99,7 +99,6 @@ defmodule TrueBGWeb.UserControllerTest do
       #   "password" => "some updated password",
       #   "user_name" => "some updated user_name"}
 
-
     @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn, jwt: jwt, user: user} do
       conn = conn
