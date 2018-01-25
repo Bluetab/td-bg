@@ -29,7 +29,7 @@ Feature: User Authentication
 
   Scenario: Assigning super-admin permission to an existing user
     Given an existing user "nobody" with password "mypass" without "super-admin" permission
-    And user "app-admin" is logged in the application
+    And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to assign "super-admin" permission to "nobody"
     Then the system returns a result with code "Ok"
     And user "nobody" can be authenticated with password "mypass" with "super-admin" permission
@@ -37,14 +37,14 @@ Feature: User Authentication
   Scenario: Error when assigning super-admin permission to an existing user
     Given an existing user "nobody" with password "mypass" with "super-admin" permission
     And an existing user "John Doe" with password "mypass" without "super-admin" permission
-    And user "nobody" is logged in the application
+    And user "nobody" is logged in the application with password "mypass"
     When "nobody" tries to assign "super-admin" permission to "John Doe"
     Then the system returns a result with code "Forbidden"
     And user "John Doe" can be authenticated with password "mypass" without "super-admin" permission
 
   Scenario: Error when creating a duplicated user
     Given an existing user "uniqueuser" with password "mypass" with "super-admin" permission
-    And user "app-admin" is logged in the application
+    And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a user "uniqueuser" with password "new-password"
     Then the system returns a result with code "Unprocessable Entity"
     And user "uniqueuser" can not be authenticated with password "new-password"
@@ -52,7 +52,7 @@ Feature: User Authentication
 
   Scenario: Password modification
     Given an existing user "johndoe" with password "secret" without "super-admin" permission
-    And user "johndoe" is logged in the application
+    And user "johndoe" is logged in the application with password "secret"
     When "johndoe" tries to modify his password with following data:
       | old_password | new_password |
       | secret       | newsecret    |
@@ -62,12 +62,12 @@ Feature: User Authentication
 
   Scenario: Password modification error
     Given an existing user "johndoe" with password "secret" without "super-admin" permission
-    And user "johndoe" is logged in the application
+    And user "johndoe" is logged in the application with password "secret"
     When "johndoe" tries to modify his password with following data:
       | old_password | new_password |
       | dontknow     | newsecret    |
-    Then the system returns a result with code "Ok"
-    And user "johndoe" can not be authenticated with password "dontknow"
+    Then the system returns a result with code "Unprocessable Entity"
+    And user "johndoe" can not be authenticated with password "newsecret"
     And user "johndoe" can be authenticated with password "secret"
 
   Scenario: Loggout

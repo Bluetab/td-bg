@@ -27,8 +27,8 @@ defmodule TrueBG.AuthenticationTest do
 
   # Scenario: logging error
 
-  defgiven ~r/^user "(?<user_name>[^"]+)" is logged in the application$/, %{user_name: user_name}, state do
-    {_, status_code, json_resp} = session_create(user_name, "mypass")
+  defgiven ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
+    {_, status_code, json_resp} = session_create(user_name, password)
     assert rc_created() == to_response_code(status_code)
     {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp})}
   end
@@ -45,6 +45,12 @@ defmodule TrueBG.AuthenticationTest do
   end
 
   # Scenario: logging error for non existing user
+
+  defwhen ~r/^"johndoe" tries to modify his password with following data:$/,
+          %{table: [%{old_password: old_password, new_password: new_password}]}, state do
+      {_, status_code} = session_change_password(state[:token], old_password, new_password)
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
 
   # Scenario: Error when creating a new user in the application by a non admin user
 
@@ -75,15 +81,14 @@ defmodule TrueBG.AuthenticationTest do
     {:ok, state}
   end
 
+  # Scenario: Password modification
+
+  # Scenario: Password modification error
+
   # Scenario: Loggout
 
-  #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
-
   defgiven ~r/^Given an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" without "super-admin" permission$/, %{user_name: user_name, password: password}, state do
-    user = Accounts.get_user_by_name(user_name)
-    unless user do
-      Accounts.create_user(%{user_name: user_name, password: password})
-    end
+    user = create_user(user_name, password, false)
     {:ok, state}
   end
 
@@ -121,6 +126,14 @@ defmodule TrueBG.AuthenticationTest do
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.delete!(session_url(@endpoint, :destroy), headers, [])
     {:ok, status_code}
+  end
+
+  defp session_change_password(token, old_password, new_password) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{old_passord: old_password, new_password: new_password} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+      HTTPoison.put!(session_url(@endpoint, :change_password), body, headers, [])
+      {:ok, status_code}
   end
 
   defp user_create(token, user_name, password) do
