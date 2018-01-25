@@ -16,9 +16,14 @@ defmodule TrueBGWeb.UserController do
   end
 
   defp exist_user(user_params) do
-    case Accounts.exist_user?(user_params["user_name"]) do
-      false -> {:valid}
-      _ -> {:invalid, @user_exist}
+    user_name = user_params["user_name"]
+    if user_name == nil do
+      {:valid}
+    else
+      case Accounts.exist_user?(user_name) do
+        false -> {:valid}
+        _ -> {:invalid, @user_exist}
+      end
     end
   end
 
