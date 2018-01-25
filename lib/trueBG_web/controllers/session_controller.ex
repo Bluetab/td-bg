@@ -46,14 +46,26 @@ defmodule TrueBGWeb.SessionController do
     send_resp(conn, :ok, "")
   end
 
-  def change_password(conn, %{"new_password" => new_password,
-                              "old_passord" => _old_passord}) do
-    user = get_current_user(conn)
+  defp do_change_password(conn, user, new_password) do
     with {:ok, %User{} = _user} <- Accounts.update_user(user, %{password: new_password}) do
       send_resp(conn, :ok, "")
     else
       _error ->
-        send_resp(conn, :unprocessable_entity, "")
+        conn
+          |> send_resp(:unprocessable_entity, "")
+    end
+  end
+
+  def change_password(conn, %{"new_password" => new_password,
+                              "old_passord" => old_password}) do
+    user = get_current_user(conn)
+    case check_password(user, old_password) do
+      true ->
+        conn
+          |> do_change_password(user, new_password)
+      _ ->
+        conn
+          |> send_resp(:unprocessable_entity, "")
     end
   end
 

@@ -60,16 +60,15 @@ Feature: User Authentication
     And user "johndoe" can not be authenticated with password "secret"
     And user "johndoe" can be authenticated with password "newsecret"
 
-  # Scenario: Password modification error
-  #   Given an existing user "johndoe" with password "secret" without "super-admin" permission
-  #   And user "johndoe" is logged in the application with password "secret"
-  #   When "johndoe" tries to modify his password with following data:
-  #     | old_password | new_password |
-  #     | dontknow     | newsecret    |
-  #   Then the system returns a result with code "Ok"
-  #   And user "johndoe" can not be authenticated with password "dontknow"
-  #   And user "johndoe" can be authenticated with password "secret"
-  #
+  Scenario: Password modification error
+    Given an existing user "johndoe" with password "secret" without "super-admin" permission
+    And user "johndoe" is logged in the application with password "secret"
+    When "johndoe" tries to modify his password with following data:
+      | old_password | new_password |
+      | dontknow     | newsecret    |
+    Then the system returns a result with code "Unprocessable Entity"
+    And user "johndoe" can not be authenticated with password "newsecret"
+    And user "johndoe" can be authenticated with password "secret"
 
   Scenario: Loggout
     Given an existing user "johndoe" with password "secret" without "super-admin" permission

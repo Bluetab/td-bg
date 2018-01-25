@@ -49,7 +49,6 @@ defmodule TrueBG.AuthenticationTest do
   defwhen ~r/^"johndoe" tries to modify his password with following data:$/,
           %{table: [%{old_password: old_password, new_password: new_password}]}, state do
       {_, status_code} = session_change_password(state[:token], old_password, new_password)
-      assert rc_ok() == to_response_code(status_code)
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -83,6 +82,8 @@ defmodule TrueBG.AuthenticationTest do
   end
 
   # Scenario: Password modification
+
+  # Scenario: Password modification error
 
   # Scenario: Loggout
 
