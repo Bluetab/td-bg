@@ -23,6 +23,7 @@ defmodule TrueBGWeb do
       import Plug.Conn
       import TrueBGWeb.Router.Helpers
       import TrueBGWeb.Gettext
+      import Canary.Plugs
     end
   end
 

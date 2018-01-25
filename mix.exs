@@ -48,6 +48,8 @@ defmodule TrueBG.Mixfile do
       {:comeonin, "~> 4.0"},
       {:bcrypt_elixir, "~> 1.0"},
       {:guardian_db, "~> 1.0"},
+      {:canary, "~> 1.1.1"},
+      {:canada, "~> 1.0.1"}
     ]
   end
 
