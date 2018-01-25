@@ -3,9 +3,14 @@ defmodule TrueBGWeb.SessionController do
 
   alias Comeonin.Bcrypt
   alias TrueBG.Accounts
+  alias TrueBG.Accounts.User
   alias TrueBG.Auth.Guardian
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
   alias TrueBGWeb.ErrorView
+
+  defp get_current_user(conn) do
+    GuardianPlug.current_resource(conn)
+  end
 
   defp handle_sign_in(conn, user) do
     conn
@@ -39,6 +44,17 @@ defmodule TrueBGWeb.SessionController do
     token = GuardianPlug.current_token(conn)
     Guardian.revoke(token)
     send_resp(conn, :ok, "")
+  end
+
+  def change_password(conn, %{"new_password" => new_password,
+                              "old_passord" => _old_passord}) do
+    user = get_current_user(conn)
+    with {:ok, %User{} = _user} <- Accounts.update_user(user, %{password: new_password}) do
+      send_resp(conn, :ok, "")
+    else
+      _error ->
+        send_resp(conn, :unprocessable_entity, "")
+    end
   end
 
   defp check_password(user, password) do

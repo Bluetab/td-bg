@@ -20,6 +20,7 @@ defmodule TrueBGWeb.Router do
     pipe_through [:api, :api_secure]
     get "/sessions", SessionController, :ping
     delete "/sessions", SessionController, :destroy
+    put "/sessions", SessionController, :change_password
     resources "/users", UserController, except: [:new, :edit]
     resources "/domain_groups", DomainGroupController, except: [:new, :edit]
     resources "/data_domains", DataDomainController, except: [:new, :edit]
