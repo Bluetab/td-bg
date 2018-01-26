@@ -1,4 +1,26 @@
 Feature: Business Concepts administration
+  A business concept has a workflow with following status depending on the executed action:
+     | initial status   | action            | new status       |
+     |                  | create            | draft            |
+     | draft            | modification      | draft            |
+     | draft            | send for approval | pending approval |
+     | draft            | delete            | deleted          |
+     | pending approval | publish           | published        |
+     | pending approval | reject            | rejected         |
+     | rejected         | delete            | deleted          |
+     | rejected         | modification      | draft            |
+     | rejected         | send for approval | pending approval |
+     | published        | modification      | draft            |
+     | published        | deprecate         | deprecated       |
+
+  Users will be able to run actions depending on the role they have in the
+  Business Concept's Data Domain:
+    |          | create  | modification | send for approval | delete | publish | reject | deprecate |
+    | admin    |    X    |      X       |        X          |   X    |    X    |   X    |     X     |
+    | publish  |    X    |      X       |        X          |   X    |    X    |   X    |     X     |
+    | create   |    X    |      X       |        X          |   X    |         |        |           |
+    | watch    |         |              |                   |        |         |        |           |
+
   In this feature we cover the creation as draft, modification, publishing and deletion
   of business concepts.
   Concepts are used by the business to declare the common language that is going
@@ -56,20 +78,23 @@ Feature: Business Concepts administration
       | Type          | Name                  | Description                                                       | Format |
       | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
     Then the system returns a result with code <result>
+    And if result <result> is "Created", <user> is able to view business concept "My Date Business Term" as a child of Data Domain "My Domain"
     And the user list <users> are <able> to see the business concept "My Date Business Term" with <status> status and following data:
-     | Field            | Value                                                              |
-     | Name             | My Date Business Term                                              |
-     | Type             | Business Term                                                      |
-     | Description      |  This is the first description of my business term which is a date |
-     | Formula          |                                                                    |
-     | Format           | Date                                                               |
-     | List of Values   |                                                                    |
-     | Sensitve Data    | N/A                                                                |
-     | Update Frequence | Not defined                                                        |
-     | Related Area     |                                                                    |
-     | Default Value    |                                                                    |
-     | Additional Data  |                                                                    |
-    And the business concept "My Date Business Term" is a child of Data Domain "My Domain"
+     | Field             | Value                                                              |
+     | Name              | My Date Business Term                                              |
+     | Type              | Business Term                                                      |
+     | Description       | This is the first description of my business term which is a date  |
+     | Formula           |                                                                    |
+     | Format            | Date                                                               |
+     | List of Values    |                                                                    |
+     | Sensitve Data     | N/A                                                                |
+     | Update Frequence  | Not defined                                                        |
+     | Related Area      |                                                                    |
+     | Default Value     |                                                                    |
+     | Additional Data   |                                                                    |
+     | Last Modification | Some timestamp                                                     |
+     | Last User         | app-admin                                                          |
+     | Version           | 1                                                                  |
 
     Examples:
       | user      | result    | users                       | able       | status |
