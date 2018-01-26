@@ -108,6 +108,26 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, Map.merge(state, %{data_domain: data_domain})}
   end
 
+  # Scenario: Modifying a Domain Group and seeing the new version
+  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/, %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+
+    existing_dg = Taxonomies.get_domain_group_by_name(domain_group_name)
+    {_, domain_group} =
+      if existing_dg == nil do
+        Taxonomies.create_domain_group(%{name: domain_group_name, description: description})
+      else
+        {:ok, existing_dg}
+      end
+    assert domain_group.description == description
+    {:ok, Map.merge(state, %{domain_group: domain_group})}
+  end
+
+  defand ~r/^user "app-admin" tries to modify a Domain Group with the name "(?<domain_group_name>[^"]+)" introducing following data:$/, %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+    id = state[:domain_group].id
+    {_, status_code, json_resp} = domain_group_update(state[:token], id, domain_group_name, description)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
+  end
+
   defp session_create(user_name, user_password) do
     body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
@@ -127,6 +147,14 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(domain_group_url(@endpoint, :show, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp domain_group_update(token, id, name, description, parent_id \\ nil) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{domain_group: %{name: name, description: description, parent_id: parent_id}} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.patch!(domain_group_url(@endpoint, :update, id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
