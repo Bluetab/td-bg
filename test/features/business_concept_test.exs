@@ -5,6 +5,8 @@ defmodule TrueBG.BusinessConceptTest do
   # import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
 
+  import_feature TrueBGWeb.GlobalFeatures
+
   alias Poison, as: JSON
   alias TrueBG.Taxonomies
   alias TrueBG.Accounts
@@ -101,12 +103,6 @@ defmodule TrueBG.BusinessConceptTest do
     {_, status_code, %{"data" => %{"id" => id, "name" => name}}} =
       business_concept_create(token, type, name, description, data_domain.id, content)
     {:ok, Map.merge(state, %{status_code: status_code, bc_id: id, bc_name: name, token: token})}
-  end
-
-  defthen ~r/^the system returns a result with code (?<status_code>[^"]+)$/,
-          %{status_code: status_code}, %{status_code: http_status_code} = state do
-    assert status_code == to_response_code(http_status_code)
-    {:ok, Map.merge(state, %{})}
   end
 
   defand ~r/^the user list (?<users>[^"]+) are (?<able>[^"]+) to see the business concept "(?<business_concept_name>[^"]+)" with (?<business_concept_status>[^"]+) status and following data:$/,
