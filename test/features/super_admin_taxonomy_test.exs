@@ -36,13 +36,10 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
-    existing_dg = Taxonomies.get_domain_group_by_name(name)
-    {_, domain_group} =
-      if existing_dg == nil do
-        Taxonomies.create_domain_group(%{name: name})
-      else
-        {:ok, existing_dg}
-      end
+    {_, status_code, json_resp} = domain_group_create(state[:token], name, "New Description")
+    assert rc_created() == to_response_code(status_code)
+    domain_group = json_resp["data"]
+    assert name == domain_group["name"]
     {:ok, Map.merge(state, %{domain_group: domain_group})}
   end
 
@@ -50,9 +47,9 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
           %{name: name, parent_name: parent_name, table: [%{Description: description}]}, state do
 
     parent = state[:domain_group]
-    assert parent.name == parent_name
+    assert parent["name"] == parent_name
 
-    {_, status_code, json_resp} = domain_group_create(state[:token], name, description, parent.id)
+    {_, status_code, json_resp} = domain_group_create(state[:token], name, description, parent["id"])
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
@@ -60,8 +57,8 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     parent = state[:domain_group]
     child = state[:resp]["data"]
     assert child["name"] == name
-    assert parent.name == parent_name
-    assert child["parent_id"] == parent.id
+    assert parent["name"] == parent_name
+    assert child["parent_id"] == parent["id"]
   end
 
   # Scenario: Creating a Data Domain depending on an existing Domain Group
@@ -70,8 +67,8 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
           %{user_name: _user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
 
     parent = state[:domain_group]
-    assert parent.name == domain_group_name
-    {_, status_code, json_resp} = data_domain_create(state[:token], %{name: data_domain_name, description: description, domain_group_id: parent.id})
+    assert parent["name"] == domain_group_name
+    {_, status_code, json_resp} = data_domain_create(state[:token], %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
@@ -90,21 +87,21 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     data_domain_info = state[:resp]["data"]
     assert data_domain_name == data_domain_info["name"]
     domain_group_info = state[:domain_group]
-    assert domain_group_name == domain_group_info.name
-    assert data_domain_info["domain_group_id"] == domain_group_info.id
+    assert domain_group_name == domain_group_info["name"]
+    assert data_domain_info["domain_group_id"] == domain_group_info["id"]
   end
 
   defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/, %{name: name, domain_group_name: domain_group_name}, state do
     domain_group_info = state[:domain_group]
-    assert domain_group_info.name == domain_group_name
+    assert domain_group_info["name"] == domain_group_name
     existing_dd = Taxonomies.get_data_domain_by_name(name)
     {_, data_domain} =
       if existing_dd == nil do
-        Taxonomies.create_data_domain(%{name: name, domain_group_id: domain_group_info.id})
+        Taxonomies.create_data_domain(%{name: name, domain_group_id: domain_group_info["id"]})
       else
         {:ok, existing_dd}
       end
-    assert data_domain.domain_group_id == domain_group_info.id
+    assert data_domain.domain_group_id == domain_group_info["id"]
     {:ok, Map.merge(state, %{data_domain: data_domain})}
   end
 
@@ -133,15 +130,15 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
 
     domain_group_info = state[:domain_group]
-    assert domain_group_info.name == domain_group_name
+    assert domain_group_info["name"] == domain_group_name
     existing_dd = Taxonomies.get_data_domain_by_name(data_domain_name)
     {_, data_domain} =
       if existing_dd == nil do
-        Taxonomies.create_data_domain(%{name: data_domain_name, description: description, domain_group_id: domain_group_info.id})
+        Taxonomies.create_data_domain(%{name: data_domain_name, description: description, domain_group_id: domain_group_info["id"]})
       else
         {:ok, existing_dd}
       end
-    assert data_domain.domain_group_id == domain_group_info.id
+    assert data_domain.domain_group_id == domain_group_info["id"]
     assert data_domain.description == description
     {:ok, Map.merge(state, %{data_domain: data_domain})}
   end
