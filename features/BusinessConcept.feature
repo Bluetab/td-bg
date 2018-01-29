@@ -74,7 +74,8 @@ Feature: Business Concepts administration
      | Related Area     | string        | 100      |                                              |    NO     |               |
      | Default Value    | string        | 100      |                                              |    NO     |               |
      | Additional Data  | string        | 500      |                                              |    NO     |               |
-    When <user> tries to create a business concept in the Data Domain "My Domain" with following data:
+    When user "<user>" is logged in the application with password "<user>" 
+    And <user> tries to create a business concept in the Data Domain "My Domain" with following data:
       | Type          | Name                  | Description                                                       | Format |
       | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
     Then the system returns a result with code <result>
