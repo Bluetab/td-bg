@@ -131,7 +131,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   # Scenario: Modifying a Data Domain and seeing the new version
   defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
     %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-      
+
     domain_group_info = state[:domain_group]
     assert domain_group_info.name == domain_group_name
     existing_dd = Taxonomies.get_data_domain_by_name(data_domain_name)
@@ -151,7 +151,6 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {_, status_code, json_resp} = data_domain_update(state[:token], id, data_domain_name, description)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
-
 
   defp session_create(user_name, user_password) do
     body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
