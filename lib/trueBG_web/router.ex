@@ -27,9 +27,6 @@ defmodule TrueBGWeb.Router do
     delete "/sessions", SessionController, :destroy
     put "/sessions", SessionController, :change_password
     resources "/users", UserController, except: [:new, :edit]
-    #resources "/domain_groups", DomainGroupController, except: [:new, :edit]
-    #resources "/data_domains", DataDomainController, except: [:new, :edit]
-    #resources "/acl_entries", AclEntryController, except: [:new, :edit]
   end
 
   scope "/api", TrueBGWeb do

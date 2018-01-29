@@ -40,7 +40,7 @@ defmodule TrueBG.Taxonomies do
   def get_domain_group(id), do: Repo.get(DomainGroup, id)
 
   def get_domain_group_by_name(name) do
-    Repo.get_by(DomainGroup, name: String.downcase(name))
+    Repo.get_by(DomainGroup, name: name)
   end
 
   @doc """
@@ -138,7 +138,7 @@ defmodule TrueBG.Taxonomies do
   end
 
   def get_data_domain_by_name(name) do
-    Repo.get_by(DataDomain, name: String.downcase(name))
+    Repo.get_by(DataDomain, name: name)
   end
 
   @doc """
