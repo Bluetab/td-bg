@@ -40,17 +40,17 @@ Feature: Business Concepts administration
   #     | publisher | publish |
   #     | admin     | admin   |
   #   And an existing Business Concept type called "Business Term" with following data:
-  #    | Field            | Format           | Values                                       | Mandatory | Default Value |
-  #    | Name             | char(20)         |                                              |    YES    |               |
-  #    | Description      | char(500)        |                                              |    YES    |               |
-  #    | Formula          | char(100)        |                                              |    NO     |               |
-  #    | Format           | List of values   | Date, Numeric, Amount, Text                  |    YES    |               |
-  #    | List of Values   | List of char(100)|                                              |    NO     |               |
-  #    | Sensitve Data    | List of values   | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-  #    | Update Frequence | List of Values   | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
-  #    | Related Area     | Char(100)        |                                              |    NO     |               |
-  #    | Default Value    | Char(100)        |                                              |    NO     |               |
-  #    | Additional Data  | char(500)        |                                              |    NO     |               |
+  # | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
+  # | Name             | string        | 40       |                                              |    YES    |               |
+  # | Description      | string        | 500      |                                              |    YES    |               |
+  # | Formula          | string        | 100      |                                              |    NO     |               |
+  # | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
+  # | List of Values   | variable list | 100      |                                              |    NO     |               |
+  # | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+  # | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+  # | Related Area     | string        | 100      |                                              |    NO     |               |
+  # | Default Value    | string        | 100      |                                              |    NO     |               |
+  # | Additional Data  | string        | 500      |                                              |    NO     |               |
 
   Scenario Outline: Creating a simple date business concept
     Given an existing Domain Group called "My Parent Group"
@@ -63,17 +63,17 @@ Feature: Business Concepts administration
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with following data:
-     | Field            | Format           | Values                                       | Mandatory | Default Value |
-     | Name             | char(40)         |                                              |    YES    |               |
-     | Description      | char(500)        |                                              |    YES    |               |
-     | Formula          | char(100)        |                                              |    NO     |               |
-     | Format           | List of values   | Date, Numeric, Amount, Text                  |    YES    |               |
-     | List of Values   | List of char(100)|                                              |    NO     |               |
-     | Sensitve Data    | List of values   | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-     | Update Frequence | List of Values   | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
-     | Related Area     | Char(100)        |                                              |    NO     |               |
-     | Default Value    | Char(100)        |                                              |    NO     |               |
-     | Additional Data  | char(500)        |                                              |    NO     |               |
+     | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
+     | Name             | string        | 40       |                                              |    YES    |               |
+     | Description      | string        | 500      |                                              |    YES    |               |
+     | Formula          | string        | 100      |                                              |    NO     |               |
+     | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
+     | List of Values   | variable list | 100      |                                              |    NO     |               |
+     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+     | Related Area     | string        | 100      |                                              |    NO     |               |
+     | Default Value    | string        | 100      |                                              |    NO     |               |
+     | Additional Data  | string        | 500      |                                              |    NO     |               |
     When <user> tries to create a business concept in the Data Domain "My Domain" with following data:
       | Type          | Name                  | Description                                                       | Format |
       | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
