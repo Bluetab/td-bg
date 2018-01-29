@@ -79,14 +79,14 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   defand ~r/^the user "(?<user_name>[^"]+)" has (?<role_name>[^"]+) role in Domain Group "(?<domain_group_name>[^"]+)"$/, %{user_name: user_name, role_name: role_name, domain_group_name: domain_group_name}, _state do
     user_info = Accounts.get_user_by_name(user_name)
     domain_group_info = Taxonomies.get_domain_group_by_name(domain_group_name)
-    role = Permissions.get_role_in_resource(:user, user_info.id, :domain_group, domain_group_info.id)
+    role = Permissions.get_role_in_resource(%{user_id: user_info.id, domain_group_id: domain_group_info.id})
     assert role == role_name
   end
 
   defand ~r/^the user "(?<user_name>[^"]+)" has (?<role_name>[^"]+) role in Data Domain "(?<data_domain_name>[^"]+)"$/, %{user_name: user_name, role_name: role_name, data_domain_name: data_domain_name}, _state do
     user_info = Accounts.get_user_by_name(user_name)
     data_domain_info = Taxonomies.get_data_domain_by_name(data_domain_name)
-    role = Permissions.get_role_in_resource(:user, user_info.id, :data_domain, data_domain_info.id)
+    role = Permissions.get_role_in_resource(%{user_id: user_info.id, data_domain_id: data_domain_info.id})
     assert role == role_name
   end
 
