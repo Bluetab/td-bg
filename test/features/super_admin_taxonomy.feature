@@ -82,11 +82,11 @@ Feature: Super-admin Taxonomy administration
      When user "app-admin" tries to modify a Domain Group with the name "Risks" introducing following data:
        | Description |
        | Second version of Risks |
-  #   Then the system returns a result with code "ok"
-  #   And the user "app-admin" is able to see the Domain Group "Risks" with following data:
-  #     | Description |
-  #     | Second version of Riesgos |
-  #
+     Then the system returns a result with code "Ok"
+     And the user "app-admin" is able to see the Domain Group "Risks" with following data:
+       | Description |
+       | Second version of Risks |
+
   # Scenario: Trying to modify a non existing Domain Group
   #   Given user "app-admin" is logged in the application
   #   When user "app-admin" tries to modify a Domain Group with the name "Imaginary Group" introducing following data:
