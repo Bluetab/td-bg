@@ -29,29 +29,6 @@ Feature: Business Concepts administration
   Relation between concept types is defined at a concept type level.
   Concepts must be unique by domain and name.
 
-  # Background:
-  #   Given an existing Domain Group called "My Parent Group"
-  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  #   And existing users with the correspoding role in Data Domain "My Domain"
-  #     | user      | role    |
-  #     | watcher   | watch   |
-  #     | creator   | create  |
-  #     | publisher | publish |
-  #     | admin     | admin   |
-  #   And an existing Business Concept type called "Business Term" with following data:
-  # | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
-  # | Name             | string        | 40       |                                              |    YES    |               |
-  # | Description      | string        | 500      |                                              |    YES    |               |
-  # | Formula          | string        | 100      |                                              |    NO     |               |
-  # | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
-  # | List of Values   | variable list | 100      |                                              |    NO     |               |
-  # | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-  # | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
-  # | Related Area     | string        | 100      |                                              |    NO     |               |
-  # | Default Value    | string        | 100      |                                              |    NO     |               |
-  # | Additional Data  | string        | 500      |                                              |    NO     |               |
-
   Scenario Outline: Creating a simple date business concept
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
@@ -131,7 +108,7 @@ Feature: Business Concepts administration
       | Type          | Name                  | Description                                                        | Format | Sensitive Data           | Update Frequence |
       | Business Term | My Date Business Term | This is the second description of my business term which is a date | Date   | Related to personal Data | Monthly          |
     Then the system returns a result with code <result>
-    And if result <result> is "Ok", user list <users> are able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
      | Field             | Value                                                              |
      | Name              | My Date Business Term                                              |
      | Type              | Business Term                                                      |
@@ -147,123 +124,170 @@ Feature: Business Concepts administration
      | Last Modification | Some timestamp                                                     |
      | Last User         | app-admin                                                          |
      | Version           | 1                                                                  |
+     | Status            | Draft                                                              |
 
     Examples:
-      | user      | result    | users                       | status |
-      | watcher   | Forbidden | watcher, creator, publisher | draft  |
-      | creator   | Ok        | watcher                     | draft  |
-      | creator   | Ok        | creator, publisher          | draft  |
-      | publisher | Ok        | watcher                     | draft  |
-      | publisher | Ok        | creator, publisher          | draft  |
-      | admin     | Ok        | creator, publisher          | draft  |
+      | user      | result    |
+      | watcher   | Forbidden |
+      | creator   | Ok        |
+      | publisher | Ok        |
+      | admin     | Ok        |
 
-
-
-
-  Scenario: A user with create privileges tries to create a duplicated concept
-    Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain in "Draft" status
-    When user "creator" tries to create a business concept with the name "Saldo Medio"
-    Then the system returns an error with code "Forbidden"
-    And the user "watcher" can't see the business concept "Saldo Medio"
-    And the user "creator" can't see the business concept "Saldo Medio" in "draft" status
-
-  Scenario Outline: Publishing a business concept
-    Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain in <initial_status>
-    When <user> tries to publish a business concept with the name "Saldo medio" in the "Saldos" domain
+  Scenario Outline: Sending business concept for approval
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    And an existing Business Concept type called "Business Term" with following data:
+     | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
+     | Formula          | string        | 100      |                                              |    NO     |               |
+     | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
+     | List of Values   | variable list | 100      |                                              |    NO     |               |
+     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+     | Related Area     | string        | 100      |                                              |    NO     |               |
+     | Default Value    | string        | 100      |                                              |    NO     |               |
+     | Additional Data  | string        | 500      |                                              |    NO     |               |
+    And user "<user>" is logged in the application with password "<user>"
+    And an existing Business Concept of type "Business Term" with following data:
+     | Type          | Name                  | Description                                                       | Format | Status |
+     | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   | Draft  |
+    When <user> tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
     Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status
+    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
+     | Field             | Value                                                              |
+     | Name              | My Date Business Term                                              |
+     | Type              | Business Term                                                      |
+     | Description       | This is the first description of my business term which is a date  |
+     | Formula           |                                                                    |
+     | Format            | Date                                                               |
+     | List of Values    |                                                                    |
+     | Sensitve Data     | N/A                                                                |
+     | Update Frequence  | Not defined                                                        |
+     | Related Area      |                                                                    |
+     | Default Value     |                                                                    |
+     | Additional Data   |                                                                    |
+     | Last Modification | Some timestamp                                                     |
+     | Last User         | app-admin                                                          |
+     | Version           | 1                                                                  |
+     | Status            | Pending Approval                                                   |
 
     Examples:
-      | user      | initial_status | result    | users                       | able       | status     |
-      | watcher   | draft          | Forbidden | watcher                     | not able   | any_status |
-      | watcher   | draft          | Forbidden | watcher, creator, publisher | not able   | published  |
-      | creator   | draft          | Forbidden | watcher, creator, publisher | not able   | published  |
-      | publisher | draft          | Ok        | watcher, creator, publisher | able       | published  |
-      | publisher | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
-      | watcher   | published      | Forbidden | watcher, creator, publisher | able       | published  |
-      | creator   | published      | Forbidden | watcher, creator, publisher | able       | published  |
-      | publisher | published      | Forbidden | watcher, creator, publisher | able       | published  |
-
-  Scenario Outline: Creating and publishing a business concept in one action
-    When <user> tries to create and publish a business concept with the name "Saldo medio" in the "Saldos" domain
-    Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status
-
-    Examples:
-      | user      | result    | users                       | able       | status     |
-      | watcher   | Forbidden | watcher, creator, publisher | not able   | any_status |
-      | creator   | Forbidden | watcher, creator, publisher | not able   | any_status |
-      | publisher | Created   | watcher, creator, publisher | able       | published  |
-
-  Scenario Outline: Modifying a Business Concept and seeing the old version
-    Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain with <status> status with the following data:
-      | Description |
-      | First version of saldo medio |
-    When <user> tries to modify a business concept with the name "Saldo medio" in the "Saldos" domain using following data:
-      | Description |
-      | Second version of saldo medio |
-    Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status with Following Data:
-      | Description |
-      | First version of saldo medio |
-
-    Examples:
-      | user      | status         | result    | users                       | able       | new_status |
-      | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
-      | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
-      | creator   | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
-      | publisher | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
-      | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | draft      |
-      | creator   | published      | Ok        | watcher, creator, publisher | not able   | draft      |
-      | publisher | published      | Ok        | watcher, creator, publisher | not able   | draft      |
-      | watcher   | published      | Forbidden | watcher, creator, publisher | able       | published  |
-      | creator   | published      | Ok        | watcher, creator, publisher | able       | published  |
-      | publisher | published      | Ok        | watcher, creator, publisher | able       | published  |
-
-  Scenario Outline: Modifying a Business Concept and seeing the new draft version
-    Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain with <status> status with the following data:
-      | Description |
-      | First version of saldo medio |
-    When <user> tries to modify a business concept with the name "Saldo medio" in the "Saldos" domain using following data:
-      | Description |
-      | Second version of saldo medio |
-    Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status with Following Data:
-      | Description |
-      | Second version of saldo medio |
-
-    Examples:
-      | user      | status         | result    | users                       | able       | new_status |
-      | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
-      | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
-      | creator   | draft          | Ok        | watcher, creator, publisher | able       | draft      |
-      | publisher | draft          | Ok        | watcher, creator, publisher | able       | draft      |
-      | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | draft      |
-      | creator   | published      | Ok        | watcher, creator, publisher | able       | draft      |
-      | publisher | published      | Ok        | watcher, creator, publisher | able       | draft      |
-      | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | published  |
-      | creator   | published      | Ok        | watcher, creator, publisher | not able   | published  |
-      | publisher | published      | Ok        | watcher, creator, publisher | not able   | published  |
-
-  Scenario Outline: Depecrating a Business Concept
-    Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain with <status> status
-    When <user> tries to deprecate a business concept with the name "Saldo medio" in the "Saldos" domain
-    Then the system returns a result with code <result>
-    And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status
-
-    Examples:
-      | user      | status         | result    | users                       | able       | new_status |
-      | watcher   | draft          | Forbidden | watcher, creator, publisher | not able   | deprecated |
-      | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
-      | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
-      | creator   | draft          | Forbidden | watcher, creator, publisher | not able   | deprecated |
-      | creator   | draft          | Forbidden | watcher                     | not able   | draft      |
-      | creator   | draft          | Forbidden | creator, publisher          | able       | draft      |
-      | publisher | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
-      | publisher | draft          | Ok        | watcher, creator, publisher | able       | deprecated |
-      | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | deprecated |
-      | watcher   | published      | Forbidden | watcher, creator, publisher | able       | published  |
-      | creator   | published      | Forbidden | watcher, creator, publisher | not able   | deprecated |
-      | creator   | published      | Forbidden | watcher, creator, publisher | able       | published  |
-      | publisher | published      | Ok        | watcher, creator, publisher | not able   | published  |
-      | publisher | published      | Ok        | watcher, creator, publisher | able       | deprecated |
+      | user      | result    |
+      | watcher   | Forbidden |
+      | creator   | Ok        |
+      | publisher | Ok        |
+      | admin     | Ok        |
+  #
+  # Scenario: A user with create privileges tries to create a duplicated concept
+  #   Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain in "Draft" status
+  #   When user "creator" tries to create a business concept with the name "Saldo Medio"
+  #   Then the system returns an error with code "Forbidden"
+  #   And the user "watcher" can't see the business concept "Saldo Medio"
+  #   And the user "creator" can't see the business concept "Saldo Medio" in "draft" status
+  #
+  # Scenario Outline: Publishing a business concept
+  #   Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain in <initial_status>
+  #   When <user> tries to publish a business concept with the name "Saldo medio" in the "Saldos" domain
+  #   Then the system returns a result with code <result>
+  #   And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status
+  #
+  #   Examples:
+  #     | user      | initial_status | result    | users                       | able       | status     |
+  #     | watcher   | draft          | Forbidden | watcher                     | not able   | any_status |
+  #     | watcher   | draft          | Forbidden | watcher, creator, publisher | not able   | published  |
+  #     | creator   | draft          | Forbidden | watcher, creator, publisher | not able   | published  |
+  #     | publisher | draft          | Ok        | watcher, creator, publisher | able       | published  |
+  #     | publisher | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
+  #     | watcher   | published      | Forbidden | watcher, creator, publisher | able       | published  |
+  #     | creator   | published      | Forbidden | watcher, creator, publisher | able       | published  |
+  #     | publisher | published      | Forbidden | watcher, creator, publisher | able       | published  |
+  #
+  # Scenario Outline: Creating and publishing a business concept in one action
+  #   When <user> tries to create and publish a business concept with the name "Saldo medio" in the "Saldos" domain
+  #   Then the system returns a result with code <result>
+  #   And the user list <users> is <able> to see the business concept "Saldo Medio" in <status> status
+  #
+  #   Examples:
+  #     | user      | result    | users                       | able       | status     |
+  #     | watcher   | Forbidden | watcher, creator, publisher | not able   | any_status |
+  #     | creator   | Forbidden | watcher, creator, publisher | not able   | any_status |
+  #     | publisher | Created   | watcher, creator, publisher | able       | published  |
+  #
+  # Scenario Outline: Modifying a Business Concept and seeing the old version
+  #   Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain with <status> status with the following data:
+  #     | Description |
+  #     | First version of saldo medio |
+  #   When <user> tries to modify a business concept with the name "Saldo medio" in the "Saldos" domain using following data:
+  #     | Description |
+  #     | Second version of saldo medio |
+  #   Then the system returns a result with code <result>
+  #   And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status with Following Data:
+  #     | Description |
+  #     | First version of saldo medio |
+  #
+  #   Examples:
+  #     | user      | status         | result    | users                       | able       | new_status |
+  #     | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
+  #     | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
+  #     | creator   | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
+  #     | publisher | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
+  #     | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | draft      |
+  #     | creator   | published      | Ok        | watcher, creator, publisher | not able   | draft      |
+  #     | publisher | published      | Ok        | watcher, creator, publisher | not able   | draft      |
+  #     | watcher   | published      | Forbidden | watcher, creator, publisher | able       | published  |
+  #     | creator   | published      | Ok        | watcher, creator, publisher | able       | published  |
+  #     | publisher | published      | Ok        | watcher, creator, publisher | able       | published  |
+  #
+  # Scenario Outline: Modifying a Business Concept and seeing the new draft version
+  #   Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain with <status> status with the following data:
+  #     | Description |
+  #     | First version of saldo medio |
+  #   When <user> tries to modify a business concept with the name "Saldo medio" in the "Saldos" domain using following data:
+  #     | Description |
+  #     | Second version of saldo medio |
+  #   Then the system returns a result with code <result>
+  #   And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status with Following Data:
+  #     | Description |
+  #     | Second version of saldo medio |
+  #
+  #   Examples:
+  #     | user      | status         | result    | users                       | able       | new_status |
+  #     | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
+  #     | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
+  #     | creator   | draft          | Ok        | watcher, creator, publisher | able       | draft      |
+  #     | publisher | draft          | Ok        | watcher, creator, publisher | able       | draft      |
+  #     | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | draft      |
+  #     | creator   | published      | Ok        | watcher, creator, publisher | able       | draft      |
+  #     | publisher | published      | Ok        | watcher, creator, publisher | able       | draft      |
+  #     | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | published  |
+  #     | creator   | published      | Ok        | watcher, creator, publisher | not able   | published  |
+  #     | publisher | published      | Ok        | watcher, creator, publisher | not able   | published  |
+  #
+  # Scenario Outline: Depecrating a Business Concept
+  #   Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain with <status> status
+  #   When <user> tries to deprecate a business concept with the name "Saldo medio" in the "Saldos" domain
+  #   Then the system returns a result with code <result>
+  #   And the user list <users> is <able> to see the business concept "Saldo Medio" in <new_status> status
+  #
+  #   Examples:
+  #     | user      | status         | result    | users                       | able       | new_status |
+  #     | watcher   | draft          | Forbidden | watcher, creator, publisher | not able   | deprecated |
+  #     | watcher   | draft          | Forbidden | watcher                     | not able   | draft      |
+  #     | watcher   | draft          | Forbidden | creator, publisher          | able       | draft      |
+  #     | creator   | draft          | Forbidden | watcher, creator, publisher | not able   | deprecated |
+  #     | creator   | draft          | Forbidden | watcher                     | not able   | draft      |
+  #     | creator   | draft          | Forbidden | creator, publisher          | able       | draft      |
+  #     | publisher | draft          | Ok        | watcher, creator, publisher | not able   | draft      |
+  #     | publisher | draft          | Ok        | watcher, creator, publisher | able       | deprecated |
+  #     | watcher   | published      | Forbidden | watcher, creator, publisher | not able   | deprecated |
+  #     | watcher   | published      | Forbidden | watcher, creator, publisher | able       | published  |
+  #     | creator   | published      | Forbidden | watcher, creator, publisher | not able   | deprecated |
+  #     | creator   | published      | Forbidden | watcher, creator, publisher | able       | published  |
+  #     | publisher | published      | Ok        | watcher, creator, publisher | not able   | published  |
+  #     | publisher | published      | Ok        | watcher, creator, publisher | able       | deprecated |
