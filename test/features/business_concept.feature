@@ -1,4 +1,26 @@
 Feature: Business Concepts administration
+  A business concept has a workflow with following status depending on the executed action:
+     | initial status   | action            | new status       |
+     |                  | create            | draft            |
+     | draft            | modification      | draft            |
+     | draft            | send for approval | pending approval |
+     | draft            | delete            | deleted          |
+     | pending approval | publish           | published        |
+     | pending approval | reject            | rejected         |
+     | rejected         | delete            | deleted          |
+     | rejected         | modification      | draft            |
+     | rejected         | send for approval | pending approval |
+     | published        | modification      | draft            |
+     | published        | deprecate         | deprecated       |
+
+  Users will be able to run actions depending on the role they have in the
+  Business Concept's Data Domain:
+    |          | create  | modification | send for approval | delete | publish | reject | deprecate |
+    | admin    |    X    |      X       |        X          |   X    |    X    |   X    |     X     |
+    | publish  |    X    |      X       |        X          |   X    |    X    |   X    |     X     |
+    | create   |    X    |      X       |        X          |   X    |         |        |           |
+    | watch    |         |              |                   |        |         |        |           |
+
   In this feature we cover the creation as draft, modification, publishing and deletion
   of business concepts.
   Concepts are used by the business to declare the common language that is going
@@ -18,63 +40,65 @@ Feature: Business Concepts administration
   #     | publisher | publish |
   #     | admin     | admin   |
   #   And an existing Business Concept type called "Business Term" with following data:
-  #    | Field            | Format           | Values                                       | Mandatory | Default Value |
-  #    | Name             | char(20)         |                                              |    YES    |               |
-  #    | Description      | char(500)        |                                              |    YES    |               |
-  #    | Formula          | char(100)        |                                              |    NO     |               |
-  #    | Format           | List of values   | Date, Numeric, Amount, Text                  |    YES    |               |
-  #    | List of Values   | List of char(100)|                                              |    NO     |               |
-  #    | Sensitve Data    | List of values   | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-  #    | Update Frequence | List of Values   | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
-  #    | Related Area     | Char(100)        |                                              |    NO     |               |
-  #    | Default Value    | Char(100)        |                                              |    NO     |               |
-  #    | Additional Data  | char(500)        |                                              |    NO     |               |
+  # | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
+  # | Name             | string        | 40       |                                              |    YES    |               |
+  # | Description      | string        | 500      |                                              |    YES    |               |
+  # | Formula          | string        | 100      |                                              |    NO     |               |
+  # | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
+  # | List of Values   | variable list | 100      |                                              |    NO     |               |
+  # | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+  # | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+  # | Related Area     | string        | 100      |                                              |    NO     |               |
+  # | Default Value    | string        | 100      |                                              |    NO     |               |
+  # | Additional Data  | string        | 500      |                                              |    NO     |               |
 
   Scenario Outline: Creating a simple date business concept
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  #   And follwinig users exist with the indicated role in Data Domain "My Domain"
-  #     | user      | role    |
-  #     | watcher   | watch   |
-  #     | creator   | create  |
-  #     | publisher | publish |
-  #     | admin     | admin   |
+    And follwinig users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
     And an existing Business Concept type called "Business Term" with following data:
-     | Field            | Format           | Values                                       | Mandatory | Default Value |
-     | Name             | char(40)         |                                              |    YES    |               |
-     | Description      | char(500)        |                                              |    YES    |               |
-     | Formula          | char(100)        |                                              |    NO     |               |
-     | Format           | List of values   | Date, Numeric, Amount, Text                  |    YES    |               |
-     | List of Values   | List of char(100)|                                              |    NO     |               |
-     | Sensitve Data    | List of values   | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-     | Update Frequence | List of Values   | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
-     | Related Area     | Char(100)        |                                              |    NO     |               |
-     | Default Value    | Char(100)        |                                              |    NO     |               |
-     | Additional Data  | char(500)        |                                              |    NO     |               |
-    When <user> tries to create a business concept in the Data Domain "My Domain" with following data:
+     | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
+     | Formula          | string        | 100      |                                              |    NO     |               |
+     | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
+     | List of Values   | variable list | 100      |                                              |    NO     |               |
+     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+     | Related Area     | string        | 100      |                                              |    NO     |               |
+     | Default Value    | string        | 100      |                                              |    NO     |               |
+     | Additional Data  | string        | 500      |                                              |    NO     |               |
+     When user "<user>" is logged in the application with password "<user>"
+     And <user> tries to create a business concept in the Data Domain "My Domain" with following data:
       | Type          | Name                  | Description                                                       | Format |
       | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
     Then the system returns a result with code <result>
-    And the user list <users> are <able> to see the business concept "My Date Business Term" with <status> status and following data:
-     | Field            | Value                                                              |
-     | Name             | My Date Business Term                                              |
-     | Type             | Business Term                                                      |
-     | Description      |  This is the first description of my business term which is a date |
-     | Formula          |                                                                    |
-     | Format           | Date                                                               |
-     | List of Values   |                                                                    |
-     | Sensitve Data    | N/A                                                                |
-     | Update Frequence | Not defined                                                        |
-     | Related Area     |                                                                    |
-     | Default Value    |                                                                    |
-     | Additional Data  |                                                                    |
-    And the business concept "My Date Business Term" is a child of Data Domain "My Domain"
+    And if result <result> is "Created", <user> is able to view business concept "My Date Business Term" as a child of Data Domain "My Domain"
+    # And the user list <users> are <able> to see the business concept "My Date Business Term" with <status> status and following data:
+    #  | Field             | Value                                                              |
+    #  | Name              | My Date Business Term                                              |
+    #  | Type              | Business Term                                                      |
+    #  | Description       | This is the first description of my business term which is a date  |
+    #  | Formula           |                                                                    |
+    #  | Format            | Date                                                               |
+    #  | List of Values    |                                                                    |
+    #  | Sensitve Data     | N/A                                                                |
+    #  | Update Frequence  | Not defined                                                        |
+    #  | Related Area      |                                                                    |
+    #  | Default Value     |                                                                    |
+    #  | Additional Data   |                                                                    |
+    #  | Last Modification | Some timestamp                                                     |
+    #  | Last User         | app-admin                                                          |
+    #  | Version           | 1                                                                  |
 
     Examples:
       | user      | result    | users                       | able       | status |
-      | watcher   | Forbidden | watcher, creator, publisher | not able   | draft  |
-      # | creator   | Created   | watcher                     | not able   | draft  |
+      # | watcher   | Forbidden | watcher, creator, publisher | not able   | draft  |
+      | creator   | Created   | watcher                     | not able   | draft  |
       # | creator   | Created   | creator, publisher          | able       | draft  |
       # | publisher | Created   | watcher                     | not able   | draft  |
       # | publisher | Created   | creator, publisher          | able       | draft  |

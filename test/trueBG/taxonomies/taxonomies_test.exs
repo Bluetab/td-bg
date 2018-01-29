@@ -140,4 +140,66 @@ defmodule TrueBG.TaxonomiesTest do
       assert %Ecto.Changeset{} = Taxonomies.change_data_domain(data_domain)
     end
   end
+
+  # describe "business_concepts" do
+  #   alias TrueBG.Taxonomies.BusinessConcept
+  #
+  #   @valid_attrs %{content: %{}, type: "some type"}
+  #   @update_attrs %{content: %{}, type: "some updated type"}
+  #   @invalid_attrs %{content: nil, type: nil}
+  #
+  #   def business_concept_fixture(attrs \\ %{}) do
+  #     {:ok, business_concept} =
+  #       attrs
+  #       |> Enum.into(@valid_attrs)
+  #       |> Taxonomies.create_business_concept()
+  #
+  #     business_concept
+  #   end
+  #
+  #   test "list_business_concepts/0 returns all business_concepts" do
+  #     business_concept = business_concept_fixture()
+  #     assert Taxonomies.list_business_concepts() == [business_concept]
+  #   end
+  #
+  #   test "get_business_concept!/1 returns the business_concept with given id" do
+  #     business_concept = business_concept_fixture()
+  #     assert Taxonomies.get_business_concept!(business_concept.id) == business_concept
+  #   end
+  #
+  #   test "create_business_concept/1 with valid data creates a business_concept" do
+  #     assert {:ok, %BusinessConcept{} = business_concept} = Taxonomies.create_business_concept(@valid_attrs)
+  #     assert business_concept.content == %{}
+  #     assert business_concept.type == "some type"
+  #   end
+  #
+  #   test "create_business_concept/1 with invalid data returns error changeset" do
+  #     assert {:error, %Ecto.Changeset{}} = Taxonomies.create_business_concept(@invalid_attrs)
+  #   end
+  #
+  #   test "update_business_concept/2 with valid data updates the business_concept" do
+  #     business_concept = business_concept_fixture()
+  #     assert {:ok, business_concept} = Taxonomies.update_business_concept(business_concept, @update_attrs)
+  #     assert %BusinessConcept{} = business_concept
+  #     assert business_concept.content == %{}
+  #     assert business_concept.type == "some updated type"
+  #   end
+  #
+  #   test "update_business_concept/2 with invalid data returns error changeset" do
+  #     business_concept = business_concept_fixture()
+  #     assert {:error, %Ecto.Changeset{}} = Taxonomies.update_business_concept(business_concept, @invalid_attrs)
+  #     assert business_concept == Taxonomies.get_business_concept!(business_concept.id)
+  #   end
+  #
+  #   test "delete_business_concept/1 deletes the business_concept" do
+  #     business_concept = business_concept_fixture()
+  #     assert {:ok, %BusinessConcept{}} = Taxonomies.delete_business_concept(business_concept)
+  #     assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_business_concept!(business_concept.id) end
+  #   end
+  #
+  #   test "change_business_concept/1 returns a business_concept changeset" do
+  #     business_concept = business_concept_fixture()
+  #     assert %Ecto.Changeset{} = Taxonomies.change_business_concept(business_concept)
+  #   end
+  # end
 end

@@ -221,4 +221,100 @@ defmodule TrueBG.Taxonomies do
   def change_data_domain(%DataDomain{} = data_domain) do
     DataDomain.changeset(data_domain, %{})
   end
+
+  alias TrueBG.Taxonomies.BusinessConcept
+
+  @doc """
+  Returns the list of business_concepts.
+
+  ## Examples
+
+      iex> list_business_concepts()
+      [%BusinessConcept{}, ...]
+
+  """
+  def list_business_concepts do
+    Repo.all(BusinessConcept)
+  end
+
+  @doc """
+  Gets a single business_concept.
+
+  Raises `Ecto.NoResultsError` if the Business concept does not exist.
+
+  ## Examples
+
+      iex> get_business_concept!(123)
+      %BusinessConcept{}
+
+      iex> get_business_concept!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_business_concept!(id), do: Repo.get!(BusinessConcept, id)
+
+  @doc """
+  Creates a business_concept.
+
+  ## Examples
+
+      iex> create_business_concept(%{field: value})
+      {:ok, %BusinessConcept{}}
+
+      iex> create_business_concept(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_business_concept(attrs \\ %{}) do
+    %BusinessConcept{}
+    |> BusinessConcept.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a business_concept.
+
+  ## Examples
+
+      iex> update_business_concept(business_concept, %{field: new_value})
+      {:ok, %BusinessConcept{}}
+
+      iex> update_business_concept(business_concept, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_business_concept(%BusinessConcept{} = business_concept, attrs) do
+    business_concept
+    |> BusinessConcept.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a BusinessConcept.
+
+  ## Examples
+
+      iex> delete_business_concept(business_concept)
+      {:ok, %BusinessConcept{}}
+
+      iex> delete_business_concept(business_concept)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_business_concept(%BusinessConcept{} = business_concept) do
+    Repo.delete(business_concept)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking business_concept changes.
+
+  ## Examples
+
+      iex> change_business_concept(business_concept)
+      %Ecto.Changeset{source: %BusinessConcept{}}
+
+  """
+  def change_business_concept(%BusinessConcept{} = business_concept) do
+    BusinessConcept.changeset(business_concept, %{})
+  end
 end

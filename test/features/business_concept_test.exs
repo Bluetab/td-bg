@@ -3,14 +3,15 @@ defmodule TrueBG.BusinessConceptTest do
   use TrueBGWeb.ConnCase
 
   # import TrueBGWeb.Router.Helpers
-  # import TrueBGWeb.ResponseCode
-  # alias TrueBG.Accounts
-  # alias Poison, as: JSON
-  #
+  import TrueBGWeb.ResponseCode
+
+  alias Poison, as: JSON
   alias TrueBG.Taxonomies
-  #
-  # @endpoint TrueBGWeb.Endpoint
-  # @headers {"Content-type", "application/json"}
+  alias TrueBG.Accounts
+  alias TrueBG.Accounts.User
+
+  @endpoint TrueBGWeb.Endpoint
+  @headers {"Content-type", "application/json"}
 
   # Scenario Outline: Creating a simple date business concept
 
@@ -56,50 +57,106 @@ defmodule TrueBG.BusinessConceptTest do
   end
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with following data:$/,
-          %{business_concept_type: _business_concept_type, table: _table},
+          %{business_concept_type: business_concept_type, table: _table},
           %{} = state do
 
-    #assert business_concept_type = "Business Term"
-
-    {:ok, Map.merge(state, %{})}
+    {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
-  #   And follwinig users exist with the indicated role in Data Domain "My Domain"
-  #     | user      | role    |
-  #     | watcher   | watch   |
-  #     | creator   | create  |
-  #     | publisher | publish |
-  #     | admin     | admin   |
+  defand ~r/^follwinig users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
+          %{data_domain_name: data_domain_name, table: table},
+          %{data_domain: data_domain} = state do
+    assert data_domain_name == data_domain.name
 
-  defwhen ~r/^(?<user_name>[^"]+) tries to create a business concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-          %{user_name: _user_name, data_domain_name: _data_domain_name, table: _table},
-          %{data_domain: _data_domain} = state do
+    create_user_fn = fn(x) ->
+      user_name = x[:user]
+      {_, %User{} = user} = Accounts.create_user(%{user_name: user_name, password: user_name})
+      user
+    end
 
-    #assert data_domain_name = data_domain.name
+    users = table |> Enum.map(create_user_fn)
 
-    {:ok, Map.merge(state, %{})}
+    {:ok, Map.merge(state, %{users: users})}
   end
 
-  defthen ~r/^the system returns a result with code (?<status_code>[^"]+)$/, %{status_code: _status_code}, state do
-      {:ok, Map.merge(state, %{})}
+  defwhen ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
+    {_, status_code, %{"token" => token} = json_resp} = session_create(user_name, password)
+    assert rc_created() == to_response_code(status_code)
+    {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp, token: token, u_user_name: user_name})}
+  end
+
+  defand ~r/^(?<user_name>[^"]+) tries to create a business concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
+          %{user_name: user_name, data_domain_name: data_domain_name, table: [%{Type: type, Name: name, Description: description} = content|_]},
+          %{u_user_name: u_user_name, bc_type: bc_type, data_domain: data_domain, token: token} = state do
+
+    assert user_name == u_user_name
+    assert data_domain_name == data_domain.name
+    assert type == bc_type
+
+    content = content
+      |> Map.delete(:Type)
+      |> Map.delete(:Name)
+      |> Map.delete(:Description)
+
+    {_, status_code, %{"data" => %{"id" => id, "name" => name}}} =
+      business_concept_create(token, type, name, description, data_domain.id, content)
+    {:ok, Map.merge(state, %{status_code: status_code, bc_id: id, bc_name: name, token: token})}
+  end
+
+  defthen ~r/^the system returns a result with code (?<status_code>[^"]+)$/,
+          %{status_code: status_code}, %{status_code: http_status_code} = state do
+    assert status_code == to_response_code(http_status_code)
+    {:ok, Map.merge(state, %{})}
   end
 
   defand ~r/^the user list (?<users>[^"]+) are (?<able>[^"]+) to see the business concept "(?<business_concept_name>[^"]+)" with (?<business_concept_status>[^"]+) status and following data:$/,
-          %{users: _users, able: _able, business_concept_name: business_concept_name, business_concept_status: _business_concept_status, table: _table}, state do
+          %{users: _users, able: _able, business_concept_name: business_concept_name, business_concept_status: _business_concept_status, table: _table},
+          %{bc_name: bc_name} = state do
 
-    assert business_concept_name == "My Date Business Term"
-
+    assert business_concept_name == bc_name
     {:ok, Map.merge(state, %{})}
   end
 
-  defand ~r/^the business concept "(?<business_concept_name>[^"]+)" is a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
-          %{business_concept_name: business_concept_name, data_domain_name: data_domain_name}, state do
-    assert business_concept_name == "My Date Business Term"
-    assert data_domain_name == "My Domain"
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
+          %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
+          %{bc_id: bc_id, bc_name: bc_name, u_user_name: u_user_name, data_domain: data_domain, token: token} = state do
 
-    {:ok, Map.merge(state, %{})}
+    assert business_concept_name == bc_name
+    assert data_domain_name == data_domain.name
+    assert user_name == u_user_name
+
+    if result == status_code do
+      {_, http_status_code, %{"data" => business_concept}} = businness_concept_show(token, bc_id)
+      assert rc_ok() == to_response_code(http_status_code)
+      assert business_concept["data_domain_id"] == data_domain.id
+      {:ok, Map.merge(state, %{business_concept: business_concept})}
+    else
+      {:ok, Map.merge(state, %{})}
+    end
   end
 
-  #   And the business concept "My Date Business Term" is a child of Data Domain "My Domain"
+  defp session_create(user_name, user_password) do
+    body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp business_concept_create(token, type, name, description, data_domain_id, content) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{business_concept: %{type: type, name: name,
+             description: description, data_domain_id: data_domain_id,
+             content: content}} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.post!(business_concept_url(@endpoint, :create), body, headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp businness_concept_show(token, id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(business_concept_url(@endpoint, :show, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
 
 end
