@@ -145,7 +145,7 @@ defmodule TrueBG.Permissions do
     data_domain = Taxonomies.get_data_domain!(resource_id)
     data_domain = data_domain |> Repo.preload(:domain_group)
     user = Accounts.get_user!(principal_id)
-    get_resource_role(user, data_domain, nil)
+    get_resource_role(user, data_domain)
   end
 
   @doc """
@@ -158,42 +158,52 @@ defmodule TrueBG.Permissions do
     get_resource_role(user, domain_group, nil)
   end
 
-  defp get_resource_role(%User{} = user, %DataDomain{domain_group_id: nil} = data_domain, role) do
+  defp get_resource_role(%User{} = user, %DataDomain{} = data_domain) do
+    role = get_role_by_principal_and_resource(:user, user.id, :data_domain, data_domain.id)
+    parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group_id)
+    parent_domain_group = parent_domain_group |> Repo.preload(:parent)
+    get_resource_role(user, parent_domain_group, role)
+  end
+
+  defp get_resource_role(%User{} = user, %DataDomain{domain_group_id: nil} = data_domain, nil) do
     case get_role_by_principal_and_resource(:user, user.id, :data_domain, data_domain.id) do
       nil ->
-        if role do
-          role.name
-        else
           get_default_role()
-        end
-      %Role{name: name} -> name
-      _ -> :error
+      %Role{name: name} ->
+        name
     end
   end
 
-  defp get_resource_role(%User{} = user, %DataDomain{} = data_domain, _role) do
-    role = get_role_by_principal_and_resource(:user, user.id, :data_domain, data_domain.id)
-    parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group.id)
-    parent_domain_group = parent_domain_group |> Repo.preload(:parent)
-    get_resource_role(user, parent_domain_group, role)
+  defp get_resource_role(%User{} = user, %DataDomain{domain_group_id: nil} = data_domain, role) do
+    case get_role_by_principal_and_resource(:user, user.id, :data_domain, data_domain.id) do
+      nil ->
+          role.name
+      %Role{name: name} ->
+        name
+    end
+  end
+
+  defp get_resource_role(%User{} = user, %DomainGroup{parent_id: nil} = domain_group, nil) do
+    case get_role_by_principal_and_resource(:user, user.id, :domain_group, domain_group.id) do
+      nil ->
+        get_default_role()
+      %Role{name: name} ->
+        name
+    end
   end
 
   defp get_resource_role(%User{} = user, %DomainGroup{parent_id: nil} = domain_group, role) do
     case get_role_by_principal_and_resource(:user, user.id, :domain_group, domain_group.id) do
       nil ->
-        if role do
-          role.name
-        else
-          get_default_role()
-        end
-      %Role{name: name} -> name
-      _ -> :error
+        role.name
+      %Role{name: name} ->
+        name
     end
   end
 
   defp get_resource_role(%User{} = user, %DomainGroup{} = domain_group, nil) do
     role = get_role_by_principal_and_resource(:user, user.id, :domain_group, domain_group.id)
-    parent_domain_group = Taxonomies.get_domain_group(domain_group.parent.id)
+    parent_domain_group = Taxonomies.get_domain_group(domain_group.parent_id)
     parent_domain_group = parent_domain_group |> Repo.preload(:parent)
     get_resource_role(user, parent_domain_group, role)
   end
