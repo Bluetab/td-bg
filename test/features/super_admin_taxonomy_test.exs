@@ -128,6 +128,29 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
+  # Scenario: Modifying a Data Domain and seeing the new version
+  defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/, %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+    domain_group_info = state[:domain_group]
+    assert domain_group_info.name == domain_group_name
+    existing_dd = Taxonomies.get_data_domain_by_name(data_domain_name)
+    {_, data_domain} =
+      if existing_dd == nil do
+        Taxonomies.create_data_domain(%{name: data_domain_name, description: description, domain_group_id: domain_group_info.id})
+      else
+        {:ok, existing_dd}
+      end
+    assert data_domain.domain_group_id == domain_group_info.id
+    assert data_domain.description == description
+    {:ok, Map.merge(state, %{data_domain: data_domain})}
+  end
+
+  defwhen ~r/^user "app-admin" tries to modify a Data Domain with the name "(?<data_domain_name>[^"]+)" introducing following data:$/, %{data_domain_name: data_domain_name, table: [%{Description: description}]}, state do
+    id = state[:data_domain].id
+    {_, status_code, json_resp} = data_domain_update(state[:token], id, data_domain_name, description)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
+  end
+
+
   defp session_create(user_name, user_password) do
     body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
@@ -163,6 +186,14 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     body = %{data_domain: data_domain_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(data_domain_url(@endpoint, :create), body, headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp data_domain_update(token, id, name, description) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{data_domain: %{name: name, description: description}} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.patch!(data_domain_url(@endpoint, :update, id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

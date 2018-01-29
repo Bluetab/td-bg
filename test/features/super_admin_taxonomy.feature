@@ -95,20 +95,20 @@ Feature: Super-admin Taxonomy administration
   #   Then the system returns a result with code "Forbidden"
   #   And the user "app-admin" is not able to see the Domain Group "Risks"
   #
-  # Scenario: Modifying a Data Domain and seeing the new version
-  #   Given user "app-admin" is logged in the application
-  #   And an existing Domain Group called "Risks"
-  #   And an existing Data Domain called "Credit Risks" child of Domain Group  "Risks" with following data:
-  #     | Description |
-  #     | First version of Credit Risks |
-  #   When user "app-admin" tries to modify a Data Domain with the name "Credit Risks" introducing following data:
-  #     | Description |
-  #     | Second version of Credit Risks |
-  #   Then the system returns a result with code "ok"
-  #   And the user "app-admin" is able to see the Data Domain "Credit Risks" with following data:
-  #     | Description |
-  #     | Second version of Credit Risks |
-  #
+   Scenario: Modifying a Data Domain and seeing the new version
+     Given user "app-admin" is logged in the application
+     And an existing Domain Group called "Risks"
+     And an existing Data Domain called "Credit Risks" child of Domain Group "Risks" with following data:
+       | Description |
+       | First version of Credit Risks |
+     When user "app-admin" tries to modify a Data Domain with the name "Credit Risks" introducing following data:
+       | Description |
+       | Second version of Credit Risks |
+     Then the system returns a result with code "Ok"
+     And the user "app-admin" is able to see the Data Domain "Credit Risks" with following data:
+       | Description |
+       | Second version of Credit Risks |
+  
   # Scenario: Trying to modify a non existing Data Domain
   #   Given user "app-admin" is logged in the application
   #   When user "app-admin" tries to modify a Data Domain with the name "Imaginary Domain" introducing following data:
