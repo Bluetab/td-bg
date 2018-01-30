@@ -1,7 +1,7 @@
 defmodule TrueBG.SuperAdminTaxonomyTest do
   use Cabbage.Feature, async: false, file: "super_admin_taxonomy.feature"
   use TrueBGWeb.ConnCase
-  import TrueBGWeb.SuperAdminTaxonomy
+  import TrueBGWeb.Taxonomy
   import TrueBGWeb.Authentication
   import TrueBGWeb.ResponseCode
 
@@ -26,7 +26,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
       token = state[:token]
       {_, _status_code, json_resp} = domain_group_list(token)
-      domain_group = Enum.find(json_resp["data"], fn(domain_group) -> domain_group["name"] == domain_group_name end)
+      domain_group =  getDomainGroupByName(json_resp["data"], domain_group_name)
       {_, status_code, json_resp} = domain_group_show(token, domain_group["id"])
       assert rc_ok() == to_response_code(status_code)
       domain_group = json_resp["data"]
@@ -51,8 +51,8 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   defand ~r/^Domain Group "(?<name>[^"]+)" is a child of Domain Group "(?<parent_name>[^"]+)"$/, %{name: name, parent_name: parent_name}, state do
     {_, _status_code, json_resp} = domain_group_list(state[:token])
-    child = Enum.find(json_resp["data"], fn(domain_group) -> domain_group["name"] == name end)
-    parent = Enum.find(json_resp["data"], fn(domain_group) -> domain_group["name"] == parent_name end)
+    child = getDomainGroupByName(json_resp["data"], name)
+    parent = getDomainGroupByName(json_resp["data"], parent_name)
     assert child["name"] == name
     assert parent["name"] == parent_name
     assert child["parent_id"] == parent["id"]

@@ -1,4 +1,4 @@
-defmodule TrueBGWeb.SuperAdminTaxonomy do
+defmodule TrueBGWeb.Taxonomy do
   @moduledoc false
 
   alias Poison, as: JSON
@@ -57,5 +57,9 @@ defmodule TrueBGWeb.SuperAdminTaxonomy do
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(data_domain_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  def getDomainGroupByName(list, domain_group_name) do
+    Enum.find(list, fn(domain_group) -> domain_group["name"] == domain_group_name end)
   end
 end

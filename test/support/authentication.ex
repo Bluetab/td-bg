@@ -38,4 +38,18 @@ defmodule TrueBGWeb.Authentication do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
+  def session_destroy(token) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.delete!(session_url(@endpoint, :destroy), headers, [])
+    {:ok, status_code}
+  end
+
+  def session_change_password(token, old_password, new_password) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{old_passord: old_password, new_password: new_password} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+      HTTPoison.put!(session_url(@endpoint, :change_password), body, headers, [])
+      {:ok, status_code}
+  end
 end
