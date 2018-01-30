@@ -137,7 +137,7 @@ defmodule TrueBG.Permissions do
     data_domain = data_domain |> Repo.preload(:domain_group)
     user = Accounts.get_user!(principal_id)
     role_name = get_resource_role(%{user: user, data_domain: data_domain})
-    %Role{ name: role_name }
+    %Role{name: role_name}
   end
 
   @doc """
@@ -148,7 +148,7 @@ defmodule TrueBG.Permissions do
     domain_group = domain_group |> Repo.preload(:parent)
     user = Accounts.get_user!(principal_id)
     role_name = get_resource_role(%{user: user, domain_group: domain_group, role: nil})
-    %Role{ name: role_name }
+    %Role{name: role_name}
   end
 
   defp get_resource_role(%{user: %User{}, data_domain: %DataDomain{domain_group_id: nil}, role: nil} = attrs) do
