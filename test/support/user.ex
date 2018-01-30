@@ -25,4 +25,16 @@ defmodule TrueBGWeb.User do
     {:ok, _status_code, json_resp} = user_list(token)
     Enum.find(json_resp["data"], fn(user) -> user["user_name"] == user_name end)
   end
+
+  def role_list(token) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(role_url(@endpoint, :index), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  def get_role_by_name(token, role_name) do
+    {:ok, _status_code, json_resp} = role_list(token)
+    Enum.find(json_resp["data"], fn(role) -> role["name"] == role_name end)
+  end
 end
