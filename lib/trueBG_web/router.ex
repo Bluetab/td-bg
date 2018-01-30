@@ -30,6 +30,15 @@ defmodule TrueBGWeb.Router do
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
     resources "/roles", RoleController, except: [:new, :edit]
     resources "/acl_entries", AclEntryController, except: [:new, :edit]
+
+    resources "/users", UserController do
+      resources "/domain_groups", DomainGroupController do
+        get "/roles", RoleController, :user_domain_group_role
+      end
+      resources "/data_domains", DataDomainController do
+        get "/roles", RoleController, :user_data_domain_role
+      end
+    end
   end
 
   scope "/api", TrueBGWeb do

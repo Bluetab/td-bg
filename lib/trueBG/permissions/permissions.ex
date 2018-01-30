@@ -123,15 +123,6 @@ defmodule TrueBG.Permissions do
   end
 
   @doc """
-    Inserts a Role record in Role schema
-  """
-  def create_role(attrs) do
-    %Role{}
-    |> Role.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
     Returns Role with name role_name
   """
   def get_role_by_name(role_name) do
@@ -145,7 +136,8 @@ defmodule TrueBG.Permissions do
     data_domain = Taxonomies.get_data_domain!(resource_id)
     data_domain = data_domain |> Repo.preload(:domain_group)
     user = Accounts.get_user!(principal_id)
-    get_resource_role(%{user: user, data_domain: data_domain})
+    role_name = get_resource_role(%{user: user, data_domain: data_domain})
+    %Role{ name: role_name }
   end
 
   @doc """
@@ -155,7 +147,8 @@ defmodule TrueBG.Permissions do
     domain_group = Taxonomies.get_domain_group(resource_id)
     domain_group = domain_group |> Repo.preload(:parent)
     user = Accounts.get_user!(principal_id)
-    get_resource_role(%{user: user, domain_group: domain_group, role: nil})
+    role_name = get_resource_role(%{user: user, domain_group: domain_group, role: nil})
+    %Role{ name: role_name }
   end
 
   defp get_resource_role(%{user: %User{}, data_domain: %DataDomain{domain_group_id: nil}, role: nil} = attrs) do
@@ -239,7 +232,6 @@ defmodule TrueBG.Permissions do
       acl_entry -> acl_entry.role
     end
   end
-
 
   alias TrueBG.Permissions.Role
 

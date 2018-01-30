@@ -39,4 +39,14 @@ defmodule TrueBGWeb.RoleController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def user_domain_group_role(conn, %{"user_id" => user_id, "domain_group_id" => domain_group_id} = attrs) do
+    role = Permissions.get_role_in_resource(%{user_id: user_id, domain_group_id: domain_group_id})
+    render(conn, "show.json", role: role)
+  end
+
+  def user_data_domain_role(conn, %{"user_id" => user_id, "data_domain_id" => data_domain_id} = attrs) do
+    role = Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: data_domain_id})
+    render(conn, "show.json", role: role)
+  end
 end
