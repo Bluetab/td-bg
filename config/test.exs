@@ -6,6 +6,10 @@ config :trueBG, TrueBGWeb.Endpoint,
   http: [port: 4001],
   server: true
 
+#Performance in test
+config :bcrypt_elixir, :log_rounds, 4
+
+
 # Print only warnings and errors during test
 config :logger, handle_sasl_reports: true, level: :warn
 
