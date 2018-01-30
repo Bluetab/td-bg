@@ -18,6 +18,7 @@
   "edeliver": {:hex, :edeliver, "1.4.4", "f019e1e8839e22dd868d3871be0ba4cd1424e4330f31891762298932eba9c8eb", [:mix], [{:distillery, ">= 0.8.0", [hex: :distillery, optional: true]}, {:exrm, ">= 0.16.0", [hex: :exrm, optional: true]}]},
   "elixir_make": {:hex, :elixir_make, "0.4.0", "992f38fabe705bb45821a728f20914c554b276838433349d4f2341f7a687cddf", [:mix], []},
   "erlware_commons": {:hex, :erlware_commons, "1.0.4", "8f215709ccb8a99bc0436405cd78a8a92b84ad08969c2b926e239cc3b08ac4dc", [:rebar3], [{:cf, "0.2.2", [hex: :cf, optional: false]}]},
+  "ex_machina": {:hex, :ex_machina, "2.1.0", "4874dc9c78e7cf2d429f24dc3c4005674d4e4da6a08be961ffccc08fb528e28b", [:mix], [{:ecto, "~> 2.1", [hex: :ecto, repo: "hexpm", optional: true]}], "hexpm"},
   "exrm": {:hex, :exrm, "1.0.8", "5aa8990cdfe300282828b02cefdc339e235f7916388ce99f9a1f926a9271a45d", [:mix], [{:relx, "~> 3.5", [hex: :relx, optional: false]}]},
   "getopt": {:hex, :getopt, "1.0.1", "c73a9fa687b217f2ff79f68a3b637711bb1936e712b521d8ce466b29cbf7808a", [:rebar3], []},
   "gettext": {:hex, :gettext, "0.14.0", "1a019a2e51d5ad3d126efe166dcdf6563768e5d06c32a99ad2281a1fa94b4c72", [:mix], []},

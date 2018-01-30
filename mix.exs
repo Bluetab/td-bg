@@ -49,7 +49,8 @@ defmodule TrueBG.Mixfile do
       {:bcrypt_elixir, "~> 1.0"},
       {:guardian_db, "~> 1.0"},
       {:canary, "~> 1.1.1"},
-      {:canada, "~> 1.0.1"}
+      {:canada, "~> 1.0.1"},
+      {:ex_machina, "~> 2.1", only: :test},
     ]
   end
 

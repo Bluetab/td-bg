@@ -13,8 +13,10 @@ defmodule TrueBGWeb.SessionController do
   end
 
   defp handle_sign_in(conn, user) do
+    custom_claims = %{"user_name": user.user_name,
+                      "is_admin": user.is_admin}
     conn
-      |> GuardianPlug.sign_in(user)
+      |> GuardianPlug.sign_in(user, custom_claims)
   end
 
   def create(conn, %{"user" => %{"user_name" => user_name,

@@ -1,10 +1,12 @@
 defmodule TrueBG.TaxonomiesTest do
   use TrueBG.DataCase
 
+  alias TrueBG.Repo
   alias TrueBG.Taxonomies
 
   describe "domain_groups" do
     alias TrueBG.Taxonomies.DomainGroup
+    alias TrueBG.Repo
 
     @valid_attrs %{description: "some description", name: "some name"}
     @update_attrs %{description: "some updated description", name: "some updated name"}
@@ -141,65 +143,84 @@ defmodule TrueBG.TaxonomiesTest do
     end
   end
 
-  # describe "business_concepts" do
-  #   alias TrueBG.Taxonomies.BusinessConcept
-  #
-  #   @valid_attrs %{content: %{}, type: "some type"}
-  #   @update_attrs %{content: %{}, type: "some updated type"}
-  #   @invalid_attrs %{content: nil, type: nil}
-  #
-  #   def business_concept_fixture(attrs \\ %{}) do
-  #     {:ok, business_concept} =
-  #       attrs
-  #       |> Enum.into(@valid_attrs)
-  #       |> Taxonomies.create_business_concept()
-  #
-  #     business_concept
-  #   end
-  #
-  #   test "list_business_concepts/0 returns all business_concepts" do
-  #     business_concept = business_concept_fixture()
-  #     assert Taxonomies.list_business_concepts() == [business_concept]
-  #   end
-  #
-  #   test "get_business_concept!/1 returns the business_concept with given id" do
-  #     business_concept = business_concept_fixture()
-  #     assert Taxonomies.get_business_concept!(business_concept.id) == business_concept
-  #   end
-  #
-  #   test "create_business_concept/1 with valid data creates a business_concept" do
-  #     assert {:ok, %BusinessConcept{} = business_concept} = Taxonomies.create_business_concept(@valid_attrs)
-  #     assert business_concept.content == %{}
-  #     assert business_concept.type == "some type"
-  #   end
-  #
-  #   test "create_business_concept/1 with invalid data returns error changeset" do
-  #     assert {:error, %Ecto.Changeset{}} = Taxonomies.create_business_concept(@invalid_attrs)
-  #   end
-  #
-  #   test "update_business_concept/2 with valid data updates the business_concept" do
-  #     business_concept = business_concept_fixture()
-  #     assert {:ok, business_concept} = Taxonomies.update_business_concept(business_concept, @update_attrs)
-  #     assert %BusinessConcept{} = business_concept
-  #     assert business_concept.content == %{}
-  #     assert business_concept.type == "some updated type"
-  #   end
-  #
-  #   test "update_business_concept/2 with invalid data returns error changeset" do
-  #     business_concept = business_concept_fixture()
-  #     assert {:error, %Ecto.Changeset{}} = Taxonomies.update_business_concept(business_concept, @invalid_attrs)
-  #     assert business_concept == Taxonomies.get_business_concept!(business_concept.id)
-  #   end
-  #
-  #   test "delete_business_concept/1 deletes the business_concept" do
-  #     business_concept = business_concept_fixture()
-  #     assert {:ok, %BusinessConcept{}} = Taxonomies.delete_business_concept(business_concept)
-  #     assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_business_concept!(business_concept.id) end
-  #   end
-  #
-  #   test "change_business_concept/1 returns a business_concept changeset" do
-  #     business_concept = business_concept_fixture()
-  #     assert %Ecto.Changeset{} = Taxonomies.change_business_concept(business_concept)
-  #   end
-  # end
+  describe "business_concepts" do
+    alias TrueBG.Taxonomies.BusinessConcept
+
+    def business_concept_preload(business_concept) do
+      business_concept
+        |> Repo.preload(:data_domain)
+        |> Repo.preload(data_domain: [:domain_group])
+    end
+
+    test "list_business_concepts/0 returns all business_concepts" do
+      user = insert(:user)
+      business_concept = insert(:business_concept, modifier: user.id)
+      businnes_conceps = Taxonomies.list_business_concepts()
+      assert  businnes_conceps |> Enum.map(fn(b) -> business_concept_preload(b) end)
+            == [business_concept]
+    end
+
+    test "get_business_concept!/1 returns the business_concept with given id" do
+      user = insert(:user)
+      business_concept = insert(:business_concept, modifier:  user.id)
+      object = Taxonomies.get_business_concept!(business_concept.id)
+      assert  object |> business_concept_preload() == business_concept
+    end
+
+    test "create_business_concept/1 with valid data creates a business_concept" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1}
+
+      creation_attrs = Map.from_struct(build(:business_concept))
+      creation_attrs = creation_attrs |> Map.merge(attrs)
+
+      assert {:ok, %BusinessConcept{} = business_concept} = Taxonomies.create_business_concept(creation_attrs)
+      attrs
+        |> Enum.each(&(assert business_concept |> Map.get(elem(&1, 0)) == elem(&1, 1)))
+    end
+
+    test "create_business_concept/1 with invalid data returns error changeset" do
+      business_concept = build(:business_concept)
+      creation_attrs = business_concept |> Map.from_struct()
+      assert {:error, %Ecto.Changeset{}} = Taxonomies.create_business_concept(creation_attrs)
+    end
+
+    test "update_business_concept/2 with valid data updates the business_concept" do
+      user = insert(:user)
+      business_concept = insert(:business_concept, modifier:  user.id)
+
+      update_attrs = %{name: "some name", description: "some description", version: 2}
+
+      assert {:ok, business_concept} = Taxonomies.update_business_concept(business_concept, update_attrs)
+      assert %BusinessConcept{} = business_concept
+      update_attrs
+        |> Enum.each(&(assert business_concept |> Map.get(elem(&1, 0)) == elem(&1, 1)))
+    end
+
+    test "update_business_concept/2 with invalid data returns error changeset" do
+      user = insert(:user)
+      business_concept = insert(:business_concept, modifier:  user.id)
+
+      update_attrs = %{name: nil, description: nil, version: nil}
+      assert {:error, %Ecto.Changeset{}} = Taxonomies.update_business_concept(business_concept, update_attrs)
+      object = Taxonomies.get_business_concept!(business_concept.id)
+      assert  object |> business_concept_preload() == business_concept
+    end
+
+    test "delete_business_concept/1 deletes the business_concept" do
+      user = insert(:user)
+      business_concept = insert(:business_concept, modifier:  user.id)
+      assert {:ok, %BusinessConcept{}} = Taxonomies.delete_business_concept(business_concept)
+      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_business_concept!(business_concept.id) end
+    end
+
+    test "change_business_concept/1 returns a business_concept changeset" do
+      user = insert(:user)
+      business_concept = insert(:business_concept, modifier:  user.id)
+      assert %Ecto.Changeset{} = Taxonomies.change_business_concept(business_concept)
+    end
+  end
 end

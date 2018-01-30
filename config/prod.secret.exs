@@ -19,3 +19,15 @@ config :trueBG, TrueBG.Repo,
   database: "truebg_prod",
   hostname: "localhost",
   pool_size: 15
+
+config :trueBG, TrueBG.Auth.Guardian,
+  allowed_algos: ["HS512"], # optional
+  issuer: "trueBG",
+  ttl: { 1, :hours },
+  secret_key: "SuperSecretTruedat"
+
+config :guardian, Guardian.DB,
+   repo: TrueBG.Repo,
+   schema_name: "guardian_tokens", # default
+   #token_types: ["refresh_token"], # store all token types if not set
+   sweep_interval: 60 # default: 60 minutes
