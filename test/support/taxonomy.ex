@@ -3,11 +3,11 @@ defmodule TrueBGWeb.Taxonomy do
 
   alias Poison, as: JSON
   import TrueBGWeb.Router.Helpers
+  import TrueBGWeb.Authentication, only: :functions
   @endpoint TrueBGWeb.Endpoint
-  @headers {"Content-type", "application/json"}
 
   def domain_group_create(token, domain_group_params) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     body = %{domain_group: domain_group_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(domain_group_url(@endpoint, :create), body, headers, [])
@@ -15,21 +15,21 @@ defmodule TrueBGWeb.Taxonomy do
   end
 
   def domain_group_list(token) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(domain_group_url(@endpoint, :index), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
   def domain_group_show(token, id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(domain_group_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
   def domain_group_update(token, id, domain_group_params) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     body = %{domain_group: domain_group_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.patch!(domain_group_url(@endpoint, :update, id), body, headers, [])
@@ -37,7 +37,7 @@ defmodule TrueBGWeb.Taxonomy do
   end
 
   def data_domain_create(token, data_domain_params) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     body = %{data_domain: data_domain_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(data_domain_url(@endpoint, :create), body, headers, [])
@@ -45,7 +45,7 @@ defmodule TrueBGWeb.Taxonomy do
   end
 
   def data_domain_update(token, id, name, description) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     body = %{data_domain: %{name: name, description: description}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.patch!(data_domain_url(@endpoint, :update, id), body, headers, [])
@@ -53,13 +53,27 @@ defmodule TrueBGWeb.Taxonomy do
   end
 
   def data_domain_show(token, id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(data_domain_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def get_domain_droup_by_name(list, domain_group_name) do
-    Enum.find(list, fn(domain_group) -> domain_group["name"] == domain_group_name end)
+  def data_domain_list(token) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(data_domain_url(@endpoint, :index), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
   end
+
+  def get_domain_group_by_name(token, domain_group_name) do
+    {:ok, _status_code, json_resp} = domain_group_list(token)
+    Enum.find(json_resp["data"], fn(domain_group) -> domain_group["name"] == domain_group_name end)
+  end
+
+  def get_data_domain_by_name(token, data_domain_name) do
+    {:ok, _status_code, json_resp} = data_domain_list(token)
+    Enum.find(json_resp["data"], fn(data_domain) -> data_domain["name"] == data_domain_name end)
+  end
+
 end

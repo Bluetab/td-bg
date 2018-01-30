@@ -4,34 +4,26 @@ defmodule TrueBG.BusinessConceptTest do
 
   # import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
+  import TrueBGWeb.Taxonomy, only: :functions
+  import TrueBGWeb.Authentication, only: :functions
 
   import_feature TrueBGWeb.GlobalFeatures
 
   alias Poison, as: JSON
-  alias TrueBG.Taxonomies
   alias TrueBG.Accounts
   alias TrueBG.Accounts.User
+  alias TrueBG.Taxonomies
 
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
 
   # Scenario Outline: Creating a simple date business concept
+  defand ~r/^an existing Domain Group called "(?<child_domain_group_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
+          %{child_domain_group_name: child_domain_group_name, domain_group_name: domain_group_name}, state do
 
-  defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
-    existing_dg = Taxonomies.get_domain_group_by_name(name)
-    {_, parent_domain_group} =
-      case existing_dg do
-        nil ->
-          Taxonomies.create_domain_group(%{name: name})
-        _ ->
-          {:ok, existing_dg}
-      end
-    {:ok, Map.merge(state, %{parent_domain_group: parent_domain_group})}
-  end
-
-  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "My Parent Group"$/,
-          %{name: name}, %{parent_domain_group: parent_domain_group} = state do
-    {_, domain_group} = Taxonomies.create_domain_group(%{name: name, parent_id: parent_domain_group.id})
+    token = state[:token_admin]
+    parent = get_domain_group_by_name(token, domain_group_name)
+    {_, domain_group} = Taxonomies.create_domain_group(%{name: child_domain_group_name, parent_id: parent["id"]})
     {:ok, Map.merge(state, %{domain_group: domain_group})}
   end
 
@@ -129,13 +121,6 @@ defmodule TrueBG.BusinessConceptTest do
     else
       {:ok, Map.merge(state, %{})}
     end
-  end
-
-  defp session_create(user_name, user_password) do
-    body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
-    {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp business_concept_create(token, type, name, description, data_domain_id, content) do
