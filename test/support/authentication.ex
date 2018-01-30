@@ -3,9 +3,13 @@ defmodule TrueBGWeb.Authentication do
   This module defines the functions required to
   add auth headers to requests
   """
-  import Plug.Conn
   alias Phoenix.ConnTest
   alias TrueBG.Auth.Guardian
+  alias Poison, as: JSON
+  import Plug.Conn
+  import TrueBGWeb.Router.Helpers
+  @endpoint TrueBGWeb.Endpoint
+  @headers {"Content-type", "application/json"}
 
   def put_auth_headers(conn, jwt) do
     conn
@@ -25,6 +29,13 @@ defmodule TrueBGWeb.Authentication do
     conn = ConnTest.build_conn()
     conn = put_auth_headers(conn, jwt)
     {:ok, %{conn: conn, jwt: jwt, claims: full_claims}}
+  end
+
+  def session_create(user_name, user_password) do
+    body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
+    {:ok, status_code, resp |> JSON.decode!}
   end
 
 end
