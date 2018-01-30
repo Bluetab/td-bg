@@ -8,7 +8,6 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   import TrueBGWeb.User, only: :functions
   alias Poison, as: JSON
   @endpoint TrueBGWeb.Endpoint
-  @headers {"Content-type", "application/json"}
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
@@ -96,21 +95,21 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   end
 
   defp user_domain_group_role(token, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(user_domain_group_role_url(@endpoint, :user_domain_group_role, attrs.user_id, attrs.domain_group_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp user_data_domain_role(token, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(user_data_domain_role_url(@endpoint, :user_data_domain_role, attrs.user_id, attrs.data_domain_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp acl_entry_create(token, acl_entry_params) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     body = %{acl_entry: acl_entry_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(acl_entry_url(@endpoint, :create), body, headers, [])
