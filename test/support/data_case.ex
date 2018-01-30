@@ -24,6 +24,7 @@ defmodule TrueBG.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import TrueBG.DataCase
+      import TrueBG.Factory
     end
   end
 

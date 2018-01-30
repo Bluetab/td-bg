@@ -14,8 +14,8 @@ defmodule TrueBG.Taxonomies.DomainGroup do
   @doc false
   def changeset(%DomainGroup{} = domain_group, attrs) do
     domain_group
-    |> cast(attrs, [:name, :description, :parent_id])
-    |> validate_required([:name])
-    |> unique_constraint(:name)
+      |> cast(attrs, [:name, :description, :parent_id])
+      |> validate_required([:name])
+      |> unique_constraint(:name)
   end
 end
