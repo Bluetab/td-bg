@@ -25,9 +25,8 @@ config :logger, :console,
 config :trueBG, TrueBG.Auth.Guardian,
   allowed_algos: ["HS512"], # optional
   issuer: "trueBG",
-  ttl: { 1, :days },
-  verify_issuer: true, # optional
-  secret_key: "get-your-own-secret-peeps"
+  ttl: { 1, :hours },
+  secret_key: "SuperSecretTruedat"
 
 config :guardian, Guardian.DB,
    repo: TrueBG.Repo,
