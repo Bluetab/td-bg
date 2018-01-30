@@ -44,9 +44,9 @@ defmodule TrueBGWeb.Taxonomy do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def data_domain_update(token, id, name, description) do
+  def data_domain_update(token, id, data_domain_params) do
     headers = get_header(token)
-    body = %{data_domain: %{name: name, description: description}} |> JSON.encode!
+    body = %{data_domain: data_domain_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.patch!(data_domain_url(@endpoint, :update, id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}

@@ -51,22 +51,20 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   # Scenario: Creating a Data Domain depending on an existing Domain Group
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to create a Data Domain with the name "(?<data_domain_name>[^"]+)" as child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-          %{user_name: _user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+          %{user_name: _user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
 
-    token = state[:token_admin]
-    parent = get_domain_group_by_name(token, domain_group_name)
+    parent = get_domain_group_by_name(token_admin, domain_group_name)
     assert parent["name"] == domain_group_name
-    {_, status_code, _json_resp} = data_domain_create(token, %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
+    {_, status_code, _json_resp} = data_domain_create(token_admin, %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
   defand ~r/^the user "(?<user_name>[^"]+)" is able to see the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-         %{user_name: _user_name, data_domain_name: data_domain_name, table: [%{Description: description}]}, state do
+         %{user_name: _user_name, data_domain_name: data_domain_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
 
-    token = state[:token_admin]
-    data_domain_info = get_data_domain_by_name(token, data_domain_name)
+    data_domain_info = get_data_domain_by_name(token_admin, data_domain_name)
     assert data_domain_name == data_domain_info["name"]
-    {_, status_code, json_resp} = data_domain_show(token, data_domain_info["id"])
+    {_, status_code, json_resp} = data_domain_show(token_admin, data_domain_info["id"])
     assert rc_ok() == to_response_code(status_code)
     data_domain = json_resp["data"]
     assert data_domain_name == data_domain["name"]
@@ -74,54 +72,60 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, %{state | status_code: nil}}
   end
 
-  defand ~r/^Data Domain "(?<data_domain_name>[^"]+)" is a child of Domain Group "(?<domain_group_name>[^"]+)"$/, %{data_domain_name: data_domain_name, domain_group_name: domain_group_name}, state do
-    token = state[:token_admin]
-    data_domain_info = get_data_domain_by_name(token, data_domain_name)
+  defand ~r/^Data Domain "(?<data_domain_name>[^"]+)" is a child of Domain Group "(?<domain_group_name>[^"]+)"$/,
+          %{data_domain_name: data_domain_name, domain_group_name: domain_group_name}, %{token_admin: token_admin} = _state do
+
+    data_domain_info = get_data_domain_by_name(token_admin, data_domain_name)
     assert data_domain_name == data_domain_info["name"]
-    domain_group_info = get_domain_group_by_name(token, domain_group_name)
+    domain_group_info = get_domain_group_by_name(token_admin, domain_group_name)
     assert domain_group_name == domain_group_info["name"]
     assert data_domain_info["domain_group_id"] == domain_group_info["id"]
   end
 
-  defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/, %{name: name, domain_group_name: domain_group_name}, state do
-    token = state[:token_admin]
-    domain_group_info = get_domain_group_by_name(token, domain_group_name)
+  defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
+      %{name: name, domain_group_name: domain_group_name}, %{token_admin: token_admin} = _state do
+
+    domain_group_info = get_domain_group_by_name(token_admin, domain_group_name)
     assert domain_group_info["name"] == domain_group_name
-    {_, _status_code, json_resp} = data_domain_create(token, %{name: name, domain_group_id: domain_group_info["id"]})
+    {_, _status_code, json_resp} = data_domain_create(token_admin, %{name: name, domain_group_id: domain_group_info["id"]})
     data_domain = json_resp["data"]
     assert data_domain["domain_group_id"] == domain_group_info["id"]
   end
 
   # Scenario: Modifying a Domain Group and seeing the new version
-  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/, %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    {_, _status_code, json_resp} = domain_group_create(state[:token_admin], %{name: domain_group_name, description: description})
+  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/,
+        %{domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = _state do
+
+    {_, _status_code, json_resp} = domain_group_create(token_admin, %{name: domain_group_name, description: description})
     domain_group = json_resp["data"]
     assert domain_group["description"] == description
   end
 
-  defand ~r/^user "app-admin" tries to modify a Domain Group with the name "(?<domain_group_name>[^"]+)" introducing following data:$/, %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    token = state[:token_admin]
-    domain_group = get_domain_group_by_name(token, domain_group_name)
-    {_, status_code, _json_resp} = domain_group_update(token, domain_group["id"], %{name: domain_group_name, description: description})
+  defand ~r/^user "app-admin" tries to modify a Domain Group with the name "(?<domain_group_name>[^"]+)" introducing following data:$/,
+      %{domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
+
+    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
+    {_, status_code, _json_resp} = domain_group_update(token_admin, domain_group["id"], %{name: domain_group_name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
   # Scenario: Modifying a Data Domain and seeing the new version
   defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-    %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    token = state[:token_admin]
-    {_, _status_code, json_resp} = domain_group_create(token, %{name: domain_group_name})
+        %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = _state do
+
+    {_, _status_code, json_resp} = domain_group_create(token_admin, %{name: domain_group_name})
     domain_group = json_resp["data"]
-    {_, _status_code, json_resp} = data_domain_create(token, %{name: data_domain_name, description: description, domain_group_id: domain_group["id"]})
+    {_, _status_code, json_resp} = data_domain_create(token_admin, %{name: data_domain_name, description: description, domain_group_id: domain_group["id"]})
     data_domain = json_resp["data"]
     assert data_domain["domain_group_id"] == domain_group["id"]
     assert data_domain["description"] == description
   end
 
-  defwhen ~r/^user "app-admin" tries to modify a Data Domain with the name "(?<data_domain_name>[^"]+)" introducing following data:$/, %{data_domain_name: data_domain_name, table: [%{Description: description}]}, state do
-    token = state[:token_admin]
-    data_domain_info = get_data_domain_by_name(token, data_domain_name)
-    {:ok, status_code, _json_resp} = data_domain_update(token, data_domain_info["id"], data_domain_name, description)
+  defwhen ~r/^user "app-admin" tries to modify a Data Domain with the name "(?<data_domain_name>[^"]+)" introducing following data:$/,
+      %{data_domain_name: data_domain_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
+
+    data_domain_info = get_data_domain_by_name(token_admin, data_domain_name)
+    {:ok, status_code, _json_resp} = data_domain_update(token_admin, data_domain_info["id"], %{name: data_domain_name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 end
