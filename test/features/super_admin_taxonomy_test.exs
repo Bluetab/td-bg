@@ -26,7 +26,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
       token = state[:token]
       {_, _status_code, json_resp} = domain_group_list(token)
-      domain_group =  getDomainGroupByName(json_resp["data"], domain_group_name)
+      domain_group =  get_domain_droup_by_name(json_resp["data"], domain_group_name)
       {_, status_code, json_resp} = domain_group_show(token, domain_group["id"])
       assert rc_ok() == to_response_code(status_code)
       domain_group = json_resp["data"]
@@ -51,8 +51,8 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   defand ~r/^Domain Group "(?<name>[^"]+)" is a child of Domain Group "(?<parent_name>[^"]+)"$/, %{name: name, parent_name: parent_name}, state do
     {_, _status_code, json_resp} = domain_group_list(state[:token])
-    child = getDomainGroupByName(json_resp["data"], name)
-    parent = getDomainGroupByName(json_resp["data"], parent_name)
+    child = get_domain_droup_by_name(json_resp["data"], name)
+    parent = get_domain_droup_by_name(json_resp["data"], parent_name)
     assert child["name"] == name
     assert parent["name"] == parent_name
     assert child["parent_id"] == parent["id"]

@@ -59,7 +59,7 @@ defmodule TrueBGWeb.Taxonomy do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def getDomainGroupByName(list, domain_group_name) do
+  def get_domain_droup_by_name(list, domain_group_name) do
     Enum.find(list, fn(domain_group) -> domain_group["name"] == domain_group_name end)
   end
 end

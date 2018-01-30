@@ -1,4 +1,5 @@
 defmodule TrueBGWeb.User do
+  @moduledoc false
 
   alias Poison, as: JSON
   import TrueBGWeb.Router.Helpers
