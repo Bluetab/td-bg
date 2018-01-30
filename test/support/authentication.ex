@@ -31,6 +31,10 @@ defmodule TrueBGWeb.Authentication do
     {:ok, %{conn: conn, jwt: jwt, claims: full_claims}}
   end
 
+  def get_header(token) do
+    [@headers, {"authorization", "Bearer #{token}"}]
+  end
+
   def session_create(user_name, user_password) do
     body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
@@ -39,14 +43,14 @@ defmodule TrueBGWeb.Authentication do
   end
 
   def session_destroy(token) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.delete!(session_url(@endpoint, :destroy), headers, [])
     {:ok, status_code}
   end
 
   def session_change_password(token, old_password, new_password) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    headers = get_header(token)
     body = %{old_passord: old_password, new_password: new_password} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
       HTTPoison.put!(session_url(@endpoint, :change_password), body, headers, [])

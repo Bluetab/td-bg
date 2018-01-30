@@ -3,8 +3,9 @@ defmodule TrueBG.AuthenticationTest do
   use TrueBGWeb.ConnCase
   import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
-  import TrueBGWeb.Authentication
-  import TrueBGWeb.User
+  import TrueBGWeb.Authentication, only: :functions
+  import TrueBGWeb.User, only: :functions
+  import_feature TrueBGWeb.GlobalFeatures
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
 
@@ -17,10 +18,6 @@ defmodule TrueBG.AuthenticationTest do
   defthen ~r/^the system returns a token with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
     assert status_code == to_response_code(state[:status_code])
     assert state[:token] != nil
-  end
-
-  defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/, %{status_code: status_code}, state do
-    assert status_code == to_response_code(state[:status_code])
   end
 
   # Scenario: logging error
