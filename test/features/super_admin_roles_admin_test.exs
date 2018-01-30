@@ -3,6 +3,8 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   use TrueBGWeb.ConnCase
   import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
+  import TrueBGWeb.Taxonomy
+  import TrueBGWeb.User, only: :functions
   alias Poison, as: JSON
   alias TrueBG.Taxonomies
   alias TrueBG.Accounts
@@ -12,13 +14,11 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
-    existing_dg = Taxonomies.get_domain_group_by_name(name)
-    {_, _domain_group} =
-      if existing_dg == nil do
-        Taxonomies.create_domain_group(%{name: name})
-      else
-        {:ok, existing_dg}
-      end
+    {_, status_code, json_resp} = session_create("app-admin", "mypass")
+    assert rc_created() == to_response_code(status_code)
+    state = Map.merge(state, %{status_code: status_code, admin_token: json_resp["token"], resp: json_resp})
+    {_, status_code, _json_resp} = domain_group_create(state[:admin_token],  %{name: name})
+    assert rc_created() == to_response_code(status_code)
     {:ok, state}
   end
 
@@ -62,12 +62,18 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
     {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
   end
 
+  defand ~r/^user "app-admin" is logged in the application$/, %{}, state do
+    {_, status_code, json_resp} = session_create("app-admin", "mypass")
+    assert rc_created() == to_response_code(status_code)
+    {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
+  end
+
   defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Domain Group (?<resource_name>[^"]+)$/,
           %{user_name: _user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
     domain_group_info = Taxonomies.get_domain_group_by_name(resource_name)
-    user_info = Accounts.get_user_by_name(principal_name)
+    user_info = get_user_by_name(state[:admin_token], principal_name)
     role_info = Permissions.get_role_by_name(role_name)
-    acl_entry_params = %{principal_type: "user", principal_id: user_info.id, resource_type: "domain_group", resource_id: domain_group_info.id, role_id: role_info.id}
+    acl_entry_params = %{principal_type: "user", principal_id: user_info["id"], resource_type: "domain_group", resource_id: domain_group_info.id, role_id: role_info.id}
     {_, status_code, json_resp} = acl_entry_create(state[:token] , acl_entry_params)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
@@ -88,6 +94,18 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
     data_domain_info = Taxonomies.get_data_domain_by_name(data_domain_name)
     role = Permissions.get_role_in_resource(%{user_id: user_info.id, data_domain_id: data_domain_info.id})
     assert role == role_name
+  end
+
+  #Scenario
+
+  defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Data Domain "(?<resource_name>[^"]+)"$/,
+          %{user_name: _user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
+    data_domain_info = Taxonomies.get_data_domain_by_name(resource_name)
+    user_info = Accounts.get_user_by_name(principal_name)
+    role_info = Permissions.get_role_by_name(role_name)
+    acl_entry_params = %{principal_type: "user", principal_id: user_info.id, resource_type: "data_domain", resource_id: data_domain_info.id, role_id: role_info.id}
+    {_, status_code, json_resp} = acl_entry_create(state[:token] , acl_entry_params)
+    {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
   defp session_create(user_name, user_password) do

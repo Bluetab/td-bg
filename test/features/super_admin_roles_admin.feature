@@ -15,7 +15,7 @@ Feature: Roles Admin
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
     And an existing user "johndoe" with password "secret" without "super-admin" permission
-    And user "app-admin" is logged in the application with password "mypass"
+    And user "app-admin" is logged in the application
     When "app-admin" grants <role> role to user "johndoe" in Domain Group <group>
     Then the system returns a result with code "Created"
     And the user "johndoe" has <parent_group_role> role in Domain Group "My Parent Group"
@@ -31,24 +31,24 @@ Feature: Roles Admin
       | create  | My Parent Group   | create             | create           | create      |
       | create  | My Child Group    | watch              | create           | create      |
 
-#  Scenario Outline: Granting roles to data domain
-#    Given an existing Domain Group called "My Parent Group"
-#    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-#    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-#    And an existing user "johndoe"
-#    And user "app-admin" is logged in the application
-#    When "app-admin" grants <role> role to user "johndoe" in Data Domain "My Domain"
-#    Then the system returns a result with code "Ok"
-#    And the user "johndoe" has <parent_group_role> role in Domain Group "My Parent Group"
-#    And the user "johndoe" has <child_group_role> role in Domain Group "My Child Group"
-#    And the user "johndoe" has <domain_role> role in Data Domain "My Domain"
-#
-#    Examples:
-#      | role    | parent_group_role  | child_group_role | domain_role |
-#      | admin   | watch              | watch            | admin       |
-#      | publish | watch              | watch            | publish     |
-#      | create  | watch              | watch            | create      |
-#
+  Scenario Outline: Granting roles to data domain
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And an existing user "johndoe" with password "secret" without "super-admin" permission
+    And user "app-admin" is logged in the application
+    When "app-admin" grants <role> role to user "johndoe" in Data Domain "My Domain"
+    Then the system returns a result with code "Created"
+    And the user "johndoe" has <parent_group_role> role in Domain Group "My Parent Group"
+    And the user "johndoe" has <child_group_role> role in Domain Group "My Child Group"
+    And the user "johndoe" has <domain_role> role in Data Domain "My Domain"
+
+    Examples:
+      | role    | parent_group_role  | child_group_role | domain_role |
+      | admin   | watch              | watch            | admin       |
+      | publish | watch              | watch            | publish     |
+      | create  | watch              | watch            | create      |
+
 #  Scenario Outline: Granting roles by non admin user to domain group
 #    Given an existing user "johndoe" with password "pas2w0rd" without "super-admin" permission
 #    And an existing user "hariseldon" with password "fundaci0n" without "super-admin" permission

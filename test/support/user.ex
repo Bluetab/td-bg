@@ -13,4 +13,16 @@ defmodule TrueBGWeb.User do
         HTTPoison.post!(user_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
+
+  def user_list(token) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(user_url(@endpoint, :index), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  def get_user_by_name(token, user_name) do
+    {:ok, _status_code, json_resp} = user_list(token)
+    Enum.find(json_resp["data"], fn(user) -> user["user_name"] == user_name end)
+  end
 end
