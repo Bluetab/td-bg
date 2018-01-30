@@ -13,7 +13,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   end
 
   defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" and following data:$/, %{name: name, table: [%{Description: description}]}, state do
-    {_, status_code, json_resp} = domain_group_create(state[:token], name, description)
+    {_, status_code, json_resp} = domain_group_create(state[:token],  %{name: name, description: description})
     domain_group = json_resp["data"]
     {:ok, Map.merge(state, %{status_code: status_code,  domain_group: domain_group})}
   end
@@ -35,7 +35,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   #Scenario Creating a Domain Group as child of an existing Domain Group
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
-    {_, _status_code, json_resp} = domain_group_create(state[:token], name, "New Description")
+    {_, _status_code, json_resp} = domain_group_create(state[:token], %{name: name, description: "New Description"})
     domain_group = json_resp["data"]
     {:ok, Map.merge(state, %{domain_group: domain_group})}
   end
@@ -44,7 +44,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
           %{name: name, parent_name: parent_name, table: [%{Description: description}]}, state do
     parent = state[:domain_group]
     assert parent["name"] == parent_name
-    {_, status_code, json_resp} = domain_group_create(state[:token], name, description, parent["id"])
+    {_, status_code, json_resp} = domain_group_create(state[:token], %{name: name, description: description, parent_id: parent["id"]})
     domain_group = json_resp["data"]
     {:ok, Map.merge(state, %{status_code: status_code,  domain_group: domain_group})}
   end
@@ -98,7 +98,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   # Scenario: Modifying a Domain Group and seeing the new version
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/, %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    {_, _status_code, json_resp} = domain_group_create(state[:token], domain_group_name, description)
+    {_, _status_code, json_resp} = domain_group_create(state[:token], %{name: domain_group_name, description: description})
     domain_group = json_resp["data"]
     assert domain_group["description"] == description
     {:ok, Map.merge(state, %{domain_group: domain_group})}
@@ -106,7 +106,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   defand ~r/^user "app-admin" tries to modify a Domain Group with the name "(?<domain_group_name>[^"]+)" introducing following data:$/, %{domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
     domain_group = state[:domain_group]
-    {_, status_code, json_resp} = domain_group_update(state[:token], domain_group["id"], domain_group_name, description)
+    {_, status_code, json_resp} = domain_group_update(state[:token], domain_group["id"], %{name: domain_group_name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
@@ -114,7 +114,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
     %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
 
-    {_, _status_code, json_resp} = domain_group_create(state[:token], domain_group_name, "New Description")
+    {_, _status_code, json_resp} = domain_group_create(state[:token], %{name: domain_group_name, description: "New Description"})
     domain_group = json_resp["data"]
     {_, _status_code, json_resp} = data_domain_create(state[:token], %{name: data_domain_name, description: description, domain_group_id: domain_group["id"]})
     data_domain = json_resp["data"]

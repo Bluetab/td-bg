@@ -6,9 +6,9 @@ defmodule TrueBGWeb.Taxonomy do
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
 
-  def domain_group_create(token, name, description, parent_id \\ nil) do
+  def domain_group_create(token, domain_group_params) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{domain_group: %{name: name, description: description, parent_id: parent_id}} |> JSON.encode!
+    body = %{domain_group: domain_group_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(domain_group_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
@@ -28,9 +28,9 @@ defmodule TrueBGWeb.Taxonomy do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def domain_group_update(token, id, name, description, parent_id \\ nil) do
+  def domain_group_update(token, id, domain_group_params) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{domain_group: %{name: name, description: description, parent_id: parent_id}} |> JSON.encode!
+    body = %{domain_group: domain_group_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.patch!(domain_group_url(@endpoint, :update, id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
