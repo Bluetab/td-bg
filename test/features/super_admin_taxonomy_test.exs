@@ -3,9 +3,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   use TrueBGWeb.ConnCase
   import TrueBGWeb.Taxonomy, only: :functions
   import TrueBGWeb.Authentication, only: :functions
-  import TrueBGWeb.ResponseCode
-
-  import_feature TrueBGWeb.GlobalFeatures
+  import TrueBGWeb.ResponseCode, only: :functions
 
   # Scenario: Creating a Domain Group without any parent
   defgiven ~r/^user "app-admin" is logged in the application$/, %{}, state do
@@ -14,9 +12,28 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, Map.merge(state, %{status_code: status_code, token_admin: json_resp["token"]})}
   end
 
+  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
+    %{domain_group_name: domain_group_name}, state do
+    token_admin = case state[:token_admin] do
+                nil ->
+                  {_, _, %{"token" => token}} = session_create("app-admin", "mypass")
+                  token
+                _ -> state[:token_admin]
+              end
+    {_, status_code, _json_resp} = domain_group_create(token_admin, %{name: domain_group_name})
+    assert rc_created() == to_response_code(status_code)
+    {:ok, Map.merge(state, %{token_admin: token_admin})}
+  end
+
   defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" and following data:$/, %{name: name, table: [%{Description: description}]}, state do
     {_, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/,
+          %{status_code: status_code}, %{status_code: http_status_code} = state do
+    assert status_code == to_response_code(http_status_code)
+    {:ok, Map.merge(state, %{})}
   end
 
   defand ~r/^the user "app-admin" is able to see the Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
