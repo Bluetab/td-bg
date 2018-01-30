@@ -51,6 +51,7 @@ defmodule TrueBG.Mixfile do
       {:canary, "~> 1.1.1"},
       {:canada, "~> 1.0.1"},
       {:ex_machina, "~> 2.1", only: :test},
+      {:cors_plug, "~> 1.2"},
     ]
   end
 
