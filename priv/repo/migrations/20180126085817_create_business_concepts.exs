@@ -11,6 +11,7 @@ defmodule TrueBG.Repo.Migrations.CreateBusinessConcepts do
       add :modifier, references(:users), null: false
       add :last_change, :utc_datetime, null: false
       add :data_domain_id, references(:data_domains), null: false
+      add :status, :string, null: false
       add :version, :integer, null: false
 
       timestamps()

@@ -1,6 +1,7 @@
 defmodule TrueBG.Factory do
   @moduledoc false
   use ExMachina.Ecto, repo: TrueBG.Repo
+  alias TrueBG.Taxonomies.BusinessConcept
 
   def user_factory do
     %TrueBG.Accounts.User {
@@ -25,7 +26,7 @@ defmodule TrueBG.Factory do
   end
 
   def business_concept_factory do
-    %TrueBG.Taxonomies.BusinessConcept {
+    %BusinessConcept {
       content: %{},
       type: "Businness Term",
       name: "My business term",
@@ -33,6 +34,7 @@ defmodule TrueBG.Factory do
       modifier: 1,
       last_change: DateTime.utc_now(),
       data_domain: build(:data_domain),
+      status: Atom.to_string(BusinessConcept.draft),
       version: 1,
     }
   end

@@ -31,6 +31,7 @@ defmodule TrueBGWeb.BusinessConceptController do
       |> Map.put("content_schema", content_schema)
       |> Map.put("modifier", get_current_user(conn).id)
       |> Map.put("last_change", DateTime.utc_now())
+      |> Map.put("status", Atom.to_string(BusinessConcept.draft))
       |> Map.put("version", 1)
 
     with {:ok, %BusinessConcept{} = business_concept} <- Taxonomies.create_business_concept(business_concept_params) do
