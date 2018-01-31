@@ -146,7 +146,7 @@ defmodule TrueBG.TaxonomiesTest do
   describe "business_concepts" do
     alias TrueBG.Taxonomies.BusinessConcept
 
-    def business_concept_preload(business_concept) do
+    defp business_concept_preload(business_concept) do
       business_concept
         |> Repo.preload(:data_domain)
         |> Repo.preload(data_domain: [:domain_group])
@@ -170,12 +170,21 @@ defmodule TrueBG.TaxonomiesTest do
     test "create_business_concept/1 with valid data creates a business_concept" do
       user = insert(:user)
       data_domain = insert(:data_domain)
+
+      content = %{
+                  "Format" => "Date",
+                  "Sensitive Data" => "Personal Data",
+                  }
+
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1}
+        modifier: user.id, version: 1, content: content,
+      }
 
       creation_attrs = Map.from_struct(build(:business_concept))
-      creation_attrs = creation_attrs |> Map.merge(attrs)
+      creation_attrs = creation_attrs
+        |> Map.merge(attrs)
+        |> Map.merge(%{content_schema: bc_content_schema(:default)})
 
       assert {:ok, %BusinessConcept{} = business_concept} = Taxonomies.create_business_concept(creation_attrs)
       attrs
@@ -184,7 +193,10 @@ defmodule TrueBG.TaxonomiesTest do
 
     test "create_business_concept/1 with invalid data returns error changeset" do
       business_concept = build(:business_concept)
-      creation_attrs = business_concept |> Map.from_struct()
+      creation_attrs = business_concept
+        |> Map.from_struct()
+        |> Map.put(:content_schema, bc_content_schema(:default))
+
       assert {:error, %Ecto.Changeset{}} = Taxonomies.create_business_concept(creation_attrs)
     end
 

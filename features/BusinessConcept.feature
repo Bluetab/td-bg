@@ -44,8 +44,8 @@ Feature: Business Concepts administration
      | Formula          | string        | 100      |                                              |    NO     |               |
      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
      | List of Values   | variable list | 100      |                                              |    NO     |               |
-     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
      | Related Area     | string        | 100      |                                              |    NO     |               |
      | Default Value    | string        | 100      |                                              |    NO     |               |
      | Additional Data  | string        | 500      |                                              |    NO     |               |

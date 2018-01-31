@@ -5,6 +5,7 @@ defmodule TrueBGWeb.BusinessConceptController do
   alias TrueBG.Taxonomies.BusinessConcept
 
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
+  alias Poison, as: JSON
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -19,7 +20,15 @@ defmodule TrueBGWeb.BusinessConceptController do
 
   def create(conn, %{"business_concept" => business_concept_params}) do
 
+    type = business_concept_params |> Map.get("type")
+    filename = Application.get_env(:trueBG, :bc_schema_location)
+    content_schema = filename
+      |> File.read!
+      |> JSON.decode!
+      |> Map.get(type)
+
     business_concept_params = business_concept_params
+      |> Map.put("content_schema", content_schema)
       |> Map.put("modifier", get_current_user(conn).id)
       |> Map.put("last_change", DateTime.utc_now())
       |> Map.put("version", 1)

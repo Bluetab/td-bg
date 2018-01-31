@@ -45,3 +45,7 @@ config :trueBG, TrueBG.Repo,
   database: "truebg_dev",
   hostname: "localhost",
   pool_size: 10
+
+  config :trueBG,
+    # business concept content  schema location
+    bc_schema_location: "bc_schema.dev"

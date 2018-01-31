@@ -29,34 +29,11 @@ Feature: Business Concepts administration
   Relation between concept types is defined at a concept type level.
   Concepts must be unique by domain and name.
 
-  # Background:
-  #   Given an existing Domain Group called "My Parent Group"
-  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  #   And existing users with the correspoding role in Data Domain "My Domain"
-  #     | user      | role    |
-  #     | watcher   | watch   |
-  #     | creator   | create  |
-  #     | publisher | publish |
-  #     | admin     | admin   |
-  #   And an existing Business Concept type called "Business Term" with following data:
-  # | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
-  # | Name             | string        | 40       |                                              |    YES    |               |
-  # | Description      | string        | 500      |                                              |    YES    |               |
-  # | Formula          | string        | 100      |                                              |    NO     |               |
-  # | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
-  # | List of Values   | variable list | 100      |                                              |    NO     |               |
-  # | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-  # | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
-  # | Related Area     | string        | 100      |                                              |    NO     |               |
-  # | Default Value    | string        | 100      |                                              |    NO     |               |
-  # | Additional Data  | string        | 500      |                                              |    NO     |               |
-
   Scenario Outline: Creating a simple date business concept
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-    And follwinig users exist with the indicated role in Data Domain "My Domain"
+    And following users exist with the indicated role in Data Domain "My Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
@@ -67,13 +44,13 @@ Feature: Business Concepts administration
      | Formula          | string        | 100      |                                              |    NO     |               |
      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
      | List of Values   | variable list | 100      |                                              |    NO     |               |
-     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
      | Related Area     | string        | 100      |                                              |    NO     |               |
      | Default Value    | string        | 100      |                                              |    NO     |               |
      | Additional Data  | string        | 500      |                                              |    NO     |               |
-     When user "<user>" is logged in the application with password "<user>"
-     And <user> tries to create a business concept in the Data Domain "My Domain" with following data:
+    And user "<user>" is logged in the application with password "<user>"
+    When <user> tries to create a business concept in the Data Domain "My Domain" with following data:
       | Type          | Name                  | Description                                                       | Format |
       | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
     Then the system returns a result with code <result>
@@ -103,7 +80,110 @@ Feature: Business Concepts administration
       # | publisher | Created   | watcher                     | not able   | draft  |
       # | publisher | Created   | creator, publisher          | able       | draft  |
 
-
+  # Scenario Outline: Modification of existing Business Concept in Draft status
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with following data:
+  #    | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
+  #    | Formula          | string        | 100      |                                              |    NO     |               |
+  #    | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
+  #    | List of Values   | variable list | 100      |                                              |    NO     |               |
+  #    | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+  #    | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+  #    | Related Area     | string        | 100      |                                              |    NO     |               |
+  #    | Default Value    | string        | 100      |                                              |    NO     |               |
+  #    | Additional Data  | string        | 500      |                                              |    NO     |               |
+  #   And user "<user>" is logged in the application with password "<user>"
+  #   And an existing Business Concept of type "Business Term" with following data:
+  #     | Type          | Name                  | Description                                                       | Format |
+  #     | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
+  #   When <user> tries to modify a business concept "My Date Business Term" of type "Business Term" with following data:
+  #     | Type          | Name                  | Description                                                        | Format | Sensitive Data           | Update Frequence |
+  #     | Business Term | My Date Business Term | This is the second description of my business term which is a date | Date   | Related to personal Data | Monthly          |
+  #   Then the system returns a result with code <result>
+  #   And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
+  #    | Field             | Value                                                              |
+  #    | Name              | My Date Business Term                                              |
+  #    | Type              | Business Term                                                      |
+  #    | Description       | This is the second description of my business term which is a date |
+  #    | Formula           |                                                                    |
+  #    | Format            | Date                                                               |
+  #    | List of Values    |                                                                    |
+  #    | Sensitve Data     | Related to personal Data                                           |
+  #    | Update Frequence  | Monthly                                                            |
+  #    | Related Area      |                                                                    |
+  #    | Default Value     |                                                                    |
+  #    | Additional Data   |                                                                    |
+  #    | Last Modification | Some timestamp                                                     |
+  #    | Last User         | app-admin                                                          |
+  #    | Version           | 1                                                                  |
+  #    | Status            | Draft                                                              |
+  #
+  #   Examples:
+  #     | user      | result    |
+  #     | watcher   | Forbidden |
+  #     | creator   | Ok        |
+  #     | publisher | Ok        |
+  #     | admin     | Ok        |
+  #
+  # Scenario Outline: Sending business concept for approval
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with following data:
+  #    | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
+  #    | Formula          | string        | 100      |                                              |    NO     |               |
+  #    | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
+  #    | List of Values   | variable list | 100      |                                              |    NO     |               |
+  #    | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
+  #    | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+  #    | Related Area     | string        | 100      |                                              |    NO     |               |
+  #    | Default Value    | string        | 100      |                                              |    NO     |               |
+  #    | Additional Data  | string        | 500      |                                              |    NO     |               |
+  #   And user "<user>" is logged in the application with password "<user>"
+  #   And an existing Business Concept of type "Business Term" with following data:
+  #    | Type          | Name                  | Description                                                       | Format | Status |
+  #    | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   | Draft  |
+  #   When <user> tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
+  #   Then the system returns a result with code <result>
+  #   And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
+  #    | Field             | Value                                                              |
+  #    | Name              | My Date Business Term                                              |
+  #    | Type              | Business Term                                                      |
+  #    | Description       | This is the first description of my business term which is a date  |
+  #    | Formula           |                                                                    |
+  #    | Format            | Date                                                               |
+  #    | List of Values    |                                                                    |
+  #    | Sensitve Data     | N/A                                                                |
+  #    | Update Frequence  | Not defined                                                        |
+  #    | Related Area      |                                                                    |
+  #    | Default Value     |                                                                    |
+  #    | Additional Data   |                                                                    |
+  #    | Last Modification | Some timestamp                                                     |
+  #    | Last User         | app-admin                                                          |
+  #    | Version           | 1                                                                  |
+  #    | Status            | Pending Approval                                                   |
+  #
+  #   Examples:
+  #     | user      | result    |
+  #     | watcher   | Forbidden |
+  #     | creator   | Ok        |
+  #     | publisher | Ok        |
+  #     | admin     | Ok        |
+  #
   # Scenario: A user with create privileges tries to create a duplicated concept
   #   Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain in "Draft" status
   #   When user "creator" tries to create a business concept with the name "Saldo Medio"

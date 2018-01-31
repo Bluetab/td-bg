@@ -8,12 +8,23 @@ defmodule TrueBG.BusinessConceptTest do
   import TrueBGWeb.Taxonomy, only: :functions
   import TrueBGWeb.Authentication, only: :functions
 
-  import_feature TrueBGWeb.GlobalFeatures
-
   alias Poison, as: JSON
 
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
+
+  defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
+    %{domain_group_name: domain_group_name}, state do
+    token_admin = case state[:token_admin] do
+                nil ->
+                  {_, _, %{"token" => token}} = session_create("app-admin", "mypass")
+                  token
+                _ -> state[:token_admin]
+              end
+    {_, status_code, _json_resp} = domain_group_create(token_admin, %{name: domain_group_name})
+    assert rc_created() == to_response_code(status_code)
+    {:ok, Map.merge(state, %{token_admin: token_admin})}
+  end
 
   # Scenario Outline: Creating a simple date business concept
   defand ~r/^an existing Domain Group called "(?<child_domain_group_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
@@ -33,13 +44,74 @@ defmodule TrueBG.BusinessConceptTest do
   end
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with following data:$/,
-          %{business_concept_type: business_concept_type, table: _table},
+          %{business_concept_type: business_concept_type, table: table},
           %{} = state do
+
+    schema_item_fn = fn(row) ->
+      name = row |> Map.get(:Field) |> String.trim
+      type = row |> Map.get(:Format) |> String.trim
+      max_size = row |> Map.get(:"Max Size") |> String.trim
+      values = row |> Map.get(:Values) |> String.trim
+      required = row |> Map.get(:Mandatory) |> String.trim
+      default = row |> Map.get(:"Default Value") |> String.trim
+
+      map = Map.new
+      map = if name != "" do
+        map |> Map.put(:name, name)
+      else
+        map
+      end
+
+      map = if type != "" do
+        map |> Map.put(:type, type)
+      else
+        map
+      end
+
+      map = if max_size != "" do
+        {max, _} = Integer.parse(max_size)
+        map |> Map.put(:max_size, max)
+      else
+        map
+      end
+
+      map = if values != "" do
+        values_ary = values
+          |> String.split(",")
+          |> Enum.map(&(String.trim(&1)))
+
+        map |> Map.put(:values, values_ary)
+      else
+        map
+      end
+
+      map = if required !=  "" && required == "YES" do
+        map |> Map.put(:required, true)
+      else
+        map
+      end
+
+      map = if default  != "" do
+        map |> Map.put(:default, default)
+      else
+        map
+      end
+
+      map
+    end
+
+    schema = table |> Enum.map(schema_item_fn)
+
+    filename = Application.get_env(:trueBG, :bc_schema_location)
+    {:ok, file} = File.open filename, [:write, :utf8]
+    json_schema = [{business_concept_type, schema}] |> Map.new |> JSON.encode!
+    IO.binwrite file, json_schema
+    File.close file
 
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
-  defand ~r/^follwinig users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
+  defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
           %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
 
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
@@ -79,6 +151,12 @@ defmodule TrueBG.BusinessConceptTest do
     {_, status_code, %{"data" => %{"id" => id, "name" => name}}} =
       business_concept_create(token_admin, type, name, description, data_domain["id"], content)
     {:ok, Map.merge(state, %{status_code: status_code, bc_id: id, bc_name: name, token_admin: token_admin})}
+  end
+
+  defthen ~r/^the system returns a result with code (?<status_code>[^"]+)$/,
+          %{status_code: status_code}, %{status_code: http_status_code} = state do
+    assert status_code == to_response_code(http_status_code)
+    {:ok, Map.merge(state, %{})}
   end
 
   defand ~r/^the user list (?<users>[^"]+) are (?<able>[^"]+) to see the business concept "(?<business_concept_name>[^"]+)" with (?<business_concept_status>[^"]+) status and following data:$/,

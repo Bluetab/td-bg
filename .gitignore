@@ -26,3 +26,6 @@ npm-debug.log
 # variables.
 /config/*.secret.exs.deliver/releases/
 .idea/
+
+# businness concept content schema definition for testing
+bc_schema.test

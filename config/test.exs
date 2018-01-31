@@ -20,3 +20,7 @@ config :trueBG, TrueBG.Repo,
   database: "truebg_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :trueBG,
+  # business concept content  schema location
+  bc_schema_location: "bc_schema.test"

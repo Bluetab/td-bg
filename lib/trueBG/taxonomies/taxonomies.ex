@@ -7,6 +7,7 @@ defmodule TrueBG.Taxonomies do
   alias TrueBG.Repo
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
+  alias Ecto.Changeset
 
   @doc """
   Returns the list of domain_groups.
@@ -253,6 +254,61 @@ defmodule TrueBG.Taxonomies do
   """
   def get_business_concept!(id), do: Repo.get!(BusinessConcept, id)
 
+  @string "string"
+  @list "list"
+  @variable_list "variable list"
+
+  defp  get_ecto_type(type) do
+      case type do
+        @string -> :string
+        @list -> :string
+        @variable_list -> {:array, :string}
+      end
+  end
+
+  defp get_ecto_types(content_schema) do
+    item_mapping = fn(item) ->
+      name = item |> Map.get("name")
+      type = item |> Map.get("type")
+      {String.to_atom(name), get_ecto_type(type)}
+    end
+    content_schema
+      |> Enum.map(item_mapping)
+      |> Map.new
+  end
+
+  defp add_validate_required(changeset, %{"name" => name, "required" => true}) do
+    changeset
+      |> Changeset.validate_required([String.to_atom(name)])
+  end
+  defp add_validate_required(changeset, %{}), do: changeset
+
+  defp add_validate_max_length(changeset, %{"name" => name, "max_size" => max_size}) do
+      changeset
+        |> Changeset.validate_length(String.to_atom(name), max: max_size)
+  end
+  defp add_validate_max_length(changeset, %{}), do: changeset
+
+  defp add_validate_inclusion(changeset, %{"name" => name, "type" => "list", "values" => values}) do
+      changeset
+        |> Changeset.validate_inclusion(String.to_atom(name), values)
+  end
+  defp add_validate_inclusion(changeset, %{}), do: changeset
+
+  defp add_content_validations(changeset, %{} = content_item) do
+    changeset
+      |> add_validate_required(content_item)
+      |> add_validate_max_length(content_item)
+      |> add_validate_inclusion(content_item)
+  end
+
+  defp add_content_validations(changeset, [tail|head]) do
+    changeset
+      |> add_content_validations(tail)
+      |> add_content_validations(head)
+  end
+  defp add_content_validations(changeset, []), do: changeset
+
   @doc """
   Creates a business_concept.
 
@@ -266,9 +322,30 @@ defmodule TrueBG.Taxonomies do
 
   """
   def create_business_concept(attrs \\ %{}) do
-    %BusinessConcept{}
-    |> BusinessConcept.changeset(attrs)
-    |> Repo.insert()
+    # attrs = attrs |> Map.delete(:name)
+    changeset = %BusinessConcept{}
+      |> BusinessConcept.changeset(attrs)
+
+    apply = changeset
+      |> Changeset.apply_action(:insert)
+
+    content = Map.get(attrs, :content) || Map.get(attrs, "content")
+    content_schema = Map.get(attrs, :content_schema) ||
+                      Map.get(attrs, "content_schema")
+    content_ecto_types = get_ecto_types(content_schema)
+
+    content_changeset = {content, content_ecto_types}
+      |> Changeset.cast(content, content_ecto_types |> Map.keys())
+      |> add_content_validations(content_schema)
+
+    content_apply = content_changeset
+      |> Changeset.apply_action(:insert)
+
+    case {changeset.valid?, content_changeset.valid?} do
+      {true, true} -> changeset |> Repo.insert()
+      {false, _} -> apply
+      {true, false} -> content_apply
+    end
   end
 
   @doc """
