@@ -9,6 +9,9 @@ use Mix.Config
 config :trueBG,
   ecto_repos: [TrueBG.Repo]
 
+# Hashing algorithm
+config :trueBG, hashing_module: Comeonin.Bcrypt
+
 # Configures the endpoint
 config :trueBG, TrueBGWeb.Endpoint,
   url: [host: "localhost"],

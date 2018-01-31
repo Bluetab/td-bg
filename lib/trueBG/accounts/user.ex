@@ -4,7 +4,7 @@ defmodule TrueBG.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
   alias TrueBG.Accounts.User
-  alias Comeonin.Bcrypt
+  @hash Application.get_env(:trueBG, :hashing_module)
 
   schema "users" do
     field :password_hash, :string
@@ -25,7 +25,7 @@ defmodule TrueBG.Accounts.User do
   end
 
   defp put_pass_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-    change(changeset, password_hash: Bcrypt.hashpwsalt(password))
+    change(changeset, password_hash: @hash.hashpwsalt(password))
   end
   defp put_pass_hash(changeset), do: changeset
 

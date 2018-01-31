@@ -1,7 +1,8 @@
 defmodule TrueBGWeb.SessionController do
   use TrueBGWeb, :controller
 
-  alias Comeonin.Bcrypt
+  @hash Application.get_env(:trueBG, :hashing_module)
+
   alias TrueBG.Accounts
   alias TrueBG.Accounts.User
   alias TrueBG.Auth.Guardian
@@ -73,8 +74,8 @@ defmodule TrueBGWeb.SessionController do
 
   defp check_password(user, password) do
     case user do
-      nil -> Bcrypt.dummy_checkpw()
-      _ -> Bcrypt.checkpw(password, user.password_hash)
+      nil -> @hash.dummy_checkpw()
+      _ -> @hash.checkpw(password, user.password_hash)
     end
   end
 
