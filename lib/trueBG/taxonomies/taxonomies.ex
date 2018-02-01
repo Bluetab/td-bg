@@ -34,7 +34,6 @@ defmodule TrueBG.Taxonomies do
     Repo.all(query)
   end
 
-
   @doc """
   Gets a single domain_group.
 
