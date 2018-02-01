@@ -119,8 +119,8 @@ Feature: Business Concepts administration
      | Formula          | string        | 100      |                                              |    NO     |               |
      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
      | List of Values   | variable list | 100      |                                              |    NO     |               |
-     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
+     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
      | Related Area     | string        | 100      |                                              |    NO     |               |
      | Default Value    | string        | 100      |                                              |    NO     |               |
      | Additional Data  | string        | 500      |                                              |    NO     |               |
@@ -167,20 +167,11 @@ Feature: Business Concepts administration
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    And an existing Business Concept type called "Business Term" with following data:
-     | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
-     | Formula          | string        | 100      |                                              |    NO     |               |
-     | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
-     | List of Values   | variable list | 100      |                                              |    NO     |               |
-     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    YES    | N/A           |
-     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    YES    | Not defined   |
-     | Related Area     | string        | 100      |                                              |    NO     |               |
-     | Default Value    | string        | 100      |                                              |    NO     |               |
-     | Additional Data  | string        | 500      |                                              |    NO     |               |
+    And an existing Business Concept type called "Business Term" without definition
     And user "<user>" is logged in the application with password "<user>"
     And an existing Business Concept of type "Business Term" with following data:
-     | Type          | Name                  | Description                                                       | Format | Status |
-     | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   | Draft  |
+     | Type          | Name                  | Description                                                       |
+     | Business Term | My Date Business Term | This is the first description of my business term which is a date |
     When <user> tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
     Then the system returns a result with code <result>
     And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
@@ -188,14 +179,6 @@ Feature: Business Concepts administration
      | Name              | My Date Business Term                                              |
      | Type              | Business Term                                                      |
      | Description       | This is the first description of my business term which is a date  |
-     | Formula           |                                                                    |
-     | Format            | Date                                                               |
-     | List of Values    |                                                                    |
-     | Sensitve Data     | N/A                                                                |
-     | Update Frequence  | Not defined                                                        |
-     | Related Area      |                                                                    |
-     | Default Value     |                                                                    |
-     | Additional Data   |                                                                    |
      | Last Modification | Some timestamp                                                     |
      | Last User         | app-admin                                                          |
      | Version           | 1                                                                  |
@@ -207,7 +190,26 @@ Feature: Business Concepts administration
       | creator   | Ok        |
       | publisher | Ok        |
       | admin     | Ok        |
-  #
+
+  Scenario: User should not be able to create a business concept with same type and name as an existing one
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"
+    And an existing Business Concept type called "Business Term" without definition
+    And an existing Business Concept of type "Business Term" with following data:
+     | Type          | Name             | Description                                       |
+     | Business Term | My Business Term | This is the first description of my business term |
+    And an existing Domain Group called "My Second Parent Group"
+    And an existing Data Domain called "My Second Domain" child of Domain Group "My Second Parent Group"
+    When "app-admin" tries to create a business concept in the Data Domain "My Second Domain" with following data:
+     | Type          | Name                    | Description                                 |
+     | Business Term | My Business Term | This is the second description of my business term |
+    Then the system returns a result with code "Unprocessable Entity"
+    And "app-admin" is able to view business concept "My Business Term" as a child of Data Domain "My Domain" with following data:
+      | Type          | Name                    | Description                                                            | Status | Last Modification | Last user | Version |
+      | Business Term | My Simple Business Term | This is the first description of my business term which is very simple | draft  | Some Timestamp    | app-admin | 1       |
+    And "app-admin" is not able to view business concept "My Business Term" as a child of Data Domain "My Second Domain"
+
+
   # Scenario: A user with create privileges tries to create a duplicated concept
   #   Given an existing business concept with the name "Saldo Medio" in the "Saldos" domain in "Draft" status
   #   When user "creator" tries to create a business concept with the name "Saldo Medio"
