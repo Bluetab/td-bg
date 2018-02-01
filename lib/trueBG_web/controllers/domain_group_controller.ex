@@ -12,6 +12,11 @@ defmodule TrueBGWeb.DomainGroupController do
     render(conn, "index.json", domain_groups: domain_groups)
   end
 
+  def index_root(conn, _params) do
+    domain_groups = Taxonomies.list_root_domain_groups()
+    render(conn, "index.json", domain_groups: domain_groups)
+  end
+
   def create(conn, %{"domain_group" => domain_group_params}) do
     parent_id = Taxonomies.get_parent_id(domain_group_params)
     status = case parent_id do

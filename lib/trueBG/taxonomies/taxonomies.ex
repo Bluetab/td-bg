@@ -23,6 +23,19 @@ defmodule TrueBG.Taxonomies do
   end
 
   @doc """
+  Returns the list of root domain_groups (no parent)
+  """
+  def list_root_domain_groups do
+    query = from dg in DomainGroup,
+                 where: is_nil(dg.parent),
+                 select: [dg.name, dg.description]
+
+    # Send the query to the repository
+    Repo.all(query)
+  end
+
+
+  @doc """
   Gets a single domain_group.
 
   Raises `Ecto.NoResultsError` if the Domain group does not exist.

@@ -45,6 +45,7 @@ defmodule TrueBGWeb.Router do
     pipe_through [:api, :api_secure, :api_authorized]
     resources "/domain_groups", DomainGroupController, except: [:new, :edit]
     resources "/data_domains", DataDomainController, except: [:new, :edit]
+    get "/domain_groups", DomainGroupController, :index_root
   end
 
 end
