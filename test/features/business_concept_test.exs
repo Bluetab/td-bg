@@ -83,6 +83,7 @@ defmodule TrueBG.BusinessConceptTest do
   defp assert_field(%{Field: "Name", Value: v0}, %{"name" => v1}), do: assert v0 == v1
   defp assert_field(%{Field: "Type", Value: v0}, %{"type" => v1}), do: assert v0 == v1
   defp assert_field(%{Field: "Description", Value: v0}, %{"description" => v1}), do: assert v0 == v1
+  defp assert_field(%{Field: "Status", Value: v0}, %{"status" => v1}), do: assert v0 == v1
   defp assert_field(%{Field: "Formula", Value: v0}, %{"content" => %{"Formula" => v1}}), do: assert v0 == v1
   defp assert_field(%{Field: "Format", Value: v0},  %{"content" => %{"Format" => v1}}), do: assert v0 == v1
   defp assert_field(%{Field: "List of Values", Value: v0},  %{"content" => %{"List of Values" => v1}}), do: assert v0 == v1
