@@ -27,10 +27,17 @@ defmodule TrueBG.Taxonomies do
   """
   def list_root_domain_groups do
     query = from dg in DomainGroup,
-                 where: is_nil(dg.parent),
-                 select: [dg.name, dg.description]
+                 where: is_nil(dg.parent_id)
 
-    # Send the query to the repository
+    Repo.all(query)
+  end
+
+  @doc """
+  Returns children of domain group id passed as argument
+  """
+  def list_domain_group_children(id) do
+    query = from dg in DomainGroup,
+                 where: dg.parent_id == ^id
     Repo.all(query)
   end
 

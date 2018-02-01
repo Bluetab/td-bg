@@ -45,6 +45,42 @@ defmodule TrueBG.TaxonomyNavigationTest do
     assert Enum.sort(table) == Enum.sort(dg_list)
   end
 
+  #Scenario
+  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
+         %{domain_group_name: name}, state do
+
+    {:ok, status_code, json_resp} = session_create("app-admin", "mypass")
+    assert rc_created() == to_response_code(status_code)
+    state = Map.merge(state, %{status_code: status_code, token_admin: json_resp["token"], resp: json_resp})
+    {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
+    assert rc_created() == to_response_code(status_code)
+    {:ok, state}
+  end
+
+  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
+         %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, description: description, parent_id: domain_group_info["id"]})
+    assert rc_created() == to_response_code(status_code)
+    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
+    {:ok, state}
+  end
+
+  defwhen ~r/^user tries to query a list of all Domain Groups children of Domain Group "(?<domain_group_name>[^"]+)"$/, %{domain_group_name: domain_group_name}, state do
+    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    {:ok, status_code, json_resp} = index_domain_group_children(state[:token], %{domain_group_id: domain_group_info["id"]})
+    assert rc_ok() == to_response_code(status_code)
+    {:ok, Map.merge(state, %{resp: json_resp})}
+  end
+
+  defp index_domain_group_children(token, attrs) do
+    headers = get_header(token)
+    id = attrs[:domain_group_id]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(domain_group_url(@endpoint, :index_children, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
   defp root_domain_group_list(token) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
