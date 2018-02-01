@@ -40,8 +40,14 @@ Feature: Business Concepts administration
       | Business Term | My Simple Business Term | This is the first description of my business term which is very simple |
     Then the system returns a result with code "Created"
     And "app-admin" is able to view business concept "My Simple Business Term" as a child of Data Domain "My Domain" with following data:
-      | Type          | Name                    | Description                                                            | Status | Last Modification | Last user | Version |
-      | Business Term | My Simple Business Term | This is the first description of my business term which is very simple | draft  | Some Timestamp    | app-admin | 1       |
+      | Field             | Value                                                                    |
+      | Type              | Business Term                                                            |
+      | Name              | My Simple Business Term                                                  |
+      | Description       | This is the first description of my business term which is very simple   |
+      | Status            | draft                                                                    |
+      | Last Modification | Some Timestamp                                                           |
+      | Last user         | app-admin                                                                |
+      | Version           | 1                                                                        | 
 
   Scenario: Create a business concept with dinamic data
     Given an existing Domain Group called "My Parent Group"
