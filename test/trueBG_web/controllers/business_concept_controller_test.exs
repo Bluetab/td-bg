@@ -25,7 +25,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       data_domain = insert(:data_domain)
 
       creation_attrs = %{
-        content: %{"Format" => "Date", "Sensitive Data" => "Personal Data"},
+        content: %{"Format" => "Date", "Sensitive Data" => "Personal Data", "Update Frequence" => "Not defined"},
         type: "Some type",
         name: "Some name",
         description: "Some description",

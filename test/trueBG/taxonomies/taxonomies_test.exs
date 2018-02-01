@@ -174,6 +174,7 @@ defmodule TrueBG.TaxonomiesTest do
       content = %{
                   "Format" => "Date",
                   "Sensitive Data" => "Personal Data",
+                  "Update Frequence" => "Not defined"
                   }
 
       attrs = %{type: "some type", name: "some name",

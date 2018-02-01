@@ -277,6 +277,34 @@ defmodule TrueBG.Taxonomies do
   @list "list"
   @variable_list "variable list"
 
+  defp keys_to_string(attrs) do
+    key_to_string = fn
+      {key, value} when is_binary(key) -> {key, value}
+      {key, value} when is_atom(key) -> {Atom.to_string(key), value}
+    end
+    attrs
+      |> Enum.map(key_to_string)
+      |> Map.new
+  end
+
+  defp add_default_value(content, %{"name" => name, "default" => default}) do
+    case content[name] do
+      nil ->
+        content |> Map.put(name, default)
+      _ -> content
+    end
+  end
+  defp add_default_value(content, %{}), do: content
+
+  defp add_default_values(content, [tails|head]) do
+    content
+      |> add_default_value(tails)
+      |> add_default_values(head)
+  end
+  defp add_default_values(content, []), do: content
+  defp add_default_values(nil, _), do: nil
+  defp add_default_values(_, nil), do: nil
+
   defp  get_ecto_type(type) do
       case type do
         @string -> :string
@@ -328,6 +356,38 @@ defmodule TrueBG.Taxonomies do
   end
   defp add_content_validations(changeset, []), do: changeset
 
+  defp do_create_business_concept(%{attrs: attrs, content: content, content_schema: content_schema}) do
+    changeset = %BusinessConcept{}
+      |> BusinessConcept.changeset(attrs)
+    case changeset.valid? do
+      false -> {:error, changeset}
+      _ -> do_create_business_concept(%{changeset: changeset, content: content, content_schema: content_schema})
+    end
+  end
+  defp do_create_business_concept(%{changeset: changeset, content: content, content_schema: content_schema}) do
+    content_ecto_types = get_ecto_types(content_schema)
+    content_changeset = {content, content_ecto_types}
+      |> Changeset.cast(content, content_ecto_types |> Map.keys())
+      |> add_content_validations(content_schema)
+    case content_changeset.valid? do
+      true -> changeset |> Repo.insert()
+      false -> {:error, content_changeset}
+    end
+  end
+
+  defp normalize_attrs(attrs) do
+    new_attrs = attrs |> keys_to_string
+    content = new_attrs |> Map.get("content")
+    content_schema = new_attrs |> Map.get("content_schema")
+    content = content
+      |> add_default_values(content_schema)
+
+    new_attrs = new_attrs
+       |> Map.put("content", content)
+
+    %{attrs: new_attrs, content: content, content_schema: content_schema}
+  end
+
   @doc """
   Creates a business_concept.
 
@@ -341,30 +401,9 @@ defmodule TrueBG.Taxonomies do
 
   """
   def create_business_concept(attrs \\ %{}) do
-    # attrs = attrs |> Map.delete(:name)
-    changeset = %BusinessConcept{}
-      |> BusinessConcept.changeset(attrs)
-
-    apply = changeset
-      |> Changeset.apply_action(:insert)
-
-    content = Map.get(attrs, :content) || Map.get(attrs, "content")
-    content_schema = Map.get(attrs, :content_schema) ||
-                      Map.get(attrs, "content_schema")
-    content_ecto_types = get_ecto_types(content_schema)
-
-    content_changeset = {content, content_ecto_types}
-      |> Changeset.cast(content, content_ecto_types |> Map.keys())
-      |> add_content_validations(content_schema)
-
-    content_apply = content_changeset
-      |> Changeset.apply_action(:insert)
-
-    case {changeset.valid?, content_changeset.valid?} do
-      {true, true} -> changeset |> Repo.insert()
-      {false, _} -> apply
-      {true, false} -> content_apply
-    end
+    attrs
+      |> normalize_attrs
+      |> do_create_business_concept
   end
 
   @doc """

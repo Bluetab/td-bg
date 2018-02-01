@@ -36,8 +36,10 @@ Feature: Business Concepts administration
     And an existing Business Concept type called "Business Term" without definition
     And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
-      | Type          | Name                    | Description                                                            |
-      | Business Term | My Simple Business Term | This is the first description of my business term which is very simple |
+      | Field             | Value                                                                   |
+      | Type              | Business Term                                                           |
+      | Name              | My Simple Business Term                                                 |
+      | Description       | This is the first description of my business term which is very simple  |
     Then the system returns a result with code "Created"
     And "app-admin" is able to view business concept "My Simple Business Term" as a child of Data Domain "My Domain" with following data:
       | Field             | Value                                                                    |
@@ -47,7 +49,7 @@ Feature: Business Concepts administration
       | Status            | draft                                                                    |
       | Last Modification | Some Timestamp                                                           |
       | Last user         | app-admin                                                                |
-      | Version           | 1                                                                        | 
+      | Version           | 1                                                                        |
 
   Scenario: Create a business concept with dinamic data
     Given an existing Domain Group called "My Parent Group"
@@ -65,8 +67,11 @@ Feature: Business Concepts administration
      | Additional Data  | string        | 500      |                                              |    NO     |               |
     And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
-      | Type          | Name                     | Description                                                       | Format |
-      | Business Term | My Dinamic Business Term | This is the first description of my business term which is a date | Date   |
+      | Field             | Value                                                                    |
+      | Type              | Business Term                                                            |
+      | Name              | My Dinamic Business Term                                                 |
+      | Description       | This is the first description of my business term which is a date        |
+      | Format            | Date                                                                     |
     Then the system returns a result with code "Created"
     And "app-admin" is able to view business concept "My Dinamic Business Term" as a child of Data Domain "My Domain" with following data:
       | Field             | Value                                                              |

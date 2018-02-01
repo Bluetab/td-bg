@@ -19,6 +19,7 @@ defmodule TrueBGWeb.BusinessConceptView do
       modifier: business_concept.modifier,
       last_change: business_concept.last_change,
       data_domain_id: business_concept.data_domain_id,
+      status: business_concept.status,
       version: business_concept.version}
   end
 end
