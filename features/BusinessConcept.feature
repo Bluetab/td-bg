@@ -33,6 +33,7 @@ Feature: Business Concepts administration
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And an existing Business Concept type called "Business Term" without definition
     And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Type          | Name                    | Description                                                            |
