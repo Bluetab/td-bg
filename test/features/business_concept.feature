@@ -55,28 +55,28 @@ Feature: Business Concepts administration
       | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
     Then the system returns a result with code <result>
     And if result <result> is "Created", <user> is able to view business concept "My Date Business Term" as a child of Data Domain "My Domain"
-    # And the user list <users> are <able> to see the business concept "My Date Business Term" with <status> status and following data:
-    #  | Field             | Value                                                              |
-    #  | Name              | My Date Business Term                                              |
-    #  | Type              | Business Term                                                      |
-    #  | Description       | This is the first description of my business term which is a date  |
-    #  | Formula           |                                                                    |
-    #  | Format            | Date                                                               |
-    #  | List of Values    |                                                                    |
-    #  | Sensitve Data     | N/A                                                                |
-    #  | Update Frequence  | Not defined                                                        |
-    #  | Related Area      |                                                                    |
-    #  | Default Value     |                                                                    |
-    #  | Additional Data   |                                                                    |
-    #  | Last Modification | Some timestamp                                                     |
-    #  | Last User         | app-admin                                                          |
-    #  | Version           | 1                                                                  |
+    And the user list <users> are <able> to see the business concept "My Date Business Term" with <status> status and following data:
+     | Field             | Value                                                              |
+     | Name              | My Date Business Term                                              |
+     | Type              | Business Term                                                      |
+     | Description       | This is the first description of my business term which is a date  |
+     | Formula           |                                                                    |
+     | Format            | Date                                                               |
+     | List of Values    |                                                                    |
+     | Sensitve Data     | N/A                                                                |
+     | Update Frequence  | Not defined                                                        |
+     | Related Area      |                                                                    |
+     | Default Value     |                                                                    |
+     | Additional Data   |                                                                    |
+     | Last Modification | Some timestamp                                                     |
+     | Last User         | app-admin                                                          |
+     | Version           | 1                                                                  |
 
     Examples:
       | user      | result    | users                       | able       | status |
       # | watcher   | Forbidden | watcher, creator, publisher | not able   | draft  |
-      | creator   | Created   | watcher                     | not able   | draft  |
-      # | creator   | Created   | creator, publisher          | able       | draft  |
+      # | creator   | Created   | watcher                     | not able   | draft  |
+      | creator   | Created   | creator, publisher          | able       | draft  |
       # | publisher | Created   | watcher                     | not able   | draft  |
       # | publisher | Created   | creator, publisher          | able       | draft  |
 

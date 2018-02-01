@@ -117,13 +117,16 @@ defmodule TrueBG.BusinessConceptTest do
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
     assert data_domain_name == data_domain["name"]
 
-    create_user_fn = fn(x) ->
+    create_user_and_acl_entries_fn = fn(x) ->
       user_name = x[:user]
-      {_, _, %{"data" => data}} = user_create(token_admin, %{user_name: user_name, password: user_name})
-      data
+      role_name = x[:role]
+      {_, _, %{"data" => %{"id" => principal_id}}} = user_create(token_admin, %{user_name: user_name, password: user_name})
+      %{"id" => role_id} = get_role_by_name(token_admin, role_name)
+      acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain["id"], role_id: role_id}
+      {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)
     end
 
-    users = table |> Enum.map(create_user_fn)
+    users = table |> Enum.map(create_user_and_acl_entries_fn)
 
     {:ok, Map.merge(state, %{users: users})}
   end
@@ -159,11 +162,58 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, Map.merge(state, %{})}
   end
 
+  defp assert_field(%{Field: "Name", Value: v0}, %{"name" => v1}), do: assert v0 == v1
+  defp assert_field(%{Field: "Type", Value: v0}, %{"type" => v1}), do: assert v0 == v1
+  defp assert_field(%{Field: "Description", Value: v0}, %{"description" => v1}), do: assert v0 == v1
+  defp assert_field(%{Field: "Formula", Value: v0}, %{"content" => %{"Formula" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "Format", Value: v0},  %{"content" => %{"Format" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "List of Values", Value: v0},  %{"content" => %{"List of Values" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "Sensitve Data", Value: v0},  %{"content" => %{"Sensitve Data" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "Update Frequence", Value: v0},  %{"content" => %{"Update Frequence" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "Related Area", Value: v0},  %{"content" => %{"Related Area" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "Default Value", Value: v0},  %{"content" => %{"Default Value" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "Additional Data", Value: v0},  %{"content" => %{"Additional Data" => v1}}), do: assert v0 == v1
+  defp assert_field(%{Field: "Last Modification", Value: _v0}, %{"last_change" => _v1}), do: nil
+  defp assert_field(%{Field: "Last User", Value: _v0}, %{"modifier" => _v1}), do: nil
+  defp assert_field(%{Field: "Version", Value: v0}, %{"version" => v1}), do: assert Integer.parse(v0) == {v1, ""}
+  defp assert_field(%{}, %{}), do: nil
+
+  defp assert_fields([tail|head], businness_concept) do
+    assert_field(tail, businness_concept)
+    assert_fields(head, businness_concept)
+  end
+  defp assert_fields([], _businness_concept),  do: nil
+
+  defp validate_user_is_able(user_name, bc_id, fields) do
+    {_, _, %{"token" => token}} = session_create(user_name, user_name)
+    {_, status_code, %{"data" => business_concept}} = businness_concept_show(token, bc_id)
+    assert rc_ok() == to_response_code(status_code)
+    assert_fields(fields, business_concept)
+  end
+
+  defp validate_user_is_not_able(user_name, bc_id, fields) do
+    {_, _, %{"token" => token}} = session_create(user_name, user_name)
+    {_, status_code, %{"data" => business_concept}} = businness_concept_show(token, bc_id)
+    assert rc_ok() == to_response_code(status_code)
+    assert_fields(fields, business_concept)
+  end
+
   defand ~r/^the user list (?<users>[^"]+) are (?<able>[^"]+) to see the business concept "(?<business_concept_name>[^"]+)" with (?<business_concept_status>[^"]+) status and following data:$/,
-          %{users: _users, able: _able, business_concept_name: business_concept_name, business_concept_status: _business_concept_status, table: _table},
-          %{bc_name: bc_name} = state do
+          %{users: users, able: able, business_concept_name: business_concept_name, business_concept_status: _business_concept_status, table: fields},
+          %{bc_id: bc_id, bc_name: bc_name} = state do
 
     assert business_concept_name == bc_name
+
+    users_ary = users |> String.split(",") |> Enum.map(&(String.trim(&1)))
+    case able do
+      "able" ->
+        users_ary
+          |> Enum.each(fn(u) -> validate_user_is_able(u, bc_id, fields) end)
+      "not able" ->
+        users_ary
+          |> Enum.each(fn(u) -> validate_user_is_not_able(u, bc_id, fields) end)
+    end
+
     {:ok, Map.merge(state, %{})}
   end
 
@@ -200,6 +250,14 @@ defmodule TrueBG.BusinessConceptTest do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(business_concept_url(@endpoint, :show, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp acl_entry_create(token, acl_entry_params) do
+    headers = get_header(token)
+    body = %{acl_entry: acl_entry_params} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.post!(acl_entry_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
