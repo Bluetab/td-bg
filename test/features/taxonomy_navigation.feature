@@ -11,6 +11,9 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
     Given an existing Domain Group called "My Third Parent Group" with following data:
       | Description |
       | First version of My Third Parent Group |
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group" with following data:
+      | Description |
+      | First version of My Child Group |
     And user "app-admin" is logged in the application with password "mypass"
     When user tries to query a list of all Domain Groups without parent
     Then user sees following list:
@@ -41,27 +44,27 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
       | My Second Child Group  | First version of My Second Child Group  |
       | My Third Child Group   | First version of My Third Child Group   |
       | My Fourth Child Group  | First version of My Fourth Child Group  |
-#
-#  Scenario: List of all Data Domains that are child of a certain Domain Group
-#    Given an existing Domain Group called "My Parent Group"
-#    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-#    And an existing Data Domain called "My Data Domain" child of Domain Group "My Child Group" with following data:
-#      | Description |
-#      | First version of My Data Domain |
-#    And an existing Data Domain called "My Second Data Domain" child of Domain Group "My Child Group" with following data:
-#      | Description |
-#      | First version of My Second Data Domain |
-#    And an existing Data Domain called "My Third Data Domain" child of Domain Group "My Child Group" with following data:
-#      | Description |
-#      | First version of My Third Data Domain |
-#    And an existing Data Domain called "My Fourth Data Domain" child of Domain Group "My Child Group" with following data:
-#      | Description |
-#      | First version of My Fourth Data Domain |
-#    And user "app-admin" is logged in the application with password "mypass"
-#    When user tries to query a list of all Data Domains children of Domain Group "My Child Group"
-#    Then user sees following list:
-#      | Data Domain            | Description                             |
-#      | My Child Group         | First version of My Data Domain         |
-#      | My Second Child Group  | First version of My Second Data Domain  |
-#      | My Third Child Group   | First version of My Third Data Domain   |
-#      | My Fourth Child Group  | First version of My Fourth Data Domain  |
+
+  Scenario: List of all Data Domains that are child of a certain Domain Group
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Data Domain" child of Domain Group "My Child Group" with following data:
+      | Description |
+      | First version of My Data Domain |
+    And an existing Data Domain called "My Second Data Domain" child of Domain Group "My Child Group" with following data:
+      | Description |
+      | First version of My Second Data Domain |
+    And an existing Data Domain called "My Third Data Domain" child of Domain Group "My Child Group" with following data:
+      | Description |
+      | First version of My Third Data Domain |
+    And an existing Data Domain called "My Fourth Data Domain" child of Domain Group "My Child Group" with following data:
+      | Description |
+      | First version of My Fourth Data Domain |
+    And user "app-admin" is logged in the application with password "mypass"
+    When user tries to query a list of all Data Domains children of Domain Group "My Child Group"
+    Then user sees following list:
+      | name                   | description                             |
+      | My Data Domain         | First version of My Data Domain         |
+      | My Second Data Domain  | First version of My Second Data Domain  |
+      | My Third Data Domain   | First version of My Third Data Domain   |
+      | My Fourth Data Domain  | First version of My Fourth Data Domain  |

@@ -57,6 +57,15 @@ defmodule TrueBG.TaxonomyNavigationTest do
     {:ok, state}
   end
 
+  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
+         %{name: name, domain_group_name: domain_group_name}, state do
+    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, parent_id: domain_group_info["id"]})
+    assert rc_created() == to_response_code(status_code)
+    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
+    {:ok, state}
+  end
+
   defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
          %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
     domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
@@ -71,6 +80,31 @@ defmodule TrueBG.TaxonomyNavigationTest do
     {:ok, status_code, json_resp} = index_domain_group_children(state[:token], %{domain_group_id: domain_group_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
+  end
+
+  # Scenario
+
+  defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
+         %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    {:ok, _status_code, json_resp} = data_domain_create(state[:token_admin],  %{name: name, description: description, domain_group_id: domain_group_info["id"]})
+    assert json_resp["data"]["domain_group_id"] == domain_group_info["id"]
+    {:ok, state}
+  end
+
+  defwhen ~r/^user tries to query a list of all Data Domains children of Domain Group "(?<domain_group_name>[^"]+)"$/, %{domain_group_name: domain_group_name}, state do
+    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    {:ok, status_code, json_resp} = index_domain_group_children_data_domain(state[:token], %{domain_group_id: domain_group_info["id"]})
+    assert rc_ok() == to_response_code(status_code)
+    {:ok, Map.merge(state, %{resp: json_resp})}
+  end
+
+  defp index_domain_group_children_data_domain(token, attrs) do
+    headers = get_header(token)
+    id = attrs[:domain_group_id]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(data_domain_url(@endpoint, :index_children_data_domain, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp index_domain_group_children(token, attrs) do

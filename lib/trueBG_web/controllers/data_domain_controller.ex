@@ -21,6 +21,11 @@ defmodule TrueBGWeb.DataDomainController do
     end
   end
 
+  def index_children_data_domain(conn, %{"id" => id}) do
+    data_domains = Taxonomies.list_children_data_domain(id)
+    render(conn, "index.json", data_domains: data_domains)
+  end
+
   def create(conn, %{"data_domain" => data_domain_params}) do
     with {:ok, %DataDomain{} = data_domain} <- Taxonomies.create_data_domain(data_domain_params) do
       conn

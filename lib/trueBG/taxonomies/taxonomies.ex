@@ -42,6 +42,14 @@ defmodule TrueBG.Taxonomies do
   end
 
   @doc """
+  """
+  def list_children_data_domain(domain_group_id) do
+    query = from dd in DataDomain,
+            where: dd.domain_group_id == ^domain_group_id
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single domain_group.
 
   Raises `Ecto.NoResultsError` if the Domain group does not exist.
