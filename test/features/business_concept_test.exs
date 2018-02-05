@@ -6,6 +6,7 @@ defmodule TrueBG.BusinessConceptTest do
   import TrueBGWeb.ResponseCode
   import TrueBGWeb.User, only: :functions
   import TrueBGWeb.Taxonomy, only: :functions
+  import TrueBGWeb.AclEntry, only: :functions
   import TrueBGWeb.Authentication, only: :functions
 
   alias Poison, as: JSON
@@ -263,13 +264,4 @@ defmodule TrueBG.BusinessConceptTest do
       HTTPoison.get!(business_concept_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
-
-  defp acl_entry_create(token, acl_entry_params) do
-    headers = get_header(token)
-    body = %{acl_entry: acl_entry_params} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(acl_entry_url(@endpoint, :create), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
 end
