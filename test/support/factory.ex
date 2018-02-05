@@ -21,7 +21,7 @@ defmodule TrueBG.Factory do
     %TrueBG.Taxonomies.DataDomain {
       name: "My data domain",
       description: "My data domain description",
-      domain_group: build(:domain_group),
+      domain_group: build(:domain_group)
     }
   end
 
@@ -36,6 +36,22 @@ defmodule TrueBG.Factory do
       data_domain: build(:data_domain),
       status: Atom.to_string(BusinessConcept.draft),
       version: 1,
+    }
+  end
+
+  def role_factory do
+    %TrueBG.Permissions.Role {
+      name: "watch"
+    }
+  end
+
+  def acl_entry_domain_group_user_factory do
+    %TrueBG.Permissions.AclEntry {
+      principal_id: nil,
+      principal_type: "user",
+      resource_id: nil,
+      resource_type: "domain_group",
+      role: nil
     }
   end
 

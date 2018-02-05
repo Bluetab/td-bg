@@ -3,6 +3,7 @@ defmodule TrueBGWeb.AclEntryController do
 
   alias TrueBG.Permissions
   alias TrueBG.Permissions.AclEntry
+  alias TrueBGWeb.ErrorView
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -17,6 +18,11 @@ defmodule TrueBGWeb.AclEntryController do
       |> put_status(:created)
       |> put_resp_header("location", acl_entry_path(conn, :show, acl_entry))
       |> render("show.json", acl_entry: acl_entry)
+    else
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 

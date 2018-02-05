@@ -7,34 +7,45 @@ defmodule TrueBG.PermissionsTest do
     alias TrueBG.Permissions.AclEntry
 
     @valid_attrs %{principal_id: 42, principal_type: "some principal_type", resource_id: 42, resource_type: "some resource_type"}
-    @update_attrs %{principal_id: 43, principal_type: "some updated principal_type", resource_id: 43, resource_type: "some updated resource_type"}
+    @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "some updated resource_type"}
     @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
 
-    def acl_entry_fixture(attrs \\ %{}) do
-      {:ok, acl_entry} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> Permissions.create_acl_entry()
+    def acl_entry_fixture do
+      user = insert(:user)
+      domain_group = insert(:domain_group)
+      role = insert(:role)
+      acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
+      acl_entry_attrs
+    end
 
-      acl_entry
+    defp get_comparable_acl_entry_fields(acl_entry) do
+      Map.take(acl_entry, ["principal_id", "principal_type", "resource_id", "resource_type", "role_id"])
     end
 
     test "list_acl_entries/0 returns all acl_entries" do
       acl_entry = acl_entry_fixture()
-      assert Permissions.list_acl_entries() == [acl_entry]
+      acl_entry = get_comparable_acl_entry_fields(acl_entry)
+      acl_entries = Enum.map(Permissions.list_acl_entries(), &(get_comparable_acl_entry_fields(&1)))
+      assert acl_entries == [acl_entry]
     end
 
     test "get_acl_entry!/1 returns the acl_entry with given id" do
       acl_entry = acl_entry_fixture()
-      assert Permissions.get_acl_entry!(acl_entry.id) == acl_entry
+      get_acl_entry = Permissions.get_acl_entry!(acl_entry.id)
+      assert get_comparable_acl_entry_fields(get_acl_entry)  == get_comparable_acl_entry_fields(acl_entry)
     end
 
     test "create_acl_entry/1 with valid data creates a acl_entry" do
-      assert {:ok, %AclEntry{} = acl_entry} = Permissions.create_acl_entry(@valid_attrs)
-      assert acl_entry.principal_id == 42
-      assert acl_entry.principal_type == "some principal_type"
-      assert acl_entry.resource_id == 42
-      assert acl_entry.resource_type == "some resource_type"
+      user = insert(:user)
+      domain_group = insert(:domain_group)
+      role = insert(:role)
+      valid_attrs = %{principal_id: user.id, principal_type: "user", resource_id: domain_group.id, resource_type: "domain_group", role_id: role.id}
+      {:ok, acl_entry = %AclEntry{}} = Permissions.create_acl_entry(valid_attrs)
+      assert acl_entry.principal_id == user.id
+      assert acl_entry.principal_type == "user"
+      assert acl_entry.resource_id == domain_group.id
+      assert acl_entry.resource_type == "domain_group"
+      assert acl_entry.role_id == role.id
     end
 
     test "create_acl_entry/1 with invalid data returns error changeset" do
@@ -46,7 +57,7 @@ defmodule TrueBG.PermissionsTest do
       assert {:ok, acl_entry} = Permissions.update_acl_entry(acl_entry, @update_attrs)
       assert %AclEntry{} = acl_entry
       assert acl_entry.principal_id == 43
-      assert acl_entry.principal_type == "some updated principal_type"
+      assert acl_entry.principal_type == "user"
       assert acl_entry.resource_id == 43
       assert acl_entry.resource_type == "some updated resource_type"
     end
@@ -54,7 +65,12 @@ defmodule TrueBG.PermissionsTest do
     test "update_acl_entry/2 with invalid data returns error changeset" do
       acl_entry = acl_entry_fixture()
       assert {:error, %Ecto.Changeset{}} = Permissions.update_acl_entry(acl_entry, @invalid_attrs)
-      assert acl_entry == Permissions.get_acl_entry!(acl_entry.id)
+      repo_acl_entry = Permissions.get_acl_entry!(acl_entry.id)
+      assert acl_entry.id == repo_acl_entry.id
+      assert acl_entry.principal_type == repo_acl_entry.principal_type
+      assert acl_entry.resource_id == repo_acl_entry.resource_id
+      assert acl_entry.resource_type == repo_acl_entry.resource_type
+      assert acl_entry.role_id == repo_acl_entry.role_id
     end
 
     test "delete_acl_entry/1 deletes the acl_entry" do

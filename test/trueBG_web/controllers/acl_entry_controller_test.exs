@@ -6,7 +6,7 @@ defmodule TrueBGWeb.AclEntryControllerTest do
   import TrueBGWeb.Authentication, only: :functions
 
   @create_attrs %{principal_id: 42, principal_type: "some principal_type", resource_id: 42, resource_type: "some resource_type"}
-  @update_attrs %{principal_id: 43, principal_type: "some updated principal_type", resource_id: 43, resource_type: "some updated resource_type"}
+  @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "some updated resource_type"}
   @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
 
   def fixture(:acl_entry) do
@@ -29,17 +29,22 @@ defmodule TrueBGWeb.AclEntryControllerTest do
   describe "create acl_entry" do
     @tag :admin_authenticated
     test "renders acl_entry when data is valid", %{conn: conn} do
-      conn = post conn, acl_entry_path(conn, :create), acl_entry: @create_attrs
+      user = insert(:user)
+      domain_group = insert(:domain_group)
+      role = insert(:role)
+      acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
+      acl_entry_attrs = acl_entry_attrs |> Map.from_struct
+      conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, acl_entry_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
-        "principal_id" => 42,
-        "principal_type" => "some principal_type",
-        "resource_id" => 42,
-        "resource_type" => "some resource_type"}
+        "principal_id" => user.id,
+        "principal_type" => "user",
+        "resource_id" => domain_group.id,
+        "resource_type" => "domain_group"}
     end
 
     @tag :admin_authenticated
@@ -62,7 +67,7 @@ defmodule TrueBGWeb.AclEntryControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "principal_id" => 43,
-        "principal_type" => "some updated principal_type",
+        "principal_type" => "user",
         "resource_id" => 43,
         "resource_type" => "some updated resource_type"}
     end
@@ -89,7 +94,10 @@ defmodule TrueBGWeb.AclEntryControllerTest do
   end
 
   defp create_acl_entry(_) do
-    acl_entry = fixture(:acl_entry)
-    {:ok, acl_entry: acl_entry}
+    user = insert(:user)
+    domain_group = insert(:domain_group)
+    role = insert(:role)
+    acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
+    {:ok, acl_entry: acl_entry_attrs}
   end
 end

@@ -20,6 +20,7 @@ defmodule TrueBG.Permissions.AclEntry do
   def changeset(%AclEntry{} = acl_entry, attrs) do
     acl_entry
     |> cast(attrs, [:principal_type, :principal_id, :resource_type, :resource_id, :role_id])
-    |> validate_required([:principal_type, :principal_id, :resource_type, :resource_id])
+    |> validate_required([:principal_type, :principal_id, :resource_type, :resource_id, :role_id])
+    |> validate_inclusion(:principal_type, ["user"])
   end
 end
