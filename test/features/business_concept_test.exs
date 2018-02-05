@@ -70,9 +70,8 @@ defmodule TrueBG.BusinessConceptTest do
     attrs = field_value_to_api_attrs(fields, @fixed_values)
 
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-    attrs = Map.put(attrs, "data_domain_id", data_domain["id"])
 
-    case business_concept_create(token, attrs) do
+    case business_concept_create(token, data_domain["id"], attrs) do
         {_, status_code, %{"data" => %{"id" => id, "name" => name}}} ->
           {:ok, Map.merge(state, %{status_code: status_code, current_bc_id: id, current_bc_name: name})}
         {_, status_code, _} ->
@@ -245,18 +244,16 @@ defmodule TrueBG.BusinessConceptTest do
   #     assert rc_ok() == to_response_code(http_status_code)
   #     assert business_concept["data_domain_id"] == data_domain["id"]
   #     {:ok, Map.merge(state, %{business_concept: business_concept})}
-  #   else
+  #   else********
   #     {:ok, Map.merge(state, %{})}
   #   end
   # end
 
-  defp business_concept_create(token, attrs) do
+  defp business_concept_create(token, data_domain_id,  attrs) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"id" => attrs["data_domain_id"],
-             "business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code:
-    status_code, body: resp} =
-        HTTPoison.post!(business_concept_url(@endpoint, :create), body, headers, [])
+    body = %{"business_concept" => attrs} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.post!(data_domain_business_concept_url(@endpoint, :create, data_domain_id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

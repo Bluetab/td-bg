@@ -47,6 +47,9 @@ defmodule TrueBGWeb.Router do
     get "/domain_groups/index_root", DomainGroupController, :index_root
     get "/domain_groups/:id/index_children", DomainGroupController, :index_children
     resources "/domain_groups", DomainGroupController, except: [:new, :edit]
+    resources "/data_domains", DataDomainController do
+      post "/business_concept", BusinessConceptController, :create
+    end
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
   end
 

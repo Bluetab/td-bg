@@ -1,8 +1,6 @@
 defmodule TrueBGWeb.BusinessConceptController do
   use TrueBGWeb, :controller
 
-  import Canada
-
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.BusinessConcept
   alias TrueBG.Taxonomies.DataDomain
@@ -10,7 +8,7 @@ defmodule TrueBGWeb.BusinessConceptController do
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
   alias Poison, as: JSON
 
-  plug :load_and_authorize_resource, model: DataDomain, persisted: true, only: :create
+  plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -46,10 +44,11 @@ defmodule TrueBGWeb.BusinessConceptController do
     end
   end
 
-  def create(conn, %{"id" => data_domain_id, "business_concept" => business_concept_params}) do
+  def create(conn, %{"business_concept" => business_concept_params}) do
     user = conn |> get_current_user
+
     business_concept_params = business_concept_params
-      |> Map.put("data_domain_id", data_domain_id)
+      |> Map.put("data_domain_id", conn.assigns.data_domain.id)
     do_create(conn, user, business_concept_params)
   end
 

@@ -29,10 +29,9 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
         type: "Some type",
         name: "Some name",
         description: "Some description",
-        data_domain_id: data_domain.id
       }
 
-      conn = post conn, business_concept_path(conn, :create), %{id: data_domain.id, business_concept: creation_attrs}
+      conn = post conn, data_domain_business_concept_path(conn, :create, data_domain.id), business_concept: creation_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
@@ -55,9 +54,8 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
         type: "Some type",
         name: nil,
         description: "Some description",
-        data_domain_id: nil
       }
-      conn = post conn, business_concept_path(conn, :create), %{id: data_domain.id, business_concept: creation_attrs}
+      conn = post conn, data_domain_business_concept_path(conn, :create, data_domain.id), business_concept: creation_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
