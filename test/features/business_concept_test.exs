@@ -12,6 +12,7 @@ defmodule TrueBG.BusinessConceptTest do
 
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
+  @fixed_values %{"Description" => "description", "Name" => "name", "Type" => "type"}
 
   # Scenario: Create a simple business concept
 
@@ -60,57 +61,16 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp, token: token, token_owner: user_name})}
   end
 
-  defp add_value_to_map(map, field, value) do
-    map
-      |> Map.put(field |> String.downcase |> String.to_atom, value)
-  end
-
-  defp add_value_to_content(map, field, value) do
-    new_content = map
-      |> Map.get(:content)
-      |> Map.put(String.to_atom(field), value)
-
-    map
-      |> Map.put(:content, new_content)
-  end
-
-  defp add_content_field(map), do: map |> Map.put(:content, %{})
-  defp add_field(map, %{Field: "Type" = field, Value: value}), do: map |> add_value_to_map(field, value)
-  defp add_field(map, %{Field: "Name" = field, Value: value}), do: map |> add_value_to_map(field, value)
-  defp add_field(map, %{Field: "Description" = field, Value: value}), do: map |> add_value_to_map(field, value)
-  defp add_field(map, %{Field: "Formula" = field, Value: value}), do: map |> add_value_to_content(field, value)
-  defp add_field(map, %{Field: "Format" = field, Value: value}), do: map |> add_value_to_content(field, value)
-  defp add_field(map, %{Field: "List of Values" = field, Value: value}), do: map |> add_value_to_content(field, value)
-  defp add_field(map, %{Field: "Sensitve Data" = field, Value: value}), do: map |> add_value_to_content(field, value)
-  defp add_field(map, %{Field: "Update Frequence" = field, Value: value}), do: map |> add_value_to_content(field, value)
-  defp add_field(map, %{Field: "Related Area" = field, Value: value}), do: map |> add_value_to_content(field, value)
-  defp add_field(map, %{Field: "Default Value" = field, Value: value}), do: map |> add_value_to_content(field, value)
-  defp add_field(map, %{Field: "Additional Data" = field, Value: value}), do: map |> add_value_to_content(field, value)
-
-  defp add_fields(map, %{} = field) do
-    map
-      |> add_field(field)
-  end
-
-  defp add_fields(map, [tail|head]) do
-    map
-      |> add_field(tail)
-      |> add_fields(head)
-  end
-  defp add_fields(map, []), do: map
-
   defand ~r/^"(?<user_name>[^"]+)" tries to create a business concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
           %{user_name: user_name, data_domain_name: data_domain_name, table: fields},
           %{token_owner: token_owner, token_admin: token_admin} = state do
 
     assert user_name == token_owner
 
-    data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    attrs = field_value_to_api_attrs(fields, @fixed_values)
 
-    attrs = Map.new
-      |> add_content_field()
-      |> add_fields(fields)
-      |> Map.put("data_domain_id", data_domain["id"])
+    data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    attrs = Map.put(attrs, "data_domain_id", data_domain["id"])
 
     {_, status_code, %{"data" => %{"id" => id, "name" => name}}} =
       business_concept_create(token_admin, attrs)
@@ -121,6 +81,13 @@ defmodule TrueBG.BusinessConceptTest do
           %{status_code: status_code}, %{status_code: http_status_code} = state do
     assert status_code == to_response_code(http_status_code)
     {:ok, Map.merge(state, %{})}
+  end
+
+  defp field_value_to_api_attrs(table, fixed_values) do
+    table
+      |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
+      |> Map.split(Map.values(fixed_values))
+      |> fn({f, v}) -> Map.put(f, "content", v) end.()
   end
 
   defp assert_field(%{Field: "Name", Value: value}, c), do: assert value == c["name"]
@@ -167,71 +134,40 @@ defmodule TrueBG.BusinessConceptTest do
   end
 
   # Scenario: Create a business concept with dinamic data
+  defp add_schema_field(map, _name, ""), do: map
+  defp add_schema_field(map, :max_size, value) do
+    Map.put(map, :max_size,  String.to_integer(value))
+  end
+  defp add_schema_field(map, :values, values) do
+    diff_values = values
+      |> String.split(",")
+      |> Enum.map(&(String.trim(&1)))
+    Map.put(map, :values, diff_values)
+  end
+  defp add_schema_field(map, :required, required) do
+    Map.put(map, :required, required == "YES")
+  end
+  defp add_schema_field(map, name, value), do: Map.put(map, name, value)
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with following definition:$/,
           %{business_concept_type: business_concept_type, table: table},
           %{} = state do
 
-    schema_item_fn = fn(row) ->
-      name = row |> Map.get(:Field) |> String.trim
-      type = row |> Map.get(:Format) |> String.trim
-      max_size = row |> Map.get(:"Max Size") |> String.trim
-      values = row |> Map.get(:Values) |> String.trim
-      required = row |> Map.get(:Mandatory) |> String.trim
-      default = row |> Map.get(:"Default Value") |> String.trim
+    schema = table
+    |> Enum.map(fn(row) ->
+      Map.new
+      |> add_schema_field(:name, row."Field")
+      |> add_schema_field(:type, row."Format")
+      |> add_schema_field(:max_size, row."Max Size")
+      |> add_schema_field(:values, row."Values")
+      |> add_schema_field(:required, row."Mandatory")
+      |> add_schema_field(:default, row."Default Value")
+    end)
 
-      map = Map.new
-      map = if name != "" do
-        map |> Map.put(:name, name)
-      else
-        map
-      end
+    json_schema = %{business_concept_type  => schema} |> JSON.encode!
 
-      map = if type != "" do
-        map |> Map.put(:type, type)
-      else
-        map
-      end
-
-      map = if max_size != "" do
-        {max, _} = Integer.parse(max_size)
-        map |> Map.put(:max_size, max)
-      else
-        map
-      end
-
-      map = if values != "" do
-        values_ary = values
-          |> String.split(",")
-          |> Enum.map(&(String.trim(&1)))
-
-        map |> Map.put(:values, values_ary)
-      else
-        map
-      end
-
-      map = if required !=  "" && required == "YES" do
-        map |> Map.put(:required, true)
-      else
-        map
-      end
-
-      map = if default  != "" do
-        map |> Map.put(:default, default)
-      else
-        map
-      end
-
-      map
-    end
-
-    schema = table |> Enum.map(schema_item_fn)
-
-    filename = Application.get_env(:trueBG, :bc_schema_location)
-    {:ok, file} = File.open filename, [:write, :utf8]
-    json_schema = [{business_concept_type, schema}] |> Map.new |> JSON.encode!
-    IO.binwrite file, json_schema
-    File.close file
+    path = Application.get_env(:trueBG, :bc_schema_location)
+    File.write!(path, json_schema, [:write, :utf8])
 
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
