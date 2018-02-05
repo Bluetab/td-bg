@@ -33,7 +33,7 @@ Feature: Business Concepts administration
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-    And an existing Business Concept type called "Business Term" without definition
+    And an existing Business Concept type called "Business Term" with empty definition
     And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Field             | Value                                                                   |
@@ -71,7 +71,14 @@ Feature: Business Concepts administration
       | Type              | Business Term                                                            |
       | Name              | My Dinamic Business Term                                                 |
       | Description       | This is the first description of my business term which is a date        |
+      | Formula           |                                                                    |
       | Format            | Date                                                                     |
+      | List of Values    |                                                                    |
+      #| Sensitve Data     | N/A                                                                |
+      #| Update Frequence  | Not defined                                                        |
+      | Related Area      |                                                                    |
+      | Default Value     |                                                                    |
+      | Additional Data   |                                                                    |
     Then the system returns a result with code "Created"
     And "app-admin" is able to view business concept "My Dinamic Business Term" as a child of Data Domain "My Domain" with following data:
       | Field             | Value                                                              |
@@ -95,6 +102,7 @@ Feature: Business Concepts administration
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And an existing Business Concept type called "Business Term" with empty definition
     And following users exist with the indicated role in Data Domain "My Domain"
       | user      | role    |
       | watcher   | watch   |
@@ -103,17 +111,18 @@ Feature: Business Concepts administration
       | admin     | admin   |
     And user "<user>" is logged in the application with password "<user>"
     When "<user>" tries to create a business concept in the Data Domain "My Domain" with following data:
-      | Type          | Name                    | Description                                                            |
-      | Business Term | My Simple Business Term | This is the first description of my business term which is very simple |
-    Then the system returns a result with code <result>
-    And if result <result> is "Created", "<user>" is able to view business concept "My Simple Business Term" as a child of Data Domain "My Domain"
-
+      | Field             | Value                                                                   |
+      | Type              | Business Term                                                           |
+      | Name              | My Simple Business Term                                                 |
+      | Description       | This is the first description of my business term which is very simple  |
+    Then the system returns a result with code "<result>"
     Examples:
-      | user      | result    |
-      | watcher   | Forbidden |
-      | creator   | Created   |
-      | publisher | Created   |
-      | admin     | Created   |
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Created      |
+      | publisher | Created      |
+      | admin     | Created      |
+
 
   Scenario Outline: Modification of existing Business Concept in Draft status
     Given an existing Domain Group called "My Parent Group"

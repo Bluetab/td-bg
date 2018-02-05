@@ -27,7 +27,6 @@ defmodule TrueBGWeb.Router do
     delete "/sessions", SessionController, :destroy
     put "/sessions", SessionController, :change_password
     resources "/users", UserController, except: [:new, :edit]
-    resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
     resources "/roles", RoleController, except: [:new, :edit]
     resources "/acl_entries", AclEntryController, except: [:new, :edit]
 
@@ -48,7 +47,7 @@ defmodule TrueBGWeb.Router do
     get "/domain_groups/index_root", DomainGroupController, :index_root
     get "/domain_groups/:id/index_children", DomainGroupController, :index_children
     resources "/domain_groups", DomainGroupController, except: [:new, :edit]
-
+    resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
   end
 
 end

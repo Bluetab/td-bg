@@ -1,11 +1,16 @@
 defmodule TrueBGWeb.BusinessConceptController do
   use TrueBGWeb, :controller
 
+  import Canada
+
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.BusinessConcept
+  alias TrueBG.Taxonomies.DataDomain
 
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
   alias Poison, as: JSON
+
+  plug :load_and_authorize_resource, model: DataDomain, persisted: true, only: :create
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -18,8 +23,7 @@ defmodule TrueBGWeb.BusinessConceptController do
     render(conn, "index.json", business_concepts: business_concepts)
   end
 
-  def create(conn, %{"business_concept" => business_concept_params}) do
-
+  defp do_create(conn, user,  business_concept_params) do
     type = business_concept_params |> Map.get("type")
     filename = Application.get_env(:trueBG, :bc_schema_location)
     content_schema = filename
@@ -29,7 +33,7 @@ defmodule TrueBGWeb.BusinessConceptController do
 
     business_concept_params = business_concept_params
       |> Map.put("content_schema", content_schema)
-      |> Map.put("modifier", get_current_user(conn).id)
+      |> Map.put("modifier", user.id)
       |> Map.put("last_change", DateTime.utc_now())
       |> Map.put("status", Atom.to_string(BusinessConcept.draft))
       |> Map.put("version", 1)
@@ -40,6 +44,13 @@ defmodule TrueBGWeb.BusinessConceptController do
       |> put_resp_header("location", business_concept_path(conn, :show, business_concept))
       |> render("show.json", business_concept: business_concept)
     end
+  end
+
+  def create(conn, %{"id" => data_domain_id, "business_concept" => business_concept_params}) do
+    user = conn |> get_current_user
+    business_concept_params = business_concept_params
+      |> Map.put("data_domain_id", data_domain_id)
+    do_create(conn, user, business_concept_params)
   end
 
   def show(conn, %{"id" => id}) do

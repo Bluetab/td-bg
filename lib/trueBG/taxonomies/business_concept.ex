@@ -5,6 +5,16 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.BusinessConcept
 
+  @permissions %{
+    admin:   [:create, :update, :send_for_approval, :delete, :publish, :reject,
+              :deprecate, :see_draft, :see_published],
+    publish: [:create, :update, :send_for_approval, :delete, :publish, :reject,
+              :deprecate, :see_draft, :see_published],
+    create:  [:create, :update, :send_for_approval, :delete, :see_draft,
+              :see_published],
+    watch:   [:see_published]
+  }
+
   @status [:draft]
 
   schema "business_concepts" do
@@ -19,6 +29,10 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
     field :version, :integer
 
     timestamps()
+  end
+
+  def get_permissions do
+    @permissions
   end
 
   @doc false

@@ -32,7 +32,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
         data_domain_id: data_domain.id
       }
 
-      conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
+      conn = post conn, business_concept_path(conn, :create), %{id: data_domain.id, business_concept: creation_attrs}
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
@@ -49,6 +49,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
 
     @tag authenticated_user: @admin_user_name
     test "renders errors when data is invalid", %{conn: conn} do
+      data_domain = insert(:data_domain)
       creation_attrs = %{
         content: %{},
         type: "Some type",
@@ -56,7 +57,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
         description: "Some description",
         data_domain_id: nil
       }
-      conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
+      conn = post conn, business_concept_path(conn, :create), %{id: data_domain.id, business_concept: creation_attrs}
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
