@@ -6,8 +6,7 @@ defmodule TrueBG.PermissionsTest do
   describe "acl_entries" do
     alias TrueBG.Permissions.AclEntry
 
-    @valid_attrs %{principal_id: 42, principal_type: "some principal_type", resource_id: 42, resource_type: "some resource_type"}
-    @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "some updated resource_type"}
+    @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain_group"}
     @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
 
     def acl_entry_fixture do
@@ -59,7 +58,7 @@ defmodule TrueBG.PermissionsTest do
       assert acl_entry.principal_id == 43
       assert acl_entry.principal_type == "user"
       assert acl_entry.resource_id == 43
-      assert acl_entry.resource_type == "some updated resource_type"
+      assert acl_entry.resource_type == @update_attrs.resource_type
     end
 
     test "update_acl_entry/2 with invalid data returns error changeset" do

@@ -1,18 +1,11 @@
 defmodule TrueBGWeb.AclEntryControllerTest do
   use TrueBGWeb.ConnCase
 
-  alias TrueBG.Permissions
   alias TrueBG.Permissions.AclEntry
   import TrueBGWeb.Authentication, only: :functions
 
-  @create_attrs %{principal_id: 42, principal_type: "some principal_type", resource_id: 42, resource_type: "some resource_type"}
-  @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "some updated resource_type"}
+  @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain_group"}
   @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
-
-  def fixture(:acl_entry) do
-    {:ok, acl_entry} = Permissions.create_acl_entry(@create_attrs)
-    acl_entry
-  end
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -66,10 +59,10 @@ defmodule TrueBGWeb.AclEntryControllerTest do
       conn = get conn, acl_entry_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
-        "principal_id" => 43,
-        "principal_type" => "user",
-        "resource_id" => 43,
-        "resource_type" => "some updated resource_type"}
+        "principal_id" => @update_attrs.principal_id,
+        "principal_type" => @update_attrs.principal_type,
+        "resource_id" => @update_attrs.resource_id,
+        "resource_type" => @update_attrs.resource_type}
     end
 
     @tag :admin_authenticated
