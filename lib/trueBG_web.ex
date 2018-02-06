@@ -24,6 +24,7 @@ defmodule TrueBGWeb do
       import TrueBGWeb.Router.Helpers
       import TrueBGWeb.Gettext
       import Canary.Plugs
+      import TrueBG.Auth.Plugs
     end
   end
 

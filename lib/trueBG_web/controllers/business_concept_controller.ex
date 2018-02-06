@@ -8,7 +8,8 @@ defmodule TrueBGWeb.BusinessConceptController do
   alias TrueBG.Auth.Guardian.Plug, as: GuardianPlug
   alias Poison, as: JSON
 
-  plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
+  plug :load_canary_action, phoenix_action: :create, canary_action: :create_business_concept
+  plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create_business_concept
 
   action_fallback TrueBGWeb.FallbackController
 
