@@ -1,9 +1,9 @@
-defmodule TrueBGWeb.PingController do
+defmodule TrueBGWeb.EchoController do
   use TrueBGWeb, :controller
 
   action_fallback TrueBGWeb.FallbackController
 
-  def ping(conn, _params) do
-    send_resp(conn, 200, "pong")
+  def echo(conn, params) do
+    send_resp(conn, 200, params |> Poison.encode!)
   end
 end

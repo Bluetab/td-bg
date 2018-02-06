@@ -17,7 +17,8 @@ defmodule TrueBGWeb.Router do
 
   scope "/api", TrueBGWeb do
     pipe_through :api
-    get "/ping", PingController, :ping
+    get  "/ping", PingController, :ping
+    post "/echo", EchoController, :echo
     post "/sessions", SessionController, :create
   end
 
