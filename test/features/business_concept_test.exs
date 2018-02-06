@@ -16,7 +16,6 @@ defmodule TrueBG.BusinessConceptTest do
   @fixed_values %{"Description" => "description", "Name" => "name", "Type" => "type"}
 
   # Scenario: Create a simple business concept
-
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
     %{domain_group_name: domain_group_name}, state do
     token_admin = case state[:token_admin] do
@@ -72,12 +71,9 @@ defmodule TrueBG.BusinessConceptTest do
 
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
 
-    case business_concept_create(token, data_domain["id"], attrs) do
-        {_, status_code, %{"data" => %{"id" => id, "name" => name}}} ->
-          {:ok, Map.merge(state, %{status_code: status_code, current_bc_id: id, current_bc_name: name})}
-        {_, status_code, _} ->
-          {:ok, Map.merge(state, %{status_code: status_code})}
-    end
+    {_, status_code, _} = business_concept_create(token, data_domain["id"], attrs)
+    {:ok, Map.merge(state, %{status_code: status_code})}
+
   end
 
   defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/,
@@ -120,20 +116,18 @@ defmodule TrueBG.BusinessConceptTest do
 
   defand ~r/^"(?<user_name>[^"]+)" is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
     %{user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name, table: fields},
-    %{token_admin: token_admin, token: token, token_owner: token_owner, current_bc_id: current_bc_id, current_bc_name: current_bc_name} = state do
+    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
 
       assert user_name == token_owner
-      assert business_concept_name == current_bc_name
-
       data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-
-      {_, http_status_code, %{"data" => business_concept}} = businness_concept_show(token, current_bc_id)
-
+      business_concept = business_concept_by_name(token, business_concept_name)
+      {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
       assert rc_ok() == to_response_code(http_status_code)
+      assert business_concept["name"] == business_concept_name
       assert business_concept["data_domain_id"] == data_domain["id"]
       assert_fields(fields, business_concept)
-
       {:ok, Map.merge(state, %{})}
+
   end
 
   # Scenario: Create a business concept with dinamic data
@@ -197,16 +191,71 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, Map.merge(state, %{users: users})}
   end
 
+  # Scenario: User should not be able to create a business concept with same type and name as an existing one
+  defand ~r/^an existing Business Concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
+    %{data_domain_name: data_domain_name, table: fields}, state do
+    #Retriving token
+    token_admin = case state[:token_admin] do
+                nil ->
+                  {_, _, %{"token" => token}} = session_create("app-admin", "mypass")
+                  token
+                _ -> state[:token_admin]
+              end
+
+    #Retrieve data domain by name in order to create a business concept
+    data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    #Create Business Concept with the given data and the admin token
+    attrs = field_value_to_api_attrs(fields, @fixed_values)
+    # Creamos el busines concept para cuando tenga que recuperarlo
+    business_concept_create(token_admin, data_domain["id"], attrs)
+  end
+
+  defand ~r/^"(?<user_name>[^"]+)" is not able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
+    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+
+    assert user_name == token_owner
+    data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    business_concept = business_concept_by_name(token, business_concept_name)
+    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
+    assert rc_ok() == to_response_code(http_status_code)
+    assert business_concept["name"] == business_concept_name
+    assert business_concept["data_domain_id"] !== data_domain["id"]
+    {:ok, Map.merge(state, %{})}
+
+  end
+
+  # defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
+  #         %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
+  #
+  #   data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+  #   assert data_domain_name == data_domain["name"]
+  #
+  #   create_user_and_acl_entries_fn = fn(x) ->
+  #     user_name = x[:user]
+  #     role_name = x[:role]
+  #     {_, _, %{"data" => %{"id" => principal_id}}} = user_create(token_admin, %{user_name: user_name, password: user_name})
+  #     %{"id" => role_id} = get_role_by_name(token_admin, role_name)
+  #     acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain["id"], role_id: role_id}
+  #     {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)
+  #   end
+  #
+  #   users = table |> Enum.map(create_user_and_acl_entries_fn)
+  #
+  #   {:ok, Map.merge(state, %{users: users})}
+  # end
+  #
+  #
   # defp validate_user_is_able(user_name, current_bc_id, fields) do
   #   {_, _, %{"token" => token}} = session_create(user_name, user_name)
-  #   {_, status_code, %{"data" => business_concept}} = businness_concept_show(token, current_bc_id)
+  #   {_, status_code, %{"data" => business_concept}} = business_concept_show(token, current_bc_id)
   #   assert rc_ok() == to_response_code(status_code)
   #   assert_fields(fields, business_concept)
   # end
   #
   # defp validate_user_is_not_able(user_name, current_bc_id, fields) do
   #   {_, _, %{"token" => token}} = session_create(user_name, user_name)
-  #   {_, status_code, %{"data" => business_concept}} = businness_concept_show(token, current_bc_id)
+  #   {_, status_code, %{"data" => business_concept}} = business_concept_show(token, current_bc_id)
   #   assert rc_ok() == to_response_code(status_code)
   #   assert_fields(fields, business_concept)
   # end
@@ -241,7 +290,7 @@ defmodule TrueBG.BusinessConceptTest do
   #   assert user_name == token_owner
   #
   #   if result == status_code do
-  #     {_, http_status_code, %{"data" => business_concept}} = businness_concept_show(token_admin, current_bc_id)
+  #     {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token_admin, current_bc_id)
   #     assert rc_ok() == to_response_code(http_status_code)
   #     assert business_concept["data_domain_id"] == data_domain["id"]
   #     {:ok, Map.merge(state, %{business_concept: business_concept})}
@@ -258,10 +307,22 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp businness_concept_show(token, id) do
+  defp business_concept_show(token, id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(business_concept_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp business_concept_list(token) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(business_concept_url(@endpoint, :index), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  def business_concept_by_name(token, business_concept_name) do
+    {:ok, _status_code, json_resp} = business_concept_list(token)
+    Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
   end
 end
