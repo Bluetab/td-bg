@@ -65,3 +65,32 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
       | My Second Child Group  | First version of My Second Data Domain  |
       | My Third Child Group   | First version of My Third Data Domain   |
       | My Fourth Child Group  | First version of My Fourth Data Domain  |
+
+  Scenario: List of all business concepts child of a Data Domain
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Data Domain" child of Domain Group "My Child Group" with following data:
+      | Description |
+      | First version of My Data Domain |
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept type called "Policy" with empty definition
+    And an existing Business Concept with following data:
+     | Type          | Name             | Description                                       |
+     | Business Term | My Business Term | This is the first description of my business term |
+    And an existing Business Concept with following data:
+     | Type          | Name                   | Description                                              |
+     | Business Term | My Seond Business Term | This is the first description of my second business term |
+    And an existing Business Concept with following data:
+     | Type          | Name                   | Description                                              |
+     | Business Term | My Third Business Term | This is the first description of my third business term  |
+    And an existing Business Concept with following data:
+     | Type          | Name                   | Description                                      |
+     | Policy        | My First Policy        | This is the first description of my First Policy |
+    And user "app-admin" is logged in the application with password "mypass"
+    When user tries to query a list of all Business Concepts children of Data Domain "My Data Domain"
+    Then user sees following list:
+      | Name                    | Type           | Description                                              |
+      | My Business Term        | Business Term  | This is the first description of my business term        |
+      | My Second Business Term | Business Term  | This is the first description of my second business term |
+      | My Third Business Term  | Business Term  | This is the first description of my third business term  |
+      | My First Policy         | Policy         | This is the first description of my First Policy         |
