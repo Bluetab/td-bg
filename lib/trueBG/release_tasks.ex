@@ -1,9 +1,12 @@
 defmodule TrueBG.ReleaseTasks do
+  @moduledoc false
+  alias Ecto.Migrator
+  alias TrueBG.Repo
 
   def migrate do
-      {:ok, _} = Application.ensure_all_started(:my_app)
-      path = Application.app_dir(:my_app, "priv/repo/migrations")
-      Ecto.Migrator.run(MyApp.Repo, path, :up, all: true)
+      {:ok, _} = Application.ensure_all_started(:trueBG)
+      path = Application.app_dir(:trueBG, "priv/repo/migrations")
+      Migrator.run(Repo, path, :up, all: true)
   end
 
   # @start_apps [
