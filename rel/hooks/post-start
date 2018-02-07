@@ -1,6 +1,0 @@
-set -e
-
-echo "pre-start:"
-echo "migrations"
-bin/trueBG rpc Elixir.TrueBG.ReleaseTasks migrate
-echo "end migrations"

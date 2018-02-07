@@ -3,15 +3,6 @@ defmodule TrueBG.ReleaseTasks do
   alias Ecto.Migrator
   alias TrueBG.Repo
 
-  # For hook
-  def migrate do
-      seed()
-      # {:ok, _} = Application.ensure_all_started(:trueBG)
-      # path = Application.app_dir(:trueBG, "priv/repo/migrations")
-      # Migrator.run(Repo, path, :up, all: true)
-  end
-
-  # For migrate
   @start_apps [
       :postgrex,
       :ecto

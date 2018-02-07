@@ -1,6 +1,3 @@
 set -e
 
-echo "pre-start:"
-echo "migrations"
 bin/trueBG command Elixir.TrueBG.ReleaseTasks seed
-echo "end migrations"
