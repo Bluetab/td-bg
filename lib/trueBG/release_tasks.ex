@@ -17,16 +17,16 @@ defmodule TrueBG.ReleaseTasks do
     ]
 
     def seed do
-      IO.puts "Loading trueBG.."
+      #IO.puts "Loading trueBG.."
       # Load the code for trueBG, but don't start it
       :ok = Application.load(:trueBG)
 
-      IO.puts "Starting dependencies.."
+      #IO.puts "Starting dependencies.."
       # Start apps necessary for executing migrations
       Enum.each(@start_apps, &Application.ensure_all_started/1)
 
       # Start the Repo(s) for trueBG
-      IO.puts "Starting repos.."
+      #IO.puts "Starting repos.."
       Enum.each(@repos, &(&1.start_link(pool_size: 1)))
 
       # Run migrations
@@ -40,7 +40,7 @@ defmodule TrueBG.ReleaseTasks do
       end
 
       # Signal shutdown
-      IO.puts "Success!"
+      #IO.puts "Success!"
       :init.stop()
     end
 

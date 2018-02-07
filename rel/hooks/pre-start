@@ -1,3 +1,2 @@
 set -e
-
-bin/trueBG command Elixir.TrueBG.ReleaseTasks seed
+bin/trueBG migrate
