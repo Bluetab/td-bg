@@ -51,6 +51,6 @@ release :trueBG do
     :runtime_tools
   ]
   set commands: [
-    "migrate": "rel/commands/migrate"
+    "migrate": "rel/commands/migrate.sh"
   ]
 end
