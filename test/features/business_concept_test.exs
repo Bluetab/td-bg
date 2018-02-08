@@ -8,6 +8,7 @@ defmodule TrueBG.BusinessConceptTest do
   import TrueBGWeb.Taxonomy, only: :functions
   import TrueBGWeb.AclEntry, only: :functions
   import TrueBGWeb.Authentication, only: :functions
+  import TrueBGWeb.BCStatusCode, only: :functions
 
   alias Poison, as: JSON
 
@@ -283,7 +284,7 @@ defmodule TrueBG.BusinessConceptTest do
 
     assert token_owner == user_name
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    {_, status_code, _} = business_concept_update(token, business_concept["id"], %{"status" => "Pending Approval"})
+    {_, status_code, _} = business_concept_update(token, business_concept["id"],  %{ "status" => to_status_string(:pending_approval)})
     {:ok, Map.merge(state, %{status_code: status_code})}
 
  end

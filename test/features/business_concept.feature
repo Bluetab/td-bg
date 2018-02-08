@@ -220,7 +220,7 @@ Feature: Business Concepts administration
      | Last Modification | Some timestamp                                                     |
      | Last User         | app-admin                                                          |
      | Version           | 1                                                                  |
-     | Status            | Pending Approval                                                   |
+     | Status            | pending approval                                                   |
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
