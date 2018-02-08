@@ -213,6 +213,33 @@ defmodule TrueBG.TaxonomiesTest do
         |> Enum.each(&(assert business_concept |> Map.get(elem(&1, 0)) == elem(&1, 1)))
     end
 
+    test "update_business_concept/2 with valid content data updates the business_concept" do
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "string", "required"=> true},
+        %{"name" => "Field2", "type" => "string", "required"=> true},
+      ]
+
+      user = insert(:user)
+      content = %{
+        "Field1" => "First field",
+        "Field2" => "Second field",
+      }
+      business_concept = insert(:business_concept, modifier:  user.id, content: content)
+
+      update_content = %{
+        "Field1" => "New first field"
+      }
+      update_attrs = %{
+        content: update_content,
+        content_schema: content_schema,
+      }
+      assert {:ok, business_concept} = Taxonomies.update_business_concept(business_concept, update_attrs)
+      assert %BusinessConcept{} = business_concept
+      assert business_concept.content["Field1"] == "New first field"
+      assert business_concept.content["Field2"] == "Second field"
+    end
+
     test "update_business_concept/2 with invalid data returns error changeset" do
       user = insert(:user)
       business_concept = insert(:business_concept, modifier:  user.id)

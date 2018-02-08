@@ -27,8 +27,12 @@ defimpl Canada.Can, for: TrueBG.Accounts.User do
     true
   end
 
-  def can?(%TrueBG.Accounts.User{}, _action, %TrueBG.Taxonomies.BusinessConcept{}) do
-    true
+  def can?(%TrueBG.Accounts.User{id: user_id}, action, %TrueBG.Taxonomies.BusinessConcept{} = business_object) when action in [:update] do
+    resource_id = business_object.data_domain_id
+    role = TrueBG.Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: resource_id})
+    role_name = String.to_atom(role.name)
+    permissions = TrueBG.Taxonomies.BusinessConcept.get_permissions()
+    Enum.member? permissions[role_name], action
   end
 
   def can?(%TrueBG.Accounts.User{}, _action, _domain),  do: false

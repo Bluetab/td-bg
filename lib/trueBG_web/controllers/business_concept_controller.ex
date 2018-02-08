@@ -11,6 +11,8 @@ defmodule TrueBGWeb.BusinessConceptController do
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_business_concept
   plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create_business_concept
 
+  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update]
+
   action_fallback TrueBGWeb.FallbackController
 
   defp get_current_user(conn) do
@@ -61,6 +63,9 @@ defmodule TrueBGWeb.BusinessConceptController do
   def update(conn, %{"id" => id, "business_concept" => business_concept_params}) do
     business_concept = Taxonomies.get_business_concept!(id)
 
+    content_schema = get_content_schema(business_concept.type)
+    business_concept_params = Map.put(business_concept_params, "content_schema", content_schema)
+
     with {:ok, %BusinessConcept{} = business_concept} <- Taxonomies.update_business_concept(business_concept, business_concept_params) do
       render(conn, "show.json", business_concept: business_concept)
     end
@@ -71,5 +76,13 @@ defmodule TrueBGWeb.BusinessConceptController do
     with {:ok, %BusinessConcept{}} <- Taxonomies.delete_business_concept(business_concept) do
       send_resp(conn, :no_content, "")
     end
+  end
+
+  defp get_content_schema(content_type) do
+    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename
+      |> File.read!
+      |> JSON.decode!
+      |> Map.get(content_type)
   end
 end

@@ -92,7 +92,7 @@ defmodule TrueBG.BusinessConceptTest do
   defp assert_field(%{Field: "Formula", Value: value}, c), do: assert value == c["content"]["Formula"]
   defp assert_field(%{Field: "Format", Value: value}, c), do: assert value == c["content"]["Format"]
   defp assert_field(%{Field: "List of Values", Value: value}, c), do: assert value == c["content"]["List of Values"]
-  defp assert_field(%{Field: "Sensitve Data", Value: value}, c), do: assert value == c["content"]["Sensitve Data"]
+  defp assert_field(%{Field: "Sensitive Data", Value: value}, c), do: assert value == c["content"]["Sensitive Data"]
   defp assert_field(%{Field: "Update Frequence", Value: value}, c), do: assert value == c["content"]["Update Frequence"]
   defp assert_field(%{Field: "Related Area", Value: value}, c), do: assert value == c["content"]["Related Area"]
   defp assert_field(%{Field: "Default Value", Value: value}, c), do: assert value == c["content"]["Default Value"]
@@ -240,15 +240,14 @@ defmodule TrueBG.BusinessConceptTest do
   end
 
   defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with follwing data:$/,
-  %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
-  %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
 
     assert user_name == token_owner
 
     if result == status_code do
       business_concept_tmp = business_concept_by_name(token_admin, business_concept_name)
       assert business_concept_type == business_concept_tmp["type"]
-
       {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
       assert rc_ok() == to_response_code(http_status_code)
       assert_fields(fields, business_concept)
@@ -256,26 +255,6 @@ defmodule TrueBG.BusinessConceptTest do
     else
       {:ok, Map.merge(state, %{})}
     end
-  end
-
-  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
-          %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
-          %{current_bc_id: current_bc_id, current_bc_name: current_bc_name, token_owner: token_owner, token_admin: token_admin} = state do
-
-    # data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-    # assert business_concept_name == current_bc_name
-    # assert data_domain_name == data_domain["name"]
-    # assert user_name == token_owner
-    #
-    # if result == status_code do
-    #   {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token_admin, current_bc_id)
-    #   assert rc_ok() == to_response_code(http_status_code)
-    #   assert business_concept["data_domain_id"] == data_domain["id"]
-    #   {:ok, Map.merge(state, %{business_concept: business_concept})}
-    # else
-    #   {:ok, Map.merge(state, %{})}
-    # end
-    {:ok, Map.merge(state, %{})}
   end
 
   # defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
@@ -348,13 +327,13 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  # defp business_concept_update(token, business_concept_id, attrs) do
-  #   headers = [@headers, {"authorization", "Bearer #{token}"}]
-  #   body = %{"business_concept" => attrs} |> JSON.encode!
-  #   %HTTPoison.Response{status_code: status_code, body: resp} =
-  #       HTTPoison.put!(business_concept_url(@endpoint, :update, business_concept_id), body, headers, [])
-  #   {:ok, status_code, resp |> JSON.decode!}
-  # end
+  defp business_concept_update(token, business_concept_id, attrs) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"business_concept" => attrs} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.put!(business_concept_url(@endpoint, :update, business_concept_id), body, headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
 
   defp business_concept_show(token, id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]

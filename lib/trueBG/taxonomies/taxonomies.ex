@@ -427,8 +427,17 @@ defmodule TrueBG.Taxonomies do
 
   """
   def update_business_concept(%BusinessConcept{} = business_concept, attrs) do
+    new_attrs = normalize_attrs(attrs).attrs
+    new_content = Map.get(new_attrs, "content")
+    new_content = if new_content == nil do
+      %{}
+    else
+      new_content
+    end
+    content = Map.merge(business_concept.content, new_content)
+    new_attrs = Map.put(new_attrs, "content", content)
     business_concept
-    |> BusinessConcept.changeset(attrs)
+    |> BusinessConcept.changeset(new_attrs)
     |> Repo.update()
   end
 

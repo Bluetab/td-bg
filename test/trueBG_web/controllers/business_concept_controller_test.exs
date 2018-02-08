@@ -68,7 +68,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       id =  business_concept |> Map.get(:id)
 
       update_attrs = %{
-        content: %{"Hola" => "Mundo"},
+        content: %{},
         name: "The new name",
         description: "The new description"
       }

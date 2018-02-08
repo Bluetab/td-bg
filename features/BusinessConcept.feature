@@ -60,7 +60,7 @@ Feature: Business Concepts administration
      | Formula          | string        | 100      |                                              |    NO     |               |
      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
      | List of Values   | variable list | 100      |                                              |    NO     |               |
-     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
+     | Sensitive Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
      | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
      | Related Area     | string        | 100      |                                              |    NO     |               |
      | Default Value    | string        | 100      |                                              |    NO     |               |
@@ -74,8 +74,8 @@ Feature: Business Concepts administration
       | Formula           |                                                                    |
       | Format            | Date                                                                     |
       | List of Values    |                                                                    |
-      #| Sensitve Data     | N/A                                                                |
-      #| Update Frequence  | Not defined                                                        |
+      #| Sensitive Data    | N/A                                                                |
+      #| Update Frequence | Not defined                                                        |
       | Related Area      |                                                                    |
       | Default Value     |                                                                    |
       | Additional Data   |                                                                    |
@@ -88,7 +88,7 @@ Feature: Business Concepts administration
       | Formula           |                                                                    |
       | Format            | Date                                                               |
       | List of Values    |                                                                    |
-      | Sensitve Data     | N/A                                                                |
+      | Sensitive Data     | N/A                                                                |
       | Update Frequence  | Not defined                                                        |
       | Related Area      |                                                                    |
       | Default Value     |                                                                    |
@@ -139,7 +139,7 @@ Feature: Business Concepts administration
      | Formula          | string        | 100      |                                              |    NO     |               |
      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
      | List of Values   | variable list | 100      |                                              |    NO     |               |
-     | Sensitve Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
+     | Sensitive Data    | list         |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
      | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
      | Related Area     | string        | 100      |                                              |    NO     |               |
      | Default Value    | string        | 100      |                                              |    NO     |               |
@@ -153,7 +153,7 @@ Feature: Business Concepts administration
       | Formula           |                                                                          |
       | Format            | Date                                                                     |
       | List of Values    |                                                                          |
-      #| Sensitve Data     | N/A                                                                     |
+      #| Sensitive Data    | N/A                                                                     |
       #| Update Frequence  | Not defined                                                             |
       | Related Area      |                                                                          |
       | Default Value     |                                                                          |
@@ -164,7 +164,7 @@ Feature: Business Concepts administration
       | Name              | My Date Business Term                                                    |
       | Description       | This is the second description of my business term which is a date       |
       | Format            | Date                                                                     |
-      | Sensitve Data     | Related to personal Data                                                 |
+      | Sensitive Data    | Related to personal Data                                                 |
       | Update Frequence  | Monthly                                                                  |
 
     Then the system returns a result with code "<result>"
@@ -176,7 +176,7 @@ Feature: Business Concepts administration
      | Formula           |                                                                    |
      | Format            | Date                                                               |
      | List of Values    |                                                                    |
-     | Sensitve Data     | Related to personal Data                                           |
+     | Sensitive Data    | Related to personal Data                                           |
      | Update Frequence  | Monthly                                                            |
      | Related Area      |                                                                    |
      | Default Value     |                                                                    |
@@ -187,11 +187,11 @@ Feature: Business Concepts administration
      | Status            | draft                                                              |
 
     Examples:
-      | user      | result    |
-      | watcher   | Forbidden |
-      | creator   | Ok        |
-      | publisher | Ok        |
-      | admin     | Ok        |
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Ok           |
+      | publisher | Ok           |
+      | admin     | Ok           |
 
   Scenario Outline: Sending business concept for approval
     Given an existing Domain Group called "My Parent Group"
