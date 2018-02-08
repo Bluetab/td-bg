@@ -203,13 +203,15 @@ Feature: Business Concepts administration
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    And an existing Business Concept type called "Business Term" without definition
+    And an existing Business Concept type called "Business Term" with empty definition
     And user "<user>" is logged in the application with password "<user>"
-    And an existing Business Concept of type "Business Term" with following data:
-     | Type          | Name                  | Description                                                       |
-     | Business Term | My Date Business Term | This is the first description of my business term which is a date |
-    When <user> tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
-    Then the system returns a result with code <result>
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Business Term                                                      |
+      | Name              | My Date Business Term                                              |
+      | Description       | This is the first description of my business term which is a date  |
+    When "<user>" tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
+    Then the system returns a result with code "<result>"
     And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
      | Field             | Value                                                              |
      | Name              | My Date Business Term                                              |
@@ -219,13 +221,13 @@ Feature: Business Concepts administration
      | Last User         | app-admin                                                          |
      | Version           | 1                                                                  |
      | Status            | Pending Approval                                                   |
-
     Examples:
-      | user      | result    |
-      | watcher   | Forbidden |
-      | creator   | Ok        |
-      | publisher | Ok        |
-      | admin     | Ok        |
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Ok           |
+      | publisher | Ok           |
+      | admin     | Ok           |
+
 
     Scenario Outline: Publish existing Business Concept in Pending Approval status
       Given an existing Domain Group called "My Parent Group"

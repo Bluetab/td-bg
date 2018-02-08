@@ -257,6 +257,37 @@ defmodule TrueBG.BusinessConceptTest do
     end
   end
 
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
+          %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
+          %{current_bc_id: current_bc_id, current_bc_name: current_bc_name, token_owner: token_owner, token_admin: token_admin} = state do
+
+    # data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    # assert business_concept_name == current_bc_name
+    # assert data_domain_name == data_domain["name"]
+    # assert user_name == token_owner
+    #
+    # if result == status_code do
+    #   {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token_admin, current_bc_id)
+    #   assert rc_ok() == to_response_code(http_status_code)
+    #   assert business_concept["data_domain_id"] == data_domain["id"]
+    #   {:ok, Map.merge(state, %{business_concept: business_concept})}
+    # else
+    #   {:ok, Map.merge(state, %{})}
+    # end
+    {:ok, Map.merge(state, %{})}
+  end
+
+ defwhen ~r/^"(?<user_name>[^"]+)" tries to send for approval a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+          %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+          %{token_owner: token_owner, token: token, token_admin: token_admin} = state do
+
+    assert token_owner == user_name
+    business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+    {_, status_code, _} = business_concept_update(token, business_concept["id"],  %{ "status" => "Pending Approval"})
+    {:ok, Map.merge(state, %{status_code: status_code})}
+
+ end
+
   # defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
   #         %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
   #
@@ -352,5 +383,12 @@ defmodule TrueBG.BusinessConceptTest do
   def business_concept_by_name(token, business_concept_name) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
     Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
+  end
+
+  def business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
+    {:ok, _status_code, json_resp} = business_concept_list(token)
+    Enum.find(json_resp["data"],
+     fn(business_concept) -> business_concept["name"] == business_concept_name
+     and  business_concept["type"] == business_concept_type end)
   end
 end

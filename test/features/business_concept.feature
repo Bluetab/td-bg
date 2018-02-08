@@ -193,39 +193,40 @@ Feature: Business Concepts administration
      | publisher | Ok           |
      | admin     | Ok           |
 
-#  Scenario Outline: Sending business concept for approval
-#    Given an existing Domain Group called "My Parent Group"
-#    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-#    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-#    And following users exist with the indicated role in Data Domain "My Domain"
-#      | user      | role    |
-#      | watcher   | watch   |
-#      | creator   | create  |
-#      | publisher | publish |
-#      | admin     | admin   |
-#    And an existing Business Concept type called "Business Term" without definition
-#    And user "<user>" is logged in the application with password "<user>"
-#    And an existing Business Concept of type "Business Term" with following data:
-#     | Type          | Name                  | Description                                                       |
-#     | Business Term | My Date Business Term | This is the first description of my business term which is a date |
-#    When <user> tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
-#    Then the system returns a result with code <result>
-#    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
-#     | Field             | Value                                                              |
-#     | Name              | My Date Business Term                                              |
-#     | Type              | Business Term                                                      |
-#     | Description       | This is the first description of my business term which is a date  |
-#     | Last Modification | Some timestamp                                                     |
-#     | Last User         | app-admin                                                          |
-#     | Version           | 1                                                                  |
-#     | Status            | Pending Approval                                                   |
-#
-#    Examples:
-#      | user      | result    |
-#      | watcher   | Forbidden |
-#      | creator   | Ok        |
-#      | publisher | Ok        |
-#      | admin     | Ok        |
+  Scenario Outline: Sending business concept for approval
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    And an existing Business Concept type called "Business Term" with empty definition
+    And user "<user>" is logged in the application with password "<user>"
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Business Term                                                      |
+      | Name              | My Date Business Term                                              |
+      | Description       | This is the first description of my business term which is a date  |
+    When "<user>" tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
+    Then the system returns a result with code "<result>"
+    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
+     | Field             | Value                                                              |
+     | Name              | My Date Business Term                                              |
+     | Type              | Business Term                                                      |
+     | Description       | This is the first description of my business term which is a date  |
+     | Last Modification | Some timestamp                                                     |
+     | Last User         | app-admin                                                          |
+     | Version           | 1                                                                  |
+     | Status            | Pending Approval                                                   |
+    Examples:
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Ok           |
+      | publisher | Ok           |
+      | admin     | Ok           |
 
   Scenario: User should not be able to create a business concept with same type and name as an existing one
     Given an existing Domain Group called "My Parent Group"
@@ -253,7 +254,7 @@ Feature: Business Concepts administration
       | Status            | draft                                                                   |
       | Last Modification | Some Timestamp                                                          |
       | Last user         | app-admin                                                               |
-      | Version           | 1
+      | Version           | 1                                                                       |
     And "app-admin" is not able to view business concept "My Business Term" as a child of Data Domain "My Second Domain"
 
 
