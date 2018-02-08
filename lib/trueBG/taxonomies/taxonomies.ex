@@ -266,6 +266,11 @@ defmodule TrueBG.Taxonomies do
   @content "content"
   @content_schema "content_schema"
 
+
+  @string "string"
+  @list "list"
+  @variable_list "variable list"
+
   @doc """
   Returns the list of business_concepts.
 
@@ -295,42 +300,6 @@ defmodule TrueBG.Taxonomies do
   """
   def get_business_concept!(id), do: Repo.get!(BusinessConcept, id)
 
-  @string "string"
-  @list "list"
-  @variable_list "variable list"
-
-  defp do_create_business_concept(%{attrs: attrs, content: content, content_schema: content_schema}) do
-    changeset = %BusinessConcept{}
-      |> BusinessConcept.changeset(attrs)
-    case changeset.valid? do
-      false -> {:error, changeset}
-      _ -> do_create_business_concept(%{changeset: changeset, content: content, content_schema: content_schema})
-    end
-  end
-  defp do_create_business_concept(%{changeset: changeset, content: content, content_schema: content_schema}) do
-    content_ecto_types = get_ecto_types(content_schema)
-    content_changeset = {content, content_ecto_types}
-      |> Changeset.cast(content, content_ecto_types |> Map.keys())
-      |> add_content_validations(content_schema)
-    case content_changeset.valid? do
-      true -> changeset |> Repo.insert()
-      false -> {:error, content_changeset}
-    end
-  end
-
-  defp normalize_attrs(attrs) do
-    new_attrs = attrs |> keys_to_string
-    content = new_attrs |> Map.get("content")
-    content_schema = new_attrs |> Map.get("content_schema")
-    content = content
-      |> add_default_values(content_schema)
-
-    new_attrs = new_attrs
-       |> Map.put("content", content)
-
-    %{attrs: new_attrs, content: content, content_schema: content_schema}
-  end
-
   @doc """
   Creates a business_concept.
 
@@ -345,8 +314,14 @@ defmodule TrueBG.Taxonomies do
   """
   def create_business_concept(attrs \\ %{}) do
     attrs
-      |> normalize_attrs
-      |> do_create_business_concept
+    |> attrs_keys_to_string
+    |> content_schema_exists?
+    |> add_content_if_not_exist
+    |> initialize_attrs_state
+    |> set_content_defaults
+    |> validate_concept(%BusinessConcept{})
+    |> validate_content
+    |> insert_concept
   end
 
   @doc """
@@ -565,10 +540,18 @@ defmodule TrueBG.Taxonomies do
 
   defp update_concept(attrs) do
     if Map.get(attrs, @valid) do
-      changeset = Map.get(attrs, @changeset)
-      Repo.update(changeset)
+      Repo.update(Map.get(attrs, @changeset))
     else
       {:error, Map.get(attrs, @changeset)}
     end
   end
+
+  defp insert_concept(attrs) do
+    if Map.get(attrs, @valid) do
+      Repo.insert(Map.get(attrs, @changeset))
+    else
+      {:error, Map.get(attrs, @changeset)}
+    end
+  end
+
 end
