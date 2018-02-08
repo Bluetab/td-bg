@@ -7,7 +7,9 @@ defmodule TrueBG.Taxonomies do
   alias TrueBG.Repo
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
+  alias TrueBG.Permissions.AclEntry
   alias Ecto.Changeset
+  alias Ecto.Multi
 
   @doc """
   Returns the list of domain_groups.
@@ -120,7 +122,14 @@ defmodule TrueBG.Taxonomies do
 
   """
   def delete_domain_group(%DomainGroup{} = domain_group) do
-    Repo.delete(domain_group)
+    Multi.new
+    |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "domain_group" and acl.resource_id == ^domain_group.id))
+    |> Multi.delete(:domain_group, domain_group)
+    |> Repo.transaction
+    |> case do
+      {:ok, %{acl_entry: _acl_entry, domain_group: domain_group}} ->
+        {:ok, domain_group}
+     end
   end
 
   @doc """
