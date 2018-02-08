@@ -134,7 +134,7 @@ Feature: Business Concepts administration
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    And an existing Business Concept type called "Business Term" with following data:
+    And an existing Business Concept type called "Business Term" with following definition:
      | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
      | Formula          | string        | 100      |                                              |    NO     |               |
      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
@@ -145,13 +145,29 @@ Feature: Business Concepts administration
      | Default Value    | string        | 100      |                                              |    NO     |               |
      | Additional Data  | string        | 500      |                                              |    NO     |               |
     And user "<user>" is logged in the application with password "<user>"
-    And an existing Business Concept of type "Business Term" with following data:
-      | Type          | Name                  | Description                                                       | Format |
-      | Business Term | My Date Business Term | This is the first description of my business term which is a date | Date   |
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                                    |
+      | Type              | Business Term                                                            |
+      | Name              | My Date Business Term                                                    |
+      | Description       | This is the first description of my business term which is a date        |
+      | Formula           |                                                                          |
+      | Format            | Date                                                                     |
+      | List of Values    |                                                                          |
+      #| Sensitve Data     | N/A                                                                     |
+      #| Update Frequence  | Not defined                                                             |
+      | Related Area      |                                                                          |
+      | Default Value     |                                                                          |
+      | Additional Data   |                                                                          |
     When <user> tries to modify a business concept "My Date Business Term" of type "Business Term" with following data:
-      | Type          | Name                  | Description                                                        | Format | Sensitive Data           | Update Frequence |
-      | Business Term | My Date Business Term | This is the second description of my business term which is a date | Date   | Related to personal Data | Monthly          |
-    Then the system returns a result with code <result>
+      | Field             | Value                                                                    |
+      | Type              | Business Term                                                            |
+      | Name              | My Date Business Term                                                    |
+      | Description       | This is the second description of my business term which is a date       |
+      | Format            | Date                                                                     |
+      | Sensitve Data     | Related to personal Data                                                 |
+      | Update Frequence  | Monthly                                                                  |
+
+    Then the system returns a result with code "<result>"
     And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
      | Field             | Value                                                              |
      | Name              | My Date Business Term                                              |
@@ -168,7 +184,7 @@ Feature: Business Concepts administration
      | Last Modification | Some timestamp                                                     |
      | Last User         | app-admin                                                          |
      | Version           | 1                                                                  |
-     | Status            | Draft                                                              |
+     | Status            | draft                                                              |
 
     Examples:
       | user      | result    |

@@ -68,7 +68,6 @@ defmodule TrueBG.BusinessConceptTest do
     assert user_name == token_owner
 
     attrs = field_value_to_api_attrs(fields, @fixed_values)
-
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
 
     {_, status_code, _} = business_concept_create(token, data_domain["id"], attrs)
@@ -80,13 +79,6 @@ defmodule TrueBG.BusinessConceptTest do
           %{status_code: status_code}, %{status_code: http_status_code} = state do
     assert status_code == to_response_code(http_status_code)
     {:ok, Map.merge(state, %{})}
-  end
-
-  defp field_value_to_api_attrs(table, fixed_values) do
-    table
-      |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
-      |> Map.split(Map.values(fixed_values))
-      |> fn({f, v}) -> Map.put(f, "content", v) end.()
   end
 
   defp assert_field(%{Field: "Name", Value: value}, c), do: assert value == c["name"]
@@ -225,6 +217,67 @@ defmodule TrueBG.BusinessConceptTest do
 
   end
 
+  # Scenario Outline: Modification of existing Business Concept in Draft status
+
+  defand ~r/^an existing Business Concept of type "(?<business_concept_type>[^"]+)" in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
+    %{business_concept_type: _business_concept_type, data_domain_name: data_domain_name,  table: fields},
+    %{token_admin: token_admin} = state do
+      attrs = field_value_to_api_attrs(fields, @fixed_values)
+      data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+      business_concept_create(token_admin, data_domain["id"], attrs)
+    {:ok, Map.merge(state, %{})}
+  end
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to modify a business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+      assert user_name == token_owner
+      business_concept = business_concept_by_name(token_admin, business_concept_name)
+      assert business_concept_type == business_concept["type"]
+      attrs = field_value_to_api_attrs(fields, @fixed_values)
+      {_, status_code, _} = business_concept_update(token, business_concept["id"],  attrs)
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with follwing data:$/,
+  %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+  %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+
+    assert user_name == token_owner
+
+    if result == status_code do
+      business_concept_tmp = business_concept_by_name(token_admin, business_concept_name)
+      assert business_concept_type == business_concept_tmp["type"]
+
+      {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
+      assert rc_ok() == to_response_code(http_status_code)
+      assert_fields(fields, business_concept)
+      {:ok, Map.merge(state, %{business_concept: business_concept})}
+    else
+      {:ok, Map.merge(state, %{})}
+    end
+  end
+
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
+          %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
+          %{current_bc_id: current_bc_id, current_bc_name: current_bc_name, token_owner: token_owner, token_admin: token_admin} = state do
+
+    # data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    # assert business_concept_name == current_bc_name
+    # assert data_domain_name == data_domain["name"]
+    # assert user_name == token_owner
+    #
+    # if result == status_code do
+    #   {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token_admin, current_bc_id)
+    #   assert rc_ok() == to_response_code(http_status_code)
+    #   assert business_concept["data_domain_id"] == data_domain["id"]
+    #   {:ok, Map.merge(state, %{business_concept: business_concept})}
+    # else
+    #   {:ok, Map.merge(state, %{})}
+    # end
+    {:ok, Map.merge(state, %{})}
+  end
+
   # defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
   #         %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
   #
@@ -279,25 +332,13 @@ defmodule TrueBG.BusinessConceptTest do
   #   {:ok, Map.merge(state, %{})}
   # end
   #
-  # defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", (?<user_name>[^"]+)
-  # is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
-  #         %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
-  #         %{current_bc_id: current_bc_id, current_bc_name: current_bc_name, token_owner: token_owner, token_admin: token_admin} = state do
-  #
-  #   data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-  #   assert business_concept_name == current_bc_name
-  #   assert data_domain_name == data_domain["name"]
-  #   assert user_name == token_owner
-  #
-  #   if result == status_code do
-  #     {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token_admin, current_bc_id)
-  #     assert rc_ok() == to_response_code(http_status_code)
-  #     assert business_concept["data_domain_id"] == data_domain["id"]
-  #     {:ok, Map.merge(state, %{business_concept: business_concept})}
-  #   else********
-  #     {:ok, Map.merge(state, %{})}
-  #   end
-  # end
+
+  defp field_value_to_api_attrs(table, fixed_values) do
+    table
+      |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
+      |> Map.split(Map.values(fixed_values))
+      |> fn({f, v}) -> Map.put(f, "content", v) end.()
+  end
 
   defp business_concept_create(token, data_domain_id,  attrs) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
@@ -306,6 +347,14 @@ defmodule TrueBG.BusinessConceptTest do
         HTTPoison.post!(data_domain_business_concept_url(@endpoint, :create, data_domain_id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
+
+  # defp business_concept_update(token, business_concept_id, attrs) do
+  #   headers = [@headers, {"authorization", "Bearer #{token}"}]
+  #   body = %{"business_concept" => attrs} |> JSON.encode!
+  #   %HTTPoison.Response{status_code: status_code, body: resp} =
+  #       HTTPoison.put!(business_concept_url(@endpoint, :update, business_concept_id), body, headers, [])
+  #   {:ok, status_code, resp |> JSON.decode!}
+  # end
 
   defp business_concept_show(token, id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
