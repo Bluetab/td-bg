@@ -26,7 +26,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
 
       creation_attrs = %{
         content: %{"Format" => "Date", "Sensitive Data" => "Personal Data", "Update Frequence" => "Not defined"},
-        type: "Some type",
+        type: "Businness Term",
         name: "Some name",
         description: "Some description",
       }
@@ -51,7 +51,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       data_domain = insert(:data_domain)
       creation_attrs = %{
         content: %{},
-        type: "Some type",
+        type: "Businness Term",
         name: nil,
         description: "Some description",
       }
@@ -61,6 +61,8 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
   end
 
   describe "update business_concept" do
+    setup [:create_content_schema]
+
     @tag authenticated_user: @admin_user_name
     test "renders business_concept when data is valid", %{conn: conn} do
       user = insert(:user)
@@ -68,7 +70,9 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       id =  business_concept |> Map.get(:id)
 
       update_attrs = %{
-        content: %{},
+        content: %{"Sensitive Data" => "Related to personal Data",
+                   "Format" => "Date",
+                   "Update Frequence" => "Not defined"},
         name: "The new name",
         description: "The new description"
       }
@@ -91,7 +95,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       business_concept = insert(:business_concept, modifier:  user.id)
 
       update_attrs = %{
-        content: nil,
+        content: %{},
         name: nil,
         description: "The new description"
       }
@@ -125,7 +129,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
 
     filename = Application.get_env(:trueBG, :bc_schema_location)
     {:ok, file} = File.open filename, [:write, :utf8]
-    json_schema = %{"Some type": bc_content_schema(:default)} |> JSON.encode!
+    json_schema = %{"Businness Term" => bc_content_schema(:default)} |> JSON.encode!
     IO.binwrite file, json_schema
     File.close file
   end

@@ -44,7 +44,7 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
                           :data_domain_id, :status, :version])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
-    |> unique_constraint(:business_concept, name: :index_business_concept_by_name_type)  
+    |> unique_constraint(:business_concept, name: :index_business_concept_by_name_type)
   end
 
   def get_status do

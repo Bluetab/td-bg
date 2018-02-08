@@ -220,11 +220,12 @@ defmodule TrueBG.TaxonomiesTest do
       user = insert(:user)
       business_concept = insert(:business_concept, modifier:  user.id)
 
-      update_attrs = %{name: "some name", description: "some description", version: 2}
+      attrs = %{name: "some name", description: "some description", version: 2, content: %{}}
+      update_attrs = Map.put(attrs, :content_schema, [])
 
       assert {:ok, business_concept} = Taxonomies.update_business_concept(business_concept, update_attrs)
       assert %BusinessConcept{} = business_concept
-      update_attrs
+      attrs
         |> Enum.each(&(assert business_concept |> Map.get(elem(&1, 0)) == elem(&1, 1)))
     end
 
@@ -259,7 +260,7 @@ defmodule TrueBG.TaxonomiesTest do
       user = insert(:user)
       business_concept = insert(:business_concept, modifier:  user.id)
 
-      update_attrs = %{name: nil, description: nil, version: nil}
+      update_attrs = %{name: nil, description: nil, version: nil, content: %{}, content_schema: []}
       assert {:error, %Ecto.Changeset{}} = Taxonomies.update_business_concept(business_concept, update_attrs)
       object = Taxonomies.get_business_concept!(business_concept.id)
       assert  object |> business_concept_preload() == business_concept

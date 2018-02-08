@@ -62,7 +62,6 @@ defmodule TrueBGWeb.BusinessConceptController do
 
   def update(conn, %{"id" => id, "business_concept" => business_concept_params}) do
     business_concept = Taxonomies.get_business_concept!(id)
-
     content_schema = get_content_schema(business_concept.type)
     business_concept_params = Map.put(business_concept_params, "content_schema", content_schema)
 
