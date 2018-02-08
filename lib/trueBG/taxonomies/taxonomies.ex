@@ -266,7 +266,6 @@ defmodule TrueBG.Taxonomies do
   @content "content"
   @content_schema "content_schema"
 
-
   @string "string"
   @list "list"
   @variable_list "variable list"
@@ -316,11 +315,10 @@ defmodule TrueBG.Taxonomies do
     attrs
     |> attrs_keys_to_string
     |> content_schema_exists?
-    |> add_content_if_not_exist
     |> initialize_attrs_state
     |> set_content_defaults
     |> validate_concept(%BusinessConcept{})
-    |> validate_content
+    |> validate_concept_content
     |> insert_concept
   end
 
@@ -345,7 +343,7 @@ defmodule TrueBG.Taxonomies do
     |> merge_content(business_concept)
     |> set_content_defaults
     |> validate_concept(business_concept)
-    |> validate_content
+    |> validate_concept_content
     |> update_concept
   end
 
@@ -376,16 +374,6 @@ defmodule TrueBG.Taxonomies do
   """
   def change_business_concept(%BusinessConcept{} = business_concept) do
     BusinessConcept.changeset(business_concept, %{})
-  end
-
-  defp keys_to_string(attrs) do
-    key_to_string = fn
-      {key, value} when is_binary(key) -> {key, value}
-      {key, value} when is_atom(key) -> {Atom.to_string(key), value}
-    end
-    attrs
-      |> Enum.map(key_to_string)
-      |> Map.new
   end
 
   defp attrs_keys_to_string(attrs) do
@@ -446,39 +434,37 @@ defmodule TrueBG.Taxonomies do
   defp set_content_defaults(attrs) do
     valid = Map.get(attrs, @valid)
     if valid do
-      content = add_default_values(Map.get(attrs, @content), Map.get(attrs, @content_schema))
+      content = set_default_values(Map.get(attrs, @content), Map.get(attrs, @content_schema))
       Map.put(attrs, @content, content)
     else
       attrs
     end
   end
 
-  defp add_default_values(content, [tails|head]) do
+  defp set_default_values(content, [tails|head]) do
     content
-      |> add_default_value(tails)
-      |> add_default_values(head)
+      |> set_default_value(tails)
+      |> set_default_values(head)
   end
-  defp add_default_values(content, []), do: content
-  defp add_default_values(nil, _), do: nil
-  defp add_default_values(_, nil), do: nil
+  defp set_default_values(content, []), do: content
 
-  defp add_default_value(content, %{"name" => name, "default" => default}) do
+  defp set_default_value(content, %{"name" => name, "default" => default}) do
     case content[name] do
       nil ->
         content |> Map.put(name, default)
       _ -> content
     end
   end
-  defp add_default_value(content, %{}), do: content
+  defp set_default_value(content, %{}), do: content
 
-  defp validate_content(attrs) do
+  defp validate_concept_content(attrs) do
     if Map.get(attrs, @valid) do
       content = Map.get(attrs, @content)
       content_schema = Map.get(attrs, @content_schema)
       ecto_types = get_ecto_types(content_schema)
       changeset = {content, ecto_types}
         |> Changeset.cast(content, Map.keys(ecto_types))
-        |> add_content_validations(content_schema)
+        |> validate_content(content_schema)
       case changeset.valid? do
         false ->
           attrs
@@ -510,33 +496,33 @@ defmodule TrueBG.Taxonomies do
       end
   end
 
-  defp add_content_validations(changeset, %{} = content_item) do
+  defp validate_content(changeset, %{} = content_item) do
     changeset
-      |> add_validate_required(content_item)
-      |> add_validate_max_length(content_item)
-      |> add_validate_inclusion(content_item)
+      |> validate_required(content_item)
+      |> validate_max_length(content_item)
+      |> validate_inclusion(content_item)
   end
-  defp add_content_validations(changeset, [tail|head]) do
+  defp validate_content(changeset, [tail|head]) do
       changeset
-        |> add_content_validations(tail)
-        |> add_content_validations(head)
+        |> validate_content(tail)
+        |> validate_content(head)
   end
-  defp add_content_validations(changeset, []), do: changeset
+  defp validate_content(changeset, []), do: changeset
 
-  defp add_validate_required(changeset, %{"name" => name, "required" => true}) do
+  defp validate_required(changeset, %{"name" => name, "required" => true}) do
     Changeset.validate_required(changeset, [String.to_atom(name)])
   end
-  defp add_validate_required(changeset, %{}), do: changeset
+  defp validate_required(changeset, %{}), do: changeset
 
-  defp add_validate_max_length(changeset, %{"name" => name, "max_size" => max_size}) do
+  defp validate_max_length(changeset, %{"name" => name, "max_size" => max_size}) do
       Changeset.validate_length(changeset, String.to_atom(name), max: max_size)
   end
-  defp add_validate_max_length(changeset, %{}), do: changeset
+  defp validate_max_length(changeset, %{}), do: changeset
 
-  defp add_validate_inclusion(changeset, %{"name" => name, "type" => "list", "values" => values}) do
+  defp validate_inclusion(changeset, %{"name" => name, "type" => "list", "values" => values}) do
     Changeset.validate_inclusion(changeset, String.to_atom(name), values)
   end
-  defp add_validate_inclusion(changeset, %{}), do: changeset
+  defp validate_inclusion(changeset, %{}), do: changeset
 
   defp update_concept(attrs) do
     if Map.get(attrs, @valid) do
