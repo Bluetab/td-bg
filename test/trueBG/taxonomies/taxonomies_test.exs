@@ -7,6 +7,7 @@ defmodule TrueBG.TaxonomiesTest do
 
   describe "domain_groups" do
     alias TrueBG.Taxonomies.DomainGroup
+    alias TrueBG.Taxonomies.DataDomain
     alias TrueBG.Repo
 
     @valid_attrs %{description: "some description", name: "some name"}
@@ -25,10 +26,17 @@ defmodule TrueBG.TaxonomiesTest do
       domain_group
     end
 
-    def acl_entry_fixture(domain_group) do
+    def acl_entry_fixture(%DomainGroup{} = domain_group) do
       user = insert(:user)
       role = insert(:role)
       acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
+      acl_entry_attrs
+    end
+
+    def acl_entry_fixture(%DataDomain{} = data_domain) do
+      user = insert(:user)
+      role = insert(:role)
+      acl_entry_attrs = insert(:acl_entry_data_domain_user, principal_id: user.id, resource_id: data_domain.id, role: role)
       acl_entry_attrs
     end
 
@@ -151,6 +159,15 @@ defmodule TrueBG.TaxonomiesTest do
       assert {:ok, %DataDomain{}} = Taxonomies.delete_data_domain(data_domain)
       assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_data_domain!(data_domain.id) end
     end
+
+    test "delete acl_entries when deleting data_domain with acl_entries" do
+      data_domain = data_domain_fixture()
+      acl_entry = acl_entry_fixture(data_domain)
+      assert {:ok, %DataDomain{}} = Taxonomies.delete_data_domain(data_domain)
+      assert_raise Ecto.NoResultsError, fn -> Permissions.get_acl_entry!(acl_entry.id) == nil end
+      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_data_domain!(data_domain.id) end
+    end
+
 
     test "change_data_domain/1 returns a data_domain changeset" do
       data_domain = data_domain_fixture()

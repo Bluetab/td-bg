@@ -243,7 +243,14 @@ defmodule TrueBG.Taxonomies do
 
   """
   def delete_data_domain(%DataDomain{} = data_domain) do
-    Repo.delete(data_domain)
+    Multi.new
+    |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "data_domain" and acl.resource_id == ^data_domain.id))
+    |> Multi.delete(:data_domain, data_domain)
+    |> Repo.transaction
+    |> case do
+         {:ok, %{acl_entry: _acl_entry, data_domain: data_domain}} ->
+           {:ok, data_domain}
+       end
   end
 
   @doc """

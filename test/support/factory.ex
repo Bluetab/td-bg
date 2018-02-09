@@ -55,4 +55,13 @@ defmodule TrueBG.Factory do
     }
   end
 
+  def acl_entry_data_domain_user_factory do
+    %TrueBG.Permissions.AclEntry {
+      principal_id: nil,
+      principal_type: "user",
+      resource_id: nil,
+      resource_type: "data_domain",
+      role: nil
+    }
+  end
 end
