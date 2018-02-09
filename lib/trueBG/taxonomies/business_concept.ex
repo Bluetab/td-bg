@@ -15,7 +15,7 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
     watch:   [:see_published]
   }
 
-  @status [:draft]
+  @status [:draft, :pending_approval, :published]
 
   schema "business_concepts" do
     field :content, :map
@@ -53,6 +53,14 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
 
   def draft do
     :draft
+  end
+
+  def pending_approval do
+    :pending_approval
+  end
+
+  def published do
+    :published
   end
 
 end

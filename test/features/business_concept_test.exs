@@ -289,6 +289,32 @@ defmodule TrueBG.BusinessConceptTest do
 
  end
 
+ # Scenario Outline: Publish existing Business Concept in Pending Approval status
+
+ defand ~r/^the status of business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" is set to "(?<status>[^"]+)"$/,
+  %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, status: status},
+  %{token_admin: token_admin} = state do
+    business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+
+    current_status = String.to_atom(business_concept["status"])
+    desired_status = String.to_atom(status)
+    case {current_status, desired_status} do
+      {:draft, :pending_approval} ->
+        business_concept_update(token_admin, business_concept["id"], %{"status" => to_status_string(:pending_approval)})
+    end
+
+    {:ok, Map.merge(state, %{})}
+  end
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to publish a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+      assert user_name == token_owner
+      business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      {_, status_code} = business_concept_publish(token, business_concept["id"])
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
   # defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
   #         %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
   #
@@ -365,6 +391,14 @@ defmodule TrueBG.BusinessConceptTest do
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.put!(business_concept_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp business_concept_publish(token, business_concept_id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.put!(business_concept_url(@endpoint, :publish, business_concept_id), body, headers, [])
+    {:ok, status_code}
   end
 
   defp business_concept_show(token, id) do
