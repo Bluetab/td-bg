@@ -168,7 +168,6 @@ defmodule TrueBG.TaxonomiesTest do
       assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_data_domain!(data_domain.id) end
     end
 
-
     test "change_data_domain/1 returns a data_domain changeset" do
       data_domain = data_domain_fixture()
       assert %Ecto.Changeset{} = Taxonomies.change_data_domain(data_domain)
