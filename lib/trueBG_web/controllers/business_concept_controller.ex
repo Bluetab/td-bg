@@ -10,7 +10,7 @@ defmodule TrueBGWeb.BusinessConceptController do
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_business_concept
   plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create_business_concept
 
-  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update, :publish]
+  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update, :publish, :send_for_approval]
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -65,6 +65,19 @@ defmodule TrueBGWeb.BusinessConceptController do
     with {:ok, %BusinessConcept{} = business_concept} <- Taxonomies.update_business_concept(business_concept, business_concept_params) do
       render(conn, "show.json", business_concept: business_concept)
     end
+  end
+
+  def send_for_approval(conn, _parmas) do
+    business_concept = conn.assigns.business_concept
+    content_schema = get_content_schema(business_concept.type)
+    business_concept_params = %{}
+    |> Map.put("content_schema", content_schema)
+    |> Map.put("status", Atom.to_string(:pending_approval))
+
+    with {:ok, %BusinessConcept{} = business_concept} <- Taxonomies.update_business_concept(business_concept, business_concept_params) do
+      render(conn, "show.json", business_concept: business_concept)
+    end
+
   end
 
   def delete(conn, %{"id" => id}) do

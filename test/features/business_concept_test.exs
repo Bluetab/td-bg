@@ -8,7 +8,6 @@ defmodule TrueBG.BusinessConceptTest do
   import TrueBGWeb.Taxonomy, only: :functions
   import TrueBGWeb.AclEntry, only: :functions
   import TrueBGWeb.Authentication, only: :functions
-  import TrueBGWeb.BCStatusCode, only: :functions
 
   alias Poison, as: JSON
 
@@ -284,7 +283,7 @@ defmodule TrueBG.BusinessConceptTest do
 
     assert token_owner == user_name
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    {_, status_code, _} = business_concept_update(token, business_concept["id"], %{"status" => to_status_string(:pending_approval)})
+    {_, status_code} = business_concept_send_for_approval(token, business_concept["id"])
     {:ok, Map.merge(state, %{status_code: status_code})}
 
  end
@@ -300,7 +299,7 @@ defmodule TrueBG.BusinessConceptTest do
     desired_status = String.to_atom(status)
     case {current_status, desired_status} do
       {:draft, :pending_approval} ->
-        business_concept_update(token_admin, business_concept["id"], %{"status" => to_status_string(:pending_approval)})
+        business_concept_send_for_approval(token_admin, business_concept["id"])
     end
 
     {:ok, Map.merge(state, %{})}
@@ -391,6 +390,14 @@ defmodule TrueBG.BusinessConceptTest do
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.put!(business_concept_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp business_concept_send_for_approval(token, business_concept_id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.put!(business_concept_url(@endpoint, :send_for_approval, business_concept_id), body, headers, [])
+    {:ok, status_code}
   end
 
   defp business_concept_publish(token, business_concept_id) do
