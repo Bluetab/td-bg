@@ -19,6 +19,11 @@ defmodule TrueBGWeb.BusinessConceptController do
     render(conn, "index.json", business_concepts: business_concepts)
   end
 
+  def index_children_business_concept(conn, %{"id" => id}) do
+    business_concepts = Taxonomies.list_children_business_concept(id)
+    render(conn, "index.json", business_concepts: business_concepts)
+  end
+
   def create(conn, %{"business_concept" => business_concept_params}) do
 
     content_type = Map.get(business_concept_params, "type")

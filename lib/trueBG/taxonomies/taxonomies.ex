@@ -5,6 +5,7 @@ defmodule TrueBG.Taxonomies do
 
   import Ecto.Query, warn: false
   alias TrueBG.Repo
+  alias TrueBG.Taxonomies.BusinessConcept
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
   alias TrueBG.Permissions.AclEntry
@@ -50,6 +51,16 @@ defmodule TrueBG.Taxonomies do
             where: dd.domain_group_id == ^domain_group_id
     Repo.all(query)
   end
+
+  @doc """
+  Returns children of data domain id passed as argument
+  """
+  def list_children_business_concept(id) do
+    query = from bconcept in BusinessConcept,
+                 where: bconcept.data_domain_id == ^id
+    Repo.all(query)
+  end
+
 
   @doc """
   Gets a single domain_group.

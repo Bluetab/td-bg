@@ -102,7 +102,7 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
       | Description       | This is the first description of my second policy                  |
     And user "app-admin" is logged in the application with password "mypass"
     When user tries to query a list of all Business Concepts children of Data Domain "My Data Domain"
-    Then user sees following list:
+    Then user sees following business concepts list:
       | name                                    | type           | Status | description                                              |
       | My First Business Concept of this type  | Business Term  | draft  | This is the first description of my first business term  |
       | My Second Business Concept of this type | Business Term  | draft  | This is the first description of my second business term |
