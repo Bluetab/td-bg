@@ -6,8 +6,7 @@ defmodule TrueBG.Repo.Migrations.CreateBusinessConcepts do
       add :type, :string, null: false
       add :name, :string, null: false, size: 255
       add :description, :string, size: 500
-      add :content, :json, null: false # json
-      #add :content, :map  # jsonb
+      add :content, :map  
       add :modifier, :bigint, null: false
       add :last_change, :utc_datetime, null: false
       add :data_domain_id, references(:data_domains), null: false
