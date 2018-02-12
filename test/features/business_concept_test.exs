@@ -258,26 +258,6 @@ defmodule TrueBG.BusinessConceptTest do
     end
   end
 
-  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
-          %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
-          %{current_bc_id: current_bc_id, current_bc_name: current_bc_name, token_owner: token_owner, token_admin: token_admin} = state do
-
-    # data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-    # assert business_concept_name == current_bc_name
-    # assert data_domain_name == data_domain["name"]
-    # assert user_name == token_owner
-    #
-    # if result == status_code do
-    #   {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token_admin, current_bc_id)
-    #   assert rc_ok() == to_response_code(http_status_code)
-    #   assert business_concept["data_domain_id"] == data_domain["id"]
-    #   {:ok, Map.merge(state, %{business_concept: business_concept})}
-    # else
-    #   {:ok, Map.merge(state, %{})}
-    # end
-    {:ok, Map.merge(state, %{})}
-  end
-
  defwhen ~r/^"(?<user_name>[^"]+)" tries to send for approval a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
           %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
           %{token_owner: token_owner, token: token, token_admin: token_admin} = state do
@@ -326,61 +306,6 @@ defmodule TrueBG.BusinessConceptTest do
 
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
-
-  # defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
-  #         %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
-  #
-  #   data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-  #   assert data_domain_name == data_domain["name"]
-  #
-  #   create_user_and_acl_entries_fn = fn(x) ->
-  #     user_name = x[:user]
-  #     role_name = x[:role]
-  #     {_, _, %{"data" => %{"id" => principal_id}}} = user_create(token_admin, %{user_name: user_name, password: user_name})
-  #     %{"id" => role_id} = get_role_by_name(token_admin, role_name)
-  #     acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain["id"], role_id: role_id}
-  #     {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)
-  #   end
-  #
-  #   users = table |> Enum.map(create_user_and_acl_entries_fn)
-  #
-  #   {:ok, Map.merge(state, %{users: users})}
-  # end
-  #
-  #
-  # defp validate_user_is_able(user_name, current_bc_id, fields) do
-  #   {_, _, %{"token" => token}} = session_create(user_name, user_name)
-  #   {_, status_code, %{"data" => business_concept}} = business_concept_show(token, current_bc_id)
-  #   assert rc_ok() == to_response_code(status_code)
-  #   assert_fields(fields, business_concept)
-  # end
-  #
-  # defp validate_user_is_not_able(user_name, current_bc_id, fields) do
-  #   {_, _, %{"token" => token}} = session_create(user_name, user_name)
-  #   {_, status_code, %{"data" => business_concept}} = business_concept_show(token, current_bc_id)
-  #   assert rc_ok() == to_response_code(status_code)
-  #   assert_fields(fields, business_concept)
-  # end
-  #
-  # defand ~r/^the user list (?<users>[^"]+) are (?<able>[^"]+) to see the business concept "(?<business_concept_name>[^"]+)" with (?<business_concept_status>[^"]+) status and following data:$/,
-  #         %{users: users, able: able, business_concept_name: business_concept_name, business_concept_status: _business_concept_status, table: fields},
-  #         %{current_bc_id: current_bc_id, current_bc_name: current_bc_name} = state do
-  #
-  #   assert business_concept_name == current_bc_name
-  #
-  #   users_ary = users |> String.split(",") |> Enum.map(&(String.trim(&1)))
-  #   case able do
-  #     "able" ->
-  #       users_ary
-  #         |> Enum.each(fn(u) -> validate_user_is_able(u, current_bc_id, fields) end)
-  #     "not able" ->
-  #       users_ary
-  #         |> Enum.each(fn(u) -> validate_user_is_not_able(u, current_bc_id, fields) end)
-  #   end
-  #
-  #   {:ok, Map.merge(state, %{})}
-  # end
-  #
 
   defp field_value_to_api_attrs(table, fixed_values) do
     table
