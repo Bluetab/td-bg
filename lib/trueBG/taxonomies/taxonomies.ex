@@ -334,7 +334,7 @@ defmodule TrueBG.Taxonomies do
     |> content_schema_exists?
     |> initialize_attrs_state
     |> set_content_defaults
-    |> validate_concept(%BusinessConcept{})
+    |> validate_new_concept
     |> validate_concept_content
     |> insert_concept
   end
@@ -378,7 +378,7 @@ defmodule TrueBG.Taxonomies do
   """
   def update_business_concept_status(%BusinessConcept{} = business_concept, attrs) do
     business_concept
-    |> BusinessConcept.status_changeset(attrs)
+    |> BusinessConcept.update_status_changeset(attrs)
     |> Repo.update()
   end
 
@@ -408,7 +408,7 @@ defmodule TrueBG.Taxonomies do
 
   """
   def change_business_concept(%BusinessConcept{} = business_concept) do
-    BusinessConcept.changeset(business_concept, %{})
+    BusinessConcept.create_changeset(business_concept, %{})
   end
 
   defp attrs_keys_to_string(attrs) do
@@ -440,9 +440,24 @@ defmodule TrueBG.Taxonomies do
       |> Map.put(@changeset, nil)
   end
 
+  defp validate_new_concept(attrs) do
+    if Map.get(attrs, @valid) do
+      changeset = BusinessConcept.create_changeset(%BusinessConcept{}, attrs)
+      case changeset.valid? do
+        false ->
+          attrs
+          |> Map.put(@valid, false)
+          |> Map.put(@changeset, changeset)
+        _ -> Map.put(attrs, @changeset, changeset)
+      end
+    else
+      attrs
+    end
+  end
+
   defp validate_concept(attrs, %BusinessConcept{} = business_concept) do
     if Map.get(attrs, @valid) do
-      changeset = BusinessConcept.changeset(business_concept, attrs)
+      changeset = BusinessConcept.update_changeset(business_concept, attrs)
       case changeset.valid? do
         false ->
           attrs

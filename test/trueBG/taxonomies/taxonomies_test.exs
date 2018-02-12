@@ -236,13 +236,13 @@ defmodule TrueBG.TaxonomiesTest do
       user = insert(:user)
       business_concept = insert(:business_concept, modifier:  user.id)
 
-      attrs = %{name: "some name", description: "some description", version: 2, content: %{}}
+      attrs = %{name: "some new name", description: "some new description", content: %{}}
       update_attrs = Map.put(attrs, :content_schema, [])
 
       assert {:ok, business_concept} = Taxonomies.update_business_concept(business_concept, update_attrs)
       assert %BusinessConcept{} = business_concept
-      attrs
-        |> Enum.each(&(assert business_concept |> Map.get(elem(&1, 0)) == elem(&1, 1)))
+      assert business_concept.name == attrs.name
+      assert business_concept.description == attrs.description
     end
 
     test "update_business_concept/2 with valid content data updates the business_concept" do

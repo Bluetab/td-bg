@@ -36,12 +36,25 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
   end
 
   @doc false
-  def changeset(%BusinessConcept{} = business_concept, attrs) do
+  def create_changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
     |> cast(attrs, [:content, :type, :name, :description, :modifier,
-                    :last_change, :data_domain_id, :status, :version])
+                    :last_change, :data_domain_id, :version])
     |> validate_required([:content, :type, :name, :modifier, :last_change,
-                          :data_domain_id, :status, :version])
+                          :data_domain_id, :version])
+    |> validate_length(:name, max: 255)
+    |> validate_length(:description, max: 500)
+    |> put_change(:status, Atom.to_string(:draft))
+    |> unique_constraint(:business_concept,
+                                    name: :index_business_concept_by_name_type)
+  end
+
+  def update_changeset(%BusinessConcept{} = business_concept, attrs) do
+    business_concept
+    |> cast(attrs, [:content, :name, :description, :modifier, :last_change,
+                    :data_domain_id])
+    |> validate_required([:content, :name, :modifier, :last_change,
+                          :data_domain_id])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
     |> unique_constraint(:business_concept,
@@ -49,7 +62,7 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
   end
 
   @doc false
-  def status_changeset(%BusinessConcept{} = business_concept, attrs) do
+  def update_status_changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
     |> cast(attrs, [:status])
     |> validate_required([:status])
