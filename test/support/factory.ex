@@ -1,7 +1,7 @@
 defmodule TrueBG.Factory do
   @moduledoc false
   use ExMachina.Ecto, repo: TrueBG.Repo
-  alias TrueBG.Taxonomies.BusinessConcept
+  alias TrueBG.BusinessConcepts.BusinessConcept
 
   def user_factory do
     %TrueBG.Accounts.User {

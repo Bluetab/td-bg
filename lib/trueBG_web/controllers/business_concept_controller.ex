@@ -1,8 +1,8 @@
 defmodule TrueBGWeb.BusinessConceptController do
   use TrueBGWeb, :controller
 
-  alias TrueBG.Taxonomies
-  alias TrueBG.Taxonomies.BusinessConcept
+  alias TrueBG.BusinessConcepts
+  alias TrueBG.BusinessConcepts.BusinessConcept
   alias TrueBG.Taxonomies.DataDomain
 
   alias Poison, as: JSON
@@ -15,12 +15,12 @@ defmodule TrueBGWeb.BusinessConceptController do
   action_fallback TrueBGWeb.FallbackController
 
   def index(conn, _params) do
-    business_concepts = Taxonomies.list_business_concepts()
+    business_concepts = BusinessConcepts.list_business_concepts()
     render(conn, "index.json", business_concepts: business_concepts)
   end
 
   def index_children_business_concept(conn, %{"id" => id}) do
-    business_concepts = Taxonomies.list_children_business_concept(id)
+    business_concepts = BusinessConcepts.list_children_business_concept(id)
     render(conn, "index.json", business_concepts: business_concepts)
   end
 
@@ -37,7 +37,7 @@ defmodule TrueBGWeb.BusinessConceptController do
       |> Map.put("version", 1)
 
     with {:ok, %BusinessConcept{} = business_concept} <-
-                  Taxonomies.create_business_concept(business_concept_params) do
+          BusinessConcepts.create_business_concept(business_concept_params) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", business_concept_path(conn, :show, business_concept))
@@ -46,12 +46,12 @@ defmodule TrueBGWeb.BusinessConceptController do
   end
 
   def show(conn, %{"id" => id}) do
-    business_concept = Taxonomies.get_business_concept!(id)
+    business_concept = BusinessConcepts.get_business_concept!(id)
     render(conn, "show.json", business_concept: business_concept)
   end
 
   def update(conn, %{"id" => id, "business_concept" => business_concept_params}) do
-    business_concept = Taxonomies.get_business_concept!(id)
+    business_concept = BusinessConcepts.get_business_concept!(id)
     content_schema = get_content_schema(business_concept.type)
 
     business_concept_params = business_concept_params
@@ -60,7 +60,7 @@ defmodule TrueBGWeb.BusinessConceptController do
       |> Map.put("last_change", DateTime.utc_now())
 
     with {:ok, %BusinessConcept{} = business_concept} <-
-      Taxonomies.update_business_concept(business_concept, business_concept_params) do
+      BusinessConcepts.update_business_concept(business_concept, business_concept_params) do
       render(conn, "show.json", business_concept: business_concept)
     end
   end
@@ -69,7 +69,7 @@ defmodule TrueBGWeb.BusinessConceptController do
     business_concept = conn.assigns.business_concept
     attrs = %{status: Atom.to_string(:pending_approval)}
     with {:ok, %BusinessConcept{} = business_concept} <-
-          Taxonomies.update_business_concept_status(business_concept, attrs) do
+          BusinessConcepts.update_business_concept_status(business_concept, attrs) do
       render(conn, "show.json", business_concept: business_concept)
     end
   end
@@ -78,7 +78,7 @@ defmodule TrueBGWeb.BusinessConceptController do
     business_concept = conn.assigns.business_concept
     attrs = %{reject_reason: reject_reason}
     with {:ok, %BusinessConcept{} = business_concept} <-
-          Taxonomies.reject_business_concept(business_concept, attrs) do
+          BusinessConcepts.reject_business_concept(business_concept, attrs) do
       render(conn, "show.json", business_concept: business_concept)
     end
   end
@@ -87,14 +87,14 @@ defmodule TrueBGWeb.BusinessConceptController do
     business_concept = conn.assigns.business_concept
     attrs = %{status: Atom.to_string(:published)}
     with {:ok, %BusinessConcept{} = business_concept} <-
-          Taxonomies.update_business_concept_status(business_concept, attrs) do
+          BusinessConcepts.update_business_concept_status(business_concept, attrs) do
       render(conn, "show.json", business_concept: business_concept)
     end
   end
 
   def delete(conn, %{"id" => id}) do
-    business_concept = Taxonomies.get_business_concept!(id)
-    with {:ok, %BusinessConcept{}} <- Taxonomies.delete_business_concept(business_concept) do
+    business_concept = BusinessConcepts.get_business_concept!(id)
+    with {:ok, %BusinessConcept{}} <- BusinessConcepts.delete_business_concept(business_concept) do
       send_resp(conn, :no_content, "")
     end
   end
