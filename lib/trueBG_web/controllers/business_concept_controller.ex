@@ -10,7 +10,7 @@ defmodule TrueBGWeb.BusinessConceptController do
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_business_concept
   plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create_business_concept
 
-  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update, :publish, :send_for_approval]
+  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update, :send_for_approval, :publish, :reject]
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -65,18 +65,27 @@ defmodule TrueBGWeb.BusinessConceptController do
     end
   end
 
-  def publish(conn, _params) do
+  def send_for_approval(conn, _parmas) do
     business_concept = conn.assigns.business_concept
-    attrs = %{status: Atom.to_string(:published)}
+    attrs = %{status: Atom.to_string(:pending_approval)}
     with {:ok, %BusinessConcept{} = business_concept} <-
           Taxonomies.update_business_concept_status(business_concept, attrs) do
       render(conn, "show.json", business_concept: business_concept)
     end
   end
 
-  def send_for_approval(conn, _parmas) do
+  def reject(conn, %{"reject_reason" => reject_reason}) do
     business_concept = conn.assigns.business_concept
-    attrs = %{status: Atom.to_string(:pending_approval)}
+    attrs = %{reject_reason: reject_reason}
+    with {:ok, %BusinessConcept{} = business_concept} <-
+          Taxonomies.reject_business_concept(business_concept, attrs) do
+      render(conn, "show.json", business_concept: business_concept)
+    end
+  end
+
+  def publish(conn, _params) do
+    business_concept = conn.assigns.business_concept
+    attrs = %{status: Atom.to_string(:published)}
     with {:ok, %BusinessConcept{} = business_concept} <-
           Taxonomies.update_business_concept_status(business_concept, attrs) do
       render(conn, "show.json", business_concept: business_concept)

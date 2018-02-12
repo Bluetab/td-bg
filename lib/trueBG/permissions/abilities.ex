@@ -45,6 +45,15 @@ defimpl Canada.Can, for: TrueBG.Accounts.User do
       status == Atom.to_string(TrueBG.Taxonomies.BusinessConcept.draft)
   end
 
+  def can?(%TrueBG.Accounts.User{id: user_id}, :reject, %TrueBG.Taxonomies.BusinessConcept{status: status} = business_object) do
+    resource_id = business_object.data_domain_id
+    role = TrueBG.Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: resource_id})
+    role_name = String.to_atom(role.name)
+    permissions = TrueBG.Taxonomies.BusinessConcept.get_permissions()
+    Enum.member?(permissions[role_name], :reject) &&
+      status == Atom.to_string(TrueBG.Taxonomies.BusinessConcept.pending_approval)
+  end
+
   def can?(%TrueBG.Accounts.User{id: user_id}, :publish, %TrueBG.Taxonomies.BusinessConcept{status: status} = business_object) do
     resource_id = business_object.data_domain_id
     role = TrueBG.Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: resource_id})

@@ -267,6 +267,44 @@ Feature: Business Concepts administration
       | admin     | Ok           |
 
 
+  Scenario Outline: Reject existing Business Concept in Pending Approval status
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    And an existing Business Concept type called "Business Term" with empty definition
+    And user "<user>" is logged in the application with password "<user>"
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                             |
+      | Type              | Business Term                                     |
+      | Name              | My Business Term                                  |
+      | Description       | This is the first description of my business term |
+    And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
+    When <user> tries to reject a business concept with name "My Business Term" of type "Business Term" and reject reason "Description is not accurate"
+    Then the system returns a result with code "<result>"
+    # And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with follwing data:
+    #  | Field             | Value                                                              |
+    #  | Name              | My Business Term                                                   |
+    #  | Type              | Business Term                                                      |
+    #  | Description       | This is the first description of my business term which is a date  |
+    #  | Last Modification | Some timestamp                                                     |
+    #  | Last User         | app-admin                                                          |
+    #  | Version           | 1                                                                  |
+    #  | Status            | Rejected                                                           |
+    #  | Reject Reason     | Description is not accurate                                        |
+    #
+    Examples:
+      | user      | result       |
+    #   | watcher   | Unauthorized |
+    #   | creator   | Unauthorized |
+      | publisher | Ok           |
+    #   | admin     | Ok           |
+
   Scenario: User should not be able to create a business concept with same type and name as an existing one
     Given an existing Domain Group called "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"

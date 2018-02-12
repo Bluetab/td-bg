@@ -272,7 +272,7 @@ Feature: Business Concepts administration
 
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending approval"
     When <user> tries to publish a business concept with name "My Business Term" of type "Business Term"
-    Then the system returns a result with code <result>
+    Then the system returns a result with code "<result>"
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with follwing data:
      | Field             | Value                                                              |
      | Name              | My Business Term                                                   |
@@ -307,7 +307,7 @@ Feature: Business Concepts administration
       | Type              | Business Term                                     |
       | Name              | My Business Term                                  |
       | Description       | This is the first description of my business term |
-    And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending approval"
+    And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
     When <user> tries to reject a business concept with name "My Business Term" of type "Business Term" and reject reason "Description is not accurate"
     Then the system returns a result with code <result>
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with follwing data:
@@ -318,7 +318,7 @@ Feature: Business Concepts administration
      | Last Modification | Some timestamp                                                     |
      | Last User         | app-admin                                                          |
      | Version           | 1                                                                  |
-     | Status            | Rejected                                                           |
+     | Status            | rejected                                                           |
      | Reject Reason     | Description is not accurate                                        |
 
     Examples:

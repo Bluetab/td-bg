@@ -15,7 +15,7 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
     watch:   [:see_published]
   }
 
-  @status [:draft, :pending_approval, :published]
+  @status [:draft, :pending_approval, :rejected, :published]
 
   schema "business_concepts" do
     field :content, :map
@@ -26,6 +26,7 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
     field :last_change, :utc_datetime
     belongs_to :data_domain, DataDomain
     field :status, :string
+    field :reject_reason, :string
     field :version, :integer
 
     timestamps()
@@ -69,6 +70,12 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
     |> validate_inclusion(:status, Enum.map(@status, &Atom.to_string(&1)))
   end
 
+  def reject_changeset(%BusinessConcept{} = business_concept, attrs) do
+    business_concept
+    |> cast(attrs, [:reject_reason])
+    |> put_change(:status, Atom.to_string(BusinessConcept.rejected))
+  end
+
   def get_status do
     @status
   end
@@ -79,6 +86,10 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
 
   def pending_approval do
     :pending_approval
+  end
+
+  def rejected do
+    :rejected
   end
 
   def published do

@@ -383,6 +383,21 @@ defmodule TrueBG.Taxonomies do
   end
 
   @doc """
+  Rejects a business_concept.
+
+  ## Examples
+
+      iex> reject_business_concept(business_concept, %{reject_reason: reject_reason})
+      {:ok, %BusinessConcept{}}
+
+  """
+  def reject_business_concept(%BusinessConcept{} = business_concept, attrs) do
+    business_concept
+    |> BusinessConcept.reject_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Deletes a BusinessConcept.
 
   ## Examples

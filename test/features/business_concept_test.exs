@@ -314,6 +314,18 @@ defmodule TrueBG.BusinessConceptTest do
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
+  # Scenario Outline: Reject existing Business Concept in Pending Approval status
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to reject a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and reject reason "(?<reject_reason>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, reject_reason: reject_reason},
+    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+      assert user_name == token_owner
+      business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      {_, status_code} = business_concept_reject(token, business_concept["id"], reject_reason)
+
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
   # defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
   #         %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
   #
@@ -397,6 +409,14 @@ defmodule TrueBG.BusinessConceptTest do
     body = %{} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.put!(business_concept_url(@endpoint, :send_for_approval, business_concept_id), body, headers, [])
+    {:ok, status_code}
+  end
+
+  defp business_concept_reject(token, business_concept_id, reject_reason) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{reject_reason: reject_reason} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.put!(business_concept_url(@endpoint, :reject, business_concept_id), body, headers, [])
     {:ok, status_code}
   end
 

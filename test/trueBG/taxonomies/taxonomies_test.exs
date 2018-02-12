@@ -290,6 +290,17 @@ defmodule TrueBG.TaxonomiesTest do
       assert business_concept.status == Atom.to_string(:published)
     end
 
+    test "reject_business_concept/2 rejects business_concept" do
+      user = insert(:user)
+      business_concept = insert(:business_concept,
+                        status: Atom.to_string(BusinessConcept.pending_approval),
+                        modifier:  user.id)
+      attrs = %{reject_reason: "Because I want to"}
+      assert {:ok, business_concept} = Taxonomies.reject_business_concept(business_concept, attrs)
+      assert business_concept.status == Atom.to_string(BusinessConcept.rejected)
+      assert business_concept.reject_reason == attrs.reject_reason
+    end
+
     test "delete_business_concept/1 deletes the business_concept" do
       user = insert(:user)
       business_concept = insert(:business_concept, modifier:  user.id)
