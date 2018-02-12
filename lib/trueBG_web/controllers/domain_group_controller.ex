@@ -17,7 +17,7 @@ defmodule TrueBGWeb.DomainGroupController do
     render(conn, "index.json", domain_groups: domain_groups)
   end
 
-  def index_children(conn, %{"id" => id}) do
+  def index_children(conn, %{"domain_group_id" => id}) do
     domain_groups = Taxonomies.list_domain_group_children(id)
     render(conn, "index.json", domain_groups: domain_groups)
   end

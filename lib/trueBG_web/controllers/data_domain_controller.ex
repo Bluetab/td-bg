@@ -4,24 +4,15 @@ defmodule TrueBGWeb.DataDomainController do
   import Plug.Conn
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DataDomain
-  alias TrueBGWeb.ErrorView
-
-  plug :authorize_resource, model: DataDomain
 
   action_fallback TrueBGWeb.FallbackController
 
   def index(conn, _params) do
-    if conn.assigns.authorized do
-        data_domains = Taxonomies.list_data_domains()
-        render(conn, "index.json", data_domains: data_domains)
-    else
-      conn
-      |> put_status(:unauthorized)
-      |> render(ErrorView, :"401.json")
-    end
+    data_domains = Taxonomies.list_data_domains()
+    render(conn, "index.json", data_domains: data_domains)
   end
 
-  def index_children_data_domain(conn, %{"id" => id}) do
+  def index_children_data_domain(conn, %{"domain_group_id" => id}) do
     data_domains = Taxonomies.list_children_data_domain(id)
     render(conn, "index.json", data_domains: data_domains)
   end
