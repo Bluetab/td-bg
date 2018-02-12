@@ -365,6 +365,24 @@ defmodule TrueBG.Taxonomies do
   end
 
   @doc """
+  Updates a business_concept status.
+
+  ## Examples
+
+      iex> update_business_concept_status(business_concept, %{status: new_status})
+      {:ok, %BusinessConcept{}}
+
+      iex> update_business_concept(business_concept, %{status: bad_status})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_business_concept_status(%BusinessConcept{} = business_concept, attrs) do
+    business_concept
+    |> BusinessConcept.status_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Deletes a BusinessConcept.
 
   ## Examples

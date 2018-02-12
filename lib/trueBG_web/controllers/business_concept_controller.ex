@@ -62,27 +62,20 @@ defmodule TrueBGWeb.BusinessConceptController do
 
   def publish(conn, _params) do
     business_concept = conn.assigns.business_concept
-    content_schema = get_content_schema(business_concept.type)
-    business_concept_params = %{}
-    |> Map.put("content_schema", content_schema)
-    |> Map.put("status", Atom.to_string(:published))
-
-    with {:ok, %BusinessConcept{} = business_concept} <- Taxonomies.update_business_concept(business_concept, business_concept_params) do
+    attrs = %{status: Atom.to_string(:published)}
+    with {:ok, %BusinessConcept{} = business_concept} <-
+          Taxonomies.update_business_concept_status(business_concept, attrs) do
       render(conn, "show.json", business_concept: business_concept)
     end
   end
 
   def send_for_approval(conn, _parmas) do
     business_concept = conn.assigns.business_concept
-    content_schema = get_content_schema(business_concept.type)
-    business_concept_params = %{}
-    |> Map.put("content_schema", content_schema)
-    |> Map.put("status", Atom.to_string(:pending_approval))
-
-    with {:ok, %BusinessConcept{} = business_concept} <- Taxonomies.update_business_concept(business_concept, business_concept_params) do
+    attrs = %{status: Atom.to_string(:pending_approval)}
+    with {:ok, %BusinessConcept{} = business_concept} <-
+          Taxonomies.update_business_concept_status(business_concept, attrs) do
       render(conn, "show.json", business_concept: business_concept)
     end
-
   end
 
   def delete(conn, %{"id" => id}) do

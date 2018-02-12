@@ -44,7 +44,16 @@ defmodule TrueBG.Taxonomies.BusinessConcept do
                           :data_domain_id, :status, :version])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
-    |> unique_constraint(:business_concept, name: :index_business_concept_by_name_type)
+    |> unique_constraint(:business_concept,
+                                    name: :index_business_concept_by_name_type)
+  end
+
+  @doc false
+  def status_changeset(%BusinessConcept{} = business_concept, attrs) do
+    business_concept
+    |> cast(attrs, [:status])
+    |> validate_required([:status])
+    |> validate_inclusion(:status, Enum.map(@status, &Atom.to_string(&1)))
   end
 
   def get_status do

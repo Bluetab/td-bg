@@ -282,6 +282,14 @@ defmodule TrueBG.TaxonomiesTest do
       assert  object |> business_concept_preload() == business_concept
     end
 
+    test "update_business_concept_status/2 with valid status data updates the business_concept" do
+      user = insert(:user)
+      business_concept = insert(:business_concept, modifier:  user.id)
+      attrs = %{status: Atom.to_string(:published)}
+      assert {:ok, business_concept} = Taxonomies.update_business_concept_status(business_concept, attrs)
+      assert business_concept.status == Atom.to_string(:published)
+    end
+
     test "delete_business_concept/1 deletes the business_concept" do
       user = insert(:user)
       business_concept = insert(:business_concept, modifier:  user.id)
