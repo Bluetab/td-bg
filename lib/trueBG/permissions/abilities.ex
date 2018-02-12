@@ -27,12 +27,31 @@ defimpl Canada.Can, for: TrueBG.Accounts.User do
     true
   end
 
-  def can?(%TrueBG.Accounts.User{id: user_id}, action, %TrueBG.Taxonomies.BusinessConcept{} = business_object) when action in [:update, :publish, :send_for_approval] do
+  def can?(%TrueBG.Accounts.User{id: user_id}, :update, %TrueBG.Taxonomies.BusinessConcept{status: status} = business_object) do
     resource_id = business_object.data_domain_id
     role = TrueBG.Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: resource_id})
     role_name = String.to_atom(role.name)
     permissions = TrueBG.Taxonomies.BusinessConcept.get_permissions()
-    Enum.member? permissions[role_name], action
+    Enum.member?(permissions[role_name], :update) &&
+      status == Atom.to_string(TrueBG.Taxonomies.BusinessConcept.draft)
+  end
+
+  def can?(%TrueBG.Accounts.User{id: user_id}, :send_for_approval, %TrueBG.Taxonomies.BusinessConcept{status: status} = business_object) do
+    resource_id = business_object.data_domain_id
+    role = TrueBG.Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: resource_id})
+    role_name = String.to_atom(role.name)
+    permissions = TrueBG.Taxonomies.BusinessConcept.get_permissions()
+    Enum.member?(permissions[role_name], :send_for_approval) &&
+      status == Atom.to_string(TrueBG.Taxonomies.BusinessConcept.draft)
+  end
+
+  def can?(%TrueBG.Accounts.User{id: user_id}, :publish, %TrueBG.Taxonomies.BusinessConcept{status: status} = business_object) do
+    resource_id = business_object.data_domain_id
+    role = TrueBG.Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: resource_id})
+    role_name = String.to_atom(role.name)
+    permissions = TrueBG.Taxonomies.BusinessConcept.get_permissions()
+    Enum.member?(permissions[role_name], :publish) &&
+      status == Atom.to_string(TrueBG.Taxonomies.BusinessConcept.pending_approval)
   end
 
   def can?(%TrueBG.Accounts.User{}, _action, _domain),  do: false
