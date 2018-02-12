@@ -85,6 +85,7 @@ defmodule TrueBG.BusinessConceptTest do
   defp assert_field(%{Field: "Type", Value: value}, c), do: assert value == c["type"]
   defp assert_field(%{Field: "Description", Value: value}, c), do: assert value == c["description"]
   defp assert_field(%{Field: "Status", Value: value}, c), do: assert value == c["status"]
+  defp assert_field(%{Field: "Reject Reason", Value: value}, c), do: assert value == c["reject_reason"]
   defp assert_field(%{Field: "Last Modification", Value: _value}, c), do: assert :ok == elem(DateTime.from_iso8601(c["last_change"]), 0)
   defp assert_field(%{Field: "Last User", Value: _value}, c), do: assert c["modifier"] != nil
   defp assert_field(%{Field: "Version", Value: value}, c), do: assert Integer.parse(value) == {c["version"], ""}

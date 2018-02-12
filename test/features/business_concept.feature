@@ -287,23 +287,23 @@ Feature: Business Concepts administration
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
     When <user> tries to reject a business concept with name "My Business Term" of type "Business Term" and reject reason "Description is not accurate"
     Then the system returns a result with code "<result>"
-    # And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with follwing data:
-    #  | Field             | Value                                                              |
-    #  | Name              | My Business Term                                                   |
-    #  | Type              | Business Term                                                      |
-    #  | Description       | This is the first description of my business term which is a date  |
-    #  | Last Modification | Some timestamp                                                     |
-    #  | Last User         | app-admin                                                          |
-    #  | Version           | 1                                                                  |
-    #  | Status            | Rejected                                                           |
-    #  | Reject Reason     | Description is not accurate                                        |
-    #
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with follwing data:
+     | Field             | Value                                                              |
+     | Name              | My Business Term                                                   |
+     | Type              | Business Term                                                      |
+     | Description       | This is the first description of my business term                  |
+     | Last Modification | Some timestamp                                                     |
+     | Last User         | app-admin                                                          |
+     | Version           | 1                                                                  |
+     | Status            | rejected                                                           |
+     | Reject Reason     | Description is not accurate                                        |
+
     Examples:
       | user      | result       |
-    #   | watcher   | Unauthorized |
-    #   | creator   | Unauthorized |
+      | watcher   | Unauthorized |
+      | creator   | Unauthorized |
       | publisher | Ok           |
-    #   | admin     | Ok           |
+      | admin     | Ok           |
 
   Scenario: User should not be able to create a business concept with same type and name as an existing one
     Given an existing Domain Group called "My Parent Group"

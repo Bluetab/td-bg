@@ -20,6 +20,7 @@ defmodule TrueBGWeb.BusinessConceptView do
       last_change: business_concept.last_change,
       data_domain_id: business_concept.data_domain_id,
       status: business_concept.status,
+      reject_reason: business_concept.reject_reason,
       version: business_concept.version}
   end
 end
