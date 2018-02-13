@@ -15,7 +15,7 @@ defmodule TrueBG.BusinessConcepts do
 
   @string "string"
   @list "list"
-  @variable_list "variable list"
+  @variable_list "variable_list"
 
   @doc """
   Returns the list of business_concepts.

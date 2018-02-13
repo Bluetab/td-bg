@@ -40,7 +40,9 @@ defmodule TrueBG.BusinessConceptsTests do
 
       creation_attrs = Map.put(attrs, :content_schema, [])
       assert {:ok, %BusinessConcept{} = business_concept} = BusinessConcepts.create_business_concept(creation_attrs)
-      Enum.each(attrs, &(assert Map.get(business_concept, elem(&1, 0)) == elem(&1, 1)))
+      Enum.each(attrs, fn {attr, value} ->
+        assert Map.get(business_concept, attr) == value
+      end)
     end
 
     test "create_business_concept/1 with invalid data returns error changeset" do
@@ -55,6 +57,174 @@ defmodule TrueBG.BusinessConceptsTests do
 
       creation_attrs = Map.put(attrs, :content_schema, [])
       assert {:error, %Ecto.Changeset{}} = BusinessConcepts.create_business_concept(creation_attrs)
+    end
+
+    test "create_business_concept/1 with content" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "string"},
+        %{"name" => "Field2", "type" => "list",
+          "values" => ["Hello", "World"]},
+        %{"name" => "Field3", "type" => "variable_list"},
+      ]
+
+      content = %{Field1: "Hello", Field2: "World", Field3: ["Hellow", "World"]}
+
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: content,
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, content_schema)
+      assert {:ok, %BusinessConcept{} = business_concept} = BusinessConcepts.create_business_concept(creation_attrs)
+      Enum.each(attrs, fn {attr, value} ->
+        assert Map.get(business_concept, attr) == value
+      end)
+    end
+
+    test "create_business_concept/1 with invalid content: required" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "string", "required" => true},
+        %{"name" => "Field2", "type" => "string", "required" => true}
+      ]
+
+      content = %{}
+
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: content,
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, content_schema)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
+      changeset
+      |> assert_expected_validation("Field1", :required)
+      |> assert_expected_validation("Field2", :required)
+    end
+
+    test "create_business_concept/1 with content: default values" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "string", "default" => "Hello"},
+        %{"name" => "Field2", "type" => "string", "default" => "World"}
+      ]
+
+      content = %{}
+
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: content,
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, content_schema)
+      assert {:ok, %BusinessConcept{} = business_concept} = BusinessConcepts.create_business_concept(creation_attrs)
+      assert business_concept.content["Field1"] == "Hello"
+      assert business_concept.content["Field2"] == "World"
+    end
+
+    test "create_business_concept/1 with invalid content: not in list" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "list", "values" => ["Hello"]},
+      ]
+
+      content = %{"Field1" => "World"}
+
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: content,
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, content_schema)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
+      assert_expected_validation(changeset, "Field1", :inclusion)
+    end
+
+    test "create_business_concept/1 with invalid content: invalid variable list" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "variable_list"},
+      ]
+
+      content = %{"Field1" => "World"}
+
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: content,
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, content_schema)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
+      assert_expected_validation(changeset, "Field1", :cast)
+    end
+
+    test "create_business_concept/1 with no content" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "variable_list"},
+      ]
+
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1,
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, content_schema)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
+      assert_expected_validation(changeset, "content", :required)
+    end
+
+    test "create_business_concept/1 with nil content" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "variable_list"},
+      ]
+
+      attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: nil,
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, content_schema)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
+      assert_expected_validation(changeset, "content", :required)
+    end
+
+    test "create_business_concept/1 with no content schema" do
+      user = insert(:user)
+      data_domain = insert(:data_domain)
+
+      creation_attrs = %{type: "some type", name: "some name",
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: %{},
+        last_change: DateTime.utc_now()
+      }
+
+      assert_raise RuntimeError, "Content Schema is not defined for Business Concept", fn ->
+        BusinessConcepts.create_business_concept(creation_attrs)
+      end
     end
 
     test "update_business_concept/2 with valid data updates the business_concept" do
@@ -139,4 +309,15 @@ defmodule TrueBG.BusinessConceptsTests do
       assert %Ecto.Changeset{} = BusinessConcepts.change_business_concept(business_concept)
     end
   end
+
+  defp assert_expected_validation(changeset, field, expected_validation) do
+    find_def = {:unknown, {"", [validation: :unknown]}}
+    current_validation = changeset.errors
+    |> Enum.find(find_def, fn {key, _value} ->
+       key == String.to_atom(field)
+     end) |> elem(1) |> elem(1) |> Keyword.get(:validation)
+    assert current_validation == expected_validation
+    changeset
+  end
+
 end

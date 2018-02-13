@@ -59,7 +59,7 @@ Feature: Business Concepts administration
      | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
      | Formula          | string        | 100      |                                              |    NO     |               |
      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
-     | List of Values   | variable list | 100      |                                              |    NO     |               |
+     | List of Values   | variable_list | 100      |                                              |    NO     |               |
      | Sensitive Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
      | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
      | Related Area     | string        | 100      |                                              |    NO     |               |
@@ -138,7 +138,7 @@ Feature: Business Concepts administration
     | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
     | Formula          | string        | 100      |                                              |    NO     |               |
     | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
-    | List of Values   | variable list | 100      |                                              |    NO     |               |
+    | List of Values   | variable_list | 100      |                                              |    NO     |               |
     | Sensitive Data    | list         |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
     | Related Area     | string        | 100      |                                              |    NO     |               |
