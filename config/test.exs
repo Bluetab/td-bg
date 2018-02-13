@@ -10,7 +10,7 @@ config :trueBG, TrueBGWeb.Endpoint,
 config :trueBG, hashing_module: TrueBG.DummyHashing
 
 # Print only warnings and errors during test
-config :logger, handle_sasl_reports: true, level: :warn
+config :logger, level: :warn
 
 # Configure your database
 config :trueBG, TrueBG.Repo,
@@ -19,7 +19,8 @@ config :trueBG, TrueBG.Repo,
   password: "postgres",
   database: "truebg_test",
   hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 1
 
 config :trueBG,
   # business concept content  schema location
