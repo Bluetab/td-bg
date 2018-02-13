@@ -25,7 +25,6 @@ defmodule TrueBG.DataCase do
       import Ecto.Query
       import TrueBG.DataCase
       import TrueBG.Factory
-      import TrueBG.BcContentSchema
     end
   end
 

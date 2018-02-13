@@ -25,8 +25,8 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       data_domain = insert(:data_domain)
 
       creation_attrs = %{
-        content: %{"Format" => "Date", "Sensitive Data" => "Personal Data", "Update Frequence" => "Not defined"},
-        type: "Businness Term",
+        content: %{},
+        type: "empty",
         name: "Some name",
         description: "Some description",
       }
@@ -51,7 +51,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       data_domain = insert(:data_domain)
       creation_attrs = %{
         content: %{},
-        type: "Businness Term",
+        type: "empty",
         name: nil,
         description: "Some description",
       }
@@ -66,13 +66,12 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
     @tag authenticated_user: @admin_user_name
     test "renders business_concept when data is valid", %{conn: conn} do
       user = insert(:user)
-      business_concept = insert(:business_concept, modifier:  user.id)
+      business_concept = insert(:business_concept,
+                                type: "empty", modifier:  user.id)
       id =  business_concept |> Map.get(:id)
 
       update_attrs = %{
-        content: %{"Sensitive Data" => "Related to personal Data",
-                   "Format" => "Date",
-                   "Update Frequence" => "Not defined"},
+        content: %{},
         name: "The new name",
         description: "The new description"
       }
@@ -92,7 +91,8 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
     @tag authenticated_user: @admin_user_name
     test "renders errors when data is invalid", %{conn: conn} do
       user = insert(:user)
-      business_concept = insert(:business_concept, modifier:  user.id)
+      business_concept = insert(:business_concept,
+                                type: "empty", modifier:  user.id)
 
       update_attrs = %{
         content: %{},
@@ -109,7 +109,8 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
     @tag authenticated_user: @admin_user_name
     test "deletes chosen business_concept", %{conn: conn} do
       user = insert(:user)
-      business_concept = insert(:business_concept, modifier:  user.id)
+      business_concept = insert(:business_concept,
+                                type: "empty", modifier:  user.id)
 
       conn = delete conn, business_concept_path(conn, :delete, business_concept)
       assert response(conn, 204)
@@ -123,14 +124,8 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
   end
 
   def create_content_schema(_) do
-    # on_exit fn ->
-    #   #IO.puts ("-------------------- on exit create content schema ---------------")
-    # end
-
-    filename = Application.get_env(:trueBG, :bc_schema_location)
-    {:ok, file} = File.open filename, [:write, :utf8]
-    json_schema = %{"Businness Term" => bc_content_schema(:default)} |> JSON.encode!
-    IO.binwrite file, json_schema
-    File.close file
+    json_schema = %{"empty" => []} |> JSON.encode!
+    path = Application.get_env(:trueBG, :bc_schema_location)
+    File.write!(path, json_schema, [:write, :utf8])
   end
 end

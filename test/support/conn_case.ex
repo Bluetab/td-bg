@@ -25,7 +25,6 @@ defmodule TrueBGWeb.ConnCase do
       use Phoenix.ConnTest
       import TrueBGWeb.Router.Helpers
       import TrueBG.Factory
-      import TrueBG.BcContentSchema
 
       # The default endpoint for testing
       @endpoint TrueBGWeb.Endpoint

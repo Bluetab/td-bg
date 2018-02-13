@@ -32,33 +32,28 @@ defmodule TrueBG.BusinessConceptsTests do
       user = insert(:user)
       data_domain = insert(:data_domain)
 
-      content = %{
-                  "Format" => "Date",
-                  "Sensitive Data" => "Personal Data",
-                  "Update Frequence" => "Not defined"
-                  }
-
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: content,
+        modifier: user.id, version: 1, content: %{},
+        last_change: DateTime.utc_now()
       }
 
-      creation_attrs = Map.from_struct(build(:business_concept))
-      creation_attrs = creation_attrs
-        |> Map.merge(attrs)
-        |> Map.merge(%{content_schema: bc_content_schema(:default)})
-
+      creation_attrs = Map.put(attrs, :content_schema, [])
       assert {:ok, %BusinessConcept{} = business_concept} = BusinessConcepts.create_business_concept(creation_attrs)
-      attrs
-        |> Enum.each(&(assert business_concept |> Map.get(elem(&1, 0)) == elem(&1, 1)))
+      Enum.each(attrs, &(assert Map.get(business_concept, elem(&1, 0)) == elem(&1, 1)))
     end
 
     test "create_business_concept/1 with invalid data returns error changeset" do
-      business_concept = build(:business_concept)
-      creation_attrs = business_concept
-        |> Map.from_struct()
-        |> Map.put(:content_schema, bc_content_schema(:default))
+      user = insert(:user)
+      data_domain = insert(:data_domain)
 
+      attrs = %{type: nil, name: nil,
+        description: "some description",  data_domain_id: data_domain.id,
+        modifier: user.id, version: 1, content: %{},
+        last_change: DateTime.utc_now()
+      }
+
+      creation_attrs = Map.put(attrs, :content_schema, [])
       assert {:error, %Ecto.Changeset{}} = BusinessConcepts.create_business_concept(creation_attrs)
     end
 
