@@ -8,7 +8,6 @@ defmodule TrueBG.BusinessConcepts do
   alias TrueBG.BusinessConcepts.BusinessConcept
   alias Ecto.Changeset
 
-  @valid "valid"
   @changeset "changeset"
   @content "content"
   @content_schema "content_schema"
@@ -71,7 +70,6 @@ defmodule TrueBG.BusinessConcepts do
     attrs
     |> attrs_keys_to_string
     |> content_schema_exists?
-    |> initialize_attrs_state
     |> set_content_defaults
     |> validate_new_concept
     |> validate_concept_content
@@ -95,7 +93,6 @@ defmodule TrueBG.BusinessConcepts do
     |> attrs_keys_to_string
     |> content_schema_exists?
     |> add_content_if_not_exist
-    |> initialize_attrs_state
     |> merge_content(business_concept)
     |> set_content_defaults
     |> validate_concept(business_concept)
@@ -181,68 +178,35 @@ defmodule TrueBG.BusinessConcepts do
   end
 
   defp add_content_if_not_exist(attrs) do
-      if not Map.has_key?(attrs, @content) do
-        Map.put(attrs, @content, %{})
-      else
-        attrs
-      end
-  end
-
-  defp initialize_attrs_state(attrs) do
+    if not Map.has_key?(attrs, @content) do
+      Map.put(attrs, @content, %{})
+    else
       attrs
-      |> Map.put(@valid, true)
-      |> Map.put(@changeset, nil)
+    end
   end
 
   defp validate_new_concept(attrs) do
-    if Map.get(attrs, @valid) do
-      changeset = BusinessConcept.create_changeset(%BusinessConcept{}, attrs)
-      case changeset.valid? do
-        false ->
-          attrs
-          |> Map.put(@valid, false)
-          |> Map.put(@changeset, changeset)
-        _ -> Map.put(attrs, @changeset, changeset)
-      end
-    else
-      attrs
-    end
+    changeset = BusinessConcept.create_changeset(%BusinessConcept{}, attrs)
+    Map.put(attrs, @changeset, changeset)
   end
 
   defp validate_concept(attrs, %BusinessConcept{} = business_concept) do
-    if Map.get(attrs, @valid) do
       changeset = BusinessConcept.update_changeset(business_concept, attrs)
-      case changeset.valid? do
-        false ->
-          attrs
-          |> Map.put(@valid, false)
-          |> Map.put(@changeset, changeset)
-        _ -> Map.put(attrs, @changeset, changeset)
-      end
-    else
-      attrs
-    end
+      Map.put(attrs, @changeset, changeset)
   end
 
   defp merge_content(attrs, %BusinessConcept{} = business_concept) do
-    if Map.get(attrs, @valid) do
-      content = Map.get(attrs, @content)
-      concept_content = Map.get(business_concept, :content, %{})
-      new_content = Map.merge(concept_content, content)
-      Map.put(attrs, @content, new_content)
-    else
-      attrs
-    end
+    content = Map.get(attrs, @content)
+    concept_content = Map.get(business_concept, :content, %{})
+    new_content = Map.merge(concept_content, content)
+    Map.put(attrs, @content, new_content)
   end
 
   defp set_content_defaults(attrs) do
-    valid = Map.get(attrs, @valid)
-    if valid do
-      content = set_default_values(Map.get(attrs, @content), Map.get(attrs, @content_schema))
-      Map.put(attrs, @content, content)
-    else
-      attrs
-    end
+    content = Map.get(attrs, @content)
+    content_schema = Map.get(attrs, @content_schema)
+    new_content = set_default_values(content, content_schema)
+    Map.put(attrs, @content, new_content)
   end
 
   defp set_default_values(content, [tails|head]) do
@@ -262,20 +226,24 @@ defmodule TrueBG.BusinessConcepts do
   defp set_default_value(content, %{}), do: content
 
   defp validate_concept_content(attrs) do
-    if Map.get(attrs, @valid) do
-      content = Map.get(attrs, @content)
-      content_schema = Map.get(attrs, @content_schema)
-      ecto_types = get_ecto_types(content_schema)
-      changeset = {content, ecto_types}
-        |> Changeset.cast(content, Map.keys(ecto_types))
-        |> validate_content(content_schema)
-      case changeset.valid? do
-        false ->
-          attrs
-          |> Map.put(@valid, false)
-          |> Map.put(@changeset, changeset)
-        _ -> attrs
-      end
+    changeset = Map.get(attrs, @changeset)
+    if changeset.valid? do
+      do_validate_concept_content(attrs)
+    else
+      attrs
+    end
+  end
+
+  defp do_validate_concept_content(attrs) do
+    content = Map.get(attrs, @content)
+    content_schema = Map.get(attrs, @content_schema)
+    ecto_types = get_ecto_types(content_schema)
+    changeset = {content, ecto_types}
+    |> Changeset.cast(content, Map.keys(ecto_types))
+    |> validate_content(content_schema)
+
+    if not changeset.valid? do
+      Map.put(attrs, @changeset, changeset)
     else
       attrs
     end
@@ -329,18 +297,20 @@ defmodule TrueBG.BusinessConcepts do
   defp validate_inclusion(changeset, %{}), do: changeset
 
   defp update_concept(attrs) do
-    if Map.get(attrs, @valid) do
-      Repo.update(Map.get(attrs, @changeset))
+    changeset = Map.get(attrs, @changeset)
+    if changeset.valid? do
+      Repo.update(changeset)
     else
-      {:error, Map.get(attrs, @changeset)}
+      {:error, changeset}
     end
   end
 
   defp insert_concept(attrs) do
-    if Map.get(attrs, @valid) do
-      Repo.insert(Map.get(attrs, @changeset))
+    changeset = Map.get(attrs, @changeset)
+    if changeset.valid? do
+      Repo.insert(changeset)
     else
-      {:error, Map.get(attrs, @changeset)}
+      {:error, changeset}
     end
   end
 
