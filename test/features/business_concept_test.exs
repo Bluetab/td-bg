@@ -13,7 +13,15 @@ defmodule TrueBG.BusinessConceptTest do
 
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
-  @fixed_values %{"Description" => "description", "Name" => "name", "Type" => "type"}
+  @fixed_values %{"Type" => "type",
+                  "Name" => "name",
+                  "Description" => "description",
+                  "Status" => "status",
+                  "Last Modification" => "last_change",
+                  "Last User" => "modifier",
+                  "Version" => "version",
+                  "Reject Reason" => "reject_reason"
+                  }
 
   # Scenario: Create a simple business concept
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
@@ -81,31 +89,29 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, Map.merge(state, %{})}
   end
 
-  defp assert_field(%{Field: "Name", Value: value}, c), do: assert value == c["name"]
-  defp assert_field(%{Field: "Type", Value: value}, c), do: assert value == c["type"]
-  defp assert_field(%{Field: "Description", Value: value}, c), do: assert value == c["description"]
-  defp assert_field(%{Field: "Status", Value: value}, c), do: assert value == c["status"]
-  defp assert_field(%{Field: "Reject Reason", Value: value}, c), do: assert value == c["reject_reason"]
-  defp assert_field(%{Field: "Last Modification", Value: _value}, c), do: assert :ok == elem(DateTime.from_iso8601(c["last_change"]), 0)
-  defp assert_field(%{Field: "Last User", Value: _value}, c), do: assert c["modifier"] != nil
-  defp assert_field(%{Field: "Version", Value: value}, c), do: assert Integer.parse(value) == {c["version"], ""}
-
-  defp assert_field(%{Field: "Formula", Value: value}, c), do: assert value == c["content"]["Formula"]
-  defp assert_field(%{Field: "Format", Value: value}, c), do: assert value == c["content"]["Format"]
-  defp assert_field(%{Field: "List of Values", Value: value}, c), do: assert value == c["content"]["List of Values"]
-  defp assert_field(%{Field: "Sensitive Data", Value: value}, c), do: assert value == c["content"]["Sensitive Data"]
-  defp assert_field(%{Field: "Update Frequence", Value: value}, c), do: assert value == c["content"]["Update Frequence"]
-  defp assert_field(%{Field: "Related Area", Value: value}, c), do: assert value == c["content"]["Related Area"]
-  defp assert_field(%{Field: "Default Value", Value: value}, c), do: assert value == c["content"]["Default Value"]
-  defp assert_field(%{Field: "Additional Data", Value: value}, c), do: assert value == c["content"]["Additional Data"]
-
-  defp assert_field(%{}, %{}), do: nil
-
-  defp assert_fields([tail|head], businness_concept) do
-    assert_field(tail, businness_concept)
-    assert_fields(head, businness_concept)
+  def assert_attr("content" = attr, value, %{} = target) do
+    assert_attrs(value, target[attr])
   end
-  defp assert_fields([], _businness_concept),  do: nil
+
+  def assert_attr("last_change" = attr, _value, %{} = target) do
+    assert :ok == elem(DateTime.from_iso8601(target[attr]), 0)
+  end
+
+  def assert_attr("modifier" = attr, _value, %{} = target) do
+    assert target[attr] != nil
+  end
+
+  def assert_attr("version" = attr, value, %{} = target) do
+    assert Integer.parse(value) == {target[attr], ""}
+  end
+
+  def assert_attr(attr, value, %{} = target) do
+    assert value == target[attr]
+  end
+
+  defp assert_attrs(%{} = attrs, %{} = target) do
+    Enum.each(attrs, fn {attr, value} -> assert_attr(attr, value, target) end)
+  end
 
   defand ~r/^"(?<user_name>[^"]+)" is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
     %{user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name, table: fields},
@@ -118,9 +124,9 @@ defmodule TrueBG.BusinessConceptTest do
       assert rc_ok() == to_response_code(http_status_code)
       assert business_concept["name"] == business_concept_name
       assert business_concept["data_domain_id"] == data_domain["id"]
-      assert_fields(fields, business_concept)
+      attrs = field_value_to_api_attrs(fields, @fixed_values)
+      assert_attrs(attrs, business_concept)
       {:ok, Map.merge(state, %{})}
-
   end
 
   # Scenario: Create a business concept with dinamic data
@@ -251,7 +257,8 @@ defmodule TrueBG.BusinessConceptTest do
       assert business_concept_type == business_concept_tmp["type"]
       {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
       assert rc_ok() == to_response_code(http_status_code)
-      assert_fields(fields, business_concept)
+      attrs = field_value_to_api_attrs(fields, @fixed_values)
+      assert_attrs(attrs, business_concept)
       {:ok, Map.merge(state, %{business_concept: business_concept})}
     else
       {:ok, Map.merge(state, %{})}

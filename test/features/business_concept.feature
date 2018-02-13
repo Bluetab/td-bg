@@ -48,7 +48,7 @@ Feature: Business Concepts administration
       | Description       | This is the first description of my business term which is very simple   |
       | Status            | draft                                                                    |
       | Last Modification | Some Timestamp                                                           |
-      | Last user         | app-admin                                                                |
+      | Last User         | app-admin                                                                |
       | Version           | 1                                                                        |
 
   Scenario: Create a business concept with dinamic data
@@ -330,6 +330,6 @@ Feature: Business Concepts administration
       | Description       | This is the first description of my business term which is very simple  |
       | Status            | draft                                                                   |
       | Last Modification | Some Timestamp                                                          |
-      | Last user         | app-admin                                                               |
+      | Last User         | app-admin                                                               |
       | Version           | 1                                                                       |
     And "app-admin" is not able to view business concept "My Business Term" as a child of Data Domain "My Second Domain"
