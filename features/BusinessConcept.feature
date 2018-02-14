@@ -352,10 +352,16 @@ Feature: Business Concepts administration
       | Name              | My Business Term                                   |
       | Description       | This is the second description of my business term |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user <user> is able to view following versions of business concept "My Business Term" of type "Business Term":
-     | Type          | Name             | Description                                        | Last Modification | Version | Status    |
-     | Business Term | My Business Term | This is the first description of my business term  | Some timestamp    | 1       | published |
-     | Business Term | My Business Term | This is the second description of my business term | Some timestamp    | 2       | draft     |
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data::
+      | Field             | Value                                             |
+      | Type              | Business Term                                     |
+      | Name              | My Business Term                                  |
+      | Description       | This is the first description of my business term |
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data::
+      | Field             | Value                                              |
+      | Type              | Business Term                                      |
+      | Name              | My Business Term                                   |
+      | Description       | This is the second description of my business term |
 
     Examples:
       | user      | result       |
