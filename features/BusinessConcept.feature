@@ -347,21 +347,23 @@ Feature: Business Concepts administration
       | Description       | This is the first description of my business term |
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
     When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
-      | Field             | Value                                              |
-      | Type              | Business Term                                      |
-      | Name              | My Business Term                                   |
-      | Description       | This is the second description of my business term |
+      | Field                 | Value                                              |
+      | Type                  | Business Term                                      |
+      | Name                  | My Business Term                                   |
+      | Description           | This is the second description of my business term |
+      | Modification Comments | Modification on the Business Term description      |
     Then the system returns a result with code "<result>"
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data::
-      | Field             | Value                                             |
-      | Type              | Business Term                                     |
-      | Name              | My Business Term                                  |
-      | Description       | This is the first description of my business term |
+      | Field                 | Value                                              |
+      | Type                  | Business Term                                      |
+      | Name                  | My Business Term                                   |
+      | Description           | This is the first description of my business term  |
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data::
-      | Field             | Value                                              |
-      | Type              | Business Term                                      |
-      | Name              | My Business Term                                   |
-      | Description       | This is the second description of my business term |
+      | Field                 | Value                                              |
+      | Type                  | Business Term                                      |
+      | Name                  | My Business Term                                   |
+      | Description           | This is the second description of my business term |
+      | Modification Comments | Modification on the Business Term description      |
 
     Examples:
       | user      | result       |
