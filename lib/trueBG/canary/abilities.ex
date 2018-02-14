@@ -1,17 +1,20 @@
-defmodule TrueBG.Permissions.Abilities do
+defmodule TrueBG.Canary.Abilities do
   @moduledoc false
   alias TrueBG.Accounts.User
   alias TrueBG.Taxonomies.DataDomain
+  alias TrueBG.Taxonomies.DomainGroup
   alias TrueBG.BusinessConcepts.BusinessConcept
   alias TrueBG.Permissions
+  alias TrueBG.Canary.TaxonomyAbilities
 
   defimpl Canada.Can, for: User do
 
     #def can?(%User{}, _action, nil),  do: false
 
     # administrator is superpowerful
-    def can?(%User{is_admin: true}, _action, _domain),  do: true
-
+    def can?(%User{is_admin: true}, _action, _domain)  do
+      true
+    end
     # Data domain
 
     # This is the creation of a business concept in a data domain
@@ -22,12 +25,8 @@ defmodule TrueBG.Permissions.Abilities do
       |> can_execute_action?
     end
 
-    def can?(%User{}, _action, %DataDomain{}) do  #when action in [:admin, :watch, :create, :publish] do
-      true
-    end
-
-    def can?(%User{}, _action, DataDomain) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
-      true
+    def can?(%User{} = user, :create_data_domain, %DomainGroup{id: domain_group_id} = domain_group) do
+      TaxonomyAbilities.can?(user, :create_data_domain, domain_group)
     end
 
     def can?(%User{}, _action, BusinessConcept) do  #when action in [:admin, :watch, :creaBusinte, :publish] do

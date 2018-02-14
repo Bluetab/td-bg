@@ -43,11 +43,12 @@ defmodule TrueBGWeb.Router do
 
   scope "/api", TrueBGWeb do
     pipe_through [:api, :api_secure, :api_authorized]
-    resources "/data_domains", DataDomainController, except: [:new, :edit]
+    resources "/data_domains", DataDomainController, except: [:new, :edit, :create]
     get "/domain_groups/index_root", DomainGroupController, :index_root
     resources "/domain_groups", DomainGroupController, except: [:new, :edit] do
       get "/index_children", DomainGroupController, :index_children
       get "/data_domains", DataDomainController, :index_children_data_domain
+      post "/data_domain", DataDomainController, :create
     end
     get "/business_concepts/:id/index_children", BusinessConceptController, :index_children_business_concept
     resources "/data_domains", DataDomainController do

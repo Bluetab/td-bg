@@ -5,8 +5,8 @@ defmodule TrueBGWeb.DataDomainControllerTest do
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DataDomain
 
-  @create_attrs %{description: "some description", name: "some name", "domain_group_id": nil}
-  @update_attrs %{description: "some updated description", name: "some updated name", "domain_group_id": nil}
+  @create_attrs %{description: "some description", name: "some name"}
+  @update_attrs %{description: "some updated description", name: "some updated name"}
   @invalid_attrs %{description: nil, name: nil}
 
   def fixture(:data_domain) do
@@ -29,7 +29,9 @@ defmodule TrueBGWeb.DataDomainControllerTest do
   describe "create data_domain" do
     @tag :admin_authenticated
     test "renders data_domain when data is valid", %{conn: conn} do
-      conn = post conn, data_domain_path(conn, :create), data_domain: @create_attrs
+      domain_group = insert(:domain_group)
+
+      conn = post conn, domain_group_data_domain_path(conn, :create, domain_group.id), data_domain: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
@@ -43,7 +45,8 @@ defmodule TrueBGWeb.DataDomainControllerTest do
 
     @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post conn, data_domain_path(conn, :create), data_domain: @invalid_attrs
+      domain_group = insert(:domain_group)
+      conn = post conn, domain_group_data_domain_path(conn, :create, domain_group.id), data_domain: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
   end

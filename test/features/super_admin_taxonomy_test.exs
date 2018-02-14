@@ -130,8 +130,8 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
         %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = _state do
 
-    {_, _status_code, json_resp} = domain_group_create(token_admin, %{name: domain_group_name})
-    domain_group = json_resp["data"]
+    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
+    assert domain_group && domain_group["id"]
     {_, _status_code, json_resp} = data_domain_create(token_admin, %{name: data_domain_name, description: description, domain_group_id: domain_group["id"]})
     data_domain = json_resp["data"]
     assert data_domain["domain_group_id"] == domain_group["id"]

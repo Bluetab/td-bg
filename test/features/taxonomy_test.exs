@@ -1,0 +1,76 @@
+defmodule TrueBG.TaxonomyTest do
+  use Cabbage.Feature, async: false, file: "taxonomy.feature"
+  use TrueBGWeb.ConnCase
+  import TrueBGWeb.ResponseCode
+  import TrueBGWeb.Taxonomy
+  import TrueBGWeb.User, only: :functions
+  import TrueBGWeb.Authentication, only: :functions
+  import TrueBGWeb.AclEntry, only: :functions
+
+  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
+         %{domain_group_name: name}, state do
+
+    {:ok, status_code, json_resp} = session_create("app-admin", "mypass")
+    assert rc_created() == to_response_code(status_code)
+    state = Map.merge(state, %{status_code: status_code, token_admin: json_resp["token"], resp: json_resp})
+    {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
+    assert rc_created() == to_response_code(status_code)
+    {:ok, state}
+  end
+
+  defand ~r/^following users exist with the indicated role in Domain Group "(?<domain_group_name>[^"]+)"$/,
+         %{domain_group_name: domain_group_name, table: table}, %{token_admin: token_admin} = state do
+
+    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
+    assert domain_group_name == domain_group["name"]
+
+    create_user_and_acl_entries_fn = fn(x) ->
+      user_name = x[:user]
+      role_name = x[:role]
+      {_, _, %{"data" => %{"id" => principal_id}}} = user_create(token_admin, %{user_name: user_name, password: user_name})
+      %{"id" => role_id} = get_role_by_name(token_admin, role_name)
+      acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group["id"], role_id: role_id}
+      {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)
+    end
+
+    users = table |> Enum.map(create_user_and_acl_entries_fn)
+
+    {:ok, Map.merge(state, %{users: users})}
+  end
+
+  # Scenario: Creating a Data Domain depending on an existing Domain Group
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to create a Data Domain with the name "(?<data_domain_name>[^"]+)" as child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
+          %{user_name: user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
+
+    parent = get_domain_group_by_name(token_admin, domain_group_name)
+    assert parent["name"] == domain_group_name
+    {:ok, status_code, json_resp} = session_create(user_name, user_name)
+    assert rc_created() == to_response_code(status_code)
+    {_, status_code, _json_resp} = data_domain_create(json_resp["token"], %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
+    {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/,
+          %{status_code: status_code}, %{status_code: http_status_code} = state do
+    assert status_code == to_response_code(http_status_code)
+    {:ok, Map.merge(state, %{})}
+  end
+
+  defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", user (?<user_name>[^"]+) is able to see the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
+         %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]},
+         state do
+    if actual_result == expected_result do
+      {:ok, status_code, json_resp} = session_create(user_name, user_name)
+      assert rc_created() == to_response_code(status_code)
+      data_domain_info = get_data_domain_by_name(json_resp["token"], data_domain_name)
+      assert data_domain_name == data_domain_info["name"]
+      {:ok, status_code, json_resp} = data_domain_show(json_resp["token"], data_domain_info["id"])
+      assert rc_ok() == to_response_code(status_code)
+      data_domain = json_resp["data"]
+      assert data_domain_name == data_domain["name"]
+      assert description == data_domain["description"]
+      {:ok, %{state | status_code: nil}}
+    end
+  end
+
+end

@@ -4,8 +4,12 @@ defmodule TrueBGWeb.DataDomainController do
   import Plug.Conn
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DataDomain
+  alias TrueBG.Taxonomies.DomainGroup
 
   action_fallback TrueBGWeb.FallbackController
+
+  plug :load_canary_action, phoenix_action: :create, canary_action: :create_data_domain
+  plug :load_and_authorize_resource, model: DomainGroup, id_name: "domain_group_id", persisted: true, only: :create_data_domain
 
   def index(conn, _params) do
     data_domains = Taxonomies.list_data_domains()
