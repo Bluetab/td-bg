@@ -34,7 +34,7 @@ defmodule TrueBG.Factory do
       modifier: 1,
       last_change: DateTime.utc_now(),
       data_domain: build(:data_domain),
-      status: Atom.to_string(BusinessConcept.draft),
+      status: BusinessConcept.status.draft,
       version: 1,
     }
   end

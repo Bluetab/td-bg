@@ -1,7 +1,6 @@
 defmodule TrueBGWeb.BusinessConceptView do
   use TrueBGWeb, :view
   alias TrueBGWeb.BusinessConceptView
-  alias TrueBG.BusinessConcepts.BusinessConcept
 
   def render("index.json", %{business_concepts: business_concepts}) do
     %{data: render_many(business_concepts, BusinessConceptView, "business_concept.json")}
@@ -22,14 +21,20 @@ defmodule TrueBGWeb.BusinessConceptView do
       data_domain_id: business_concept.data_domain_id,
       status: business_concept.status,
       version: business_concept.version}
-    |> add_reject_reason(business_concept)
+    |> add_reject_reason(business_concept.reject_reason,
+                         String.to_atom(business_concept.status))
+    |> add_mod_comments(business_concept.mod_comments,
+                        business_concept.version)
   end
 
-  defp add_reject_reason(%{} = bc_map, business_concept) do
-    if String.to_atom(business_concept.status) == BusinessConcept.rejected do
-      Map.merge(bc_map, %{reject_reason: business_concept.reject_reason})
-    else
-      bc_map
-    end
+  defp add_reject_reason(concept, reject_reason, :rejected) do
+    Map.put(concept, :reject_reason, reject_reason)
   end
+  defp add_reject_reason(concept, _reject_reason, _status), do: concept
+
+  defp add_mod_comments(concept, _mod_comments,  1), do: concept
+  defp add_mod_comments(concept, mod_comments,  _version) do
+    Map.put(concept, :mod_comments, mod_comments)
+  end
+
 end

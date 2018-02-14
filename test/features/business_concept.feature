@@ -333,3 +333,48 @@ Feature: Business Concepts administration
       | Last User         | app-admin                                                               |
       | Version           | 1                                                                       |
     And "app-admin" is not able to view business concept "My Business Term" as a child of Data Domain "My Second Domain"
+
+
+    Scenario Outline: Modification of existing Business Concept in Published status
+      Given an existing Domain Group called "My Parent Group"
+      And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+      And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+      And following users exist with the indicated role in Data Domain "My Domain"
+        | user      | role    |
+        | watcher   | watch   |
+        | creator   | create  |
+        | publisher | publish |
+        | admin     | admin   |
+      And an existing Business Concept type called "Business Term" with empty definition
+      And user "<user>" is logged in the application with password "<user>"
+      And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+        | Field             | Value                                             |
+        | Type              | Business Term                                     |
+        | Name              | My Business Term                                  |
+        | Description       | This is the first description of my business term |
+      And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
+      When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
+        | Field                 | Value                                              |
+        | Type                  | Business Term                                      |
+        | Name                  | My Business Term                                   |
+        | Description           | This is the second description of my business term |
+        | Modification Comments | Modification on the Business Term description      |
+      Then the system returns a result with code "<result>"
+      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data::
+        | Field                 | Value                                              |
+        | Type                  | Business Term                                      |
+        | Name                  | My Business Term                                   |
+        | Description           | This is the first description of my business term  |
+      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data::
+        | Field                 | Value                                              |
+        | Type                  | Business Term                                      |
+        | Name                  | My Business Term                                   |
+        | Description           | This is the second description of my business term |
+        | Modification Comments | Modification on the Business Term description      |
+
+      Examples:
+        | user      | result       |
+        | watcher   | Unauthorized |
+        | creator   | Ok           |
+        | publisher | Ok           |
+        | admin     | Ok           |

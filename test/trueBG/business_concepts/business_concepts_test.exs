@@ -288,11 +288,11 @@ defmodule TrueBG.BusinessConceptsTests do
     test "reject_business_concept/2 rejects business_concept" do
       user = insert(:user)
       business_concept = insert(:business_concept,
-                        status: Atom.to_string(BusinessConcept.pending_approval),
+                        status: BusinessConcept.status.pending_approval,
                         modifier:  user.id)
       attrs = %{reject_reason: "Because I want to"}
       assert {:ok, business_concept} = BusinessConcepts.reject_business_concept(business_concept, attrs)
-      assert business_concept.status == Atom.to_string(BusinessConcept.rejected)
+      assert business_concept.status == BusinessConcept.status.rejected
       assert business_concept.reject_reason == attrs.reject_reason
     end
 

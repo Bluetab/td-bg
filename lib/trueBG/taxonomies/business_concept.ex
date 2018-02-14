@@ -15,7 +15,11 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     watch:   [:see_published]
   }
 
-  @status [:draft, :pending_approval, :rejected, :published]
+  @status %{draft: "draft",
+            pending_approval: "pending_approval",
+            rejected: "rejected",
+            published: "published",
+            versioned: "versioned"}
 
   schema "business_concepts" do
     field :content, :map
@@ -27,6 +31,8 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     belongs_to :data_domain, DataDomain
     field :status, :string
     field :reject_reason, :string
+    field :mod_comments, :string
+    belongs_to :last_version, BusinessConcept
     field :version, :integer
 
     timestamps()
@@ -36,18 +42,24 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     @permissions
   end
 
+  def status do
+    @status
+  end
+
   @doc false
   def create_changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
     |> cast(attrs, [:content, :type, :name, :description, :modifier,
-                    :last_change, :data_domain_id, :version])
+                    :last_change, :data_domain_id, :version,
+                    :mod_comments])
     |> validate_required([:content, :type, :name, :modifier, :last_change,
                           :data_domain_id, :version])
     |> validate_length(:name, max: 255)
-    |> validate_length(:description, max: 500)
+    |> validate_length(:description,  max: 500)
+    |> validate_length(:mod_comments, max: 500)
     |> put_change(:status, Atom.to_string(:draft))
     |> unique_constraint(:business_concept,
-                                    name: :index_business_concept_by_name_type)
+                                    name: :index_business_concept_by_version_name_type)
   end
 
   def update_changeset(%BusinessConcept{} = business_concept, attrs) do
@@ -59,7 +71,7 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
     |> unique_constraint(:business_concept,
-                                    name: :index_business_concept_by_name_type)
+                                    name: :index_business_concept_by_version_name_type)
   end
 
   @doc false
@@ -67,33 +79,14 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     business_concept
     |> cast(attrs, [:status])
     |> validate_required([:status])
-    |> validate_inclusion(:status, Enum.map(@status, &Atom.to_string(&1)))
+    |> validate_inclusion(:status, Map.values(BusinessConcept.status))
   end
 
   def reject_changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
     |> cast(attrs, [:reject_reason])
-    |> put_change(:status, Atom.to_string(BusinessConcept.rejected))
-  end
-
-  def get_status do
-    @status
-  end
-
-  def draft do
-    :draft
-  end
-
-  def pending_approval do
-    :pending_approval
-  end
-
-  def rejected do
-    :rejected
-  end
-
-  def published do
-    :published
+    |> validate_length(:reject_reason, max: 500)
+    |> put_change(:status, BusinessConcept.status.rejected)
   end
 
 end

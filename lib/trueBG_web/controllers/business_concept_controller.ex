@@ -52,16 +52,12 @@ defmodule TrueBGWeb.BusinessConceptController do
 
   def update(conn, %{"id" => id, "business_concept" => business_concept_params}) do
     business_concept = BusinessConcepts.get_business_concept!(id)
-    content_schema = get_content_schema(business_concept.type)
-
-    business_concept_params = business_concept_params
-      |> Map.put("content_schema", content_schema)
-      |> Map.put("modifier", conn.assigns.current_user.id)
-      |> Map.put("last_change", DateTime.utc_now())
-
-    with {:ok, %BusinessConcept{} = business_concept} <-
-      BusinessConcepts.update_business_concept(business_concept, business_concept_params) do
-      render(conn, "show.json", business_concept: business_concept)
+    status = String.to_atom(business_concept.status)
+    case status do
+      :draft ->
+        update_draft(conn, business_concept, business_concept_params)
+      :published ->
+        update_published(conn, business_concept, business_concept_params)
     end
   end
 
@@ -87,7 +83,8 @@ defmodule TrueBGWeb.BusinessConceptController do
     business_concept = conn.assigns.business_concept
     attrs = %{status: Atom.to_string(:published)}
     with {:ok, %BusinessConcept{} = business_concept} <-
-          BusinessConcepts.update_business_concept_status(business_concept, attrs) do
+          BusinessConcepts.update_business_concept_status(business_concept, attrs),
+         {_n, nil} <- BusinessConcepts.update_status_to_versioned(business_concept.id) do
       render(conn, "show.json", business_concept: business_concept)
     end
   end
@@ -96,6 +93,40 @@ defmodule TrueBGWeb.BusinessConceptController do
     business_concept = BusinessConcepts.get_business_concept!(id)
     with {:ok, %BusinessConcept{}} <- BusinessConcepts.delete_business_concept(business_concept) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  defp update_draft(conn, business_concept, business_concept_params) do
+    content_schema = get_content_schema(business_concept.type)
+
+    business_concept_params = business_concept_params
+      |> Map.put("content_schema", content_schema)
+      |> Map.put("modifier", conn.assigns.current_user.id)
+      |> Map.put("last_change", DateTime.utc_now())
+
+    with {:ok, %BusinessConcept{} = business_concept} <-
+      BusinessConcepts.update_business_concept(business_concept, business_concept_params) do
+      render(conn, "show.json", business_concept: business_concept)
+    end
+  end
+
+  defp update_published(conn, business_concept, business_concept_params)  do
+    content_schema = get_content_schema(business_concept.type)
+    creation_attrs = Map.from_struct(business_concept)
+    creation_attrs = Map.merge(creation_attrs, business_concept_params)
+
+    creation_attrs = creation_attrs
+    |> Map.put("content_schema", content_schema)
+    |> Map.put("modifier", conn.assigns.current_user.id)
+    |> Map.put("last_change", DateTime.utc_now())
+    |> Map.put("mod_comments", business_concept_params["mod_comments"])
+    |> Map.put("version", business_concept.version + 1)
+
+    with {:ok, %BusinessConcept{} = new_business_concept} <-
+          BusinessConcepts.create_business_concept(creation_attrs),
+         {_n, nil} <- BusinessConcepts.update_last_version(new_business_concept.id,
+                                                           business_concept.id) do
+      render(conn, "show.json", business_concept: business_concept)
     end
   end
 
