@@ -121,7 +121,7 @@ defmodule TrueBG.BusinessConcepts do
   def update_status_to_versioned(published_business_concept_id) do
     query = from c in BusinessConcept,
     where: c.last_version_id == ^published_business_concept_id
-    Repo.update_all query, set: [status: Atom.to_string(BusinessConcept.versioned)]
+    Repo.update_all query, set: [status: BusinessConcept.status.versioned]
   end
 
   def update_last_version(new_id, old_id) do

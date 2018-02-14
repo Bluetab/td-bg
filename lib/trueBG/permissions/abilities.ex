@@ -36,32 +36,32 @@ defmodule TrueBG.Permissions.Abilities do
 
     def can?(%User{id: user_id}, :update, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
       %{user_id: user_id, action: :update,
-        current_status: String.to_atom(status),
-        required_statuses: [BusinessConcept.draft, BusinessConcept.published],
+        current_status: status,
+        required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.published],
         data_domain_id: data_domain_id}
       |> can_execute_action?
     end
 
     def can?(%User{id: user_id}, :send_for_approval, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
       %{user_id: user_id, action: :send_for_approval,
-        current_status: String.to_atom(status),
-        required_statuses: [BusinessConcept.draft],
+        current_status: status,
+        required_statuses: [BusinessConcept.status.draft],
         data_domain_id: data_domain_id}
       |> can_execute_action?
     end
 
     def can?(%User{id: user_id}, :reject, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
       %{user_id: user_id, action: :reject,
-        current_status: String.to_atom(status),
-        required_statuses: [BusinessConcept.pending_approval],
+        current_status: status,
+        required_statuses: [BusinessConcept.status.pending_approval],
         data_domain_id: data_domain_id}
       |> can_execute_action?
     end
 
     def can?(%User{id: user_id}, :publish, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
       %{user_id: user_id, action: :publish,
-        current_status: String.to_atom(status),
-        required_statuses: [BusinessConcept.pending_approval],
+        current_status: status,
+        required_statuses: [BusinessConcept.status.pending_approval],
         data_domain_id: data_domain_id}
       |> can_execute_action?
     end
