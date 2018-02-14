@@ -22,8 +22,7 @@ defmodule TrueBGWeb.User do
   end
 
   def get_user_by_name(token, user_name) do
-    {:ok, _status_code, json_resp} = user_list(token)
-    Enum.find(json_resp["data"], fn(user) -> user["user_name"] == user_name end)
+    %{"id" => trunc(:binary.decode_unsigned(user_name)/10000000000000000), "user_name" => user_name}
   end
 
   def role_list(token) do

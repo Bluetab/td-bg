@@ -1,9 +1,7 @@
 defmodule TrueBG.Auth.Guardian do
   @moduledoc false
   use Guardian, otp_app: :trueBG
-
-  alias TrueBG.Accounts
-  alias Guardian.DB , as: GuardianDB
+  alias TrueBG.Accounts.User
 
   def subject_for_token(resource, _claims) do
     # You can use any value for the subject of your token but
@@ -11,7 +9,7 @@ defmodule TrueBG.Auth.Guardian do
     # how it being used on `resource_from_claims/1` function.
     # A unique `id` is a good subject, a non-unique email address
     # is a poor subject.
-    sub = to_string(resource.id)
+    sub = Poison.encode!(resource)
     {:ok, sub}
   end
 
@@ -19,26 +17,8 @@ defmodule TrueBG.Auth.Guardian do
     # Here we'll look up our resource from the claims, the subject can be
     # found in the `"sub"` key. In `above subject_for_token/2` we returned
     # the resource id so here we'll rely on that to look it up.
-    id = claims["sub"]
-    resource = Accounts.get_user!(id)
+    sub = Poison.decode!(claims["sub"])
+    resource = %User{id: sub["id"], is_admin: sub["is_admin"], user_name: sub["user_name"]}
     {:ok,  resource}
-  end
-
-  def after_encode_and_sign(resource, claims, token, _options) do
-    with {:ok, _} <- GuardianDB.after_encode_and_sign(resource, claims["typ"], claims, token) do
-      {:ok, token}
-    end
-  end
-
-  def on_verify(claims, token, _options) do
-    with {:ok, _} <- GuardianDB.on_verify(claims, token) do
-      {:ok, claims}
-    end
-  end
-
-  def on_revoke(claims, token, _options) do
-    with {:ok, _} <- GuardianDB.on_revoke(claims, token) do
-      {:ok, claims}
-    end
   end
 end

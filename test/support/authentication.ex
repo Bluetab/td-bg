@@ -35,25 +35,15 @@ defmodule TrueBGWeb.Authentication do
     [@headers, {"authorization", "Bearer #{token}"}]
   end
 
-  def session_create(user_name, user_password) do
-    body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def session_destroy(token) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.delete!(session_url(@endpoint, :destroy), headers, [])
-    {:ok, status_code}
-  end
-
-  def session_change_password(token, old_password, new_password) do
-    headers = get_header(token)
-    body = %{old_passord: old_password, new_password: new_password} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-      HTTPoison.put!(session_url(@endpoint, :change_password), body, headers, [])
-      {:ok, status_code}
+  def session_create(user_name, _user_password) do
+    if user_name == "app-admin" do
+      user = %TrueBG.Accounts.User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), is_admin: true, user_name: user_name}
+      {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user)
+      {:ok, 201, %{"token" => jwt}}
+    else
+      user = %TrueBG.Accounts.User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), is_admin: false, user_name: user_name}
+      {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user)
+      {:ok, 201, %{"token" => jwt}}
+    end
   end
 end

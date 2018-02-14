@@ -5,8 +5,9 @@ defmodule TrueBG.Factory do
 
   def user_factory do
     %TrueBG.Accounts.User {
+      id: 0,
       user_name: "bufoncillo",
-      password: "bufoncillo",
+      is_admin: false
     }
   end
 

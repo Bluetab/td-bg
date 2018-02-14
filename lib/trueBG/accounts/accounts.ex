@@ -35,15 +35,17 @@ defmodule TrueBG.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id) do
+    %User{id: id}
+  end
 
   def get_user_by_name(user_name) do
-    Repo.get_by(User, user_name: String.downcase(user_name))
+    %User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), user_name: user_name}
   end
 
-  def exist_user?(user_name) do
-    Repo.one(from u in User, select: count(u.id), where: u.user_name == ^user_name) > 0
-  end
+  # def exist_user?(user_name) do
+  #   Repo.one(from u in User, select: count(u.id), where: u.user_name == ^user_name) > 0
+  # end
 
   @doc """
   Creates a user.
@@ -58,9 +60,8 @@ defmodule TrueBG.Accounts do
 
   """
   def create_user(attrs \\ %{}) do
-    %User{}
-    |> User.registration_changeset(attrs)
-    |> Repo.insert()
+    user_name = Map.get(attrs, "user_name")
+    {:ok, %User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), user_name: user_name, is_admin: false}}
   end
 
   @doc """
@@ -75,11 +76,11 @@ defmodule TrueBG.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_user(%User{} = user, attrs) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update()
-  end
+  # def update_user(%User{} = user, attrs) do
+  #   user
+  #   |> User.changeset(attrs)
+  #   |> Repo.update()
+  # end
 
   @doc """
   Deletes a User.
@@ -93,9 +94,9 @@ defmodule TrueBG.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
-  end
+  # def delete_user(%User{} = user) do
+  #   Repo.delete(user)
+  # end
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking user changes.
@@ -106,7 +107,7 @@ defmodule TrueBG.Accounts do
       %Ecto.Changeset{source: %User{}}
 
   """
-  def change_user(%User{} = user) do
-    User.changeset(user, %{})
-  end
+  # def change_user(%User{} = user) do
+  #   User.changeset(user, %{})
+  # end
 end

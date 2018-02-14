@@ -25,14 +25,14 @@ defmodule TrueBG.TaxonomiesTest do
     end
 
     def acl_entry_fixture(%DomainGroup{} = domain_group) do
-      user = insert(:user)
+      user = build(:user)
       role = insert(:role)
       acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
       acl_entry_attrs
     end
 
     def acl_entry_fixture(%DataDomain{} = data_domain) do
-      user = insert(:user)
+      user = build(:user)
       role = insert(:role)
       acl_entry_attrs = insert(:acl_entry_data_domain_user, principal_id: user.id, resource_id: data_domain.id, role: role)
       acl_entry_attrs

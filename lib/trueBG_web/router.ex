@@ -19,14 +19,10 @@ defmodule TrueBGWeb.Router do
     pipe_through :api
     get  "/ping", PingController, :ping
     post "/echo", EchoController, :echo
-    post "/sessions", SessionController, :create
   end
 
   scope "/api", TrueBGWeb do
     pipe_through [:api, :api_secure]
-    get "/sessions", SessionController, :ping
-    delete "/sessions", SessionController, :destroy
-    put "/sessions", SessionController, :change_password
     resources "/users", UserController, except: [:new, :edit]
     resources "/roles", RoleController, except: [:new, :edit]
     resources "/acl_entries", AclEntryController, except: [:new, :edit]
