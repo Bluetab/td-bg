@@ -20,7 +20,8 @@ defmodule TrueBG.BusinessConceptTest do
                   "Last Modification" => "last_change",
                   "Last User" => "modifier",
                   "Version" => "version",
-                  "Reject Reason" => "reject_reason"
+                  "Reject Reason" => "reject_reason",
+                  "Modification Comments" => "mod_comments"
                   }
 
   # Scenario: Create a simple business concept
@@ -288,6 +289,9 @@ defmodule TrueBG.BusinessConceptTest do
     case {current_status, desired_status} do
       {:draft, :pending_approval} ->
         business_concept_send_for_approval(token_admin, business_concept["id"])
+      {:draft, :published} ->
+        business_concept_send_for_approval(token_admin, business_concept["id"])
+        business_concept_publish(token_admin, business_concept["id"])
     end
 
     {:ok, Map.merge(state, %{})}
@@ -312,6 +316,32 @@ defmodule TrueBG.BusinessConceptTest do
       {_, status_code} = business_concept_reject(token, business_concept["id"], reject_reason)
 
       {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  # Scenario Outline: Modification of existing Business Concept in Published status
+
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with follwing data::$/,
+    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
+    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+
+      assert user_name == token_owner
+
+      business_concept_version = String.to_integer(version)
+
+      if result == status_code do
+        business_concept_tmp = business_concept_by_version_name_and_type(
+                    token_admin, business_concept_version, business_concept_name,
+                    business_concept_type)
+        assert business_concept_version == business_concept_tmp["version"]
+        assert business_concept_type == business_concept_tmp["type"]
+        {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
+        assert rc_ok() == to_response_code(http_status_code)
+        attrs = field_value_to_api_attrs(fields, @fixed_values)
+        assert_attrs(attrs, business_concept)
+        {:ok, Map.merge(state, %{business_concept: business_concept})}
+      else
+        {:ok, Map.merge(state, %{})}
+      end
   end
 
   defp field_value_to_api_attrs(table, fixed_values) do
@@ -386,4 +416,17 @@ defmodule TrueBG.BusinessConceptTest do
      fn(business_concept) -> business_concept["name"] == business_concept_name
      and  business_concept["type"] == business_concept_type end)
   end
+
+  def business_concept_by_version_name_and_type(token, business_concept_version,
+                                                      business_concept_name,
+                                                      business_concept_type) do
+    {:ok, _status_code, json_resp} = business_concept_list(token)
+    Enum.find(json_resp["data"],
+     fn(business_concept) ->
+       business_concept["version"] == business_concept_version &&
+       business_concept["name"] == business_concept_name &&
+       business_concept["type"] == business_concept_type
+     end)
+  end
+
 end

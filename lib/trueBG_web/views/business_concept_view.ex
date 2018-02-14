@@ -23,6 +23,7 @@ defmodule TrueBGWeb.BusinessConceptView do
       status: business_concept.status,
       version: business_concept.version}
     |> add_reject_reason(business_concept)
+    |> add_mod_comments(business_concept)
   end
 
   defp add_reject_reason(%{} = bc_map, business_concept) do
@@ -32,4 +33,13 @@ defmodule TrueBGWeb.BusinessConceptView do
       bc_map
     end
   end
+
+  defp add_mod_comments(%{} = bc_map, business_concept) do
+    if business_concept.version != 1 do
+      Map.merge(bc_map, %{mod_comments: business_concept.mod_comments})
+    else
+      bc_map
+    end
+  end
+
 end

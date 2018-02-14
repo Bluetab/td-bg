@@ -118,6 +118,18 @@ defmodule TrueBG.BusinessConcepts do
     |> Repo.update()
   end
 
+  def update_status_to_versioned(published_business_concept_id) do
+    query = from c in BusinessConcept,
+    where: c.last_version_id == ^published_business_concept_id
+    Repo.update_all query, set: [status: Atom.to_string(BusinessConcept.versioned)]
+  end
+
+  def update_last_version(new_id, old_id) do
+    query = from c in BusinessConcept,
+    where: c.last_version_id == ^old_id or c.id == ^old_id
+    Repo.update_all query, set: [last_version_id: new_id]
+  end
+
   @doc """
   Rejects a business_concept.
 
