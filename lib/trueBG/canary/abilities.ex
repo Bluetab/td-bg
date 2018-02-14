@@ -25,7 +25,7 @@ defmodule TrueBG.Canary.Abilities do
       |> can_execute_action?
     end
 
-    def can?(%User{} = user, :create_data_domain, %DomainGroup{id: domain_group_id} = domain_group) do
+    def can?(%User{} = user, :create_data_domain, %DomainGroup{} = domain_group) do
       TaxonomyAbilities.can?(user, :create_data_domain, domain_group)
     end
 
