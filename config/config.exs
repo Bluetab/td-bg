@@ -31,12 +31,6 @@ config :trueBG, TrueBG.Auth.Guardian,
   ttl: { 1, :hours },
   secret_key: "SuperSecretTruedat"
 
-config :guardian, Guardian.DB,
-   repo: TrueBG.Repo,
-   schema_name: "guardian_tokens", # default
-   #token_types: ["refresh_token"], # store all token types if not set
-   sweep_interval: 60 # default: 60 minutes
-
 config :canary, repo: TrueBG.Repo,
   unauthorized_handler: {TrueBG.Auth.Canary, :handle_unauthorized},
   not_found_handler: {TrueBG.Auth.Canary, :handle_not_found}

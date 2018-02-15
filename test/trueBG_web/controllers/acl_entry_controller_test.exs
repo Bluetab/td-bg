@@ -22,7 +22,7 @@ defmodule TrueBGWeb.AclEntryControllerTest do
   describe "create acl_entry" do
     @tag :admin_authenticated
     test "renders acl_entry when data is valid", %{conn: conn} do
-      user = insert(:user)
+      user = build(:user)
       domain_group = insert(:domain_group)
       role = insert(:role)
       acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
@@ -87,7 +87,7 @@ defmodule TrueBGWeb.AclEntryControllerTest do
   end
 
   defp create_acl_entry(_) do
-    user = insert(:user)
+    user = build(:user)
     domain_group = insert(:domain_group)
     role = insert(:role)
     acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
