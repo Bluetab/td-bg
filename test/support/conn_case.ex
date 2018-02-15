@@ -14,7 +14,6 @@ defmodule TrueBGWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
-  alias TrueBG.Accounts
   alias Ecto.Adapters.SQL.Sandbox
   alias Phoenix.ConnTest
   import TrueBGWeb.Authentication, only: :functions
@@ -41,12 +40,10 @@ defmodule TrueBGWeb.ConnCase do
 
     cond do
       tags[:admin_authenticated] ->
-        user = Accounts.get_user_by_name(@admin_user_name)
-        user = Map.put(user, :is_admin, true)
+        user = create_user(@admin_user_name, true)
         create_user_auth_conn(user)
       tags[:authenticated_user] ->
-        user = Accounts.get_user_by_name(tags[:authenticated_user])
-        user = Map.put(user, :is_admin, true)
+        user = create_user(tags[:authenticated_user], true)
         create_user_auth_conn(user)
        true ->
          {:ok, conn: ConnTest.build_conn()}

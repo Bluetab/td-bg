@@ -53,11 +53,15 @@ defmodule TrueBGWeb.Authentication do
     %TrueBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
   end
 
-  defp build_user_token(%User{} = user) do
+  def build_user_token(%User{} = user) do
       case Guardian.encode_and_sign(user) do
         {:ok, jwt, _full_claims} -> jwt
         _ -> raise "Problems encoding and signing a user"
       end
+  end
+
+  def build_user_token(user_name, is_admin \\ false) when is_binary(user_name) do
+    build_user_token(create_user(user_name, is_admin))
   end
 
 end

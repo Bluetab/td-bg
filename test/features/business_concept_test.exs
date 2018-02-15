@@ -180,7 +180,7 @@ defmodule TrueBG.BusinessConceptTest do
     create_user_and_acl_entries_fn = fn(x) ->
       user_name = x[:user]
       role_name = x[:role]
-      {_, _, %{"data" => %{"id" => principal_id}}} = user_create(token_admin, %{user_name: user_name, password: user_name})
+      principal_id = create_user(user_name).id
       %{"id" => role_id} = get_role_by_name(token_admin, role_name)
       acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain["id"], role_id: role_id}
       {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)

@@ -6,21 +6,6 @@ defmodule TrueBGWeb.User do
   import TrueBGWeb.Authentication, only: :functions
   @endpoint TrueBGWeb.Endpoint
 
-  def user_create(token, user_params) do
-    headers = get_header(token)
-    body = %{user: user_params} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(user_url(@endpoint, :create), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def user_list(token) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(user_url(@endpoint, :index), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
   def role_list(token) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
