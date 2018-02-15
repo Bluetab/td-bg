@@ -40,7 +40,12 @@ defmodule TrueBG.Accounts do
   end
 
   def get_user_by_name(user_name) do
-    %User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), user_name: user_name}
+    do_create_user(user_name, false)
+  end
+
+  defp do_create_user(user_name, is_admin) do
+    id = Integer.mod(:binary.decode_unsigned(user_name), 100_000)
+    %TrueBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
   end
 
   # def exist_user?(user_name) do
@@ -61,7 +66,7 @@ defmodule TrueBG.Accounts do
   """
   def create_user(attrs \\ %{}) do
     user_name = Map.get(attrs, "user_name")
-    {:ok, %User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), user_name: user_name, is_admin: false}}
+    {:ok, do_create_user(user_name, false)}
   end
 
   @doc """

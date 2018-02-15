@@ -6,6 +6,7 @@ defmodule TrueBGWeb.Authentication do
   alias Phoenix.ConnTest
   alias TrueBG.Auth.Guardian
   alias Poison, as: JSON
+  alias TrueBG.Accounts.User
   import Plug.Conn
   import TrueBGWeb.Router.Helpers
   @endpoint TrueBGWeb.Endpoint
@@ -37,13 +38,26 @@ defmodule TrueBGWeb.Authentication do
 
   def session_create(user_name, _user_password) do
     if user_name == "app-admin" do
-      user = %TrueBG.Accounts.User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), is_admin: true, user_name: user_name}
-      {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user)
-      {:ok, 201, %{"token" => jwt}}
+      user  = create_user(user_name, true)
+      token = build_user_token(user)
+      {:ok, 201, %{"token" => token}}
     else
-      user = %TrueBG.Accounts.User{id: trunc(:binary.decode_unsigned(user_name)/10000000000000000), is_admin: false, user_name: user_name}
-      {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user)
-      {:ok, 201, %{"token" => jwt}}
+      user = create_user(user_name)
+      token = build_user_token(user)
+      {:ok, 201, %{"token" => token}}
     end
   end
+
+  def create_user(user_name, is_admin \\ false) do
+    id = Integer.mod(:binary.decode_unsigned(user_name), 100_000)
+    %TrueBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
+  end
+
+  defp build_user_token(%User{} = user) do
+      case Guardian.encode_and_sign(user) do
+        {:ok, jwt, _full_claims} -> jwt
+        _ -> raise "Problems encoding and signing a user"
+      end
+  end
+
 end

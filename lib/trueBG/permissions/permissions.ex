@@ -8,7 +8,6 @@ defmodule TrueBG.Permissions do
 
   alias TrueBG.Permissions.AclEntry
   alias TrueBG.Permissions.Role
-  alias TrueBG.Accounts
   alias TrueBG.Accounts.User
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
@@ -30,15 +29,15 @@ defmodule TrueBG.Permissions do
   @doc """
 
   """
-  def get_acl_entry_by_principal_and_resource(%{user: user, domain_group: domain_group}) do
-    Repo.get_by(AclEntry, principal_type: "user", principal_id: user.id, resource_type: "domain_group", resource_id: domain_group.id)
+  def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, domain_group: domain_group}) do
+    Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group.id)
   end
 
   @doc """
 
   """
-  def get_acl_entry_by_principal_and_resource(%{user: user, data_domain: data_domain}) do
-    Repo.get_by(AclEntry, principal_type: "user", principal_id: user.id, resource_type: "data_domain", resource_id: data_domain.id)
+  def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, data_domain: data_domain}) do
+    Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain.id)
   end
 
   @doc """
@@ -135,8 +134,7 @@ defmodule TrueBG.Permissions do
   def get_role_in_resource(%{user_id: principal_id, data_domain_id: resource_id}) do
     data_domain = Taxonomies.get_data_domain!(resource_id)
     data_domain = data_domain |> Repo.preload(:domain_group)
-    user = Accounts.get_user!(principal_id)
-    role_name = get_resource_role(%{user: user, data_domain: data_domain})
+    role_name = get_resource_role(%{user_id: principal_id, data_domain: data_domain})
     %Role{name: role_name}
   end
 
@@ -146,12 +144,11 @@ defmodule TrueBG.Permissions do
   def get_role_in_resource(%{user_id: principal_id, domain_group_id: resource_id}) do
     domain_group = Taxonomies.get_domain_group(resource_id)
     domain_group = domain_group |> Repo.preload(:parent)
-    user = Accounts.get_user!(principal_id)
-    role_name = get_resource_role(%{user: user, domain_group: domain_group, role: nil})
+    role_name = get_resource_role(%{user_id: principal_id, domain_group: domain_group, role: nil})
     %Role{name: role_name}
   end
 
-  defp get_resource_role(%{user: %User{}, data_domain: %DataDomain{domain_group_id: nil}, role: nil} = attrs) do
+  defp get_resource_role(%{user_id: _principal_id, data_domain: %DataDomain{domain_group_id: nil}, role: nil} = attrs) do
     case get_role_by_principal_and_resource(attrs) do
       nil ->
         get_default_role()
@@ -160,7 +157,7 @@ defmodule TrueBG.Permissions do
     end
   end
 
-  defp get_resource_role(%{user: %User{}, data_domain: %DataDomain{domain_group_id: nil}, role: role} = attrs) do
+  defp get_resource_role(%{user_id: _principal_id, data_domain: %DataDomain{domain_group_id: nil}, role: role} = attrs) do
     case get_role_by_principal_and_resource(attrs) do
       nil ->
         role.name
@@ -169,14 +166,14 @@ defmodule TrueBG.Permissions do
     end
   end
 
-  defp get_resource_role(%{user: %User{} = user, data_domain: %DataDomain{} = data_domain} = attrs) do
+  defp get_resource_role(%{user_id: principal_id, data_domain: %DataDomain{} = data_domain} = attrs) do
     role = get_role_by_principal_and_resource(attrs)
     parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group_id)
     parent_domain_group = parent_domain_group |> Repo.preload(:parent)
-    get_resource_role(%{user: user, domain_group: parent_domain_group, role: role})
+    get_resource_role(%{user_id: principal_id, domain_group: parent_domain_group, role: role})
   end
 
-  defp get_resource_role(%{user: %User{}, domain_group: %DomainGroup{parent_id: nil}, role: nil} = attrs) do
+  defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{parent_id: nil}, role: nil} = attrs) do
     case get_role_by_principal_and_resource(attrs) do
       nil ->
         get_default_role()
@@ -185,7 +182,7 @@ defmodule TrueBG.Permissions do
     end
   end
 
-  defp get_resource_role(%{user: %User{}, domain_group: %DomainGroup{parent_id: nil}, role: role} = attrs) do
+  defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{parent_id: nil}, role: role} = attrs) do
     case get_role_by_principal_and_resource(attrs) do
       nil ->
         role.name
@@ -194,14 +191,14 @@ defmodule TrueBG.Permissions do
     end
   end
 
-  defp get_resource_role(%{user: %User{} = user, domain_group: %DomainGroup{} = domain_group, role: nil} = attrs) do
+  defp get_resource_role(%{user_id: principal_id, domain_group: %DomainGroup{} = domain_group, role: nil} = attrs) do
     role = get_role_by_principal_and_resource(attrs)
     parent_domain_group = Taxonomies.get_domain_group(domain_group.parent_id)
     parent_domain_group = parent_domain_group |> Repo.preload(:parent)
-    get_resource_role(%{user: user, role: role, domain_group: parent_domain_group})
+    get_resource_role(%{user_id: principal_id, role: role, domain_group: parent_domain_group})
   end
 
-  defp get_resource_role(%{user: %User{} = _user, domain_group: %DomainGroup{} = _domain_group, role: role}) do
+  defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{} = _domain_group, role: role}) do
     role.name
   end
 
@@ -209,7 +206,7 @@ defmodule TrueBG.Permissions do
     Role.watch |> Atom.to_string
   end
 
-  defp get_role_by_principal_and_resource(%{user: %User{}, domain_group: %DomainGroup{}} = attrs) do
+  defp get_role_by_principal_and_resource(%{user_id: _principal_id, domain_group: %DomainGroup{}} = attrs) do
     acl_entry =
       case get_acl_entry_by_principal_and_resource(attrs) do
         nil ->  nil
@@ -221,7 +218,7 @@ defmodule TrueBG.Permissions do
     end
   end
 
-  defp get_role_by_principal_and_resource(%{user: %User{}, data_domain: %DataDomain{}} = attrs) do
+  defp get_role_by_principal_and_resource(%{user_id: _principal_id, data_domain: %DataDomain{}} = attrs) do
     acl_entry =
       case get_acl_entry_by_principal_and_resource(attrs) do
         nil ->  nil

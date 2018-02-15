@@ -39,7 +39,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       conn = get conn, business_concept_path(conn, :show, id)
       business_concept = json_response(conn, 200)["data"]
 
-      %{id: id, modifier: trunc(:binary.decode_unsigned(@admin_user_name)/10000000000000000), version: 1}
+      %{id: id, modifier: Integer.mod(:binary.decode_unsigned(@admin_user_name), 100_000), version: 1}
         |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
 
       creation_attrs

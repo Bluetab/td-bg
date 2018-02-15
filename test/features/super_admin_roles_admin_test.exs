@@ -34,11 +34,7 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
     {:ok, state}
   end
 
-  defand ~r/^an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" without "super-admin" permission$/, %{user_name: user_name, password: password}, state do
-    user = get_user_by_name(state[:token_admin], user_name)
-    unless user do
-      user_create(state[:token_admin], %{user_name: user_name, password: password})
-    end
+  defand ~r/^an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" without "super-admin" permission$/, %{user_name: _user_name, password: _password}, state do
     {:ok, state}
   end
 
@@ -57,9 +53,9 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Domain Group (?<resource_name>[^"]+)$/,
           %{user_name: _user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
     domain_group_info = get_domain_group_by_name(state[:token_admin], resource_name)
-    user_info = get_user_by_name(state[:token_admin], principal_name)
+    user = create_user(principal_name)
     role_info = get_role_by_name(state[:token_admin], role_name)
-    acl_entry_params = %{principal_type: "user", principal_id: user_info["id"], resource_type: "domain_group", resource_id: domain_group_info["id"], role_id: role_info["id"]}
+    acl_entry_params = %{principal_type: "user", principal_id: user.id, resource_type: "domain_group", resource_id: domain_group_info["id"], role_id: role_info["id"]}
     {_, status_code, json_resp} = acl_entry_create(state[:token] , acl_entry_params)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
@@ -69,16 +65,16 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   end
 
   defand ~r/^the user "(?<user_name>[^"]+)" has (?<role_name>[^"]+) role in Domain Group "(?<domain_group_name>[^"]+)"$/, %{user_name: user_name, role_name: role_name, domain_group_name: domain_group_name}, state do
-    user_info = get_user_by_name(state[:token_admin], user_name)
+    user = create_user(user_name)
     domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, _status_code, role_data} = user_domain_group_role(state[:token_admin], %{user_id: user_info["id"], domain_group_id: domain_group_info["id"]})
+    {:ok, _status_code, role_data} = user_domain_group_role(state[:token_admin], %{user_id: user.id, domain_group_id: domain_group_info["id"]})
     assert role_data["data"]["name"] == role_name
   end
 
   defand ~r/^the user "(?<user_name>[^"]+)" has (?<role_name>[^"]+) role in Data Domain "(?<data_domain_name>[^"]+)"$/, %{user_name: user_name, role_name: role_name, data_domain_name: data_domain_name}, state do
-    user_info = get_user_by_name(state[:token_admin], user_name)
+    user = create_user(user_name)
     data_domain_info = get_data_domain_by_name(state[:token_admin], data_domain_name)
-    {:ok, _status_code, role_data} = user_data_domain_role(state[:token_admin], %{user_id: user_info["id"], data_domain_id: data_domain_info["id"]})
+    {:ok, _status_code, role_data} = user_data_domain_role(state[:token_admin], %{user_id: user.id, data_domain_id: data_domain_info["id"]})
     assert role_data["data"]["name"] == role_name
   end
 
@@ -87,9 +83,9 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Data Domain "(?<resource_name>[^"]+)"$/,
           %{user_name: _user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
     data_domain_info = get_data_domain_by_name(state[:token_admin], resource_name)
-    user_info = get_user_by_name(state[:token_admin], principal_name)
+    user = create_user(principal_name)
     role_info = get_role_by_name(state[:token_admin], role_name)
-    acl_entry_params = %{principal_type: "user", principal_id: user_info["id"], resource_type: "data_domain", resource_id: data_domain_info["id"], role_id: role_info["id"]}
+    acl_entry_params = %{principal_type: "user", principal_id: user.id, resource_type: "data_domain", resource_id: data_domain_info["id"], role_id: role_info["id"]}
     {_, status_code, json_resp} = acl_entry_create(state[:token] , acl_entry_params)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
