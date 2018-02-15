@@ -32,7 +32,7 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     field :status, :string
     field :reject_reason, :string
     field :mod_comments, :string
-    belongs_to :last_version, BusinessConcept
+    field :version_group_id, :binary_id, null: false
     field :version, :integer
 
     timestamps()
@@ -50,7 +50,7 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
   def create_changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
     |> cast(attrs, [:content, :type, :name, :description, :modifier,
-                    :last_change, :data_domain_id, :version,
+                    :last_change, :data_domain_id, :version_group_id, :version,
                     :mod_comments])
     |> validate_required([:content, :type, :name, :modifier, :last_change,
                           :data_domain_id, :version])

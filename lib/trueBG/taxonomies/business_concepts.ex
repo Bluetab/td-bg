@@ -7,6 +7,7 @@ defmodule TrueBG.BusinessConcepts do
   alias TrueBG.Repo
   alias TrueBG.BusinessConcepts.BusinessConcept
   alias Ecto.Changeset
+  alias Ecto.Multi
 
   @changeset "changeset"
   @content "content"
@@ -118,16 +119,19 @@ defmodule TrueBG.BusinessConcepts do
     |> Repo.update()
   end
 
-  def update_status_to_versioned(published_business_concept_id) do
-    query = from c in BusinessConcept,
-    where: c.last_version_id == ^published_business_concept_id
-    Repo.update_all query, set: [status: BusinessConcept.status.versioned]
-  end
+  def publish_business_concept(business_concept) do
+    status_published = BusinessConcept.status.published
+    attrs = %{status: status_published}
 
-  def update_last_version(new_id, old_id) do
+    version_group_id = business_concept.version_group_id
     query = from c in BusinessConcept,
-    where: c.last_version_id == ^old_id or c.id == ^old_id
-    Repo.update_all query, set: [last_version_id: new_id]
+    where: c.version_group_id == ^version_group_id and
+           c.status == ^status_published
+
+    Multi.new
+    |> Multi.update_all(:versioned, query, [set: [status: BusinessConcept.status.versioned]])
+    |> Multi.update(:published, BusinessConcept.update_status_changeset(business_concept, attrs))
+    |> Repo.transaction
   end
 
   @doc """

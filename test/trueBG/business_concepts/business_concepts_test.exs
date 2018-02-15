@@ -3,6 +3,7 @@ defmodule TrueBG.BusinessConceptsTests do
 
   alias TrueBG.Repo
   alias TrueBG.BusinessConcepts
+  alias Ecto.UUID
 
   describe "business_concepts" do
     alias TrueBG.BusinessConcepts.BusinessConcept
@@ -34,7 +35,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: %{},
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: %{},
         last_change: DateTime.utc_now()
       }
 
@@ -51,7 +53,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: nil, name: nil,
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: %{},
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: %{},
         last_change: DateTime.utc_now()
       }
 
@@ -74,7 +77,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: content,
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: content,
         last_change: DateTime.utc_now()
       }
 
@@ -98,7 +102,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: content,
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: content,
         last_change: DateTime.utc_now()
       }
 
@@ -122,7 +127,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: content,
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: content,
         last_change: DateTime.utc_now()
       }
 
@@ -144,7 +150,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: content,
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: content,
         last_change: DateTime.utc_now()
       }
 
@@ -165,7 +172,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: content,
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: content,
         last_change: DateTime.utc_now()
       }
 
@@ -184,7 +192,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1,
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1,
         last_change: DateTime.utc_now()
       }
 
@@ -203,7 +212,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: nil,
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: nil,
         last_change: DateTime.utc_now()
       }
 
@@ -218,7 +228,8 @@ defmodule TrueBG.BusinessConceptsTests do
 
       creation_attrs = %{type: "some type", name: "some name",
         description: "some description",  data_domain_id: data_domain.id,
-        modifier: user.id, version: 1, content: %{},
+        modifier: user.id, version_group_id: UUID.generate(),
+        version: 1, content: %{},
         last_change: DateTime.utc_now()
       }
 

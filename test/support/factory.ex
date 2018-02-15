@@ -2,6 +2,7 @@ defmodule TrueBG.Factory do
   @moduledoc false
   use ExMachina.Ecto, repo: TrueBG.Repo
   alias TrueBG.BusinessConcepts.BusinessConcept
+  alias Ecto.UUID
 
   def user_factory do
     %TrueBG.Accounts.User {
@@ -35,6 +36,7 @@ defmodule TrueBG.Factory do
       last_change: DateTime.utc_now(),
       data_domain: build(:data_domain),
       status: BusinessConcept.status.draft,
+      version_group_id: UUID.generate,
       version: 1,
     }
   end
