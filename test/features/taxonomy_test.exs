@@ -8,7 +8,7 @@ defmodule TrueBG.TaxonomyTest do
   import TrueBGWeb.AclEntry, only: :functions
 
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
-         %{domain_group_name: name}, state do
+     %{domain_group_name: name}, state do
 
     {:ok, status_code, json_resp} = session_create("app-admin", "mypass")
     assert rc_created() == to_response_code(status_code)
@@ -19,7 +19,7 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^following users exist with the indicated role in Domain Group "(?<domain_group_name>[^"]+)"$/,
-         %{domain_group_name: domain_group_name, table: table}, %{token_admin: token_admin} = state do
+     %{domain_group_name: domain_group_name, table: table}, %{token_admin: token_admin} = state do
 
     domain_group = get_domain_group_by_name(token_admin, domain_group_name)
     assert domain_group_name == domain_group["name"]
@@ -40,7 +40,7 @@ defmodule TrueBG.TaxonomyTest do
 
   # Scenario: Creating a Data Domain depending on an existing Domain Group
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to create a Data Domain with the name "(?<data_domain_name>[^"]+)" as child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-          %{user_name: user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
+    %{user_name: user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
 
     parent = get_domain_group_by_name(token_admin, domain_group_name)
     assert parent["name"] == domain_group_name
@@ -71,6 +71,17 @@ defmodule TrueBG.TaxonomyTest do
       assert description == data_domain["description"]
       {:ok, %{state | status_code: nil}}
     end
+  end
+
+  #And if result <result> is "Created", Data Domain "My Data Domain" is a child of Domain Group "My Group"
+  defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Data Domain "(?<data_domain_name>[^"]+)" is a child of Domain Group "(?<domain_group_name>[^"]+)"$/,
+    %{actual_result: actual_result, expected_result: expected_result, data_domain_name: data_domain_name, domain_group_name: domain_group_name}, state do
+    if actual_result == expected_result do
+      data_domain_info = get_data_domain_by_name(state[:token_admin], data_domain_name)
+      domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+      assert data_domain_info["domain_group_id"] == domain_group_info["id"]
+    end
+
   end
 
 end

@@ -17,7 +17,7 @@ Feature: Taxonomy administration
     And if result <result> is "Created", user <user> is able to see the Data Domain "My Data Domain" with following data:
        | Description |
        | First version of my Data Domain |
-    #And if result <result> is "Created", Data Domain "My Data Domain" is a child of Domain Group "My Group"
+    And if result <result> is "Created", Data Domain "My Data Domain" is a child of Domain Group "My Group"
 
     Examples:
       | user      | result       |
