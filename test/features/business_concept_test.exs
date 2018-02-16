@@ -62,17 +62,11 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: _password}, state do
-    token = build_user_token(user_name, is_admin: user_name == "app-admin")
-    {:ok, Map.merge(state, %{token: token, token_owner: user_name})}
-  end
-
   defand ~r/^"(?<user_name>[^"]+)" tries to create a business concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
           %{user_name: user_name, data_domain_name: data_domain_name, table: fields},
-          %{token_owner: token_owner, token: token, token_admin: token_admin} = state do
+          %{token_admin: token_admin} = state do
 
-    assert user_name == token_owner
-
+    token = get_user_token(user_name)
     attrs = field_value_to_api_attrs(fields, @fixed_values)
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
 
@@ -113,9 +107,9 @@ defmodule TrueBG.BusinessConceptTest do
 
   defand ~r/^"(?<user_name>[^"]+)" is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
     %{user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name, table: fields},
-    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+    %{token_admin: token_admin} = state do
 
-      assert user_name == token_owner
+      token = get_user_token(user_name)
       data_domain = get_data_domain_by_name(token_admin, data_domain_name)
       business_concept = business_concept_by_name(token, business_concept_name)
       {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
@@ -207,9 +201,9 @@ defmodule TrueBG.BusinessConceptTest do
 
   defand ~r/^"(?<user_name>[^"]+)" is not able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
     %{user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
-    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+    %{token_admin: token_admin} = state do
 
-    assert user_name == token_owner
+    token = get_user_token(user_name)
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
     business_concept = business_concept_by_name(token, business_concept_name)
     {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
@@ -233,8 +227,8 @@ defmodule TrueBG.BusinessConceptTest do
 
   defwhen ~r/^(?<user_name>[^"]+) tries to modify a business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
     %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
-    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
-      assert user_name == token_owner
+    %{token_admin: token_admin} = state do
+      token = get_user_token(user_name)
       business_concept = business_concept_by_name(token_admin, business_concept_name)
       assert business_concept_type == business_concept["type"]
       attrs = field_value_to_api_attrs(fields, @fixed_values)
@@ -244,10 +238,9 @@ defmodule TrueBG.BusinessConceptTest do
 
   defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with follwing data:$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
-    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+    %{token_admin: token_admin} = state do
 
-    assert user_name == token_owner
-
+    token = get_user_token(user_name)
     if result == status_code do
       business_concept_tmp = business_concept_by_name(token_admin, business_concept_name)
       assert business_concept_type == business_concept_tmp["type"]
@@ -263,9 +256,9 @@ defmodule TrueBG.BusinessConceptTest do
 
  defwhen ~r/^"(?<user_name>[^"]+)" tries to send for approval a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
           %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
-          %{token_owner: token_owner, token: token, token_admin: token_admin} = state do
+          %{token_admin: token_admin} = state do
 
-    assert token_owner == user_name
+    token = get_user_token(user_name)
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     {_, status_code} = business_concept_send_for_approval(token, business_concept["id"])
     {:ok, Map.merge(state, %{status_code: status_code})}
@@ -294,8 +287,8 @@ defmodule TrueBG.BusinessConceptTest do
 
   defwhen ~r/^(?<user_name>[^"]+) tries to publish a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
     %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
-    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
-      assert user_name == token_owner
+    %{token_admin: token_admin} = state do
+      token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
       {_, status_code} = business_concept_publish(token, business_concept["id"])
       {:ok, Map.merge(state, %{status_code: status_code})}
@@ -305,8 +298,8 @@ defmodule TrueBG.BusinessConceptTest do
 
   defwhen ~r/^(?<user_name>[^"]+) tries to reject a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and reject reason "(?<reject_reason>[^"]+)"$/,
     %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, reject_reason: reject_reason},
-    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
-      assert user_name == token_owner
+    %{token_admin: token_admin} = state do
+      token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
       {_, status_code} = business_concept_reject(token, business_concept["id"], reject_reason)
 
@@ -317,10 +310,9 @@ defmodule TrueBG.BusinessConceptTest do
 
   defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with follwing data::$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
-    %{token_admin: token_admin, token: token, token_owner: token_owner} = state do
+    %{token_admin: token_admin} = state do
 
-      assert user_name == token_owner
-
+      token = get_user_token(user_name)
       business_concept_version = String.to_integer(version)
 
       if result == status_code do
@@ -422,6 +414,10 @@ defmodule TrueBG.BusinessConceptTest do
        business_concept["name"] == business_concept_name &&
        business_concept["type"] == business_concept_type
      end)
+  end
+
+  defp get_user_token(user_name) do
+    build_user_token(user_name, is_admin: user_name == "app-admin")
   end
 
 end
