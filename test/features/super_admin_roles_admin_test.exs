@@ -33,27 +33,19 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
     {:ok, state}
   end
 
-  defand ~r/^an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" without "super-admin" permission$/, %{user_name: _user_name, password: _password}, state do
-    {:ok, state}
-  end
-
-  defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
-    token = build_user_token(user_name)
-    {:ok, Map.merge(state, %{token: token})}
-  end
-
   defand ~r/^user "app-admin" is logged in the application$/, %{}, state do
     token_admin = build_user_token("app-admin", is_admin: true)
     {:ok, Map.merge(state, %{token: token_admin})}
   end
 
   defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Domain Group (?<resource_name>[^"]+)$/,
-          %{user_name: _user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
+          %{user_name: user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
     domain_group_info = get_domain_group_by_name(state[:token_admin], resource_name)
     user = create_user(principal_name)
     role_info = get_role_by_name(state[:token_admin], role_name)
     acl_entry_params = %{principal_type: "user", principal_id: user.id, resource_type: "domain_group", resource_id: domain_group_info["id"], role_id: role_info["id"]}
-    {_, status_code, json_resp} = acl_entry_create(state[:token] , acl_entry_params)
+    token = get_user_token(user_name)
+    {_, status_code, json_resp} = acl_entry_create(token , acl_entry_params)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
@@ -78,12 +70,13 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   #Scenario
 
   defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Data Domain "(?<resource_name>[^"]+)"$/,
-          %{user_name: _user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
+          %{user_name: user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
     data_domain_info = get_data_domain_by_name(state[:token_admin], resource_name)
     user = create_user(principal_name)
     role_info = get_role_by_name(state[:token_admin], role_name)
     acl_entry_params = %{principal_type: "user", principal_id: user.id, resource_type: "data_domain", resource_id: data_domain_info["id"], role_id: role_info["id"]}
-    {_, status_code, json_resp} = acl_entry_create(state[:token] , acl_entry_params)
+    token = get_user_token(user_name)
+    {_, status_code, json_resp} = acl_entry_create(token , acl_entry_params)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
@@ -108,4 +101,9 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
       HTTPoison.post!(acl_entry_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
+
+  defp get_user_token(user_name) do
+    build_user_token(user_name, is_admin: user_name == "app-admin")
+  end
+
 end
