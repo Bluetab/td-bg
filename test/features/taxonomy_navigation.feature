@@ -14,8 +14,7 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group" with following data:
       | Description |
       | First version of My Child Group |
-    And user "app-admin" is logged in the application with password "mypass"
-    When user tries to query a list of all Domain Groups without parent
+    When user "app-admin" tries to query a list of all Domain Groups without parent
     Then user sees following list:
       | name                   | description                             |
       | My Parent Group        | First version of My Parent Group        |
@@ -36,8 +35,7 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
     And an existing Domain Group called "My Fourth Child Group" child of Domain Group "My Parent Group" with following data:
       | Description |
       | First version of My Fourth Child Group |
-    And user "app-admin" is logged in the application with password "mypass"
-    When user tries to query a list of all Domain Groups children of Domain Group "My Parent Group"
+    When user "app-admin" tries to query a list of all Domain Groups children of Domain Group "My Parent Group"
     Then user sees following list:
       | name                   | description                             |
       | My Child Group         | First version of My Child Group         |
@@ -60,8 +58,7 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
     And an existing Data Domain called "My Fourth Data Domain" child of Domain Group "My Child Group" with following data:
       | Description |
       | First version of My Fourth Data Domain |
-    And user "app-admin" is logged in the application with password "mypass"
-    When user tries to query a list of all Data Domains children of Domain Group "My Child Group"
+    When user "app-admin" tries to query a list of all Data Domains children of Domain Group "My Child Group"
     Then user sees following list:
       | name                   | description                             |
       | My Data Domain         | First version of My Data Domain         |
@@ -96,8 +93,7 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
        | Type              | Policy                                                             |
        | Name              | My Second Business Concept of this type                            |
        | Description       | This is the first description of my second policy                  |
-     And user "app-admin" is logged in the application with password "mypass"
-     When user tries to query a list of all Business Concepts children of Data Domain "My Data Domain"
+     When user "app-admin" tries to query a list of all Business Concepts children of Data Domain "My Data Domain"
      Then user sees following business concepts list:
        | name                                    | type           | status | description                                              |
        | My First Business Concept of this type  | Business Term  | draft  | This is the first description of my first business term  |

@@ -34,7 +34,6 @@ Feature: Business Concepts administration
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
     And an existing Business Concept type called "Business Term" with empty definition
-    And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Field             | Value                                                                   |
       | Type              | Business Term                                                           |
@@ -65,7 +64,6 @@ Feature: Business Concepts administration
      | Related Area     | string        | 100      |                                              |    NO     |               |
      | Default Value    | string        | 100      |                                              |    NO     |               |
      | Additional Data  | string        | 500      |                                              |    NO     |               |
-    And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Field             | Value                                                              |
       | Type              | Business Term                                                      |
@@ -107,7 +105,6 @@ Feature: Business Concepts administration
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    And user "<user>" is logged in the application with password "<user>"
     When "<user>" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Field             | Value                                                                   |
       | Type              | Business Term                                                           |
@@ -132,7 +129,6 @@ Feature: Business Concepts administration
      | Description       | This is the first description of my business term which is very simple  |
     And an existing Domain Group called "My Second Parent Group"
     And an existing Data Domain called "My Second Domain" child of Domain Group "My Second Parent Group"
-    And user "app-admin" is logged in the application with password "mypass"
     When "app-admin" tries to create a business concept in the Data Domain "My Second Domain" with following data:
      | Field             | Value                                                                   |
      | Type              | Business Term                                                           |
@@ -170,7 +166,6 @@ Feature: Business Concepts administration
     | Related Area     | string        | 100      |                                              |    NO     |               |
     | Default Value    | string        | 100      |                                              |    NO     |               |
     | Additional Data  | string        | 500      |                                              |    NO     |               |
-   And user "<user>" is logged in the application with password "<user>"
    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
      | Field             | Value                                                                    |
      | Type              | Business Term                                                            |
@@ -228,7 +223,6 @@ Feature: Business Concepts administration
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with empty definition
-    And user "<user>" is logged in the application with password "<user>"
     And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
       | Field             | Value                                                              |
       | Type              | Business Term                                                      |
@@ -263,7 +257,6 @@ Feature: Business Concepts administration
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with empty definition
-    And user "<user>" is logged in the application with password "<user>"
     And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
       | Field             | Value                                                              |
       | Type              | Business Term                                                      |
@@ -301,7 +294,6 @@ Feature: Business Concepts administration
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with empty definition
-    And user "<user>" is logged in the application with password "<user>"
     And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
       | Field             | Value                                             |
       | Type              | Business Term                                     |
@@ -339,7 +331,6 @@ Feature: Business Concepts administration
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with empty definition
-    And user "<user>" is logged in the application with password "<user>"
     And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
       | Field             | Value                                             |
       | Type              | Business Term                                     |

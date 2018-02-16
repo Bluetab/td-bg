@@ -39,7 +39,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
       conn = get conn, business_concept_path(conn, :show, id)
       business_concept = json_response(conn, 200)["data"]
 
-      %{id: id, modifier: 1, version: 1}
+      %{id: id, modifier: Integer.mod(:binary.decode_unsigned(@admin_user_name), 100_000), version: 1}
         |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
 
       creation_attrs
@@ -65,7 +65,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
 
     @tag authenticated_user: @admin_user_name
     test "renders business_concept when data is valid", %{conn: conn} do
-      user = insert(:user)
+      user = build(:user)
       business_concept = insert(:business_concept,
                                 type: "empty", modifier:  user.id)
       id =  business_concept |> Map.get(:id)
@@ -90,7 +90,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
 
     @tag authenticated_user: @admin_user_name
     test "renders errors when data is invalid", %{conn: conn} do
-      user = insert(:user)
+      user = build(:user)
       business_concept = insert(:business_concept,
                                 type: "empty", modifier:  user.id)
 
@@ -108,7 +108,7 @@ defmodule TrueBGWeb.BusinessConceptControllerTest do
   describe "delete business_concept" do
     @tag authenticated_user: @admin_user_name
     test "deletes chosen business_concept", %{conn: conn} do
-      user = insert(:user)
+      user = build(:user)
       business_concept = insert(:business_concept,
                                 type: "empty", modifier:  user.id)
 

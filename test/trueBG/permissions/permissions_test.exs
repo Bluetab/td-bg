@@ -10,7 +10,7 @@ defmodule TrueBG.PermissionsTest do
     @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
 
     def acl_entry_fixture do
-      user = insert(:user)
+      user = build(:user)
       domain_group = insert(:domain_group)
       role = insert(:role)
       acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
@@ -35,7 +35,7 @@ defmodule TrueBG.PermissionsTest do
     end
 
     test "create_acl_entry/1 with valid data creates a acl_entry" do
-      user = insert(:user)
+      user = build(:user)
       domain_group = insert(:domain_group)
       role = insert(:role)
       valid_attrs = %{principal_id: user.id, principal_type: "user", resource_id: domain_group.id, resource_type: "domain_group", role_id: role.id}

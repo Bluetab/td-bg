@@ -14,8 +14,6 @@ Feature: Roles Admin
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-    And an existing user "johndoe" with password "secret" without "super-admin" permission
-    And user "app-admin" is logged in the application
     When "app-admin" grants <role> role to user "johndoe" in Domain Group <group>
     Then the system returns a result with code "Created"
     And the user "johndoe" has <parent_group_role> role in Domain Group "My Parent Group"
@@ -35,8 +33,6 @@ Feature: Roles Admin
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-    And an existing user "johndoe" with password "secret" without "super-admin" permission
-    And user "app-admin" is logged in the application
     When "app-admin" grants <role> role to user "johndoe" in Data Domain "My Domain"
     Then the system returns a result with code "Created"
     And the user "johndoe" has <parent_group_role> role in Domain Group "My Parent Group"
@@ -48,38 +44,3 @@ Feature: Roles Admin
       | admin   | watch              | watch            | admin       |
       | publish | watch              | watch            | publish     |
       | create  | watch              | watch            | create      |
-
-#  Scenario Outline: Granting roles by non admin user to domain group
-#    Given an existing user "johndoe" with password "pas2w0rd" without "super-admin" permission
-#    And an existing user "hariseldon" with password "fundaci0n" without "super-admin" permission
-#    And user "johndoe" is logged in the application
-#    When "johndoe" grants <role> role to user "hariseldon" in Domain Group <group>
-#    Then the system returns a result with code "Forbidden"
-#    And the user "hariseldon" has "watch" role in Domain Group "Risks"
-#    And the user "hariseldon" has "watch" role in Domain Group "Markets"
-#    And the user "hariseldon" has "watch" role in Data Domain "Credit Risks"
-#
-#    Examples:
-#      | role    | group   |
-#      | admin   | Risks   |
-#      | admin   | Markets |
-#      | publish | Risks   |
-#      | publish | Markets |
-#      | create  | Risks   |
-#      | create  | Markets |
-#
-#  Scenario Outline: Granting roles by non admin user to data domain
-#    Given an existing user "johndoe" with password "pas2w0rd" without "super-admin" permission
-#    And an existing user "hariseldon" with password "fundaci0n" without "super-admin" permission
-#    And user "johndoe" is logged in the application
-#    When "johndoe" grants <role> role to user "hariseldon" in Data Domain "Credit Risks"
-#    Then the system returns a result with code "Forbidden"
-#    And the user "hariseldon" has <parent_group_role> role in Domain Group "Risks"
-#    And the user "hariseldon" has <child_group_role> role in Domain Group "Markets"
-#    And the user "hariseldon" has <domain_role> role in Data Domain "Credit Risks"
-#
-#    Examples:
-#      | role    | parent_group_role  | child_group_role | domain_role |
-#      | admin   | watch              | watch            | watch       |
-#      | publish | watch              | watch            | watch       |
-#      | create  | watch              | watch            | watch       |

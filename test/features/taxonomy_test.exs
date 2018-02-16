@@ -10,10 +10,9 @@ defmodule TrueBG.TaxonomyTest do
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
      %{domain_group_name: name}, state do
 
-    {:ok, status_code, json_resp} = session_create("app-admin", "mypass")
-    assert rc_created() == to_response_code(status_code)
-    state = Map.merge(state, %{status_code: status_code, token_admin: json_resp["token"], resp: json_resp})
-    {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
+    token_admin = build_user_token("app-admin", is_admin: true)
+    state = Map.merge(state, %{token_admin: token_admin})
+    {:ok, status_code, _json_resp} = domain_group_create(token_admin,  %{name: name})
     assert rc_created() == to_response_code(status_code)
     {:ok, state}
   end
@@ -27,7 +26,7 @@ defmodule TrueBG.TaxonomyTest do
     create_user_and_acl_entries_fn = fn(x) ->
       user_name = x[:user]
       role_name = x[:role]
-      {_, _, %{"data" => %{"id" => principal_id}}} = user_create(token_admin, %{user_name: user_name, password: user_name})
+      principal_id = create_user(user_name).id
       %{"id" => role_id} = get_role_by_name(token_admin, role_name)
       acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group["id"], role_id: role_id}
       {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)
@@ -44,9 +43,8 @@ defmodule TrueBG.TaxonomyTest do
 
     parent = get_domain_group_by_name(token_admin, domain_group_name)
     assert parent["name"] == domain_group_name
-    {:ok, status_code, json_resp} = session_create(user_name, user_name)
-    assert rc_created() == to_response_code(status_code)
-    {_, status_code, _json_resp} = data_domain_create(json_resp["token"], %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
+    token = build_user_token(user_name)
+    {_, status_code, _json_resp} = data_domain_create(token, %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -60,11 +58,10 @@ defmodule TrueBG.TaxonomyTest do
          %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]},
          state do
     if actual_result == expected_result do
-      {:ok, status_code, json_resp} = session_create(user_name, user_name)
-      assert rc_created() == to_response_code(status_code)
-      data_domain_info = get_data_domain_by_name(json_resp["token"], data_domain_name)
+      token  = build_user_token(user_name)
+      data_domain_info = get_data_domain_by_name(token, data_domain_name)
       assert data_domain_name == data_domain_info["name"]
-      {:ok, status_code, json_resp} = data_domain_show(json_resp["token"], data_domain_info["id"])
+      {:ok, status_code, json_resp} = data_domain_show(token, data_domain_info["id"])
       assert rc_ok() == to_response_code(status_code)
       data_domain = json_resp["data"]
       assert data_domain_name == data_domain["name"]

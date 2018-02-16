@@ -5,10 +5,8 @@ defmodule TrueBGWeb.Authentication do
   """
   alias Phoenix.ConnTest
   alias TrueBG.Auth.Guardian
-  alias Poison, as: JSON
+  alias TrueBG.Accounts.User
   import Plug.Conn
-  import TrueBGWeb.Router.Helpers
-  @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
 
   def put_auth_headers(conn, jwt) do
@@ -35,25 +33,24 @@ defmodule TrueBGWeb.Authentication do
     [@headers, {"authorization", "Bearer #{token}"}]
   end
 
-  def session_create(user_name, user_password) do
-    body = %{user: %{user_name: user_name, password: user_password}} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(session_url(@endpoint, :create), body, [@headers], [])
-    {:ok, status_code, resp |> JSON.decode!}
+  def create_user(user_name, opts \\ []) do
+    id = Integer.mod(:binary.decode_unsigned(user_name), 100_000)
+    is_admin = Keyword.get(opts, :is_admin, false)
+    %TrueBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
   end
 
-  def session_destroy(token) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.delete!(session_url(@endpoint, :destroy), headers, [])
-    {:ok, status_code}
+  def build_user_token(%User{} = user) do
+      case Guardian.encode_and_sign(user) do
+        {:ok, jwt, _full_claims} -> jwt
+        _ -> raise "Problems encoding and signing a user"
+      end
   end
 
-  def session_change_password(token, old_password, new_password) do
-    headers = get_header(token)
-    body = %{old_passord: old_password, new_password: new_password} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-      HTTPoison.put!(session_url(@endpoint, :change_password), body, headers, [])
-      {:ok, status_code}
+  def build_user_token(user_name, opts \\ []) when is_binary(user_name) do
+    build_user_token(create_user(user_name, opts))
+  end
+
+  def get_user_token(user_name) do
+    build_user_token(user_name, is_admin: user_name == "app-admin")
   end
 end
