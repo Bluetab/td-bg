@@ -11,7 +11,7 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
-    token_admin = build_user_token("app-admin", true)
+    token_admin = build_user_token("app-admin", is_admin: true)
     state = Map.merge(state, %{token_admin: token_admin})
     {_, status_code, _json_resp} = domain_group_create(token_admin,  %{name: name})
     assert rc_created() == to_response_code(status_code)
@@ -43,7 +43,7 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   end
 
   defand ~r/^user "app-admin" is logged in the application$/, %{}, state do
-    token_admin = build_user_token("app-admin", true)
+    token_admin = build_user_token("app-admin", is_admin: true)
     {:ok, Map.merge(state, %{token: token_admin})}
   end
 

@@ -20,7 +20,7 @@ defmodule TrueBG.TaxonomyNavigationTest do
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/,
          %{domain_group_name: name, table: [%{Description: description}]}, state do
 
-    token_admin = build_user_token("app-admin", true)
+    token_admin = build_user_token("app-admin", is_admin: true)
     state = Map.merge(state, %{token_admin: token_admin})
     {:ok, status_code, json_resp} = domain_group_create(token_admin,  %{name: name, description: description})
     assert rc_created() == to_response_code(status_code)
@@ -67,7 +67,7 @@ defmodule TrueBG.TaxonomyNavigationTest do
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
          %{domain_group_name: name}, state do
 
-    token_admin = build_user_token("app-admin", true)
+    token_admin = build_user_token("app-admin", is_admin: true)
     state = Map.merge(state, %{token_admin: token_admin})
     {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
     assert rc_created() == to_response_code(status_code)

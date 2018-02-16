@@ -28,7 +28,7 @@ defmodule TrueBG.BusinessConceptTest do
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
     %{domain_group_name: domain_group_name}, state do
     token_admin = case state[:token_admin] do
-                nil -> build_user_token("app-admin", true)
+                nil -> build_user_token("app-admin", is_admin: true)
                 _ -> state[:token_admin]
               end
     {_, status_code, _json_resp} = domain_group_create(token_admin, %{name: domain_group_name})
@@ -63,7 +63,7 @@ defmodule TrueBG.BusinessConceptTest do
   end
 
   defwhen ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: _password}, state do
-    token = build_user_token(user_name, user_name == "app-admin")
+    token = build_user_token(user_name, is_admin: user_name == "app-admin")
     {:ok, Map.merge(state, %{token: token, token_owner: user_name})}
   end
 
@@ -193,7 +193,7 @@ defmodule TrueBG.BusinessConceptTest do
     %{data_domain_name: data_domain_name, table: fields}, state do
     #Retriving token
     token_admin = case state[:token_admin] do
-                nil -> build_user_token("app-admin", true)
+                nil -> build_user_token("app-admin", is_admin: true)
                 _ -> state[:token_admin]
               end
 

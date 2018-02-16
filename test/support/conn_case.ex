@@ -40,10 +40,10 @@ defmodule TrueBGWeb.ConnCase do
 
     cond do
       tags[:admin_authenticated] ->
-        user = create_user(@admin_user_name, true)
+        user = create_user(@admin_user_name, is_admin: true)
         create_user_auth_conn(user)
       tags[:authenticated_user] ->
-        user = create_user(tags[:authenticated_user], true)
+        user = create_user(tags[:authenticated_user], is_admin: true)
         create_user_auth_conn(user)
        true ->
          {:ok, conn: ConnTest.build_conn()}

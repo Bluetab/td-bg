@@ -33,8 +33,9 @@ defmodule TrueBGWeb.Authentication do
     [@headers, {"authorization", "Bearer #{token}"}]
   end
 
-  def create_user(user_name, is_admin \\ false) do
+  def create_user(user_name, opts \\ []) do
     id = Integer.mod(:binary.decode_unsigned(user_name), 100_000)
+    is_admin = Keyword.get(opts, :is_admin, false)
     %TrueBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
   end
 
@@ -45,8 +46,8 @@ defmodule TrueBGWeb.Authentication do
       end
   end
 
-  def build_user_token(user_name, is_admin \\ false) when is_binary(user_name) do
-    build_user_token(create_user(user_name, is_admin))
+  def build_user_token(user_name, opts \\ []) when is_binary(user_name) do
+    build_user_token(create_user(user_name, opts))
   end
 
 end

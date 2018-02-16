@@ -7,14 +7,14 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
 
   # Scenario: Creating a Domain Group without any parent
   defgiven ~r/^user "app-admin" is logged in the application$/, %{}, state do
-    token_admin = build_user_token("app-admin", true)
+    token_admin = build_user_token("app-admin", is_admin: true)
     {:ok, Map.merge(state, %{token_admin: token_admin})}
   end
 
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
     %{domain_group_name: domain_group_name}, state do
     token_admin = case state[:token_admin] do
-                nil -> build_user_token("app-admin", true)
+                nil -> build_user_token("app-admin", is_admin: true)
                 _ -> state[:token_admin]
               end
     {_, status_code, _json_resp} = domain_group_create(token_admin, %{name: domain_group_name})
