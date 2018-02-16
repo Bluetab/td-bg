@@ -20,20 +20,18 @@ defmodule TrueBG.TaxonomyNavigationTest do
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/,
          %{domain_group_name: name, table: [%{Description: description}]}, state do
 
-    {:ok, status_code, json_resp} = session_create("app-admin", "mypass")
-    assert rc_created() == to_response_code(status_code)
-    state = Map.merge(state, %{status_code: status_code, token_admin: json_resp["token"], resp: json_resp})
-    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, description: description})
+    token_admin = build_user_token("app-admin", true)
+    state = Map.merge(state, %{token_admin: token_admin})
+    {:ok, status_code, json_resp} = domain_group_create(token_admin,  %{name: name, description: description})
     assert rc_created() == to_response_code(status_code)
     domain_group = json_resp["data"]
     assert domain_group["description"] == description
     {:ok, state}
   end
 
-  defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
-    {_, status_code, json_resp} = session_create(user_name, password)
-    assert rc_created() == to_response_code(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
+  defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: _password}, state do
+    token = build_user_token(user_name)
+    {:ok, Map.merge(state, %{token: token})}
   end
 
   defwhen ~r/^user tries to query a list of all Domain Groups without parent$/, _vars, state do
@@ -69,9 +67,8 @@ defmodule TrueBG.TaxonomyNavigationTest do
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
          %{domain_group_name: name}, state do
 
-    {:ok, status_code, json_resp} = session_create("app-admin", "mypass")
-    assert rc_created() == to_response_code(status_code)
-    state = Map.merge(state, %{status_code: status_code, token_admin: json_resp["token"], resp: json_resp})
+    token_admin = build_user_token("app-admin", true)
+    state = Map.merge(state, %{token_admin: token_admin})
     {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
     assert rc_created() == to_response_code(status_code)
     {:ok, state}

@@ -28,9 +28,7 @@ defmodule TrueBG.BusinessConceptTest do
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
     %{domain_group_name: domain_group_name}, state do
     token_admin = case state[:token_admin] do
-                nil ->
-                  {_, _, %{"token" => token}} = session_create("app-admin", "mypass")
-                  token
+                nil -> build_user_token("app-admin", true)
                 _ -> state[:token_admin]
               end
     {_, status_code, _json_resp} = domain_group_create(token_admin, %{name: domain_group_name})
@@ -64,10 +62,9 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
-    {_, status_code, %{"token" => token} = json_resp} = session_create(user_name, password)
-    assert rc_created() == to_response_code(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, resp: json_resp, token: token, token_owner: user_name})}
+  defwhen ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: _password}, state do
+    token = build_user_token(user_name, user_name == "app-admin")
+    {:ok, Map.merge(state, %{token: token, token_owner: user_name})}
   end
 
   defand ~r/^"(?<user_name>[^"]+)" tries to create a business concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
@@ -196,9 +193,7 @@ defmodule TrueBG.BusinessConceptTest do
     %{data_domain_name: data_domain_name, table: fields}, state do
     #Retriving token
     token_admin = case state[:token_admin] do
-                nil ->
-                  {_, _, %{"token" => token}} = session_create("app-admin", "mypass")
-                  token
+                nil -> build_user_token("app-admin", true)
                 _ -> state[:token_admin]
               end
 

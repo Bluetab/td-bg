@@ -5,11 +5,8 @@ defmodule TrueBGWeb.Authentication do
   """
   alias Phoenix.ConnTest
   alias TrueBG.Auth.Guardian
-  alias Poison, as: JSON
   alias TrueBG.Accounts.User
   import Plug.Conn
-  import TrueBGWeb.Router.Helpers
-  @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
 
   def put_auth_headers(conn, jwt) do
@@ -34,18 +31,6 @@ defmodule TrueBGWeb.Authentication do
 
   def get_header(token) do
     [@headers, {"authorization", "Bearer #{token}"}]
-  end
-
-  def session_create(user_name, _user_password) do
-    if user_name == "app-admin" do
-      user  = create_user(user_name, true)
-      token = build_user_token(user)
-      {:ok, 201, %{"token" => token}}
-    else
-      user = create_user(user_name)
-      token = build_user_token(user)
-      {:ok, 201, %{"token" => token}}
-    end
   end
 
   def create_user(user_name, is_admin \\ false) do

@@ -11,10 +11,9 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
-    {_, status_code, json_resp} = session_create("app-admin", "mypass")
-    assert rc_created() == to_response_code(status_code)
-    state = Map.merge(state, %{status_code: status_code, token_admin: json_resp["token"], resp: json_resp})
-    {_, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
+    token_admin = build_user_token("app-admin", true)
+    state = Map.merge(state, %{token_admin: token_admin})
+    {_, status_code, _json_resp} = domain_group_create(token_admin,  %{name: name})
     assert rc_created() == to_response_code(status_code)
     {:ok, state}
   end
@@ -39,15 +38,13 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
   end
 
   defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: password}, state do
-    {_, status_code, json_resp} = session_create(user_name, password)
-    assert rc_created() == to_response_code(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
+    token = build_user_token(user_name)
+    {:ok, Map.merge(state, %{token: token})}
   end
 
   defand ~r/^user "app-admin" is logged in the application$/, %{}, state do
-    {_, status_code, json_resp} = session_create("app-admin", "mypass")
-    assert rc_created() == to_response_code(status_code)
-    {:ok, Map.merge(state, %{status_code: status_code, token: json_resp["token"], resp: json_resp})}
+    token_admin = build_user_token("app-admin", true)
+    {:ok, Map.merge(state, %{token: token_admin})}
   end
 
   defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Domain Group (?<resource_name>[^"]+)$/,
