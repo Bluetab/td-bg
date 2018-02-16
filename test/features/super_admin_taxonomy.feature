@@ -108,7 +108,7 @@ Feature: Super-admin Taxonomy administration
      And the user "app-admin" is able to see the Data Domain "Credit Risks" with following data:
        | Description |
        | Second version of Credit Risks |
-  
+
   # Scenario: Trying to modify a non existing Data Domain
   #   Given user "app-admin" is logged in the application
   #   When user "app-admin" tries to modify a Data Domain with the name "Imaginary Domain" introducing following data:

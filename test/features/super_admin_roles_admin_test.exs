@@ -102,8 +102,4 @@ defmodule TrueBG.SuperAdminRolesAdminTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp get_user_token(user_name) do
-    build_user_token(user_name, is_admin: user_name == "app-admin")
-  end
-
 end

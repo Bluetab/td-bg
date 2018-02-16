@@ -416,8 +416,4 @@ defmodule TrueBG.BusinessConceptTest do
      end)
   end
 
-  defp get_user_token(user_name) do
-    build_user_token(user_name, is_admin: user_name == "app-admin")
-  end
-
 end

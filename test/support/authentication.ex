@@ -50,4 +50,7 @@ defmodule TrueBGWeb.Authentication do
     build_user_token(create_user(user_name, opts))
   end
 
+  def get_user_token(user_name) do
+    build_user_token(user_name, is_admin: user_name == "app-admin")
+  end
 end

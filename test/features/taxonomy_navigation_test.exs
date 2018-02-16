@@ -29,14 +29,10 @@ defmodule TrueBG.TaxonomyNavigationTest do
     {:ok, state}
   end
 
-  defand ~r/^user "(?<user_name>[^"]+)" is logged in the application with password "(?<password>[^"]+)"$/, %{user_name: user_name, password: _password}, state do
-    token = build_user_token(user_name)
-    {:ok, Map.merge(state, %{token: token})}
-  end
-
-  defwhen ~r/^user tries to query a list of all Domain Groups without parent$/, _vars, state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domain Groups without parent$/, %{user_name: user_name}, state do
     # Your implementation here
-    {:ok, status_code, json_resp} = root_domain_group_list(state[:token])
+    token = get_user_token(user_name)
+    {:ok, status_code, json_resp} = root_domain_group_list(token)
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
@@ -66,7 +62,6 @@ defmodule TrueBG.TaxonomyNavigationTest do
   #Scenario
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
          %{domain_group_name: name}, state do
-
     token_admin = build_user_token("app-admin", is_admin: true)
     state = Map.merge(state, %{token_admin: token_admin})
     {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
@@ -132,9 +127,11 @@ defmodule TrueBG.TaxonomyNavigationTest do
     {:ok, Map.merge(state, %{})}
   end
 
-  defwhen ~r/^user tries to query a list of all Domain Groups children of Domain Group "(?<domain_group_name>[^"]+)"$/, %{domain_group_name: domain_group_name}, state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domain Groups children of Domain Group "(?<domain_group_name>[^"]+)"$/,
+    %{user_name: user_name, domain_group_name: domain_group_name}, state do
+    token = get_user_token(user_name)
     domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, status_code, json_resp} = index_domain_group_children(state[:token], %{domain_group_id: domain_group_info["id"]})
+    {:ok, status_code, json_resp} = index_domain_group_children(token, %{domain_group_id: domain_group_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
@@ -149,16 +146,20 @@ defmodule TrueBG.TaxonomyNavigationTest do
     {:ok, state}
   end
 
-  defwhen ~r/^user tries to query a list of all Data Domains children of Domain Group "(?<domain_group_name>[^"]+)"$/, %{domain_group_name: domain_group_name}, state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Data Domains children of Domain Group "(?<domain_group_name>[^"]+)"$/,
+    %{user_name: user_name, domain_group_name: domain_group_name}, state do
+    token = get_user_token(user_name)
     domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, status_code, json_resp} = index_domain_group_children_data_domain(state[:token], %{domain_group_id: domain_group_info["id"]})
+    {:ok, status_code, json_resp} = index_domain_group_children_data_domain(token , %{domain_group_id: domain_group_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
 
-  defwhen ~r/^user tries to query a list of all Business Concepts children of Data Domain "(?<data_domain_name>[^"]+)"$/, %{data_domain_name: data_domain_name}, state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Business Concepts children of Data Domain "(?<data_domain_name>[^"]+)"$/,
+    %{user_name: user_name, data_domain_name: data_domain_name}, state do
+    token = get_user_token(user_name)
     data_domain_info = get_data_domain_by_name(state[:token_admin], data_domain_name)
-    {:ok, status_code, json_resp} = index_data_domain_children_business_concept(state[:token], %{data_domain_id: data_domain_info["id"]})
+    {:ok, status_code, json_resp} = index_data_domain_children_business_concept(token, %{data_domain_id: data_domain_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
