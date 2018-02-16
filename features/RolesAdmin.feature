@@ -14,7 +14,6 @@ Feature: Roles Admin
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    And an existing user "johndoe"
     And user "<user>" is logged in the application
     When "<user>" grants <role> role to user "johndoe" in Domain Group "My Group"
     Then the system returns a result with code "<code>"
