@@ -4,6 +4,8 @@ defmodule TrueBGWeb.AclEntryController do
   alias TrueBG.Permissions
   alias TrueBG.Permissions.AclEntry
   alias TrueBGWeb.ErrorView
+  alias Guardian.Plug, as: GuardianPlug
+  import Canada
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -12,17 +14,36 @@ defmodule TrueBGWeb.AclEntryController do
     render(conn, "index.json", acl_entries: acl_entries)
   end
 
+  def to_struct(kind, attrs) do
+    struct = struct(kind)
+    Enum.reduce Map.to_list(struct), struct, fn {k, _}, acc ->
+      case Map.fetch(attrs, Atom.to_string(k)) do
+        {:ok, v} -> %{acc | k => v}
+        :error -> acc
+      end
+    end
+  end
+
   def create(conn, %{"acl_entry" => acl_entry_params}) do
-    with {:ok, %AclEntry{} = acl_entry} <- Permissions.create_acl_entry(acl_entry_params) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", acl_entry_path(conn, :show, acl_entry))
-      |> render("show.json", acl_entry: acl_entry)
-    else
-      _error ->
+    acl_entry = %AclEntry{} |> Map.merge(to_struct(AclEntry, acl_entry_params))
+    current_user = GuardianPlug.current_resource(conn)
+
+    if current_user |> can?(create(acl_entry)) do
+      with {:ok, %AclEntry{} = acl_entry} <- Permissions.create_acl_entry(acl_entry_params) do
         conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_status(:created)
+        |> put_resp_header("location", acl_entry_path(conn, :show, acl_entry))
+        |> render("show.json", acl_entry: acl_entry)
+      else
+        _error ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(ErrorView, :"422.json")
+      end
+    else
+      conn
+      |> put_status(403)
+      |> render(ErrorView, :"403")
     end
   end
 

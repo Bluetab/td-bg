@@ -6,6 +6,7 @@ defmodule TrueBG.Canary.Abilities do
   alias TrueBG.BusinessConcepts.BusinessConcept
   alias TrueBG.Permissions
   alias TrueBG.Canary.TaxonomyAbilities
+  alias TrueBG.Permissions.AclEntry
 
   defimpl Canada.Can, for: User do
 
@@ -27,6 +28,10 @@ defmodule TrueBG.Canary.Abilities do
 
     def can?(%User{} = user, :create_data_domain, %DomainGroup{} = domain_group) do
       TaxonomyAbilities.can?(user, :create_data_domain, domain_group)
+    end
+
+    def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "domain_group"} = acl_entry) do
+      TaxonomyAbilities.can?(user, :create, acl_entry)
     end
 
     def can?(%User{}, _action, BusinessConcept) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
