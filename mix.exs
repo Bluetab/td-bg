@@ -45,8 +45,6 @@ defmodule TrueBG.Mixfile do
       {:distillery, ">= 0.8.0", warn_missing: false},
       {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false},
       {:guardian, "~> 1.0"},
-      {:comeonin, "~> 4.0"},
-      {:bcrypt_elixir, "~> 1.0"},
       {:canary, "~> 1.1.1"},
       {:canada, "~> 1.0.1"},
       {:ex_machina, "~> 2.1", only: :test},
