@@ -8,7 +8,6 @@ defmodule TrueBG.Permissions do
 
   alias TrueBG.Permissions.AclEntry
   alias TrueBG.Permissions.Role
-  alias TrueBG.Accounts.User
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
   alias TrueBG.Taxonomies
