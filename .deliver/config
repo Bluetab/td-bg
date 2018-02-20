@@ -19,34 +19,3 @@ pre_erlang_get_and_update_deps() {
     "
   fi
 }
-
-pre_erlang_clean_compile() {
-  status "Preparing assets with: brunch build and phoenix.digest"
-  __sync_remote "
-    # runs the commands on the build host
-    # [ -f ~/.profile ] && source ~/.profile # load profile (optional)
-
-    export PATH=$PATH:/node-v6.11.1-linux-x64/bin
-
-    # fail if any command fails (recommended)
-    set -e
-
-    # enter the build directory on the build host (required)
-    cd '$BUILD_AT'
-
-    mkdir -p priv/static # required by the phoenix.digest task
-
-    cd assets
-
-    # installing npm dependencies
-    npm install
-
-    # building brunch
-    brunch build --production
-
-    cd ..
-
-    # run your custom task
-    APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phx.digest $SILENCE
-  "
-}
