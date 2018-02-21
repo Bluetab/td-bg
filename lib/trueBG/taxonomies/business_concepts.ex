@@ -18,6 +18,24 @@ defmodule TrueBG.BusinessConcepts do
   @variable_list "variable_list"
 
   @doc """
+  count  business conceps of indicated type name
+  and status 
+
+  """
+  def count_business_concepts(type, name, status) do
+    do_count_business_concepts(type, name, status)
+  end
+
+  defp do_count_business_concepts(_type, _name, []), do: raise "Invalid empty status list"
+  defp do_count_business_concepts(type, name, _status) when is_nil(type) or is_nil(name),  do: {:ok, 0}
+  defp do_count_business_concepts(type, name, status) do
+    count =  Repo.one(from c in BusinessConcept,
+      select: count("*"), where: c.type == ^type and
+      c.name == ^name and c.status in ^status)
+    {:ok, count}                                                    #                                                     BusinessConcept.published])
+  end
+
+  @doc """
   Returns the list of business_concepts.
 
   ## Examples
@@ -329,5 +347,4 @@ defmodule TrueBG.BusinessConcepts do
       {:error, changeset}
     end
   end
-
 end

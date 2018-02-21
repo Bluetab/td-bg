@@ -5,6 +5,7 @@ defmodule TrueBGWeb.BusinessConceptController do
   alias TrueBG.BusinessConcepts.BusinessConcept
   alias TrueBG.Taxonomies.DataDomain
   alias Ecto.UUID
+  alias TrueBGWeb.ErrorView
 
   alias Poison, as: JSON
 
@@ -27,8 +28,10 @@ defmodule TrueBGWeb.BusinessConceptController do
 
   def create(conn, %{"business_concept" => business_concept_params}) do
 
-    content_type = Map.get(business_concept_params, "type")
-    content_schema = get_content_schema(content_type)
+    concept_type = Map.get(business_concept_params, "type")
+    content_schema = get_content_schema(concept_type)
+
+    concept_name = Map.get(business_concept_params, "name")
 
     creation_attrs = business_concept_params
       |> Map.put("data_domain_id", conn.assigns.data_domain.id)
@@ -38,12 +41,18 @@ defmodule TrueBGWeb.BusinessConceptController do
       |> Map.put("version_group_id", UUID.generate)
       |> Map.put("version", 1)
 
-    with {:ok, %BusinessConcept{} = business_concept} <-
+    with {:ok, 0} <- count_business_concepts(concept_type, concept_name),
+         {:ok, %BusinessConcept{} = business_concept} <-
           BusinessConcepts.create_business_concept(creation_attrs) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", business_concept_path(conn, :show, business_concept))
       |> render("show.json", business_concept: business_concept)
+    else
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 
@@ -100,17 +109,26 @@ defmodule TrueBGWeb.BusinessConceptController do
   end
 
   defp update_draft(conn, business_concept, business_concept_params) do
-    content_schema = get_content_schema(business_concept.type)
+    concept_type = business_concept.type
+    concept_name = Map.get(business_concept_params, "name")
+    content_schema = get_content_schema(concept_type)
 
     business_concept_params = business_concept_params
       |> Map.put("content_schema", content_schema)
       |> Map.put("modifier", conn.assigns.current_user.id)
       |> Map.put("last_change", DateTime.utc_now())
 
-    with {:ok, %BusinessConcept{} = business_concept} <-
+    count = if concept_name == business_concept.name, do: 1, else: 0
+    with {:ok, ^count} <- count_business_concepts(concept_type, concept_name),
+         {:ok, %BusinessConcept{} = business_concept} <-
       BusinessConcepts.update_business_concept(business_concept,
                                                     business_concept_params) do
       render(conn, "show.json", business_concept: business_concept)
+    else
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 
@@ -138,5 +156,11 @@ defmodule TrueBGWeb.BusinessConceptController do
       |> File.read!
       |> JSON.decode!
       |> Map.get(content_type)
+  end
+
+  defp count_business_concepts(type, name) do
+    BusinessConcepts.count_business_concepts(type, name,
+                                      [BusinessConcept.status.draft,
+                                       BusinessConcept.status.published])
   end
 end

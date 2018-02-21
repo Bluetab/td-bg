@@ -238,6 +238,15 @@ defmodule TrueBG.BusinessConceptsTests do
       end
     end
 
+    test "count_business_concepts/1 invalid type/name" do
+      user = build(:user)
+      business_concept = insert(:business_concept, modifier:  user.id)
+      type = business_concept.type
+      name = business_concept.name
+      status = [BusinessConcept.status.draft, BusinessConcept.status.published]
+      assert {:ok, 1} == BusinessConcepts.count_business_concepts(type, name, status)
+    end
+
     test "update_business_concept/2 with valid data updates the business_concept" do
       user = build(:user)
       business_concept = insert(:business_concept, modifier:  user.id)
