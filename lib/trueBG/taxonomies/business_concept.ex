@@ -59,7 +59,7 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     |> validate_length(:mod_comments, max: 500)
     |> put_change(:status, Atom.to_string(:draft))
     |> unique_constraint(:business_concept,
-                                    name: :index_business_concept_by_version_name_type)
+                                name: :index_business_concept_by_version_version_group_id)
   end
 
   def update_changeset(%BusinessConcept{} = business_concept, attrs) do
@@ -71,7 +71,7 @@ defmodule TrueBG.BusinessConcepts.BusinessConcept do
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
     |> unique_constraint(:business_concept,
-                                    name: :index_business_concept_by_version_name_type)
+                                name: :index_business_concept_by_version_version_group_id)
   end
 
   @doc false
