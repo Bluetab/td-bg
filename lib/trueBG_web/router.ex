@@ -50,10 +50,10 @@ defmodule TrueBGWeb.Router do
     resources "/data_domains", DataDomainController do
       post "/business_concept", BusinessConceptController, :create
     end
-    put "/business_concepts/:id/send_por_approval", BusinessConceptController, :send_for_approval
-    put "/business_concepts/:id/reject", BusinessConceptController, :reject
-    put "/business_concepts/:id/publish", BusinessConceptController, :publish
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
+    resources "/business_concepts", BusinessConceptController do
+      patch "/status", BusinessConceptStatusController, :update
+    end
   end
 
 end

@@ -356,25 +356,25 @@ defmodule TrueBG.BusinessConceptTest do
 
   defp business_concept_send_for_approval(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{} |> JSON.encode!
+    body = %{"status" => "pending_approval"} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.put!(business_concept_url(@endpoint, :send_for_approval, business_concept_id), body, headers, [])
+        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code}
   end
 
   defp business_concept_reject(token, business_concept_id, reject_reason) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{reject_reason: reject_reason} |> JSON.encode!
+    body = %{"status" => "rejected", "reject_reason" => reject_reason} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.put!(business_concept_url(@endpoint, :reject, business_concept_id), body, headers, [])
+        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code}
   end
 
   defp business_concept_publish(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{} |> JSON.encode!
+    body = %{"status" => "published"} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.put!(business_concept_url(@endpoint, :publish, business_concept_id), body, headers, [])
+        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code}
   end
 

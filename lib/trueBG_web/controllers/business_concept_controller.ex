@@ -12,7 +12,7 @@ defmodule TrueBGWeb.BusinessConceptController do
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_business_concept
   plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create_business_concept
 
-  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update, :send_for_approval, :publish, :reject]
+  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update]
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -72,32 +72,6 @@ defmodule TrueBGWeb.BusinessConceptController do
         update_published(conn, business_concept, business_concept_params)
     end
 
-  end
-
-  def send_for_approval(conn, _parmas) do
-    business_concept = conn.assigns.business_concept
-    attrs = %{status: BusinessConcept.status.pending_approval}
-    with {:ok, %BusinessConcept{} = business_concept} <-
-          BusinessConcepts.update_business_concept_status(business_concept, attrs) do
-      render(conn, "show.json", business_concept: business_concept)
-    end
-  end
-
-  def reject(conn, %{"reject_reason" => reject_reason}) do
-    business_concept = conn.assigns.business_concept
-    attrs = %{reject_reason: reject_reason}
-    with {:ok, %BusinessConcept{} = business_concept} <-
-          BusinessConcepts.reject_business_concept(business_concept, attrs) do
-      render(conn, "show.json", business_concept: business_concept)
-    end
-  end
-
-  def publish(conn, _params) do
-    concept = conn.assigns.business_concept
-    with {:ok, %{published: %BusinessConcept{} = published}} <-
-                  BusinessConcepts.publish_business_concept(concept) do
-      render(conn, "show.json", business_concept: published)
-    end
   end
 
   def delete(conn, %{"id" => id}) do
