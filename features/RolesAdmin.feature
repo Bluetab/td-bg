@@ -14,23 +14,50 @@ Feature: Roles Admin
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    And user "<user>" is logged in the application
     When "<user>" grants <role> role to user "johndoe" in Domain Group "My Group"
     Then the system returns a result with code "<code>"
-    And if return code "<code>" is "Ok", the user "johndoe" has <group_role> role in Domain Group "My Group"
-    And if return code "<code>" is "Ok", the user "johndoe" has <domain_role> role in Data Domain "My Domain"
+    And if result "<code>" is "Created", the user "johndoe" has "<group_role>" role in Domain Group "My Group"
+    And if result "<code>" is "Created", the user "johndoe" has "<domain_role>" role in Data Domain "My Domain"
 
     Examples:
       | user       | role      | code         | group_role  | domain_role |
-      | watcher    | admin     | Unauthorized |             |             |
-      | creator    | admin     | Unauthorized |             |             |
-      | publisher  | admin     | Unauthorized |             |             |
-      | admin      | admin     | Ok           | admin       | admin       |
-      | watcher    | publish   | Unauthorized |             |             |
-      | creator    | publish   | Unauthorized |             |             |
-      | publisher  | publish   | Unauthorized |             |             |
-      | admin      | publish   | Ok           | publish     | publish     |
-      | watcher    | create    | Unauthorized |             |             |
-      | creator    | create    | Unauthorized |             |             |
-      | publisher  | create    | Unauthorized |             |             |
-      | admin      | create    | Ok           | create      | create      |
+      | watcher    | admin     | Unauthorized | -           | -           |
+      | creator    | admin     | Unauthorized | -           | -           |
+      | publisher  | admin     | Unauthorized | -           | -           |
+      | admin      | admin     | Created      | admin       | admin       |
+      | watcher    | publish   | Unauthorized | -           | -           |
+      | creator    | publish   | Unauthorized | -           | -           |
+      | publisher  | publish   | Unauthorized | -           | -           |
+      | admin      | publish   | Created      | publish     | publish     |
+      | watcher    | create    | Unauthorized | -           | -           |
+      | creator    | create    | Unauthorized | -           | -           |
+      | publisher  | create    | Unauthorized | -           | -           |
+      | admin      | create    | Created      | create      | create      |
+
+  Scenario Outline: Granting roles to data domain by domain manager
+    Given an existing Domain Group called "My Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    When "<user>" grants <role> role to user "johndoe" in Domain Group "My Domain"
+    Then the system returns a result with code "<code>"
+    And if result "<code>" is "Created", the user "johndoe" has "<domain_role>" role in Data Domain "My Domain"
+
+    Examples:
+      | user       | role      | code         | domain_role |
+      | watcher    | admin     | Unauthorized | -           |
+      | creator    | admin     | Unauthorized | -           |
+      | publisher  | admin     | Unauthorized | -           |
+      | admin      | admin     | Created      | admin       |
+      | watcher    | publish   | Unauthorized | -           |
+      | creator    | publish   | Unauthorized | -           |
+      | publisher  | publish   | Unauthorized | -           |
+      | admin      | publish   | Created      | publish     |
+      | watcher    | create    | Unauthorized | -           |
+      | creator    | create    | Unauthorized | -           |
+      | publisher  | create    | Unauthorized | -           |
+      | admin      | create    | Created      | create      |
