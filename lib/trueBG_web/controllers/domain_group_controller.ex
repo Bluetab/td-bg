@@ -68,5 +68,6 @@ defmodule TrueBGWeb.DomainGroupController do
     with {:ok, %DomainGroup{}} <- Taxonomies.delete_domain_group(domain_group) do
       send_resp(conn, :no_content, "")
     end
+    send_resp(conn, :no_content, "")
   end
 end

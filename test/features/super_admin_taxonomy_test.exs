@@ -135,4 +135,32 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
     {:ok, status_code, _json_resp} = data_domain_update(token, data_domain_info["id"], %{name: data_domain_name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
+
+  defand ~r/^an existing Domain Group called "(?<child_name>[^"]+)" child of Domain Group "(?<parent_name>[^"]+)"$/,
+    %{child_name: child_name, parent_name: parent_name},
+    _state do
+    token = get_user_token("app-admin")
+    parent = get_domain_group_by_name(token, parent_name)
+    {_, http_status_code, _json_resp} = domain_group_create(token, %{name: child_name, parent_id: parent["id"]})
+    assert rc_created() == to_response_code(http_status_code)
+  end
+
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to delete a Domain Group with the name "(?<domain_group_name>[^"]+)"$/,
+    %{user_name: user_name, domain_group_name: domain_group_name},
+    state do
+    token = get_user_token(user_name)
+    domain_group = get_domain_group_by_name(token, domain_group_name)
+    {_, status_code} = domain_group_delete(token, domain_group["id"])
+    {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defand ~r/^Domain Group "(?<child_name>[^"]+)" does not exist as child of Domain Group "(?<parent_name>[^"]+)"$/,
+    %{child_name: child_name, parent_name: parent_name},
+    _state do
+      token = get_user_token("app-admin")
+      parent = get_domain_group_by_name(token, parent_name)
+      child  = get_domain_group_by_name_and_parent(token, child_name, parent["id"])
+      assert !child
+  end
+
 end

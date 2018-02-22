@@ -8,6 +8,8 @@ defmodule TrueBG.Taxonomies.DomainGroup do
     field :description, :string
     field :name, :string
     belongs_to :parent, DomainGroup
+    field :deleted_at, :utc_datetime, default: nil
+
     timestamps()
   end
 
@@ -18,4 +20,12 @@ defmodule TrueBG.Taxonomies.DomainGroup do
       |> validate_required([:name])
       |> unique_constraint(:name)
   end
+
+  @doc false
+  def delete_changeset(%DomainGroup{} = domain_group) do
+    domain_group
+    |> cast(%{}, [])
+    |> put_change(:deleted_at, DateTime.utc_now())
+  end
+
 end

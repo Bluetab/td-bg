@@ -102,53 +102,44 @@ Feature: Super-admin Taxonomy administration
        | Description |
        | Second version of Credit Risks |
 
-  # Scenario: Trying to modify a non existing Data Domain
-  #   Given user "app-admin" is logged in the application
-  #   When user "app-admin" tries to modify a Data Domain with the name "Imaginary Domain" introducing following data:
-  #     | Description |
-  #     | Second version of Imaginary Domain |
-  #   Then the system returns a result with code "Forbidden"
-  #   And the user "app-admin" is not able to see the Data Domain "Imaginary Domain"
-  #
-  # Scenario: Deleting a Domain Group without any Group or Domain pending on it
-  #   Given user "app-admin" is logged in the application
-  #   And and existing Domain Group called "No-Data"
-  #   When "app-admin" tries to delete a Domain Group with the name "No-Data"
-  #   Then the system returns a result with code "ok"
-  #   And the user "app-admin" is not able to see the Domain Group "Risks"
-  #
-  # Scenario: Deleting a Data Domain
-  #   Given user "app-admin" is logged in the application
-  #   And an existing Domain Group called "Risks"
-  #   And an existing Data Domain called "Credit Risks" child of Domain Group "Risks"
-  #   When "app-admin" tries to delete a Data Domain with the name "Credit Risks"
-  #   Then the system returns a result with code "ok"
-  #   And the user "app-admin" is not able to see the Data Domain "Credit Risks"
-  #
-  # Scenario: Deleting a non existing Data Domain
-  #   Given user "app-admin" is logged in the application
-  #   When "app-admin" tries to delete a Data Domain with the name "Imaginary Domain"
-  #   Then the system returns a result with code "Forbidden"
-  #   And the user "app-admin" is not able to see the Data Domain "Imaginary Domain"
-  #
-  # Scenario: Deleting a Domain Group with a Data Domain pending on it
-  #   Given user "app-admin" is logged in the application
-  #   And an existing Domain Group called "Risks"
-  #   And an existing Data Domain called "Credit Risks" child of Domain Group "Risks"
-  #   When "app-admin" tries to delete a Domain Group with the name "Risks"
-  #   Then the system returns a result with code "Forbidden"
-  #   And the user "app-admin" is able to see the Domain Group "Risks"
-  #
-  # Scenario: Deleting a Domain Group with a Data Group pending on it
-  #   Given user "app-admin" is logged in the application
-  #   And an existing Domain Group called "Risks"
-  #   And an existing Domain Group called "Markets" as child of Domain Group "Risks"
-  #   When "app-admin" tries to delete a Domain Group with the name "Risks"
-  #   Then the system returns a result with code "Forbidden"
-  #   And the user "app-admin" is able to see the Domain Group "Risks"
-  #
-  # Scenario: Deleting a non existing Domain Group
-  #   Given user "app-admin" is logged in the application
-  #   When "app-admin" tries to delete a Domain Group with the name "Imaginary Group"
-  #   Then the system returns a result with code "Forbidden"
-  #   And the user "app-admin" is not able to see the Data Domain "Imaginary Group"
+   Scenario: Deleting a Domain Group without any Group or Domain pending on it
+     Given an existing Domain Group called "My Parent Group"
+     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+     When user "app-admin" tries to delete a Domain Group with the name "My Child Group"
+     Then the system returns a result with code "Deleted"
+     And Domain Group "My Child Group" does not exist as child of Domain Group "My Parent Group"
+
+  #  Scenario: Deleting a Domain Group with a Domain Group pending on it
+  #    Given an existing Domain Group called "My Parent Group"
+  #    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #    When user "app-admin" tries to delete a Domain Group with the name "My Parent Group"
+  #    Then the system returns a result with code "Unprocessable Entity"
+  #    And Domain Group "My Child Group" does not exist as child of Domain Group "My Parent Group"
+   #
+  #  Scenario: Deleting a Domain Group with a Data Domain pending on it
+  #    Given an existing Domain Group called "My Parent Group"
+  #    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #    When user "app-admin" tries to delete a Domain Group with the name "My Child Group"
+  #    Then the system returns a result with code "Unprocessable Entity"
+  #    And Domain Group "My Child Group" does not exist as child of Domain Group "My Parent Group"
+   #
+  #  Scenario: Deleting a Data Domain
+  #    Given an existing Domain Group called "My Group"
+  #    And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+  #    When user "app-admin" tries to delete a Data Domain with the name "My Domain" child of Domain Group "My Group"
+  #    Then the system returns a result with code "Ok"
+  #    And Data Domain "My Domain" is not a child of Domain Group "My Group"
+   #
+  #  Scenario: Deleting a Data Domain with existing Business Concepts pending on them
+  #    Given an existing Domain Group called "My Group"
+  #    And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+  #    And an existing Business Concept type called "Business Term" with empty definition
+  #    And an existing Business Concept in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                                                   |
+  #     | Type              | Business Term                                                           |
+  #     | Name              | My Business Term                                                        |
+  #     | Description       | This is the first description of my business term which is very simple  |
+  #    When user "app-admin" tries to delete a Data Domain with the name "My Domain" child of Domain Group "My Group"
+  #    Then the system returns a result with code "Unprocessable Entity"
+  #    And Data Domain "My Domain" is a child of Domain Group "My Group"

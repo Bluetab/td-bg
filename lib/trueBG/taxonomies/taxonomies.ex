@@ -4,6 +4,8 @@ defmodule TrueBG.Taxonomies do
   """
 
   import Ecto.Query, warn: false
+  alias Ecto.NoResultsError
+  alias Ecto.MultipleResultsError
   alias TrueBG.Repo
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
@@ -20,26 +22,21 @@ defmodule TrueBG.Taxonomies do
 
   """
   def list_domain_groups do
-    Repo.all(DomainGroup)
+    Repo.all from r in DomainGroup, where: is_nil(r.deleted_at)
   end
 
   @doc """
   Returns the list of root domain_groups (no parent)
   """
   def list_root_domain_groups do
-    query = from dg in DomainGroup,
-                 where: is_nil(dg.parent_id)
-
-    Repo.all(query)
+    Repo.all from r in DomainGroup, where: is_nil(r.parent_id) and is_nil(r.deleted_at)
   end
 
   @doc """
   Returns children of domain group id passed as argument
   """
   def list_domain_group_children(id) do
-    query = from dg in DomainGroup,
-                 where: dg.parent_id == ^id
-    Repo.all(query)
+    Repo.all from r in DomainGroup, where: r.parent_id == ^id and is_nil(r.deleted_at)
   end
 
   @doc """
@@ -64,12 +61,19 @@ defmodule TrueBG.Taxonomies do
       ** (Ecto.NoResultsError)
 
   """
-  def get_domain_group!(id), do: Repo.get!(DomainGroup, id)
+  def get_domain_group!(id) do
+    all = Repo.all from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
+    one!(all, DomainGroup)
+  end
 
-  def get_domain_group(id), do: Repo.get(DomainGroup, id)
+  def get_domain_group(id) do
+    all = Repo.all from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
+    one(all, DomainGroup)
+  end
 
   def get_domain_group_by_name(name) do
-    Repo.get_by(DomainGroup, name: name)
+    all = Repo.all from r in DomainGroup, where: r.name == ^name and is_nil(r.deleted_at)
+    one(all, DomainGroup)
   end
 
   @doc """
@@ -123,7 +127,7 @@ defmodule TrueBG.Taxonomies do
   def delete_domain_group(%DomainGroup{} = domain_group) do
     Multi.new
     |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "domain_group" and acl.resource_id == ^domain_group.id))
-    |> Multi.delete(:domain_group, domain_group)
+    |> Multi.update(:domain_group, DomainGroup.delete_changeset(domain_group))
     |> Repo.transaction
     |> case do
       {:ok, %{acl_entry: _acl_entry, domain_group: domain_group}} ->
@@ -263,6 +267,23 @@ defmodule TrueBG.Taxonomies do
   """
   def change_data_domain(%DataDomain{} = data_domain) do
     DataDomain.changeset(data_domain, %{})
+  end
+
+  defp one!(all, queryable) do
+    case all do
+      [one] -> one
+      []    -> raise NoResultsError, queryable: queryable
+      other -> raise MultipleResultsError, queryable: queryable, count: length(other)
+    end
+
+  end
+
+  defp one(all, queryable) do
+    case all do
+      [one] -> one
+      []    -> nil
+      other -> raise MultipleResultsError, queryable: queryable, count: length(other)
+    end
   end
 
 end
