@@ -7,6 +7,7 @@ defmodule TrueBG.Taxonomies do
   alias TrueBG.Repo
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
+  alias TrueBG.BusinessConcepts.BusinessConcept
   alias TrueBG.Permissions.AclEntry
   alias Ecto.Multi
 
@@ -183,6 +184,11 @@ defmodule TrueBG.Taxonomies do
   """
   def list_data_domains do
     Repo.all from r in DataDomain, where: is_nil(r.deleted_at)
+  end
+
+  def count_data_domain_business_concept_children(id) do
+    count = Repo.one from r in BusinessConcept, select: count(r.id), where: r.data_domain_id == ^id #and is_nil(r.deleted_at)
+    {:count, :business_concept, count}
   end
 
   def get_data_domain_by_name(name) do

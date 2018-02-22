@@ -392,19 +392,19 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def business_concept_by_name(token, business_concept_name) do
+  defp business_concept_by_name(token, business_concept_name) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
     Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
   end
 
-  def business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
+  defp business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
     Enum.find(json_resp["data"],
      fn(business_concept) -> business_concept["name"] == business_concept_name
      and  business_concept["type"] == business_concept_type end)
   end
 
-  def business_concept_by_version_name_and_type(token, business_concept_version,
+  defp business_concept_by_version_name_and_type(token, business_concept_version,
                                                       business_concept_name,
                                                       business_concept_type) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
@@ -415,5 +415,4 @@ defmodule TrueBG.BusinessConceptTest do
        business_concept["type"] == business_concept_type
      end)
   end
-
 end

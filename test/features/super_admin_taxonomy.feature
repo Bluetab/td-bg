@@ -131,15 +131,15 @@ Feature: Super-admin Taxonomy administration
      Then the system returns a result with code "Deleted"
      And Data Domain "My Domain" does not exist as child of Domain Group "My Group"
 
-  #  Scenario: Deleting a Data Domain with existing Business Concepts pending on them
-  #    Given an existing Domain Group called "My Group"
-  #    And an existing Data Domain called "My Domain" child of Domain Group "My Group"
-  #    And an existing Business Concept type called "Business Term" with empty definition
-  #    And an existing Business Concept in the Data Domain "My Domain" with following data:
-  #     | Field             | Value                                                                   |
-  #     | Type              | Business Term                                                           |
-  #     | Name              | My Business Term                                                        |
-  #     | Description       | This is the first description of my business term which is very simple  |
-  #    When user "app-admin" tries to delete a Data Domain with the name "My Domain" child of Domain Group "My Group"
-  #    Then the system returns a result with code "Unprocessable Entity"
-  #    And Data Domain "My Domain" is a child of Domain Group "My Group"
+   Scenario: Deleting a Data Domain with existing Business Concepts pending on them
+     Given an existing Domain Group called "My Group"
+     And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+     And an existing Business Concept type called "Business Term" with empty definition
+     And an existing Business Concept in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                                   |
+      | Type              | Business Term                                                           |
+      | Name              | My Business Term                                                        |
+      | Description       | This is the first description of my business term which is very simple  |
+     When user "app-admin" tries to delete a Data Domain with the name "My Domain" child of Domain Group "My Group"
+     Then the system returns a result with code "Unprocessable Entity"
+     And Data Domain "My Domain" is a child of Domain Group "My Group"

@@ -2,6 +2,7 @@ defmodule TrueBGWeb.DataDomainController do
   use TrueBGWeb, :controller
 
   import Plug.Conn
+  alias TrueBGWeb.ErrorView
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
@@ -45,8 +46,18 @@ defmodule TrueBGWeb.DataDomainController do
 
   def delete(conn, %{"id" => id}) do
     data_domain = Taxonomies.get_data_domain!(id)
-    with {:ok, %DataDomain{}} <- Taxonomies.delete_data_domain(data_domain) do
+    with {:count, :business_concept, 0} <- Taxonomies.count_data_domain_business_concept_children(id),
+         {:ok, %DataDomain{}} <- Taxonomies.delete_data_domain(data_domain) do
       send_resp(conn, :no_content, "")
+    else
+      {:count, :business_concept, n}  when is_integer(n) ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 end
