@@ -3,6 +3,7 @@ defmodule TrueBG.TaxonomiesTest do
 
   alias TrueBG.Taxonomies
   alias TrueBG.Permissions
+  alias Ecto.Changeset
 
   describe "domain_groups" do
     alias TrueBG.Taxonomies.DomainGroup
@@ -54,6 +55,11 @@ defmodule TrueBG.TaxonomiesTest do
       assert domain_group.name == "some name"
     end
 
+    test "create_domain_group/1 tow domain groups with valid data" do
+      assert {:ok, %DomainGroup{}} = Taxonomies.create_domain_group(@valid_attrs)
+      assert {:error, %Changeset{}} = Taxonomies.create_domain_group(@valid_attrs)
+    end
+
     test "create_domain_group/2 child of a parent group" do
       parent_domain_group = domain_group_fixture()
       child_attrs = Map.put(@child_attrs, :parent_id, parent_domain_group.id)
@@ -86,6 +92,12 @@ defmodule TrueBG.TaxonomiesTest do
       domain_group = domain_group_fixture()
       assert {:ok, %DomainGroup{}} = Taxonomies.delete_domain_group(domain_group)
       assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain_group!(domain_group.id) end
+    end
+
+    test "delete_domain_group/1 deletes the domain_group an create the same group" do
+      assert {:ok, %DomainGroup{} = domain_group} = Taxonomies.create_domain_group(@valid_attrs)
+      assert {:ok, %DomainGroup{}} = Taxonomies.delete_domain_group(domain_group)
+      assert {:ok, %DomainGroup{}} = Taxonomies.create_domain_group(@valid_attrs)
     end
 
     test "delete acl_entries when deleting domain_group with acl_entries" do
