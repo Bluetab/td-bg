@@ -182,11 +182,12 @@ defmodule TrueBG.Taxonomies do
 
   """
   def list_data_domains do
-    Repo.all(DataDomain)
+    Repo.all from r in DataDomain, where: is_nil(r.deleted_at)
   end
 
   def get_data_domain_by_name(name) do
-    Repo.get_by(DataDomain, name: name)
+    all = Repo.all from r in DataDomain, where: r.name == ^name and is_nil(r.deleted_at)
+    one(all, DataDomain)
   end
 
   @doc """
@@ -203,7 +204,10 @@ defmodule TrueBG.Taxonomies do
       ** (Ecto.NoResultsError)
 
   """
-  def get_data_domain!(id), do: Repo.get!(DataDomain, id)
+  def get_data_domain!(id) do
+    all = Repo.all from r in DataDomain, where: r.id == ^id and is_nil(r.deleted_at)
+    one!(all, DataDomain)
+  end
 
   @doc """
   Creates a data_domain.
@@ -256,7 +260,7 @@ defmodule TrueBG.Taxonomies do
   def delete_data_domain(%DataDomain{} = data_domain) do
     Multi.new
     |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "data_domain" and acl.resource_id == ^data_domain.id))
-    |> Multi.delete(:data_domain, data_domain)
+    |> Multi.update(:data_domain, DataDomain.delete_changeset(data_domain))
     |> Repo.transaction
     |> case do
          {:ok, %{acl_entry: _acl_entry, data_domain: data_domain}} ->

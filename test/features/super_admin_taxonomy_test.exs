@@ -172,4 +172,21 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
       assert child
   end
 
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to delete a Data Domain with the name "(?<child_name>[^"]+)" child of Domain Group "(?<parent_name>[^"]+)"$/,
+    %{user_name: user_name, child_name: child_name, parent_name: parent_name}, state do
+      token = get_user_token(user_name)
+      domain_group = get_domain_group_by_name(token, parent_name)
+      data_domain = get_data_domain_by_name_and_parent(token, child_name, domain_group["id"])
+      {_, status_code} = data_domain_delete(token, data_domain["id"])
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defand ~r/^Data Domain "(?<child_name>[^"]+)" does not exist as child of Domain Group "(?<parent_name>[^"]+)"$/,
+    %{child_name: child_name, parent_name: parent_name},
+    _state do
+      token = get_user_token("app-admin")
+      parent = get_domain_group_by_name(token, parent_name)
+      child  = get_data_domain_by_name_and_parent(token, child_name, parent["id"])
+      assert !child
+  end
 end
