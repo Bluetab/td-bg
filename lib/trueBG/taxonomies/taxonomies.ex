@@ -4,8 +4,6 @@ defmodule TrueBG.Taxonomies do
   """
 
   import Ecto.Query, warn: false
-  alias Ecto.NoResultsError
-  alias Ecto.MultipleResultsError
   alias TrueBG.Repo
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
@@ -35,9 +33,14 @@ defmodule TrueBG.Taxonomies do
   @doc """
   Returns children of domain group id passed as argument
   """
-  def count_domain_group_children(id) do
+  def count_domain_group_domain_group_children(id) do
     count = Repo.one from r in DomainGroup, select: count(r.id), where: r.parent_id == ^id and is_nil(r.deleted_at)
-    {:ok, count}
+    {:count, :domain_group, count}
+  end
+
+  def count_domain_group_data_domain_children(id) do
+    count = Repo.one from r in DataDomain, select: count(r.id), where: r.domain_group_id == ^id and is_nil(r.deleted_at)
+    {:count, :data_domain, count}
   end
 
   @doc """
@@ -70,18 +73,15 @@ defmodule TrueBG.Taxonomies do
 
   """
   def get_domain_group!(id) do
-    all = Repo.all from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
-    one!(all, DomainGroup)
+    Repo.one! from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
   end
 
   def get_domain_group(id) do
-    all = Repo.all from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
-    one(all, DomainGroup)
+    Repo.one from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
   end
 
   def get_domain_group_by_name(name) do
-    all = Repo.all from r in DomainGroup, where: r.name == ^name and is_nil(r.deleted_at)
-    one(all, DomainGroup)
+    Repo.one from r in DomainGroup, where: r.name == ^name and is_nil(r.deleted_at)
   end
 
   @doc """
@@ -186,8 +186,7 @@ defmodule TrueBG.Taxonomies do
   end
 
   def get_data_domain_by_name(name) do
-    all = Repo.all from r in DataDomain, where: r.name == ^name and is_nil(r.deleted_at)
-    one(all, DataDomain)
+    Repo.one from r in DataDomain, where: r.name == ^name and is_nil(r.deleted_at)
   end
 
   @doc """
@@ -205,8 +204,7 @@ defmodule TrueBG.Taxonomies do
 
   """
   def get_data_domain!(id) do
-    all = Repo.all from r in DataDomain, where: r.id == ^id and is_nil(r.deleted_at)
-    one!(all, DataDomain)
+    Repo.one! from r in DataDomain, where: r.id == ^id and is_nil(r.deleted_at)
   end
 
   @doc """
@@ -280,22 +278,4 @@ defmodule TrueBG.Taxonomies do
   def change_data_domain(%DataDomain{} = data_domain) do
     DataDomain.changeset(data_domain, %{})
   end
-
-  defp one!(all, queryable) do
-    case all do
-      [one] -> one
-      []    -> raise NoResultsError, queryable: queryable
-      other -> raise MultipleResultsError, queryable: queryable, count: length(other)
-    end
-
-  end
-
-  defp one(all, queryable) do
-    case all do
-      [one] -> one
-      []    -> nil
-      other -> raise MultipleResultsError, queryable: queryable, count: length(other)
-    end
-  end
-
 end

@@ -65,11 +65,16 @@ defmodule TrueBGWeb.DomainGroupController do
 
   def delete(conn, %{"id" => id}) do
     domain_group = Taxonomies.get_domain_group!(id)
-    with {:ok, 0} <- Taxonomies.count_domain_group_children(id),
+    with {:count, :domain_group, 0} <- Taxonomies.count_domain_group_domain_group_children(id),
+         {:count, :data_domain, 0} <- Taxonomies.count_domain_group_data_domain_children(id),
          {:ok, %DomainGroup{}} <- Taxonomies.delete_domain_group(domain_group) do
       send_resp(conn, :no_content, "")
     else
-      {:ok, n}  when is_integer(n) ->
+      {:count, :domain_group, n}  when is_integer(n) ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+      {:count, :data_domain, n}  when is_integer(n) ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")

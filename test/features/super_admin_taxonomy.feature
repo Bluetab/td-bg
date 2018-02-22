@@ -116,13 +116,13 @@ Feature: Super-admin Taxonomy administration
      Then the system returns a result with code "Unprocessable Entity"
      And Domain Group "My Child Group" exist as child of Domain Group "My Parent Group"
 
-  #  Scenario: Deleting a Domain Group with a Data Domain pending on it
-  #    Given an existing Domain Group called "My Parent Group"
-  #    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  #    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  #    When user "app-admin" tries to delete a Domain Group with the name "My Child Group"
-  #    Then the system returns a result with code "Unprocessable Entity"
-  #    And Domain Group "My Child Group" does not exist as child of Domain Group "My Parent Group"
+   Scenario: Deleting a Domain Group with a Data Domain pending on it
+     Given an existing Domain Group called "My Parent Group"
+     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+     When user "app-admin" tries to delete a Domain Group with the name "My Child Group"
+     Then the system returns a result with code "Unprocessable Entity"
+     And Domain Group "My Child Group" exist as child of Domain Group "My Parent Group"
 
    Scenario: Deleting a Data Domain
      Given an existing Domain Group called "My Group"
