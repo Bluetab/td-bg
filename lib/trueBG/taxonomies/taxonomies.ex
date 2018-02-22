@@ -35,6 +35,14 @@ defmodule TrueBG.Taxonomies do
   @doc """
   Returns children of domain group id passed as argument
   """
+  def count_domain_group_children(id) do
+    count = Repo.one from r in DomainGroup, select: count(r.id), where: r.parent_id == ^id and is_nil(r.deleted_at)
+    {:ok, count}
+  end
+
+  @doc """
+  Returns children of domain group id passed as argument
+  """
   def list_domain_group_children(id) do
     Repo.all from r in DomainGroup, where: r.parent_id == ^id and is_nil(r.deleted_at)
   end

@@ -163,4 +163,13 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
       assert !child
   end
 
+  defand ~r/^Domain Group "(?<child_name>[^"]+)" exist as child of Domain Group "(?<parent_name>[^"]+)"$/,
+    %{child_name: child_name, parent_name: parent_name},
+    _state do
+      token = get_user_token("app-admin")
+      parent = get_domain_group_by_name(token, parent_name)
+      child  = get_domain_group_by_name_and_parent(token, child_name, parent["id"])
+      assert child
+  end
+
 end
