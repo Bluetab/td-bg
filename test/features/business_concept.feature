@@ -255,9 +255,9 @@ Feature: Business Concepts administration
 
     Examples:
       | user      | result       |
-      # | watcher   | Unauthorized |
-      # | creator   | Unauthorized |
-      # | publisher | Ok           |
+      | watcher   | Unauthorized |
+      | creator   | Unauthorized |
+      | publisher | Ok           |
       | admin     | Ok           |
 
 
