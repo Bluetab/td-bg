@@ -37,7 +37,9 @@ defmodule TrueBGWeb.AclEntryControllerTest do
         "principal_id" => user.id,
         "principal_type" => "user",
         "resource_id" => domain_group.id,
-        "resource_type" => "domain_group"}
+        "resource_type" => "domain_group",
+        "role_id" => role.id
+      }
     end
 
     @tag :admin_authenticated
@@ -51,7 +53,7 @@ defmodule TrueBGWeb.AclEntryControllerTest do
     setup [:create_acl_entry]
 
     @tag :admin_authenticated
-    test "renders acl_entry when data is valid", %{conn: conn, acl_entry: %AclEntry{id: id} = acl_entry} do
+    test "renders acl_entry when data is valid", %{conn: conn, acl_entry: %AclEntry{id: id, role_id: role_id} = acl_entry} do
       conn = put conn, acl_entry_path(conn, :update, acl_entry), acl_entry: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
@@ -62,7 +64,9 @@ defmodule TrueBGWeb.AclEntryControllerTest do
         "principal_id" => @update_attrs.principal_id,
         "principal_type" => @update_attrs.principal_type,
         "resource_id" => @update_attrs.resource_id,
-        "resource_type" => @update_attrs.resource_type}
+        "resource_type" => @update_attrs.resource_type,
+        "role_id" => role_id
+       }
     end
 
     @tag :admin_authenticated

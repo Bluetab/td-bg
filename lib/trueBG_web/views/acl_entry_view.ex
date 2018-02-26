@@ -15,6 +15,8 @@ defmodule TrueBGWeb.AclEntryView do
       principal_type: acl_entry.principal_type,
       principal_id: acl_entry.principal_id,
       resource_type: acl_entry.resource_type,
-      resource_id: acl_entry.resource_id}
+      resource_id: acl_entry.resource_id,
+      role_id: acl_entry.role_id
+    }
   end
 end

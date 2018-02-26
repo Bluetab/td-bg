@@ -1,20 +1,32 @@
 defmodule TrueBGWeb.AclEntryController do
   use TrueBGWeb, :controller
+  use PhoenixSwagger
 
   alias TrueBG.Permissions
   alias TrueBG.Permissions.AclEntry
   alias TrueBGWeb.ErrorView
   alias Guardian.Plug, as: GuardianPlug
+  alias TrueBGWeb.SwaggerDefinitions
   import Canada
 
   action_fallback TrueBGWeb.FallbackController
+
+  def swagger_definitions do
+    SwaggerDefinitions.acl_entry_swagger_definitions()
+  end
+
+  swagger_path :index do
+    get "/acl_entries"
+    description "List Acl Entries"
+    response 200, "OK", Schema.ref(:AclEntries)
+  end
 
   def index(conn, _params) do
     acl_entries = Permissions.list_acl_entries()
     render(conn, "index.json", acl_entries: acl_entries)
   end
 
-  def to_struct(kind, attrs) do
+  defp to_struct(kind, attrs) do
     struct = struct(kind)
     Enum.reduce Map.to_list(struct), struct, fn {k, _}, acc ->
       case Map.fetch(attrs, Atom.to_string(k)) do
@@ -22,6 +34,17 @@ defmodule TrueBGWeb.AclEntryController do
         :error -> acc
       end
     end
+  end
+
+  swagger_path :create do
+    post "/acl_entries"
+    description "Creates an Acl Entry"
+    produces "application/json"
+    parameters do
+      acl_entry :body, Schema.ref(:AclEntryCreate), "Acl entry create attrs"
+    end
+    response 200, "OK", Schema.ref(:AclEntry)
+    response 400, "Client Error"
   end
 
   def create(conn, %{"acl_entry" => acl_entry_params}) do
@@ -47,9 +70,32 @@ defmodule TrueBGWeb.AclEntryController do
     end
   end
 
+  swagger_path :show do
+    get "/acl_entries/{id}"
+    description "Show Acl Entry"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Acl Entry ID", required: true
+    end
+    response 200, "OK", Schema.ref(:AclEntry)
+    response 400, "Client Error"
+  end
+
   def show(conn, %{"id" => id}) do
     acl_entry = Permissions.get_acl_entry!(id)
     render(conn, "show.json", acl_entry: acl_entry)
+  end
+
+  swagger_path :update do
+    put "/acl_entries/{id}"
+    description "Updates Acl entry"
+    produces "application/json"
+    parameters do
+      data_domain :body, Schema.ref(:AclEntry), "Acl entry update attrs"
+      id :path, :integer, "Acl Entry ID", required: true
+    end
+    response 200, "OK", Schema.ref(:AclEntry)
+    response 400, "Client Error"
   end
 
   def update(conn, %{"id" => id, "acl_entry" => acl_entry_params}) do
@@ -58,6 +104,17 @@ defmodule TrueBGWeb.AclEntryController do
     with {:ok, %AclEntry{} = acl_entry} <- Permissions.update_acl_entry(acl_entry, acl_entry_params) do
       render(conn, "show.json", acl_entry: acl_entry)
     end
+  end
+
+  swagger_path :delete do
+    delete "/acl_entries/{id}"
+    description "Delete Acl Entry"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Acl entry ID", required: true
+    end
+    response 200, "OK"
+    response 400, "Client Error"
   end
 
   def delete(conn, %{"id" => id}) do

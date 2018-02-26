@@ -82,4 +82,36 @@ defmodule TrueBGWeb.SwaggerDefinitions do
     }
   end
 
+  def acl_entry_swagger_definitions do
+    %{
+      AclEntry: swagger_schema do
+        title "Acl entry"
+        description "An Acl entry"
+        properties do
+          id :integer, "unique identifier", required: true
+          principal_id :integer, "id of principal", required: true
+          principal_type :string, "type of principal: user", required: true
+          resource_id :integer, "id of resource", required: true
+          resource_type :string, "type of resource: data_domain / domain_group", required: true
+          role_id :integer, "id of role", required: true
+        end
+      end,
+      AclEntryCreate: swagger_schema do
+        properties do
+          principal_id :integer, "id of principal", required: true
+          principal_type :string, "type of principal: user", required: true
+          resource_id :integer, "id of resource", required: true
+          resource_type :string, "type of resource: data_domain / domain_group", required: true
+          role_id :integer, "id of role", required: true
+        end
+      end,
+      AclEntries: swagger_schema do
+        title "Acl entries"
+        description "A collection of Acl Entry"
+        type :array
+        items Schema.ref(:AclEntry)
+      end
+    }
+  end
+
 end
