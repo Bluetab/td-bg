@@ -1,5 +1,6 @@
 defmodule TrueBGWeb.AclEntryControllerTest do
   use TrueBGWeb.ConnCase
+  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TrueBG.Permissions.AclEntry
   import TrueBGWeb.Authentication, only: :functions
@@ -21,7 +22,7 @@ defmodule TrueBGWeb.AclEntryControllerTest do
 
   describe "create acl_entry" do
     @tag :admin_authenticated
-    test "renders acl_entry when data is valid", %{conn: conn} do
+    test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain_group = insert(:domain_group)
       role = insert(:role)
@@ -29,9 +30,11 @@ defmodule TrueBGWeb.AclEntryControllerTest do
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
+      validate_resp_schema(conn, schema, "AclEntryResponse")
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, acl_entry_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "AclEntryResponse")
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "principal_id" => user.id,
@@ -53,12 +56,13 @@ defmodule TrueBGWeb.AclEntryControllerTest do
     setup [:create_acl_entry]
 
     @tag :admin_authenticated
-    test "renders acl_entry when data is valid", %{conn: conn, acl_entry: %AclEntry{id: id, role_id: role_id} = acl_entry} do
+    test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema, acl_entry: %AclEntry{id: id, role_id: role_id} = acl_entry} do
       conn = put conn, acl_entry_path(conn, :update, acl_entry), acl_entry: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, acl_entry_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "AclEntryResponse")
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "principal_id" => @update_attrs.principal_id,

@@ -15,7 +15,7 @@ defmodule TrueBGWeb.RoleController do
   swagger_path :index do
     get "/roles"
     description "List Roles"
-    response 200, "OK", Schema.ref(:Role)
+    response 200, "OK", Schema.ref(:Roles)
   end
 
   def index(conn, _params) do
@@ -30,7 +30,7 @@ defmodule TrueBGWeb.RoleController do
     parameters do
       role :body, Schema.ref(:Role), "Role create attrs"
     end
-    response 200, "OK", Schema.ref(:DomainGroup)
+    response 200, "OK", Schema.ref(:Role)
     response 400, "Client Error"
   end
 

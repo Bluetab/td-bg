@@ -14,7 +14,6 @@ defmodule TrueBGWeb.SwaggerDefinitions do
           name :string, "data domain name", required: true
           descritpion :string, "descritpion"
           domain_group_id [:integer, :null], "Domain Group Id", required: true
-          #domain_group Schema.ref(:DomainGroup)
         end
         example %{
         id: 123,
@@ -123,6 +122,12 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         description "A collection of Acl Entry"
         type :array
         items Schema.ref(:AclEntry)
+      end,
+      AclEntryResponse: swagger_schema do
+        properties do
+          type :object
+          data Schema.ref(:AclEntry)
+        end
       end
     }
   end
@@ -135,6 +140,24 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         properties do
           id :integer, "unique identifier", required: true
           name :string, "role name", required: true
+        end
+      end,
+      Roles: swagger_schema do
+        title "Roles"
+        description "A collection of Roles"
+        type :array
+        items Schema.ref(:Role)
+      end,
+      RoleResponse: swagger_schema do
+        properties do
+          type :object
+          data Schema.ref(:Role)
+        end
+      end,
+      RolesResponse: swagger_schema do
+        properties do
+          type :object
+          data Schema.ref(:Roles)
         end
       end
     }

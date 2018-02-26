@@ -1,5 +1,7 @@
 defmodule TrueBGWeb.RoleControllerTest do
   use TrueBGWeb.ConnCase
+  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
+
   import TrueBGWeb.Authentication, only: :functions
 
   alias TrueBG.Permissions
@@ -20,20 +22,23 @@ defmodule TrueBGWeb.RoleControllerTest do
 
   describe "index" do
     @tag :admin_authenticated
-    test "lists all roles", %{conn: conn} do
+    test "lists all roles", %{conn: conn, swagger_schema: schema} do
       conn = get conn, role_path(conn, :index)
+      validate_resp_schema(conn, schema, "RolesResponse")
       assert length(json_response(conn, 200)["data"]) == length(Role.get_roles())
     end
   end
 
   describe "create role" do
     @tag :admin_authenticated
-    test "renders role when data is valid", %{conn: conn} do
+    test "renders role when data is valid", %{conn: conn, swagger_schema: schema} do
       conn = post conn, role_path(conn, :create), role: @create_attrs
+      validate_resp_schema(conn, schema, "RoleResponse")
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, role_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "RoleResponse")
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "name" => "some name"}
@@ -50,12 +55,14 @@ defmodule TrueBGWeb.RoleControllerTest do
     setup [:create_role]
 
     @tag :admin_authenticated
-    test "renders role when data is valid", %{conn: conn, role: %Role{id: id} = role} do
+    test "renders role when data is valid", %{conn: conn, swagger_schema: schema, role: %Role{id: id} = role} do
       conn = put conn, role_path(conn, :update, role), role: @update_attrs
+      validate_resp_schema(conn, schema, "RoleResponse")
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, role_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "RoleResponse")
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "name" => "some updated name"}

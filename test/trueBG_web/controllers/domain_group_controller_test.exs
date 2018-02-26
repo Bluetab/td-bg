@@ -1,6 +1,6 @@
 defmodule TrueBGWeb.DomainGroupControllerTest do
   use TrueBGWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "swagger.json"
+  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import TrueBGWeb.Authentication, only: :functions
 
