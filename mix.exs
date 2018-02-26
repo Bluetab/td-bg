@@ -49,6 +49,7 @@ defmodule TrueBG.Mixfile do
       {:canada, "~> 1.0.1"},
       {:ex_machina, "~> 2.1", only: :test},
       {:cors_plug, "~> 1.2"},
+      {:phoenix_swagger, "~> 0.7.0"}
     ]
   end
 

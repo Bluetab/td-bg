@@ -23,3 +23,4 @@ erl_crash.dump
 
 # businness concept content schema definition for testing
 bc_schema.test
+assets/node_modules/

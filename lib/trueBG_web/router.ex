@@ -56,4 +56,13 @@ defmodule TrueBGWeb.Router do
     end
   end
 
+  def swagger_info do
+    %{
+      info: %{
+        version: "1.0",
+        title: "TrueBG"
+      }
+    }
+  end
+
 end
