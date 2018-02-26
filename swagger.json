@@ -1,5 +1,20 @@
 {
   "swagger": "2.0",
+  "securityDefinitions": {
+    "bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
   "paths": {
     "/domain_groups/{domain_group_id}/data_domains": {
       "get": {
@@ -151,7 +166,15 @@
             "description": "OK"
           }
         },
-        "parameters": [],
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token"
+          }
+        ],
         "operationId": "TrueBGWeb.DataDomainController.index",
         "description": "List Data Domains"
       }
@@ -275,5 +298,6 @@
       },
       "description": "A Data Domain child of a Domain Group"
     }
-  }
+  },
+  "basePath": "/api"
 }

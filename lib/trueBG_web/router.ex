@@ -58,10 +58,26 @@ defmodule TrueBGWeb.Router do
 
   def swagger_info do
     %{
+      schemes: ["http"],
       info: %{
         version: "1.0",
         title: "TrueBG"
-      }
+      },
+      "basePath": "/api",
+      "securityDefinitions":
+        %{
+          bearer:
+          %{
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+          }
+      },
+      "security": [
+        %{
+         bearer: []
+        }
+      ]
     }
   end
 
