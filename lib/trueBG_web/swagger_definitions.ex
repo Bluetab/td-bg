@@ -114,4 +114,17 @@ defmodule TrueBGWeb.SwaggerDefinitions do
     }
   end
 
+  def role_swagger_definitions do
+    %{
+      Role: swagger_schema do
+        title "Role"
+        description "Role"
+        properties do
+          id :integer, "unique identifier", required: true
+          name :string, "role name", required: true
+        end
+      end
+    }
+  end
+
 end

@@ -83,7 +83,7 @@ defmodule TrueBGWeb.DataDomainController do
   end
 
   swagger_path :update do
-    put "/data_domain/{id}"
+    put "/data_domains/{id}"
     description "Updates Data Domain"
     produces "application/json"
     parameters do

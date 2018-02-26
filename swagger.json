@@ -16,7 +16,274 @@
     "http"
   ],
   "paths": {
+    "/users/{user_id}/domain_groups/{domain_group_id}/roles": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "user_id",
+            "in": "path",
+            "description": "user id"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "domain_group_id",
+            "in": "path",
+            "description": "domain group id"
+          }
+        ],
+        "operationId": "TrueBGWeb.RoleController.user_domain_group_role",
+        "description": ""
+      }
+    },
+    "/users/{user_id}/data_domains/{data_domain_id}/roles": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "user_id",
+            "in": "path",
+            "description": "user id"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "data_domain_id",
+            "in": "path",
+            "description": "data domain id"
+          }
+        ],
+        "operationId": "TrueBGWeb.RoleController.user_data_domain_role",
+        "description": ""
+      }
+    },
+    "/roles/{id}": {
+      "put": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Role"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/Role"
+            },
+            "required": false,
+            "name": "data_domain",
+            "in": "body",
+            "description": "Role update attrs"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Role ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.RoleController.update",
+        "description": "Updates Role"
+      },
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Role"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Role ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.RoleController.show",
+        "description": "Show Role"
+      },
+      "delete": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Role ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.RoleController.delete",
+        "description": "Delete Role"
+      }
+    },
+    "/roles": {
+      "post": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroup"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/Role"
+            },
+            "required": false,
+            "name": "role",
+            "in": "body",
+            "description": "Role create attrs"
+          }
+        ],
+        "operationId": "TrueBGWeb.RoleController.create",
+        "description": "Creates a Role"
+      },
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Role"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TrueBGWeb.RoleController.index",
+        "description": "List Roles"
+      }
+    },
     "/domain_groups/{id}": {
+      "put": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroup"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/DomainGroupUpdate"
+            },
+            "required": false,
+            "name": "data_domain",
+            "in": "body",
+            "description": "Domain Group update attrs"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Domain Group ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.DomainGroupController.update",
+        "description": "Updates Domain Group"
+      },
       "get": {
         "tags": [
           "DomainGroup"
@@ -254,10 +521,10 @@
         "description": "List Domain Groups"
       }
     },
-    "/domain_group/{id}": {
+    "/data_domains/{id}": {
       "put": {
         "tags": [
-          "DomainGroup"
+          "DataDomain"
         ],
         "summary": "",
         "responses": {
@@ -266,7 +533,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/DomainGroup"
+              "$ref": "#/definitions/DataDomain"
             },
             "description": "OK"
           }
@@ -277,26 +544,24 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/DomainGroupUpdate"
+              "$ref": "#/definitions/DataDomainUpdate"
             },
             "required": false,
             "name": "data_domain",
             "in": "body",
-            "description": "Domain Group update attrs"
+            "description": "Data Domain update attrs"
           },
           {
             "type": "integer",
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Domain Group ID"
+            "description": "Data Domain ID"
           }
         ],
-        "operationId": "TrueBGWeb.DomainGroupController.update",
-        "description": "Updates Domain Group"
-      }
-    },
-    "/data_domains/{id}": {
+        "operationId": "TrueBGWeb.DataDomainController.update",
+        "description": "Updates Data Domain"
+      },
       "get": {
         "tags": [
           "DataDomain"
@@ -374,48 +639,6 @@
         "parameters": [],
         "operationId": "TrueBGWeb.DataDomainController.index",
         "description": "List Data Domains"
-      }
-    },
-    "/data_domain/{id}": {
-      "put": {
-        "tags": [
-          "DataDomain"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/DataDomain"
-            },
-            "description": "OK"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/definitions/DataDomainUpdate"
-            },
-            "required": false,
-            "name": "data_domain",
-            "in": "body",
-            "description": "Data Domain update attrs"
-          },
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Data Domain ID"
-          }
-        ],
-        "operationId": "TrueBGWeb.DataDomainController.update",
-        "description": "Updates Data Domain"
       }
     },
     "/acl_entries/{id}": {
@@ -578,6 +801,25 @@
   },
   "host": "localhost:4000",
   "definitions": {
+    "Role": {
+      "type": "object",
+      "title": "Role",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "role name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        }
+      },
+      "description": "Role"
+    },
     "DomainGroups": {
       "type": "array",
       "title": "Domain Groups",

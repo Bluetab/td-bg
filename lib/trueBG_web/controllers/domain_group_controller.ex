@@ -106,7 +106,7 @@ defmodule TrueBGWeb.DomainGroupController do
   end
 
   swagger_path :update do
-    put "/domain_group/{id}"
+    put "/domain_groups/{id}"
     description "Updates Domain Group"
     produces "application/json"
     parameters do
