@@ -1,5 +1,7 @@
 defmodule TrueBGWeb.DataDomainControllerTest do
   use TrueBGWeb.ConnCase
+  use PhoenixSwagger.SchemaTest, "swagger.json"
+
   import TrueBGWeb.Authentication, only: :functions
 
   alias TrueBG.Taxonomies
@@ -28,14 +30,17 @@ defmodule TrueBGWeb.DataDomainControllerTest do
 
   describe "create data_domain" do
     @tag :admin_authenticated
-    test "renders data_domain when data is valid", %{conn: conn} do
+    test "renders data_domain when data is valid", %{conn: conn, swagger_schema: schema} do
       domain_group = insert(:domain_group)
 
       conn = post conn, domain_group_data_domain_path(conn, :create, domain_group.id), data_domain: @create_attrs
+      validate_resp_schema(conn, schema, "DataDomainResponse")
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, data_domain_path(conn, :show, id)
+
+      validate_resp_schema(conn, schema, "DataDomainResponse")
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "description" => "some description",
@@ -55,12 +60,13 @@ defmodule TrueBGWeb.DataDomainControllerTest do
     setup [:create_data_domain]
 
     @tag :admin_authenticated
-    test "renders data_domain when data is valid", %{conn: conn, data_domain: %DataDomain{id: id} = data_domain} do
+    test "renders data_domain when data is valid", %{conn: conn, swagger_schema: schema, data_domain: %DataDomain{id: id} = data_domain} do
       conn = put conn, data_domain_path(conn, :update, data_domain), data_domain: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, data_domain_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "DataDomainResponse")
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "description" => "some updated description",

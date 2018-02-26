@@ -879,6 +879,7 @@
       "type": "object",
       "title": "Domain Group",
       "required": [
+        "parent_id",
         "name",
         "id"
       ],
@@ -930,6 +931,17 @@
         }
       }
     },
+    "DataDomainResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "object"
+        },
+        "data": {
+          "$ref": "#/definitions/DataDomain"
+        }
+      }
+    },
     "DataDomainCreate": {
       "type": "object",
       "required": [
@@ -964,7 +976,10 @@
           "description": "Unique identifier"
         },
         "domain_group_id": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "description": "Domain Group Id"
         },
         "descritpion": {

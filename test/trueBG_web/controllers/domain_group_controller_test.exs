@@ -1,10 +1,11 @@
 defmodule TrueBGWeb.DomainGroupControllerTest do
   use TrueBGWeb.ConnCase
+  use PhoenixSwagger.SchemaTest, "swagger.json"
+
   import TrueBGWeb.Authentication, only: :functions
 
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DomainGroup
-  use PhoenixSwagger.SchemaTest, "swagger.json"
 
   @create_attrs %{description: "some description", name: "some name"}
   @update_attrs %{description: "some updated description", name: "some updated name"}
@@ -32,6 +33,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     test "renders domain_group when data is valid", %{conn: conn, swagger_schema: schema} do
       conn = post conn, domain_group_path(conn, :create), domain_group: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
+      validate_resp_schema(conn, schema, "DomainGroupResponse")
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, domain_group_path(conn, :show, id)
@@ -55,12 +57,13 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     setup [:create_domain_group]
 
     @tag :admin_authenticated
-    test "renders domain_group when data is valid", %{conn: conn, domain_group: %DomainGroup{id: id} = domain_group} do
+    test "renders domain_group when data is valid", %{conn: conn, swagger_schema: schema, domain_group: %DomainGroup{id: id} = domain_group} do
       conn = put conn, domain_group_path(conn, :update, domain_group), domain_group: @update_attrs
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, domain_group_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "DomainGroupResponse")
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
         "description" => "some updated description",
@@ -81,10 +84,9 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     @tag :admin_authenticated
     test "deletes chosen domain_group", %{conn: conn, domain_group: domain_group} do
       conn = delete conn, domain_group_path(conn, :delete, domain_group)
+
       assert response(conn, 204)
-
       conn = recycle_and_put_headers(conn)
-
       assert_error_sent 404, fn ->
         get conn, domain_group_path(conn, :show, domain_group)
       end
