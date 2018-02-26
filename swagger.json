@@ -16,6 +16,67 @@
     "http"
   ],
   "paths": {
+    "/domain_groups/{id}": {
+      "get": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroup"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Domain Group ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.DomainGroupController.show",
+        "description": "Show Domain Group"
+      },
+      "delete": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Domain Group ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.DomainGroupController.delete",
+        "description": "Delete Domain Group"
+      }
+    },
     "/domain_groups/{domain_group_id}/data_domains": {
       "get": {
         "tags": [
@@ -89,6 +150,150 @@
         ],
         "operationId": "TrueBGWeb.DataDomainController.create",
         "description": "Creates a Data Domain children of Domain Group"
+      }
+    },
+    "/domain_groups/index_root": {
+      "get": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroups"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "operationId": "TrueBGWeb.DomainGroupController.index_root",
+        "description": "List Root Domain Group"
+      }
+    },
+    "/domain_groups/index_children": {
+      "get": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroups"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "operationId": "TrueBGWeb.DomainGroupController.index_children",
+        "description": "List non-root Domain Groups"
+      }
+    },
+    "/domain_groups": {
+      "post": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroup"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/DomainGroupCreate"
+            },
+            "required": false,
+            "name": "domain_group",
+            "in": "body",
+            "description": "Domain Group create attrs"
+          }
+        ],
+        "operationId": "TrueBGWeb.DomainGroupController.create",
+        "description": "Creates a Domain Group"
+      },
+      "get": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroups"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TrueBGWeb.DomainGroupController.index",
+        "description": "List Domain Groups"
+      }
+    },
+    "/domain_group/{id}": {
+      "put": {
+        "tags": [
+          "DomainGroup"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainGroup"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/DomainGroupUpdate"
+            },
+            "required": false,
+            "name": "data_domain",
+            "in": "body",
+            "description": "Domain Group update attrs"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Domain Group ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.DomainGroupController.update",
+        "description": "Updates Domain Group"
       }
     },
     "/data_domains/{id}": {
@@ -166,15 +371,7 @@
             "description": "OK"
           }
         },
-        "parameters": [
-          {
-            "type": "string",
-            "required": true,
-            "name": "Authorization",
-            "in": "header",
-            "description": "JWT access token"
-          }
-        ],
+        "parameters": [],
         "operationId": "TrueBGWeb.DataDomainController.index",
         "description": "List Data Domains"
       }
@@ -228,6 +425,81 @@
   },
   "host": "localhost:4000",
   "definitions": {
+    "DomainGroups": {
+      "type": "array",
+      "title": "Domain Groups",
+      "items": {
+        "$ref": "#/definitions/DomainGroup"
+      },
+      "description": "A collection of Domain Groups"
+    },
+    "DomainGroupUpdate": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "domain group name"
+        },
+        "description": {
+          "type": "string",
+          "description": "domain group description"
+        }
+      }
+    },
+    "DomainGroupCreate": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "parent_id": {
+          "type": "integer",
+          "description": "parent domain group id"
+        },
+        "name": {
+          "type": "string",
+          "description": "domain group name"
+        },
+        "description": {
+          "type": "string",
+          "description": "domain group description"
+        }
+      }
+    },
+    "DomainGroup": {
+      "type": "object",
+      "title": "Domain Group",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "parent_id": {
+          "type": "integer",
+          "description": "Domain Group id"
+        },
+        "name": {
+          "type": "string",
+          "description": "data domain name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier"
+        },
+        "descritpion": {
+          "type": "string",
+          "description": "descritpion"
+        }
+      },
+      "example": {
+        "name": "Domain group name",
+        "id": 12
+      },
+      "description": "A Domain Group"
+    },
     "DataDomains": {
       "type": "array",
       "title": "Data Domains",

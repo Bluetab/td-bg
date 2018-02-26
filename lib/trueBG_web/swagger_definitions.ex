@@ -60,6 +60,19 @@ defmodule TrueBGWeb.SwaggerDefinitions do
           parent_id: nil
         }
       end,
+      DomainGroupCreate: swagger_schema do
+        properties do
+          name :string, "domain group name", required: true
+          description :string, "domain group description"
+          parent_id :integer, "parent domain group id"
+        end
+      end,
+      DomainGroupUpdate: swagger_schema do
+        properties do
+          name :string, "domain group name", required: true
+          description :string, "domain group description"
+        end
+      end,
       DomainGroups: swagger_schema do
         title "Domain Groups"
         description "A collection of Domain Groups"

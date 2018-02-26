@@ -1,15 +1,35 @@
 defmodule TrueBGWeb.DomainGroupController do
   use TrueBGWeb, :controller
+  use PhoenixSwagger
 
   alias TrueBGWeb.ErrorView
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DomainGroup
+  alias TrueBGWeb.SwaggerDefinitions
 
   action_fallback TrueBGWeb.FallbackController
+
+  def swagger_definitions do
+    SwaggerDefinitions.domain_group_swagger_definitions()
+  end
+
+  swagger_path :index do
+    get "/domain_groups"
+    description "List Domain Groups"
+    response 200, "OK", Schema.ref(:DomainGroups)
+  end
 
   def index(conn, _params) do
     domain_groups = Taxonomies.list_domain_groups()
     render(conn, "index.json", domain_groups: domain_groups)
+  end
+
+  swagger_path :index_root do
+    get "/domain_groups/index_root"
+    description "List Root Domain Group"
+    produces "application/json"
+    response 200, "OK", Schema.ref(:DomainGroups)
+    response 400, "Client Error"
   end
 
   def index_root(conn, _params) do
@@ -17,9 +37,28 @@ defmodule TrueBGWeb.DomainGroupController do
     render(conn, "index.json", domain_groups: domain_groups)
   end
 
+  swagger_path :index_children do
+    get "/domain_groups/index_children"
+    description "List non-root Domain Groups"
+    produces "application/json"
+    response 200, "OK", Schema.ref(:DomainGroups)
+    response 400, "Client Error"
+  end
+
   def index_children(conn, %{"domain_group_id" => id}) do
     domain_groups = Taxonomies.list_domain_group_children(id)
     render(conn, "index.json", domain_groups: domain_groups)
+  end
+
+  swagger_path :create do
+    post "/domain_groups"
+    description "Creates a Domain Group"
+    produces "application/json"
+    parameters do
+      domain_group :body, Schema.ref(:DomainGroupCreate), "Domain Group create attrs"
+    end
+    response 200, "OK", Schema.ref(:DomainGroup)
+    response 400, "Client Error"
   end
 
   def create(conn, %{"domain_group" => domain_group_params}) do
@@ -50,9 +89,32 @@ defmodule TrueBGWeb.DomainGroupController do
     end
   end
 
+  swagger_path :show do
+    get "/domain_groups/{id}"
+    description "Show Domain Group"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Domain Group ID", required: true
+    end
+    response 200, "OK", Schema.ref(:DomainGroup)
+    response 400, "Client Error"
+  end
+
   def show(conn, %{"id" => id}) do
     domain_group = Taxonomies.get_domain_group!(id)
     render(conn, "show.json", domain_group: domain_group)
+  end
+
+  swagger_path :update do
+    put "/domain_group/{id}"
+    description "Updates Domain Group"
+    produces "application/json"
+    parameters do
+      data_domain :body, Schema.ref(:DomainGroupUpdate), "Domain Group update attrs"
+      id :path, :integer, "Domain Group ID", required: true
+    end
+    response 200, "OK", Schema.ref(:DomainGroup)
+    response 400, "Client Error"
   end
 
   def update(conn, %{"id" => id, "domain_group" => domain_group_params}) do
@@ -61,6 +123,17 @@ defmodule TrueBGWeb.DomainGroupController do
     with {:ok, %DomainGroup{} = domain_group} <- Taxonomies.update_domain_group(domain_group, domain_group_params) do
       render(conn, "show.json", domain_group: domain_group)
     end
+  end
+
+  swagger_path :delete do
+    delete "/domain_groups/{id}"
+    description "Delete Domain Group"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Domain Group ID", required: true
+    end
+    response 200, "OK"
+    response 400, "Client Error"
   end
 
   def delete(conn, %{"id" => id}) do
