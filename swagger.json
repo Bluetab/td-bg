@@ -844,6 +844,17 @@
         }
       }
     },
+    "DomainGroupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "object"
+        },
+        "data": {
+          "$ref": "#/definitions/DomainGroup"
+        }
+      }
+    },
     "DomainGroupCreate": {
       "type": "object",
       "required": [
@@ -873,7 +884,10 @@
       ],
       "properties": {
         "parent_id": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "description": "Domain Group id"
         },
         "name": {

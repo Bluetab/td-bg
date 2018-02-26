@@ -52,7 +52,7 @@ defmodule TrueBGWeb.SwaggerDefinitions do
           id :integer, "Unique identifier", required: true
           name :string, "data domain name", required: true
           descritpion :string, "descritpion"
-          parent_id :integer, "Domain Group id"
+          parent_id [:integer, :null], "Domain Group id", required: false
         end
         example %{
           id: 12,
@@ -78,6 +78,12 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         description "A collection of Domain Groups"
         type :array
         items Schema.ref(:DomainGroup)
+      end,
+      DomainGroupResponse: swagger_schema do
+        properties do
+          type :object
+          data Schema.ref(:DomainGroup)
+        end
       end
     }
   end

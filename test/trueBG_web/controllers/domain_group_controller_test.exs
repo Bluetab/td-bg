@@ -4,6 +4,7 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
 
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DomainGroup
+  use PhoenixSwagger.SchemaTest, "swagger.json"
 
   @create_attrs %{description: "some description", name: "some name"}
   @update_attrs %{description: "some updated description", name: "some updated name"}
@@ -28,13 +29,15 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
 
   describe "create domain_group" do
     @tag :admin_authenticated
-    test "renders domain_group when data is valid", %{conn: conn} do
+    test "renders domain_group when data is valid", %{conn: conn, swagger_schema: schema} do
       conn = post conn, domain_group_path(conn, :create), domain_group: @create_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, domain_group_path(conn, :show, id)
-      assert json_response(conn, 200)["data"] == %{
+      json_response_data = json_response(conn, 200)["data"]
+      validate_resp_schema(conn, schema, "DomainGroupResponse")
+      assert json_response_data == %{
         "id" => id,
         "description" => "some description",
         "name" => "some name",
