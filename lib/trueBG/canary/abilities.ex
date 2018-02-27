@@ -3,7 +3,7 @@ defmodule TrueBG.Canary.Abilities do
   alias TrueBG.Accounts.User
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
-  alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TrueBG.BusinessConcepts.BusinessConceptVersion
   alias TrueBG.Canary.TaxonomyAbilities
   alias TrueBG.Canary.BusinessConceptAbilities
   alias TrueBG.Permissions.AclEntry
@@ -31,23 +31,23 @@ defmodule TrueBG.Canary.Abilities do
       TaxonomyAbilities.can?(user, :create, acl_entry)
     end
 
-    def can?(%User{}, _action, BusinessConcept) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
+    def can?(%User{}, _action, BusinessConceptVersion) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
       true
     end
 
-    def can?(%User{} = user, :update, %BusinessConcept{} = business_concept) do
+    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept) do
       BusinessConceptAbilities.can?(user, :update, business_concept)
     end
 
-    def can?(%User{} = user, :send_for_approval, %BusinessConcept{} = business_concept) do
+    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept) do
       BusinessConceptAbilities.can?(user, :send_for_approval, business_concept)
     end
 
-    def can?(%User{} = user, :reject, %BusinessConcept{} = business_concept) do
+    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept) do
       BusinessConceptAbilities.can?(user, :reject, business_concept)
     end
 
-    def can?(%User{} = user, :publish, %BusinessConcept{} = business_concept) do
+    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept) do
       BusinessConceptAbilities.can?(user, :publish, business_concept)
     end
 

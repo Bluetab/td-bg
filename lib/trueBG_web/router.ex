@@ -50,10 +50,13 @@ defmodule TrueBGWeb.Router do
     resources "/data_domains", DataDomainController do
       post "/business_concept", BusinessConceptController, :create
     end
+
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
     resources "/business_concepts", BusinessConceptController do
       patch "/status", BusinessConceptStatusController, :update
     end
+
+    resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update, :delete]
   end
 
   def swagger_info do

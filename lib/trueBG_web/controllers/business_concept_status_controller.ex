@@ -5,6 +5,7 @@ defmodule TrueBGWeb.BusinessConceptStatusController do
 
   alias TrueBG.BusinessConcepts
   alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TrueBG.BusinessConcepts.BusinessConceptVersion
   alias TrueBGWeb.BusinessConceptView
   alias TrueBGWeb.ErrorView
 
@@ -12,10 +13,10 @@ defmodule TrueBGWeb.BusinessConceptStatusController do
 
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update]
 
-  def update(conn, %{"status" => new_status} = params) do
+  def update(conn, %{"business_concept_id" => id, "status" => new_status} = params) do
 
-    business_concept = conn.assigns.business_concept
-    status = business_concept.status
+    business_concept_version = BusinessConcepts.get_business_concept!(id)
+    status = business_concept_version.status
     user = conn.assigns.current_user
 
     draft = BusinessConcept.status.draft
@@ -25,11 +26,11 @@ defmodule TrueBGWeb.BusinessConceptStatusController do
 
     case {status, new_status} do
       {^draft, ^pending_approval} ->
-        send_for_approval(conn, user, business_concept, params)
+        send_for_approval(conn, user, business_concept_version, params)
       {^pending_approval, ^published} ->
-        publish(conn, user,  business_concept, params)
+        publish(conn, user,  business_concept_version, params)
       {^pending_approval, ^rejected} ->
-        reject(conn, user,  business_concept, params)
+        reject(conn, user,  business_concept_version, params)
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -37,56 +38,56 @@ defmodule TrueBGWeb.BusinessConceptStatusController do
     end
   end
 
-  defp send_for_approval(conn, user, business_concept, _parmas) do
-    case can?(user, send_for_approval(business_concept)) do
-      true -> do_send_for_approval(conn, business_concept)
-      _ ->
-         conn
-           |> put_status(:forbidden)
-           |> render(ErrorView, :"403.json")
-    end
-  end
-
-  defp do_send_for_approval(conn, business_concept) do
+  defp send_for_approval(conn, user, business_concept_version, _params) do
     attrs = %{status: BusinessConcept.status.pending_approval}
-    with {:ok, %BusinessConcept{} = concept} <-
-          BusinessConcepts.update_business_concept_status(business_concept, attrs) do
-      render(conn, BusinessConceptView, "show.json", business_concept: concept)
+    with true <- can?(user, send_for_approval(business_concept_version)),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+           BusinessConcepts.update_business_concept_status(business_concept_version, attrs) do
+       render(conn, BusinessConceptView, "show.json", business_concept: concept)
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 
-  defp reject(conn, user, business_concept, params) do
-    case can?(user, reject(business_concept)) do
-      true -> do_reject(conn, business_concept, params)
-      _ ->
-         conn
-           |> put_status(:forbidden)
-           |> render(ErrorView, :"403.json")
-    end
-  end
-
-  defp do_reject(conn, business_concept, params) do
+  defp reject(conn, user, business_concept_version, params) do
     attrs = %{reject_reason: Map.get(params, "reject_reason")}
-    with {:ok, %BusinessConcept{} = concept} <-
-          BusinessConcepts.reject_business_concept(business_concept, attrs) do
-      render(conn, BusinessConceptView, "show.json", business_concept: concept)
+    with true <- can?(user, reject(business_concept_version)),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+           BusinessConcepts.reject_business_concept(business_concept_version, attrs) do
+       render(conn, BusinessConceptView, "show.json", business_concept: concept)
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 
-  defp publish(conn, user, business_concept, _parmas) do
-    case can?(user, publish(business_concept)) do
-      true -> do_publish(conn, business_concept)
-      _ ->
-         conn
-           |> put_status(:forbidden)
-           |> render(ErrorView, :"403.json")
-    end
-  end
-
-  defp do_publish(conn, business_concept) do
-    with {:ok, %{published: %BusinessConcept{} = concept}} <-
-                  BusinessConcepts.publish_business_concept(business_concept) do
-      render(conn, BusinessConceptView, "show.json", business_concept: concept)
+  defp publish(conn, user, business_concept_version, _parmas) do
+    with true <- can?(user, publish(business_concept_version)),
+         {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
+                    BusinessConcepts.publish_business_concept(business_concept_version) do
+         render(conn, BusinessConceptView, "show.json", business_concept: concept)
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 end

@@ -3,6 +3,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
   alias TrueBG.Accounts.User
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TrueBG.BusinessConcepts.BusinessConceptVersion
   alias TrueBG.Permissions
 
   def can?(%User{id: user_id}, :create_business_concept, %DataDomain{id: data_domain_id})  do
@@ -12,7 +13,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
-  def can?(%User{id: user_id}, :update, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
+  def can?(%User{id: user_id}, :update, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :update,
       current_status: status,
       required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.published],
@@ -20,7 +21,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
-  def can?(%User{id: user_id}, :send_for_approval, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
+  def can?(%User{id: user_id}, :send_for_approval, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :send_for_approval,
       current_status: status,
       required_statuses: [BusinessConcept.status.draft],
@@ -28,7 +29,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
-  def can?(%User{id: user_id}, :reject, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
+  def can?(%User{id: user_id}, :reject, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :reject,
       current_status: status,
       required_statuses: [BusinessConcept.status.pending_approval],
@@ -36,7 +37,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
-  def can?(%User{id: user_id}, :publish, %BusinessConcept{status: status, data_domain_id: data_domain_id}) do
+  def can?(%User{id: user_id}, :publish, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :publish,
       current_status: status,
       required_statuses: [BusinessConcept.status.pending_approval],
