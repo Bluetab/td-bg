@@ -78,6 +78,36 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
     end
   end
 
+  describe "index root" do
+    setup [:create_domain_group]
+
+    @tag :admin_authenticated
+    test "lists root domain groups", %{conn: conn, swagger_schema: schema, domain_group: domain_group} do
+      conn = get conn, domain_group_path(conn, :index_root)
+      validate_resp_schema(conn, schema, "DomainGroupsResponse")
+      assert json_response(conn, 200)["data"] == [%{
+               "id" => domain_group.id,
+               "description" => domain_group.description,
+               "name" => domain_group.name,
+               "parent_id" => nil}]
+    end
+  end
+
+  describe "index_children" do
+    setup [:create_child_domain_group]
+
+    @tag :admin_authenticated
+    test "index domain group children", %{conn: conn, swagger_schema: schema, child_domain_group: {:ok, child_domain_group}} do
+      conn = get conn, domain_group_domain_group_path(conn,  :index_children, child_domain_group.parent_id)
+      validate_resp_schema(conn, schema, "DomainGroupsResponse")
+      assert json_response(conn, 200)["data"] == [%{
+               "id" => child_domain_group.id,
+               "description" => child_domain_group.description,
+               "name" => child_domain_group.name,
+               "parent_id" => child_domain_group.parent_id}]
+    end
+  end
+
   describe "delete domain_group" do
     setup [:create_domain_group]
 
@@ -96,5 +126,11 @@ defmodule TrueBGWeb.DomainGroupControllerTest do
   defp create_domain_group(_) do
     domain_group = fixture(:domain_group)
     {:ok, domain_group: domain_group}
+  end
+
+  defp create_child_domain_group(_) do
+    {:ok, domain_group} =  Taxonomies.create_domain_group(@create_attrs)
+    child_domain_group = Taxonomies.create_domain_group(%{parent_id: domain_group.id, description: "some child description", name: "some child name"})
+    {:ok, child_domain_group: child_domain_group}
   end
 end

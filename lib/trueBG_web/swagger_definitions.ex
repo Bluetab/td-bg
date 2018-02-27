@@ -90,6 +90,12 @@ defmodule TrueBGWeb.SwaggerDefinitions do
           type :object
           data Schema.ref(:DomainGroup)
         end
+      end,
+      DomainGroupsResponse: swagger_schema do
+        properties do
+          type :object
+          data Schema.ref(:DomainGroups)
+        end
       end
     }
   end
@@ -158,6 +164,29 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         properties do
           type :object
           data Schema.ref(:Roles)
+        end
+      end
+    }
+  end
+
+  def business_concept_definitions do
+    %{
+      BusinessConcept: swagger_schema do
+        title "Business Concept"
+        description "Business Concept"
+        properties do
+          id :integer, "unique identifier", required: true
+          content :object, "json content"
+          type :string, "bc type"
+          name :string, "name"
+          description :string, "description"
+          modifier :string, "last updated by"
+          last_change :date, "last updated date"
+          data_domain_id :integer, "parent data domain id"
+          status :string, "status"
+          version :integer, "version"
+          reject_reason :string, required: false
+          mod_comments :string, required: false
         end
       end
     }
