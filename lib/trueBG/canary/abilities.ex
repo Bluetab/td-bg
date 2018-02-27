@@ -19,8 +19,8 @@ defmodule TrueBG.Canary.Abilities do
     # Data domain
 
     # This is the creation of a business concept in a data domain
-    def can?(%User{} = user, :create_business_concept, %DataDomain{} = data_domain)  do
-      BusinessConceptAbilities.can?(user, :create_business_concept, data_domain)
+    def can?(%User{} = user, :create_new_business_concept, %DataDomain{} = data_domain)  do
+      BusinessConceptAbilities.can?(user, :create_new_business_concept, data_domain)
     end
 
     def can?(%User{} = user, :create_data_domain, %DomainGroup{} = domain_group) do

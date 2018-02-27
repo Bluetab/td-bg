@@ -15,7 +15,7 @@ defmodule TrueBGWeb.BusinessConceptStatusController do
 
   def update(conn, %{"business_concept_id" => id, "status" => new_status} = params) do
 
-    business_concept_version = BusinessConcepts.get_business_concept!(id)
+    business_concept_version = BusinessConcepts.get_current_business_concept!(id)
     status = business_concept_version.status
     user = conn.assigns.current_user
 
@@ -42,7 +42,7 @@ defmodule TrueBGWeb.BusinessConceptStatusController do
     attrs = %{status: BusinessConcept.status.pending_approval}
     with true <- can?(user, send_for_approval(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = concept} <-
-           BusinessConcepts.update_business_concept_status(business_concept_version, attrs) do
+           BusinessConcepts.update_current_business_concept_status(business_concept_version, attrs) do
        render(conn, BusinessConceptView, "show.json", business_concept: concept)
     else
       false ->
@@ -77,7 +77,7 @@ defmodule TrueBGWeb.BusinessConceptStatusController do
   defp publish(conn, user, business_concept_version, _parmas) do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
-                    BusinessConcepts.publish_business_concept(business_concept_version) do
+                    BusinessConcepts.publish_current_business_concept(business_concept_version) do
          render(conn, BusinessConceptView, "show.json", business_concept: concept)
     else
       false ->

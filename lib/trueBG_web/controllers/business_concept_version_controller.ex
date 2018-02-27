@@ -12,7 +12,7 @@ defmodule TrueBGWeb.BusinessConceptVersionController do
   end
 
   def show(conn, %{"id" => id}) do
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_version = BusinessConcepts.get_current_business_concept_version!(id)
     render(conn, "show.json", business_concept_version: business_concept_version)
   end
 end
