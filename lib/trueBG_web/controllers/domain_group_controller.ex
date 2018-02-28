@@ -6,6 +6,9 @@ defmodule TrueBGWeb.DomainGroupController do
   alias TrueBG.Taxonomies
   alias TrueBG.Taxonomies.DomainGroup
   alias TrueBGWeb.SwaggerDefinitions
+  alias TrueBG.Utils.CollectionUtils
+  alias Guardian.Plug, as: GuardianPlug
+  import Canada
 
   action_fallback TrueBGWeb.FallbackController
 
@@ -65,12 +68,24 @@ defmodule TrueBGWeb.DomainGroupController do
   end
 
   def create(conn, %{"domain_group" => domain_group_params}) do
+    current_user = GuardianPlug.current_resource(conn)
+    domain_group = %DomainGroup{} |> Map.merge(CollectionUtils.to_struct(DomainGroup, domain_group_params))
+
+    if current_user |> can?(create(domain_group)) do
+      do_create(conn, domain_group_params)
+    else
+      conn
+      |> put_status(403)
+      |> render(ErrorView, :"403")
+    end
+  end
+
+  defp do_create(conn, domain_group_params) do
     parent_id = Taxonomies.get_parent_id(domain_group_params)
     status = case parent_id do
       {:ok, _parent} -> Taxonomies.create_domain_group(domain_group_params)
       {:error, _} -> {:error, nil}
     end
-
     case status do
       {:ok, %DomainGroup{} = domain_group} ->
         conn

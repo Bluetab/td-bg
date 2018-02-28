@@ -78,7 +78,40 @@ defmodule TrueBG.TaxonomyTest do
       domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
       assert data_domain_info["domain_group_id"] == domain_group_info["id"]
     end
+  end
 
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to create a Domain Group with the name "(?<new_domain_group_name>[^"]+)" as child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
+          %{user_name: user_name, new_domain_group_name: new_domain_group_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
+    parent = get_domain_group_by_name(token_admin, domain_group_name)
+    assert parent["name"] == domain_group_name
+    token = build_user_token(user_name)
+    {_, status_code, _json_resp} = domain_group_create(token, %{name: new_domain_group_name, description: description, parent_id: parent["id"]})
+    {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", user (?<user_name>[^"]+) is able to see the Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
+         %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]},
+         state do
+    if actual_result == expected_result do
+      token  = build_user_token(user_name)
+      domain_group_info = get_domain_group_by_name(token, domain_group_name)
+      assert domain_group_name == domain_group_info["name"]
+      {:ok, status_code, json_resp} = domain_group_show(token, domain_group_info["id"])
+      assert rc_ok() == to_response_code(status_code)
+      domain_group = json_resp["data"]
+      assert domain_group_name == domain_group["name"]
+      assert description == domain_group["description"]
+      {:ok, %{state | status_code: nil}}
+    end
+  end
+
+  defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Domain Group "(?<domain_group_name>[^"]+)" is a child of Domain Group "(?<parent_domain_group_name>[^"]+)"$/,
+         %{actual_result: actual_result, expected_result: expected_result, domain_group_name: domain_group_name, parent_domain_group_name: parent_domain_group_name}, state do
+    if actual_result == expected_result do
+      domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+      parent_domain_group_info = get_domain_group_by_name(state[:token_admin], parent_domain_group_name)
+      assert domain_group_info["parent_id"] == parent_domain_group_info["id"]
+    end
   end
 
 end

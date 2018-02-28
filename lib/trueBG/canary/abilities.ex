@@ -27,6 +27,10 @@ defmodule TrueBG.Canary.Abilities do
       TaxonomyAbilities.can?(user, :create_data_domain, domain_group)
     end
 
+    def can?(%User{} = user, :create, %DomainGroup{} = domain_group) do
+      TaxonomyAbilities.can?(user, :create, domain_group)
+    end
+
     def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "domain_group"} = acl_entry) do
       TaxonomyAbilities.can?(user, :create, acl_entry)
     end

@@ -7,6 +7,7 @@ defmodule TrueBGWeb.AclEntryController do
   alias TrueBGWeb.ErrorView
   alias Guardian.Plug, as: GuardianPlug
   alias TrueBGWeb.SwaggerDefinitions
+  alias TrueBG.Utils.CollectionUtils
   import Canada
 
   action_fallback TrueBGWeb.FallbackController
@@ -26,16 +27,6 @@ defmodule TrueBGWeb.AclEntryController do
     render(conn, "index.json", acl_entries: acl_entries)
   end
 
-  defp to_struct(kind, attrs) do
-    struct = struct(kind)
-    Enum.reduce Map.to_list(struct), struct, fn {k, _}, acc ->
-      case Map.fetch(attrs, Atom.to_string(k)) do
-        {:ok, v} -> %{acc | k => v}
-        :error -> acc
-      end
-    end
-  end
-
   swagger_path :create do
     post "/acl_entries"
     description "Creates an Acl Entry"
@@ -48,7 +39,7 @@ defmodule TrueBGWeb.AclEntryController do
   end
 
   def create(conn, %{"acl_entry" => acl_entry_params}) do
-    acl_entry = %AclEntry{} |> Map.merge(to_struct(AclEntry, acl_entry_params))
+    acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
     current_user = GuardianPlug.current_resource(conn)
 
     if current_user |> can?(create(acl_entry)) do
