@@ -41,7 +41,6 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       end,
       DataDomainResponse: swagger_schema do
         properties do
-          type :object
           data Schema.ref(:DataDomain)
         end
       end
@@ -68,9 +67,13 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       end,
       DomainGroupCreate: swagger_schema do
         properties do
-          name :string, "domain group name", required: true
-          description :string, "domain group description"
-          parent_id :integer, "parent domain group id"
+          domain_group (Schema.new do
+            properties do
+              name :string, "domain group name", required: true
+              description :string, "domain group description"
+              parent_id :integer, "parent domain group id"
+             end
+          end)
         end
       end,
       DomainGroupUpdate: swagger_schema do
@@ -87,13 +90,11 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       end,
       DomainGroupResponse: swagger_schema do
         properties do
-          type :object
           data Schema.ref(:DomainGroup)
         end
       end,
       DomainGroupsResponse: swagger_schema do
         properties do
-          type :object
           data Schema.ref(:DomainGroups)
         end
       end
@@ -131,7 +132,6 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       end,
       AclEntryResponse: swagger_schema do
         properties do
-          type :object
           data Schema.ref(:AclEntry)
         end
       end
@@ -156,13 +156,11 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       end,
       RoleResponse: swagger_schema do
         properties do
-          type :object
           data Schema.ref(:Role)
         end
       end,
       RolesResponse: swagger_schema do
         properties do
-          type :object
           data Schema.ref(:Roles)
         end
       end

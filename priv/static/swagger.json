@@ -431,7 +431,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/DomainGroups"
+              "$ref": "#/definitions/DomainGroupsResponse"
             },
             "description": "OK"
           }
@@ -456,7 +456,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/DomainGroups"
+              "$ref": "#/definitions/DomainGroupsResponse"
             },
             "description": "OK"
           }
@@ -479,11 +479,11 @@
           "400": {
             "description": "Client Error"
           },
-          "200": {
+          "201": {
             "schema": {
-              "$ref": "#/definitions/DomainGroup"
+              "$ref": "#/definitions/DomainGroupResponse"
             },
-            "description": "OK"
+            "description": "Created"
           }
         },
         "produces": [
@@ -511,7 +511,7 @@
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/DomainGroups"
+              "$ref": "#/definitions/DomainGroupsResponse"
             },
             "description": "OK"
           }
@@ -804,9 +804,6 @@
     "RolesResponse": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "object"
-        },
         "data": {
           "$ref": "#/definitions/Roles"
         }
@@ -823,9 +820,6 @@
     "RoleResponse": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "object"
-        },
         "data": {
           "$ref": "#/definitions/Role"
         }
@@ -853,9 +847,6 @@
     "DomainGroupsResponse": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "object"
-        },
         "data": {
           "$ref": "#/definitions/DomainGroups"
         }
@@ -888,9 +879,6 @@
     "DomainGroupResponse": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "object"
-        },
         "data": {
           "$ref": "#/definitions/DomainGroup"
         }
@@ -898,21 +886,26 @@
     },
     "DomainGroupCreate": {
       "type": "object",
-      "required": [
-        "name"
-      ],
       "properties": {
-        "parent_id": {
-          "type": "integer",
-          "description": "parent domain group id"
-        },
-        "name": {
-          "type": "string",
-          "description": "domain group name"
-        },
-        "description": {
-          "type": "string",
-          "description": "domain group description"
+        "domain_group": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "parent_id": {
+              "type": "integer",
+              "description": "parent domain group id"
+            },
+            "name": {
+              "type": "string",
+              "description": "domain group name"
+            },
+            "description": {
+              "type": "string",
+              "description": "domain group description"
+            }
+          }
         }
       }
     },
@@ -975,9 +968,6 @@
     "DataDomainResponse": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "object"
-        },
         "data": {
           "$ref": "#/definitions/DataDomain"
         }
@@ -1038,9 +1028,6 @@
     "AclEntryResponse": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "object"
-        },
         "data": {
           "$ref": "#/definitions/AclEntry"
         }
