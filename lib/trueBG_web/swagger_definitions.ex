@@ -171,6 +171,15 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         type :array
         items Schema.ref(:Role)
       end,
+      RoleCreateUpdate: swagger_schema do
+        properties do
+          role (Schema.new do
+            properties do
+              name :string, "role name", required: true
+            end
+          end)
+        end
+      end,
       RoleResponse: swagger_schema do
         properties do
           data Schema.ref(:Role)

@@ -15,7 +15,7 @@ defmodule TrueBGWeb.RoleController do
   swagger_path :index do
     get "/roles"
     description "List Roles"
-    response 200, "OK", Schema.ref(:Roles)
+    response 200, "OK", Schema.ref(:RolesResponse)
   end
 
   def index(conn, _params) do
@@ -28,9 +28,9 @@ defmodule TrueBGWeb.RoleController do
     description "Creates a Role"
     produces "application/json"
     parameters do
-      role :body, Schema.ref(:Role), "Role create attrs"
+      role :body, Schema.ref(:RoleCreateUpdate), "Role create attrs"
     end
-    response 200, "OK", Schema.ref(:Role)
+    response 201, "Created", Schema.ref(:RoleResponse)
     response 400, "Client Error"
   end
 
@@ -50,7 +50,7 @@ defmodule TrueBGWeb.RoleController do
     parameters do
       id :path, :integer, "Role ID", required: true
     end
-    response 200, "OK", Schema.ref(:Role)
+    response 200, "OK", Schema.ref(:RoleResponse)
     response 400, "Client Error"
   end
 
@@ -64,10 +64,10 @@ defmodule TrueBGWeb.RoleController do
     description "Updates Role"
     produces "application/json"
     parameters do
-      data_domain :body, Schema.ref(:Role), "Role update attrs"
+      data_domain :body, Schema.ref(:RoleCreateUpdate), "Role update attrs"
       id :path, :integer, "Role ID", required: true
     end
-    response 200, "OK", Schema.ref(:Role)
+    response 200, "OK", Schema.ref(:RoleResponse)
     response 400, "Client Error"
   end
 
@@ -86,7 +86,7 @@ defmodule TrueBGWeb.RoleController do
     parameters do
       id :path, :integer, "Role ID", required: true
     end
-    response 200, "OK"
+    response 204, "OK"
     response 400, "Client Error"
   end
 
@@ -104,7 +104,7 @@ defmodule TrueBGWeb.RoleController do
       user_id :path, :integer, "user id", required: true
       domain_group_id :path, :integer, "domain group id", required: true
     end
-    response 200, "OK"
+    response 200, "OK", Schema.ref(:RoleResponse)
     response 400, "Client Error"
   end
 
@@ -120,7 +120,7 @@ defmodule TrueBGWeb.RoleController do
       user_id :path, :integer, "user id", required: true
       data_domain_id :path, :integer, "data domain id", required: true
     end
-    response 200, "OK"
+    response 200, "OK", Schema.ref(:RoleResponse)
     response 400, "Client Error"
   end
 

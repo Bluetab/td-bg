@@ -27,6 +27,9 @@
             "description": "Client Error"
           },
           "200": {
+            "schema": {
+              "$ref": "#/definitions/RoleResponse"
+            },
             "description": "OK"
           }
         },
@@ -64,6 +67,9 @@
             "description": "Client Error"
           },
           "200": {
+            "schema": {
+              "$ref": "#/definitions/RoleResponse"
+            },
             "description": "OK"
           }
         },
@@ -102,7 +108,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/Role"
+              "$ref": "#/definitions/RoleResponse"
             },
             "description": "OK"
           }
@@ -113,7 +119,7 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/Role"
+              "$ref": "#/definitions/RoleCreateUpdate"
             },
             "required": false,
             "name": "data_domain",
@@ -142,7 +148,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/Role"
+              "$ref": "#/definitions/RoleResponse"
             },
             "description": "OK"
           }
@@ -171,7 +177,7 @@
           "400": {
             "description": "Client Error"
           },
-          "200": {
+          "204": {
             "description": "OK"
           }
         },
@@ -201,11 +207,11 @@
           "400": {
             "description": "Client Error"
           },
-          "200": {
+          "201": {
             "schema": {
-              "$ref": "#/definitions/Role"
+              "$ref": "#/definitions/RoleResponse"
             },
-            "description": "OK"
+            "description": "Created"
           }
         },
         "produces": [
@@ -214,7 +220,7 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/Role"
+              "$ref": "#/definitions/RoleCreateUpdate"
             },
             "required": false,
             "name": "role",
@@ -233,7 +239,7 @@
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/Roles"
+              "$ref": "#/definitions/RolesResponse"
             },
             "description": "OK"
           }
@@ -830,6 +836,23 @@
       "properties": {
         "data": {
           "$ref": "#/definitions/Role"
+        }
+      }
+    },
+    "RoleCreateUpdate": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "role name"
+            }
+          }
         }
       }
     },
