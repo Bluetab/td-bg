@@ -35,14 +35,6 @@ config :canary, repo: TrueBG.Repo,
   unauthorized_handler: {TrueBG.Auth.Canary, :handle_unauthorized},
   not_found_handler: {TrueBG.Auth.Canary, :handle_not_found}
 
-config :trueBG, :phoenix_swagger,
-  swagger_files: %{
-   "priv/static/swagger.json" => [
-     router: TrueBGWeb.Router,     # phoenix routes will be converted to swagger paths
-     endpoint: TrueBGWeb.Endpoint  # (optional) endpoint config used to set host, port and https schemes.
-   ]
-  }
-
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
