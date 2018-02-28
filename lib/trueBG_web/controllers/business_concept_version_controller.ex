@@ -2,7 +2,6 @@ defmodule TrueBGWeb.BusinessConceptVersionController do
   use TrueBGWeb, :controller
 
   alias TrueBG.BusinessConcepts
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
 
   action_fallback TrueBGWeb.FallbackController
 

@@ -419,13 +419,6 @@ defmodule TrueBG.BusinessConceptsTests do
       assert  object |> business_concept_version_preload() == business_concept_version
     end
 
-    # test "delete_business_concept/1 deletes the business_concept" do
-    #   user = build(:user)
-    #   business_concept = insert(:business_concept, last_change_by:  user.id)
-    #   assert {:ok, %BusinessConcept{}} = BusinessConcepts.delete_business_concept(business_concept)
-    #   assert_raise Ecto.NoResultsError, fn -> BusinessConcepts.get_current_version_by_business_concept_id!(business_concept.id) end
-    # end
-
     test "change_business_concept/1 returns a business_concept changeset" do
       user = build(:user)
       business_concept = insert(:business_concept, last_change_by:  user.id)
