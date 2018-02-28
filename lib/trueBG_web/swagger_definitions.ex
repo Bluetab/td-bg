@@ -23,14 +23,22 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       end,
       DataDomainCreate: swagger_schema do
         properties do
-          name :string, "data domain name", required: true
-          description :string, "data domain description"
+          data_domain (Schema.new do
+            properties do
+              name :string, "data domain name", required: true
+              description :string, "data domain description"
+            end
+          end)
         end
       end,
       DataDomainUpdate: swagger_schema do
         properties do
-          name :string, "data domain name"
-          description :string, "data domain description"
+          data_domain (Schema.new do
+            properties do
+             name :string, "data domain name"
+             description :string, "data domain description"
+            end
+          end)
         end
       end,
       DataDomains: swagger_schema do
@@ -62,7 +70,8 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         example %{
           id: 12,
           name: "Domain group name",
-          parent_id: nil
+          description: "dg description",
+          parent_id: 1
         }
       end,
       DomainGroupCreate: swagger_schema do
@@ -78,8 +87,12 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       end,
       DomainGroupUpdate: swagger_schema do
         properties do
-          name :string, "domain group name", required: true
-          description :string, "domain group description"
+          domain_group (Schema.new do
+            properties do
+              name :string, "domain group name", required: true
+              description :string, "domain group description"
+            end
+          end)
         end
       end,
       DomainGroups: swagger_schema do

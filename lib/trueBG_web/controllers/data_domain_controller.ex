@@ -53,7 +53,7 @@ defmodule TrueBGWeb.DataDomainController do
       data_domain :body, Schema.ref(:DataDomainCreate), "Data Domain create attrs"
       domain_group_id :path, :integer, "Domain Group ID", required: true
     end
-    response 200, "OK", Schema.ref(:DataDomain)
+    response 201, "OK", Schema.ref(:DataDomain)
     response 400, "Client Error"
   end
 
@@ -109,7 +109,7 @@ defmodule TrueBGWeb.DataDomainController do
     parameters do
       id :path, :integer, "Data Domain ID", required: true
     end
-    response 200, "OK"
+    response 204, "OK"
     response 400, "Client Error"
   end
 

@@ -38,9 +38,12 @@ defmodule TrueBGWeb.DomainGroupController do
   end
 
   swagger_path :index_children do
-    get "/domain_groups/index_children"
+    get "/domain_groups/{domain_group_id}/index_children"
     description "List non-root Domain Groups"
     produces "application/json"
+    parameters do
+      domain_group_id :path, :integer, "Domain Group ID", required: true
+    end
     response 200, "OK", Schema.ref(:DomainGroupsResponse)
     response 400, "Client Error"
   end
@@ -96,7 +99,7 @@ defmodule TrueBGWeb.DomainGroupController do
     parameters do
       id :path, :integer, "Domain Group ID", required: true
     end
-    response 200, "OK", Schema.ref(:DomainGroup)
+    response 200, "OK", Schema.ref(:DomainGroupResponse)
     response 400, "Client Error"
   end
 
@@ -113,7 +116,7 @@ defmodule TrueBGWeb.DomainGroupController do
       data_domain :body, Schema.ref(:DomainGroupUpdate), "Domain Group update attrs"
       id :path, :integer, "Domain Group ID", required: true
     end
-    response 200, "OK", Schema.ref(:DomainGroup)
+    response 200, "OK", Schema.ref(:DomainGroupResponse)
     response 400, "Client Error"
   end
 
