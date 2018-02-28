@@ -24,15 +24,7 @@ defmodule TrueBG.BusinessConcepts.BusinessConceptVersion do
   def create_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
     |> cast(attrs, [:content, :name, :description, :last_change_by, :last_change_at, :version, :mod_comments])
-    |> case do
-      changeset ->
-        case attrs["business_concept"] do
-          %BusinessConcept{} = concept ->
-            put_assoc(changeset, :business_concept, concept)
-          _ ->
-            cast_assoc(changeset, :business_concept)
-        end
-    end
+    |> put_assoc(:business_concept, attrs.business_concept)
     |> validate_required([:content, :name, :last_change_by, :last_change_at, :version, :business_concept])
     |> put_change(:status, BusinessConcept.status.draft)
     |> validate_length(:name, max: 255)
