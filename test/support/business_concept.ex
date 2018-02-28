@@ -11,8 +11,8 @@ defmodule TrueBGWeb.BusinessConcept do
                   "Name" => "name",
                   "Description" => "description",
                   "Status" => "status",
-                  "Last Modification" => "last_change",
-                  "Last User" => "modifier",
+                  "Last Modification" => "last_change_at",
+                  "Last User" => "last_change_by",
                   "Version" => "version",
                   "Reject Reason" => "reject_reason",
                   "Modification Comments" => "mod_comments"
@@ -102,4 +102,12 @@ defmodule TrueBGWeb.BusinessConcept do
        business_concept["type"] == business_concept_type
      end)
   end
+
+  def business_concept_version_show(token, id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(business_concept_version_url(@endpoint, :show, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
 end

@@ -162,7 +162,6 @@ Feature: Business Concepts administration
      | Format            | Date                                                                     |
      | Sensitive Data    | Related to personal Data                                                 |
      | Update Frequence  | Monthly                                                                  |
-
    Then the system returns a result with code "<result>"
    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
     | Field             | Value                                                              |
@@ -189,7 +188,7 @@ Feature: Business Concepts administration
      | publisher | Ok           |
      | admin     | Ok           |
 
-  Scenario Outline: Sending business concept for approval
+   Scenario Outline: Sending business concept for approval
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
@@ -260,15 +259,14 @@ Feature: Business Concepts administration
       | publisher | Ok           |
       | admin     | Ok           |
 
-
   Scenario Outline: Reject existing Business Concept in Pending Approval status
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
     And following users exist with the indicated role in Data Domain "My Domain"
       | user      | role    |
-      | watcher   | watch   |
       | creator   | create  |
+      | watcher   | watch   |
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with empty definition
@@ -351,12 +349,12 @@ Feature: Business Concepts administration
         | Description           | This is the second description of my business term |
         | Modification Comments | Modification on the Business Term description      |
       Then the system returns a result with code "<result>"
-      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data::
+      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
         | Field                 | Value                                              |
         | Type                  | Business Term                                      |
         | Name                  | My Business Term                                   |
         | Description           | This is the first description of my business term  |
-      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data::
+      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
         | Field                 | Value                                              |
         | Type                  | Business Term                                      |
         | Name                  | My Business Term                                   |

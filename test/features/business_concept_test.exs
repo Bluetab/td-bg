@@ -17,8 +17,8 @@ defmodule TrueBG.BusinessConceptTest do
                   "Name" => "name",
                   "Description" => "description",
                   "Status" => "status",
-                  "Last Modification" => "last_change",
-                  "Last User" => "modifier",
+                  "Last Modification" => "last_change_at",
+                  "Last User" => "last_change_by",
                   "Version" => "version",
                   "Reject Reason" => "reject_reason",
                   "Modification Comments" => "mod_comments"
@@ -85,11 +85,11 @@ defmodule TrueBG.BusinessConceptTest do
     assert_attrs(value, target[attr])
   end
 
-  def assert_attr("last_change" = attr, _value, %{} = target) do
+  def assert_attr("last_change_at" = attr, _value, %{} = target) do
     assert :ok == elem(DateTime.from_iso8601(target[attr]), 0)
   end
 
-  def assert_attr("modifier" = attr, _value, %{} = target) do
+  def assert_attr("last_change_by" = attr, _value, %{} = target) do
     assert target[attr] != nil
   end
 
@@ -308,7 +308,7 @@ defmodule TrueBG.BusinessConceptTest do
 
   # Scenario Outline: Modification of existing Business Concept in Published status
 
-  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with follwing data::$/,
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with follwing data:$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
     %{token_admin: token_admin} = state do
 
@@ -321,7 +321,7 @@ defmodule TrueBG.BusinessConceptTest do
                     business_concept_type)
         assert business_concept_version == business_concept_tmp["version"]
         assert business_concept_type == business_concept_tmp["type"]
-        {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
+        {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
         assert rc_ok() == to_response_code(http_status_code)
         attrs = field_value_to_api_attrs(fields, @fixed_values)
         assert_attrs(attrs, business_concept)
@@ -415,4 +415,12 @@ defmodule TrueBG.BusinessConceptTest do
        business_concept["type"] == business_concept_type
      end)
   end
+
+  defp business_concept_version_show(token, id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(business_concept_version_url(@endpoint, :show, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
 end

@@ -1,29 +1,28 @@
 defmodule TrueBGWeb.BusinessConceptController do
   use TrueBGWeb, :controller
 
+  import Canada, only: [can?: 2]
+
   alias TrueBG.BusinessConcepts
   alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TrueBG.BusinessConcepts.BusinessConceptVersion
   alias TrueBG.Taxonomies.DataDomain
-  alias Ecto.UUID
   alias TrueBGWeb.ErrorView
 
   alias Poison, as: JSON
 
-  plug :load_canary_action, phoenix_action: :create, canary_action: :create_business_concept
-  plug :load_and_authorize_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create_business_concept
-
-  plug :load_and_authorize_resource, model: BusinessConcept, only: [:update]
+  plug :load_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
 
   action_fallback TrueBGWeb.FallbackController
 
   def index(conn, _params) do
-    business_concepts = BusinessConcepts.list_business_concepts()
-    render(conn, "index.json", business_concepts: business_concepts)
+    business_concept_versions = BusinessConcepts.list_business_concept_versions()
+    render(conn, "index.json", business_concepts: business_concept_versions)
   end
 
   def index_children_business_concept(conn, %{"id" => id}) do
-    business_concepts = BusinessConcepts.list_children_business_concept(id)
-    render(conn, "index.json", business_concepts: business_concepts)
+    business_concept_vesions = BusinessConcepts.get_data_domain_children_versions!(id)
+    render(conn, "index.json", business_concepts: business_concept_vesions)
   end
 
   def create(conn, %{"business_concept" => business_concept_params}) do
@@ -33,22 +32,36 @@ defmodule TrueBGWeb.BusinessConceptController do
 
     concept_name = Map.get(business_concept_params, "name")
 
-    creation_attrs = business_concept_params
-      |> Map.put("data_domain_id", conn.assigns.data_domain.id)
-      |> Map.put("content_schema", content_schema)
-      |> Map.put("modifier", conn.assigns.current_user.id)
-      |> Map.put("last_change", DateTime.utc_now())
-      |> Map.put("version_group_id", UUID.generate)
-      |> Map.put("version", 1)
+    user = conn.assigns.current_user
+    data_domain = conn.assigns.data_domain
 
-    with {:ok, 0} <- count_business_concepts(concept_type, concept_name),
-         {:ok, %BusinessConcept{} = business_concept} <-
-          BusinessConcepts.create_business_concept(creation_attrs) do
+    business_concept_attrs = %{}
+    |> Map.put("data_domain_id", data_domain.id)
+    |> Map.put("type", concept_type)
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    creation_attrs = business_concept_params
+    |> Map.put("business_concept", business_concept_attrs)
+    |> Map.put("content_schema", content_schema)
+    |> Map.put("last_change_by", conn.assigns.current_user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+    |> Map.put("status", BusinessConcept.status.draft)
+    |> Map.put("version", 1)
+
+    with true <- can?(user, create_business_concept(data_domain)),
+         {:ok, 0} <- count_business_concepts(concept_type, concept_name),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+          BusinessConcepts.create_business_concept_version(creation_attrs) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", business_concept_path(conn, :show, business_concept))
-      |> render("show.json", business_concept: business_concept)
+      |> put_resp_header("location", business_concept_path(conn, :show, concept.business_concept))
+      |> render("show.json", business_concept: concept)
     else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
       _error ->
         conn
         |> put_status(:unprocessable_entity)
@@ -57,48 +70,52 @@ defmodule TrueBGWeb.BusinessConceptController do
   end
 
   def show(conn, %{"id" => id}) do
-    business_concept = BusinessConcepts.get_business_concept!(id)
+    business_concept = BusinessConcepts.get_current_version_by_business_concept_id!(id)
     render(conn, "show.json", business_concept: business_concept)
   end
 
   def update(conn, %{"id" => id, "business_concept" => business_concept_params}) do
-    business_concept = BusinessConcepts.get_business_concept!(id)
+    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
     status_draft = BusinessConcept.status.draft
     status_published = BusinessConcept.status.published
-    case business_concept.status do
+    case business_concept_version.status do
       ^status_draft ->
-        update_draft(conn, business_concept, business_concept_params)
+        update_draft(conn, business_concept_version, business_concept_params)
       ^status_published ->
-        update_published(conn, business_concept, business_concept_params)
+        update_published(conn, business_concept_version, business_concept_params)
     end
 
   end
 
-  def delete(conn, %{"id" => id}) do
-    business_concept = BusinessConcepts.get_business_concept!(id)
-    with {:ok, %BusinessConcept{}} <-
-        BusinessConcepts.delete_business_concept(business_concept) do
-      send_resp(conn, :no_content, "")
-    end
-  end
-
-  defp update_draft(conn, business_concept, business_concept_params) do
-    concept_type = business_concept.type
+  defp update_draft(conn, business_concept_version, business_concept_params) do
+    concept_type = business_concept_version.business_concept.type
     concept_name = Map.get(business_concept_params, "name")
     content_schema = get_content_schema(concept_type)
 
-    business_concept_params = business_concept_params
-      |> Map.put("content_schema", content_schema)
-      |> Map.put("modifier", conn.assigns.current_user.id)
-      |> Map.put("last_change", DateTime.utc_now())
+    user = conn.assigns.current_user
 
-    count = if concept_name == business_concept.name, do: 1, else: 0
-    with {:ok, ^count} <- count_business_concepts(concept_type, concept_name),
-         {:ok, %BusinessConcept{} = business_concept} <-
-      BusinessConcepts.update_business_concept(business_concept,
-                                                    business_concept_params) do
-      render(conn, "show.json", business_concept: business_concept)
+    business_concept_attrs = %{}
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    update_params = business_concept_params
+    |> Map.put("business_concept", business_concept_attrs)
+    |> Map.put("content_schema", content_schema)
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    count = if concept_name == business_concept_version.name, do: 1, else: 0
+    with true <- can?(user, update(business_concept_version)),
+         {:ok, ^count} <- count_business_concepts(concept_type, concept_name),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+      BusinessConcepts.update_business_concept_version(business_concept_version,
+                                                              update_params) do
+      render(conn, "show.json", business_concept: concept)
     else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
       _error ->
         conn
         |> put_status(:unprocessable_entity)
@@ -106,21 +123,41 @@ defmodule TrueBGWeb.BusinessConceptController do
     end
   end
 
-  defp update_published(conn, business_concept, business_concept_params)  do
-    content_schema = get_content_schema(business_concept.type)
-    draft_attrs = Map.from_struct(business_concept)
+  defp update_published(conn, business_concept_version, business_concept_params)  do
+    business_concept = business_concept_version.business_concept
+    concept_type = business_concept.type
+    content_schema = get_content_schema(concept_type)
+
+    user = conn.assigns.current_user
+
+    business_concept = business_concept
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    draft_attrs = Map.from_struct(business_concept_version)
     draft_attrs = draft_attrs
     |> Map.merge(business_concept_params)
+    |> Map.put("business_concept", business_concept)
     |> Map.put("content_schema", content_schema)
-    |> Map.put("modifier", conn.assigns.current_user.id)
-    |> Map.put("last_change", DateTime.utc_now())
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
     |> Map.put("mod_comments", business_concept_params["mod_comments"])
-    |> Map.put("version_group_id", business_concept.version_group_id)
-    |> Map.put("version", business_concept.version + 1)
+    |> Map.put("status", BusinessConcept.status.draft)
+    |> Map.put("version", business_concept_version.version + 1)
 
-    with {:ok, %BusinessConcept{} = draft} <-
-          BusinessConcepts.create_business_concept(draft_attrs) do
+    with true <- can?(user, update(business_concept_version)),
+         {:ok, %BusinessConceptVersion{} = draft} <-
+           BusinessConcepts.create_business_concept_version(draft_attrs) do
       render(conn, "show.json", business_concept: draft)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      __error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 

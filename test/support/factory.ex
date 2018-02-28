@@ -2,7 +2,7 @@ defmodule TrueBG.Factory do
   @moduledoc false
   use ExMachina.Ecto, repo: TrueBG.Repo
   alias TrueBG.BusinessConcepts.BusinessConcept
-  alias Ecto.UUID
+  alias TrueBG.BusinessConcepts.BusinessConceptVersion
 
   def user_factory do
     %TrueBG.Accounts.User {
@@ -29,15 +29,22 @@ defmodule TrueBG.Factory do
 
   def business_concept_factory do
     %BusinessConcept {
+      data_domain: build(:data_domain),
+      type: "some type",
+      last_change_by: 1,
+      last_change_at: DateTime.utc_now(),
+    }
+  end
+
+  def business_concept_version_factory do
+    %BusinessConceptVersion {
+      business_concept: build(:business_concept),
       content: %{},
-      type: "Businness Term",
       name: "My business term",
       description: "My business term description",
-      modifier: 1,
-      last_change: DateTime.utc_now(),
-      data_domain: build(:data_domain),
+      last_change_by: 1,
+      last_change_at: DateTime.utc_now(),
       status: BusinessConcept.status.draft,
-      version_group_id: UUID.generate,
       version: 1,
     }
   end

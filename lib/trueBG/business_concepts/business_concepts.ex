@@ -6,6 +6,7 @@ defmodule TrueBG.BusinessConcepts do
   import Ecto.Query, warn: false
   alias TrueBG.Repo
   alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TrueBG.BusinessConcepts.BusinessConceptVersion
   alias Ecto.Changeset
   alias Ecto.Multi
 
@@ -19,7 +20,7 @@ defmodule TrueBG.BusinessConcepts do
 
   @doc """
   count  business conceps of indicated type name
-  and status 
+  and status
 
   """
   def count_business_concepts(type, name, status) do
@@ -29,32 +30,22 @@ defmodule TrueBG.BusinessConcepts do
   defp do_count_business_concepts(_type, _name, []), do: raise "Invalid empty status list"
   defp do_count_business_concepts(type, name, _status) when is_nil(type) or is_nil(name),  do: {:ok, 0}
   defp do_count_business_concepts(type, name, status) do
-    count =  Repo.one(from c in BusinessConcept,
+    count =  Repo.one(from v in BusinessConceptVersion,
+      join: c in BusinessConcept, on: c.id == v.business_concept_id,
       select: count("*"), where: c.type == ^type and
-      c.name == ^name and c.status in ^status)
+      v.name == ^name and v.status in ^status)
     {:ok, count}                                                    #                                                     BusinessConcept.published])
-  end
-
-  @doc """
-  Returns the list of business_concepts.
-
-  ## Examples
-
-      iex> list_business_concepts()
-      [%BusinessConcept{}, ...]
-
-  """
-  def list_business_concepts do
-    Repo.all(BusinessConcept)
   end
 
   @doc """
   Returns children of data domain id passed as argument
   """
-  def list_children_business_concept(id) do
-    query = from bconcept in BusinessConcept,
-                 where: bconcept.data_domain_id == ^id
-    Repo.all(query)
+  def get_data_domain_children_versions!(data_domain_id) do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> preload([_, c], [business_concept: c])
+    |> where([_, c], c.data_domain_id == ^data_domain_id)
+    |> Repo.all
   end
 
   @doc """
@@ -64,31 +55,39 @@ defmodule TrueBG.BusinessConcepts do
 
   ## Examples
 
-      iex> get_business_concept!(123)
+      iex> get_current_version_by_business_concept_id!(123)
       %BusinessConcept{}
 
-      iex> get_business_concept!(456)
+      iex> get_current_version_by_business_concept_id!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_business_concept!(id), do: Repo.get!(BusinessConcept, id)
+  def get_current_version_by_business_concept_id!(business_concept_id) do
+     BusinessConceptVersion
+     |> join(:left, [v], _ in assoc(v, :business_concept))
+     |> preload([_, c], [business_concept: c])
+     |> where([_, c], c.id == ^business_concept_id)
+     |> order_by(desc: :version)
+     |> limit(1)
+     |> Repo.one!
+   end
 
   @doc """
   Creates a business_concept.
 
   ## Examples
 
-      iex> create_business_concept(%{field: value})
-      {:ok, %BusinessConcept{}}
+      iex> create_business_concept_version(%{field: value})
+      {:ok, %BusinessConceptVersion{}}
 
-      iex> create_business_concept(%{field: bad_value})
+      iex> create_business_concept_version(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_business_concept(attrs \\ %{}) do
+  def create_business_concept_version(attrs \\ %{}) do
     attrs
     |> attrs_keys_to_string
-    |> content_schema_exists?
+    |> raise_error_if_no_content_schema
     |> set_content_defaults
     |> validate_new_concept
     |> validate_concept_content
@@ -100,87 +99,50 @@ defmodule TrueBG.BusinessConcepts do
 
   ## Examples
 
-      iex> update_business_concept(business_concept, %{field: new_value})
-      {:ok, %BusinessConcept{}}
+      iex> update_business_concept_version(business_concept_version, %{field: new_value})
+      {:ok, %BusinessConceptVersion{}}
 
-      iex> update_business_concept(business_concept, %{field: bad_value})
+      iex> update_business_concept_version(business_concept_version, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_business_concept(%BusinessConcept{} = business_concept, attrs) do
+  def update_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
     attrs
     |> attrs_keys_to_string
-    |> content_schema_exists?
+    |> raise_error_if_no_content_schema
     |> add_content_if_not_exist
-    |> merge_content(business_concept)
+    |> merge_content_with_concept(business_concept_version)
     |> set_content_defaults
-    |> validate_concept(business_concept)
+    |> validate_concept(business_concept_version)
     |> validate_concept_content
     |> update_concept
   end
 
-  @doc """
-  Updates a business_concept status.
-
-  ## Examples
-
-      iex> update_business_concept_status(business_concept, %{status: new_status})
-      {:ok, %BusinessConcept{}}
-
-      iex> update_business_concept(business_concept, %{status: bad_status})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_business_concept_status(%BusinessConcept{} = business_concept, attrs) do
-    business_concept
-    |> BusinessConcept.update_status_changeset(attrs)
+  def update_business_concept_version_status(%BusinessConceptVersion{} = business_concept_version, attrs) do
+    business_concept_version
+    |> BusinessConceptVersion.update_status_changeset(attrs)
     |> Repo.update()
   end
 
-  def publish_business_concept(business_concept) do
+  def publish_business_concept_version(business_concept_version) do
     status_published = BusinessConcept.status.published
     attrs = %{status: status_published}
 
-    version_group_id = business_concept.version_group_id
-    query = from c in BusinessConcept,
-    where: c.version_group_id == ^version_group_id and
+    business_concept_id = business_concept_version.business_concept.id
+    query = from c in BusinessConceptVersion,
+    where: c.business_concept_id == ^business_concept_id and
            c.status == ^status_published
 
     Multi.new
     |> Multi.update_all(:versioned, query, [set: [status: BusinessConcept.status.versioned]])
-    |> Multi.update(:published, BusinessConcept.update_status_changeset(business_concept, attrs))
+    |> Multi.update(:published, BusinessConceptVersion.update_status_changeset(business_concept_version, attrs))
     |> Repo.transaction
   end
 
-  @doc """
-  Rejects a business_concept.
-
-  ## Examples
-
-      iex> reject_business_concept(business_concept, %{reject_reason: reject_reason})
-      {:ok, %BusinessConcept{}}
-
-  """
-  def reject_business_concept(%BusinessConcept{} = business_concept, attrs) do
-    business_concept
-    |> BusinessConcept.reject_changeset(attrs)
+  def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
+    business_concept_version
+    |> BusinessConceptVersion.reject_changeset(attrs)
     |> Repo.update()
-  end
-
-  @doc """
-  Deletes a BusinessConcept.
-
-  ## Examples
-
-      iex> delete_business_concept(business_concept)
-      {:ok, %BusinessConcept{}}
-
-      iex> delete_business_concept(business_concept)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_business_concept(%BusinessConcept{} = business_concept) do
-    Repo.delete(business_concept)
   end
 
   @doc """
@@ -193,7 +155,60 @@ defmodule TrueBG.BusinessConcepts do
 
   """
   def change_business_concept(%BusinessConcept{} = business_concept) do
-    BusinessConcept.create_changeset(business_concept, %{})
+    BusinessConcept.changeset(business_concept, %{})
+  end
+
+  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+
+  @doc """
+  Returns the list of business_concept_versions.
+
+  ## Examples
+
+      iex> list_business_concept_versions()
+      [%BusinessConceptVersion{}, ...]
+
+  """
+  def list_business_concept_versions do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> preload([_, c], [business_concept: c])
+    |> Repo.all
+  end
+
+  @doc """
+  Gets a single business_concept_version.
+
+  Raises `Ecto.NoResultsError` if the Business concept version does not exist.
+
+  ## Examples
+
+      iex> get_business_concept_version!(123)
+      %BusinessConceptVersion{}
+
+      iex> get_business_concept_version!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_business_concept_version!(id) do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> preload([_, c], [business_concept: c])
+    |> where([v, _], v.id == ^id)
+    |> Repo.one!
+   end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking business_concept_version changes.
+
+  ## Examples
+
+      iex> change_business_concept_version(business_concept_version)
+      %Ecto.Changeset{source: %BusinessConceptVersion{}}
+
+  """
+  def change_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.changeset(business_concept_version, %{})
   end
 
   defp attrs_keys_to_string(attrs) do
@@ -204,7 +219,7 @@ defmodule TrueBG.BusinessConcepts do
       Map.new(keyword)
   end
 
-  defp content_schema_exists?(attrs) do
+  defp raise_error_if_no_content_schema(attrs) do
     if not Map.has_key?(attrs, @content_schema) do
       raise "Content Schema is not defined for Business Concept"
     end
@@ -220,18 +235,18 @@ defmodule TrueBG.BusinessConcepts do
   end
 
   defp validate_new_concept(attrs) do
-    changeset = BusinessConcept.create_changeset(%BusinessConcept{}, attrs)
+    changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, attrs)
     Map.put(attrs, @changeset, changeset)
   end
 
-  defp validate_concept(attrs, %BusinessConcept{} = business_concept) do
-      changeset = BusinessConcept.update_changeset(business_concept, attrs)
+  defp validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
+      changeset = BusinessConceptVersion.update_changeset(business_concept_version, attrs)
       Map.put(attrs, @changeset, changeset)
   end
 
-  defp merge_content(attrs, %BusinessConcept{} = business_concept) do
+  defp merge_content_with_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
     content = Map.get(attrs, @content)
-    concept_content = Map.get(business_concept, :content, %{})
+    concept_content = Map.get(business_concept_version, :content, %{})
     new_content = Map.merge(concept_content, content)
     Map.put(attrs, @content, new_content)
   end
@@ -347,4 +362,5 @@ defmodule TrueBG.BusinessConcepts do
       {:error, changeset}
     end
   end
+
 end
