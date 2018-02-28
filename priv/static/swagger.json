@@ -667,7 +667,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/AclEntry"
+              "$ref": "#/definitions/AclEntryResponse"
             },
             "description": "OK"
           }
@@ -678,10 +678,10 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/AclEntry"
+              "$ref": "#/definitions/AclEntryCreateUpdate"
             },
             "required": false,
-            "name": "data_domain",
+            "name": "acl_entry",
             "in": "body",
             "description": "Acl entry update attrs"
           },
@@ -707,7 +707,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/AclEntry"
+              "$ref": "#/definitions/AclEntryResponse"
             },
             "description": "OK"
           }
@@ -736,7 +736,7 @@
           "400": {
             "description": "Client Error"
           },
-          "200": {
+          "204": {
             "description": "OK"
           }
         },
@@ -766,9 +766,9 @@
           "400": {
             "description": "Client Error"
           },
-          "200": {
+          "201": {
             "schema": {
-              "$ref": "#/definitions/AclEntry"
+              "$ref": "#/definitions/AclEntryResponse"
             },
             "description": "OK"
           }
@@ -779,7 +779,7 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/AclEntryCreate"
+              "$ref": "#/definitions/AclEntryCreateUpdate"
             },
             "required": false,
             "name": "acl_entry",
@@ -798,7 +798,7 @@
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/AclEntries"
+              "$ref": "#/definitions/AclEntriesResponse"
             },
             "description": "OK"
           }
@@ -1089,35 +1089,40 @@
         }
       }
     },
-    "AclEntryCreate": {
+    "AclEntryCreateUpdate": {
       "type": "object",
-      "required": [
-        "role_id",
-        "resource_type",
-        "resource_id",
-        "principal_type",
-        "principal_id"
-      ],
       "properties": {
-        "role_id": {
-          "type": "integer",
-          "description": "id of role"
-        },
-        "resource_type": {
-          "type": "string",
-          "description": "type of resource: data_domain / domain_group"
-        },
-        "resource_id": {
-          "type": "integer",
-          "description": "id of resource"
-        },
-        "principal_type": {
-          "type": "string",
-          "description": "type of principal: user"
-        },
-        "principal_id": {
-          "type": "integer",
-          "description": "id of principal"
+        "acl_entry": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "resource_type",
+            "resource_id",
+            "principal_type",
+            "principal_id"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "integer",
+              "description": "id of role"
+            },
+            "resource_type": {
+              "type": "string",
+              "description": "type of resource: data_domain / domain_group"
+            },
+            "resource_id": {
+              "type": "integer",
+              "description": "id of resource"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "type of principal: user"
+            },
+            "principal_id": {
+              "type": "integer",
+              "description": "id of principal"
+            }
+          }
         }
       }
     },
@@ -1159,6 +1164,14 @@
         }
       },
       "description": "An Acl entry"
+    },
+    "AclEntriesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntries"
+        }
+      }
     },
     "AclEntries": {
       "type": "array",

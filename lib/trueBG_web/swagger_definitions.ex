@@ -132,13 +132,17 @@ defmodule TrueBGWeb.SwaggerDefinitions do
           role_id :integer, "id of role", required: true
         end
       end,
-      AclEntryCreate: swagger_schema do
+      AclEntryCreateUpdate: swagger_schema do
         properties do
-          principal_id :integer, "id of principal", required: true
-          principal_type :string, "type of principal: user", required: true
-          resource_id :integer, "id of resource", required: true
-          resource_type :string, "type of resource: data_domain / domain_group", required: true
-          role_id :integer, "id of role", required: true
+          acl_entry (Schema.new do
+            properties do
+              principal_id :integer, "id of principal", required: true
+              principal_type :string, "type of principal: user", required: true
+              resource_id :integer, "id of resource", required: true
+              resource_type :string, "type of resource: data_domain / domain_group", required: true
+              role_id :integer, "id of role", required: true
+            end
+          end)
         end
       end,
       AclEntries: swagger_schema do
@@ -150,6 +154,11 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       AclEntryResponse: swagger_schema do
         properties do
           data Schema.ref(:AclEntry)
+        end
+      end,
+      AclEntriesResponse: swagger_schema do
+        properties do
+          data Schema.ref(:AclEntries)
         end
       end
     }

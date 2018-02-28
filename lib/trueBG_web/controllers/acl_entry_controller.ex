@@ -18,7 +18,7 @@ defmodule TrueBGWeb.AclEntryController do
   swagger_path :index do
     get "/acl_entries"
     description "List Acl Entries"
-    response 200, "OK", Schema.ref(:AclEntries)
+    response 200, "OK", Schema.ref(:AclEntriesResponse)
   end
 
   def index(conn, _params) do
@@ -41,9 +41,9 @@ defmodule TrueBGWeb.AclEntryController do
     description "Creates an Acl Entry"
     produces "application/json"
     parameters do
-      acl_entry :body, Schema.ref(:AclEntryCreate), "Acl entry create attrs"
+      acl_entry :body, Schema.ref(:AclEntryCreateUpdate), "Acl entry create attrs"
     end
-    response 200, "OK", Schema.ref(:AclEntry)
+    response 201, "OK", Schema.ref(:AclEntryResponse)
     response 400, "Client Error"
   end
 
@@ -77,7 +77,7 @@ defmodule TrueBGWeb.AclEntryController do
     parameters do
       id :path, :integer, "Acl Entry ID", required: true
     end
-    response 200, "OK", Schema.ref(:AclEntry)
+    response 200, "OK", Schema.ref(:AclEntryResponse)
     response 400, "Client Error"
   end
 
@@ -91,10 +91,10 @@ defmodule TrueBGWeb.AclEntryController do
     description "Updates Acl entry"
     produces "application/json"
     parameters do
-      data_domain :body, Schema.ref(:AclEntry), "Acl entry update attrs"
+      acl_entry :body, Schema.ref(:AclEntryCreateUpdate), "Acl entry update attrs"
       id :path, :integer, "Acl Entry ID", required: true
     end
-    response 200, "OK", Schema.ref(:AclEntry)
+    response 200, "OK", Schema.ref(:AclEntryResponse)
     response 400, "Client Error"
   end
 
@@ -113,7 +113,7 @@ defmodule TrueBGWeb.AclEntryController do
     parameters do
       id :path, :integer, "Acl entry ID", required: true
     end
-    response 200, "OK"
+    response 204, "OK"
     response 400, "Client Error"
   end
 

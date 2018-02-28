@@ -57,7 +57,7 @@ defmodule TrueBGWeb.DataDomainController do
     response 400, "Client Error"
   end
 
-  def create(conn, %{"domain_group_id" => domain_group_id ,"data_domain" => data_domain_params}) do
+  def create(conn, %{"domain_group_id" => domain_group_id, "data_domain" => data_domain_params}) do
     data_domain_params = Map.put(data_domain_params, "domain_group_id", domain_group_id)
     with {:ok, %DataDomain{} = data_domain} <- Taxonomies.create_data_domain(data_domain_params) do
       conn
