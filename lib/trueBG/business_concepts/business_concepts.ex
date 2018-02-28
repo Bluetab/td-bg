@@ -10,9 +10,9 @@ defmodule TrueBG.BusinessConcepts do
   alias Ecto.Changeset
   alias Ecto.Multi
 
-  @changeset "changeset"
-  @content "content"
-  @content_schema "content_schema"
+  @changeset :changeset
+  @content :content
+  @content_schema :content_schema
 
   @string "string"
   @list "list"
@@ -86,7 +86,7 @@ defmodule TrueBG.BusinessConcepts do
   """
   def create_business_concept_version(attrs \\ %{}) do
     attrs
-    |> attrs_keys_to_string
+    |> attrs_keys_to_atoms
     |> raise_error_if_no_content_schema
     |> set_content_defaults
     |> validate_new_concept
@@ -108,7 +108,7 @@ defmodule TrueBG.BusinessConcepts do
   """
   def update_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
     attrs
-    |> attrs_keys_to_string
+    |> attrs_keys_to_atoms
     |> raise_error_if_no_content_schema
     |> add_content_if_not_exist
     |> merge_content_with_concept(business_concept_version)
@@ -211,12 +211,20 @@ defmodule TrueBG.BusinessConcepts do
     BusinessConceptVersion.changeset(business_concept_version, %{})
   end
 
-  defp attrs_keys_to_string(attrs) do
-      keyword = Enum.map(attrs, fn
-        {key, value} when is_binary(key) -> {key, value}
-        {key, value} when is_atom(key) -> {Atom.to_string(key), value}
-      end)
-      Map.new(keyword)
+  defp attrs_keys_to_atoms(attrs) do
+    Map.new(Enum.map(attrs, fn
+      {"business_concept", %BusinessConcept{} = value}  ->
+          {:business_concept, value}
+      {:business_concept, %BusinessConcept{} = value} ->
+          {:business_concept, value}
+      {"business_concept", %{} = value}  ->
+          {:business_concept, attrs_keys_to_atoms(value)}
+      {:business_concept, %{} = value} ->
+          {:business_concept, attrs_keys_to_atoms(value)}
+
+      {key, value} when is_binary(key) -> {String.to_existing_atom(key), value}
+      {key, value} when is_atom(key) -> {key, value}
+    end))
   end
 
   defp raise_error_if_no_content_schema(attrs) do
