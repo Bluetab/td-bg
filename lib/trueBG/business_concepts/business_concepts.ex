@@ -38,29 +38,13 @@ defmodule TrueBG.BusinessConcepts do
   end
 
   @doc """
-  Returns the list of  business_concepts.
-
-  ## Examples
-
-      iex> list_business_concepts()
-      [%BusinessConceptVersion{}, ...]
-
-  """
-  def list_business_concepts do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> preload([_, c], [business_concept: c])
-    |> Repo.all
-  end
-
-  @doc """
   Returns children of data domain id passed as argument
   """
-  def list_children_business_concept(id) do
+  def get_data_domain_children_versions!(data_domain_id) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> preload([_, c], [business_concept: c])
-    |> where([_, c], c.data_domain_id == ^id)
+    |> where([_, c], c.data_domain_id == ^data_domain_id)
     |> Repo.all
   end
 
@@ -71,18 +55,18 @@ defmodule TrueBG.BusinessConcepts do
 
   ## Examples
 
-      iex> get_current_business_concept!(123)
+      iex> get_current_version_by_business_concept_id!(123)
       %BusinessConcept{}
 
-      iex> get_current_business_concept!(456)
+      iex> get_current_version_by_business_concept_id!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_current_business_concept!(id) do
+  def get_current_version_by_business_concept_id!(business_concept_id) do
      BusinessConceptVersion
      |> join(:left, [v], _ in assoc(v, :business_concept))
      |> preload([_, c], [business_concept: c])
-     |> where([_, c], c.id == ^id)
+     |> where([_, c], c.id == ^business_concept_id)
      |> order_by(desc: :version)
      |> limit(1)
      |> Repo.one!
@@ -93,14 +77,14 @@ defmodule TrueBG.BusinessConcepts do
 
   ## Examples
 
-      iex> create_new_business_concept(%{field: value})
+      iex> create_business_concept_version(%{field: value})
       {:ok, %BusinessConceptVersion{}}
 
-      iex> create_new_business_concept(%{field: bad_value})
+      iex> create_business_concept_version(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_new_business_concept(attrs \\ %{}) do
+  def create_business_concept_version(attrs \\ %{}) do
     attrs
     |> attrs_keys_to_string
     |> raise_error_if_no_content_schema
@@ -115,14 +99,14 @@ defmodule TrueBG.BusinessConcepts do
 
   ## Examples
 
-      iex> update_current_business_concept(business_concept_version, %{field: new_value})
+      iex> update_business_concept_version(business_concept_version, %{field: new_value})
       {:ok, %BusinessConceptVersion{}}
 
-      iex> update_current_business_concept(business_concept_version, %{field: bad_value})
+      iex> update_business_concept_version(business_concept_version, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_current_business_concept(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def update_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
     attrs
     |> attrs_keys_to_string
     |> raise_error_if_no_content_schema
@@ -134,13 +118,13 @@ defmodule TrueBG.BusinessConcepts do
     |> update_concept
   end
 
-  def update_current_business_concept_status(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def update_business_concept_version_status(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
     |> BusinessConceptVersion.update_status_changeset(attrs)
     |> Repo.update()
   end
 
-  def publish_current_business_concept(business_concept_version) do
+  def publish_business_concept_version(business_concept_version) do
     status_published = BusinessConcept.status.published
     attrs = %{status: status_published}
 
@@ -155,7 +139,7 @@ defmodule TrueBG.BusinessConcepts do
     |> Repo.transaction
   end
 
-  def reject_business_concept(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
     |> BusinessConceptVersion.reject_changeset(attrs)
     |> Repo.update()
@@ -186,7 +170,10 @@ defmodule TrueBG.BusinessConcepts do
 
   """
   def list_business_concept_versions do
-    Repo.all(BusinessConceptVersion)
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> preload([_, c], [business_concept: c])
+    |> Repo.all
   end
 
   @doc """
@@ -196,14 +183,14 @@ defmodule TrueBG.BusinessConcepts do
 
   ## Examples
 
-      iex> get_current_business_concept_version!(123)
+      iex> get_business_concept_version!(123)
       %BusinessConceptVersion{}
 
-      iex> get_current_business_concept_version!(456)
+      iex> get_business_concept_version!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_current_business_concept_version!(id) do
+  def get_business_concept_version!(id) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> preload([_, c], [business_concept: c])

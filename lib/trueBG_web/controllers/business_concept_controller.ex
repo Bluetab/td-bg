@@ -16,13 +16,13 @@ defmodule TrueBGWeb.BusinessConceptController do
   action_fallback TrueBGWeb.FallbackController
 
   def index(conn, _params) do
-    business_concepts = BusinessConcepts.list_business_concepts()
-    render(conn, "index.json", business_concepts: business_concepts)
+    business_concept_versions = BusinessConcepts.list_business_concept_versions()
+    render(conn, "index.json", business_concepts: business_concept_versions)
   end
 
   def index_children_business_concept(conn, %{"id" => id}) do
-    business_concepts = BusinessConcepts.list_children_business_concept(id)
-    render(conn, "index.json", business_concepts: business_concepts)
+    business_concept_vesions = BusinessConcepts.get_data_domain_children_versions!(id)
+    render(conn, "index.json", business_concepts: business_concept_vesions)
   end
 
   def create(conn, %{"business_concept" => business_concept_params}) do
@@ -49,10 +49,10 @@ defmodule TrueBGWeb.BusinessConceptController do
     |> Map.put("status", BusinessConcept.status.draft)
     |> Map.put("version", 1)
 
-    with true <- can?(user, create_new_business_concept(data_domain)),
+    with true <- can?(user, create_business_concept(data_domain)),
          {:ok, 0} <- count_business_concepts(concept_type, concept_name),
          {:ok, %BusinessConceptVersion{} = concept} <-
-          BusinessConcepts.create_new_business_concept(creation_attrs) do
+          BusinessConcepts.create_business_concept_version(creation_attrs) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", business_concept_path(conn, :show, concept.business_concept))
@@ -70,12 +70,12 @@ defmodule TrueBGWeb.BusinessConceptController do
   end
 
   def show(conn, %{"id" => id}) do
-    business_concept = BusinessConcepts.get_current_business_concept!(id)
+    business_concept = BusinessConcepts.get_current_version_by_business_concept_id!(id)
     render(conn, "show.json", business_concept: business_concept)
   end
 
   def update(conn, %{"id" => id, "business_concept" => business_concept_params}) do
-    business_concept_version = BusinessConcepts.get_current_business_concept!(id)
+    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
     status_draft = BusinessConcept.status.draft
     status_published = BusinessConcept.status.published
     case business_concept_version.status do
@@ -108,7 +108,7 @@ defmodule TrueBGWeb.BusinessConceptController do
     with true <- can?(user, update(business_concept_version)),
          {:ok, ^count} <- count_business_concepts(concept_type, concept_name),
          {:ok, %BusinessConceptVersion{} = concept} <-
-      BusinessConcepts.update_current_business_concept(business_concept_version,
+      BusinessConcepts.update_business_concept_version(business_concept_version,
                                                               update_params) do
       render(conn, "show.json", business_concept: concept)
     else
@@ -147,7 +147,7 @@ defmodule TrueBGWeb.BusinessConceptController do
 
     with true <- can?(user, update(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = draft} <-
-           BusinessConcepts.create_new_business_concept(draft_attrs) do
+           BusinessConcepts.create_business_concept_version(draft_attrs) do
       render(conn, "show.json", business_concept: draft)
     else
       false ->

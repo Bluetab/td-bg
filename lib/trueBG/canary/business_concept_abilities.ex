@@ -6,7 +6,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
   alias TrueBG.BusinessConcepts.BusinessConceptVersion
   alias TrueBG.Permissions
 
-  def can?(%User{id: user_id}, :create_new_business_concept, %DataDomain{id: data_domain_id})  do
+  def can?(%User{id: user_id}, :create_business_concept, %DataDomain{id: data_domain_id})  do
     %{user_id: user_id,
       action: :create,
       data_domain_id: data_domain_id}
