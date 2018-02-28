@@ -389,7 +389,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/DataDomains"
+              "$ref": "#/definitions/DataDomainsResponse"
             },
             "description": "OK"
           }
@@ -422,9 +422,9 @@
           },
           "201": {
             "schema": {
-              "$ref": "#/definitions/DataDomain"
+              "$ref": "#/definitions/DataDomainResponse"
             },
-            "description": "OK"
+            "description": "Created"
           }
         },
         "produces": [
@@ -541,7 +541,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/DataDomain"
+              "$ref": "#/definitions/DataDomainResponse"
             },
             "description": "OK"
           }
@@ -581,7 +581,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/DataDomain"
+              "$ref": "#/definitions/DataDomainResponse"
             },
             "description": "OK"
           }
@@ -639,7 +639,7 @@
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/DataDomains"
+              "$ref": "#/definitions/DataDomainsResponse"
             },
             "description": "OK"
           }
@@ -958,6 +958,14 @@
         "description": "dg description"
       },
       "description": "A Domain Group"
+    },
+    "DataDomainsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/DataDomains"
+        }
+      }
     },
     "DataDomains": {
       "type": "array",

@@ -45,7 +45,7 @@ defmodule TrueBGWeb.DataDomainControllerTest do
         "id" => id,
         "description" => "some description",
         "name" => "some name",
-        "domain_group_id" => nil}
+        "domain_group_id" => domain_group.id}
     end
 
     @tag :admin_authenticated

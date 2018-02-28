@@ -51,8 +51,12 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         properties do
           data Schema.ref(:DataDomain)
         end
+      end,
+      DataDomainsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataDomains)
+        end
       end
-
     }
   end
 

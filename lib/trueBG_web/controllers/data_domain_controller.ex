@@ -21,7 +21,7 @@ defmodule TrueBGWeb.DataDomainController do
   swagger_path :index do
     get "/data_domains"
     description "List Data Domains"
-    response 200, "OK", Schema.ref(:DataDomains)
+    response 200, "OK", Schema.ref(:DataDomainsResponse)
   end
 
   def index(conn, _params) do
@@ -36,7 +36,7 @@ defmodule TrueBGWeb.DataDomainController do
     parameters do
       domain_group_id :path, :integer, "Domain Group ID", required: true
     end
-    response 200, "OK", Schema.ref(:DataDomains)
+    response 200, "OK", Schema.ref(:DataDomainsResponse)
     response 400, "Client Error"
   end
 
@@ -53,11 +53,12 @@ defmodule TrueBGWeb.DataDomainController do
       data_domain :body, Schema.ref(:DataDomainCreate), "Data Domain create attrs"
       domain_group_id :path, :integer, "Domain Group ID", required: true
     end
-    response 201, "OK", Schema.ref(:DataDomain)
+    response 201, "Created", Schema.ref(:DataDomainResponse)
     response 400, "Client Error"
   end
 
-  def create(conn, %{"data_domain" => data_domain_params}) do
+  def create(conn, %{"domain_group_id" => domain_group_id ,"data_domain" => data_domain_params}) do
+    data_domain_params = Map.put(data_domain_params, "domain_group_id", domain_group_id)
     with {:ok, %DataDomain{} = data_domain} <- Taxonomies.create_data_domain(data_domain_params) do
       conn
       |> put_status(:created)
@@ -73,7 +74,7 @@ defmodule TrueBGWeb.DataDomainController do
     parameters do
       id :path, :integer, "Data Domain ID", required: true
     end
-    response 200, "OK", Schema.ref(:DataDomain)
+    response 200, "OK", Schema.ref(:DataDomainResponse)
     response 400, "Client Error"
   end
 
@@ -90,7 +91,7 @@ defmodule TrueBGWeb.DataDomainController do
       data_domain :body, Schema.ref(:DataDomainUpdate), "Data Domain update attrs"
       id :path, :integer, "Data Domain ID", required: true
     end
-    response 200, "OK", Schema.ref(:DataDomain)
+    response 200, "OK", Schema.ref(:DataDomainResponse)
     response 400, "Client Error"
   end
 
