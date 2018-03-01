@@ -48,7 +48,7 @@ defmodule TrueBGWeb.DataDomainController do
 
   swagger_path :create do
     post "/domain_groups/{domain_group_id}/data_domain"
-    description "Creates a Data Domain children of Domain Group"
+    description "Creates a Data Domain child of Domain Group"
     produces "application/json"
     parameters do
       data_domain :body, Schema.ref(:DataDomainCreate), "Data Domain create attrs"

@@ -46,9 +46,9 @@ defmodule TrueBGWeb.Router do
       get "/data_domains", DataDomainController, :index_children_data_domain
       post "/data_domain", DataDomainController, :create
     end
-    get "/business_concepts/:id/index_children", BusinessConceptController, :index_children_business_concept
     resources "/data_domains", DataDomainController do
       post "/business_concept", BusinessConceptController, :create
+      get "/business_concepts", BusinessConceptController, :index_children_business_concept
     end
 
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]

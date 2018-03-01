@@ -455,7 +455,7 @@
           }
         ],
         "operationId": "TrueBGWeb.DataDomainController.create",
-        "description": "Creates a Data Domain children of Domain Group"
+        "description": "Creates a Data Domain child of Domain Group"
       }
     },
     "/domain_groups/index_root": {
@@ -533,6 +533,39 @@
         "parameters": [],
         "operationId": "TrueBGWeb.DomainGroupController.index",
         "description": "List Domain Groups"
+      }
+    },
+    "/data_domains/{id}/business_concepts": {
+      "get": {
+        "tags": [
+          "BusinessConcept"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptsResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Data Domain ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.BusinessConceptController.index_children_business_concept",
+        "description": "List Business Concepts children of Data Domain"
       }
     },
     "/data_domains/{id}": {
@@ -636,6 +669,48 @@
         "description": "Delete Data Domain"
       }
     },
+    "/data_domains/{data_domain_id}/business_concept": {
+      "post": {
+        "tags": [
+          "BusinessConcept"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptResponse"
+            },
+            "description": "Created"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptCreate"
+            },
+            "required": false,
+            "name": "data_domain",
+            "in": "body",
+            "description": "Business Concept create attrs"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "data_domain_id",
+            "in": "path",
+            "description": "Data Domain ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.BusinessConceptController.create",
+        "description": "Creates a Business Concept child of Data Domain"
+      }
+    },
     "/data_domains": {
       "get": {
         "tags": [
@@ -653,6 +728,98 @@
         "parameters": [],
         "operationId": "TrueBGWeb.DataDomainController.index",
         "description": "List Data Domains"
+      }
+    },
+    "/business_concepts/{id}": {
+      "put": {
+        "tags": [
+          "BusinessConcept"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptUpdate"
+            },
+            "required": false,
+            "name": "business_concept",
+            "in": "body",
+            "description": "Business Concept update attrs"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Business Concept ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.BusinessConceptController.update",
+        "description": "Updates Business Ccncepts"
+      },
+      "get": {
+        "tags": [
+          "BusinessConcept"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Business Concept ID"
+          }
+        ],
+        "operationId": "TrueBGWeb.BusinessConceptController.show",
+        "description": "Show Business Concepts"
+      }
+    },
+    "/business_concepts": {
+      "get": {
+        "tags": [
+          "BusinessConcept"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptsResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TrueBGWeb.BusinessConceptController.index",
+        "description": "List Business Concepts"
       }
     },
     "/acl_entries/{id}": {
@@ -1080,6 +1247,150 @@
         "domain_group_id": 742
       },
       "description": "A Data Domain child of a Domain Group"
+    },
+    "BusinessConceptsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConcepts"
+        }
+      }
+    },
+    "BusinessConcepts": {
+      "type": "array",
+      "title": "Business Concepts",
+      "items": {
+        "$ref": "#/definitions/BusinessConcept"
+      },
+      "description": "A collection of Business Concepts"
+    },
+    "BusinessConceptUpdate": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "properties": {
+            "reject_reason": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "description": "name"
+            },
+            "mod_comments": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "description": "description"
+            },
+            "content": {
+              "type": "object",
+              "description": "json content"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConcept"
+        }
+      }
+    },
+    "BusinessConceptCreate": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "required": [
+            "description",
+            "name",
+            "content",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "bc type (empty,...)"
+            },
+            "name": {
+              "type": "string",
+              "description": "name"
+            },
+            "description": {
+              "type": "string",
+              "description": "description"
+            },
+            "content": {
+              "type": "object",
+              "description": "json content"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConcept": {
+      "type": "object",
+      "title": "Business Concept",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "description": "version"
+        },
+        "type": {
+          "type": "string",
+          "description": "bc type"
+        },
+        "status": {
+          "type": "string",
+          "description": "status"
+        },
+        "reject_reason": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "name"
+        },
+        "mod_comments": {
+          "type": "string"
+        },
+        "last_change_by": {
+          "type": "integer",
+          "description": "last updated by"
+        },
+        "last_change_at": {
+          "type": "string",
+          "description": "last updated date"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        },
+        "description": {
+          "type": "string",
+          "description": "description"
+        },
+        "data_domain_id": {
+          "type": "integer",
+          "description": "parent data domain id"
+        },
+        "content": {
+          "type": "object",
+          "description": "json content"
+        },
+        "business_concept_version_id": {
+          "type": "integer",
+          "description": "version id"
+        }
+      },
+      "description": "Business Concept"
     },
     "AclEntryResponse": {
       "type": "object",

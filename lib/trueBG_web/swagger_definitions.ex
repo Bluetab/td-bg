@@ -209,17 +209,59 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         description "Business Concept"
         properties do
           id :integer, "unique identifier", required: true
-          content :object, "json content"
+          business_concept_version_id :integer, "version id"
           type :string, "bc type"
+          content :object, "json content"
           name :string, "name"
           description :string, "description"
-          modifier :string, "last updated by"
-          last_change :date, "last updated date"
+          last_change_by :integer, "last updated by"
+          last_change_at :string, "last updated date"
           data_domain_id :integer, "parent data domain id"
           status :string, "status"
           version :integer, "version"
-          reject_reason :string, required: false
-          mod_comments :string, required: false
+          reject_reason :string
+          mod_comments :string
+        end
+      end,
+      BusinessConceptCreate: swagger_schema do
+        properties do
+          business_concept (Schema.new do
+            properties do
+              type :string, "bc type (empty,...)", required: true
+              content :object, "json content", required: true
+              name :string, "name", required: true
+              description :string, "description", required: true
+            end
+          end)
+        end
+      end,
+      BusinessConceptUpdate: swagger_schema do
+        properties do
+          business_concept (Schema.new do
+            properties do
+              content :object, "json content"
+              name :string, "name"
+              description :string, "description"
+              reject_reason :string
+              mod_comments :string
+            end
+          end)
+        end
+      end,
+      BusinessConcepts: swagger_schema do
+        title "Business Concepts"
+        description "A collection of Business Concepts"
+        type :array
+        items Schema.ref(:BusinessConcept)
+      end,
+      BusinessConceptResponse: swagger_schema do
+        properties do
+          data Schema.ref(:BusinessConcept)
+        end
+      end,
+      BusinessConceptsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:BusinessConcepts)
         end
       end
     }

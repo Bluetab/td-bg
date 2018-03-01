@@ -176,7 +176,7 @@ defmodule TrueBG.TaxonomyNavigationTest do
     headers = get_header(token)
     id = attrs[:data_domain_id]
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_url(@endpoint, :index_children_business_concept, id), headers, [])
+      HTTPoison.get!(data_domain_business_concept_url(@endpoint, :index_children_business_concept, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
