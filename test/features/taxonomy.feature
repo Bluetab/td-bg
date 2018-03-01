@@ -14,7 +14,7 @@ Feature: Taxonomy administration
        | Description |
        | First version of my Data Domain |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Created", user <user> is able to see the Data Domain "My Data Domain" with following data:
+    And if result <result> is "Created", user "<user>" is able to see the Data Domain "My Data Domain" with following data:
        | Description |
        | First version of my Data Domain |
     And if result <result> is "Created", Data Domain "My Data Domain" is a child of Domain Group "My Group"
@@ -38,7 +38,7 @@ Feature: Taxonomy administration
       | Description |
       | First version of my Child Domain Group |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Created", user <user> is able to see the Domain Group "My Child Group" with following data:
+    And if result <result> is "Created", user "<user>" is able to see the Domain Group "My Child Group" with following data:
       | Description |
       | First version of my Child Domain Group |
     And if result <result> is "Created", Domain Group "My Child Group" is a child of Domain Group "My Group"
@@ -50,3 +50,31 @@ Feature: Taxonomy administration
       | publisher | Unauthorized |
       | admin     | Created      |
 
+  Scenario Outline: Modifying a Domain Group and seeing the new version by Group Manager
+    Given an existing Domain Group called "My Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Group" with following data:
+      | Description |
+      | First version of Child Group |
+    And following users exist with the indicated role in Domain Group "My Child Group"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    When user "<user>" tries to modify a Domain Group with the name "My Child Group" introducing following data:
+      | Description |
+      | Second version of My Child Group |
+    Then the system returns a result with code "<result>"
+    And if result <result> is "Ok", user "<user>" is able to see the Domain Group "My Child Group" with following data:
+      | Description |
+      | Second version of My Child Group |
+    And if result <result> is not "Ok", user "<user>" is able to see the Domain Group "My Child Group" with following data:
+      | Description |
+      | First version of Child Group |
+
+    Examples:
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Unauthorized |
+      | publisher | Unauthorized |
+      | admin     | Ok           |
