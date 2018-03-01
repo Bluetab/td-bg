@@ -78,3 +78,32 @@ Feature: Taxonomy administration
       | creator   | Unauthorized |
       | publisher | Unauthorized |
       | admin     | Ok           |
+
+  Scenario Outline: Modifying a Data Domain and seeing the new version by Domain Manager
+    Given an existing Domain Group called "My Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Group" with following data:
+      | Description |
+      | First version of My Domain |
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    When user "<user>" tries to modify a Data Domain with the name "My Domain" introducing following data:
+      | Description |
+      | Second version of My Domain |
+    Then the system returns a result with code "<result>"
+    And if result <result> is "Ok", user "<user>" is able to see the Data Domain "My Domain" with following data:
+      | Description |
+      | Second version of My Domain |
+    And if result <result> is not "Ok", user "<user>" is able to see the Data Domain "My Domain" with following data:
+      | Description |
+      | First version of My Domain |
+
+    Examples:
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Unauthorized |
+      | publisher | Unauthorized |
+      | admin     | Ok           |

@@ -23,6 +23,10 @@ defmodule TrueBG.Canary.Abilities do
       BusinessConceptAbilities.can?(user, :create_business_concept, data_domain)
     end
 
+    def can?(%User{} = user, :update, %DataDomain{} = data_domain) do
+      TaxonomyAbilities.can?(user, :update, data_domain)
+    end
+
     def can?(%User{} = user, :create_data_domain, %DomainGroup{} = domain_group) do
       TaxonomyAbilities.can?(user, :create_data_domain, domain_group)
     end

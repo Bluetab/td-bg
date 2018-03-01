@@ -2,6 +2,7 @@ defmodule TrueBG.Canary.TaxonomyAbilities do
   @moduledoc false
   alias TrueBG.Accounts.User
   alias TrueBG.Taxonomies.DomainGroup
+  alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Permissions
   alias TrueBG.Permissions.AclEntry
 
@@ -20,6 +21,19 @@ defmodule TrueBG.Canary.TaxonomyAbilities do
 
   def can?(%User{id: user_id}, :update, %DomainGroup{id: domain_group_id}) do
     acl_params = %{user_id: user_id, domain_group_id: domain_group_id}
+    role = Permissions.get_role_in_resource(acl_params)
+    case role.name do
+      "admin" ->
+        true
+      name when name in ["watcher" , "creator", "publisher"] ->
+        false
+      _ ->
+        false
+    end
+  end
+
+  def can?(%User{id: user_id}, :update, %DataDomain{id: data_domain_id}) do
+    acl_params = %{user_id: user_id, data_domain_id: data_domain_id}
     role = Permissions.get_role_in_resource(acl_params)
     case role.name do
       "admin" ->
