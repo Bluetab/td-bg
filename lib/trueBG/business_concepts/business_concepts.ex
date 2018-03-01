@@ -211,20 +211,20 @@ defmodule TrueBG.BusinessConcepts do
     BusinessConceptVersion.changeset(business_concept_version, %{})
   end
 
-  defp attrs_keys_to_atoms(attrs) do
-    Map.new(Enum.map(attrs, fn
-      {"business_concept", %BusinessConcept{} = value}  ->
-          {:business_concept, value}
-      {:business_concept, %BusinessConcept{} = value} ->
-          {:business_concept, value}
-      {"business_concept", %{} = value}  ->
-          {:business_concept, attrs_keys_to_atoms(value)}
-      {:business_concept, %{} = value} ->
-          {:business_concept, attrs_keys_to_atoms(value)}
-
+  defp map_keys_to_atoms(key_values) do
+    Map.new((Enum.map(key_values, fn
       {key, value} when is_binary(key) -> {String.to_existing_atom(key), value}
       {key, value} when is_atom(key) -> {key, value}
-    end))
+    end)))
+  end
+
+  defp attrs_keys_to_atoms(key_values) do
+    map = map_keys_to_atoms(key_values)
+    case map.business_concept do
+      %BusinessConcept{} -> map
+      %{} = concept -> Map.put(map, :business_concept, map_keys_to_atoms(concept))
+        _ -> map
+    end
   end
 
   defp raise_error_if_no_content_schema(attrs) do
