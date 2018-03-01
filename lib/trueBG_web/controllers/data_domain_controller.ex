@@ -13,7 +13,7 @@ defmodule TrueBGWeb.DataDomainController do
 
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_data_domain
   plug :load_and_authorize_resource, model: DomainGroup, id_name: "domain_group_id", persisted: true, only: :create_data_domain
-  plug :load_and_authorize_resource, model: DataDomain, id_name: "id", persisted: true, only: :update
+  plug :load_and_authorize_resource, model: DataDomain, id_name: "id", persisted: true, only: [:update, :delete]
 
   def swagger_definitions do
     SwaggerDefinitions.data_domain_swagger_definitions()

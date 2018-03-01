@@ -128,3 +128,24 @@ Feature: Taxonomy administration
       | creator   | Unauthorized |
       | publisher | Unauthorized |
       | admin     | Deleted      |
+
+  Scenario Outline: Deleting a Data Domain without any Business Concept by Group Manager
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    When user "<user>" tries to delete a Data Domain with the name "My Domain"
+    Then the system returns a result with code "<result>"
+    And if result <result> is "Deleted", Data Domain "My Domain" does not exist as child of Domain Group "My Parent Group"
+    And if result <result> is not "Deleted", Data Domain "My Domain" is a child of Domain Group "My Parent Group"
+
+    Examples:
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Unauthorized |
+      | publisher | Unauthorized |
+      | admin     | Deleted      |

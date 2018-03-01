@@ -27,6 +27,10 @@ defmodule TrueBG.Canary.Abilities do
       TaxonomyAbilities.can?(user, :update, data_domain)
     end
 
+    def can?(%User{} = user, :delete, %DataDomain{} = data_domain) do
+      TaxonomyAbilities.can?(user, :delete, data_domain)
+    end
+
     def can?(%User{} = user, :create_data_domain, %DomainGroup{} = domain_group) do
       TaxonomyAbilities.can?(user, :create_data_domain, domain_group)
     end
