@@ -1,6 +1,6 @@
 defmodule TrueBG.SuperAdminTaxonomyTest do
   use Cabbage.Feature, async: false, file: "super_admin_taxonomy.feature"
-  use TrueBGWeb.ConnCase
+  use TrueBGWeb.FeatureCase
   import TrueBGWeb.Taxonomy, only: :functions
   import TrueBGWeb.BusinessConcept, only: :functions
   import TrueBGWeb.Authentication, only: :functions

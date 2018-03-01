@@ -1,6 +1,6 @@
 defmodule TrueBG.RolesAdminTest do
   use Cabbage.Feature, async: false, file: "roles_admin.feature"
-  use TrueBGWeb.ConnCase
+  use TrueBGWeb.FeatureCase
   import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
   import TrueBGWeb.Taxonomy

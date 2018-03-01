@@ -1,6 +1,6 @@
 defmodule TrueBG.BusinessConceptTest do
   use Cabbage.Feature, async: false, file: "business_concept.feature"
-  use TrueBGWeb.ConnCase
+  use TrueBGWeb.FeatureCase
 
   # import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode

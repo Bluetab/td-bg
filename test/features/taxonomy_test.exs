@@ -1,6 +1,6 @@
 defmodule TrueBG.TaxonomyTest do
   use Cabbage.Feature, async: false, file: "taxonomy.feature"
-  use TrueBGWeb.ConnCase
+  use TrueBGWeb.FeatureCase
   import TrueBGWeb.ResponseCode
   import TrueBGWeb.Taxonomy
   import TrueBGWeb.User, only: :functions

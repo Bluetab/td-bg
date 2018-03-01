@@ -1,6 +1,6 @@
 defmodule TrueBG.SuperAdminRolesAdminTest do
   use Cabbage.Feature, async: false, file: "super_admin_roles_admin.feature"
-  use TrueBGWeb.ConnCase
+  use TrueBGWeb.FeatureCase
   import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
   import TrueBGWeb.Taxonomy

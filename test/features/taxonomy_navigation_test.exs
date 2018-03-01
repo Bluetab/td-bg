@@ -1,6 +1,6 @@
 defmodule TrueBG.TaxonomyNavigationTest do
   use Cabbage.Feature, async: false, file: "taxonomy_navigation.feature"
-  use TrueBGWeb.ConnCase
+  use TrueBGWeb.FeatureCase
   import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
   import TrueBGWeb.Taxonomy
