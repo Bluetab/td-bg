@@ -7,87 +7,35 @@ defmodule TrueBG.Canary.TaxonomyAbilities do
   alias TrueBG.Permissions.AclEntry
 
   def can?(%User{id: user_id}, :create_data_domain, %DomainGroup{id: domain_group_id}) do
-    acl_params = %{user_id: user_id, domain_group_id: domain_group_id}
-    role = Permissions.get_role_in_resource(acl_params)
-    case role.name do
-      "admin" ->
-        true
-      name when name in ["watcher" , "creator", "publisher"] ->
-        false
-      _ ->
-        false
-    end
+    has_admin_role(%{user_id: user_id, domain_group_id: domain_group_id})
   end
 
   def can?(%User{id: user_id}, :update, %DomainGroup{id: domain_group_id}) do
-    acl_params = %{user_id: user_id, domain_group_id: domain_group_id}
-    role = Permissions.get_role_in_resource(acl_params)
-    case role.name do
-      "admin" ->
-        true
-      name when name in ["watcher" , "creator", "publisher"] ->
-        false
-      _ ->
-        false
-    end
+    has_admin_role(%{user_id: user_id, domain_group_id: domain_group_id})
   end
 
   def can?(%User{id: user_id}, :delete, %DomainGroup{id: domain_group_id}) do
-    acl_params = %{user_id: user_id, domain_group_id: domain_group_id}
-    role = Permissions.get_role_in_resource(acl_params)
-    case role.name do
-      "admin" ->
-        true
-      name when name in ["watcher" , "creator", "publisher"] ->
-        false
-      _ ->
-        false
-    end
+    has_admin_role(%{user_id: user_id, domain_group_id: domain_group_id})
   end
 
   def can?(%User{id: user_id}, :update, %DataDomain{id: data_domain_id}) do
-    acl_params = %{user_id: user_id, data_domain_id: data_domain_id}
-    role = Permissions.get_role_in_resource(acl_params)
-    case role.name do
-      "admin" ->
-        true
-      name when name in ["watcher" , "creator", "publisher"] ->
-        false
-      _ ->
-        false
-    end
+    has_admin_role(%{user_id: user_id, data_domain_id: data_domain_id})
   end
 
   def can?(%User{id: user_id}, :delete, %DataDomain{id: data_domain_id}) do
-    acl_params = %{user_id: user_id, data_domain_id: data_domain_id}
-    role = Permissions.get_role_in_resource(acl_params)
-    case role.name do
-      "admin" ->
-        true
-      name when name in ["watcher" , "creator", "publisher"] ->
-        false
-      _ ->
-        false
-    end
+    has_admin_role(%{user_id: user_id, data_domain_id: data_domain_id})
   end
 
   def can?(%User{id: user_id}, :create, %DomainGroup{parent_id: parent_domain_group_id}) do
-    acl_params = %{user_id: user_id, domain_group_id: parent_domain_group_id}
-    role = Permissions.get_role_in_resource(acl_params)
-    case role.name do
-      "admin" ->
-        true
-      name when name in ["watcher" , "creator", "publisher"] ->
-        false
-      _ ->
-        false
-    end
+    has_admin_role(%{user_id: user_id, domain_group_id: parent_domain_group_id})
   end
 
   def can?( %User{id: user_id}, :create, %AclEntry{principal_type: "user", resource_type: "domain_group", resource_id: resource_id}) do
-    acl_params = %{user_id: user_id, domain_group_id: resource_id}
-    role = Permissions.get_role_in_resource(acl_params)
+    has_admin_role(%{user_id: user_id, domain_group_id: resource_id})
+  end
 
+  defp has_admin_role(acl_params) do
+    role = Permissions.get_role_in_resource(acl_params)
     case role.name do
       "admin" ->
         true
