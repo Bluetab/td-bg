@@ -22,12 +22,6 @@ config :trueBG, TrueBG.Repo,
 
 config :trueBG, TrueBG.Auth.Guardian,
   allowed_algos: ["HS512"], # optional
-  issuer: "trueBG",
+  issuer: "tdauth",
   ttl: { 1, :hours },
   secret_key: "SuperSecretTruedat"
-
-config :guardian, Guardian.DB,
-   repo: TrueBG.Repo,
-   schema_name: "guardian_tokens", # default
-   #token_types: ["refresh_token"], # store all token types if not set
-   sweep_interval: 60 # default: 60 minutes

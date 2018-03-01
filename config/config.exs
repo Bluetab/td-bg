@@ -27,7 +27,7 @@ config :logger, :console,
 
 config :trueBG, TrueBG.Auth.Guardian,
   allowed_algos: ["HS512"], # optional
-  issuer: "trueBG",
+  issuer: "tdauth",
   ttl: { 1, :hours },
   secret_key: "SuperSecretTruedat"
 
