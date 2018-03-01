@@ -107,3 +107,24 @@ Feature: Taxonomy administration
       | creator   | Unauthorized |
       | publisher | Unauthorized |
       | admin     | Ok           |
+
+  Scenario Outline: Deleting a Domain Group without any Group or Domain pending on it by Group Manager
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And following users exist with the indicated role in Domain Group "My Child Group"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    When user "<user>" tries to delete a Domain Group with the name "My Child Group"
+    Then the system returns a result with code "<result>"
+    And if result <result> is "Deleted", Domain Group "My Child Group" does not exist as child of Domain Group "My Parent Group"
+    And if result <result> is not "Deleted", Domain Group "My Child Group" is a child of Domain Group "My Parent Group"
+
+    Examples:
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Unauthorized |
+      | publisher | Unauthorized |
+      | admin     | Deleted      |

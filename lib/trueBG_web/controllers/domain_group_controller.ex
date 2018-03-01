@@ -12,7 +12,7 @@ defmodule TrueBGWeb.DomainGroupController do
 
   action_fallback TrueBGWeb.FallbackController
 
-  plug :load_and_authorize_resource, model: DomainGroup, id_name: "id", persisted: true, only: :update
+  plug :load_and_authorize_resource, model: DomainGroup, id_name: "id", persisted: true, only: [:update, :delete]
 
   def swagger_definitions do
     SwaggerDefinitions.domain_group_swagger_definitions()

@@ -39,7 +39,8 @@ defmodule TrueBG.TaxonomyTest do
 
   # Scenario: Creating a Data Domain depending on an existing Domain Group
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to create a Data Domain with the name "(?<data_domain_name>[^"]+)" as child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-    %{user_name: user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, %{token_admin: token_admin} = state do
+    %{user_name: user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]},
+    %{token_admin: token_admin} = state do
 
     parent = get_domain_group_by_name(token_admin, domain_group_name)
     assert parent["name"] == domain_group_name
@@ -55,8 +56,8 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", user "(?<user_name>[^"]+)" is able to see the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-         %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]},
-         state do
+    %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]},
+    state do
     if actual_result == expected_result do
       token  = build_user_token(user_name)
       data_domain_info = get_data_domain_by_name(token, data_domain_name)
@@ -71,8 +72,8 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is not "(?<expected_result>[^"]+)", user "(?<user_name>[^"]+)" is able to see the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-         %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]},
-         state do
+    %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]},
+    state do
     if actual_result != expected_result do
       token  = build_user_token(user_name)
       data_domain_info = get_data_domain_by_name(token, data_domain_name)
@@ -106,8 +107,8 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", user "(?<user_name>[^"]+)" is able to see the Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-         %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]},
-         state do
+    %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]},
+    state do
     if actual_result == expected_result do
       token  = build_user_token(user_name)
       domain_group_info = get_domain_group_by_name(token, domain_group_name)
@@ -122,8 +123,8 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is not "(?<expected_result>[^"]+)", user "(?<user_name>[^"]+)" is able to see the Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-         %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]},
-         state do
+    %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]},
+    state do
     if actual_result != expected_result do
       token  = build_user_token(user_name)
       domain_group_info = get_domain_group_by_name(token, domain_group_name)
@@ -138,7 +139,7 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Domain Group "(?<domain_group_name>[^"]+)" is a child of Domain Group "(?<parent_domain_group_name>[^"]+)"$/,
-         %{actual_result: actual_result, expected_result: expected_result, domain_group_name: domain_group_name, parent_domain_group_name: parent_domain_group_name}, state do
+    %{actual_result: actual_result, expected_result: expected_result, domain_group_name: domain_group_name, parent_domain_group_name: parent_domain_group_name}, state do
     if actual_result == expected_result do
       domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
       parent_domain_group_info = get_domain_group_by_name(state[:token_admin], parent_domain_group_name)
@@ -146,9 +147,17 @@ defmodule TrueBG.TaxonomyTest do
     end
   end
 
-  #Scenario
+  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
+    %{name: name, domain_group_name: domain_group_name}, state do
+    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, parent_id: domain_group_info["id"]})
+    assert rc_created() == to_response_code(status_code)
+    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
+    {:ok, state}
+  end
+
   defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-         %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+    %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
     domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
     {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, description: description, parent_id: domain_group_info["id"]})
     assert rc_created() == to_response_code(status_code)
@@ -157,16 +166,15 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^user "(?<user_name>[^"]+)" tries to modify a Domain Group with the name "(?<domain_group_name>[^"]+)" introducing following data:$/,
-         %{user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+    %{user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
     token = get_user_token(user_name)
     domain_group = get_domain_group_by_name(token, domain_group_name)
     {_, status_code, _json_resp} = domain_group_update(token, domain_group["id"], %{name: domain_group_name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
-  #Scenario
   defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-         %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
+    %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
     token_admin = build_user_token("app-admin", is_admin: true)
     domain_group = get_domain_group_by_name(token_admin, domain_group_name)
     assert domain_group && domain_group["id"]
@@ -179,7 +187,7 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
-         %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
+    %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
 
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
     assert data_domain_name == data_domain["name"]
@@ -199,11 +207,49 @@ defmodule TrueBG.TaxonomyTest do
   end
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to modify a Data Domain with the name "(?<data_domain_name>[^"]+)" introducing following data:$/,
-          %{user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]}, state do
+    %{user_name: user_name, data_domain_name: data_domain_name, table: [%{Description: description}]}, state do
     token = get_user_token(user_name)
     data_domain_info = get_data_domain_by_name(token, data_domain_name)
     {:ok, status_code, _json_resp} = data_domain_update(token, data_domain_info["id"], %{name: data_domain_name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to delete a Domain Group with the name "(?<domain_group_name>[^"]+)"$/,
+    %{user_name: user_name, domain_group_name: domain_group_name}, state do
+
+    token = get_user_token(user_name)
+    domain_group_info = get_domain_group_by_name(token, domain_group_name)
+    {:ok, status_code} = domain_group_delete(token, domain_group_info["id"])
+    {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Data Domain "(?<data_domain_name>[^"]+)" is a child of Domain Group "(?<domain_group_name>[^"]+)"$/,
+         %{actual_result: actual_result, expected_result: expected_result, data_domain_name: data_domain_name, domain_group_name: domain_group_name}, state do
+    if actual_result == expected_result do
+      data_domain_info = get_data_domain_by_name(state[:token_admin], data_domain_name)
+      domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+      assert data_domain_info["domain_group_id"] == domain_group_info["id"]
+    end
+  end
+
+  defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Domain Group "(?<child_name>[^"]+)" does not exist as child of Domain Group "(?<parent_name>[^"]+)"$/,
+         %{actual_result: actual_result, expected_result: expected_result, child_name: child_name, parent_name: parent_name},
+         _state do
+    if actual_result == expected_result do
+      token = get_user_token("app-admin")
+      parent = get_domain_group_by_name(token, parent_name)
+      child  = get_domain_group_by_name_and_parent(token, child_name, parent["id"])
+      assert !child
+    end
+  end
+
+  defand ~r/^if result (?<actual_result>[^"]+) is not "(?<expected_result>[^"]+)", Domain Group "(?<domain_group_name>[^"]+)" is a child of Domain Group "(?<parent_domain_group_name>[^"]+)"$/,
+         %{actual_result: actual_result, expected_result: expected_result, domain_group_name: domain_group_name, parent_domain_group_name: parent_domain_group_name}, state do
+    if actual_result != expected_result do
+      domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+      parent_domain_group_info = get_domain_group_by_name(state[:token_admin], parent_domain_group_name)
+      assert domain_group_info["parent_id"] == parent_domain_group_info["id"]
+    end
   end
 
 end
