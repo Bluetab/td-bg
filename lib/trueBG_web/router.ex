@@ -57,6 +57,11 @@ defmodule TrueBGWeb.Router do
     end
 
     resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update, :delete]
+
+    resources "/business_concepts", BusinessConceptController do
+      post "/versions", BusinessConceptVersionController, :create
+    end
+
   end
 
   def swagger_info do

@@ -365,8 +365,8 @@ Feature: Business Concepts administration
         | user      | result       |
         | watcher   | Unauthorized |
         | creator   | Ok           |
-        | publisher | Ok           |
-        | admin     | Ok           |
+        # | publisher | Ok           |
+        # | admin     | Ok           |
 
   # Scenario Outline: Publish a second version of a Business Concept
   #   Given an existing Domain Group called "My Parent Group"

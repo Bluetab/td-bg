@@ -10,6 +10,7 @@ defmodule TrueBG.BusinessConceptTest do
   import TrueBGWeb.Authentication, only: :functions
 
   alias Poison, as: JSON
+  alias TrueBG.BusinessConcepts.BusinessConcept
 
   @endpoint TrueBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
@@ -232,7 +233,12 @@ defmodule TrueBG.BusinessConceptTest do
       business_concept = business_concept_by_name(token_admin, business_concept_name)
       assert business_concept_type == business_concept["type"]
       attrs = field_value_to_api_attrs(fields, @fixed_values)
-      {_, status_code, _} = business_concept_update(token, business_concept["id"],  attrs)
+      status = business_concept["status"]
+      {_, status_code, _} = if status == BusinessConcept.status.published do
+        business_concept_version_create(token, business_concept["id"],  attrs)
+      else
+        business_concept_update(token, business_concept["id"],  attrs)
+      end
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -423,4 +429,11 @@ defmodule TrueBG.BusinessConceptTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
+  defp business_concept_version_create(token, business_concept_id, attrs) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"business_concept" => attrs} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.post!(business_concept_business_concept_version_url(@endpoint, :create, business_concept_id), body, headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
 end

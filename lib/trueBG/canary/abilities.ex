@@ -71,6 +71,10 @@ defmodule TrueBG.Canary.Abilities do
       BusinessConceptAbilities.can?(user, :publish, business_concept)
     end
 
+    def can?(%User{} = user, :update_published, %BusinessConceptVersion{} = business_concept) do
+      BusinessConceptAbilities.can?(user, :update_published, business_concept)
+    end
+
     def can?(%User{}, _action, _domain),  do: false
   end
 end
