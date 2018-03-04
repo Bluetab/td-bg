@@ -120,8 +120,7 @@ Feature: Business Concepts administration
       | publisher | Created      |
       | admin     | Created      |
 
-
- Scenario Outline: Modification of existing Business Concept in Draft status
+  Scenario Outline: Modification of existing Business Concept in Draft status
    Given an existing Domain Group called "My Parent Group"
    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
@@ -149,8 +148,8 @@ Feature: Business Concepts administration
      | Formula           |                                                                          |
      | Format            | Date                                                                     |
      | List of Values    |                                                                          |
-     #| Sensitive Data    | N/A                                                                     |
-     #| Update Frequence  | Not defined                                                             |
+     | Sensitive Data    | N/A                                                                     |
+     | Update Frequence  | Not defined                                                             |
      | Related Area      |                                                                          |
      | Default Value     |                                                                          |
      | Additional Data   |                                                                          |
@@ -188,7 +187,7 @@ Feature: Business Concepts administration
      | publisher | Ok           |
      | admin     | Ok           |
 
-   Scenario Outline: Sending business concept for approval
+  Scenario Outline: Sending business concept for approval
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
@@ -238,7 +237,6 @@ Feature: Business Concepts administration
       | Type              | Business Term                                                      |
       | Name              | My Business Term                                                   |
       | Description       | This is the first description of my business term which is a date  |
-
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
     When <user> tries to publish a business concept with name "My Business Term" of type "Business Term"
     Then the system returns a result with code "<result>"
@@ -325,48 +323,82 @@ Feature: Business Concepts administration
     And "app-admin" is not able to view business concept "My Business Term" as a child of Data Domain "My Second Domain"
 
 
-    Scenario Outline: Modification of existing Business Concept in Published status
-      Given an existing Domain Group called "My Parent Group"
-      And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-      And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-      And following users exist with the indicated role in Data Domain "My Domain"
-        | user      | role    |
-        | watcher   | watch   |
-        | creator   | create  |
-        | publisher | publish |
-        | admin     | admin   |
-      And an existing Business Concept type called "Business Term" with empty definition
-      And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
-        | Field             | Value                                             |
-        | Type              | Business Term                                     |
-        | Name              | My Business Term                                  |
-        | Description       | This is the first description of my business term |
-      And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
-      When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
-        | Field                 | Value                                              |
-        | Type                  | Business Term                                      |
-        | Name                  | My Business Term                                   |
-        | Description           | This is the second description of my business term |
-        | Modification Comments | Modification on the Business Term description      |
-      Then the system returns a result with code "<result>"
-      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
-        | Field                 | Value                                              |
-        | Type                  | Business Term                                      |
-        | Name                  | My Business Term                                   |
-        | Description           | This is the first description of my business term  |
-      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
-        | Field                 | Value                                              |
-        | Type                  | Business Term                                      |
-        | Name                  | My Business Term                                   |
-        | Description           | This is the second description of my business term |
-        | Modification Comments | Modification on the Business Term description      |
+  Scenario Outline: Modification of existing Business Concept in Published status
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                             |
+      | Type              | Business Term                                     |
+      | Name              | My Business Term                                  |
+      | Description       | This is the first description of my business term |
+    And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
+    When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
+      | Field                 | Value                                              |
+      | Type                  | Business Term                                      |
+      | Name                  | My Business Term                                   |
+      | Description           | This is the second description of my business term |
+      | Modification Comments | Modification on the Business Term description      |
+    Then the system returns a result with code "<result>"
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
+      | Field                 | Value                                              |
+      | Type                  | Business Term                                      |
+      | Name                  | My Business Term                                   |
+      | Description           | This is the first description of my business term  |
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+      | Field                 | Value                                              |
+      | Type                  | Business Term                                      |
+      | Name                  | My Business Term                                   |
+      | Description           | This is the second description of my business term |
+      | Modification Comments | Modification on the Business Term description      |
 
-      Examples:
-        | user      | result       |
-        | watcher   | Unauthorized |
-        | creator   | Ok           |
-        # | publisher | Ok           |
-        # | admin     | Ok           |
+    Examples:
+      | user      | result       |
+      | watcher   | Unauthorized |
+      | creator   | Ok           |
+      | publisher | Ok           |
+      | admin     | Ok           |
+
+  # Scenario Outline: Delete existing Business Concept in Draft Status
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                             |
+  #     | Type              | Business Term                                     |
+  #     | Name              | My Business Term                                  |
+  #     | Description       | This is the first description of my business term |
+  #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "draft"
+  #   When <user> tries to delete a business concept "My Business Term" of type "Business Term"
+  #   Then the system returns a result with code "<result>"
+  #   And if result <result> is "Deleted", user <user> is not able to view business concept "My Business Term" of type "Business Term"
+  #   And if result <result> is not "Deleted", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
+  #     | Field                 | Value                                              |
+  #     | Type                  | Business Term                                      |
+  #     | Name                  | My Business Term                                   |
+  #     | Description           | This is the first description of my business term  |
+  #
+  #   Examples:
+  #     | user      | result       |
+  #     | watcher   | Unauthorized |
+  #     | creator   | Deleted      |
+  #     | publisher | Deleted      |
+  #     | admin     | Deleted      |
+  #
 
   # Scenario Outline: Publish a second version of a Business Concept
   #   Given an existing Domain Group called "My Parent Group"
@@ -397,6 +429,208 @@ Feature: Business Concepts administration
   #     | Last User         | app-admin                                                          |
   #     | Version           | 2                                                                  |
   #     | Status            | published                                                          |
+  #
+  #   Examples:
+  #     | user      | result       |
+  #     | watcher   | Unauthorized |
+  #     | creator   | Unauthorized |
+  #     | publisher | Ok           |
+  #     | admin     | Ok           |
+
+  # Scenario Outline: Modify a second version of a published Business Concept
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                             |
+  #     | Type              | Business Term                                     |
+  #     | Name              | My Business Term                                  |
+  #     | Description       | This is the first description of my business term |
+  #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "versioned" for version 1
+  #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "published" for version 2
+  #   When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
+  #     | Field                 | Value                                               |
+  #     | Type                  | Business Term                                       |
+  #     | Name                  | My Business Term                                    |
+  #     | Description           | This is the third description of my business term   |
+  #     | Modification Comments | Third Modification on the Business Term description |
+  #   Then the system returns a result with code "<result>"
+  #   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+  #     | Field                 | Value                                              |
+  #     | Type                  | Business Term                                      |
+  #     | Name                  | My Business Term                                   |
+  #     | Description           | This is the first description of my business term  |
+  #     | Status                | published                                          |
+  #   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "3" with follwing data:
+  #     | Field                 | Value                                               |
+  #     | Type                  | Business Term                                       |
+  #     | Name                  | My Business Term                                    |
+  #     | Description           | This is the third description of my business term   |
+  #     | Modification Comments | Third Modification on the Business Term description |
+  #     | Status                | draft                                               |
+  #
+  #   Examples:
+  #     | user      | result       |
+  #     | watcher   | Unauthorized |
+  #     | creator   | Ok           |
+  #     | publisher | Ok           |
+  #     | admin     | Ok           |
+
+  # Scenario Outline: Delete existing Business Concept in Reject Status
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                             |
+  #     | Type              | Business Term                                     |
+  #     | Name              | My Business Term                                  |
+  #     | Description       | This is the first description of my business term |
+  #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "rejected"
+  #   When <user> tries to delete a business concept "My Business Term" of type "Business Term"
+  #   Then the system returns a result with code "<result>"
+  #   And if result <result> is "Deleted", user <user> is not able to view business concept "My Business Term" of type "Business Term"
+  #   And if result <result> is not "Deleted", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
+  #     | Field                 | Value                                              |
+  #     | Type                  | Business Term                                      |
+  #     | Name                  | My Business Term                                   |
+  #     | Description           | This is the first description of my business term  |
+  #
+  #   Examples:
+  #     | user      | result       |
+  #     | watcher   | Unauthorized |
+  #     | creator   | Deleted      |
+  #     | publisher | Deleted      |
+  #     | admin     | Deleted      |
+  #
+
+  # Scenario Outline: Modification of existing Business Concept in Reject status
+  #  Given an existing Domain Group called "My Parent Group"
+  #  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #  And following users exist with the indicated role in Data Domain "My Domain"
+  #    | user      | role    |
+  #    | watcher   | watch   |
+  #    | creator   | create  |
+  #    | publisher | publish |
+  #    | admin     | admin   |
+  #  And an existing Business Concept type called "Business Term" with empty definition
+  #  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #    | Field             | Value                                             |
+  #    | Type              | Business Term                                     |
+  #    | Name              | My Business Term                                  |
+  #    | Description       | This is the first description of my business term |
+  #  And the status of business concept with name "My Business Term" of type "Business Term" is set to "rejected"
+  #  When <user> tries to modify a business concept "My Date Business Term" of type "Business Term" with following data:
+  #    | Field             | Value                                                                    |
+  #    | Type              | Business Term                                                            |
+  #    | Name              | My Business Term                                                         |
+  #    | Description       | This is the second description of my business term                       |
+  #  Then the system returns a result with code "<result>"
+  #  And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with following data:
+  #   | Field             | Value                                              |
+  #   | Name              | My Date Business Term                              |
+  #   | Type              | Business Term                                      |
+  #   | Description       | This is the second description of my business term |
+  #   | Last Modification | Some timestamp                                     |
+  #   | Last User         | app-admin                                          |
+  #   | Version           | 1                                                  |
+  #   | Status            | draft                                              |
+  #
+  #  Examples:
+  #    | user      | result       |
+  #    | watcher   | Unauthorized |
+  #    | creator   | Ok           |
+  #    | publisher | Ok           |
+  #    | admin     | Ok           |
+
+  # Scenario Outline: Sending Business Concept in Reject Status for approval
+  #  Given an existing Domain Group called "My Parent Group"
+  #  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #  And following users exist with the indicated role in Data Domain "My Domain"
+  #    | user      | role    |
+  #    | watcher   | watch   |
+  #    | creator   | create  |
+  #    | publisher | publish |
+  #    | admin     | admin   |
+  #  And an existing Business Concept type called "Business Term" with empty definition
+  #  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #    | Field             | Value                                             |
+  #    | Type              | Business Term                                     |
+  #    | Name              | My Business Term                                  |
+  #    | Description       | This is the first description of my business term |
+  #  And the status of business concept with name "My Business Term" of type "Business Term" is set to "rejected"
+  #  When "<user>" tries to send for approval a business concept with name "My Business Term"" of type "Business Term"
+  #  Then the system returns a result with code "<result>"
+  #  And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with following data:
+  #   | Field             | Value                                              |
+  #   | Name              | My Date Business Term                              |
+  #   | Type              | Business Term                                      |
+  #   | Description       | This is the first description of my business term  |
+  #   | Last Modification | Some timestamp                                     |
+  #   | Last User         | app-admin                                          |
+  #   | Version           | 1                                                  |
+  #   | Status            | pending_approval                                   |
+  #
+  #  Examples:
+  #    | user      | result       |
+  #    | watcher   | Unauthorized |
+  #    | creator   | Ok           |
+  #    | publisher | Ok           |
+  #    | admin     | Ok           |
+
+  # Scenario Outline: Delete current draft version for a BC that has been published previously
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                             |
+  #     | Type              | Business Term                                     |
+  #     | Name              | My Business Term                                  |
+  #     | Description       | This is the first description of my business term |
+  #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "published" for version 1
+  #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "draft" for version 2
+  #   When <user> tries to delete a business concept "My Business Term" of type "Business Term"
+  #   Then the system returns a result with code "<result>"
+  #   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
+  #     | Field             | Value                                                              |
+  #     | Name              | My Business Term                                                   |
+  #     | Type              | Business Term                                                      |
+  #     | Description       | This is the first description of my business term                  |
+  #     | Last Modification | Some timestamp                                                     |
+  #     | Last User         | app-admin                                                          |
+  #     | Version           | 1                                                                  |
+  #     | Status            | published                                                          |
+  #   And if result <result> is "Ok", user <user> is not able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+  #     | Field             | Value                                                              |
+  #     | Name              | My Business Term                                                   |
+  #     | Type              | Business Term                                                      |
+  #     | Description       | This is the first description of my business term                  |
+  #     | Last Modification | Some timestamp                                                     |
+  #     | Last User         | app-admin                                                          |
+  #     | Version           | 2                                                                  |
+  #     | Status            | draft                                                              |
   #
   #   Examples:
   #     | user      | result       |
