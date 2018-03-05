@@ -30,6 +30,10 @@ defmodule TrueBG.Canary.TaxonomyAbilities do
     has_admin_role(%{user_id: user_id, domain_group_id: parent_domain_group_id})
   end
 
+  def can?( %User{id: user_id}, :create, %AclEntry{principal_type: "user", resource_type: "data_domain", resource_id: resource_id}) do
+    has_admin_role(%{user_id: user_id, data_domain_id: resource_id})
+  end
+
   def can?( %User{id: user_id}, :create, %AclEntry{principal_type: "user", resource_type: "domain_group", resource_id: resource_id}) do
     has_admin_role(%{user_id: user_id, domain_group_id: resource_id})
   end

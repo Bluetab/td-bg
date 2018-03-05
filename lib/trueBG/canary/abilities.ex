@@ -51,6 +51,10 @@ defmodule TrueBG.Canary.Abilities do
       TaxonomyAbilities.can?(user, :create, acl_entry)
     end
 
+    def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "data_domain"} = acl_entry) do
+      TaxonomyAbilities.can?(user, :create, acl_entry)
+    end
+
     def can?(%User{}, _action, BusinessConceptVersion) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
       true
     end

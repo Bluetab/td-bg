@@ -34,33 +34,34 @@ Feature: Roles Admin
       | publisher  | create    | Unauthorized | -           | -           |
       | admin      | create    | Created      | create      | create      |
 
-  # Scenario Outline: Granting roles to data domain by domain manager
-  #   Given an existing Domain Group called "My Group"
-  #   And an existing Data Domain called "My Domain" child of Domain Group "My Group"
-  #   And following users exist with the indicated role in Data Domain "My Domain"
-  #     | user      | role    |
-  #     | watcher   | watch   |
-  #     | creator   | create  |
-  #     | publisher | publish |
-  #     | admin     | admin   |
-  #   When "<user>" grants <role> role to user "johndoe" in Domain Group "My Domain"
-  #   Then the system returns a result with code "<code>"
-  #   And if result "<code>" is "Created", the user "johndoe" has "<domain_role>" role in Data Domain "My Domain"
-  #
-  #   Examples:
-  #     | user       | role      | code         | domain_role |
-  #     | watcher    | admin     | Unauthorized | -           |
-  #     | creator    | admin     | Unauthorized | -           |
-  #     | publisher  | admin     | Unauthorized | -           |
-  #     | admin      | admin     | Created      | admin       |
-  #     | watcher    | publish   | Unauthorized | -           |
-  #     | creator    | publish   | Unauthorized | -           |
-  #     | publisher  | publish   | Unauthorized | -           |
-  #     | admin      | publish   | Created      | publish     |
-  #     | watcher    | create    | Unauthorized | -           |
-  #     | creator    | create    | Unauthorized | -           |
-  #     | publisher  | create    | Unauthorized | -           |
-  #     | admin      | create    | Created      | create      |
+
+  Scenario Outline: Granting roles to data domain by domain manager
+    Given an existing Domain Group called "My Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    When "<user>" grants <role> role to user "johndoe" in Data Domain "My Domain"
+    Then the system returns a result with code "<code>"
+    And if result "<code>" is "Created", the user "johndoe" has "<domain_role>" role in Data Domain "My Domain"
+
+    Examples:
+      | user       | role      | code         | domain_role |
+      | watcher    | admin     | Unauthorized | -           |
+      | creator    | admin     | Unauthorized | -           |
+      | publisher  | admin     | Unauthorized | -           |
+      | admin      | admin     | Created      | admin       |
+      | watcher    | publish   | Unauthorized | -           |
+      | creator    | publish   | Unauthorized | -           |
+      | publisher  | publish   | Unauthorized | -           |
+      | admin      | publish   | Created      | publish     |
+      | watcher    | create    | Unauthorized | -           |
+      | creator    | create    | Unauthorized | -           |
+      | publisher  | create    | Unauthorized | -           |
+      | admin      | create    | Created      | create      |
 
   # Scenario: List of user with custom permission in a Data Domain or Domain Group
   #   Given an existing Domain Group called "My Group"
