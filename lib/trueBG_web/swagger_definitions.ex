@@ -209,28 +209,28 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         description "Business Concept"
         properties do
           id :integer, "unique identifier", required: true
-          business_concept_version_id :integer, "version id"
-          type :string, "bc type"
-          content :object, "json content"
-          name :string, "name"
-          description :string, "description"
-          last_change_by :integer, "last updated by"
-          last_change_at :string, "last updated date"
-          data_domain_id :integer, "parent data domain id"
-          status :string, "status"
-          version :integer, "version"
-          reject_reason :string
-          mod_comments :string
+          business_concept_version_id :integer, "Business Concept current version id"
+          type :string, "Business Concept type"
+          content :object, "Business Concept content"
+          name :string, "Business Concept name"
+          description :string, "Business Concept description"
+          last_change_by :integer, "Business Concept last updated by"
+          last_change_at :string, "Business Conceptlast updated date"
+          data_domain_id :integer, "Business Concept parent data domain id"
+          status :string, "Business Conceptstatus"
+          version :integer, "Business Concept version"
+          reject_reason [:string, :null], "Business Concept reject reason"
+          mod_comments [:string, :null], "Business Concept modification comments"
         end
       end,
       BusinessConceptCreate: swagger_schema do
         properties do
           business_concept (Schema.new do
             properties do
-              type :string, "bc type (empty,...)", required: true
-              content :object, "json content", required: true
-              name :string, "name", required: true
-              description :string, "description", required: true
+              type :string, "Business Concept type (empty,...)", required: true
+              content :object, "Business Concept content", required: true
+              name :string, "Business Concept name", required: true
+              description :string, "Business Conceptdescription", required: true
             end
           end)
         end
@@ -239,11 +239,9 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         properties do
           business_concept (Schema.new do
             properties do
-              content :object, "json content"
-              name :string, "name"
-              description :string, "description"
-              reject_reason :string
-              mod_comments :string
+              content :object, "Business Concept content"
+              name :string, "Business Concept name"
+              description :string, "Business Concept description"
             end
           end)
         end

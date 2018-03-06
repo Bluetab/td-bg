@@ -170,6 +170,17 @@ defmodule TrueBGWeb.BusinessConceptController do
     end
   end
 
+  swagger_path :delete do
+    delete "/business_concepts/{id}"
+    description "Delete Business Concepts"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept ID", required: true
+    end
+    response 204, "No Content"
+    response 400, "Client Error"
+  end
+
   def delete(conn, %{"id" => id}) do
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
 
