@@ -59,24 +59,28 @@ defmodule TrueBG.Canary.Abilities do
       true
     end
 
-    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :update, business_concept)
+    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :update, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :send_for_approval, business_concept)
+    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :send_for_approval, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :reject, business_concept)
+    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :reject, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :publish, business_concept)
+    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :publish, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :update_published, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :update_published, business_concept)
+    def can?(%User{} = user, :update_published, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :update_published, business_concept_vesion)
+    end
+
+    def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :delete, business_concept_vesion)
     end
 
     def can?(%User{}, _action, _domain),  do: false

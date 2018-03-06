@@ -198,6 +198,34 @@ defmodule TrueBG.BusinessConcepts do
     |> Repo.one!
    end
 
+   @doc """
+   Deletes a BusinessCocneptVersion.
+
+   ## Examples
+
+       iex> delete_business_concept_version(data_structure)
+       {:ok, %BusinessCocneptVersion{}}
+
+       iex> delete_business_concept_version(data_structure)
+       {:error, %Ecto.Changeset{}}
+
+   """
+   def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
+     if business_concept_version.version == 1 do
+       Multi.new
+       |> Multi.delete(:business_concept_version, business_concept_version)
+       |> Multi.delete(:business_concept, business_concept_version.business_concept)
+       |> Repo.transaction
+       |> case do
+         {:ok, %{business_concept: %BusinessConcept{},
+                 business_concept_version: %BusinessConceptVersion{} = version}} ->
+           {:ok, version}
+       end
+     else
+       Repo.delete(business_concept_version)
+     end
+   end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking business_concept_version changes.
 
