@@ -110,4 +110,12 @@ defmodule TrueBGWeb.BusinessConcept do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
+  def business_concept_version_create(token, business_concept_id, attrs) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"business_concept" => attrs} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.post!(business_concept_business_concept_version_url(@endpoint, :create, business_concept_id), body, headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
 end

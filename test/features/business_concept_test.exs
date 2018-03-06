@@ -1,6 +1,7 @@
 defmodule TrueBG.BusinessConceptTest do
   use Cabbage.Feature, async: false, file: "business_concept.feature"
   use TrueBGWeb.FeatureCase
+  import TrueBGWeb.BusinessConcept
 
   # import TrueBGWeb.Router.Helpers
   import TrueBGWeb.ResponseCode
@@ -12,8 +13,6 @@ defmodule TrueBG.BusinessConceptTest do
   alias Poison, as: JSON
   alias TrueBG.BusinessConcepts.BusinessConcept
 
-  @endpoint TrueBGWeb.Endpoint
-  @headers {"Content-type", "application/json"}
   @fixed_values %{"Type" => "type",
                   "Name" => "name",
                   "Description" => "description",
@@ -344,96 +343,4 @@ defmodule TrueBG.BusinessConceptTest do
       |> fn({f, v}) -> Map.put(f, "content", v) end.()
   end
 
-  defp business_concept_create(token, data_domain_id,  attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(data_domain_business_concept_url(@endpoint, :create, data_domain_id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_update(token, business_concept_id, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.put!(business_concept_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_send_for_approval(token, business_concept_id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "pending_approval"} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code}
-  end
-
-  defp business_concept_reject(token, business_concept_id, reject_reason) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "rejected", "reject_reason" => reject_reason} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code}
-  end
-
-  defp business_concept_publish(token, business_concept_id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "published"} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code}
-  end
-
-  defp business_concept_show(token, id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_url(@endpoint, :show, id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_list(token) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_url(@endpoint, :index), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_by_name(token, business_concept_name) do
-    {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
-  end
-
-  defp business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
-    {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"],
-     fn(business_concept) -> business_concept["name"] == business_concept_name
-     and  business_concept["type"] == business_concept_type end)
-  end
-
-  defp business_concept_by_version_name_and_type(token, business_concept_version,
-                                                      business_concept_name,
-                                                      business_concept_type) do
-    {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"],
-     fn(business_concept) ->
-       business_concept["version"] == business_concept_version &&
-       business_concept["name"] == business_concept_name &&
-       business_concept["type"] == business_concept_type
-     end)
-  end
-
-  defp business_concept_version_show(token, id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_version_url(@endpoint, :show, id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_version_create(token, business_concept_id, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(business_concept_business_concept_version_url(@endpoint, :create, business_concept_id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
 end
