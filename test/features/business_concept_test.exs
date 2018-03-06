@@ -78,7 +78,7 @@ defmodule TrueBG.BusinessConceptTest do
   defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/,
           %{status_code: status_code}, %{status_code: http_status_code} = state do
     assert status_code == to_response_code(http_status_code)
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
   end
 
   def assert_attr("content" = attr, value, %{} = target) do
@@ -118,7 +118,7 @@ defmodule TrueBG.BusinessConceptTest do
       assert business_concept["data_domain_id"] == data_domain["id"]
       attrs = field_value_to_api_attrs(fields, @fixed_values)
       assert_attrs(attrs, business_concept)
-      {:ok, Map.merge(state, %{})}
+      {:ok, state}
   end
 
   # Scenario: Create a business concept with dinamic data
@@ -210,7 +210,7 @@ defmodule TrueBG.BusinessConceptTest do
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept["name"] == business_concept_name
     assert business_concept["data_domain_id"] !== data_domain["id"]
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
 
   end
 
@@ -222,7 +222,7 @@ defmodule TrueBG.BusinessConceptTest do
       attrs = field_value_to_api_attrs(fields, @fixed_values)
       data_domain = get_data_domain_by_name(token_admin, data_domain_name)
       business_concept_create(token_admin, data_domain["id"], attrs)
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
   end
 
   defwhen ~r/^(?<user_name>[^"]+) tries to modify a business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
@@ -255,7 +255,7 @@ defmodule TrueBG.BusinessConceptTest do
       assert_attrs(attrs, business_concept)
       {:ok, Map.merge(state, %{business_concept: business_concept})}
     else
-      {:ok, Map.merge(state, %{})}
+      {:ok, state}
     end
   end
 
@@ -287,7 +287,7 @@ defmodule TrueBG.BusinessConceptTest do
         business_concept_publish(token_admin, business_concept["id"])
     end
 
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
   end
 
   defwhen ~r/^(?<user_name>[^"]+) tries to publish a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
@@ -332,7 +332,7 @@ defmodule TrueBG.BusinessConceptTest do
         assert_attrs(attrs, business_concept)
         {:ok, Map.merge(state, %{business_concept: business_concept})}
       else
-        {:ok, Map.merge(state, %{})}
+        {:ok, state}
       end
   end
 
@@ -350,7 +350,7 @@ defmodule TrueBG.BusinessConceptTest do
     else
       business_concept_update(token_admin, business_concept["id"],  attrs)
     end
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
   end
 
   defp field_value_to_api_attrs(table, fixed_values) do
