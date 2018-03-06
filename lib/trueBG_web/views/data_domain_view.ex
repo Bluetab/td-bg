@@ -17,4 +17,15 @@ defmodule TrueBGWeb.DataDomainView do
       domain_group_id: data_domain.domain_group_id
     }
   end
+
+  def render("index_user_roles.json", %{users_roles: users_roles}) do
+    %{data: render_many(users_roles, DataDomainView, "users_role.json")}
+  end
+
+  def render("users_role.json", %{data_domain: user_role}) do
+    %{
+      user_id: user_role.principal_id,
+      role: user_role.role.name
+    }
+  end
 end

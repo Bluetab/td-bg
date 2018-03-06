@@ -26,6 +26,14 @@ defmodule TrueBG.Permissions do
   end
 
   @doc """
+    Returns a list of users-role with acl_entries in the data_domain passed as argument
+  """
+  def list_acl_entries(%{data_domain: data_domain}) do
+    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.resource_type == "data_domain" and acl_entry.resource_id == ^data_domain.id)
+    acl_entries |> Repo.preload(:role)
+  end
+
+  @doc """
 
   """
   def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, domain_group: domain_group}) do

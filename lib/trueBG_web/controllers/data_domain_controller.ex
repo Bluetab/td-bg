@@ -5,6 +5,7 @@ defmodule TrueBGWeb.DataDomainController do
   import Plug.Conn
   alias TrueBGWeb.ErrorView
   alias TrueBG.Taxonomies
+  alias TrueBG.Permissions
   alias TrueBG.Taxonomies.DataDomain
   alias TrueBG.Taxonomies.DomainGroup
   alias TrueBGWeb.SwaggerDefinitions
@@ -130,5 +131,13 @@ defmodule TrueBGWeb.DataDomainController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  def users_roles(conn, %{"data_domain_id" => id}) do
+    data_domain = Taxonomies.get_data_domain!(id)
+    acl_entries = Permissions.list_acl_entries(%{data_domain: data_domain})
+    #call external auth API service
+    _mapa = Enum.map(acl_entries, fn(acl_entry) -> %{user: acl_entry.principal_id, role: acl_entry.role.name} end)
+    render(conn, "index_user_roles.json", users_roles: acl_entries)
   end
 end

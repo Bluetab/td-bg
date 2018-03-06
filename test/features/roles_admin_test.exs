@@ -112,6 +112,26 @@ defmodule TrueBG.RolesAdminTest do
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
+  defwhen ~r/^"(?<user_name>[^"]+)" lists all users with custom permissions in Data Domain "(?<data_domain_name>[^"]+)"$/,
+    %{user_name: user_name, data_domain_name: data_domain_name}, state do
+    token = get_user_token(user_name)
+    data_domain_info = get_data_domain_by_name(token, data_domain_name)
+    data_domain_users_roles(token, %{id: data_domain_info["id"]})
+    {:ok, Map.merge(state, %{})}
+  end
+
+  defthen ~r/^the system returns a result with following data:$/,
+    %{table: _expected_list}, _state do
+
+  end
+
+  defp data_domain_users_roles(token, attrs) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(data_domain_data_domain_url(@endpoint, :users_roles, attrs.id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
   defp user_domain_group_role(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
