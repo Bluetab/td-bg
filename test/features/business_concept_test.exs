@@ -267,7 +267,6 @@ defmodule TrueBG.BusinessConceptTest do
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     {_, status_code} = business_concept_send_for_approval(token, business_concept["id"])
     {:ok, Map.merge(state, %{status_code: status_code})}
-
  end
 
  # Scenario Outline: Publish existing Business Concept in Pending Approval status

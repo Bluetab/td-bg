@@ -1,5 +1,6 @@
 defmodule TrueBGWeb.BusinessConceptVersionController do
   use TrueBGWeb, :controller
+  use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
@@ -8,12 +9,34 @@ defmodule TrueBGWeb.BusinessConceptVersionController do
   alias TrueBG.BusinessConcepts.BusinessConceptVersion
   alias Poison, as: JSON
   alias TrueBGWeb.ErrorView
+  alias TrueBGWeb.SwaggerDefinitions
 
   action_fallback TrueBGWeb.FallbackController
+
+  def swagger_definitions do
+    SwaggerDefinitions.business_concept_version_definitions()
+  end
+
+  swagger_path :index do
+    get "/business_concept_versions"
+    description "List Business Concept Versions"
+    response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
+  end
 
   def index(conn, _params) do
     business_concept_versions = BusinessConcepts.list_business_concept_versions()
     render(conn, "index.json", business_concept_versions: business_concept_versions)
+  end
+
+  swagger_path :create do
+    post "/business_concept_versions"
+    description "Creates a Business Concept Version"
+    produces "application/json"
+    parameters do
+      business_concept :body, Schema.ref(:BusinessConceptVersionCreate), "Business Concept Version create attrs"
+    end
+    response 201, "OK", Schema.ref(:BusinessConceptVersionResponse)
+    response 400, "Client Error"
   end
 
   def create(conn, %{"business_concept_id" => business_concept_id, "business_concept" => business_concept_params}) do
@@ -52,6 +75,17 @@ defmodule TrueBGWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  swagger_path :show do
+    get "/business_concept_version/{id}"
+    description "Show Business Concept Version"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
+    response 400, "Client Error"
   end
 
   def show(conn, %{"id" => id}) do
