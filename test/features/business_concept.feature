@@ -417,40 +417,40 @@ Feature: Business Concepts administration
       | Name              | My Business Term                                  |
       | Description       | This is the first description of my business term |
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
-    # And business concept with name "My Business Term" of type "Business Term" has been modified with following data:
-    #   | Field                 | Value                                              |
-    #   | Type                  | Business Term                                      |
-    #   | Name                  | My Business Term                                   |
-    #   | Description           | This is the second description of my business term |
-    #   | Modification Comments | Modification on the Business Term description      |
-    # And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
-  #   When <user> tries to publish a business concept with name "My Business Term" of type "Business Term"
-  #   Then the system returns a result with code "<result>"
-  #   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
-  #     | Field             | Value                                                              |
-  #     | Name              | My Business Term                                                   |
-  #     | Type              | Business Term                                                      |
-  #     | Description       | This is the second description of my business term                 |
-  #     | Last Modification | Some timestamp                                                     |
-  #     | Last User         | <user>                                                             |
-  #     | Version           | 2                                                                  |
-  #     | Status            | published                                                          |
-  #   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
-  #     | Field             | Value                                                              |
-  #     | Name              | My Business Term                                                   |
-  #     | Type              | Business Term                                                      |
-  #     | Description       | This is the first description of my business term                 |
-  #     | Last Modification | Some timestamp                                                     |
-  #     | Last User         | <user>                                                             |
-  #     | Version           | 1                                                                  |
-  #     | Status            | versioned                                                          |
-  #
+    And business concept with name "My Business Term" of type "Business Term" has been modified with following data:
+      | Field                 | Value                                              |
+      | Type                  | Business Term                                      |
+      | Name                  | My Business Term                                   |
+      | Description           | This is the second description of my business term |
+      | Modification Comments | Modification on the Business Term description      |
+    And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
+    When <user> tries to publish a business concept with name "My Business Term" of type "Business Term"
+    Then the system returns a result with code "<result>"
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+      | Field             | Value                                                              |
+      | Name              | My Business Term                                                   |
+      | Type              | Business Term                                                      |
+      | Description       | This is the second description of my business term                 |
+      | Last Modification | Some timestamp                                                     |
+      | Last User         | <user>                                                             |
+      | Version           | 2                                                                  |
+      | Status            | published                                                          |
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
+      | Field             | Value                                                              |
+      | Name              | My Business Term                                                   |
+      | Type              | Business Term                                                      |
+      | Description       | This is the first description of my business term                 |
+      | Last Modification | Some timestamp                                                     |
+      | Last User         | <user>                                                             |
+      | Version           | 1                                                                  |
+      | Status            | versioned                                                          |
+
     Examples:
       | user      | result       |
-      # | watcher   | Unauthorized |
-      # | creator   | Unauthorized |
+      | watcher   | Unauthorized |
+      | creator   | Unauthorized |
       | publisher | Ok           |
-  #     | admin     | Ok           |
+      | admin     | Ok           |
 
   # Scenario Outline: Modify a second version of a published Business Concept
   #   Given an existing Domain Group called "My Parent Group"

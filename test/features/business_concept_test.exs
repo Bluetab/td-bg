@@ -336,6 +336,23 @@ defmodule TrueBG.BusinessConceptTest do
       end
   end
 
+  # Scenario Outline: Publish a second version of a Business Concept
+
+  defand ~r/^business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" has been modified with following data:$/,
+  %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+  %{token_admin: token_admin} = state do
+    business_concept = business_concept_by_name(token_admin, business_concept_name)
+    assert business_concept_type == business_concept["type"]
+    attrs = field_value_to_api_attrs(fields, @fixed_values)
+    status = business_concept["status"]
+    {_, _, _} = if status == BusinessConcept.status.published do
+      business_concept_version_create(token_admin, business_concept["id"],  attrs)
+    else
+      business_concept_update(token_admin, business_concept["id"],  attrs)
+    end
+    {:ok, Map.merge(state, %{})}
+  end
+
   defp field_value_to_api_attrs(table, fixed_values) do
     table
       |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
