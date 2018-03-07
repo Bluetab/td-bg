@@ -1,27 +1,27 @@
-defmodule TrueBGWeb.Router do
-  use TrueBGWeb, :router
+defmodule TdBGWeb.Router do
+  use TdBGWeb, :router
 
   pipeline :api do
-    plug TrueBG.Auth.Pipeline.Unsecure
+    plug TdBG.Auth.Pipeline.Unsecure
     plug :accepts, ["json"]
   end
 
   pipeline :api_secure do
-    plug TrueBG.Auth.Pipeline.Secure
+    plug TdBG.Auth.Pipeline.Secure
   end
 
   pipeline :api_authorized do
-    plug TrueBG.Permissions.Plug.CurrentUser
+    plug TdBG.Permissions.Plug.CurrentUser
     plug Guardian.Plug.LoadResource
   end
 
-  scope "/api", TrueBGWeb do
+  scope "/api", TdBGWeb do
     pipe_through :api
     get  "/ping", PingController, :ping
     post "/echo", EchoController, :echo
   end
 
-  scope "/api", TrueBGWeb do
+  scope "/api", TdBGWeb do
     pipe_through [:api, :api_secure]
     resources "/users", UserController, except: [:new, :edit]
     resources "/roles", RoleController, except: [:new, :edit]
@@ -37,7 +37,7 @@ defmodule TrueBGWeb.Router do
     end
   end
 
-  scope "/api", TrueBGWeb do
+  scope "/api", TdBGWeb do
     pipe_through [:api, :api_secure, :api_authorized]
     resources "/data_domains", DataDomainController, except: [:new, :edit, :create]
     get "/domain_groups/index_root", DomainGroupController, :index_root
@@ -70,7 +70,7 @@ defmodule TrueBGWeb.Router do
       schemes: ["http"],
       info: %{
         version: "1.0",
-        title: "TrueBG"
+        title: "TdBG"
       },
       "basePath": "/api",
       "securityDefinitions":

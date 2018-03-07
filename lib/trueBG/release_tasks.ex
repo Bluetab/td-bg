@@ -1,7 +1,7 @@
-defmodule TrueBG.ReleaseTasks do
+defmodule TdBG.ReleaseTasks do
   @moduledoc false
   alias Ecto.Migrator
-  alias TrueBG.Repo
+  alias TdBG.Repo
 
   @start_apps [
       :postgrex,
@@ -9,7 +9,7 @@ defmodule TrueBG.ReleaseTasks do
     ]
 
     @myapps [
-      :trueBG
+      :td_bg
     ]
 
     @repos [
@@ -17,15 +17,15 @@ defmodule TrueBG.ReleaseTasks do
     ]
 
     def seed do
-      #IO.puts "Loading trueBG.."
-      # Load the code for trueBG, but don't start it
-      :ok = Application.load(:trueBG)
+      #IO.puts "Loading TdBG.."
+      # Load the code for TdBG, but don't start it
+      :ok = Application.load(:td_bg)
 
       #IO.puts "Starting dependencies.."
       # Start apps necessary for executing migrations
       Enum.each(@start_apps, &Application.ensure_all_started/1)
 
-      # Start the Repo(s) for trueBG
+      # Start the Repo(s) for TdBG
       #IO.puts "Starting repos.."
       Enum.each(@repos, &(&1.start_link(pool_size: 1)))
 
@@ -33,7 +33,7 @@ defmodule TrueBG.ReleaseTasks do
       Enum.each(@myapps, &run_migrations_for/1)
 
       # Run the seed script if it exists
-      seed_script = Path.join([priv_dir(:trueBG), "repo", "seeds.exs"])
+      seed_script = Path.join([priv_dir(:td_bg), "repo", "seeds.exs"])
       if File.exists?(seed_script) do
         IO.puts "Running seed script.."
         Code.eval_file(seed_script)
@@ -48,7 +48,7 @@ defmodule TrueBG.ReleaseTasks do
 
     defp run_migrations_for(app) do
       IO.puts "Running migrations for #{app}"
-      Migrator.run(TrueBG.Repo, migrations_path(app), :up, all: true)
+      Migrator.run(TdBG.Repo, migrations_path(app), :up, all: true)
     end
 
     defp migrations_path(app), do: Path.join([priv_dir(app), "repo", "migrations"])

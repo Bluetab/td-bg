@@ -1,4 +1,4 @@
-defmodule TrueBG.Repo.Migrations.AddUniqueBusinessConceptVersionVersionGroup do
+defmodule TdBG.Repo.Migrations.AddUniqueBusinessConceptVersionVersionGroup do
   use Ecto.Migration
 
   def change do

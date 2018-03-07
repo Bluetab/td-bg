@@ -6,18 +6,18 @@
 use Mix.Config
 
 # General application configuration
-config :trueBG,
-  ecto_repos: [TrueBG.Repo]
+config :td_bg,
+  ecto_repos: [TdBG.Repo]
 
 # Hashing algorithm
-config :trueBG, hashing_module: Comeonin.Bcrypt
+config :td_bg, hashing_module: Comeonin.Bcrypt
 
 # Configures the endpoint
-config :trueBG, TrueBGWeb.Endpoint,
+config :td_bg, TdBGWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "tOxTkbz1LLqsEmoRRhSorwFZm35yQbVPP/gdU3cFUYV5IdcoIRNroCeADl4ysBBg",
-  render_errors: [view: TrueBGWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: TrueBG.PubSub,
+  render_errors: [view: TdBGWeb.ErrorView, accepts: ~w(json)],
+  pubsub: [name: TdBG.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
@@ -25,17 +25,17 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-config :trueBG, TrueBG.Auth.Guardian,
+config :td_bg, TdBG.Auth.Guardian,
   allowed_algos: ["HS512"], # optional
   issuer: "tdauth",
   ttl: { 1, :hours },
   secret_key: "SuperSecretTruedat"
 
-config :canary, repo: TrueBG.Repo,
-  unauthorized_handler: {TrueBG.Auth.Canary, :handle_unauthorized},
-  not_found_handler: {TrueBG.Auth.Canary, :handle_not_found}
+config :canary, repo: TdBG.Repo,
+  unauthorized_handler: {TdBG.Auth.Canary, :handle_unauthorized},
+  not_found_handler: {TdBG.Auth.Canary, :handle_not_found}
 
-config :trueBG, :auth_service,
+config :td_bg, :auth_service,
   protocol: "http",
   host: "localhost",
   port: "4001",

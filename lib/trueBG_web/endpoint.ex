@@ -1,14 +1,14 @@
-defmodule TrueBGWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :trueBG
+defmodule TdBGWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :td_bg
 
-  socket "/socket", TrueBGWeb.UserSocket
+  socket "/socket", TdBGWeb.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phoenix.digest
   # when deploying your static files in production.
   plug Plug.Static,
-    at: "/", from: :trueBG, gzip: false,
+    at: "/", from: :td_bg, gzip: false,
     only: ~w(swagger.json)
 
   # Code reloading can be explicitly enabled under the
@@ -33,12 +33,12 @@ defmodule TrueBGWeb.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   plug Plug.Session,
     store: :cookie,
-    key: "_trueBG_key",
+    key: "_TdBG_key",
     signing_salt: "X5RG5d/j"
 
   plug CORSPlug, origin: ["*"]
 
-  plug TrueBGWeb.Router
+  plug TdBGWeb.Router
 
   @doc """
   Callback invoked for dynamically configuring the endpoint.

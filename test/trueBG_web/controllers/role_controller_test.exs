@@ -1,11 +1,11 @@
-defmodule TrueBGWeb.RoleControllerTest do
-  use TrueBGWeb.ConnCase
+defmodule TdBGWeb.RoleControllerTest do
+  use TdBGWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TrueBGWeb.Authentication, only: :functions
+  import TdBGWeb.Authentication, only: :functions
 
-  alias TrueBG.Permissions
-  alias TrueBG.Permissions.Role
+  alias TdBG.Permissions
+  alias TdBG.Permissions.Role
 
   @create_attrs %{name: "some name"}
   @update_attrs %{name: "some updated name"}

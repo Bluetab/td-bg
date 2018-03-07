@@ -1,19 +1,19 @@
-defmodule TrueBG.TaxonomyNavigationTest do
+defmodule TdBG.TaxonomyNavigationTest do
   use Cabbage.Feature, async: false, file: "taxonomy_navigation.feature"
-  use TrueBGWeb.FeatureCase
-  import TrueBGWeb.Router.Helpers
-  import TrueBGWeb.ResponseCode
-  import TrueBGWeb.Taxonomy
-  import TrueBGWeb.Authentication, only: :functions
+  use TdBGWeb.FeatureCase
+  import TdBGWeb.Router.Helpers
+  import TdBGWeb.ResponseCode
+  import TdBGWeb.Taxonomy
+  import TdBGWeb.Authentication, only: :functions
   alias Poison, as: JSON
-  @endpoint TrueBGWeb.Endpoint
+  @endpoint TdBGWeb.Endpoint
 
   @bc_fixed_fields %{"Description" => "description", "Name" => "name", "Type" => "type"}
   @headers {"Content-type", "application/json"}
 
   setup do
     on_exit fn ->
-              File.rm(Application.get_env(:trueBG, :bc_schema_location))
+              File.rm(Application.get_env(:td_bg, :bc_schema_location))
             end
   end
 
@@ -98,7 +98,7 @@ defmodule TrueBG.TaxonomyNavigationTest do
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
     %{business_concept_type: business_concept_type}, state do
-    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename = Application.get_env(:td_bg, :bc_schema_location)
 
     {:ok, file} = File.open filename, [:read, :write, :utf8]
     content = File.read! filename

@@ -1,10 +1,10 @@
-defmodule TrueBG.SuperAdminTaxonomyTest do
+defmodule TdBG.SuperAdminTaxonomyTest do
   use Cabbage.Feature, async: false, file: "super_admin_taxonomy.feature"
-  use TrueBGWeb.FeatureCase
-  import TrueBGWeb.Taxonomy, only: :functions
-  import TrueBGWeb.BusinessConcept, only: :functions
-  import TrueBGWeb.Authentication, only: :functions
-  import TrueBGWeb.ResponseCode, only: :functions
+  use TdBGWeb.FeatureCase
+  import TdBGWeb.Taxonomy, only: :functions
+  import TdBGWeb.BusinessConcept, only: :functions
+  import TdBGWeb.Authentication, only: :functions
+  import TdBGWeb.ResponseCode, only: :functions
   alias Poison, as: JSON
 
   # Scenario: Creating a Domain Group without any parent
@@ -195,7 +195,7 @@ defmodule TrueBG.SuperAdminTaxonomyTest do
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
     %{business_concept_type: business_concept_type},
     _state do
-      filename = Application.get_env(:trueBG, :bc_schema_location)
+      filename = Application.get_env(:td_bg, :bc_schema_location)
       {:ok, file} = File.open filename, [:write, :utf8]
       json_schema = [{business_concept_type, []}] |> Map.new |> JSON.encode!
       IO.binwrite file, json_schema

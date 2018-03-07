@@ -1,6 +1,6 @@
-defmodule TrueBGWeb.DomainGroupView do
-  use TrueBGWeb, :view
-  alias TrueBGWeb.DomainGroupView
+defmodule TdBGWeb.DomainGroupView do
+  use TdBGWeb, :view
+  alias TdBGWeb.DomainGroupView
 
   def render("index.json", %{domain_groups: domain_groups}) do
     %{data: render_many(domain_groups, DomainGroupView, "domain_group.json")}

@@ -45,8 +45,8 @@ end
 # when running `mix release`, the first release in the file
 # will be used by default
 
-release :trueBG do
-  set version: current_version(:trueBG)
+release :td_bg do
+  set version: current_version(:td_bg)
   set applications: [
     :runtime_tools
   ]

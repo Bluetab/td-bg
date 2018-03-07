@@ -1,19 +1,42 @@
-defmodule TrueBGWeb.BusinessConceptVersionController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.BusinessConceptVersionController do
+  use TdBGWeb, :controller
+  use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
-  alias TrueBG.BusinessConcepts
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.BusinessConcepts
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
   alias Poison, as: JSON
-  alias TrueBGWeb.ErrorView
+  alias TdBGWeb.ErrorView
+  alias TdBGWeb.SwaggerDefinitions
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
+
+  def swagger_definitions do
+    SwaggerDefinitions.business_concept_version_definitions()
+  end
+
+  swagger_path :index do
+    get "/business_concept_versions"
+    description "List Business Concept Versions"
+    response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
+  end
 
   def index(conn, _params) do
     business_concept_versions = BusinessConcepts.list_business_concept_versions()
     render(conn, "index.json", business_concept_versions: business_concept_versions)
+  end
+
+  swagger_path :create do
+    post "/business_concept_versions"
+    description "Creates a Business Concept Version"
+    produces "application/json"
+    parameters do
+      business_concept :body, Schema.ref(:BusinessConceptVersionCreate), "Business Concept Version create attrs"
+    end
+    response 201, "OK", Schema.ref(:BusinessConceptVersionResponse)
+    response 400, "Client Error"
   end
 
   def create(conn, %{"business_concept_id" => business_concept_id, "business_concept" => business_concept_params}) do
@@ -54,13 +77,24 @@ defmodule TrueBGWeb.BusinessConceptVersionController do
     end
   end
 
+  swagger_path :show do
+    get "/business_concept_version/{id}"
+    description "Show Business Concept Version"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
+    response 400, "Client Error"
+  end
+
   def show(conn, %{"id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     render(conn, "show.json", business_concept_version: business_concept_version)
   end
 
   defp get_content_schema(content_type) do
-    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename = Application.get_env(:td_bg, :bc_schema_location)
     filename
       |> File.read!
       |> JSON.decode!

@@ -1,7 +1,7 @@
-defmodule TrueBGWeb.PingController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.PingController do
+  use TdBGWeb, :controller
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   def ping(conn, _params) do
     send_resp(conn, 200, "pong")

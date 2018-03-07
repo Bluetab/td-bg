@@ -1,7 +1,7 @@
-defmodule TrueBG.Auth.Guardian do
+defmodule TdBG.Auth.Guardian do
   @moduledoc false
-  use Guardian, otp_app: :trueBG
-  alias TrueBG.Accounts.User
+  use Guardian, otp_app: :td_bg
+  alias TdBG.Accounts.User
 
   def subject_for_token(resource, _claims) do
     # You can use any value for the subject of your token but

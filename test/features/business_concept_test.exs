@@ -1,19 +1,18 @@
-defmodule TrueBG.BusinessConceptTest do
+defmodule TdBG.BusinessConceptTest do
   use Cabbage.Feature, async: false, file: "business_concept.feature"
-  use TrueBGWeb.FeatureCase
+  use TdBGWeb.FeatureCase
+  import TdBGWeb.BusinessConcept
 
-  # import TrueBGWeb.Router.Helpers
-  import TrueBGWeb.ResponseCode
-  import TrueBGWeb.User, only: :functions
-  import TrueBGWeb.Taxonomy, only: :functions
-  import TrueBGWeb.AclEntry, only: :functions
-  import TrueBGWeb.Authentication, only: :functions
+  # import TdBGWeb.Router.Helpers
+  import TdBGWeb.ResponseCode
+  import TdBGWeb.User, only: :functions
+  import TdBGWeb.Taxonomy, only: :functions
+  import TdBGWeb.AclEntry, only: :functions
+  import TdBGWeb.Authentication, only: :functions
 
   alias Poison, as: JSON
-  alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConcept
 
-  @endpoint TrueBGWeb.Endpoint
-  @headers {"Content-type", "application/json"}
   @fixed_values %{"Type" => "type",
                   "Name" => "name",
                   "Description" => "description",
@@ -55,7 +54,7 @@ defmodule TrueBG.BusinessConceptTest do
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
     %{business_concept_type: business_concept_type}, state do
-    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename = Application.get_env(:td_bg, :bc_schema_location)
     {:ok, file} = File.open filename, [:write, :utf8]
     json_schema = [{business_concept_type, []}] |> Map.new |> JSON.encode!
     IO.binwrite file, json_schema
@@ -79,7 +78,7 @@ defmodule TrueBG.BusinessConceptTest do
   defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/,
           %{status_code: status_code}, %{status_code: http_status_code} = state do
     assert status_code == to_response_code(http_status_code)
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
   end
 
   def assert_attr("content" = attr, value, %{} = target) do
@@ -119,7 +118,7 @@ defmodule TrueBG.BusinessConceptTest do
       assert business_concept["data_domain_id"] == data_domain["id"]
       attrs = field_value_to_api_attrs(fields, @fixed_values)
       assert_attrs(attrs, business_concept)
-      {:ok, Map.merge(state, %{})}
+      {:ok, state}
   end
 
   # Scenario: Create a business concept with dinamic data
@@ -155,7 +154,7 @@ defmodule TrueBG.BusinessConceptTest do
 
     json_schema = %{business_concept_type  => schema} |> JSON.encode!
 
-    path = Application.get_env(:trueBG, :bc_schema_location)
+    path = Application.get_env(:td_bg, :bc_schema_location)
     File.write!(path, json_schema, [:write, :utf8])
 
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
@@ -211,7 +210,7 @@ defmodule TrueBG.BusinessConceptTest do
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept["name"] == business_concept_name
     assert business_concept["data_domain_id"] !== data_domain["id"]
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
 
   end
 
@@ -223,7 +222,7 @@ defmodule TrueBG.BusinessConceptTest do
       attrs = field_value_to_api_attrs(fields, @fixed_values)
       data_domain = get_data_domain_by_name(token_admin, data_domain_name)
       business_concept_create(token_admin, data_domain["id"], attrs)
-    {:ok, Map.merge(state, %{})}
+    {:ok, state}
   end
 
   defwhen ~r/^(?<user_name>[^"]+) tries to modify a business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
@@ -242,7 +241,7 @@ defmodule TrueBG.BusinessConceptTest do
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
-  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with follwing data:$/,
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
     %{token_admin: token_admin} = state do
 
@@ -256,7 +255,7 @@ defmodule TrueBG.BusinessConceptTest do
       assert_attrs(attrs, business_concept)
       {:ok, Map.merge(state, %{business_concept: business_concept})}
     else
-      {:ok, Map.merge(state, %{})}
+      {:ok, state}
     end
   end
 
@@ -266,9 +265,9 @@ defmodule TrueBG.BusinessConceptTest do
 
     token = get_user_token(user_name)
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    {_, status_code} = business_concept_send_for_approval(token, business_concept["id"])
+    business_concept_id = business_concept["id"]
+    {_, status_code} = business_concept_send_for_approval(token, business_concept_id)
     {:ok, Map.merge(state, %{status_code: status_code})}
-
  end
 
  # Scenario Outline: Publish existing Business Concept in Pending Approval status
@@ -277,18 +276,9 @@ defmodule TrueBG.BusinessConceptTest do
   %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, status: status},
   %{token_admin: token_admin} = state do
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-
-    current_status = String.to_atom(business_concept["status"])
-    desired_status = String.to_atom(status)
-    case {current_status, desired_status} do
-      {:draft, :pending_approval} ->
-        business_concept_send_for_approval(token_admin, business_concept["id"])
-      {:draft, :published} ->
-        business_concept_send_for_approval(token_admin, business_concept["id"])
-        business_concept_publish(token_admin, business_concept["id"])
-    end
-
-    {:ok, Map.merge(state, %{})}
+    business_concept_id = business_concept["id"]
+    change_business_concept_status(token_admin, business_concept_id, status)
+    {:ok, state}
   end
 
   defwhen ~r/^(?<user_name>[^"]+) tries to publish a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
@@ -296,7 +286,8 @@ defmodule TrueBG.BusinessConceptTest do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      {_, status_code} = business_concept_publish(token, business_concept["id"])
+      business_concept_id = business_concept["id"]
+      {_, status_code} = business_concept_publish(token, business_concept_id)
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -307,14 +298,15 @@ defmodule TrueBG.BusinessConceptTest do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      {_, status_code} = business_concept_reject(token, business_concept["id"], reject_reason)
+      business_concept_id = business_concept["id"]
+      {_, status_code} = business_concept_reject(token, business_concept_id, reject_reason)
 
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
   # Scenario Outline: Modification of existing Business Concept in Published status
 
-  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with follwing data:$/,
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with following data:$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
     %{token_admin: token_admin} = state do
 
@@ -333,8 +325,148 @@ defmodule TrueBG.BusinessConceptTest do
         assert_attrs(attrs, business_concept)
         {:ok, Map.merge(state, %{business_concept: business_concept})}
       else
-        {:ok, Map.merge(state, %{})}
+        {:ok, state}
       end
+  end
+
+  # Scenario Outline: Publish a second version of a Business Concept
+
+  defand ~r/^the status of business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" is set to "(?<business_concept_status>[^"]+)" for version (?<version>\d+)$/,
+    %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, business_concept_status: business_concept_status, version: version},
+    %{token_admin: token_admin} = state do
+
+    business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+    business_concept_id = business_concept["id"]
+    business_concept_version = String.to_integer(version)
+    if version > 1 do
+      Enum.each(2..business_concept_version, fn(_x) ->
+        change_business_concept_status(token_admin, business_concept_id, BusinessConcept.status.published)
+        change_business_concept_status(token_admin, business_concept_id, BusinessConcept.status.draft)
+      end)
+    end
+    change_business_concept_status(token_admin, business_concept_id, business_concept_status)
+
+    {:ok, state}
+   end
+
+  defand ~r/^business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" has been modified with following data:$/,
+  %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+  %{token_admin: token_admin} = state do
+    business_concept = business_concept_by_name(token_admin, business_concept_name)
+    assert business_concept_type == business_concept["type"]
+    attrs = field_value_to_api_attrs(fields, @fixed_values)
+    status = business_concept["status"]
+    {_, _, _} = if status == BusinessConcept.status.published do
+      business_concept_version_create(token_admin, business_concept["id"],  attrs)
+    else
+      business_concept_update(token_admin, business_concept["id"],  attrs)
+    end
+    {:ok, state}
+  end
+
+  # Scenario Outline: Delete existing Business Concept in Draft Status
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to delete a business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin} = state do
+
+      business_concept_tmp = business_concept_by_name_and_type(
+                  token_admin, business_concept_name,
+                  business_concept_type)
+      assert business_concept_tmp
+      token = get_user_token(user_name)
+      business_concept_id = business_concept_tmp["id"]
+      {_, status_code} = business_concept_delete(token, business_concept_id)
+      {:ok, Map.merge(state, %{status_code: status_code, deleted_business_concept_id: business_concept_id})}
+  end
+
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is not able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: _business_concept_name, business_concept_type: _business_concept_type},
+    %{deleted_business_concept_id: business_concept_id} = state do
+      if result == status_code do
+        token = get_user_token(user_name)
+        {_, http_status_code, _} = business_concept_show(token, business_concept_id)
+        assert rc_not_found() == to_response_code(http_status_code)
+        {:ok, state}
+      else
+        {:ok, state}
+      end
+  end
+
+  defand ~r/^if result (?<result>[^"]+) is not "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with following data:$/,
+    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
+    %{token_admin: token_admin} = state do
+      token = get_user_token(user_name)
+      business_concept_version = String.to_integer(version)
+
+      if result != status_code do
+        business_concept_tmp = business_concept_by_version_name_and_type(
+                    token_admin, business_concept_version, business_concept_name,
+                    business_concept_type)
+        assert business_concept_version == business_concept_tmp["version"]
+        assert business_concept_type == business_concept_tmp["type"]
+        {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
+        assert rc_ok() == to_response_code(http_status_code)
+        attrs = field_value_to_api_attrs(fields, @fixed_values)
+        assert_attrs(attrs, business_concept)
+        {:ok, state}
+      else
+        {:ok, state}
+      end
+  end
+
+  # Scenario Outline: Delete current draft version for a BC that has been published previously
+
+  defand ~r/^user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with following data:$/,
+    %{user_name: user_name,  business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
+    %{token_admin: token_admin} = state do
+      business_concept_version = String.to_integer(version)
+      business_concept_tmp = business_concept_by_version_name_and_type(token_admin,
+                                                                      business_concept_version,
+                                                                      business_concept_name,
+                                                                      business_concept_type)
+      assert business_concept_tmp
+      assert business_concept_type == business_concept_tmp["type"]
+      token = get_user_token(user_name)
+      {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
+      assert rc_ok() == to_response_code(http_status_code)
+      attrs = field_value_to_api_attrs(fields, @fixed_values)
+      assert_attrs(attrs, business_concept)
+      {:ok, state}
+  end
+
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)",  business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" does not exist$/,
+    %{result: result, status_code: status_code, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version},
+    %{token_admin: token_admin} = _state do
+      if result == status_code do
+        business_concept_version = String.to_integer(version)
+        business_concept_tmp = business_concept_by_version_name_and_type(token_admin,
+                                                                        business_concept_version,
+                                                                        business_concept_name,
+                                                                        business_concept_type)
+        assert !business_concept_tmp
+      end
+  end
+
+  defp change_business_concept_status(token_admin, business_concept_id, status) do
+    {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
+    assert rc_ok() == to_response_code(status_code)
+
+    current_status = String.to_atom(business_concept_version["status"])
+    desired_status = String.to_atom(status)
+    case {current_status, desired_status} do
+      {:draft, :draft} -> nil # do nohting
+      {:draft, :rejected} ->
+        business_concept_send_for_approval(token_admin, business_concept_id)
+        business_concept_reject(token_admin, business_concept_id, "")
+      {:draft, :pending_approval} ->
+        business_concept_send_for_approval(token_admin, business_concept_id)
+      {:draft, :published} ->
+        business_concept_send_for_approval(token_admin, business_concept_id)
+        business_concept_publish(token_admin, business_concept_id)
+      {:published, :draft} ->
+        business_concept_version_create(token_admin, business_concept_id,  %{})
+    end
   end
 
   defp field_value_to_api_attrs(table, fixed_values) do
@@ -344,96 +476,4 @@ defmodule TrueBG.BusinessConceptTest do
       |> fn({f, v}) -> Map.put(f, "content", v) end.()
   end
 
-  defp business_concept_create(token, data_domain_id,  attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(data_domain_business_concept_url(@endpoint, :create, data_domain_id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_update(token, business_concept_id, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.put!(business_concept_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_send_for_approval(token, business_concept_id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "pending_approval"} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code}
-  end
-
-  defp business_concept_reject(token, business_concept_id, reject_reason) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "rejected", "reject_reason" => reject_reason} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code}
-  end
-
-  defp business_concept_publish(token, business_concept_id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "published"} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
-    {:ok, status_code}
-  end
-
-  defp business_concept_show(token, id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_url(@endpoint, :show, id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_list(token) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_url(@endpoint, :index), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_by_name(token, business_concept_name) do
-    {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
-  end
-
-  defp business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
-    {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"],
-     fn(business_concept) -> business_concept["name"] == business_concept_name
-     and  business_concept["type"] == business_concept_type end)
-  end
-
-  defp business_concept_by_version_name_and_type(token, business_concept_version,
-                                                      business_concept_name,
-                                                      business_concept_type) do
-    {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"],
-     fn(business_concept) ->
-       business_concept["version"] == business_concept_version &&
-       business_concept["name"] == business_concept_name &&
-       business_concept["type"] == business_concept_type
-     end)
-  end
-
-  defp business_concept_version_show(token, id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_version_url(@endpoint, :show, id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp business_concept_version_create(token, business_concept_id, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(business_concept_business_concept_version_url(@endpoint, :create, business_concept_id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
 end

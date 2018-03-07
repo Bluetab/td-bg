@@ -1,4 +1,4 @@
-defmodule TrueBGWeb.BCStatusCode do
+defmodule TdBGWeb.BCStatusCode do
   @moduledoc false
 
   @draft "draft"

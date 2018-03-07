@@ -1,10 +1,10 @@
-defmodule TrueBG.Canary.BusinessConceptAbilities do
+defmodule TdBG.Canary.BusinessConceptAbilities do
   @moduledoc false
-  alias TrueBG.Accounts.User
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
-  alias TrueBG.Permissions
+  alias TdBG.Accounts.User
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.Permissions
 
   def can?(%User{id: user_id}, :create_business_concept, %DataDomain{id: data_domain_id})  do
     %{user_id: user_id,
@@ -16,7 +16,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
   def can?(%User{id: user_id}, :update, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :update,
       current_status: status,
-      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.published],
+      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
       data_domain_id: data_domain_id}
     |> can_execute_action?
   end
@@ -24,7 +24,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
   def can?(%User{id: user_id}, :send_for_approval, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :send_for_approval,
       current_status: status,
-      required_statuses: [BusinessConcept.status.draft],
+      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
       data_domain_id: data_domain_id}
     |> can_execute_action?
   end
@@ -49,6 +49,14 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
     %{user_id: user_id, action: :update,
       current_status: status,
       required_statuses: [BusinessConcept.status.published],
+      data_domain_id: data_domain_id}
+    |> can_execute_action?
+  end
+
+  def can?(%User{id: user_id}, :delete, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
+    %{user_id: user_id, action: :delete,
+      current_status: status,
+      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
       data_domain_id: data_domain_id}
     |> can_execute_action?
   end

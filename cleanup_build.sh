@@ -1,5 +1,5 @@
 #!/bin/bash
 
-rm ~/.ssh/truebg.pem
+rm ~/.ssh/td_bg.pem
 cp -f ~/.ssh/config.bk ~/.ssh/config
-rm -f ~/truebg.prod.secret.exs
+rm -f ~/td_bg.prod.secret.exs

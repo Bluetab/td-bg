@@ -1,22 +1,22 @@
-defmodule TrueBGWeb.DataDomainController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.DataDomainController do
+  use TdBGWeb, :controller
   use PhoenixSwagger
 
   import Plug.Conn
-  alias TrueBGWeb.ErrorView
-  alias TrueBG.Taxonomies
-  alias TrueBG.Permissions
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBG.Taxonomies.DomainGroup
-  alias TrueBGWeb.SwaggerDefinitions
+  alias TdBGWeb.ErrorView
+  alias TdBG.Taxonomies
+  alias TdBG.Permissions
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBG.Taxonomies.DomainGroup
+  alias TdBGWeb.SwaggerDefinitions
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_data_domain
   plug :load_and_authorize_resource, model: DomainGroup, id_name: "domain_group_id", persisted: true, only: :create_data_domain
   plug :load_and_authorize_resource, model: DataDomain, id_name: "id", persisted: true, only: [:update, :delete]
 
-  @td_auth_api Application.get_env(:trueBG, :auth_service)[:api_service]
+  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   def swagger_definitions do
     SwaggerDefinitions.data_domain_swagger_definitions()

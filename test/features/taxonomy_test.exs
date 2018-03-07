@@ -1,11 +1,11 @@
-defmodule TrueBG.TaxonomyTest do
+defmodule TdBG.TaxonomyTest do
   use Cabbage.Feature, async: false, file: "taxonomy.feature"
-  use TrueBGWeb.FeatureCase
-  import TrueBGWeb.ResponseCode
-  import TrueBGWeb.Taxonomy
-  import TrueBGWeb.User, only: :functions
-  import TrueBGWeb.Authentication, only: :functions
-  import TrueBGWeb.AclEntry, only: :functions
+  use TdBGWeb.FeatureCase
+  import TdBGWeb.ResponseCode
+  import TdBGWeb.Taxonomy
+  import TdBGWeb.User, only: :functions
+  import TdBGWeb.Authentication, only: :functions
+  import TdBGWeb.AclEntry, only: :functions
 
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
      %{domain_group_name: name}, state do

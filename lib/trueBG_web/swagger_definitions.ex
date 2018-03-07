@@ -1,4 +1,4 @@
-defmodule TrueBGWeb.SwaggerDefinitions do
+defmodule TdBGWeb.SwaggerDefinitions do
   @moduledoc """
    Swagger definitions used by controllers
   """
@@ -209,28 +209,28 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         description "Business Concept"
         properties do
           id :integer, "unique identifier", required: true
-          business_concept_version_id :integer, "version id"
-          type :string, "bc type"
-          content :object, "json content"
-          name :string, "name"
-          description :string, "description"
-          last_change_by :integer, "last updated by"
-          last_change_at :string, "last updated date"
-          data_domain_id :integer, "parent data domain id"
-          status :string, "status"
-          version :integer, "version"
-          reject_reason :string
-          mod_comments :string
+          business_concept_version_id :integer, "Business Concept current version id"
+          type :string, "Business Concept type"
+          content :object, "Business Concept content"
+          name :string, "Business Concept name"
+          description :string, "Business Concept description"
+          last_change_by :integer, "Business Concept last updated by"
+          last_change_at :string, "Business Conceptlast updated date"
+          data_domain_id :integer, "Business Concept parent data domain id"
+          status :string, "Business Conceptstatus"
+          version :integer, "Business Concept version"
+          reject_reason [:string, :null], "Business Concept reject reason"
+          mod_comments [:string, :null], "Business Concept modification comments"
         end
       end,
       BusinessConceptCreate: swagger_schema do
         properties do
           business_concept (Schema.new do
             properties do
-              type :string, "bc type (empty,...)", required: true
-              content :object, "json content", required: true
-              name :string, "name", required: true
-              description :string, "description", required: true
+              type :string, "Business Concept type (empty,...)", required: true
+              content :object, "Business Concept content", required: true
+              name :string, "Business Concept name", required: true
+              description :string, "Business Conceptdescription", required: true
             end
           end)
         end
@@ -239,11 +239,9 @@ defmodule TrueBGWeb.SwaggerDefinitions do
         properties do
           business_concept (Schema.new do
             properties do
-              content :object, "json content"
-              name :string, "name"
-              description :string, "description"
-              reject_reason :string
-              mod_comments :string
+              content :object, "Business Concept content"
+              name :string, "Business Concept name"
+              description :string, "Business Concept description"
             end
           end)
         end
@@ -262,6 +260,59 @@ defmodule TrueBGWeb.SwaggerDefinitions do
       BusinessConceptsResponse: swagger_schema do
         properties do
           data Schema.ref(:BusinessConcepts)
+        end
+      end
+    }
+  end
+
+  def business_concept_version_definitions do
+    %{
+      BusinessConceptVersion: swagger_schema do
+        title "Business Concept Version"
+        description "Business Concept Version"
+        properties do
+          id :integer, "unique identifier", required: true
+          business_concept_id :integer, "Business Concept unique id", required: true
+          type :string, "Business Concept type", required: true
+          content :object, "Business Concept Version content", required: true
+          name :string, "Business Concept Version name", required: true
+          description :string, "Business Concept Version description"
+          last_change_by :integer, "Business Concept Version last change by", required: true
+          last_change_at :string, "Business Concept Verion last change at", required: true
+          data_domain_id :integer, "Belongs to Data Domain", required: true
+          status :string, "Business Concept Version status", required: true
+          version :integer, "Business Concept Version version number", required: true
+          reject_reason [:string, :null], "Business Concept Version rejection reason", required: false
+          mod_comments [:string, :null], "Business Concept Version modification comments", required: false
+        end
+      end,
+      BusinessConceptVersionCreate: swagger_schema do
+        properties do
+          business_concept_version (Schema.new do
+            properties do
+              business_concept_id :integer, "usiness Concept id", required: true
+              content :object, "Business Concept Vesion object"
+              name :string, "Business Concept Vesion name"
+              description :string, "Business Concept Version description"
+              mod_comments :string, "Business Concept Version modification comments"
+            end
+          end)
+        end
+      end,
+      BusinessConceptVersions: swagger_schema do
+        title "Business Concept Versions"
+        description "A collection of Business Concept Versions"
+        type :array
+        items Schema.ref(:BusinessConceptVersion)
+      end,
+      BusinessConceptVersionResponse: swagger_schema do
+        properties do
+          data Schema.ref(:BusinessConceptVersion)
+        end
+      end,
+      BusinessConceptVersionsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:BusinessConceptVersions)
         end
       end
     }

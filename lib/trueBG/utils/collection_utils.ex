@@ -1,4 +1,4 @@
-defmodule TrueBG.Utils.CollectionUtils do
+defmodule TdBG.Utils.CollectionUtils do
   @moduledoc false
 
   def to_struct(kind, attrs) do

@@ -1,4 +1,4 @@
-defmodule TrueBG.Repo.Migrations.CreateAclEntries do
+defmodule TdBG.Repo.Migrations.CreateAclEntries do
   use Ecto.Migration
 
   def change do

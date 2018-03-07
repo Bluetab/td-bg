@@ -1,13 +1,13 @@
-defmodule TrueBG.RolesAdminTest do
+defmodule TdBG.RolesAdminTest do
   use Cabbage.Feature, async: false, file: "roles_admin.feature"
-  use TrueBGWeb.FeatureCase
-  import TrueBGWeb.Router.Helpers
-  import TrueBGWeb.ResponseCode
-  import TrueBGWeb.Taxonomy
-  import TrueBGWeb.Authentication, only: :functions
-  import TrueBGWeb.User, only: :functions
+  use TdBGWeb.FeatureCase
+  import TdBGWeb.Router.Helpers
+  import TdBGWeb.ResponseCode
+  import TdBGWeb.Taxonomy
+  import TdBGWeb.Authentication, only: :functions
+  import TdBGWeb.User, only: :functions
   alias Poison, as: JSON
-  @endpoint TrueBGWeb.Endpoint
+  @endpoint TdBGWeb.Endpoint
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do

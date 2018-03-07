@@ -1,21 +1,21 @@
-defmodule TrueBGWeb.BusinessConceptController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.BusinessConceptController do
+  use TdBGWeb, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
-  alias TrueBG.BusinessConcepts
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBGWeb.ErrorView
-  alias TrueBGWeb.SwaggerDefinitions
+  alias TdBG.BusinessConcepts
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBGWeb.ErrorView
+  alias TdBGWeb.SwaggerDefinitions
 
   alias Poison, as: JSON
 
   plug :load_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.business_concept_definitions()
@@ -170,8 +170,39 @@ defmodule TrueBGWeb.BusinessConceptController do
     end
   end
 
+  swagger_path :delete do
+    delete "/business_concepts/{id}"
+    description "Delete Business Concepts"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept ID", required: true
+    end
+    response 204, "No Content"
+    response 400, "Client Error"
+  end
+
+  def delete(conn, %{"id" => id}) do
+    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
+
+    user = conn.assigns.current_user
+
+    with true <- can?(user, delete(business_concept_version)),
+         {:ok, %BusinessConceptVersion{}} <- BusinessConcepts.delete_business_concept_version(business_concept_version) do
+      send_resp(conn, :no_content, "")
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
   defp get_content_schema(content_type) do
-    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename = Application.get_env(:td_bg, :bc_schema_location)
     filename
       |> File.read!
       |> JSON.decode!

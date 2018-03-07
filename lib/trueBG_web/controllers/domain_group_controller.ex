@@ -1,16 +1,16 @@
-defmodule TrueBGWeb.DomainGroupController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.DomainGroupController do
+  use TdBGWeb, :controller
   use PhoenixSwagger
 
-  alias TrueBGWeb.ErrorView
-  alias TrueBG.Taxonomies
-  alias TrueBG.Taxonomies.DomainGroup
-  alias TrueBGWeb.SwaggerDefinitions
-  alias TrueBG.Utils.CollectionUtils
+  alias TdBGWeb.ErrorView
+  alias TdBG.Taxonomies
+  alias TdBG.Taxonomies.DomainGroup
+  alias TdBGWeb.SwaggerDefinitions
+  alias TdBG.Utils.CollectionUtils
   alias Guardian.Plug, as: GuardianPlug
   import Canada
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   plug :load_and_authorize_resource, model: DomainGroup, id_name: "id", persisted: true, only: [:update, :delete]
 

@@ -1,12 +1,12 @@
-defmodule TrueBG.BusinessConcepts do
+defmodule TdBG.BusinessConcepts do
   @moduledoc """
   The BusinessConcepts context.
   """
 
   import Ecto.Query, warn: false
-  alias TrueBG.Repo
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.Repo
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
   alias Ecto.Changeset
   alias Ecto.Multi
 
@@ -158,7 +158,7 @@ defmodule TrueBG.BusinessConcepts do
     BusinessConcept.changeset(business_concept, %{})
   end
 
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
 
   @doc """
   Returns the list of business_concept_versions.
@@ -196,6 +196,34 @@ defmodule TrueBG.BusinessConcepts do
     |> preload([_, c], [business_concept: c])
     |> where([v, _], v.id == ^id)
     |> Repo.one!
+   end
+
+   @doc """
+   Deletes a BusinessCocneptVersion.
+
+   ## Examples
+
+       iex> delete_business_concept_version(data_structure)
+       {:ok, %BusinessCocneptVersion{}}
+
+       iex> delete_business_concept_version(data_structure)
+       {:error, %Ecto.Changeset{}}
+
+   """
+   def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
+     if business_concept_version.version == 1 do
+       Multi.new
+       |> Multi.delete(:business_concept_version, business_concept_version)
+       |> Multi.delete(:business_concept, business_concept_version.business_concept)
+       |> Repo.transaction
+       |> case do
+         {:ok, %{business_concept: %BusinessConcept{},
+                 business_concept_version: %BusinessConceptVersion{} = version}} ->
+           {:ok, version}
+       end
+     else
+       Repo.delete(business_concept_version)
+     end
    end
 
   @doc """

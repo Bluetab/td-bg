@@ -1,11 +1,11 @@
-defmodule TrueBGWeb.BusinessConcept do
+defmodule TdBGWeb.BusinessConcept do
   @moduledoc false
 
   alias Poison, as: JSON
-  import TrueBGWeb.Router.Helpers
-  import TrueBGWeb.Authentication, only: :functions
+  import TdBGWeb.Router.Helpers
+  import TdBGWeb.Authentication, only: :functions
 
-  @endpoint TrueBGWeb.Endpoint
+  @endpoint TdBGWeb.Endpoint
   @headers {"Content-type", "application/json"}
   @fixed_values %{"Type" => "type",
                   "Name" => "name",
@@ -72,6 +72,13 @@ defmodule TrueBGWeb.BusinessConcept do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
+  def business_concept_delete(token, id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+      HTTPoison.delete!(business_concept_url(@endpoint, :delete, id), headers, [])
+    {:ok, status_code}
+  end
+
   def business_concept_list(token) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
@@ -107,6 +114,14 @@ defmodule TrueBGWeb.BusinessConcept do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(business_concept_version_url(@endpoint, :show, id), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  def business_concept_version_create(token, business_concept_id, attrs) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"business_concept" => attrs} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+        HTTPoison.post!(business_concept_business_concept_version_url(@endpoint, :create, business_concept_id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

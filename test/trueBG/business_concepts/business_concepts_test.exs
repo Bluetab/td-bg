@@ -1,12 +1,12 @@
-defmodule TrueBG.BusinessConceptsTests do
-  use TrueBG.DataCase
+defmodule TdBG.BusinessConceptsTests do
+  use TdBG.DataCase
 
-  alias TrueBG.Repo
-  alias TrueBG.BusinessConcepts
+  alias TdBG.Repo
+  alias TdBG.BusinessConcepts
 
   describe "business_concepts" do
-    alias TrueBG.BusinessConcepts.BusinessConcept
-    alias TrueBG.BusinessConcepts.BusinessConceptVersion
+    alias TdBG.BusinessConcepts.BusinessConcept
+    alias TdBG.BusinessConcepts.BusinessConceptVersion
 
     test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
       user = build(:user)
@@ -427,8 +427,8 @@ defmodule TrueBG.BusinessConceptsTests do
   end
 
   describe "business_concept_versions" do
-    alias TrueBG.BusinessConcepts.BusinessConcept
-    alias TrueBG.BusinessConcepts.BusinessConceptVersion
+    alias TdBG.BusinessConcepts.BusinessConcept
+    alias TdBG.BusinessConcepts.BusinessConceptVersion
 
     test "list_business_concept_versions/0 returns all business_concept_versions" do
       business_concept_version = insert(:business_concept_version)

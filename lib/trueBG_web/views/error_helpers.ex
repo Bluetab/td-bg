@@ -1,4 +1,4 @@
-defmodule TrueBGWeb.ErrorHelpers do
+defmodule TdBGWeb.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
@@ -21,9 +21,9 @@ defmodule TrueBGWeb.ErrorHelpers do
     #     dgettext "errors", "is invalid"
     #
     if count = opts[:count] do
-      Gettext.dngettext(TrueBGWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(TdBGWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(TrueBGWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(TdBGWeb.Gettext, "errors", msg, opts)
     end
   end
 end

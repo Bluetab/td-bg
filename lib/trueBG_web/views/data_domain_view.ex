@@ -1,6 +1,6 @@
-defmodule TrueBGWeb.DataDomainView do
-  use TrueBGWeb, :view
-  alias TrueBGWeb.DataDomainView
+defmodule TdBGWeb.DataDomainView do
+  use TdBGWeb, :view
+  alias TdBGWeb.DataDomainView
 
   def render("index.json", %{data_domains: data_domains}) do
     %{data: render_many(data_domains, DataDomainView, "data_domain.json")}

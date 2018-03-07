@@ -1,9 +1,9 @@
-defmodule TrueBGWeb.UserController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.UserController do
+  use TdBGWeb, :controller
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
-  @td_auth_api Application.get_env(:trueBG, :auth_service)[:api_service]
+  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   def create(_conn, %{"user" => _user_params} = req) do
     @td_auth_api.create(req)

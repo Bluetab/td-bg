@@ -3,4 +3,4 @@
 
 ExUnit.start()
 
-Ecto.Adapters.SQL.Sandbox.mode(TrueBG.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(TdBG.Repo, :manual)

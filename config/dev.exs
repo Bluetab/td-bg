@@ -6,8 +6,8 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :trueBG, TrueBGWeb.Endpoint,
-  http: [port: 4000],
+config :td_bg, TdBGWeb.Endpoint,
+  http: [port: 4002],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -37,19 +37,19 @@ config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
-config :trueBG, TrueBG.Repo,
+config :td_bg, TdBG.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
-  database: "truebg_dev",
+  database: "TdBG_dev",
   hostname: "localhost",
   pool_size: 10
 
-config :trueBG,
+config :td_bg,
   # business concept content  schema location
   bc_schema_location: "bc_schema.dev"
 
-config :trueBG, :auth_service, api_service: TrueBGWeb.ApiServices.HttpTdAuthService,
+config :td_bg, :auth_service, api_service: TdBGWeb.ApiServices.HttpTdAuthService,
        host: "localhost",
        port: "4001",
        domain: ""

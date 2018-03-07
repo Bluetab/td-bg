@@ -1,9 +1,9 @@
-defmodule TrueBG.BusinessConcepts.BusinessConcept do
+defmodule TdBG.BusinessConcepts.BusinessConcept do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBG.BusinessConcepts.BusinessConcept
 
   @permissions %{
     admin:   [:create, :update, :send_for_approval, :delete, :publish, :reject,

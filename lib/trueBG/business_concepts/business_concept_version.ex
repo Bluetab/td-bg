@@ -1,9 +1,9 @@
-defmodule TrueBG.BusinessConcepts.BusinessConceptVersion do
+defmodule TdBG.BusinessConcepts.BusinessConceptVersion do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
 
   schema "business_concept_versions" do
     field :content, :map
@@ -36,6 +36,7 @@ defmodule TrueBG.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(attrs, [:content, :name, :description, :last_change_by, :last_change_at])
     |> cast_assoc(:business_concept)
+    |> put_change(:status, BusinessConcept.status.draft)
     |> validate_required([:content, :name, :last_change_by, :last_change_at])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)

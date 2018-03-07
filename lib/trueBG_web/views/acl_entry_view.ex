@@ -1,6 +1,6 @@
-defmodule TrueBGWeb.AclEntryView do
-  use TrueBGWeb, :view
-  alias TrueBGWeb.AclEntryView
+defmodule TdBGWeb.AclEntryView do
+  use TdBGWeb, :view
+  alias TdBGWeb.AclEntryView
 
   def render("index.json", %{acl_entries: acl_entries}) do
     %{data: render_many(acl_entries, AclEntryView, "acl_entry.json")}

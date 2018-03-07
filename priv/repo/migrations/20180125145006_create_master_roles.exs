@@ -1,8 +1,8 @@
-defmodule TrueBG.Repo.Migrations.CreateMasterRoles do
+defmodule TdBG.Repo.Migrations.CreateMasterRoles do
   use Ecto.Migration
 
-  alias TrueBG.Permissions
-  alias TrueBG.Permissions.Role
+  alias TdBG.Permissions
+  alias TdBG.Permissions.Role
 
   def change do
     Enum.each Role.get_roles, fn role_name ->

@@ -1,12 +1,12 @@
-defmodule TrueBG.Canary.Abilities do
+defmodule TdBG.Canary.Abilities do
   @moduledoc false
-  alias TrueBG.Accounts.User
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBG.Taxonomies.DomainGroup
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
-  alias TrueBG.Canary.TaxonomyAbilities
-  alias TrueBG.Canary.BusinessConceptAbilities
-  alias TrueBG.Permissions.AclEntry
+  alias TdBG.Accounts.User
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBG.Taxonomies.DomainGroup
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.Canary.TaxonomyAbilities
+  alias TdBG.Canary.BusinessConceptAbilities
+  alias TdBG.Permissions.AclEntry
 
   defimpl Canada.Can, for: User do
 
@@ -59,24 +59,28 @@ defmodule TrueBG.Canary.Abilities do
       true
     end
 
-    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :update, business_concept)
+    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :update, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :send_for_approval, business_concept)
+    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :send_for_approval, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :reject, business_concept)
+    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :reject, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :publish, business_concept)
+    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :publish, business_concept_vesion)
     end
 
-    def can?(%User{} = user, :update_published, %BusinessConceptVersion{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :update_published, business_concept)
+    def can?(%User{} = user, :update_published, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :update_published, business_concept_vesion)
+    end
+
+    def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :delete, business_concept_vesion)
     end
 
     def can?(%User{}, _action, _domain),  do: false

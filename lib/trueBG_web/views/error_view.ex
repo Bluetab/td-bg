@@ -1,5 +1,5 @@
-defmodule TrueBGWeb.ErrorView do
-  use TrueBGWeb, :view
+defmodule TdBGWeb.ErrorView do
+  use TdBGWeb, :view
 
   def render("401.json", _assigns) do
     %{errors: %{detail: "Invalid credentials"}}

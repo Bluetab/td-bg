@@ -1,4 +1,4 @@
-defmodule TrueBG.Repo.Migrations.CreateBusinessConcepts do
+defmodule TdBG.Repo.Migrations.CreateBusinessConcepts do
   use Ecto.Migration
 
   def change do
