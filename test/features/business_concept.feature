@@ -666,7 +666,7 @@ Feature: Business Concepts administration
       | Type                  | Business Term                                      |
       | Name                  | My Business Term                                   |
       | Description           | This is the second description of my business term |
-      #| Modification Comments | Modification on the Business Term description      |
+      | Modification Comments | Modification on the Business Term description      |
     Then the system returns a result with code "<result>"
     And user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
       | Field             | Value                                                              |
@@ -682,7 +682,7 @@ Feature: Business Concepts administration
       | Name                  | My Business Term                                                   |
       | Type                  | Business Term                                                      |
       | Description           | This is the second description of my business term                 |
-      #| Modification Comments | Modification on the Business Term description                      |
+      | Modification Comments | Modification on the Business Term description                      |
       | Last Modification     | Some timestamp                                                     |
       | Last User             | app-admin                                                          |
       | Version               | 2                                                                  |

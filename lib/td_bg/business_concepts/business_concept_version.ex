@@ -34,12 +34,13 @@ defmodule TdBG.BusinessConcepts.BusinessConceptVersion do
 
   def update_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [:content, :name, :description, :last_change_by, :last_change_at])
+    |> cast(attrs, [:content, :name, :description, :last_change_by, :last_change_at, :mod_comments])
     |> cast_assoc(:business_concept)
     |> put_change(:status, BusinessConcept.status.draft)
     |> validate_required([:content, :name, :last_change_by, :last_change_at])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
+    |> validate_length(:mod_comments, max: 500)
   end
 
   @doc false
