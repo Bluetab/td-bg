@@ -24,6 +24,7 @@ defmodule TdBGWeb.BusinessConceptStatusController do
     rejected = BusinessConcept.status.rejected
     pending_approval = BusinessConcept.status.pending_approval
     published = BusinessConcept.status.published
+    deprecated = BusinessConcept.status.deprecated
 
     case {status, new_status} do
       {^draft, ^pending_approval} ->
@@ -34,6 +35,8 @@ defmodule TdBGWeb.BusinessConceptStatusController do
         reject(conn, user,  business_concept_version, params)
       {^rejected, ^pending_approval} ->
         send_for_approval(conn, user, business_concept_version, params)
+      {^published, ^deprecated} ->
+        deprecate(conn, user, business_concept_version, params)
       _ ->
         Logger.info "No status action for {#{status}, #{new_status}} combination"
         conn
@@ -94,4 +97,23 @@ defmodule TdBGWeb.BusinessConceptStatusController do
         |> render(ErrorView, :"422.json")
     end
   end
+
+  defp deprecate(conn, user, business_concept_version, _parmas) do
+    attrs = %{status: BusinessConcept.status.deprecated}
+    with true <- can?(user, deprecate(business_concept_version)),
+          {:ok, %BusinessConceptVersion{} = concept} <-
+            BusinessConcepts.update_business_concept_version_status(business_concept_version, attrs) do
+         render(conn, BusinessConceptView, "show.json", business_concept: concept)
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
 end

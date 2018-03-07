@@ -57,6 +57,14 @@ defmodule TdBGWeb.BusinessConcept do
     {:ok, status_code}
   end
 
+  def business_concept_deprecate(token, business_concept_id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"status" => "deprecated"} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
+    {:ok, status_code}
+  end
+
   def business_concept_publish(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{"status" => "published"} |> JSON.encode!

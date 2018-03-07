@@ -45,6 +45,14 @@ defmodule TdBG.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
+  def can?(%User{id: user_id}, :deprecate, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
+    %{user_id: user_id, action: :deprecate,
+      current_status: status,
+      required_statuses: [BusinessConcept.status.published],
+      data_domain_id: data_domain_id}
+    |> can_execute_action?
+  end
+
   def can?(%User{id: user_id}, :update_published, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :update,
       current_status: status,

@@ -19,7 +19,8 @@ defmodule TdBG.BusinessConcepts.BusinessConcept do
             pending_approval: "pending_approval",
             rejected: "rejected",
             published: "published",
-            versioned: "versioned"}
+            versioned: "versioned",
+            deprecated: "deprecated"}
 
   schema "business_concepts" do
     belongs_to :data_domain, DataDomain

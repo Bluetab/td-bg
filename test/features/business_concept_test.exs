@@ -448,6 +448,20 @@ defmodule TdBG.BusinessConceptTest do
       end
   end
 
+  # Scenario Outline: Deprecation of existing Business Concept in Published status
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to deprecate a business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin} = state do
+
+      token = get_user_token(user_name)
+      business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_id = business_concept["id"]
+      {_, status_code} = business_concept_deprecate(token, business_concept_id)
+
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
   defp change_business_concept_status(token_admin, business_concept_id, status) do
     {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
     assert rc_ok() == to_response_code(status_code)

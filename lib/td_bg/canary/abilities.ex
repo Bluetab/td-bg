@@ -75,6 +75,10 @@ defmodule TdBG.Canary.Abilities do
       BusinessConceptAbilities.can?(user, :publish, business_concept_vesion)
     end
 
+    def can?(%User{} = user, :deprecate, %BusinessConceptVersion{} = business_concept_vesion) do
+      BusinessConceptAbilities.can?(user, :deprecate, business_concept_vesion)
+    end
+
     def can?(%User{} = user, :update_published, %BusinessConceptVersion{} = business_concept_vesion) do
       BusinessConceptAbilities.can?(user, :update_published, business_concept_vesion)
     end
