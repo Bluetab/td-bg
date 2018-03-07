@@ -135,6 +135,18 @@ defmodule TdBGWeb.DataDomainController do
     end
   end
 
+  swagger_path :users_roles do
+    post "/data_domains/{data_domain_id}/users_roles"
+    description "Lists user-role list of a data domain"
+    produces "application/json"
+    parameters do
+      data :body, Schema.ref(:UsersRolesRequest), "Data Domain search attrs"
+      data_domain_id :path, :integer, "Data Domain ID", required: true
+    end
+    response 200, "Ok", Schema.ref(:UsersRolesResponse)
+    response 400, "Client Error"
+  end
+
   def users_roles(conn, %{"data_domain_id" => id}) do
     data_domain = Taxonomies.get_data_domain!(id)
     acl_entries = Permissions.list_acl_entries(%{data_domain: data_domain})

@@ -56,6 +56,21 @@ defmodule TdBGWeb.SwaggerDefinitions do
         properties do
           data Schema.ref(:DataDomains)
         end
+      end,
+      UsersRolesRequest: swagger_schema do
+        properties do
+          data :object
+        end
+      end,
+      UsersRolesResponse: swagger_schema do
+        properties do
+          data (Schema.new do
+            properties do
+              user :string, "user name"
+              role :string, "role name"
+            end
+          end)
+        end
       end
     }
   end

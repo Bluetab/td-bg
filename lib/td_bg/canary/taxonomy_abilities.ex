@@ -27,7 +27,11 @@ defmodule TdBG.Canary.TaxonomyAbilities do
   end
 
   def can?(%User{id: user_id}, :create, %DomainGroup{parent_id: parent_domain_group_id}) do
-    has_admin_role(%{user_id: user_id, domain_group_id: parent_domain_group_id})
+    if parent_domain_group_id == nil do
+      false
+    else
+      has_admin_role(%{user_id: user_id, domain_group_id: parent_domain_group_id})
+    end
   end
 
   def can?( %User{id: user_id}, :create, %AclEntry{principal_type: "user", resource_type: "data_domain", resource_id: resource_id}) do

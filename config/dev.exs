@@ -49,7 +49,11 @@ config :td_bg,
   # business concept content  schema location
   bc_schema_location: "bc_schema.dev"
 
+config :td_bg, :api_services_login,
+  user_name: "api-admin",
+  password: "apipass"
+
 config :td_bg, :auth_service, api_service: TdBGWeb.ApiServices.HttpTdAuthService,
-       host: "localhost",
-       port: "4001",
-       domain: ""
+  host: "localhost",
+  port: "4001",
+  domain: ""

@@ -135,7 +135,7 @@ defmodule TdBG.RolesAdminTest do
   defp data_domain_users_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(data_domain_data_domain_url(@endpoint, :users_roles, attrs.id), headers, [])
+      HTTPoison.post!(data_domain_data_domain_url(@endpoint, :users_roles, attrs.id), [], headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
