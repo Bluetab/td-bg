@@ -425,6 +425,7 @@ defmodule TdBG.BusinessConceptTest do
     case {current_status, desired_status} do
       {:draft, :draft} -> nil # do nohting
       {:draft, :rejected} ->
+        business_concept_send_for_approval(token_admin, business_concept_id)
         business_concept_reject(token_admin, business_concept_id, "")
       {:draft, :pending_approval} ->
         business_concept_send_for_approval(token_admin, business_concept_id)

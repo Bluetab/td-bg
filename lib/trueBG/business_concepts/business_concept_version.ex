@@ -36,6 +36,7 @@ defmodule TdBG.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(attrs, [:content, :name, :description, :last_change_by, :last_change_at])
     |> cast_assoc(:business_concept)
+    |> put_change(:status, BusinessConcept.status.draft)
     |> validate_required([:content, :name, :last_change_by, :last_change_at])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
