@@ -32,7 +32,7 @@ defmodule TdBG.Canary.BusinessConceptAbilities do
   def can?(%User{id: user_id}, :reject, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :reject,
       current_status: status,
-      required_statuses: [BusinessConcept.status.pending_approval],
+      required_statuses: [BusinessConcept.status.pending_approval, BusinessConcept.status.rejected],
       data_domain_id: data_domain_id}
     |> can_execute_action?
   end
