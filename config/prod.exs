@@ -67,3 +67,8 @@ import_config "prod.secret.exs"
 config :trueBG,
   # business concept content  schema location
   bc_schema_location: "bc_schema.prod"
+
+config :trueBG, :auth_service, api_service: TrueBGWeb.ApiServices.HttpTdAuthService,
+  host: "localhost",
+  port: "4001",
+  domain: ""

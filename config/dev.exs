@@ -45,6 +45,11 @@ config :trueBG, TrueBG.Repo,
   hostname: "localhost",
   pool_size: 10
 
-  config :trueBG,
-    # business concept content  schema location
-    bc_schema_location: "bc_schema.dev"
+config :trueBG,
+  # business concept content  schema location
+  bc_schema_location: "bc_schema.dev"
+
+config :trueBG, :auth_service, api_service: TrueBGWeb.ApiServices.HttpTdAuthService,
+       host: "localhost",
+       port: "4001",
+       domain: ""

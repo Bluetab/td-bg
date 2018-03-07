@@ -116,13 +116,20 @@ defmodule TrueBG.RolesAdminTest do
     %{user_name: user_name, data_domain_name: data_domain_name}, state do
     token = get_user_token(user_name)
     data_domain_info = get_data_domain_by_name(token, data_domain_name)
-    data_domain_users_roles(token, %{id: data_domain_info["id"]})
-    {:ok, Map.merge(state, %{})}
+    {:ok, 200,  %{"data" => users_roles}} = data_domain_users_roles(token, %{id: data_domain_info["id"]})
+    {:ok, Map.merge(state, %{users_roles: users_roles})}
   end
 
   defthen ~r/^the system returns a result with following data:$/,
-    %{table: _expected_list}, _state do
+    %{table: expected_list}, state do
 
+    actual_list = state[:users_roles]
+    expected_list = Enum.reduce(expected_list, [], fn(item, acc) ->
+      nitem = Map.new(item, fn {k, v} -> {Atom.to_string(k), v} end)
+      acc ++ [nitem]
+    end
+    )
+    assert Enum.sort(actual_list) == Enum.sort(expected_list)
   end
 
   defp data_domain_users_roles(token, attrs) do

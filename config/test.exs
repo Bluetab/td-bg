@@ -3,7 +3,7 @@ use Mix.Config
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :trueBG, TrueBGWeb.Endpoint,
-  http: [port: 4001],
+  http: [port: 3001],
   server: true
 
 # Hashing algorithm just for testing porpouses
@@ -25,3 +25,8 @@ config :trueBG, TrueBG.Repo,
 config :trueBG,
   # business concept content  schema location
   bc_schema_location: "bc_schema.test"
+
+config :trueBG, :auth_service, api_service: TrueBGWeb.ApiServices.MockTdAuthService,
+  host: "localhost",
+  port: "4001",
+  domain: ""

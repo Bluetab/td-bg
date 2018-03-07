@@ -16,6 +16,8 @@ defmodule TrueBGWeb.DataDomainController do
   plug :load_and_authorize_resource, model: DomainGroup, id_name: "domain_group_id", persisted: true, only: :create_data_domain
   plug :load_and_authorize_resource, model: DataDomain, id_name: "id", persisted: true, only: [:update, :delete]
 
+  @td_auth_api Application.get_env(:trueBG, :auth_service)[:api_service]
+
   def swagger_definitions do
     SwaggerDefinitions.data_domain_swagger_definitions()
   end
@@ -136,8 +138,10 @@ defmodule TrueBGWeb.DataDomainController do
   def users_roles(conn, %{"data_domain_id" => id}) do
     data_domain = Taxonomies.get_data_domain!(id)
     acl_entries = Permissions.list_acl_entries(%{data_domain: data_domain})
-    #call external auth API service
-    _mapa = Enum.map(acl_entries, fn(acl_entry) -> %{user: acl_entry.principal_id, role: acl_entry.role.name} end)
-    render(conn, "index_user_roles.json", users_roles: acl_entries)
+    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role: acl_entry.role.name} end)
+    user_ids = Enum.reduce(role_user_id, [], fn(e, acc) -> acc ++ [e.user_id] end)
+    users = @td_auth_api.search(%{"data" => %{"ids" => user_ids}})
+    users_roles = Enum.reduce(role_user_id, [], fn(u, acc) -> acc ++ [%{role: u.role, user: Enum.find(users, &(&1.id == u.user_id)).user_name}]  end)
+    render(conn, "index_user_roles.json", users_roles: users_roles)
   end
 end

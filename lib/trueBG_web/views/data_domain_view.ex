@@ -24,8 +24,8 @@ defmodule TrueBGWeb.DataDomainView do
 
   def render("users_role.json", %{data_domain: user_role}) do
     %{
-      user_id: user_role.principal_id,
-      role: user_role.role.name
+      user: user_role.user,
+      role: user_role.role
     }
   end
 end

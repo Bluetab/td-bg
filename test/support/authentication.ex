@@ -8,6 +8,7 @@ defmodule TrueBGWeb.Authentication do
   alias TrueBG.Accounts.User
   import Plug.Conn
   @headers {"Content-type", "application/json"}
+  @td_auth_api Application.get_env(:trueBG, :auth_service)[:api_service]
 
   def put_auth_headers(conn, jwt) do
     conn
@@ -34,9 +35,9 @@ defmodule TrueBGWeb.Authentication do
   end
 
   def create_user(user_name, opts \\ []) do
-    id = Integer.mod(:binary.decode_unsigned(user_name), 100_000)
     is_admin = Keyword.get(opts, :is_admin, false)
-    %TrueBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
+    user = @td_auth_api.create(%{"user" => %{user_name: user_name, is_admin: is_admin}})
+    user
   end
 
   def build_user_token(%User{} = user) do
