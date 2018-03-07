@@ -16,7 +16,7 @@ config :td_bg, TdBG.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
-  database: "TdBG_prod",
+  database: "td_bg_prod",
   hostname: "localhost",
   pool_size: 10
 

@@ -19,6 +19,7 @@ defmodule TdBGWeb.ApiServices.HttpTdAuthService do
   def create(%{"user" => _user_params} = body) do
     headers = ["Accept": "Application/json; Charset=utf-8"]
     token = HTTPoison.post!(get_users_path(), body, headers, [])
+    token
   end
 
   def search(%{"data" => %{"ids" => _ids}} = body) do
