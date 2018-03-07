@@ -32,6 +32,8 @@ defmodule TdBGWeb.BusinessConceptStatusController do
         publish(conn, user,  business_concept_version, params)
       {^pending_approval, ^rejected} ->
         reject(conn, user,  business_concept_version, params)
+      {^rejected, ^pending_approval} ->
+        send_for_approval(conn, user, business_concept_version, params)
       _ ->
         Logger.info "No status action for {#{status}, #{new_status}} combination"
         conn
