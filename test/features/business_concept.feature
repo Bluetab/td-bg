@@ -468,14 +468,7 @@ Feature: Business Concepts administration
       | Type              | Business Term                                     |
       | Name              | My Business Term                                  |
       | Description       | This is the first description of my business term |
-    And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
-    And business concept with name "My Business Term" of type "Business Term" has been modified with following data:
-      | Field                 | Value                                              |
-      | Type                  | Business Term                                      |
-      | Name                  | My Business Term                                   |
-      | Description           | This is the second description of my business term |
-      | Modification Comments | Modification on the Business Term description      |
-    And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
+    And the status of business concept with name "My Business Term" of type "Business Term" is set to "published" for version 2
     When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
       | Field                 | Value                                               |
       | Type                  | Business Term                                       |
@@ -487,7 +480,7 @@ Feature: Business Concepts administration
       | Field                 | Value                                              |
       | Type                  | Business Term                                      |
       | Name                  | My Business Term                                   |
-      | Description           | This is the second description of my business term  |
+      | Description           | This is the first description of my business term  |
       | Status                | published                                          |
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "3" with follwing data:
       | Field                 | Value                                               |

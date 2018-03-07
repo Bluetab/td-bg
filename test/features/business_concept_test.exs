@@ -277,22 +277,7 @@ defmodule TdBG.BusinessConceptTest do
   %{token_admin: token_admin} = state do
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     business_concept_id = business_concept["id"]
-    {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
-    assert rc_ok() == to_response_code(status_code)
-
-    current_status = String.to_atom(business_concept_version["status"])
-    desired_status = String.to_atom(status)
-    case {current_status, desired_status} do
-      {:draft, :draft} -> nil # do nohting
-      {:draft, :rejected} ->
-        business_concept_reject(token_admin, business_concept_id, "")
-      {:draft, :pending_approval} ->
-        business_concept_send_for_approval(token_admin, business_concept_id)
-      {:draft, :published} ->
-        business_concept_send_for_approval(token_admin, business_concept_id)
-        business_concept_publish(token_admin, business_concept_id)
-    end
-
+    change_business_concept_status(token_admin, business_concept_id, status)
     {:ok, state}
   end
 
@@ -345,6 +330,24 @@ defmodule TdBG.BusinessConceptTest do
   end
 
   # Scenario Outline: Publish a second version of a Business Concept
+
+  defand ~r/^the status of business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" is set to "(?<business_concept_status>[^"]+)" for version (?<version>\d+)$/,
+    %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, business_concept_status: business_concept_status, version: version},
+    %{token_admin: token_admin} = state do
+
+    business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+    business_concept_id = business_concept["id"]
+    business_concept_version = String.to_integer(version)
+    if version > 1 do
+      Enum.each(2..business_concept_version, fn(_x) ->
+        change_business_concept_status(token_admin, business_concept_id, BusinessConcept.status.published)
+        change_business_concept_status(token_admin, business_concept_id, BusinessConcept.status.draft)
+      end)
+    end
+    change_business_concept_status(token_admin, business_concept_id, business_concept_status)
+
+    {:ok, state}
+   end
 
   defand ~r/^business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" has been modified with following data:$/,
   %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
@@ -412,6 +415,26 @@ defmodule TdBG.BusinessConceptTest do
         {:ok, state}
       end
       # Your implementation here
+  end
+
+  defp change_business_concept_status(token_admin, business_concept_id, status) do
+    {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
+    assert rc_ok() == to_response_code(status_code)
+
+    current_status = String.to_atom(business_concept_version["status"])
+    desired_status = String.to_atom(status)
+    case {current_status, desired_status} do
+      {:draft, :draft} -> nil # do nohting
+      {:draft, :rejected} ->
+        business_concept_reject(token_admin, business_concept_id, "")
+      {:draft, :pending_approval} ->
+        business_concept_send_for_approval(token_admin, business_concept_id)
+      {:draft, :published} ->
+        business_concept_send_for_approval(token_admin, business_concept_id)
+        business_concept_publish(token_admin, business_concept_id)
+      {:published, :draft} ->
+        business_concept_version_create(token_admin, business_concept_id,  %{})
+    end
   end
 
   defp field_value_to_api_attrs(table, fixed_values) do
