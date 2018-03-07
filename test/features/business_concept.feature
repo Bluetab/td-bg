@@ -551,7 +551,7 @@ Feature: Business Concepts administration
    When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
      | Field             | Value                                                                    |
      | Type              | Business Term                                                            |
-     | Name              | My Date Business Term                                                         |
+     | Name              | My Date Business Term                                                    |
      | Description       | This is the second description of my business term                       |
    Then the system returns a result with code "<result>"
    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with following data:
@@ -566,9 +566,9 @@ Feature: Business Concepts administration
 
    Examples:
      | user      | result       |
-     | watcher   | Unauthorized |
-     | creator   | Ok           |
-     | publisher | Ok           |
+    #  | watcher   | Unauthorized |
+    #  | creator   | Ok           |
+    #  | publisher | Ok           |
      | admin     | Ok           |
 
   # Scenario Outline: Sending Business Concept in Reject Status for approval
