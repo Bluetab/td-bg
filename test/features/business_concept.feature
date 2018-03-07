@@ -162,7 +162,7 @@ Feature: Business Concepts administration
      | Sensitive Data    | Related to personal Data                                                 |
      | Update Frequence  | Monthly                                                                  |
    Then the system returns a result with code "<result>"
-   And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
+   And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with following data:
     | Field             | Value                                                              |
     | Name              | My Date Business Term                                              |
     | Type              | Business Term                                                      |
@@ -205,7 +205,7 @@ Feature: Business Concepts administration
       | Description       | This is the first description of my business term which is a date  |
     When "<user>" tries to send for approval a business concept with name "My Date Business Term" of type "Business Term"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with following data:
      | Field             | Value                                                              |
      | Name              | My Date Business Term                                              |
      | Type              | Business Term                                                      |
@@ -240,7 +240,7 @@ Feature: Business Concepts administration
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
     When <user> tries to publish a business concept with name "My Business Term" of type "Business Term"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with following data:
      | Field             | Value                                                              |
      | Name              | My Business Term                                                   |
      | Type              | Business Term                                                      |
@@ -276,7 +276,7 @@ Feature: Business Concepts administration
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
     When <user> tries to reject a business concept with name "My Business Term" of type "Business Term" and reject reason "Description is not accurate"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" with following data:
      | Field             | Value                                                              |
      | Name              | My Business Term                                                   |
      | Type              | Business Term                                                      |
@@ -347,12 +347,12 @@ Feature: Business Concepts administration
       | Description           | This is the second description of my business term |
       | Modification Comments | Modification on the Business Term description      |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
       | Field                 | Value                                              |
       | Type                  | Business Term                                      |
       | Name                  | My Business Term                                   |
       | Description           | This is the first description of my business term  |
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
       | Field                 | Value                                              |
       | Type                  | Business Term                                      |
       | Name                  | My Business Term                                   |
@@ -426,7 +426,7 @@ Feature: Business Concepts administration
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval"
     When <user> tries to publish a business concept with name "My Business Term" of type "Business Term"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
       | Field             | Value                                                              |
       | Name              | My Business Term                                                   |
       | Type              | Business Term                                                      |
@@ -435,7 +435,7 @@ Feature: Business Concepts administration
       | Last User         | <user>                                                             |
       | Version           | 2                                                                  |
       | Status            | published                                                          |
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
       | Field             | Value                                                              |
       | Name              | My Business Term                                                   |
       | Type              | Business Term                                                      |
@@ -476,13 +476,13 @@ Feature: Business Concepts administration
       | Description           | This is the third description of my business term   |
       | Modification Comments | Third Modification on the Business Term description |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
       | Field                 | Value                                              |
       | Type                  | Business Term                                      |
       | Name                  | My Business Term                                   |
       | Description           | This is the first description of my business term  |
       | Status                | published                                          |
-    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "3" with follwing data:
+    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "3" with following data:
       | Field                 | Value                                               |
       | Type                  | Business Term                                       |
       | Name                  | My Business Term                                    |
@@ -531,45 +531,45 @@ Feature: Business Concepts administration
       | admin     | Deleted      |
 
 
-  # Scenario Outline: Modification of existing Business Concept in Reject status
-  #  Given an existing Domain Group called "My Parent Group"
-  #  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  #  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  #  And following users exist with the indicated role in Data Domain "My Domain"
-  #    | user      | role    |
-  #    | watcher   | watch   |
-  #    | creator   | create  |
-  #    | publisher | publish |
-  #    | admin     | admin   |
-  #  And an existing Business Concept type called "Business Term" with empty definition
-  #  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
-  #    | Field             | Value                                             |
-  #    | Type              | Business Term                                     |
-  #    | Name              | My Business Term                                  |
-  #    | Description       | This is the first description of my business term |
-  #  And the status of business concept with name "My Business Term" of type "Business Term" is set to "rejected"
-  #  When <user> tries to modify a business concept "My Date Business Term" of type "Business Term" with following data:
-  #    | Field             | Value                                                                    |
-  #    | Type              | Business Term                                                            |
-  #    | Name              | My Business Term                                                         |
-  #    | Description       | This is the second description of my business term                       |
-  #  Then the system returns a result with code "<result>"
-  #  And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with following data:
-  #   | Field             | Value                                              |
-  #   | Name              | My Date Business Term                              |
-  #   | Type              | Business Term                                      |
-  #   | Description       | This is the second description of my business term |
-  #   | Last Modification | Some timestamp                                     |
-  #   | Last User         | app-admin                                          |
-  #   | Version           | 1                                                  |
-  #   | Status            | draft                                              |
-  #
-  #  Examples:
-  #    | user      | result       |
-  #    | watcher   | Unauthorized |
-  #    | creator   | Ok           |
-  #    | publisher | Ok           |
-  #    | admin     | Ok           |
+  Scenario Outline: Modification of existing Business Concept in Reject status
+   Given an existing Domain Group called "My Parent Group"
+   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+   And following users exist with the indicated role in Data Domain "My Domain"
+     | user      | role    |
+     | watcher   | watch   |
+     | creator   | create  |
+     | publisher | publish |
+     | admin     | admin   |
+   And an existing Business Concept type called "Business Term" with empty definition
+   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+     | Field             | Value                                             |
+     | Type              | Business Term                                     |
+     | Name              | My Business Term                                  |
+     | Description       | This is the first description of my business term |
+   And the status of business concept with name "My Business Term" of type "Business Term" is set to "rejected"
+   When <user> tries to modify a business concept "My Business Term" of type "Business Term" with following data:
+     | Field             | Value                                                                    |
+     | Type              | Business Term                                                            |
+     | Name              | My Date Business Term                                                         |
+     | Description       | This is the second description of my business term                       |
+   Then the system returns a result with code "<result>"
+   And if result <result> is "Ok", user <user> is able to view business concept "My Date Business Term" of type "Business Term" with following data:
+    | Field             | Value                                              |
+    | Name              | My Date Business Term                              |
+    | Type              | Business Term                                      |
+    | Description       | This is the second description of my business term |
+    | Last Modification | Some timestamp                                     |
+    | Last User         | app-admin                                          |
+    | Version           | 1                                                  |
+    | Status            | draft                                              |
+
+   Examples:
+     | user      | result       |
+     | watcher   | Unauthorized |
+     | creator   | Ok           |
+     | publisher | Ok           |
+     | admin     | Ok           |
 
   # Scenario Outline: Sending Business Concept in Reject Status for approval
   #  Given an existing Domain Group called "My Parent Group"
@@ -627,7 +627,7 @@ Feature: Business Concepts administration
   #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "draft" for version 2
   #   When <user> tries to delete a business concept "My Business Term" of type "Business Term"
   #   Then the system returns a result with code "<result>"
-  #   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with follwing data:
+  #   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
   #     | Field             | Value                                                              |
   #     | Name              | My Business Term                                                   |
   #     | Type              | Business Term                                                      |
@@ -636,7 +636,7 @@ Feature: Business Concepts administration
   #     | Last User         | app-admin                                                          |
   #     | Version           | 1                                                                  |
   #     | Status            | published                                                          |
-  #   And if result <result> is "Ok", user <user> is not able to view business concept "My Business Term" of type "Business Term" and version "2" with follwing data:
+  #   And if result <result> is "Ok", user <user> is not able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
   #     | Field             | Value                                                              |
   #     | Name              | My Business Term                                                   |
   #     | Type              | Business Term                                                      |

@@ -241,7 +241,7 @@ defmodule TdBG.BusinessConceptTest do
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
-  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with follwing data:$/,
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
     %{token_admin: token_admin} = state do
 
@@ -306,7 +306,7 @@ defmodule TdBG.BusinessConceptTest do
 
   # Scenario Outline: Modification of existing Business Concept in Published status
 
-  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with follwing data:$/,
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with following data:$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
     %{token_admin: token_admin} = state do
 
@@ -383,7 +383,6 @@ defmodule TdBG.BusinessConceptTest do
   defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is not able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: _business_concept_name, business_concept_type: _business_concept_type},
     %{deleted_business_concept_id: business_concept_id} = state do
-
       if result == status_code do
         token = get_user_token(user_name)
         {_, http_status_code, _} = business_concept_show(token, business_concept_id)
