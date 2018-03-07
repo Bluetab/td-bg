@@ -23,14 +23,8 @@ defmodule TdBG.BusinessConcepts do
   and status
 
   """
+  def count_business_concepts(_type, name, _exclude_id, _status) when is_nil(name),  do: {:ok, 0}
   def count_business_concepts(type, name, exclude_id, status) do
-    do_count_business_concepts(type, name, exclude_id, status)
-  end
-
-  defp do_count_business_concepts(_type, _name, _exclude_id, []), do: raise "Invalid empty status list"
-  defp do_count_business_concepts(type, name, _exclude_id, _status) when is_nil(type) or is_nil(name),  do: {:ok, 0}
-
-  defp do_count_business_concepts(type, name, exclude_id, status) do
     count = BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> where([v, c], c.type == ^type and v.name == ^name and v.status in ^status)
