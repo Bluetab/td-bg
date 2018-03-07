@@ -1,4 +1,5 @@
 defmodule TdBGWeb.BusinessConceptStatusController do
+  require Logger
   use TdBGWeb, :controller
 
   import Canada, only: [can?: 2]
@@ -32,6 +33,7 @@ defmodule TdBGWeb.BusinessConceptStatusController do
       {^pending_approval, ^rejected} ->
         reject(conn, user,  business_concept_version, params)
       _ ->
+        Logger.info "No status action for {#{status}, #{new_status}} combination"
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
