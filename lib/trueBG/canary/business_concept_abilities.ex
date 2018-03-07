@@ -56,7 +56,7 @@ defmodule TrueBG.Canary.BusinessConceptAbilities do
   def can?(%User{id: user_id}, :delete, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :delete,
       current_status: status,
-      required_statuses: [BusinessConcept.status.draft],
+      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
       data_domain_id: data_domain_id}
     |> can_execute_action?
   end

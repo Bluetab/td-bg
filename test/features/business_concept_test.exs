@@ -265,7 +265,8 @@ defmodule TrueBG.BusinessConceptTest do
 
     token = get_user_token(user_name)
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    {_, status_code} = business_concept_send_for_approval(token, business_concept["id"])
+    business_concept_id = business_concept["id"]
+    {_, status_code} = business_concept_send_for_approval(token, business_concept_id)
     {:ok, Map.merge(state, %{status_code: status_code})}
  end
 
@@ -283,6 +284,8 @@ defmodule TrueBG.BusinessConceptTest do
     desired_status = String.to_atom(status)
     case {current_status, desired_status} do
       {:draft, :draft} -> nil # do nohting
+      {:draft, :rejected} ->
+        business_concept_reject(token_admin, business_concept_id, "")
       {:draft, :pending_approval} ->
         business_concept_send_for_approval(token_admin, business_concept_id)
       {:draft, :published} ->
@@ -298,7 +301,8 @@ defmodule TrueBG.BusinessConceptTest do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      {_, status_code} = business_concept_publish(token, business_concept["id"])
+      business_concept_id = business_concept["id"]
+      {_, status_code} = business_concept_publish(token, business_concept_id)
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -309,7 +313,8 @@ defmodule TrueBG.BusinessConceptTest do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      {_, status_code} = business_concept_reject(token, business_concept["id"], reject_reason)
+      business_concept_id = business_concept["id"]
+      {_, status_code} = business_concept_reject(token, business_concept_id, reject_reason)
 
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
