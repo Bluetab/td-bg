@@ -1,11 +1,11 @@
-defmodule TrueBGWeb.BusinessConceptVersionControllerTest do
-  use TrueBGWeb.ConnCase
+defmodule TdBGWeb.BusinessConceptVersionControllerTest do
+  use TdBGWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TrueBGWeb.Authentication, only: :functions
+  import TdBGWeb.Authentication, only: :functions
 
   alias Poison, as: JSON
-  alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConcept
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -51,7 +51,7 @@ defmodule TrueBGWeb.BusinessConceptVersionControllerTest do
 
   def create_content_schema(_) do
     json_schema = %{"some type" => []} |> JSON.encode!
-    path = Application.get_env(:trueBG, :bc_schema_location)
+    path = Application.get_env(:td_bg, :bc_schema_location)
     File.write!(path, json_schema, [:write, :utf8])
   end
 

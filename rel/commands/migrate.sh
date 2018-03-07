@@ -1,3 +1,3 @@
 #!/bin/sh
 
-bin/trueBG command Elixir.TrueBG.ReleaseTasks seed
+bin/td_bg command Elixir.td_bg.ReleaseTasks seed

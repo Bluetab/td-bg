@@ -1,4 +1,4 @@
-defmodule TrueBG.Auth.Canary do
+defmodule TdBG.Auth.Canary do
   @moduledoc false
   import Plug.Conn
 

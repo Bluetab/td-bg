@@ -1,11 +1,11 @@
-defmodule TrueBGWeb.Authentication do
+defmodule TdBGWeb.Authentication do
   @moduledoc """
   This module defines the functions required to
   add auth headers to requests
   """
   alias Phoenix.ConnTest
-  alias TrueBG.Auth.Guardian
-  alias TrueBG.Accounts.User
+  alias TdBG.Auth.Guardian
+  alias TdBG.Accounts.User
   import Plug.Conn
   @headers {"Content-type", "application/json"}
 
@@ -36,7 +36,7 @@ defmodule TrueBGWeb.Authentication do
   def create_user(user_name, opts \\ []) do
     id = Integer.mod(:binary.decode_unsigned(user_name), 100_000)
     is_admin = Keyword.get(opts, :is_admin, false)
-    %TrueBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
+    %TdBG.Accounts.User{id: id, is_admin: is_admin, user_name: user_name}
   end
 
   def build_user_token(%User{} = user) do

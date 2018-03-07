@@ -1,12 +1,12 @@
-defmodule TrueBG.BusinessConcepts do
+defmodule TdBG.BusinessConcepts do
   @moduledoc """
   The BusinessConcepts context.
   """
 
   import Ecto.Query, warn: false
-  alias TrueBG.Repo
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.Repo
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
   alias Ecto.Changeset
   alias Ecto.Multi
 
@@ -158,7 +158,7 @@ defmodule TrueBG.BusinessConcepts do
     BusinessConcept.changeset(business_concept, %{})
   end
 
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
 
   @doc """
   Returns the list of business_concept_versions.

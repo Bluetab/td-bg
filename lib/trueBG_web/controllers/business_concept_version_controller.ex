@@ -1,17 +1,17 @@
-defmodule TrueBGWeb.BusinessConceptVersionController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.BusinessConceptVersionController do
+  use TdBGWeb, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
-  alias TrueBG.BusinessConcepts
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.BusinessConcepts
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
   alias Poison, as: JSON
-  alias TrueBGWeb.ErrorView
-  alias TrueBGWeb.SwaggerDefinitions
+  alias TdBGWeb.ErrorView
+  alias TdBGWeb.SwaggerDefinitions
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.business_concept_version_definitions()
@@ -94,7 +94,7 @@ defmodule TrueBGWeb.BusinessConceptVersionController do
   end
 
   defp get_content_schema(content_type) do
-    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename = Application.get_env(:td_bg, :bc_schema_location)
     filename
       |> File.read!
       |> JSON.decode!

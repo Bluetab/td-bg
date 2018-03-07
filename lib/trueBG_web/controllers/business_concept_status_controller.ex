@@ -1,15 +1,15 @@
-defmodule TrueBGWeb.BusinessConceptStatusController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.BusinessConceptStatusController do
+  use TdBGWeb, :controller
 
   import Canada, only: [can?: 2]
 
-  alias TrueBG.BusinessConcepts
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
-  alias TrueBGWeb.BusinessConceptView
-  alias TrueBGWeb.ErrorView
+  alias TdBG.BusinessConcepts
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBGWeb.BusinessConceptView
+  alias TdBGWeb.ErrorView
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update]
 

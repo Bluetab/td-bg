@@ -1,21 +1,21 @@
-defmodule TrueBGWeb.BusinessConceptController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.BusinessConceptController do
+  use TdBGWeb, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
-  alias TrueBG.BusinessConcepts
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBGWeb.ErrorView
-  alias TrueBGWeb.SwaggerDefinitions
+  alias TdBG.BusinessConcepts
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBGWeb.ErrorView
+  alias TdBGWeb.SwaggerDefinitions
 
   alias Poison, as: JSON
 
   plug :load_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.business_concept_definitions()
@@ -202,7 +202,7 @@ defmodule TrueBGWeb.BusinessConceptController do
   end
 
   defp get_content_schema(content_type) do
-    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename = Application.get_env(:td_bg, :bc_schema_location)
     filename
       |> File.read!
       |> JSON.decode!

@@ -1,16 +1,16 @@
-defmodule TrueBGWeb.AclEntryController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.AclEntryController do
+  use TdBGWeb, :controller
   use PhoenixSwagger
 
-  alias TrueBG.Permissions
-  alias TrueBG.Permissions.AclEntry
-  alias TrueBGWeb.ErrorView
+  alias TdBG.Permissions
+  alias TdBG.Permissions.AclEntry
+  alias TdBGWeb.ErrorView
   alias Guardian.Plug, as: GuardianPlug
-  alias TrueBGWeb.SwaggerDefinitions
-  alias TrueBG.Utils.CollectionUtils
+  alias TdBGWeb.SwaggerDefinitions
+  alias TdBG.Utils.CollectionUtils
   import Canada
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.acl_entry_swagger_definitions()

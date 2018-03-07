@@ -1,10 +1,10 @@
-defmodule TrueBGWeb.AclEntry do
+defmodule TdBGWeb.AclEntry do
   @moduledoc false
 
   alias Poison, as: JSON
-  import TrueBGWeb.Router.Helpers
-  import TrueBGWeb.Authentication, only: :functions
-  @endpoint TrueBGWeb.Endpoint
+  import TdBGWeb.Router.Helpers
+  import TdBGWeb.Authentication, only: :functions
+  @endpoint TdBGWeb.Endpoint
 
   def acl_entry_create(token, acl_entry_params) do
     headers = get_header(token)

@@ -1,4 +1,4 @@
-# TrueBG
+# td_bg
 
 To start your Phoenix server:
 

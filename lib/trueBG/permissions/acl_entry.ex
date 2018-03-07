@@ -1,10 +1,10 @@
-defmodule TrueBG.Permissions.AclEntry do
+defmodule TdBG.Permissions.AclEntry do
   @moduledoc false
 
   use Ecto.Schema
   import Ecto.Changeset
-  alias TrueBG.Permissions.AclEntry
-  alias TrueBG.Permissions.Role
+  alias TdBG.Permissions.AclEntry
+  alias TdBG.Permissions.Role
 
   schema "acl_entries" do
     field :principal_id, :integer

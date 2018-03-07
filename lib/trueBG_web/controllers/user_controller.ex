@@ -1,6 +1,6 @@
-defmodule TrueBGWeb.UserController do
-  use TrueBGWeb, :controller
+defmodule TdBGWeb.UserController do
+  use TdBGWeb, :controller
 
-  action_fallback TrueBGWeb.FallbackController
+  action_fallback TdBGWeb.FallbackController
 
 end

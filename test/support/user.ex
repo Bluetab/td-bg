@@ -1,10 +1,10 @@
-defmodule TrueBGWeb.User do
+defmodule TdBGWeb.User do
   @moduledoc false
 
   alias Poison, as: JSON
-  import TrueBGWeb.Router.Helpers
-  import TrueBGWeb.Authentication, only: :functions
-  @endpoint TrueBGWeb.Endpoint
+  import TdBGWeb.Router.Helpers
+  import TdBGWeb.Authentication, only: :functions
+  @endpoint TdBGWeb.Endpoint
 
   def role_list(token) do
     headers = get_header(token)

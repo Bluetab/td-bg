@@ -1,9 +1,9 @@
-defmodule TrueBG.Permissions.Role do
+defmodule TdBG.Permissions.Role do
   @moduledoc false
 
   use Ecto.Schema
   import Ecto.Changeset
-  alias TrueBG.Permissions.Role
+  alias TdBG.Permissions.Role
 
   @roles [:admin, :watch, :create, :publish]
 

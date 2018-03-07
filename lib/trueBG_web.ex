@@ -1,12 +1,12 @@
-defmodule TrueBGWeb do
+defmodule TdBGWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, views, channels and so on.
 
   This can be used in your application as:
 
-      use TrueBGWeb, :controller
-      use TrueBGWeb, :view
+      use TdBGWeb, :controller
+      use TdBGWeb, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -19,26 +19,26 @@ defmodule TrueBGWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: TrueBGWeb
+      use Phoenix.Controller, namespace: TdBGWeb
       import Plug.Conn
-      import TrueBGWeb.Router.Helpers
-      import TrueBGWeb.Gettext
+      import TdBGWeb.Router.Helpers
+      import TdBGWeb.Gettext
       import Canary.Plugs
-      import TrueBG.Auth.Plugs
+      import TdBG.Auth.Plugs
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/trueBG_web/templates",
-                        namespace: TrueBGWeb
+      use Phoenix.View, root: "lib/TdBG_web/templates",
+                        namespace: TdBGWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
 
-      import TrueBGWeb.Router.Helpers
-      import TrueBGWeb.ErrorHelpers
-      import TrueBGWeb.Gettext
+      import TdBGWeb.Router.Helpers
+      import TdBGWeb.ErrorHelpers
+      import TdBGWeb.Gettext
     end
   end
 
@@ -53,7 +53,7 @@ defmodule TrueBGWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import TrueBGWeb.Gettext
+      import TdBGWeb.Gettext
     end
   end
 

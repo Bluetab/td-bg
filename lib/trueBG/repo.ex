@@ -1,5 +1,5 @@
-defmodule TrueBG.Repo do
-  use Ecto.Repo, otp_app: :trueBG
+defmodule TdBG.Repo do
+  use Ecto.Repo, otp_app: :td_bg
 
   @doc """
   Dynamically loads the repository url from the

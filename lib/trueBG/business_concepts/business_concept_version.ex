@@ -1,9 +1,9 @@
-defmodule TrueBG.BusinessConcepts.BusinessConceptVersion do
+defmodule TdBG.BusinessConcepts.BusinessConceptVersion do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
 
   schema "business_concept_versions" do
     field :content, :map

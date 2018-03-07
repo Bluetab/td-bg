@@ -1,16 +1,16 @@
-defmodule TrueBG.Permissions do
+defmodule TdBG.Permissions do
   @moduledoc """
   The Permissions context.
   """
 
   import Ecto.Query, warn: false
-  alias TrueBG.Repo
+  alias TdBG.Repo
 
-  alias TrueBG.Permissions.AclEntry
-  alias TrueBG.Permissions.Role
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBG.Taxonomies.DomainGroup
-  alias TrueBG.Taxonomies
+  alias TdBG.Permissions.AclEntry
+  alias TdBG.Permissions.Role
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBG.Taxonomies.DomainGroup
+  alias TdBG.Taxonomies
 
   @doc """
   Returns the list of acl_entries.
@@ -229,7 +229,7 @@ defmodule TrueBG.Permissions do
     end
   end
 
-  alias TrueBG.Permissions.Role
+  alias TdBG.Permissions.Role
 
   @doc """
   Returns the list of roles.

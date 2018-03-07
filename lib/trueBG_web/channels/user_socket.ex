@@ -1,8 +1,8 @@
-defmodule TrueBGWeb.UserSocket do
+defmodule TdBGWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", TrueBGWeb.RoomChannel
+  # channel "room:*", TdBGWeb.RoomChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
@@ -31,7 +31,7 @@ defmodule TrueBGWeb.UserSocket do
   # Would allow you to broadcast a "disconnect" event and terminate
   # all active sockets and channels for a given user:
   #
-  #    TrueBGWeb.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
+  #    TdBGWeb.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
   def id(_socket), do: nil

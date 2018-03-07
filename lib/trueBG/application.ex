@@ -1,7 +1,7 @@
-defmodule TrueBG.Application do
+defmodule TdBG.Application do
   @moduledoc false
   use Application
-  alias TrueBGWeb.Endpoint
+  alias TdBGWeb.Endpoint
 
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
@@ -11,17 +11,17 @@ defmodule TrueBG.Application do
     # Define workers and child supervisors to be supervised
     children = [
       # Start the Ecto repository
-      supervisor(TrueBG.Repo, []),
+      supervisor(TdBG.Repo, []),
       # Start the endpoint when the application starts
-      supervisor(TrueBGWeb.Endpoint, []),
+      supervisor(TdBGWeb.Endpoint, []),
       # Start your own worker by calling:
-      # TrueBG.Worker.start_link(arg1, arg2, arg3)
-      # worker(TrueBG.Worker, [arg1, arg2, arg3]),
+      # TdBG.Worker.start_link(arg1, arg2, arg3)
+      # worker(TdBG.Worker, [arg1, arg2, arg3]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: TrueBG.Supervisor]
+    opts = [strategy: :one_for_one, name: TdBG.Supervisor]
     Supervisor.start_link(children, opts)
   end
 

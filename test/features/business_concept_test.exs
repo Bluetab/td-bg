@@ -1,17 +1,17 @@
-defmodule TrueBG.BusinessConceptTest do
+defmodule TdBG.BusinessConceptTest do
   use Cabbage.Feature, async: false, file: "business_concept.feature"
-  use TrueBGWeb.FeatureCase
-  import TrueBGWeb.BusinessConcept
+  use TdBGWeb.FeatureCase
+  import TdBGWeb.BusinessConcept
 
-  # import TrueBGWeb.Router.Helpers
-  import TrueBGWeb.ResponseCode
-  import TrueBGWeb.User, only: :functions
-  import TrueBGWeb.Taxonomy, only: :functions
-  import TrueBGWeb.AclEntry, only: :functions
-  import TrueBGWeb.Authentication, only: :functions
+  # import TdBGWeb.Router.Helpers
+  import TdBGWeb.ResponseCode
+  import TdBGWeb.User, only: :functions
+  import TdBGWeb.Taxonomy, only: :functions
+  import TdBGWeb.AclEntry, only: :functions
+  import TdBGWeb.Authentication, only: :functions
 
   alias Poison, as: JSON
-  alias TrueBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConcept
 
   @fixed_values %{"Type" => "type",
                   "Name" => "name",
@@ -54,7 +54,7 @@ defmodule TrueBG.BusinessConceptTest do
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
     %{business_concept_type: business_concept_type}, state do
-    filename = Application.get_env(:trueBG, :bc_schema_location)
+    filename = Application.get_env(:td_bg, :bc_schema_location)
     {:ok, file} = File.open filename, [:write, :utf8]
     json_schema = [{business_concept_type, []}] |> Map.new |> JSON.encode!
     IO.binwrite file, json_schema
@@ -154,7 +154,7 @@ defmodule TrueBG.BusinessConceptTest do
 
     json_schema = %{business_concept_type  => schema} |> JSON.encode!
 
-    path = Application.get_env(:trueBG, :bc_schema_location)
+    path = Application.get_env(:td_bg, :bc_schema_location)
     File.write!(path, json_schema, [:write, :utf8])
 
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}

@@ -1,4 +1,4 @@
-defmodule TrueBGWeb.ChannelCase do
+defmodule TdBGWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -22,14 +22,14 @@ defmodule TrueBGWeb.ChannelCase do
       use Phoenix.ChannelTest
 
       # The default endpoint for testing
-      @endpoint TrueBGWeb.Endpoint
+      @endpoint TdBGWeb.Endpoint
     end
   end
 
   setup tags do
-    :ok = Sandbox.checkout(TrueBG.Repo)
+    :ok = Sandbox.checkout(TdBG.Repo)
     unless tags[:async] do
-      Sandbox.mode(TrueBG.Repo, {:shared, self()})
+      Sandbox.mode(TdBG.Repo, {:shared, self()})
     end
     :ok
   end

@@ -1,10 +1,10 @@
-defmodule TrueBG.Canary.BusinessConceptAbilities do
+defmodule TdBG.Canary.BusinessConceptAbilities do
   @moduledoc false
-  alias TrueBG.Accounts.User
-  alias TrueBG.Taxonomies.DataDomain
-  alias TrueBG.BusinessConcepts.BusinessConcept
-  alias TrueBG.BusinessConcepts.BusinessConceptVersion
-  alias TrueBG.Permissions
+  alias TdBG.Accounts.User
+  alias TdBG.Taxonomies.DataDomain
+  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBG.Permissions
 
   def can?(%User{id: user_id}, :create_business_concept, %DataDomain{id: data_domain_id})  do
     %{user_id: user_id,

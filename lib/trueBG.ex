@@ -1,6 +1,6 @@
-defmodule TrueBG do
+defmodule TdBG do
   @moduledoc """
-  TrueBG keeps the contexts that define your domain
+  TdBG keeps the contexts that define your domain
   and business logic.
 
   Contexts are also responsible for managing your data, regardless

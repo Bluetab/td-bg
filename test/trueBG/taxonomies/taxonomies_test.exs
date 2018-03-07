@@ -1,13 +1,13 @@
-defmodule TrueBG.TaxonomiesTest do
-  use TrueBG.DataCase
+defmodule TdBG.TaxonomiesTest do
+  use TdBG.DataCase
 
-  alias TrueBG.Taxonomies
-  alias TrueBG.Permissions
+  alias TdBG.Taxonomies
+  alias TdBG.Permissions
   alias Ecto.Changeset
 
   describe "domain_groups" do
-    alias TrueBG.Taxonomies.DomainGroup
-    alias TrueBG.Taxonomies.DataDomain
+    alias TdBG.Taxonomies.DomainGroup
+    alias TdBG.Taxonomies.DataDomain
 
     @valid_attrs %{description: "some description", name: "some name"}
     @update_attrs %{description: "some updated description", name: "some updated name"}
@@ -115,7 +115,7 @@ defmodule TrueBG.TaxonomiesTest do
   end
 
   describe "data_domains" do
-    alias TrueBG.Taxonomies.DataDomain
+    alias TdBG.Taxonomies.DataDomain
 
     @valid_attrs %{description: "some description", name: "some name"}
     @update_attrs %{description: "some updated description", name: "some updated name"}
