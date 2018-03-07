@@ -323,7 +323,7 @@ defmodule TdBG.BusinessConceptsTests do
       type = business_concept_version.business_concept.type
       name = business_concept_version.name
       status = [BusinessConcept.status.draft, BusinessConcept.status.published]
-      assert {:ok, 1} == BusinessConcepts.count_business_concepts(type, name, status)
+      assert {:ok, 1} == BusinessConcepts.count_business_concepts(type, name, nil, status)
     end
 
     test "update_business_concept_version/2 with valid data updates the business_concept_version" do

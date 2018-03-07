@@ -151,9 +151,8 @@ defmodule TdBGWeb.BusinessConceptController do
     |> Map.put("last_change_by", user.id)
     |> Map.put("last_change_at", DateTime.utc_now())
 
-    count = if concept_name == business_concept_version.name, do: 1, else: 0
     with true <- can?(user, update(business_concept_version)),
-         {:ok, ^count} <- count_business_concepts(concept_type, concept_name),
+         {:ok, 0} <- count_business_concepts(concept_type, concept_name, id),
          {:ok, %BusinessConceptVersion{} = concept} <-
       BusinessConcepts.update_business_concept_version(business_concept_version,
                                                               update_params) do
@@ -209,8 +208,8 @@ defmodule TdBGWeb.BusinessConceptController do
       |> Map.get(content_type)
   end
 
-  defp count_business_concepts(type, name) do
-    BusinessConcepts.count_business_concepts(type, name,
+  defp count_business_concepts(type, name, business_concept_id \\ nil) do
+    BusinessConcepts.count_business_concepts(type, name, business_concept_id,
                                       [BusinessConcept.status.draft,
                                        BusinessConcept.status.published])
   end

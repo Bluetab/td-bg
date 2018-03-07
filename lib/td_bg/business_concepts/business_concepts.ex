@@ -23,18 +23,26 @@ defmodule TdBG.BusinessConcepts do
   and status
 
   """
-  def count_business_concepts(type, name, status) do
-    do_count_business_concepts(type, name, status)
+  def count_business_concepts(type, name, exclude_id, status) do
+    do_count_business_concepts(type, name, exclude_id, status)
   end
 
-  defp do_count_business_concepts(_type, _name, []), do: raise "Invalid empty status list"
-  defp do_count_business_concepts(type, name, _status) when is_nil(type) or is_nil(name),  do: {:ok, 0}
-  defp do_count_business_concepts(type, name, status) do
-    count =  Repo.one(from v in BusinessConceptVersion,
-      join: c in BusinessConcept, on: c.id == v.business_concept_id,
-      select: count("*"), where: c.type == ^type and
-      v.name == ^name and v.status in ^status)
+  defp do_count_business_concepts(_type, _name, _exclude_id, []), do: raise "Invalid empty status list"
+  defp do_count_business_concepts(type, name, _exclude_id, _status) when is_nil(type) or is_nil(name),  do: {:ok, 0}
+
+  defp do_count_business_concepts(type, name, exclude_id, status) do
+    count = BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> where([v, c], c.type == ^type and v.name == ^name and v.status in ^status)
+    |> exlude_business_id_where(exclude_id)
+    |> select([v, _], count(v.id))
+    |> Repo.one!
     {:ok, count}                                                    #                                                     BusinessConcept.published])
+  end
+
+  defp exlude_business_id_where(query, nil), do: query
+  defp exlude_business_id_where(query, exclude_id) do
+    query |> where([_, c], c.id != ^exclude_id)
   end
 
   @doc """
