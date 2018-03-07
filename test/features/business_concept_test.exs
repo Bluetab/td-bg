@@ -413,7 +413,39 @@ defmodule TdBG.BusinessConceptTest do
       else
         {:ok, state}
       end
-      # Your implementation here
+  end
+
+  # Scenario Outline: Delete current draft version for a BC that has been published previously
+
+  defand ~r/^user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with following data:$/,
+    %{user_name: user_name,  business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version, table: fields},
+    %{token_admin: token_admin} = state do
+      business_concept_version = String.to_integer(version)
+      business_concept_tmp = business_concept_by_version_name_and_type(token_admin,
+                                                                      business_concept_version,
+                                                                      business_concept_name,
+                                                                      business_concept_type)
+      assert business_concept_tmp
+      assert business_concept_type == business_concept_tmp["type"]
+      token = get_user_token(user_name)
+      {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
+      assert rc_ok() == to_response_code(http_status_code)
+      attrs = field_value_to_api_attrs(fields, @fixed_values)
+      assert_attrs(attrs, business_concept)
+      {:ok, state}
+  end
+
+  defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)",  business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" does not exist$/,
+    %{result: result, status_code: status_code, business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version},
+    %{token_admin: token_admin} = _state do
+      if result == status_code do
+        business_concept_version = String.to_integer(version)
+        business_concept_tmp = business_concept_by_version_name_and_type(token_admin,
+                                                                        business_concept_version,
+                                                                        business_concept_name,
+                                                                        business_concept_type)
+        assert !business_concept_tmp
+      end
   end
 
   defp change_business_concept_status(token_admin, business_concept_id, status) do
