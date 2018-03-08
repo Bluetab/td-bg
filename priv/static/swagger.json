@@ -876,7 +876,7 @@
     "/business_concepts/{business_concept_id}/status": {
       "patch": {
         "tags": [
-          "BusinessConceptStatus"
+          "BusinessConcept"
         ],
         "summary": "",
         "responses": {
@@ -896,7 +896,7 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/BusinessConceptStatusUpdate"
+              "$ref": "#/definitions/BusinessConceptUpdateStatus"
             },
             "required": false,
             "name": "business_concept",
@@ -911,7 +911,7 @@
             "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptStatusController.update",
+        "operationId": "TdBGWeb.BusinessConceptController.update_status",
         "description": "Updates Business Ccncept status"
       }
     },
@@ -1179,137 +1179,6 @@
   },
   "host": "localhost:4000",
   "definitions": {
-    "AclEntry": {
-      "type": "object",
-      "title": "Acl entry",
-      "required": [
-        "role_id",
-        "resource_type",
-        "resource_id",
-        "principal_type",
-        "principal_id",
-        "id"
-      ],
-      "properties": {
-        "role_id": {
-          "type": "integer",
-          "description": "id of role"
-        },
-        "resource_type": {
-          "type": "string",
-          "description": "type of resource: data_domain / domain_group"
-        },
-        "resource_id": {
-          "type": "integer",
-          "description": "id of resource"
-        },
-        "principal_type": {
-          "type": "string",
-          "description": "type of principal: user"
-        },
-        "principal_id": {
-          "type": "integer",
-          "description": "id of principal"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        }
-      },
-      "description": "An Acl entry"
-    },
-    "BusinessConcept": {
-      "type": "object",
-      "title": "Business Concept",
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "version": {
-          "type": "integer",
-          "description": "Business Concept version"
-        },
-        "type": {
-          "type": "string",
-          "description": "Business Concept type"
-        },
-        "status": {
-          "type": "string",
-          "description": "Business Conceptstatus"
-        },
-        "reject_reason": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Business Concept reject reason"
-        },
-        "name": {
-          "type": "string",
-          "description": "Business Concept name"
-        },
-        "mod_comments": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Business Concept modification comments"
-        },
-        "last_change_by": {
-          "type": "integer",
-          "description": "Business Concept last updated by"
-        },
-        "last_change_at": {
-          "type": "string",
-          "description": "Business Conceptlast updated date"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        },
-        "description": {
-          "type": "string",
-          "description": "Business Concept description"
-        },
-        "data_domain_id": {
-          "type": "integer",
-          "description": "Business Concept parent data domain id"
-        },
-        "content": {
-          "type": "object",
-          "description": "Business Concept content"
-        },
-        "business_concept_version_id": {
-          "type": "integer",
-          "description": "Business Concept current version id"
-        }
-      },
-      "description": "Business Concept"
-    },
-    "AclEntries": {
-      "type": "array",
-      "title": "Acl entries",
-      "items": {
-        "$ref": "#/definitions/AclEntry"
-      },
-      "description": "A collection of Acl Entry"
-    },
-    "UsersRolesRequest": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object"
-        }
-      }
-    },
-    "AclEntriesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/AclEntries"
-        }
-      }
-    },
     "BusinessConcepts": {
       "type": "array",
       "title": "Business Concepts",
@@ -1317,46 +1186,6 @@
         "$ref": "#/definitions/BusinessConcept"
       },
       "description": "A collection of Business Concepts"
-    },
-    "RoleResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Role"
-        }
-      }
-    },
-    "DataDomainsResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/DataDomains"
-        }
-      }
-    },
-    "BusinessConceptVersionResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/BusinessConceptVersion"
-        }
-      }
-    },
-    "Roles": {
-      "type": "array",
-      "title": "Roles",
-      "items": {
-        "$ref": "#/definitions/Role"
-      },
-      "description": "A collection of Roles"
-    },
-    "DataDomains": {
-      "type": "array",
-      "title": "Data Domains",
-      "items": {
-        "$ref": "#/definitions/DataDomain"
-      },
-      "description": "A collection of Data Domains"
     },
     "BusinessConceptVersion": {
       "type": "object",
@@ -1435,182 +1264,121 @@
       },
       "description": "Business Concept Version"
     },
-    "AclEntryCreateUpdate": {
+    "BusinessConcept": {
       "type": "object",
-      "properties": {
-        "acl_entry": {
-          "type": "object",
-          "required": [
-            "role_id",
-            "resource_type",
-            "resource_id",
-            "principal_type",
-            "principal_id"
-          ],
-          "properties": {
-            "role_id": {
-              "type": "integer",
-              "description": "id of role"
-            },
-            "resource_type": {
-              "type": "string",
-              "description": "type of resource: data_domain / domain_group"
-            },
-            "resource_id": {
-              "type": "integer",
-              "description": "id of resource"
-            },
-            "principal_type": {
-              "type": "string",
-              "description": "type of principal: user"
-            },
-            "principal_id": {
-              "type": "integer",
-              "description": "id of principal"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptStatusUpdate": {
-      "type": "object",
-      "properties": {
-        "business_concept": {
-          "type": "object",
-          "properties": {
-            "status": {
-              "type": "object",
-              "description": "Business Concept status (rejected, published, deprecated...)"
-            },
-            "reject_reason": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Business Concept reject reason"
-            }
-          }
-        }
-      }
-    },
-    "Role": {
-      "type": "object",
-      "title": "Role",
+      "title": "Business Concept",
       "required": [
-        "name",
         "id"
       ],
       "properties": {
+        "version": {
+          "type": "integer",
+          "description": "Business Concept version"
+        },
+        "type": {
+          "type": "string",
+          "description": "Business Concept type"
+        },
+        "status": {
+          "type": "string",
+          "description": "Business Conceptstatus"
+        },
+        "reject_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Business Concept reject reason"
+        },
         "name": {
           "type": "string",
-          "description": "role name"
+          "description": "Business Concept name"
+        },
+        "mod_comments": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Business Concept modification comments"
+        },
+        "last_change_by": {
+          "type": "integer",
+          "description": "Business Concept last updated by"
+        },
+        "last_change_at": {
+          "type": "string",
+          "description": "Business Conceptlast updated date"
         },
         "id": {
           "type": "integer",
           "description": "unique identifier"
+        },
+        "description": {
+          "type": "string",
+          "description": "Business Concept description"
+        },
+        "data_domain_id": {
+          "type": "integer",
+          "description": "Business Concept parent data domain id"
+        },
+        "content": {
+          "type": "object",
+          "description": "Business Concept content"
+        },
+        "business_concept_version_id": {
+          "type": "integer",
+          "description": "Business Concept current version id"
         }
       },
-      "description": "Role"
+      "description": "Business Concept"
     },
-    "DataDomainResponse": {
+    "UsersRolesResponse": {
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/DataDomain"
-        }
-      }
-    },
-    "AclEntryResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/AclEntry"
-        }
-      }
-    },
-    "DataDomainCreate": {
-      "type": "object",
-      "properties": {
-        "data_domain": {
           "type": "object",
-          "required": [
-            "name"
-          ],
           "properties": {
-            "name": {
+            "user": {
               "type": "string",
-              "description": "data domain name"
+              "description": "user name"
             },
-            "description": {
+            "role": {
               "type": "string",
-              "description": "data domain description"
+              "description": "role name"
             }
           }
         }
       }
     },
-    "DomainGroupCreate": {
-      "type": "object",
-      "properties": {
-        "domain_group": {
-          "type": "object",
-          "required": [
-            "name"
-          ],
-          "properties": {
-            "parent_id": {
-              "type": "integer",
-              "description": "parent domain group id"
-            },
-            "name": {
-              "type": "string",
-              "description": "domain group name"
-            },
-            "description": {
-              "type": "string",
-              "description": "domain group description"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptCreate": {
-      "type": "object",
-      "properties": {
-        "business_concept": {
-          "type": "object",
-          "required": [
-            "description",
-            "name",
-            "content",
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "type": "string",
-              "description": "Business Concept type (empty,...)"
-            },
-            "name": {
-              "type": "string",
-              "description": "Business Concept name"
-            },
-            "description": {
-              "type": "string",
-              "description": "Business Conceptdescription"
-            },
-            "content": {
-              "type": "object",
-              "description": "Business Concept content"
-            }
-          }
-        }
-      }
-    },
-    "DomainGroupsResponse": {
+    "UsersRolesRequest": {
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/DomainGroups"
+          "type": "object"
+        }
+      }
+    },
+    "BusinessConceptVersions": {
+      "type": "array",
+      "title": "Business Concept Versions",
+      "items": {
+        "$ref": "#/definitions/BusinessConceptVersion"
+      },
+      "description": "A collection of Business Concept Versions"
+    },
+    "RolesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Roles"
+        }
+      }
+    },
+    "AclEntriesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntries"
         }
       }
     },
@@ -1647,14 +1415,6 @@
         }
       }
     },
-    "BusinessConceptVersionsResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/BusinessConceptVersions"
-        }
-      }
-    },
     "DataDomainUpdate": {
       "type": "object",
       "properties": {
@@ -1670,14 +1430,6 @@
               "description": "data domain description"
             }
           }
-        }
-      }
-    },
-    "DomainGroupResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/DomainGroup"
         }
       }
     },
@@ -1702,41 +1454,143 @@
         }
       }
     },
-    "DataDomain": {
+    "AclEntries": {
+      "type": "array",
+      "title": "Acl entries",
+      "items": {
+        "$ref": "#/definitions/AclEntry"
+      },
+      "description": "A collection of Acl Entry"
+    },
+    "DataDomainCreate": {
       "type": "object",
-      "title": "Data Domain",
+      "properties": {
+        "data_domain": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "data domain name"
+            },
+            "description": {
+              "type": "string",
+              "description": "data domain description"
+            }
+          }
+        }
+      }
+    },
+    "DomainGroups": {
+      "type": "array",
+      "title": "Domain Groups",
+      "items": {
+        "$ref": "#/definitions/DomainGroup"
+      },
+      "description": "A collection of Domain Groups"
+    },
+    "BusinessConceptVersionsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConceptVersions"
+        }
+      }
+    },
+    "DataDomainsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/DataDomains"
+        }
+      }
+    },
+    "DataDomainResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/DataDomain"
+        }
+      }
+    },
+    "DomainGroupResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/DomainGroup"
+        }
+      }
+    },
+    "BusinessConceptUpdate": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Business Concept name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Business Concept description"
+            },
+            "content": {
+              "type": "object",
+              "description": "Business Concept content"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConcept"
+        }
+      }
+    },
+    "AclEntry": {
+      "type": "object",
+      "title": "Acl entry",
       "required": [
-        "domain_group_id",
-        "name",
+        "role_id",
+        "resource_type",
+        "resource_id",
+        "principal_type",
+        "principal_id",
         "id"
       ],
       "properties": {
-        "name": {
+        "role_id": {
+          "type": "integer",
+          "description": "id of role"
+        },
+        "resource_type": {
           "type": "string",
-          "description": "data domain name"
+          "description": "type of resource: data_domain / domain_group"
+        },
+        "resource_id": {
+          "type": "integer",
+          "description": "id of resource"
+        },
+        "principal_type": {
+          "type": "string",
+          "description": "type of principal: user"
+        },
+        "principal_id": {
+          "type": "integer",
+          "description": "id of principal"
         },
         "id": {
           "type": "integer",
-          "description": "Unique identifier"
-        },
-        "domain_group_id": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "description": "Domain Group Id"
-        },
-        "descritpion": {
-          "type": "string",
-          "description": "descritpion"
+          "description": "unique identifier"
         }
       },
-      "example": {
-        "name": "Data domain name",
-        "id": 123,
-        "domain_group_id": 742
-      },
-      "description": "A Data Domain child of a Domain Group"
+      "description": "An Acl entry"
     },
     "RoleCreateUpdate": {
       "type": "object",
@@ -1752,6 +1606,62 @@
               "description": "role name"
             }
           }
+        }
+      }
+    },
+    "BusinessConceptVersionResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConceptVersion"
+        }
+      }
+    },
+    "BusinessConceptCreate": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "required": [
+            "description",
+            "name",
+            "content",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Business Concept type (empty,...)"
+            },
+            "name": {
+              "type": "string",
+              "description": "Business Concept name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Business Conceptdescription"
+            },
+            "content": {
+              "type": "object",
+              "description": "Business Concept content"
+            }
+          }
+        }
+      }
+    },
+    "DataDomains": {
+      "type": "array",
+      "title": "Data Domains",
+      "items": {
+        "$ref": "#/definitions/DataDomain"
+      },
+      "description": "A collection of Data Domains"
+    },
+    "DomainGroupsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/DomainGroups"
         }
       }
     },
@@ -1792,83 +1702,173 @@
       },
       "description": "A Domain Group"
     },
-    "BusinessConceptVersions": {
-      "type": "array",
-      "title": "Business Concept Versions",
-      "items": {
-        "$ref": "#/definitions/BusinessConceptVersion"
-      },
-      "description": "A collection of Business Concept Versions"
-    },
-    "UsersRolesResponse": {
+    "RoleResponse": {
       "type": "object",
       "properties": {
         "data": {
+          "$ref": "#/definitions/Role"
+        }
+      }
+    },
+    "AclEntryResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntry"
+        }
+      }
+    },
+    "DomainGroupCreate": {
+      "type": "object",
+      "properties": {
+        "domain_group": {
           "type": "object",
+          "required": [
+            "name"
+          ],
           "properties": {
-            "user": {
-              "type": "string",
-              "description": "user name"
+            "parent_id": {
+              "type": "integer",
+              "description": "parent domain group id"
             },
-            "role": {
-              "type": "string",
-              "description": "role name"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/BusinessConcept"
-        }
-      }
-    },
-    "RolesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Roles"
-        }
-      }
-    },
-    "DomainGroups": {
-      "type": "array",
-      "title": "Domain Groups",
-      "items": {
-        "$ref": "#/definitions/DomainGroup"
-      },
-      "description": "A collection of Domain Groups"
-    },
-    "BusinessConceptUpdate": {
-      "type": "object",
-      "properties": {
-        "business_concept": {
-          "type": "object",
-          "properties": {
             "name": {
               "type": "string",
-              "description": "Business Concept name"
+              "description": "domain group name"
             },
             "description": {
               "type": "string",
-              "description": "Business Concept description"
-            },
-            "content": {
-              "type": "object",
-              "description": "Business Concept content"
+              "description": "domain group description"
             }
           }
         }
       }
+    },
+    "Roles": {
+      "type": "array",
+      "title": "Roles",
+      "items": {
+        "$ref": "#/definitions/Role"
+      },
+      "description": "A collection of Roles"
+    },
+    "DataDomain": {
+      "type": "object",
+      "title": "Data Domain",
+      "required": [
+        "domain_group_id",
+        "name",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "data domain name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier"
+        },
+        "domain_group_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Domain Group Id"
+        },
+        "descritpion": {
+          "type": "string",
+          "description": "descritpion"
+        }
+      },
+      "example": {
+        "name": "Data domain name",
+        "id": 123,
+        "domain_group_id": 742
+      },
+      "description": "A Data Domain child of a Domain Group"
     },
     "BusinessConceptsResponse": {
       "type": "object",
       "properties": {
         "data": {
           "$ref": "#/definitions/BusinessConcepts"
+        }
+      }
+    },
+    "BusinessConceptUpdateStatus": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Business Concept status (rejected, published, deprecated...)"
+            },
+            "reject_reason": {
+              "type": "string",
+              "description": "Business Concept reject reason"
+            }
+          }
+        }
+      }
+    },
+    "Role": {
+      "type": "object",
+      "title": "Role",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "role name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        }
+      },
+      "description": "Role"
+    },
+    "AclEntryCreateUpdate": {
+      "type": "object",
+      "properties": {
+        "acl_entry": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "resource_type",
+            "resource_id",
+            "principal_type",
+            "principal_id"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "integer",
+              "description": "id of role"
+            },
+            "resource_type": {
+              "type": "string",
+              "description": "type of resource: data_domain / domain_group"
+            },
+            "resource_id": {
+              "type": "integer",
+              "description": "id of resource"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "type of principal: user"
+            },
+            "principal_id": {
+              "type": "integer",
+              "description": "id of principal"
+            }
+          }
         }
       }
     }

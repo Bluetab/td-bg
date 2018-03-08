@@ -54,7 +54,7 @@ defmodule TdBGWeb.Router do
 
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
     resources "/business_concepts", BusinessConceptController do
-      patch "/status", BusinessConceptStatusController, :update
+      patch "/status", BusinessConceptController, :update_status
     end
 
     resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update, :delete]
