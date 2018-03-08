@@ -175,6 +175,7 @@ defmodule TdBG.BusinessConcepts do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> preload([_, c], [business_concept: c])
+    |> order_by(asc: :version)
     |> Repo.all
   end
 

@@ -230,13 +230,15 @@ defmodule TdBG.BusinessConceptTest do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name(token_admin, business_concept_name)
-      assert business_concept_type == business_concept["type"]
+      {_, _, %{"data" => current_business_concept}} = business_concept_show(token, business_concept["id"])
+      business_concept_id = current_business_concept["id"]
+      assert business_concept_type == current_business_concept["type"]
       attrs = field_value_to_api_attrs(fields, @fixed_values)
-      status = business_concept["status"]
+      status = current_business_concept["status"]
       {_, status_code, _} = if status == BusinessConcept.status.published do
-        business_concept_version_create(token, business_concept["id"],  attrs)
+        business_concept_version_create(token, business_concept_id,  attrs)
       else
-        business_concept_update(token, business_concept["id"],  attrs)
+        business_concept_update(token, business_concept_id,  attrs)
       end
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
