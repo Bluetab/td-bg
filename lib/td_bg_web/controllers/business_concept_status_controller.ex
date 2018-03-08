@@ -14,7 +14,7 @@ defmodule TdBGWeb.BusinessConceptStatusController do
 
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update]
 
-  def update(conn, %{"business_concept_id" => id, "status" => new_status} = params) do
+  def update(conn, %{"business_concept_id" => id, "business_concept" => %{"status" => new_status} = business_concept_params}) do
 
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
     status = business_concept_version.status
@@ -28,15 +28,15 @@ defmodule TdBGWeb.BusinessConceptStatusController do
 
     case {status, new_status} do
       {^draft, ^pending_approval} ->
-        send_for_approval(conn, user, business_concept_version, params)
+        send_for_approval(conn, user, business_concept_version, business_concept_params)
       {^pending_approval, ^published} ->
-        publish(conn, user,  business_concept_version, params)
+        publish(conn, user,  business_concept_version, business_concept_params)
       {^pending_approval, ^rejected} ->
-        reject(conn, user,  business_concept_version, params)
+        reject(conn, user,  business_concept_version, business_concept_params)
       {^rejected, ^pending_approval} ->
-        send_for_approval(conn, user, business_concept_version, params)
+        send_for_approval(conn, user, business_concept_version, business_concept_params)
       {^published, ^deprecated} ->
-        deprecate(conn, user, business_concept_version, params)
+        deprecate(conn, user, business_concept_version, business_concept_params)
       _ ->
         Logger.info "No status action for {#{status}, #{new_status}} combination"
         conn
@@ -45,7 +45,7 @@ defmodule TdBGWeb.BusinessConceptStatusController do
     end
   end
 
-  defp send_for_approval(conn, user, business_concept_version, _params) do
+  defp send_for_approval(conn, user, business_concept_version, _business_concept_params) do
     attrs = %{status: BusinessConcept.status.pending_approval}
     with true <- can?(user, send_for_approval(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = concept} <-
@@ -63,8 +63,8 @@ defmodule TdBGWeb.BusinessConceptStatusController do
     end
   end
 
-  defp reject(conn, user, business_concept_version, params) do
-    attrs = %{reject_reason: Map.get(params, "reject_reason")}
+  defp reject(conn, user, business_concept_version, business_concept_params) do
+    attrs = %{reject_reason: Map.get(business_concept_params, "reject_reason")}
     with true <- can?(user, reject(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
@@ -81,7 +81,7 @@ defmodule TdBGWeb.BusinessConceptStatusController do
     end
   end
 
-  defp publish(conn, user, business_concept_version, _parmas) do
+  defp publish(conn, user, business_concept_version, _business_concept_params) do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
                     BusinessConcepts.publish_business_concept_version(business_concept_version) do
@@ -98,7 +98,7 @@ defmodule TdBGWeb.BusinessConceptStatusController do
     end
   end
 
-  defp deprecate(conn, user, business_concept_version, _parmas) do
+  defp deprecate(conn, user, business_concept_version, _business_concept_params) do
     attrs = %{status: BusinessConcept.status.deprecated}
     with true <- can?(user, deprecate(business_concept_version)),
           {:ok, %BusinessConceptVersion{} = concept} <-

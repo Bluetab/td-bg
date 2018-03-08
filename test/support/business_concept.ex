@@ -43,7 +43,7 @@ defmodule TdBGWeb.BusinessConcept do
 
   def business_concept_send_for_approval(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "pending_approval"} |> JSON.encode!
+    body = %{"business_concept" => %{"status" => "pending_approval"}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code}
@@ -51,7 +51,7 @@ defmodule TdBGWeb.BusinessConcept do
 
   def business_concept_reject(token, business_concept_id, reject_reason) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "rejected", "reject_reason" => reject_reason} |> JSON.encode!
+    body = %{"business_concept" => %{"status" => "rejected", "reject_reason" => reject_reason}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code}
@@ -59,7 +59,7 @@ defmodule TdBGWeb.BusinessConcept do
 
   def business_concept_deprecate(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "deprecated"} |> JSON.encode!
+    body = %{"business_concept" => %{"status" => "deprecated"}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code}
@@ -67,7 +67,7 @@ defmodule TdBGWeb.BusinessConcept do
 
   def business_concept_publish(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"status" => "published"} |> JSON.encode!
+    body = %{"business_concept" => %{"status" => "published"}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.patch!(business_concept_business_concept_status_url(@endpoint, :update, business_concept_id), body, headers, [])
     {:ok, status_code}
