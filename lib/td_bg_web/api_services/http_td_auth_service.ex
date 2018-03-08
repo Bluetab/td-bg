@@ -1,8 +1,8 @@
-defmodule TdBGWeb.ApiServices.HttpTdAuthService do
+defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   @moduledoc false
 
   alias Poison, as: JSON
-  alias TdBG.Utils.CollectionUtils
+  alias TdBg.Utils.CollectionUtils
 
   defp get_config do
     Application.get_env(:td_bg, :auth_service)
@@ -49,7 +49,7 @@ defmodule TdBGWeb.ApiServices.HttpTdAuthService do
       resp
       |> JSON.decode!
       |> resp["data"]
-    users = Enum.map(json, fn(user) -> %TdBG.Accounts.User{} |> Map.merge(CollectionUtils.to_struct(TdBG.Accounts.User, user)) end)
+    users = Enum.map(json, fn(user) -> %TdBg.Accounts.User{} |> Map.merge(CollectionUtils.to_struct(TdBg.Accounts.User, user)) end)
     users
   end
 

@@ -1,17 +1,17 @@
-defmodule TdBG.BusinessConceptTest do
+defmodule TdBg.BusinessConceptTest do
   use Cabbage.Feature, async: false, file: "business_concept.feature"
-  use TdBGWeb.FeatureCase
-  import TdBGWeb.BusinessConcept
+  use TdBgWeb.FeatureCase
+  import TdBgWeb.BusinessConcept
 
-  # import TdBGWeb.Router.Helpers
-  import TdBGWeb.ResponseCode
-  import TdBGWeb.User, only: :functions
-  import TdBGWeb.Taxonomy, only: :functions
-  import TdBGWeb.AclEntry, only: :functions
-  import TdBGWeb.Authentication, only: :functions
+  # import TdBgWeb.Router.Helpers
+  import TdBgWeb.ResponseCode
+  import TdBgWeb.User, only: :functions
+  import TdBgWeb.Taxonomy, only: :functions
+  import TdBgWeb.AclEntry, only: :functions
+  import TdBgWeb.Authentication, only: :functions
 
   alias Poison, as: JSON
-  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConcept
 
   @fixed_values %{"Type" => "type",
                   "Name" => "name",

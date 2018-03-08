@@ -1,27 +1,27 @@
-defmodule TdBGWeb.Router do
-  use TdBGWeb, :router
+defmodule TdBgWeb.Router do
+  use TdBgWeb, :router
 
   pipeline :api do
-    plug TdBG.Auth.Pipeline.Unsecure
+    plug TdBg.Auth.Pipeline.Unsecure
     plug :accepts, ["json"]
   end
 
   pipeline :api_secure do
-    plug TdBG.Auth.Pipeline.Secure
+    plug TdBg.Auth.Pipeline.Secure
   end
 
   pipeline :api_authorized do
-    plug TdBG.Permissions.Plug.CurrentUser
+    plug TdBg.Permissions.Plug.CurrentUser
     plug Guardian.Plug.LoadResource
   end
 
-  scope "/api", TdBGWeb do
+  scope "/api", TdBgWeb do
     pipe_through :api
     get  "/ping", PingController, :ping
     post "/echo", EchoController, :echo
   end
 
-  scope "/api", TdBGWeb do
+  scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure]
     resources "/users", UserController, except: [:new, :edit]
     resources "/roles", RoleController, except: [:new, :edit]
@@ -37,7 +37,7 @@ defmodule TdBGWeb.Router do
     end
   end
 
-  scope "/api", TdBGWeb do
+  scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure, :api_authorized]
     resources "/data_domains", DataDomainController, except: [:new, :edit, :create]
     get "/domain_groups/index_root", DomainGroupController, :index_root
@@ -70,7 +70,7 @@ defmodule TdBGWeb.Router do
       schemes: ["http"],
       info: %{
         version: "1.0",
-        title: "TdBG"
+        title: "TdBg"
       },
       "basePath": "/api",
       "securityDefinitions":

@@ -1,11 +1,11 @@
-defmodule TdBGWeb.BusinessConcept do
+defmodule TdBgWeb.BusinessConcept do
   @moduledoc false
 
   alias Poison, as: JSON
-  import TdBGWeb.Router.Helpers
-  import TdBGWeb.Authentication, only: :functions
+  import TdBgWeb.Router.Helpers
+  import TdBgWeb.Authentication, only: :functions
 
-  @endpoint TdBGWeb.Endpoint
+  @endpoint TdBgWeb.Endpoint
   @headers {"Content-type", "application/json"}
   @fixed_values %{"Type" => "type",
                   "Name" => "name",

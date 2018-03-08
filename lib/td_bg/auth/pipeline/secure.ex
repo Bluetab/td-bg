@@ -1,9 +1,9 @@
-defmodule TdBG.Auth.Pipeline.Secure do
+defmodule TdBg.Auth.Pipeline.Secure do
   @moduledoc false
   use Guardian.Plug.Pipeline,
     otp_app: :td_bg,
-    error_handler: TdBG.Auth.ErrorHandler,
-    module: TdBG.Auth.Guardian
+    error_handler: TdBg.Auth.ErrorHandler,
+    module: TdBg.Auth.Guardian
   # If there is a session token, validate it
   #plug Guardian.Plug.VerifySession, claims: %{"typ" => "access"}
   # If there is an authorization header, validate it

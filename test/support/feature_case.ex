@@ -1,4 +1,4 @@
-defmodule TdBGWeb.FeatureCase do
+defmodule TdBgWeb.FeatureCase do
   @moduledoc """
   This module defines the test case to be used by
   feature tests.
@@ -10,15 +10,15 @@ defmodule TdBGWeb.FeatureCase do
 
   using do
     quote do
-      import TdBGWeb.Router.Helpers
-      @endpoint TdBGWeb.Endpoint
+      import TdBgWeb.Router.Helpers
+      @endpoint TdBgWeb.Endpoint
     end
   end
 
   setup tags do
-    :ok = Sandbox.checkout(TdBG.Repo)
+    :ok = Sandbox.checkout(TdBg.Repo)
     unless tags[:async] do
-      Sandbox.mode(TdBG.Repo, {:shared, self()})
+      Sandbox.mode(TdBg.Repo, {:shared, self()})
     end
     :ok
   end

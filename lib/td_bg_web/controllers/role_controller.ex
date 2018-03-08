@@ -1,12 +1,12 @@
-defmodule TdBGWeb.RoleController do
-  use TdBGWeb, :controller
+defmodule TdBgWeb.RoleController do
+  use TdBgWeb, :controller
   use PhoenixSwagger
 
-  alias TdBG.Permissions
-  alias TdBG.Permissions.Role
-  alias TdBGWeb.SwaggerDefinitions
+  alias TdBg.Permissions
+  alias TdBg.Permissions.Role
+  alias TdBgWeb.SwaggerDefinitions
 
-  action_fallback TdBGWeb.FallbackController
+  action_fallback TdBgWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.role_swagger_definitions()

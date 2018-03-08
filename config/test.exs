@@ -2,18 +2,18 @@ use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :td_bg, TdBGWeb.Endpoint,
+config :td_bg, TdBgWeb.Endpoint,
   http: [port: 3001],
   server: true
 
 # Hashing algorithm just for testing porpouses
-config :td_bg, hashing_module: TdBG.DummyHashing
+config :td_bg, hashing_module: TdBg.DummyHashing
 
 # Print only warnings and errors during test
 config :logger, level: :warn
 
 # Configure your database
-config :td_bg, TdBG.Repo,
+config :td_bg, TdBg.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
@@ -26,7 +26,7 @@ config :td_bg,
   # business concept content  schema location
   bc_schema_location: "bc_schema.test"
 
-config :td_bg, :auth_service, api_service: TdBGWeb.ApiServices.MockTdAuthService,
+config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.MockTdAuthService,
   host: "localhost",
   port: "4001",
   domain: ""

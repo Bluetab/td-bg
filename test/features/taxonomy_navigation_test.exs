@@ -1,12 +1,12 @@
-defmodule TdBG.TaxonomyNavigationTest do
+defmodule TdBg.TaxonomyNavigationTest do
   use Cabbage.Feature, async: false, file: "taxonomy_navigation.feature"
-  use TdBGWeb.FeatureCase
-  import TdBGWeb.Router.Helpers
-  import TdBGWeb.ResponseCode
-  import TdBGWeb.Taxonomy
-  import TdBGWeb.Authentication, only: :functions
+  use TdBgWeb.FeatureCase
+  import TdBgWeb.Router.Helpers
+  import TdBgWeb.ResponseCode
+  import TdBgWeb.Taxonomy
+  import TdBgWeb.Authentication, only: :functions
   alias Poison, as: JSON
-  @endpoint TdBGWeb.Endpoint
+  @endpoint TdBgWeb.Endpoint
 
   @bc_fixed_fields %{"Description" => "description", "Name" => "name", "Type" => "type"}
   @headers {"Content-type", "application/json"}

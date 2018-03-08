@@ -1,17 +1,17 @@
-defmodule TdBGWeb.BusinessConceptVersionController do
-  use TdBGWeb, :controller
+defmodule TdBgWeb.BusinessConceptVersionController do
+  use TdBgWeb, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
-  alias TdBG.BusinessConcepts
-  alias TdBG.BusinessConcepts.BusinessConcept
-  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias Poison, as: JSON
-  alias TdBGWeb.ErrorView
-  alias TdBGWeb.SwaggerDefinitions
+  alias TdBgWeb.ErrorView
+  alias TdBgWeb.SwaggerDefinitions
 
-  action_fallback TdBGWeb.FallbackController
+  action_fallback TdBgWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.business_concept_version_definitions()

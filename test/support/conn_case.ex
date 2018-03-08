@@ -1,4 +1,4 @@
-defmodule TdBGWeb.ConnCase do
+defmodule TdBgWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -16,26 +16,26 @@ defmodule TdBGWeb.ConnCase do
   use ExUnit.CaseTemplate
   alias Ecto.Adapters.SQL.Sandbox
   alias Phoenix.ConnTest
-  import TdBGWeb.Authentication, only: :functions
+  import TdBgWeb.Authentication, only: :functions
 
   using do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import TdBGWeb.Router.Helpers
-      import TdBG.Factory
+      import TdBgWeb.Router.Helpers
+      import TdBg.Factory
 
       # The default endpoint for testing
-      @endpoint TdBGWeb.Endpoint
+      @endpoint TdBgWeb.Endpoint
     end
   end
 
   @admin_user_name "app-admin"
 
   setup tags do
-    :ok = Sandbox.checkout(TdBG.Repo)
+    :ok = Sandbox.checkout(TdBg.Repo)
     unless tags[:async] do
-      Sandbox.mode(TdBG.Repo, {:shared, self()})
+      Sandbox.mode(TdBg.Repo, {:shared, self()})
     end
 
     cond do

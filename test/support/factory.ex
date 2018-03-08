@@ -1,11 +1,11 @@
-defmodule TdBG.Factory do
+defmodule TdBg.Factory do
   @moduledoc false
-  use ExMachina.Ecto, repo: TdBG.Repo
-  alias TdBG.BusinessConcepts.BusinessConcept
-  alias TdBG.BusinessConcepts.BusinessConceptVersion
+  use ExMachina.Ecto, repo: TdBg.Repo
+  alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
 
   def user_factory do
-    %TdBG.Accounts.User {
+    %TdBg.Accounts.User {
       id: 0,
       user_name: "bufoncillo",
       is_admin: false
@@ -13,14 +13,14 @@ defmodule TdBG.Factory do
   end
 
   def domain_group_factory do
-    %TdBG.Taxonomies.DomainGroup {
+    %TdBg.Taxonomies.DomainGroup {
       name: "My domain group",
       description: "My domain group description",
     }
   end
 
   def data_domain_factory do
-    %TdBG.Taxonomies.DataDomain {
+    %TdBg.Taxonomies.DataDomain {
       name: "My data domain",
       description: "My data domain description",
       domain_group: build(:domain_group)
@@ -50,13 +50,13 @@ defmodule TdBG.Factory do
   end
 
   def role_factory do
-    %TdBG.Permissions.Role {
+    %TdBg.Permissions.Role {
       name: "watch"
     }
   end
 
   def acl_entry_domain_group_user_factory do
-    %TdBG.Permissions.AclEntry {
+    %TdBg.Permissions.AclEntry {
       principal_id: nil,
       principal_type: "user",
       resource_id: nil,
@@ -66,7 +66,7 @@ defmodule TdBG.Factory do
   end
 
   def acl_entry_data_domain_user_factory do
-    %TdBG.Permissions.AclEntry {
+    %TdBg.Permissions.AclEntry {
       principal_id: nil,
       principal_type: "user",
       resource_id: nil,

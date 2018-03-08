@@ -1,14 +1,14 @@
-defmodule TdBG.Taxonomies do
+defmodule TdBg.Taxonomies do
   @moduledoc """
   The Taxonomies context.
   """
 
   import Ecto.Query, warn: false
-  alias TdBG.Repo
-  alias TdBG.Taxonomies.DataDomain
-  alias TdBG.Taxonomies.DomainGroup
-  alias TdBG.BusinessConcepts.BusinessConcept
-  alias TdBG.Permissions.AclEntry
+  alias TdBg.Repo
+  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Permissions.AclEntry
   alias Ecto.Multi
 
   @doc """

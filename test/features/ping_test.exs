@@ -1,7 +1,7 @@
-defmodule TdBG.PingTest do
+defmodule TdBg.PingTest do
   use Cabbage.Feature, async: false, file: "ping.feature"
-  import TdBGWeb.Router.Helpers
-  @endpoint TdBGWeb.Endpoint
+  import TdBgWeb.Router.Helpers
+  @endpoint TdBgWeb.Endpoint
 
   defwhen ~r/^you send me a ping$/, _params, state do
     %HTTPoison.Response{status_code: status_code, body: body} =

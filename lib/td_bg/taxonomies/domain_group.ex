@@ -1,8 +1,8 @@
-defmodule TdBG.Taxonomies.DomainGroup do
+defmodule TdBg.Taxonomies.DomainGroup do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TdBG.Taxonomies.DomainGroup
+  alias TdBg.Taxonomies.DomainGroup
 
   schema "domain_groups" do
     field :description, :string

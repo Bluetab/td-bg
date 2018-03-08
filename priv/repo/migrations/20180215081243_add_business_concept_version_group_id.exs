@@ -1,4 +1,4 @@
-defmodule TdBG.Repo.Migrations.AddBusinessConceptVersionGroupId do
+defmodule TdBg.Repo.Migrations.AddBusinessConceptVersionGroupId do
   use Ecto.Migration
 
   def change do

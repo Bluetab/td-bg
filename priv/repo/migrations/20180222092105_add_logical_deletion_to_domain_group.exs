@@ -1,4 +1,4 @@
-defmodule TdBG.Repo.Migrations.AddLogicalDeletionToDomainGroup do
+defmodule TdBg.Repo.Migrations.AddLogicalDeletionToDomainGroup do
   use Ecto.Migration
 
   def change do

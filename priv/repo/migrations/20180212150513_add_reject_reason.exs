@@ -1,4 +1,4 @@
-defmodule TdBG.Repo.Migrations.AddRejectReason do
+defmodule TdBg.Repo.Migrations.AddRejectReason do
   use Ecto.Migration
 
   def change do

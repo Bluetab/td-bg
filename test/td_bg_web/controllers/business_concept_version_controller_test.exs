@@ -1,11 +1,11 @@
-defmodule TdBGWeb.BusinessConceptVersionControllerTest do
-  use TdBGWeb.ConnCase
+defmodule TdBgWeb.BusinessConceptVersionControllerTest do
+  use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBGWeb.Authentication, only: :functions
+  import TdBgWeb.Authentication, only: :functions
 
   alias Poison, as: JSON
-  alias TdBG.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConcept
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}

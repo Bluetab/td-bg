@@ -1,4 +1,4 @@
-defmodule TdBG.Permissions.Plug.CurrentUser do
+defmodule TdBg.Permissions.Plug.CurrentUser do
   @moduledoc false
 
   alias Guardian.Plug, as: GuardianPlug

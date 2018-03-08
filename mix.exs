@@ -1,4 +1,4 @@
-defmodule TdBG.Mixfile do
+defmodule TdBg.Mixfile do
   use Mix.Project
 
   def project do
@@ -19,7 +19,7 @@ defmodule TdBG.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {TdBG.Application, []},
+      mod: {TdBg.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end

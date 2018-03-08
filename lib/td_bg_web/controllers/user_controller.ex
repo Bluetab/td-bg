@@ -1,7 +1,7 @@
-defmodule TdBGWeb.UserController do
-  use TdBGWeb, :controller
+defmodule TdBgWeb.UserController do
+  use TdBgWeb, :controller
 
-  action_fallback TdBGWeb.FallbackController
+  action_fallback TdBgWeb.FallbackController
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 

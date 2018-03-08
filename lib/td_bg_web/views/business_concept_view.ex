@@ -1,6 +1,6 @@
-defmodule TdBGWeb.BusinessConceptView do
-  use TdBGWeb, :view
-  alias TdBGWeb.BusinessConceptView
+defmodule TdBgWeb.BusinessConceptView do
+  use TdBgWeb, :view
+  alias TdBgWeb.BusinessConceptView
 
   def render("index.json", %{business_concepts: business_concept_versions}) do
     %{data: render_many(business_concept_versions, BusinessConceptView, "business_concept.json")}

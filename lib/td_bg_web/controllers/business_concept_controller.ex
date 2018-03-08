@@ -1,23 +1,23 @@
-defmodule TdBGWeb.BusinessConceptController do
+defmodule TdBgWeb.BusinessConceptController do
   require Logger
-  use TdBGWeb, :controller
+  use TdBgWeb, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
-  alias TdBG.BusinessConcepts
-  alias TdBG.BusinessConcepts.BusinessConcept
-  alias TdBG.BusinessConcepts.BusinessConceptVersion
-  alias TdBG.Taxonomies.DataDomain
-  alias TdBGWeb.ErrorView
-  alias TdBGWeb.SwaggerDefinitions
+  alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Taxonomies.DataDomain
+  alias TdBgWeb.ErrorView
+  alias TdBgWeb.SwaggerDefinitions
 
   alias Poison, as: JSON
 
   plug :load_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update_status]
 
-  action_fallback TdBGWeb.FallbackController
+  action_fallback TdBgWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.business_concept_definitions()

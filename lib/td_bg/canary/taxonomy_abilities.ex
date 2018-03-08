@@ -1,10 +1,10 @@
-defmodule TdBG.Canary.TaxonomyAbilities do
+defmodule TdBg.Canary.TaxonomyAbilities do
   @moduledoc false
-  alias TdBG.Accounts.User
-  alias TdBG.Taxonomies.DomainGroup
-  alias TdBG.Taxonomies.DataDomain
-  alias TdBG.Permissions
-  alias TdBG.Permissions.AclEntry
+  alias TdBg.Accounts.User
+  alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Permissions
+  alias TdBg.Permissions.AclEntry
 
   def can?(%User{id: user_id}, :create_data_domain, %DomainGroup{id: domain_group_id}) do
     has_admin_role(%{user_id: user_id, domain_group_id: domain_group_id})

@@ -1,4 +1,4 @@
-defmodule TdBG.Repo.Migrations.AddParentDomainGroup do
+defmodule TdBg.Repo.Migrations.AddParentDomainGroup do
   use Ecto.Migration
 
   def change do

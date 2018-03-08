@@ -1,9 +1,9 @@
-defmodule TdBGWeb.AclEntryControllerTest do
-  use TdBGWeb.ConnCase
+defmodule TdBgWeb.AclEntryControllerTest do
+  use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdBG.Permissions.AclEntry
-  import TdBGWeb.Authentication, only: :functions
+  alias TdBg.Permissions.AclEntry
+  import TdBgWeb.Authentication, only: :functions
 
   @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain_group"}
   @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}

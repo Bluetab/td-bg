@@ -1,4 +1,4 @@
-defmodule TdBG.Repo.Migrations.AddUniqueDataDomainByDomainGroup2 do
+defmodule TdBg.Repo.Migrations.AddUniqueDataDomainByDomainGroup2 do
   use Ecto.Migration
 
   def change do

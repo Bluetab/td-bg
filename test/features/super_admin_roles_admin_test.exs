@@ -1,13 +1,13 @@
-defmodule TdBG.SuperAdminRolesAdminTest do
+defmodule TdBg.SuperAdminRolesAdminTest do
   use Cabbage.Feature, async: false, file: "super_admin_roles_admin.feature"
-  use TdBGWeb.FeatureCase
-  import TdBGWeb.Router.Helpers
-  import TdBGWeb.ResponseCode
-  import TdBGWeb.Taxonomy
-  import TdBGWeb.Authentication, only: :functions
-  import TdBGWeb.User, only: :functions
+  use TdBgWeb.FeatureCase
+  import TdBgWeb.Router.Helpers
+  import TdBgWeb.ResponseCode
+  import TdBgWeb.Taxonomy
+  import TdBgWeb.Authentication, only: :functions
+  import TdBgWeb.User, only: :functions
   alias Poison, as: JSON
-  @endpoint TdBGWeb.Endpoint
+  @endpoint TdBgWeb.Endpoint
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do

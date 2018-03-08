@@ -1,10 +1,10 @@
-defmodule TdBG.SuperAdminTaxonomyTest do
+defmodule TdBg.SuperAdminTaxonomyTest do
   use Cabbage.Feature, async: false, file: "super_admin_taxonomy.feature"
-  use TdBGWeb.FeatureCase
-  import TdBGWeb.Taxonomy, only: :functions
-  import TdBGWeb.BusinessConcept, only: :functions
-  import TdBGWeb.Authentication, only: :functions
-  import TdBGWeb.ResponseCode, only: :functions
+  use TdBgWeb.FeatureCase
+  import TdBgWeb.Taxonomy, only: :functions
+  import TdBgWeb.BusinessConcept, only: :functions
+  import TdBgWeb.Authentication, only: :functions
+  import TdBgWeb.ResponseCode, only: :functions
   alias Poison, as: JSON
 
   # Scenario: Creating a Domain Group without any parent

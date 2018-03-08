@@ -1,7 +1,7 @@
-defmodule TdBGWeb.Endpoint do
+defmodule TdBgWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :td_bg
 
-  socket "/socket", TdBGWeb.UserSocket
+  socket "/socket", TdBgWeb.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -33,12 +33,12 @@ defmodule TdBGWeb.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   plug Plug.Session,
     store: :cookie,
-    key: "_TdBG_key",
+    key: "_TdBg_key",
     signing_salt: "X5RG5d/j"
 
   plug CORSPlug, origin: ["*"]
 
-  plug TdBGWeb.Router
+  plug TdBgWeb.Router
 
   @doc """
   Callback invoked for dynamically configuring the endpoint.

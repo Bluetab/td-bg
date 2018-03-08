@@ -1,10 +1,10 @@
-defmodule TdBG.PermissionsTest do
-  use TdBG.DataCase
+defmodule TdBg.PermissionsTest do
+  use TdBg.DataCase
 
-  alias TdBG.Permissions
+  alias TdBg.Permissions
 
   describe "acl_entries" do
-    alias TdBG.Permissions.AclEntry
+    alias TdBg.Permissions.AclEntry
 
     @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain_group"}
     @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
@@ -85,7 +85,7 @@ defmodule TdBG.PermissionsTest do
   end
 
   describe "roles" do
-    alias TdBG.Permissions.Role
+    alias TdBg.Permissions.Role
 
     @valid_attrs %{name: "some name"}
     @update_attrs %{name: "some updated name"}

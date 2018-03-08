@@ -1,20 +1,20 @@
-defmodule TdBGWeb.FallbackController do
+defmodule TdBgWeb.FallbackController do
   @moduledoc """
   Translates controller action results into valid `Plug.Conn` responses.
 
   See `Phoenix.Controller.action_fallback/1` for more details.
   """
-  use TdBGWeb, :controller
+  use TdBgWeb, :controller
 
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
-    |> render(TdBGWeb.ChangesetView, "error.json", changeset: changeset)
+    |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
   end
 
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> render(TdBGWeb.ErrorView, :"404")
+    |> render(TdBgWeb.ErrorView, :"404")
   end
 end

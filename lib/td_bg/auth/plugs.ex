@@ -1,4 +1,4 @@
-defmodule TdBG.Auth.Plugs do
+defmodule TdBg.Auth.Plugs do
   @moduledoc false
   import Plug.Conn
 

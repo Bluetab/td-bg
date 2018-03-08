@@ -1,4 +1,4 @@
-defmodule TdBG.Repo do
+defmodule TdBg.Repo do
   use Ecto.Repo, otp_app: :td_bg
 
   @doc """

@@ -1,11 +1,11 @@
-defmodule TdBGWeb.Authentication do
+defmodule TdBgWeb.Authentication do
   @moduledoc """
   This module defines the functions required to
   add auth headers to requests
   """
   alias Phoenix.ConnTest
-  alias TdBG.Auth.Guardian
-  alias TdBG.Accounts.User
+  alias TdBg.Auth.Guardian
+  alias TdBg.Accounts.User
   import Plug.Conn
   @headers {"Content-type", "application/json"}
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]

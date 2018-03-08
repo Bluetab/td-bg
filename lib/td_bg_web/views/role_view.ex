@@ -1,6 +1,6 @@
-defmodule TdBGWeb.RoleView do
-  use TdBGWeb, :view
-  alias TdBGWeb.RoleView
+defmodule TdBgWeb.RoleView do
+  use TdBgWeb, :view
+  alias TdBgWeb.RoleView
 
   def render("index.json", %{roles: roles}) do
     %{data: render_many(roles, RoleView, "role.json")}

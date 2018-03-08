@@ -1,16 +1,16 @@
-defmodule TdBGWeb.DataDomainController do
-  use TdBGWeb, :controller
+defmodule TdBgWeb.DataDomainController do
+  use TdBgWeb, :controller
   use PhoenixSwagger
 
   import Plug.Conn
-  alias TdBGWeb.ErrorView
-  alias TdBG.Taxonomies
-  alias TdBG.Permissions
-  alias TdBG.Taxonomies.DataDomain
-  alias TdBG.Taxonomies.DomainGroup
-  alias TdBGWeb.SwaggerDefinitions
+  alias TdBgWeb.ErrorView
+  alias TdBg.Taxonomies
+  alias TdBg.Permissions
+  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Taxonomies.DomainGroup
+  alias TdBgWeb.SwaggerDefinitions
 
-  action_fallback TdBGWeb.FallbackController
+  action_fallback TdBgWeb.FallbackController
 
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_data_domain
   plug :load_and_authorize_resource, model: DomainGroup, id_name: "domain_group_id", persisted: true, only: :create_data_domain

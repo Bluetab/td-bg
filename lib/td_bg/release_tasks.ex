@@ -1,7 +1,7 @@
-defmodule TdBG.ReleaseTasks do
+defmodule TdBg.ReleaseTasks do
   @moduledoc false
   alias Ecto.Migrator
-  alias TdBG.Repo
+  alias TdBg.Repo
 
   @start_apps [
       :postgrex,
@@ -17,15 +17,15 @@ defmodule TdBG.ReleaseTasks do
     ]
 
     def seed do
-      #IO.puts "Loading TdBG.."
-      # Load the code for TdBG, but don't start it
+      #IO.puts "Loading TdBg.."
+      # Load the code for TdBg, but don't start it
       :ok = Application.load(:td_bg)
 
       #IO.puts "Starting dependencies.."
       # Start apps necessary for executing migrations
       Enum.each(@start_apps, &Application.ensure_all_started/1)
 
-      # Start the Repo(s) for TdBG
+      # Start the Repo(s) for TdBg
       #IO.puts "Starting repos.."
       Enum.each(@repos, &(&1.start_link(pool_size: 1)))
 
@@ -48,7 +48,7 @@ defmodule TdBG.ReleaseTasks do
 
     defp run_migrations_for(app) do
       IO.puts "Running migrations for #{app}"
-      Migrator.run(TdBG.Repo, migrations_path(app), :up, all: true)
+      Migrator.run(TdBg.Repo, migrations_path(app), :up, all: true)
     end
 
     defp migrations_path(app), do: Path.join([priv_dir(app), "repo", "migrations"])

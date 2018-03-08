@@ -1,4 +1,4 @@
-defmodule TdBG.Repo.Migrations.RemoveUniqueBusinessConceptKey do
+defmodule TdBg.Repo.Migrations.RemoveUniqueBusinessConceptKey do
   use Ecto.Migration
 
   def change do

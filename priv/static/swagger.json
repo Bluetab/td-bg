@@ -52,7 +52,7 @@
             "description": "domain group id"
           }
         ],
-        "operationId": "TdBGWeb.RoleController.user_domain_group_role",
+        "operationId": "TdBgWeb.RoleController.user_domain_group_role",
         "description": ""
       }
     },
@@ -92,7 +92,7 @@
             "description": "data domain id"
           }
         ],
-        "operationId": "TdBGWeb.RoleController.user_data_domain_role",
+        "operationId": "TdBgWeb.RoleController.user_data_domain_role",
         "description": ""
       }
     },
@@ -134,7 +134,7 @@
             "description": "Role ID"
           }
         ],
-        "operationId": "TdBGWeb.RoleController.update",
+        "operationId": "TdBgWeb.RoleController.update",
         "description": "Updates Role"
       },
       "get": {
@@ -165,7 +165,7 @@
             "description": "Role ID"
           }
         ],
-        "operationId": "TdBGWeb.RoleController.show",
+        "operationId": "TdBgWeb.RoleController.show",
         "description": "Show Role"
       },
       "delete": {
@@ -193,7 +193,7 @@
             "description": "Role ID"
           }
         ],
-        "operationId": "TdBGWeb.RoleController.delete",
+        "operationId": "TdBgWeb.RoleController.delete",
         "description": "Delete Role"
       }
     },
@@ -228,7 +228,7 @@
             "description": "Role create attrs"
           }
         ],
-        "operationId": "TdBGWeb.RoleController.create",
+        "operationId": "TdBgWeb.RoleController.create",
         "description": "Creates a Role"
       },
       "get": {
@@ -245,7 +245,7 @@
           }
         },
         "parameters": [],
-        "operationId": "TdBGWeb.RoleController.index",
+        "operationId": "TdBgWeb.RoleController.index",
         "description": "List Roles"
       }
     },
@@ -287,7 +287,7 @@
             "description": "Domain Group ID"
           }
         ],
-        "operationId": "TdBGWeb.DomainGroupController.update",
+        "operationId": "TdBgWeb.DomainGroupController.update",
         "description": "Updates Domain Group"
       },
       "get": {
@@ -318,7 +318,7 @@
             "description": "Domain Group ID"
           }
         ],
-        "operationId": "TdBGWeb.DomainGroupController.show",
+        "operationId": "TdBgWeb.DomainGroupController.show",
         "description": "Show Domain Group"
       },
       "delete": {
@@ -346,7 +346,7 @@
             "description": "Domain Group ID"
           }
         ],
-        "operationId": "TdBGWeb.DomainGroupController.delete",
+        "operationId": "TdBgWeb.DomainGroupController.delete",
         "description": "Delete Domain Group"
       }
     },
@@ -379,7 +379,7 @@
             "description": "Domain Group ID"
           }
         ],
-        "operationId": "TdBGWeb.DomainGroupController.index_children",
+        "operationId": "TdBgWeb.DomainGroupController.index_children",
         "description": "List non-root Domain Groups"
       }
     },
@@ -412,7 +412,7 @@
             "description": "Domain Group ID"
           }
         ],
-        "operationId": "TdBGWeb.DataDomainController.index_children_data_domain",
+        "operationId": "TdBgWeb.DataDomainController.index_children_data_domain",
         "description": "List Data Domain children of Domain Group"
       }
     },
@@ -454,7 +454,7 @@
             "description": "Domain Group ID"
           }
         ],
-        "operationId": "TdBGWeb.DataDomainController.create",
+        "operationId": "TdBgWeb.DataDomainController.create",
         "description": "Creates a Data Domain child of Domain Group"
       }
     },
@@ -479,7 +479,7 @@
           "application/json"
         ],
         "parameters": [],
-        "operationId": "TdBGWeb.DomainGroupController.index_root",
+        "operationId": "TdBgWeb.DomainGroupController.index_root",
         "description": "List Root Domain Group"
       }
     },
@@ -514,7 +514,7 @@
             "description": "Domain Group create attrs"
           }
         ],
-        "operationId": "TdBGWeb.DomainGroupController.create",
+        "operationId": "TdBgWeb.DomainGroupController.create",
         "description": "Creates a Domain Group"
       },
       "get": {
@@ -531,7 +531,7 @@
           }
         },
         "parameters": [],
-        "operationId": "TdBGWeb.DomainGroupController.index",
+        "operationId": "TdBgWeb.DomainGroupController.index",
         "description": "List Domain Groups"
       }
     },
@@ -564,7 +564,7 @@
             "description": "Data Domain ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptController.index_children_business_concept",
+        "operationId": "TdBgWeb.BusinessConceptController.index_children_business_concept",
         "description": "List Business Concepts children of Data Domain"
       }
     },
@@ -606,7 +606,7 @@
             "description": "Data Domain ID"
           }
         ],
-        "operationId": "TdBGWeb.DataDomainController.update",
+        "operationId": "TdBgWeb.DataDomainController.update",
         "description": "Updates Data Domain"
       },
       "get": {
@@ -637,7 +637,7 @@
             "description": "Data Domain ID"
           }
         ],
-        "operationId": "TdBGWeb.DataDomainController.show",
+        "operationId": "TdBgWeb.DataDomainController.show",
         "description": "Show Data Domain"
       },
       "delete": {
@@ -665,7 +665,7 @@
             "description": "Data Domain ID"
           }
         ],
-        "operationId": "TdBGWeb.DataDomainController.delete",
+        "operationId": "TdBgWeb.DataDomainController.delete",
         "description": "Delete Data Domain"
       }
     },
@@ -707,7 +707,7 @@
             "description": "Data Domain ID"
           }
         ],
-        "operationId": "TdBGWeb.DataDomainController.users_roles",
+        "operationId": "TdBgWeb.DataDomainController.users_roles",
         "description": "Lists user-role list of a data domain"
       }
     },
@@ -749,7 +749,7 @@
             "description": "Data Domain ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptController.create",
+        "operationId": "TdBgWeb.BusinessConceptController.create",
         "description": "Creates a Business Concept child of Data Domain"
       }
     },
@@ -768,7 +768,7 @@
           }
         },
         "parameters": [],
-        "operationId": "TdBGWeb.DataDomainController.index",
+        "operationId": "TdBgWeb.DataDomainController.index",
         "description": "List Data Domains"
       }
     },
@@ -810,7 +810,7 @@
             "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptController.update",
+        "operationId": "TdBgWeb.BusinessConceptController.update",
         "description": "Updates Business Ccncepts"
       },
       "get": {
@@ -841,7 +841,7 @@
             "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptController.show",
+        "operationId": "TdBgWeb.BusinessConceptController.show",
         "description": "Show Business Concepts"
       },
       "delete": {
@@ -869,7 +869,7 @@
             "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptController.delete",
+        "operationId": "TdBgWeb.BusinessConceptController.delete",
         "description": "Delete Business Concepts"
       }
     },
@@ -911,7 +911,7 @@
             "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptController.update_status",
+        "operationId": "TdBgWeb.BusinessConceptController.update_status",
         "description": "Updates Business Ccncept status"
       }
     },
@@ -930,7 +930,7 @@
           }
         },
         "parameters": [],
-        "operationId": "TdBGWeb.BusinessConceptController.index",
+        "operationId": "TdBgWeb.BusinessConceptController.index",
         "description": "List Business Concepts"
       }
     },
@@ -965,7 +965,7 @@
             "description": "Business Concept Version create attrs"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptVersionController.create",
+        "operationId": "TdBgWeb.BusinessConceptVersionController.create",
         "description": "Creates a Business Concept Version"
       },
       "get": {
@@ -982,7 +982,7 @@
           }
         },
         "parameters": [],
-        "operationId": "TdBGWeb.BusinessConceptVersionController.index",
+        "operationId": "TdBgWeb.BusinessConceptVersionController.index",
         "description": "List Business Concept Versions"
       }
     },
@@ -1015,7 +1015,7 @@
             "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBGWeb.BusinessConceptVersionController.show",
+        "operationId": "TdBgWeb.BusinessConceptVersionController.show",
         "description": "Show Business Concept Version"
       }
     },
@@ -1057,7 +1057,7 @@
             "description": "Acl Entry ID"
           }
         ],
-        "operationId": "TdBGWeb.AclEntryController.update",
+        "operationId": "TdBgWeb.AclEntryController.update",
         "description": "Updates Acl entry"
       },
       "get": {
@@ -1088,7 +1088,7 @@
             "description": "Acl Entry ID"
           }
         ],
-        "operationId": "TdBGWeb.AclEntryController.show",
+        "operationId": "TdBgWeb.AclEntryController.show",
         "description": "Show Acl Entry"
       },
       "delete": {
@@ -1116,7 +1116,7 @@
             "description": "Acl entry ID"
           }
         ],
-        "operationId": "TdBGWeb.AclEntryController.delete",
+        "operationId": "TdBgWeb.AclEntryController.delete",
         "description": "Delete Acl Entry"
       }
     },
@@ -1151,7 +1151,7 @@
             "description": "Acl entry create attrs"
           }
         ],
-        "operationId": "TdBGWeb.AclEntryController.create",
+        "operationId": "TdBgWeb.AclEntryController.create",
         "description": "Creates an Acl Entry"
       },
       "get": {
@@ -1168,14 +1168,14 @@
           }
         },
         "parameters": [],
-        "operationId": "TdBGWeb.AclEntryController.index",
+        "operationId": "TdBgWeb.AclEntryController.index",
         "description": "List Acl Entries"
       }
     }
   },
   "info": {
     "version": "1.0",
-    "title": "TdBG"
+    "title": "TdBg"
   },
   "host": "localhost:4000",
   "definitions": {

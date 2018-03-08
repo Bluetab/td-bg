@@ -1,11 +1,11 @@
-defmodule TdBGWeb.DataDomainControllerTest do
-  use TdBGWeb.ConnCase
+defmodule TdBgWeb.DataDomainControllerTest do
+  use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBGWeb.Authentication, only: :functions
+  import TdBgWeb.Authentication, only: :functions
 
-  alias TdBG.Taxonomies
-  alias TdBG.Taxonomies.DataDomain
+  alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.DataDomain
 
   @create_attrs %{description: "some description", name: "some name"}
   @update_attrs %{description: "some updated description", name: "some updated name"}

@@ -1,4 +1,4 @@
-defmodule TdBG.Repo.Migrations.CreateRoles do
+defmodule TdBg.Repo.Migrations.CreateRoles do
   use Ecto.Migration
 
   def change do

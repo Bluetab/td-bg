@@ -1,6 +1,6 @@
-defmodule TdBGWeb.UserView do
-  use TdBGWeb, :view
-  alias TdBGWeb.UserView
+defmodule TdBgWeb.UserView do
+  use TdBgWeb, :view
+  alias TdBgWeb.UserView
 
   def render("index.json", %{users: users}) do
     %{data: render_many(users, UserView, "user.json")}

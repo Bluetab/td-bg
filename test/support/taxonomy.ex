@@ -1,10 +1,10 @@
-defmodule TdBGWeb.Taxonomy do
+defmodule TdBgWeb.Taxonomy do
   @moduledoc false
 
   alias Poison, as: JSON
-  import TdBGWeb.Router.Helpers
-  import TdBGWeb.Authentication, only: :functions
-  @endpoint TdBGWeb.Endpoint
+  import TdBgWeb.Router.Helpers
+  import TdBgWeb.Authentication, only: :functions
+  @endpoint TdBgWeb.Endpoint
 
   def domain_group_create(token, domain_group_params) do
     headers = get_header(token)
