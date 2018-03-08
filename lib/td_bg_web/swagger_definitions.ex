@@ -266,7 +266,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           business_concept (Schema.new do
             properties do
               status :string, "Business Concept status (rejected, published, deprecated...)", required: true
-              reject_reason :string, "Business Concept reject reason"
+              reject_reason [:string, :null], "Business Concept reject reason"
             end
           end)
         end

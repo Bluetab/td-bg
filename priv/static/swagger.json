@@ -1809,7 +1809,10 @@
               "description": "Business Concept status (rejected, published, deprecated...)"
             },
             "reject_reason": {
-              "type": "string",
+              "type": [
+                "string",
+                "null"
+              ],
               "description": "Business Concept reject reason"
             }
           }
