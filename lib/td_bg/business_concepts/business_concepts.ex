@@ -23,8 +23,8 @@ defmodule TdBG.BusinessConcepts do
   and status
 
   """
-  def exist_business_concept_by_type_and_name?(type, name, _exclude_id)
-    when is_nil(name) or is_nil(type),  do: {:ok, 0}
+  def exist_business_concept_by_type_and_name?(type, name, exclude_id \\ nil)
+  def exist_business_concept_by_type_and_name?(type, name, _exclude_id) when is_nil(name) or is_nil(type),  do: {:ok, 0}
   def exist_business_concept_by_type_and_name?(type, name, exclude_id) do
     status = [BusinessConcept.status.versioned]
     count = BusinessConceptVersion

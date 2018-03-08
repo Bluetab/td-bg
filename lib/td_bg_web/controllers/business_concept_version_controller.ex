@@ -43,6 +43,7 @@ defmodule TdBGWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
     business_concept = business_concept_version.business_concept
     concept_type = business_concept.type
+    concept_name = Map.get(business_concept_params, "name")
     content_schema = get_content_schema(concept_type)
 
     user = conn.assigns.current_user
@@ -63,6 +64,7 @@ defmodule TdBGWeb.BusinessConceptVersionController do
     |> Map.put("version", business_concept_version.version + 1)
 
     with true <- can?(user, update_published(business_concept_version)),
+         {:ok, 0} <- BusinessConcepts.exist_business_concept_by_type_and_name?(concept_type, concept_name, business_concept_id),
          {:ok, %BusinessConceptVersion{} = new_version} <- BusinessConcepts.create_business_concept_version(draft_attrs) do
       render(conn, "show.json", business_concept_version: new_version)
     else
