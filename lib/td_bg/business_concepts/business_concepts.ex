@@ -23,7 +23,8 @@ defmodule TdBG.BusinessConcepts do
   and status
 
   """
-  def count_business_concepts(_type, name, _exclude_id, _status) when is_nil(name),  do: {:ok, 0}
+  def count_business_concepts(type, name, _exclude_id, status)
+    when is_nil(name) or is_nil(type) or length(status) == 1,  do: {:ok, 0}
   def count_business_concepts(type, name, exclude_id, status) do
     count = BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
