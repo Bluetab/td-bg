@@ -23,12 +23,13 @@ defmodule TdBG.BusinessConcepts do
   and status
 
   """
-  def count_business_concepts(type, name, _exclude_id, status)
-    when is_nil(name) or is_nil(type) or length(status) == 1,  do: {:ok, 0}
-  def count_business_concepts(type, name, exclude_id, status) do
+  def exist_business_concept_by_type_and_name?(type, name, _exclude_id)
+    when is_nil(name) or is_nil(type),  do: {:ok, 0}
+  def exist_business_concept_by_type_and_name?(type, name, exclude_id) do
+    status = [BusinessConcept.status.versioned]
     count = BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> where([v, c], c.type == ^type and v.name == ^name and v.status in ^status)
+    |> where([v, c], c.type == ^type and v.name == ^name and v.status not in ^status)
     |> exlude_business_id_where(exclude_id)
     |> select([v, _], count(v.id))
     |> Repo.one!
