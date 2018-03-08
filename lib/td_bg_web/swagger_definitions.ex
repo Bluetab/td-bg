@@ -261,6 +261,16 @@ defmodule TdBGWeb.SwaggerDefinitions do
           end)
         end
       end,
+      BusinessConceptStatusUpdate: swagger_schema do
+        properties do
+          business_concept (Schema.new do
+            properties do
+              status :object, "Business Concept status (rejected, published, deprecated...)"
+              reject_reason [:string, :null], "Business Concept reject reason"
+            end
+          end)
+        end
+      end,
       BusinessConcepts: swagger_schema do
         title "Business Concepts"
         description "A collection of Business Concepts"

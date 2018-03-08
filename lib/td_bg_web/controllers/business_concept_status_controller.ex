@@ -1,6 +1,7 @@
 defmodule TdBGWeb.BusinessConceptStatusController do
   require Logger
   use TdBGWeb, :controller
+  use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
@@ -9,10 +10,27 @@ defmodule TdBGWeb.BusinessConceptStatusController do
   alias TdBG.BusinessConcepts.BusinessConceptVersion
   alias TdBGWeb.BusinessConceptView
   alias TdBGWeb.ErrorView
+  alias TdBGWeb.SwaggerDefinitions
 
   action_fallback TdBGWeb.FallbackController
 
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update]
+
+  def swagger_definitions do
+    SwaggerDefinitions.business_concept_definitions()
+  end
+
+  swagger_path :update do
+    patch "/business_concepts/{business_concept_id}/status"
+    description "Updates Business Ccncept status"
+    produces "application/json"
+    parameters do
+      business_concept :body, Schema.ref(:BusinessConceptStatusUpdate), "Business Concept status update attrs"
+      business_concept_id :path, :integer, "Business Concept ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 400, "Client Error"
+  end
 
   def update(conn, %{"business_concept_id" => id, "business_concept" => %{"status" => new_status} = business_concept_params}) do
 
