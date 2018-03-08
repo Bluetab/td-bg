@@ -464,6 +464,42 @@ defmodule TdBg.BusinessConceptTest do
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
+  # Scenario Outline: History of changes in Business Glossary
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to query history for a business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin} = state do
+      business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_id = business_concept_version["id"]
+      token = get_user_token(user_name)
+      {_, status_code, %{"data" => business_concept_versions}} = business_concept_versions(token, business_concept_id)
+      assert rc_ok() == to_response_code(status_code)
+      {:ok, Map.merge(state, %{business_concept_versions: business_concept_versions})}
+   end
+
+  defthen ~r/^the system returns following data:$/,
+    %{table: fields},
+    %{business_concept_versions: business_concept_versions} = _state do
+
+    field_atoms = [:name, :type, :description, :version, :status]
+
+    cooked_versions = business_concept_versions
+    |> Enum.reduce([], fn(item, acc) ->
+                          acc ++ [Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)]
+                       end)
+    |> Enum.map(&(Map.take(&1, field_atoms)))
+    |> Enum.sort
+
+    cooked_fields = fields
+    |> Enum.reduce([], fn(item, acc) ->
+                            acc ++ [update_in(item[:version], &String.to_integer(&1))]
+                      end)
+    |> Enum.map(&(Map.take(&1, field_atoms)))
+    |> Enum.sort
+
+    assert cooked_versions == cooked_fields
+  end
+
   defp change_business_concept_status(token_admin, business_concept_id, status) do
     {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
     assert rc_ok() == to_response_code(status_code)

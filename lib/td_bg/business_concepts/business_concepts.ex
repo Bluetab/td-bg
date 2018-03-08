@@ -169,15 +169,34 @@ defmodule TdBg.BusinessConcepts do
 
   ## Examples
 
-      iex> list_business_concept_versions()
+      iex> list_all_business_concept_versions()
       [%BusinessConceptVersion{}, ...]
 
   """
-  def list_business_concept_versions do
+  def list_all_business_concept_versions do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> preload([_, c], [business_concept: c])
     |> order_by(asc: :version)
+    |> Repo.all
+  end
+
+  @doc """
+  Returns the list of business_concept_versions of a
+  business_concept
+
+  ## Examples
+
+      iex> list_business_concept_versions(business_concept_id)
+      [%BusinessConceptVersion{}, ...]
+
+  """
+  def list_business_concept_versions(business_concept_id) do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> preload([_, c], [business_concept: c])
+    |> where([_, c], c.id == ^business_concept_id)
+    |> order_by(desc: :version)
     |> Repo.all
   end
 

@@ -13,6 +13,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
+  def can?(%User{}, :view_versions, %BusinessConcept{}), do: true
+
   def can?(%User{id: user_id}, :update, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
     %{user_id: user_id, action: :update,
       current_status: status,

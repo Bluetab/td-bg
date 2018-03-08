@@ -24,8 +24,38 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def index(conn, _params) do
-    business_concept_versions = BusinessConcepts.list_business_concept_versions()
+    business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
     render(conn, "index.json", business_concept_versions: business_concept_versions)
+  end
+
+  swagger_path :versions do
+    get "/business_concepts/:business_concept_id/versions"
+    description "List Business Concept Versions"
+    parameters do
+      id :path, :integer, "Business Concept ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptVersionsResponse)
+  end
+
+  def versions(conn, %{"business_concept_id" => business_concept_id}) do
+    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+    business_concept = business_concept_version.business_concept
+
+    user = conn.assigns.current_user
+
+    with true <- can?(user, view_versions(business_concept)) do
+      business_concept_versions = BusinessConcepts.list_business_concept_versions(business_concept.id)
+      render(conn, "index.json", business_concept_versions: business_concept_versions)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      __error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
   end
 
   swagger_path :create do

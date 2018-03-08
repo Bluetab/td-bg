@@ -3,6 +3,7 @@ defmodule TdBg.Canary.Abilities do
   alias TdBg.Accounts.User
   alias TdBg.Taxonomies.DataDomain
   alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canary.TaxonomyAbilities
   alias TdBg.Canary.BusinessConceptAbilities
@@ -53,6 +54,10 @@ defmodule TdBg.Canary.Abilities do
 
     def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "data_domain"} = acl_entry) do
       TaxonomyAbilities.can?(user, :create, acl_entry)
+    end
+
+    def can?(%User{} = user, :view_versions, %BusinessConcept{} = business_concept) do
+      BusinessConceptAbilities.can?(user, :view_versions, business_concept)
     end
 
     def can?(%User{}, _action, BusinessConceptVersion) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
