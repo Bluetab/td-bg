@@ -475,29 +475,31 @@ defmodule TdBg.BusinessConceptTest do
       {_, status_code, %{"data" => business_concept_versions}} = business_concept_versions(token, business_concept_id)
       assert rc_ok() == to_response_code(status_code)
       {:ok, Map.merge(state, %{business_concept_versions: business_concept_versions})}
-   end
+  end
 
-  defthen ~r/^the system returns following data:$/,
-    %{table: fields},
+  defthen ~r/^if (?<user_name>[^"]+) is "(?<target_user_name>[^"]+)" the system returns following data:$/,
+    %{user_name: user_name, target_user_name: target_user_name, table: fields},
     %{business_concept_versions: business_concept_versions} = _state do
+    if user_name == target_user_name do
+      field_atoms = [:name, :type, :description, :version, :status]
 
-    field_atoms = [:name, :type, :description, :version, :status]
+      cooked_versions = business_concept_versions
+      |> Enum.reduce([], fn(item, acc) ->
+                            acc ++ [Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)]
+                         end)
+      |> Enum.map(&(Map.take(&1, field_atoms)))
+      |> Enum.sort
 
-    cooked_versions = business_concept_versions
-    |> Enum.reduce([], fn(item, acc) ->
-                          acc ++ [Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)]
-                       end)
-    |> Enum.map(&(Map.take(&1, field_atoms)))
-    |> Enum.sort
+      cooked_fields = fields
+      |> Enum.reduce([], fn(item, acc) ->
+                              acc ++ [update_in(item[:version], &String.to_integer(&1))]
+                        end)
+      |> Enum.map(&(Map.take(&1, field_atoms)))
+      |> Enum.sort
 
-    cooked_fields = fields
-    |> Enum.reduce([], fn(item, acc) ->
-                            acc ++ [update_in(item[:version], &String.to_integer(&1))]
-                      end)
-    |> Enum.map(&(Map.take(&1, field_atoms)))
-    |> Enum.sort
+      assert cooked_versions == cooked_fields
 
-    assert cooked_versions == cooked_fields
+    end
   end
 
   defp change_business_concept_status(token_admin, business_concept_id, status) do

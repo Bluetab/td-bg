@@ -10,6 +10,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias Poison, as: JSON
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
+  alias TdBg.Permissions
+  alias TdBg.Permissions.Role
 
   action_fallback TdBgWeb.FallbackController
 
@@ -43,18 +45,32 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     user = conn.assigns.current_user
 
-    with true <- can?(user, view_versions(business_concept)) do
-      business_concept_versions = BusinessConcepts.list_business_concept_versions(business_concept.id)
+    with true <- can?(user, view_versions(business_concept_version)) do
+      allowed_status = get_allowed_version_status_by_role(user, business_concept)
+      business_concept_versions = BusinessConcepts.list_business_concept_versions(business_concept.id, allowed_status)
       render(conn, "index.json", business_concept_versions: business_concept_versions)
     else
       false ->
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
-      __error ->
+      _error ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
+    end
+  end
+
+  defp get_allowed_version_status_by_role(user, business_concept) do
+    if user.is_admin do
+      BusinessConcept.get_allowed_version_status_by_role(Role.admin)
+    else
+      role_name = %{user_id: user.id, data_domain_id:  business_concept.data_domain_id}
+      role_name
+      |> Permissions.get_role_in_resource
+      |> Map.get(:name)
+      |> String.to_atom
+      |> BusinessConcept.get_allowed_version_status_by_role
     end
   end
 

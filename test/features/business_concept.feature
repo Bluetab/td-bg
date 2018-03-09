@@ -927,7 +927,23 @@ Feature: Business Concepts administration
       | Description       | This is the first description of my business term |
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval" for version 4
     When <user> tries to query history for a business concept with name "My Business Term" of type "Business Term"
-    Then the system returns following data:
+    Then if <user> is "watcher" the system returns following data:
+      | name             | type          | description                                        | Last Modification | Last User   | version | status           |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
+    Then if <user> is "creator" the system returns following data:
+      | name             | type          | description                                        | Last Modification | Last User   | version | status           |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
+    Then if <user> is "publisher" the system returns following data:
+      | name             | type          | description                                        | Last Modification | Last User   | version | status           |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 4       | pending_approval |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
+    Then if <user> is "admin" the system returns following data:
       | name             | type          | description                                        | Last Modification | Last User   | version | status           |
       | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 4       | pending_approval |
       | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
@@ -937,6 +953,6 @@ Feature: Business Concepts administration
     Examples:
       | user      |
       | watcher   |
-  #     | creator   |
-  #     | publisher |
-  #     | admin     |
+      | creator   |
+      | publisher |
+      | admin     |

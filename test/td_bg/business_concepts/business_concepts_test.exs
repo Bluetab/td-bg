@@ -440,7 +440,7 @@ defmodule TdBg.BusinessConceptsTests do
     test "list_business_concept_versions/1 returns all business_concept_versions of a business_concept_version" do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id
-      business_concept_versions = BusinessConcepts.list_business_concept_versions(business_concept_id)
+      business_concept_versions = BusinessConcepts.list_business_concept_versions(business_concept_id, [BusinessConcept.status.draft])
       assert  business_concept_versions |> Enum.map(fn(b) -> business_concept_version_preload(b) end)
             == [business_concept_version]
     end
