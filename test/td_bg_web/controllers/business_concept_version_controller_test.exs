@@ -47,7 +47,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       conn = post conn, business_concept_business_concept_version_path(conn, :create, business_concept_id), business_concept: creation_attrs
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert %{"id" => id} = json_response(conn, 200)["data"] # change response to created?
+      assert %{"id" => id} = json_response(conn, 201)["data"] # change response to created?
 
       conn = recycle_and_put_headers(conn)
 

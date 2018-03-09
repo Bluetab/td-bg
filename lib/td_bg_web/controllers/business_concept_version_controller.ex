@@ -81,7 +81,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     parameters do
       business_concept :body, Schema.ref(:BusinessConceptVersionCreate), "Business Concept Version create attrs"
     end
-    response 201, "OK", Schema.ref(:BusinessConceptVersionResponse)
+    response 200, "Created", Schema.ref(:BusinessConceptVersionResponse)
     response 400, "Client Error"
   end
 
@@ -112,7 +112,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, update_published(business_concept_version)),
          {:ok, 0} <- BusinessConcepts.exist_business_concept_by_type_and_name?(concept_type, concept_name, business_concept_id),
          {:ok, %BusinessConceptVersion{} = new_version} <- BusinessConcepts.create_business_concept_version(draft_attrs) do
-      render(conn, "show.json", business_concept_version: new_version)
+      conn
+        |> put_status(:created)
+        |> put_resp_header("location", business_concept_version_path(conn, :show, business_concept_version))
+        |> render("show.json", business_concept_version: new_version)
     else
       false ->
         conn

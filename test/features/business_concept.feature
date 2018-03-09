@@ -362,9 +362,9 @@ Feature: Business Concepts administration
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
-      | creator   | Ok           |
-      | publisher | Ok           |
-      | admin     | Ok           |
+      | creator   | Created      |
+      | publisher | Created      |
+      | admin     | Created      |
 
   Scenario Outline: Delete existing Business Concept in Draft Status
     Given an existing Domain Group called "My Parent Group"
@@ -493,9 +493,9 @@ Feature: Business Concepts administration
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
-      | creator   | Ok           |
-      | publisher | Ok           |
-      | admin     | Ok           |
+      | creator   | Created      |
+      | publisher | Created      |
+      | admin     | Created      |
 
   Scenario Outline: Delete existing Business Concept in Reject Status
     Given an existing Domain Group called "My Parent Group"
