@@ -140,7 +140,6 @@ defmodule TdBgWeb.DataDomainController do
     description "Lists user-role list of a data domain"
     produces "application/json"
     parameters do
-      data :body, Schema.ref(:UsersRolesRequest), "Data Domain search attrs"
       data_domain_id :path, :integer, "Data Domain ID", required: true
     end
     response 200, "Ok", Schema.ref(:UsersRolesResponse)
@@ -150,10 +149,17 @@ defmodule TdBgWeb.DataDomainController do
   def users_roles(conn, %{"data_domain_id" => id}) do
     data_domain = Taxonomies.get_data_domain!(id)
     acl_entries = Permissions.list_acl_entries(%{data_domain: data_domain})
-    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role: acl_entry.role.name} end)
+    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role_id: acl_entry.role.id, role_name: acl_entry.role.name} end)
     user_ids = Enum.reduce(role_user_id, [], fn(e, acc) -> acc ++ [e.user_id] end)
     users = @td_auth_api.search(%{"data" => %{"ids" => user_ids}})
-    users_roles = Enum.reduce(role_user_id, [], fn(u, acc) -> acc ++ [%{role: u.role, user: Enum.find(users, &(&1.id == u.user_id)).user_name}]  end)
+    users_roles = Enum.reduce(role_user_id, [],
+      fn(u, acc) ->
+        acc ++ [Map.merge(%{role_id: u.role_id, role_name: u.role_name}, user_map(Enum.find(users, &(&1.id == u.user_id))))]
+    end)
     render(conn, "index_user_roles.json", users_roles: users_roles)
+  end
+
+  defp user_map(user) do
+    %{"user_id": user.id, "user_name": user.user_name}
   end
 end

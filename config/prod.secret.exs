@@ -25,3 +25,12 @@ config :td_bg, TdBg.Auth.Guardian,
   issuer: "tdauth",
   ttl: { 1, :hours },
   secret_key: "SuperSecretTruedat"
+
+config :td_bg, :api_services_login,
+  api_username: "api-admin",
+  api_password: "xxxxx"
+
+config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService,
+  host: "localhost",
+  port: "4001",
+  domain: ""

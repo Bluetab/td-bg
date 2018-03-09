@@ -66,8 +66,10 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data (Schema.new do
             properties do
-              user :string, "user name"
-              role :string, "role name"
+              user_id :integer, "user id"
+              user_name :string, "user name"
+              role_id :integer, "role id"
+              role_name :string, "role name"
             end
           end)
         end

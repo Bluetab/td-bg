@@ -50,8 +50,8 @@ config :td_bg,
   bc_schema_location: "bc_schema.dev"
 
 config :td_bg, :api_services_login,
-  user_name: "api-admin",
-  password: "apipass"
+  api_username: "api-admin",
+  api_password: "apipass"
 
 config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService,
   host: "localhost",

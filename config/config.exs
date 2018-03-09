@@ -37,9 +37,6 @@ config :canary, repo: TdBg.Repo,
 
 config :td_bg, :auth_service,
   protocol: "http",
-  host: "localhost",
-  port: "4001",
-  domain: "",
   users_path: "/api/users/",
   sessions_path: "/api/sessions/"
 

@@ -11,7 +11,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
 
   defp get_api_user_token do
     api_config = Application.get_env(:td_bg, :api_services_login)
-    user_credentials = %{user_name: api_config[:user_name], password: api_config[:password]}
+    user_credentials = %{user_name: api_config[:api_username], password: api_config[:api_password]}
     body = %{user: user_credentials} |> JSON.encode!
     %HTTPoison.Response{status_code: _status_code, body: resp} =
       HTTPoison.post!(get_sessions_path(), body, ["Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"], [])
@@ -47,7 +47,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     #search user
     body = %{"data" => %{"user_name" => user_params.user_name}}
     |> JSON.encode!
-    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_users_path()}/search", body, headers, [])
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_users_path()}search", body, headers, [])
     json_user =
       resp
       |> JSON.decode!
@@ -90,7 +90,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     json =
       resp
       |> JSON.decode!
-      |> resp["data"]
+    json = json["data"]
     users = Enum.map(json, fn(user) -> %User{} |> Map.merge(CollectionUtils.to_struct(User, user)) end)
     users
   end

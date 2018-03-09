@@ -129,7 +129,14 @@ defmodule TdBg.RolesAdminTest do
       acc ++ [nitem]
     end
     )
-    assert Enum.sort(actual_list) == Enum.sort(expected_list)
+    assert length(expected_list) == length(actual_list)
+    Enum.each(expected_list, fn(e_user_role_entry) ->
+      user_role = Enum.find(actual_list, fn(c_user_role_entry) ->
+        e_user_role_entry["user"] == c_user_role_entry["user_name"]
+      end)
+      assert user_role["user_name"] == e_user_role_entry["user"] &&
+        user_role["role_name"] == e_user_role_entry["role"]
+    end)
   end
 
   defand ~r/^following users exist in the application:$/, %{table: users}, state do
