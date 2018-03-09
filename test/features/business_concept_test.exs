@@ -340,7 +340,7 @@ defmodule TdBg.BusinessConceptTest do
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     business_concept_id = business_concept["id"]
     business_concept_version = String.to_integer(version)
-    if version > 1 do
+    if business_concept_version > 1 do
       Enum.each(2..business_concept_version, fn(_x) ->
         change_business_concept_status(token_admin, business_concept_id, BusinessConcept.status.published)
         change_business_concept_status(token_admin, business_concept_id, BusinessConcept.status.draft)
