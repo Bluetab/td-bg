@@ -84,25 +84,25 @@ Feature: Roles Admin
        | Peter.sellers  | create  |
        | pietro.alpin   | watch   |
 
-  # Scenario: List of users availble for setting custom permission in a Data Domain or Domain Group
-  #   Given an existing Domain Group called "My Group"
-  #   And an existing Data Domain called "My Domain" child of Domain Group "My Group"
-  #   And following users exist in the application:
-  #     | user           |
-  #     | pietro.alpin   |
-  #     | Hari.seldon    |
-  #     | tomclancy      |
-  #     | publisher      |
-  #     | Peter.sellers  |
-  #     | tom.sawyer     |
-  #   And following users have the indicated role in Data Domain "My Domain":
-  #     | user           | role    |
-  #     | pietro.alpin   | watch   |
-  #     | tom.sawyer     | admin   |
-  #   When "app-admin" tries to list all users available to set custom permissions in Domain Group "My Domain"
-  #   Then the system returns a result with following data:
-  #     | user           |
-  #     | Hari.seldon    |
-  #     | Peter.sellers  |
-  #     | publisher      |
-  #     | tomclancy      |
+   Scenario: List of users available for setting custom permission in a Domain Group
+     Given an existing Domain Group called "My Group"
+     And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+     And following users exist in the application:
+       | user           |
+       | pietro.alpin   |
+       | Hari.seldon    |
+       | tomclancy      |
+       | publisher      |
+       | Peter.sellers  |
+       | tom.sawyer     |
+     And following users exist with the indicated role in Domain Group "My Group"
+       | user           | role    |
+       | pietro.alpin   | watch   |
+       | tom.sawyer     | admin   |
+     When "app-admin" tries to list all users available to set custom permissions in Domain Group "My Group"
+     Then the system returns an user list with following data:
+       | user           |
+       | Hari.seldon    |
+       | Peter.sellers  |
+       | publisher      |
+       | tomclancy      |

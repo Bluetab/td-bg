@@ -3,6 +3,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
 
   alias Poison, as: JSON
   alias TdBg.Utils.CollectionUtils
+  alias TdBg.Accounts.User
 
   defp get_config do
     Application.get_env(:td_bg, :auth_service)
@@ -39,6 +40,47 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     token
   end
 
+  def create_user(%{"user" => user_params} = req) do
+    token = get_api_user_token()
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+
+    #search user
+    body = %{"data" => %{"user_name" => user_params.user_name}}
+    |> JSON.encode!
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_users_path()}/search", body, headers, [])
+    json_user =
+      resp
+      |> JSON.decode!
+    json_user = json_user["data"]
+
+    if json_user do
+      user = %User{} |> Map.merge(CollectionUtils.to_struct(User, json_user))
+      user
+    else
+      body = req |> JSON.encode!
+      %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_users_path()}", body, headers, [])
+      json_user =
+        resp
+        |> JSON.decode!
+      json_user = json_user["data"]
+      user = %User{} |> Map.merge(CollectionUtils.to_struct(User, json_user))
+      user
+    end
+  end
+
+  def index do
+    token = get_api_user_token()
+
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.get!("#{get_users_path()}", headers, [])
+    json =
+      resp
+      |> JSON.decode!
+    json = json["data"]
+    users = Enum.map(json, fn(user) -> %User{} |> Map.merge(CollectionUtils.to_struct(User, user)) end)
+    users
+  end
+
   def search(%{"data" => %{"ids" => _ids}} = req) do
     token = get_api_user_token()
 
@@ -49,7 +91,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
       resp
       |> JSON.decode!
       |> resp["data"]
-    users = Enum.map(json, fn(user) -> %TdBg.Accounts.User{} |> Map.merge(CollectionUtils.to_struct(TdBg.Accounts.User, user)) end)
+    users = Enum.map(json, fn(user) -> %User{} |> Map.merge(CollectionUtils.to_struct(User, user)) end)
     users
   end
 

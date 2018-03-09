@@ -129,6 +129,21 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data Schema.ref(:DomainGroups)
         end
+      end,
+      UserResponse: swagger_schema do
+        properties do
+          data (Schema.new do
+            properties do
+              id :integer, "user id"
+              user_name :string, "username"
+              is_admin :boolean, "is admin"
+            end
+          end)
+        end
+      end,
+      UsersResponse: swagger_schema do
+        type :array
+        items Schema.ref(:UserResponse)
       end
     }
   end

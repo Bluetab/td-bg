@@ -45,6 +45,7 @@ defmodule TdBgWeb.Router do
       get "/index_children", DomainGroupController, :index_children
       get "/data_domains", DataDomainController, :index_children_data_domain
       post "/data_domain", DataDomainController, :create
+      get "/available_users", DomainGroupController, :available_users
     end
     resources "/data_domains", DataDomainController do
       post "/business_concept", BusinessConceptController, :create

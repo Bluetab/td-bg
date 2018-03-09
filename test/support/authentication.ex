@@ -36,7 +36,8 @@ defmodule TdBgWeb.Authentication do
 
   def create_user(user_name, opts \\ []) do
     is_admin = Keyword.get(opts, :is_admin, false)
-    user = @td_auth_api.create(%{"user" => %{user_name: user_name, is_admin: is_admin}})
+    password = Keyword.get(opts, :password, "secret")
+    user = @td_auth_api.create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password}})
     user
   end
 
@@ -48,7 +49,8 @@ defmodule TdBgWeb.Authentication do
   end
 
   def build_user_token(user_name, opts \\ []) when is_binary(user_name) do
-    build_user_token(create_user(user_name, opts))
+    user = create_user(user_name, opts)
+    build_user_token(user)
   end
 
   def get_user_token(user_name) do

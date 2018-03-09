@@ -132,6 +132,38 @@ defmodule TdBg.RolesAdminTest do
     assert Enum.sort(actual_list) == Enum.sort(expected_list)
   end
 
+  defand ~r/^following users exist in the application:$/, %{table: users}, state do
+    existing_users = Enum.map(users, fn(user) ->
+      new_user = create_user(user.user)
+      assert new_user != nil
+      new_user
+    end)
+    {:ok, Map.merge(state, %{existing_users: existing_users})}
+  end
+
+  defwhen ~r/^"(?<user_name>[^"]+)" tries to list all users available to set custom permissions in Domain Group "(?<domain_group>[^"]+)"$/,
+          %{user_name: user_name, domain_group: domain_group_name}, state do
+    token = get_user_token(user_name)
+    headers = get_header(token)
+    domain_group = get_domain_group_by_name(token, domain_group_name)
+    {:ok, %HTTPoison.Response{status_code: status_code, body: resp}} =
+      HTTPoison.get(domain_group_domain_group_url(@endpoint, :available_users, domain_group["id"]), headers, [])
+    users = resp |> JSON.decode!
+    {:ok, Map.merge(state, %{status_code: status_code, users: users})}
+  end
+
+  defthen ~r/^the system returns an user list with following data:$/, %{table: users}, state do
+    existing_users = state[:existing_users]
+    all_available_users = state[:users]["data"]
+    available_users = Enum.filter(all_available_users, fn(user) -> Enum.find(existing_users, fn(existing) -> user["user_name"] == existing.user_name  end)  end)
+    Enum.each(users, fn(user) ->
+      match_user = Enum.find(available_users, fn(available) ->
+        user.user == available["user_name"]
+      end)
+      assert match_user
+    end)
+  end
+
   defp data_domain_users_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =

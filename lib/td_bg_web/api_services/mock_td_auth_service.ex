@@ -15,11 +15,15 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     %TdBg.Accounts.User{id: 19, is_admin: false, user_name: "tom.sawyer"}
   ]
 
-  def create(%{"user" => user_params}) do
+  def create_user(%{"user" => user_params}) do
       Enum.find(@users, fn(user) -> user_params.user_name == user.user_name end)
   end
 
   def search(%{"data" => %{"ids" => ids}}) do
     Enum.filter(@users, fn(user) -> Enum.find(ids, &(&1 == user.id)) != nil end)
+  end
+
+  def index do
+    @users
   end
 end

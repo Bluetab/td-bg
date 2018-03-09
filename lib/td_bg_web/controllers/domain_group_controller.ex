@@ -3,7 +3,9 @@ defmodule TdBgWeb.DomainGroupController do
   use PhoenixSwagger
 
   alias TdBgWeb.ErrorView
+  alias TdBgWeb.UserView
   alias TdBg.Taxonomies
+  alias TdBg.Permissions
   alias TdBg.Taxonomies.DomainGroup
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
@@ -13,6 +15,7 @@ defmodule TdBgWeb.DomainGroupController do
   action_fallback TdBgWeb.FallbackController
 
   plug :load_and_authorize_resource, model: DomainGroup, id_name: "id", persisted: true, only: [:update, :delete]
+  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   def swagger_definitions do
     SwaggerDefinitions.domain_group_swagger_definitions()
@@ -176,6 +179,25 @@ defmodule TdBgWeb.DomainGroupController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  swagger_path :available_users do
+    get "/domain_groups/{domain_group_id}/available_users"
+    description "Lists users available in a domain group"
+    produces "application/json"
+    parameters do
+      domain_group_id :path, :integer, "Domain Group ID", required: true
+    end
+    response 200, "Ok", Schema.ref(:UsersResponse)
+    response 400, "Client Error"
+  end
+  def available_users(conn, %{"domain_group_id" => id}) do
+    domain_group = Taxonomies.get_domain_group!(id)
+    acl_entries = Permissions.list_acl_entries(%{domain_group: domain_group})
+    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role: acl_entry.role.name} end)
+    all_users = @td_auth_api.index()
+    available_users = Enum.filter(all_users, fn(user) -> Enum.find(role_user_id, &(&1.user_id == user.id)) == nil end)
+    render(conn, UserView, "index.json", users: available_users)
   end
 
 end
