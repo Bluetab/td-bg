@@ -484,16 +484,12 @@ defmodule TdBg.BusinessConceptTest do
       field_atoms = [:name, :type, :description, :version, :status]
 
       cooked_versions = business_concept_versions
-      |> Enum.reduce([], fn(item, acc) ->
-                            acc ++ [Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)]
-                         end)
+      |> Enum.reduce([], &([version_keys_to_atoms(&1)| &2]))
       |> Enum.map(&(Map.take(&1, field_atoms)))
       |> Enum.sort
 
       cooked_fields = fields
-      |> Enum.reduce([], fn(item, acc) ->
-                              acc ++ [update_in(item[:version], &String.to_integer(&1))]
-                        end)
+      |> Enum.reduce([], &([update_fields_map(&1)|&2]))
       |> Enum.map(&(Map.take(&1, field_atoms)))
       |> Enum.sort
 
@@ -501,6 +497,9 @@ defmodule TdBg.BusinessConceptTest do
 
     end
   end
+
+  defp version_keys_to_atoms(version), do: Map.new(version, &({String.to_atom(elem(&1, 0)), elem(&1, 1)}))
+  defp update_fields_map(field_map), do: update_in(field_map[:version], &String.to_integer(&1))
 
   defp change_business_concept_status(token_admin, business_concept_id, status) do
     {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
