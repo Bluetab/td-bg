@@ -32,4 +32,12 @@ defmodule TdBg.Permissions.Role do
     :watch
   end
 
+  def create do
+    :create
+  end
+
+  def publish do
+    :publish
+  end
+
 end

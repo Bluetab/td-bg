@@ -30,7 +30,7 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def index(conn, _params) do
-    business_concept_versions = BusinessConcepts.list_business_concept_versions()
+    business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
     render(conn, "index.json", business_concepts: business_concept_versions)
   end
 

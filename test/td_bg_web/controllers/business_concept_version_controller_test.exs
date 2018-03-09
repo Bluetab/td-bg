@@ -21,6 +21,17 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
+  describe "versions" do
+    @tag authenticated_user: @admin_user_name
+    test "lists business_concept_versions", %{conn: conn} do
+      business_concept_version = insert(:business_concept_version)
+      business_concept_id = business_concept_version.business_concept.id
+      conn = get conn, business_concept_business_concept_version_path(conn, :versions, business_concept_id)
+      [data] = json_response(conn, 200)["data"]
+      assert data["name"] == business_concept_version.name
+    end
+  end
+
   describe "create business_concept_version" do
     setup [:create_content_schema]
 
@@ -36,7 +47,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       conn = post conn, business_concept_business_concept_version_path(conn, :create, business_concept_id), business_concept: creation_attrs
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert %{"id" => id} = json_response(conn, 200)["data"] # change response to created?
+      assert %{"id" => id} = json_response(conn, 201)["data"] # change response to created?
 
       conn = recycle_and_put_headers(conn)
 

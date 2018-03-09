@@ -4,15 +4,15 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   import Ecto.Changeset
   alias TdBg.Taxonomies.DataDomain
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Permissions.Role
 
   @permissions %{
     admin:   [:create, :update, :send_for_approval, :delete, :publish, :reject,
-              :deprecate, :see_draft, :see_published],
+              :deprecate, :view_versions],
     publish: [:create, :update, :send_for_approval, :delete, :publish, :reject,
-              :deprecate, :see_draft, :see_published],
-    create:  [:create, :update, :send_for_approval, :delete, :see_draft,
-              :see_published],
-    watch:   [:see_published]
+              :deprecate, :view_versions],
+    create:  [:create, :update, :send_for_approval, :delete, :view_versions],
+    watch:   [:view_versions]
   }
 
   @status %{draft: "draft",
@@ -33,6 +33,21 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
 
   def get_permissions do
     @permissions
+  end
+
+  def get_allowed_version_status_by_role(role) do
+    if role == Role.create or role == Role.watch do
+      [BusinessConcept.status.published,
+       BusinessConcept.status.versioned,
+       BusinessConcept.status.deprecated]
+    else
+      [BusinessConcept.status.draft,
+       BusinessConcept.status.pending_approval,
+       BusinessConcept.status.rejected,
+       BusinessConcept.status.published,
+       BusinessConcept.status.versioned,
+       BusinessConcept.status.deprecated]
+    end
   end
 
   def status do

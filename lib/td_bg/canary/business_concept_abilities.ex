@@ -69,6 +69,15 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
+  def can?(%User{id: user_id}, :view_versions, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
+    %{user_id: user_id, action: :view_versions,
+      current_status: status,
+      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.pending_approval, BusinessConcept.status.rejected,
+                          BusinessConcept.status.published, BusinessConcept.status.versioned, BusinessConcept.status.deprecated],
+      data_domain_id: data_domain_id}
+    |> can_execute_action?
+  end
+
   def can?(%User{}, _action, _domain),  do: false
 
   defp can_execute_action?(%{user_id: _user_id,
@@ -86,19 +95,14 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     params |> allowed_action?
   end
 
-  defp allowed_action?(%{user_id: user_id, action: action,
-                             data_domain_id: data_domain_id}) do
-
-    role_name = %{user_id: user_id, data_domain_id: data_domain_id}
-    |> Permissions.get_role_in_resource
-    |> Map.get(:name)
-    |> String.to_atom
-
-    permissions = BusinessConcept.get_permissions()
-
-    permissions
-    |> Map.get(role_name)
-    |> Enum.member?(action)
+  defp allowed_action?(%{user_id: user_id, action: action, data_domain_id: data_domain_id}) do
+    role_in_resource = Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: data_domain_id})
+    if role_in_resource do
+      role_name = role_in_resource |> Map.get(:name) |> String.to_atom
+      BusinessConcept.get_permissions() |> Map.get(role_name) |> Enum.member?(action)
+    else
+      false
+    end
   end
 
 end

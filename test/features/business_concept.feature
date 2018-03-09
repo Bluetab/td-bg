@@ -362,9 +362,9 @@ Feature: Business Concepts administration
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
-      | creator   | Ok           |
-      | publisher | Ok           |
-      | admin     | Ok           |
+      | creator   | Created      |
+      | publisher | Created      |
+      | admin     | Created      |
 
   Scenario Outline: Delete existing Business Concept in Draft Status
     Given an existing Domain Group called "My Parent Group"
@@ -493,9 +493,9 @@ Feature: Business Concepts administration
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
-      | creator   | Ok           |
-      | publisher | Ok           |
-      | admin     | Ok           |
+      | creator   | Created      |
+      | publisher | Created      |
+      | admin     | Created      |
 
   Scenario Outline: Delete existing Business Concept in Reject Status
     Given an existing Domain Group called "My Parent Group"
@@ -909,35 +909,50 @@ Feature: Business Concepts administration
       | publisher | Ok           |
       | admin     | Ok           |
 
-  # Scenario Outline: History of changes in Business Glossary
-  #   Given an existing Domain Group called "My Parent Group"
-  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  #   And following users exist with the indicated role in Data Domain "My Domain"
-  #     | user      | role    |
-  #     | watcher   | watch   |
-  #     | creator   | create  |
-  #     | publisher | publish |
-  #     | admin     | admin   |
-  #   And an existing Business Concept type called "Business Term" with empty definition
-  #   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
-  #     | Field             | Value                                             |
-  #     | Type              | Business Term                                     |
-  #     | Name              | My Business Term                                  |
-  #     | Description       | This is the first description of my business term |
-  #   And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval" for version 4
-  #   When <user> tries to query history for a business concept with name "My Business Term" of type "Business Term"
-  #   Then the system returns following data
-  #   And user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
-  #     | Name             | Type          | Description                                        | Last Modification | Last User   | Version | Status           |
-  #     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
-  #     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
-  #     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
-  #     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 4       | pending_approval |
-  #
-  #   Examples:
-  #     | user      |
-  #     | watcher   |
-  #     | creator   |
-  #     | publisher |
-  #     | admin     |
+  Scenario Outline: History of changes in Business Glossary
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                             |
+      | Type              | Business Term                                     |
+      | Name              | My Business Term                                  |
+      | Description       | This is the first description of my business term |
+    And the status of business concept with name "My Business Term" of type "Business Term" is set to "pending_approval" for version 4
+    When <user> tries to query history for a business concept with name "My Business Term" of type "Business Term"
+    Then if <user> is "watcher" the system returns following data:
+      | name             | type          | description                                        | Last Modification | Last User   | version | status           |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
+    Then if <user> is "creator" the system returns following data:
+      | name             | type          | description                                        | Last Modification | Last User   | version | status           |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
+    Then if <user> is "publisher" the system returns following data:
+      | name             | type          | description                                        | Last Modification | Last User   | version | status           |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 4       | pending_approval |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
+    Then if <user> is "admin" the system returns following data:
+      | name             | type          | description                                        | Last Modification | Last User   | version | status           |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 4       | pending_approval |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        |
+      | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        |
+
+    Examples:
+      | user      |
+      | watcher   |
+      | creator   |
+      | publisher |
+      | admin     |

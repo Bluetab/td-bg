@@ -61,6 +61,7 @@ defmodule TdBgWeb.Router do
     resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update, :delete]
 
     resources "/business_concepts", BusinessConceptController do
+      get "/versions", BusinessConceptVersionController, :versions
       post "/versions", BusinessConceptVersionController, :create
     end
 

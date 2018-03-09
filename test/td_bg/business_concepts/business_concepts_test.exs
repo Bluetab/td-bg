@@ -429,12 +429,20 @@ defmodule TdBg.BusinessConceptsTests do
     alias TdBg.BusinessConcepts.BusinessConcept
     alias TdBg.BusinessConcepts.BusinessConceptVersion
 
-    test "list_business_concept_versions/0 returns all business_concept_versions" do
+    test "list_all_business_concept_versions/0 returns all business_concept_versions" do
       business_concept_version = insert(:business_concept_version)
-      business_concept_versions = BusinessConcepts.list_business_concept_versions()
+      business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
       assert  business_concept_versions |> Enum.map(fn(b) -> business_concept_version_preload(b) end)
             == [business_concept_version]
 
+    end
+
+    test "list_business_concept_versions/1 returns all business_concept_versions of a business_concept_version" do
+      business_concept_version = insert(:business_concept_version)
+      business_concept_id = business_concept_version.business_concept.id
+      business_concept_versions = BusinessConcepts.list_business_concept_versions(business_concept_id, [BusinessConcept.status.draft])
+      assert  business_concept_versions |> Enum.map(fn(b) -> business_concept_version_preload(b) end)
+            == [business_concept_version]
     end
 
     test "get_business_concept_version!/1 returns the business_concept_version with given id" do
