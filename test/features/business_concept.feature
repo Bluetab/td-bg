@@ -50,33 +50,54 @@ Feature: Business Concepts administration
       | Last User         | app-admin                                                                |
       | Version           | 1                                                                        |
 
+  # Scenario: Create a simple business concept with aliases
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                                                   |
+  #     | Type              | Business Term                                                           |
+  #     | Name              | My Simple Business Term                                                 |
+  #     | Aliases           | Alias, Second Alias                                                     |
+  #     | Description       | This is the first description of my business term which is very simple  |
+  #   Then the system returns a result with code "Created"
+  #   And "app-admin" is able to view business concept "Alias" as a child of Data Domain "My Domain" with following data:
+  #     | Field             | Value                                                                    |
+  #     | Type              | Business Term                                                            |
+  #     | Name              | My Simple Business Term                                                  |
+  #     | Aliases           | Alias, Second Alias                                                      |
+  #     | Description       | This is the first description of my business term which is very simple   |
+  #     | Status            | draft                                                                    |
+  #     | Last Modification | Some Timestamp                                                           |
+  #     | Last User         | app-admin                                                                |
+  #     | Version           | 1                                                                        |
+
   Scenario: Create a business concept with dinamic data
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
     And an existing Business Concept type called "Business Term" with following definition:
-     | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
-     | Formula          | string        | 100      |                                              |    NO     |               |
-     | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
-     | List of Values   | variable_list | 100      |                                              |    NO     |               |
-     | Sensitive Data    | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
-     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
-     | Related Area     | string        | 100      |                                              |    NO     |               |
-     | Default Value    | string        | 100      |                                              |    NO     |               |
-     | Additional Data  | string        | 500      |                                              |    NO     |               |
+     | Field            | Format        | Max Size | Values                                        | Mandatory | Default Value |
+     | Formula          | string        | 100      |                                               |    NO     |               |
+     | Format           | list          |          | Date, Numeric, Amount, Text                   |    YES    |               |
+     | List of Values   | variable_list | 100      |                                               |    NO     |               |
+     | Sensitive Data   | list          |          | N/A, Personal Data, Related to personal Data  |    NO     | N/A           |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly   |    NO     | Not defined   |
+     | Related Area     | string        | 100      |                                               |    NO     |               |
+     | Default Value    | string        | 100      |                                               |    NO     |               |
+     | Additional Data  | string        | 500      |                                               |    NO     |               |
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Field             | Value                                                                    |
       | Type              | Business Term                                                            |
       | Name              | My Dinamic Business Term                                                 |
       | Description       | This is the first description of my business term which is a date        |
-      | Formula           |                                                                    |
+      | Formula           |                                                                          |
       | Format            | Date                                                                     |
-      | List of Values    |                                                                    |
-      #| Sensitive Data     | N/A                                                                |
-      #| Update Frequence  | Not defined                                                        |
-      | Related Area      |                                                                    |
-      | Default Value     |                                                                    |
-      | Additional Data   |                                                                    |
+      | List of Values    |                                                                          |
+      | Related Area      |                                                                          |
+      | Default Value     |                                                                          |
+      | Additional Data   |                                                                          |
     Then the system returns a result with code "Created"
     And "app-admin" is able to view business concept "My Dinamic Business Term" as a child of Data Domain "My Domain" with following data:
       | Field             | Value                                                              |
@@ -86,7 +107,7 @@ Feature: Business Concepts administration
       | Formula           |                                                                    |
       | Format            | Date                                                               |
       | List of Values    |                                                                    |
-      | Sensitive Data     | N/A                                                                |
+      | Sensitive Data    | N/A                                                                |
       | Update Frequence  | Not defined                                                        |
       | Related Area      |                                                                    |
       | Default Value     |                                                                    |
@@ -148,8 +169,8 @@ Feature: Business Concepts administration
      | Formula           |                                                                          |
      | Format            | Date                                                                     |
      | List of Values    |                                                                          |
-     | Sensitive Data    | N/A                                                                     |
-     | Update Frequence  | Not defined                                                             |
+     | Sensitive Data    | N/A                                                                      |
+     | Update Frequence  | Not defined                                                              |
      | Related Area      |                                                                          |
      | Default Value     |                                                                          |
      | Additional Data   |                                                                          |
@@ -321,6 +342,35 @@ Feature: Business Concepts administration
       | Last User         | app-admin                                                               |
       | Version           | 1                                                                       |
     And "app-admin" is not able to view business concept "My Business Term" as a child of Data Domain "My Second Domain"
+
+  # Scenario: User should not be able to create a business concept with same type and name as an existing alias
+  #   Given an existing Domain Group called "My Parent Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   And an existing Business Concept in the Data Domain "My Domain" with following data:
+  #    | Field             | Value                                                                   |
+  #    | Type              | Business Term                                                           |
+  #    | Name              | My Business Term                                                        |
+  #    | Aliases           | Alias, Second Alias                                                     |
+  #    | Description       | This is the first description of my business term which is very simple  |
+  #   And an existing Domain Group called "My Second Parent Group"
+  #   And an existing Data Domain called "My Second Domain" child of Domain Group "My Second Parent Group"
+  #   When "app-admin" tries to create a business concept in the Data Domain "My Second Domain" with following data:
+  #    | Field             | Value                                                                   |
+  #    | Type              | Business Term                                                           |
+  #    | Name              | Second Alias                                                            |
+  #    | Description       | This is the second description of my business term                      |
+  #   Then the system returns a result with code "Unprocessable Entity"
+  #   And "app-admin" is able to view business concept "My Business Term" as a child of Data Domain "My Domain" with following data:
+  #     | Field             | Value                                                                   |
+  #     | Type              | Business Term                                                           |
+  #     | Name              | My Business Term                                                        |
+  #     | Description       | This is the first description of my business term which is very simple  |
+  #     | Status            | draft                                                                   |
+  #     | Last Modification | Some Timestamp                                                          |
+  #     | Last User         | app-admin                                                               |
+  #     | Version           | 1                                                                       |
+  #   And "app-admin" is not able to view business concept "Second Alias" as a child of Data Domain "My Second Domain"
 
 
   Scenario Outline: Modification of existing Business Concept in Published status
