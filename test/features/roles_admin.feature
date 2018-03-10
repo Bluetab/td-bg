@@ -108,6 +108,7 @@ Feature: Roles Admin
    Scenario: List of users available for setting custom permission in a Domain Group
      Given an existing Domain Group called "My Group"
      And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+    #  And an existing user "superman" with password "cripto" with super-admin property "yes"
      And following users exist in the application:
        | user           |
        | pietro.alpin   |
@@ -132,6 +133,7 @@ Feature: Roles Admin
     # Scenario: List of users available for setting custom permission in a Data Domain
     #   Given an existing Domain Group called "My Group"
     #   And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+    #   And an existing user "superman" with password "cripto" with super-admin property "yes"
     #   And following users exist in the application:
     #     | user           |
     #     | pietro.alpin   |
