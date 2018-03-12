@@ -50,29 +50,6 @@ Feature: Business Concepts administration
       | Last User         | app-admin                                                                |
       | Version           | 1                                                                        |
 
-  # Scenario: Create a simple business concept with aliases
-  #   Given an existing Domain Group called "My Parent Group"
-  #   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  #   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  #   And an existing Business Concept type called "Business Term" with empty definition
-  #   When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
-  #     | Field             | Value                                                                   |
-  #     | Type              | Business Term                                                           |
-  #     | Name              | My Simple Business Term                                                 |
-  #     | Aliases           | Alias, Second Alias                                                     |
-  #     | Description       | This is the first description of my business term which is very simple  |
-  #   Then the system returns a result with code "Created"
-  #   And "app-admin" is able to view business concept "Alias" as a child of Data Domain "My Domain" with following data:
-  #     | Field             | Value                                                                    |
-  #     | Type              | Business Term                                                            |
-  #     | Name              | My Simple Business Term                                                  |
-  #     | Aliases           | Alias, Second Alias                                                      |
-  #     | Description       | This is the first description of my business term which is very simple   |
-  #     | Status            | draft                                                                    |
-  #     | Last Modification | Some Timestamp                                                           |
-  #     | Last User         | app-admin                                                                |
-  #     | Version           | 1                                                                        |
-
   Scenario: Create a business concept with dinamic data
     Given an existing Domain Group called "My Parent Group"
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
@@ -1006,3 +983,65 @@ Feature: Business Concepts administration
       | creator   |
       | publisher |
       | admin     |
+
+  # Scenario Outline: Create a alias for a business concept
+  #   Given an existing Domain Group called "My Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                             |
+  #     | Type              | Business Term                                     |
+  #     | Name              | My Business Term                                  |
+  #     | Description       | This is the first description of my business term |
+  # When <user> tries to create a new alias "My Synonym Term" for business concept with name "My Business Term" of type "Business Term"
+  # Then the system returns a result with code <result>
+  # And if <result> is "Created", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
+  #     | Alias           |
+  #     | My Synonym Term |
+  #
+  # Examples:
+  #   | user      | result       |
+  #   | watcher   | Unauthorized |
+  #   | creator   | Unauthorized |
+  #   | publisher | Created      |
+  #   | admin     | Created      |
+  #
+  # Scenario Outline: Delete alias for a business concept
+  #   Given an existing Domain Group called "My Group"
+  #   And an existing Data Domain called "My Domain" child of Domain Group "My Group"
+  #   And following users exist with the indicated role in Data Domain "My Domain"
+  #     | user      | role    |
+  #     | watcher   | watch   |
+  #     | creator   | create  |
+  #     | publisher | publish |
+  #     | admin     | admin   |
+  #   And an existing Business Concept type called "Business Term" with empty definition
+  #   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  #     | Field             | Value                                             |
+  #     | Type              | Business Term                                     |
+  #     | Name              | My Business Term                                  |
+  #     | Description       | This is the first description of my business term |
+  #   And business concept with name "My Business Term" of type "Business Term" has an alias "My Synonym Term"
+  #   And business concept with name "My Business Term" of type "Business Term" has an alias "My Second Synonym Term"
+  #   When <user> tries to delete alias "My Synonym Term" for business concept with name "My Business Term" of type "Business Term"
+  #   Then the system returns a result with code <result>
+  #   And if <result> is "Ok", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
+  #       | Alias                  |
+  #       | My Second Synonym Term |
+  #   And if <result> is not "Ok", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
+  #       | Alias                  |
+  #       | My Synonym Term        |
+  #       | My Second Synonym Term |
+  #
+  #   Examples:
+  #     | user      | result       |
+  #     | watcher   | Unauthorized |
+  #     | creator   | Unauthorized |
+  #     | publisher | Ok           |
+  #     | admin     | Ok           |
