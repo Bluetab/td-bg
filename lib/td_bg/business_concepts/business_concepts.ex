@@ -429,4 +429,85 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
+  alias TdBg.BusinessConcepts.BusinessConceptAlias
+
+  @doc """
+  Returns the list of business_concept_aliases
+  of a business_concept
+
+  ## Examples
+
+      iex> list_business_concept_aliases(123)
+      [%BusinessConceptAlias{}, ...]
+
+  """
+  def list_business_concept_aliases(business_concept_id) do
+    BusinessConceptAlias
+    |> where([v], v.business_concept_id == ^business_concept_id)
+    |> order_by(desc: :business_concept_id)
+    |> Repo.all
+  end
+
+  @doc """
+  Gets a single business_concept_alias.
+
+  Raises `Ecto.NoResultsError` if the Business concept alias does not exist.
+
+  ## Examples
+
+      iex> get_business_concept_alias!(123)
+      %BusinessConceptAlias{}
+
+      iex> get_business_concept_alias!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_business_concept_alias!(id), do: Repo.get!(BusinessConceptAlias, id)
+
+  @doc """
+  Creates a business_concept_alias.
+
+  ## Examples
+
+      iex> create_business_concept_alias(%{field: value})
+      {:ok, %BusinessConceptAlias{}}
+
+      iex> create_business_concept_alias(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_business_concept_alias(attrs \\ %{}) do
+    %BusinessConceptAlias{}
+    |> BusinessConceptAlias.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Deletes a BusinessConceptAlias.
+
+  ## Examples
+
+      iex> delete_business_concept_alias(business_concept_alias)
+      {:ok, %BusinessConceptAlias{}}
+
+      iex> delete_business_concept_alias(business_concept_alias)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
+    Repo.delete(business_concept_alias)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking business_concept_alias changes.
+
+  ## Examples
+
+      iex> change_business_concept_alias(business_concept_alias)
+      %Ecto.Changeset{source: %BusinessConceptAlias{}}
+
+  """
+  def change_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
+    BusinessConceptAlias.changeset(business_concept_alias, %{})
+  end
 end

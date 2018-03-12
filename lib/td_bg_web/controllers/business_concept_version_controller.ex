@@ -31,7 +31,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :versions do
-    get "/business_concepts/:business_concept_id/versions"
+    get "/business_concepts/{business_concept_id}/versions"
     description "List Business Concept Versions"
     parameters do
       id :path, :integer, "Business Concept ID", required: true

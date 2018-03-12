@@ -3,6 +3,7 @@ defmodule TdBg.Factory do
   use ExMachina.Ecto, repo: TdBg.Repo
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.BusinessConceptAlias
 
   def user_factory do
     %TdBg.Accounts.User {
@@ -46,6 +47,13 @@ defmodule TdBg.Factory do
       last_change_at: DateTime.utc_now(),
       status: BusinessConcept.status.draft,
       version: 1,
+    }
+  end
+
+  def business_concept_alias_factory do
+    %BusinessConceptAlias {
+      business_concept_id: 0,
+      name: "my great alias",
     }
   end
 

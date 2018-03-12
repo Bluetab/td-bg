@@ -494,4 +494,59 @@ defmodule TdBg.BusinessConceptsTests do
     changeset
   end
 
+  describe "business_concept_aliases" do
+    alias TdBg.BusinessConcepts.BusinessConceptAlias
+
+    defp create_business_concept_alias do
+      business_concept_version = insert(:business_concept_version)
+      insert(:business_concept_alias, business_concept_id: business_concept_version.business_concept.id)
+    end
+
+    test "list_business_concept_aliases/0 returns all business_concept_aliases" do
+      business_concept_alias = create_business_concept_alias()
+      assert BusinessConcepts.list_business_concept_aliases(business_concept_alias.business_concept_id) == [business_concept_alias]
+    end
+
+    test "get_business_concept_alias!/1 returns the business_concept_alias with given id" do
+      business_concept_alias = create_business_concept_alias()
+      assert BusinessConcepts.get_business_concept_alias!(business_concept_alias.id) == business_concept_alias
+    end
+
+    test "create_business_concept_alias/1 with valid data creates a business_concept_alias" do
+      business_concept_version = insert(:business_concept_version)
+      business_concept_id = business_concept_version.business_concept.id
+
+      creation_attrs = %{
+        business_concept_id: business_concept_id,
+        name: "some name"
+      }
+
+      assert {:ok, %BusinessConceptAlias{} = business_concept_alias} = BusinessConcepts.create_business_concept_alias(creation_attrs)
+      assert business_concept_alias.business_concept_id == business_concept_id
+      assert business_concept_alias.name == "some name"
+    end
+
+    test "create_business_concept_alias/1 with invalid data returns error changeset" do
+      business_concept_version = insert(:business_concept_version)
+      business_concept_id = business_concept_version.business_concept.id
+
+      creation_attrs = %{
+        business_concept_id: business_concept_id,
+        name: nil
+      }
+
+      assert {:error, %Ecto.Changeset{}} = BusinessConcepts.create_business_concept_alias(creation_attrs)
+    end
+
+    test "delete_business_concept_alias/1 deletes the business_concept_alias" do
+      business_concept_alias = create_business_concept_alias()
+      assert {:ok, %BusinessConceptAlias{}} = BusinessConcepts.delete_business_concept_alias(business_concept_alias)
+      assert_raise Ecto.NoResultsError, fn -> BusinessConcepts.get_business_concept_alias!(business_concept_alias.id) end
+    end
+
+    test "change_business_concept_alias/1 returns a business_concept_alias changeset" do
+      business_concept_alias = create_business_concept_alias()
+      assert %Ecto.Changeset{} = BusinessConcepts.change_business_concept_alias(business_concept_alias)
+    end
+  end
 end

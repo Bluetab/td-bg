@@ -494,7 +494,6 @@ defmodule TdBg.BusinessConceptTest do
       |> Enum.sort
 
       assert cooked_versions == cooked_fields
-
     end
   end
 

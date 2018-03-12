@@ -65,6 +65,12 @@ defmodule TdBgWeb.Router do
       post "/versions", BusinessConceptVersionController, :create
     end
 
+    resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]
+
+    resources "/business_concepts", BusinessConceptController do
+      get  "/aliases", BusinessConceptAliasController, :index
+      post "/aliases", BusinessConceptAliasController, :create
+    end
   end
 
   def swagger_info do
