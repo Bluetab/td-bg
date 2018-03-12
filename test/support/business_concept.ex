@@ -154,4 +154,18 @@ defmodule TdBgWeb.BusinessConcept do
       HTTPoison.get!(business_concept_business_concept_alias_url(@endpoint, :index, business_concept_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
+
+  def business_concept_alias_delete(token, id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+      HTTPoison.delete!(business_concept_alias_url(@endpoint, :delete, id), headers, [])
+    {:ok, status_code}
+  end
+
+  def business_concept_alias_by_name(token, business_concept_id, business_concept_alias) do
+    {:ok, _status_code, json_resp} = business_concept_alias_list(token, business_concept_id)
+    Enum.find(json_resp["data"],
+     fn(alias_item) -> alias_item["name"] == business_concept_alias end)
+  end
+
 end

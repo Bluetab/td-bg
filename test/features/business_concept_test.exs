@@ -516,26 +516,62 @@ defmodule TdBg.BusinessConceptTest do
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
     %{token_admin: token_admin} = _state do
     if result == status_code do
-      business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_id = business_concept_version["id"]
-      token = get_user_token(user_name)
-      {_, status_code, %{"data" => business_concept_aliases}} = business_concept_alias_list(token, business_concept_id)
-      assert rc_ok() == to_response_code(status_code)
-
-      field_atoms = [:name]
-
-      cooked_aliases = business_concept_aliases
-      |> Enum.reduce([], &([map_keys_to_atoms(&1)| &2]))
-      |> Enum.map(&(Map.take(&1, field_atoms)))
-      |> Enum.sort
-
-      cooked_fields = fields
-      |> Enum.map(&(Map.take(&1, field_atoms)))
-      |> Enum.sort
-
-      assert cooked_aliases == cooked_fields
-
+      assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields)
     end
+  end
+
+  defand ~r/^business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" has an alias "(?<business_concept_alias>[^"]+)"$/,
+    %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, business_concept_alias: business_concept_alias},
+    %{token_admin: token_admin} = _state do
+      business_concept= business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_id = business_concept["id"]
+      creation_attrs = %{name: business_concept_alias}
+      {_, status_code, _} = business_concept_alias_create(token_admin, business_concept_id, creation_attrs)
+      assert rc_created() == to_response_code(status_code)
+  end
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to delete alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin} = state do
+      business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_id = business_concept["id"]
+      business_concept_alias = business_concept_alias_by_name(token_admin, business_concept_id, business_concept_alias)
+      assert business_concept_alias
+      token = get_user_token(user_name)
+      {_, status_code} = business_concept_alias_delete(token, business_concept_alias["id"])
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  # cenario Outline: Delete alias for a business concept
+
+  defand ~r/^if (?<result>[^"]+) is not "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+    %{token_admin: token_admin} = _state do
+    if result != status_code do
+      assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields)
+    end
+  end
+
+  defp assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields) do
+    business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+    business_concept_id = business_concept_version["id"]
+    token = get_user_token(user_name)
+    {_, status_code, %{"data" => business_concept_aliases}} = business_concept_alias_list(token, business_concept_id)
+    assert rc_ok() == to_response_code(status_code)
+
+    field_atoms = [:name]
+
+    cooked_aliases = business_concept_aliases
+    |> Enum.reduce([], &([map_keys_to_atoms(&1)| &2]))
+    |> Enum.map(&(Map.take(&1, field_atoms)))
+    |> Enum.sort
+
+    cooked_fields = fields
+    |> Enum.map(&(Map.take(&1, field_atoms)))
+    |> Enum.sort
+
+    assert cooked_aliases == cooked_fields
+
   end
 
   defp map_keys_to_atoms(version), do: Map.new(version, &({String.to_atom(elem(&1, 0)), elem(&1, 1)}))
