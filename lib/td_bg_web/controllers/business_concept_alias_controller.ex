@@ -2,9 +2,13 @@ defmodule TdBgWeb.BusinessConceptAliasController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 
+  import Canada, only: [can?: 2]
+
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptAlias
   alias TdBgWeb.SwaggerDefinitions
+  alias Guardian.Plug, as: GuardianPlug
+  alias TdBgWeb.ErrorView
 
   action_fallback TdBgWeb.FallbackController
 
@@ -38,14 +42,27 @@ defmodule TdBgWeb.BusinessConceptAliasController do
   end
 
   def create(conn, %{"business_concept_id" => business_concept_id, "business_concept_alias" => business_concept_alias_params}) do
+
+    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
     creation_attrs = business_concept_alias_params
     |> Map.put("business_concept_id", business_concept_id)
 
-    with {:ok, %BusinessConceptAlias{} = business_concept_alias} <- BusinessConcepts.create_business_concept_alias(creation_attrs) do
+    user = get_current_user(conn)
+    with true <- can?(user, create_alias(business_concept_version)),
+         {:ok, %BusinessConceptAlias{} = business_concept_alias} <- BusinessConcepts.create_business_concept_alias(creation_attrs) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", business_concept_alias_path(conn, :show, business_concept_alias))
       |> render("show.json", business_concept_alias: business_concept_alias)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 
@@ -56,8 +73,27 @@ defmodule TdBgWeb.BusinessConceptAliasController do
 
   def delete(conn, %{"id" => id}) do
     business_concept_alias = BusinessConcepts.get_business_concept_alias!(id)
-    with {:ok, %BusinessConceptAlias{}} <- BusinessConcepts.delete_business_concept_alias(business_concept_alias) do
+    business_concept_id = business_concept_alias.business_concept_id
+    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+
+    user = get_current_user(conn)
+    with true <- can?(user, delete_alias(business_concept_version)),
+         {:ok, %BusinessConceptAlias{}} <- BusinessConcepts.delete_business_concept_alias(business_concept_alias) do
       send_resp(conn, :no_content, "")
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
+
+  defp get_current_user(conn) do
+    GuardianPlug.current_resource(conn)
+  end
+
 end

@@ -78,6 +78,14 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     |> can_execute_action?
   end
 
+  def can?(%User{id: user_id}, :manage_alias, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{data_domain_id: data_domain_id}}) do
+    %{user_id: user_id, action: :manage_alias,
+      current_status: status,
+      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.published],
+      data_domain_id: data_domain_id}
+    |> can_execute_action?
+  end
+
   def can?(%User{}, _action, _domain),  do: false
 
   defp can_execute_action?(%{user_id: _user_id,

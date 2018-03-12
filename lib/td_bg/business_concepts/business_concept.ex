@@ -8,9 +8,9 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
 
   @permissions %{
     admin:   [:create, :update, :send_for_approval, :delete, :publish, :reject,
-              :deprecate, :view_versions],
+              :deprecate, :view_versions, :manage_alias],
     publish: [:create, :update, :send_for_approval, :delete, :publish, :reject,
-              :deprecate, :view_versions],
+              :deprecate, :view_versions, :manage_alias],
     create:  [:create, :update, :send_for_approval, :delete, :view_versions],
     watch:   [:view_versions]
   }

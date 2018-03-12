@@ -481,15 +481,15 @@ defmodule TdBg.BusinessConceptTest do
     %{user_name: user_name, target_user_name: target_user_name, table: fields},
     %{business_concept_versions: business_concept_versions} = _state do
     if user_name == target_user_name do
-      field_atoms = [:name, :type, :description, :version, :status]
 
+      field_atoms = [:name, :type, :description, :version, :status]
       cooked_versions = business_concept_versions
-      |> Enum.reduce([], &([version_keys_to_atoms(&1)| &2]))
+      |> Enum.reduce([], &([map_keys_to_atoms(&1)| &2]))
       |> Enum.map(&(Map.take(&1, field_atoms)))
       |> Enum.sort
 
       cooked_fields = fields
-      |> Enum.reduce([], &([update_fields_map(&1)|&2]))
+      |> Enum.reduce([], &([update_business_concept_version_map(&1)|&2]))
       |> Enum.map(&(Map.take(&1, field_atoms)))
       |> Enum.sort
 
@@ -497,8 +497,48 @@ defmodule TdBg.BusinessConceptTest do
     end
   end
 
-  defp version_keys_to_atoms(version), do: Map.new(version, &({String.to_atom(elem(&1, 0)), elem(&1, 1)}))
-  defp update_fields_map(field_map), do: update_in(field_map[:version], &String.to_integer(&1))
+  defp update_business_concept_version_map(field_map), do: update_in(field_map[:version], &String.to_integer(&1))
+
+  # Scenario Outline: Create a alias for a business concept
+
+  defwhen ~r/^(?<user_name>[^"]+) tries to create a new alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin} = state do
+      business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_id = business_concept_version["id"]
+      token = get_user_token(user_name)
+      creation_attrs = %{name: business_concept_alias}
+      {_, status_code, _} = business_concept_alias_create(token, business_concept_id, creation_attrs)
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defand ~r/^if (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+    %{token_admin: token_admin} = _state do
+    if result == status_code do
+      business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_id = business_concept_version["id"]
+      token = get_user_token(user_name)
+      {_, status_code, %{"data" => business_concept_aliases}} = business_concept_alias_list(token, business_concept_id)
+      assert rc_ok() == to_response_code(status_code)
+
+      field_atoms = [:name]
+
+      cooked_aliases = business_concept_aliases
+      |> Enum.reduce([], &([map_keys_to_atoms(&1)| &2]))
+      |> Enum.map(&(Map.take(&1, field_atoms)))
+      |> Enum.sort
+
+      cooked_fields = fields
+      |> Enum.map(&(Map.take(&1, field_atoms)))
+      |> Enum.sort
+
+      assert cooked_aliases == cooked_fields
+
+    end
+  end
+
+  defp map_keys_to_atoms(version), do: Map.new(version, &({String.to_atom(elem(&1, 0)), elem(&1, 1)}))
 
   defp change_business_concept_status(token_admin, business_concept_id, status) do
     {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
