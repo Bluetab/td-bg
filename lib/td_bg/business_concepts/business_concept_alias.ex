@@ -2,11 +2,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptAlias do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptAlias
 
   schema "business_concept_aliases" do
     field :name, :string
-    field :business_concept_id, :id
+    belongs_to :business_concept, BusinessConcept
 
     timestamps()
   end

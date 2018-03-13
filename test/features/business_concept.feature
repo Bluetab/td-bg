@@ -969,7 +969,7 @@ Feature: Business Concepts administration
       | Type              | Business Term                                     |
       | Name              | My Business Term                                  |
       | Description       | This is the first description of my business term |
-  When <user> tries to create a new alias "My Synonym Term" for business concept with name "My Business Term" of type "Business Term"
+  When "<user>" tries to create a new alias "My Synonym Term" for business concept with name "My Business Term" of type "Business Term"
   Then the system returns a result with code "<result>"
   And if <result> is "Created", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
       | name           |
@@ -1035,25 +1035,25 @@ Feature: Business Concepts administration
   #    | Name              | My Synonym Term                                                         |
   #    | Description       | This is the second description of my business term                      |
   #   Then the system returns a result with code "Unprocessable Entity"
-  #   And "app-admin" is not able to view business concept "My Synonym Term" as a child of Data Domain "My Second Domain"
+    # And "app-admin" is not able to view business concept "My Synonym Term" as a child of Data Domain "My Second Domain"
 
-  # Scenario: User should not be able to create an alias with same type and name as an existing business concept
-  #   Given an existing Domain Group called "My Parent Group"
-  #   And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"
-  #   And an existing Business Concept type called "Business Term" with empty definition
-  #   And an existing Business Concept in the Data Domain "My Domain" with following data:
-  #    | Field             | Value                                                                   |
-  #    | Type              | Business Term                                                           |
-  #    | Name              | My Business Term                                                        |
-  #    | Description       | This is the first description of my business term which is very simple  |
-  #   And an existing Domain Group called "My Second Parent Group"
-  #   And an existing Data Domain called "My Second Domain" child of Domain Group "My Second Parent Group"
-  #   And an existing Business Concept in the Data Domain "My Domain" with following data:
-  #    | Field             | Value                                                                          |
-  #    | Type              | Business Term                                                                  |
-  #    | Name              | Second Business Term                                                           |
-  #    | Description       | This is the first description of my second business term which is very simple  |
-  #   When "app-admin" tries to create a new alias "Second Business Term" for business concept with name "My Business Term" of type "Business Term"                  |
-  #   Then the system returns a result with code "Unprocessable Entity"
+  Scenario: User should not be able to create an alias with same type and name as an existing business concept
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept in the Data Domain "My Domain" with following data:
+     | Field             | Value                                                                   |
+     | Type              | Business Term                                                           |
+     | Name              | My Business Term                                                        |
+     | Description       | This is the first description of my business term which is very simple  |
+    And an existing Domain Group called "My Second Parent Group"
+    And an existing Data Domain called "My Second Domain" child of Domain Group "My Second Parent Group"
+    And an existing Business Concept in the Data Domain "My Domain" with following data:
+     | Field             | Value                                                                          |
+     | Type              | Business Term                                                                  |
+     | Name              | Second Business Term                                                           |
+     | Description       | This is the first description of my second business term which is very simple  |
+    When "app-admin" tries to create a new alias "Second Business Term" for business concept with name "My Business Term" of type "Business Term"
+    # Then the system returns a result with code "Unprocessable Entity"
   #   And user "app-admin" is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
-  #     | Alias           |
+  #     | name           |

@@ -4,6 +4,8 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   import Ecto.Changeset
   alias TdBg.Taxonomies.DataDomain
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.BusinessConceptAlias
   alias TdBg.Permissions.Role
 
   @permissions %{
@@ -27,6 +29,9 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
     field :type, :string
     field :last_change_by, :integer
     field :last_change_at, :utc_datetime
+
+    has_many :versions, BusinessConceptVersion
+    has_many :aliases, BusinessConceptAlias
 
     timestamps()
   end

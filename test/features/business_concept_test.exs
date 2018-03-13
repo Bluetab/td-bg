@@ -501,7 +501,7 @@ defmodule TdBg.BusinessConceptTest do
 
   # Scenario Outline: Create a alias for a business concept
 
-  defwhen ~r/^(?<user_name>[^"]+) tries to create a new alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+  defwhen ~r/^"(?<user_name>[^"]+)" tries to create a new alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
     %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
     %{token_admin: token_admin} = state do
       business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
@@ -523,7 +523,7 @@ defmodule TdBg.BusinessConceptTest do
   defand ~r/^business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" has an alias "(?<business_concept_alias>[^"]+)"$/,
     %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, business_concept_alias: business_concept_alias},
     %{token_admin: token_admin} = _state do
-      business_concept= business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
       business_concept_id = business_concept["id"]
       creation_attrs = %{name: business_concept_alias}
       {_, status_code, _} = business_concept_alias_create(token_admin, business_concept_id, creation_attrs)
