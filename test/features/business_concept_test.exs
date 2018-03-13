@@ -10,6 +10,7 @@ defmodule TdBg.BusinessConceptTest do
   import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
 
+  alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
 
@@ -23,6 +24,11 @@ defmodule TdBg.BusinessConceptTest do
                   "Reject Reason" => "reject_reason",
                   "Modification Comments" => "mod_comments"
                   }
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
 
   # Scenario: Create a simple business concept
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,

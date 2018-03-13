@@ -4,6 +4,7 @@ defmodule TdBgWeb.DomainGroupControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
+  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.DomainGroup
 
@@ -14,6 +15,11 @@ defmodule TdBgWeb.DomainGroupControllerTest do
   def fixture(:domain_group) do
     {:ok, domain_group} = Taxonomies.create_domain_group(@create_attrs)
     domain_group
+  end
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
   end
 
   setup %{conn: conn, jwt: _jwt} do

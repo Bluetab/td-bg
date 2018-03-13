@@ -1,29 +1,34 @@
 defmodule TdBgWeb.ApiServices.MockTdAuthService do
   @moduledoc false
 
-  @users [
-    %TdBg.Accounts.User{id: Integer.mod(:binary.decode_unsigned("app-admin"), 100_000), is_admin: true, user_name: "app-admin"},
-    %TdBg.Accounts.User{id: 10, is_admin: false, user_name: "watcher"},
-    %TdBg.Accounts.User{id: 11, is_admin: false, user_name: "creator"},
-    %TdBg.Accounts.User{id: 12, is_admin: false, user_name: "publisher"},
-    %TdBg.Accounts.User{id: 13, is_admin: false, user_name: "admin"},
-    %TdBg.Accounts.User{id: 14, is_admin: false, user_name: "pietro.alpin"},
-    %TdBg.Accounts.User{id: 15, is_admin: false, user_name: "johndoe"},
-    %TdBg.Accounts.User{id: 16, is_admin: false, user_name: "Hari.seldon"},
-    %TdBg.Accounts.User{id: 17, is_admin: false, user_name: "tomclancy"},
-    %TdBg.Accounts.User{id: 18, is_admin: false, user_name: "Peter.sellers"},
-    %TdBg.Accounts.User{id: 19, is_admin: false, user_name: "tom.sawyer"}
-  ]
+  use Agent
 
-  def create_user(%{"user" => user_params}) do
-      Enum.find(@users, fn(user) -> user_params.user_name == user.user_name end)
+  import TdBgWeb.User, only: :functions
+  alias TdBg.Accounts.User
+
+  def start_link(_) do
+    Agent.start_link(fn -> [] end, name: MockTdAuthService)
   end
 
-  def search(%{"data" => %{"ids" => ids}}) do
-    Enum.filter(@users, fn(user) -> Enum.find(ids, &(&1 == user.id)) != nil end)
+  def set_users(user_list) do
+    Agent.update(MockTdAuthService, fn(_) -> user_list end)
+  end
+
+  def create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password}}) do
+    new_user = %User{id: gen_id_from_user_name(user_name), user_name: user_name, password: password, is_admin: is_admin}
+    Agent.update(MockTdAuthService, &(&1 ++ [new_user]))
+    new_user
+  end
+
+  def get_user_by_name(user_name) do
+    List.first(Enum.filter(index(), &(&1.user_name == user_name)))
+  end
+
+  def search(%{"ids" => ids}) do
+    Enum.filter(index(), fn(user) -> Enum.find(ids, &(&1 == user.id)) != nil end)
   end
 
   def index do
-    @users
+    Agent.get(MockTdAuthService, &(&1)) || []
   end
 end

@@ -7,6 +7,13 @@ defmodule TdBg.TaxonomyTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.AclEntry, only: :functions
 
+  alias TdBgWeb.ApiServices.MockTdAuthService
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
+
   defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
      %{domain_group_name: name}, state do
 

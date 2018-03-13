@@ -6,8 +6,20 @@ defmodule TdBg.RolesAdminTest do
   import TdBgWeb.Taxonomy
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.User, only: :functions
+  alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   @endpoint TdBgWeb.Endpoint
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
+
+  setup do
+    on_exit fn ->
+      MockTdAuthService.set_users([])
+    end
+  end
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
@@ -33,7 +45,7 @@ defmodule TdBg.RolesAdminTest do
     Enum.map(table, fn(x) ->
         user_name = x[:user]
         role_name = x[:role]
-        principal_id = create_user(user_name).id
+        principal_id = find_or_create_user(user_name).id
         %{"id" => role_id} = get_role_by_name(state[:token_admin], role_name)
         acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group["id"], role_id: role_id}
         {:ok, _, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
@@ -64,7 +76,7 @@ defmodule TdBg.RolesAdminTest do
     %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, role_name: role_name, domain_group_name: domain_group_name}, state do
     if actual_result == expected_result do
       domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-      principal_id = create_user(user_name).id
+      principal_id = get_user_by_name(user_name).id
       acl_entry_params = %{user_id: principal_id, domain_group_id: domain_group_info["id"]}
       {:ok, _status_code, json_resp} = user_domain_group_role(state[:token_admin], acl_entry_params)
       assert json_resp["data"]["name"] == role_name
@@ -76,7 +88,7 @@ defmodule TdBg.RolesAdminTest do
     %{actual_result: actual_result, expected_result: expected_result, user_name: user_name, role_name: role_name, data_domain_name: data_domain_name}, state do
     if actual_result == expected_result do
       data_domain_info = get_data_domain_by_name(state[:token_admin], data_domain_name)
-      principal_id = create_user(user_name).id
+      principal_id = get_user_by_name(user_name).id
       acl_entry_params = %{user_id: principal_id, data_domain_id: data_domain_info["id"]}
       {:ok, _status_code, json_resp} = user_data_domain_role(state[:token_admin], acl_entry_params)
       assert json_resp["data"]["name"] == role_name
@@ -90,7 +102,7 @@ defmodule TdBg.RolesAdminTest do
     Enum.map(table, fn(x) ->
       user_name = x[:user]
       role_name = x[:role]
-      principal_id = create_user(user_name).id
+      principal_id = find_or_create_user(user_name).id
       %{"id" => role_id} = get_role_by_name(state[:token_admin], role_name)
       acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain["id"], role_id: role_id}
       {:ok, _, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
@@ -103,7 +115,7 @@ defmodule TdBg.RolesAdminTest do
           %{user_name: user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
 
     data_domain_info = get_data_domain_by_name(state[:token_admin], resource_name)
-    principal_id = create_user(principal_name).id
+    principal_id = find_or_create_user(principal_name).id
     role_info = get_role_by_name(state[:token_admin], role_name)
     acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain_info["id"], role_id: role_info["id"]}
 
@@ -139,13 +151,8 @@ defmodule TdBg.RolesAdminTest do
     end)
   end
 
-  defand ~r/^following users exist in the application:$/, %{table: users}, state do
-    existing_users = Enum.map(users, fn(user) ->
-      new_user = create_user(user.user)
-      assert new_user != nil
-      new_user
-    end)
-    {:ok, Map.merge(state, %{existing_users: existing_users})}
+  defand ~r/^following users exist in the application:$/, %{table: users}, _state do
+    Enum.each(users, &(create_user(&1.user)))
   end
 
   defwhen ~r/^"(?<user_name>[^"]+)" tries to list all users available to set custom permissions in Domain Group "(?<domain_group>[^"]+)"$/,
@@ -160,15 +167,30 @@ defmodule TdBg.RolesAdminTest do
   end
 
   defthen ~r/^the system returns an user list with following data:$/, %{table: users}, state do
-    existing_users = state[:existing_users]
-    all_available_users = state[:users]["data"]
-    available_users = Enum.filter(all_available_users, fn(user) -> Enum.find(existing_users, fn(existing) -> user["user_name"] == existing.user_name  end)  end)
+    available_users = state[:users]["data"]
     Enum.each(users, fn(user) ->
       match_user = Enum.find(available_users, fn(available) ->
         user.user == available["user_name"]
       end)
       assert match_user
     end)
+  end
+
+  defand ~r/^an existing user "(?<user_name>[^"]+)" with password "(?<password>[^"]+)" with super-admin property "(?<is_admin>[^"]+)"$/,
+         %{user_name: user_name, password: password, is_admin: is_admin}, _state do
+    super_user = create_user(user_name, password: password, is_admin: is_admin_bool(is_admin))
+    assert super_user != nil
+  end
+
+  defwhen ~r/"(?<user_name>[^"]+)" tries to list all users available to set custom permissions in Data Domain "(?<data_domain>[^"]+)"$/,
+          %{user_name: user_name, data_domain: data_domain_name}, state do
+    token = get_user_token(user_name)
+    headers = get_header(token)
+    data_domain = get_data_domain_by_name(token, data_domain_name)
+    {:ok, %HTTPoison.Response{status_code: status_code, body: resp}} =
+      HTTPoison.get(data_domain_data_domain_url(@endpoint, :available_users, data_domain["id"]), headers, [])
+    users = resp |> JSON.decode!
+    {:ok, Map.merge(state, %{status_code: status_code, users: users})}
   end
 
   defp data_domain_users_roles(token, attrs) do

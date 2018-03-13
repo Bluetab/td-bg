@@ -5,11 +5,17 @@ defmodule TdBg.TaxonomyNavigationTest do
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy
   import TdBgWeb.Authentication, only: :functions
+  alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   @endpoint TdBgWeb.Endpoint
 
   @bc_fixed_fields %{"Description" => "description", "Name" => "name", "Type" => "type"}
   @headers {"Content-type", "application/json"}
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
 
   setup do
     on_exit fn ->

@@ -9,7 +9,7 @@ defmodule TdBgWeb.UserController do
     @td_auth_api.create_user(req)
   end
 
-  def search(_conn, %{"data" => %{"ids" => _ids}} = req) do
+  def search(_conn, %{"ids" => _ids} = req) do
     @td_auth_api.search(req)
   end
 

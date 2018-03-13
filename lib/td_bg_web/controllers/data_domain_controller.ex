@@ -4,6 +4,7 @@ defmodule TdBgWeb.DataDomainController do
 
   import Plug.Conn
   alias TdBgWeb.ErrorView
+  alias TdBgWeb.UserView
   alias TdBg.Taxonomies
   alias TdBg.Permissions
   alias TdBg.Taxonomies.DataDomain
@@ -151,7 +152,7 @@ defmodule TdBgWeb.DataDomainController do
     acl_entries = Permissions.list_acl_entries(%{data_domain: data_domain})
     role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role_id: acl_entry.role.id, role_name: acl_entry.role.name} end)
     user_ids = Enum.reduce(role_user_id, [], fn(e, acc) -> acc ++ [e.user_id] end)
-    users = @td_auth_api.search(%{"data" => %{"ids" => user_ids}})
+    users = @td_auth_api.search(%{"ids" => user_ids})
     users_roles = Enum.reduce(role_user_id, [],
       fn(u, acc) ->
         acc ++ [Map.merge(%{role_id: u.role_id, role_name: u.role_name}, user_map(Enum.find(users, &(&1.id == u.user_id))))]
@@ -161,5 +162,24 @@ defmodule TdBgWeb.DataDomainController do
 
   defp user_map(user) do
     %{"user_id": user.id, "user_name": user.user_name}
+  end
+
+  swagger_path :available_users do
+    get "/data_domains/{data_domain_id}/available_users"
+    description "Lists users available in a data domain"
+    produces "application/json"
+    parameters do
+      domain_group_id :path, :integer, "Data Domain ID", required: true
+    end
+    response 200, "Ok", Schema.ref(:UsersResponse)
+    response 400, "Client Error"
+  end
+  def available_users(conn, %{"data_domain_id" => id}) do
+    data_domain = Taxonomies.get_data_domain!(id)
+    acl_entries = Permissions.list_acl_entries(%{data_domain: data_domain})
+    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role: acl_entry.role.name} end)
+    all_users = @td_auth_api.index()
+    available_users = Enum.filter(all_users, fn(user) -> Enum.find(role_user_id, &(&1.user_id == user.id)) == nil and user.is_admin == false end)
+    render(conn, UserView, "index.json", users: available_users)
   end
 end

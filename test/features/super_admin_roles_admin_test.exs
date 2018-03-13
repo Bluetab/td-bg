@@ -6,8 +6,15 @@ defmodule TdBg.SuperAdminRolesAdminTest do
   import TdBgWeb.Taxonomy
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.User, only: :functions
+
+  alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   @endpoint TdBgWeb.Endpoint
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
 
   #Scenario
   defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do

@@ -4,6 +4,7 @@ defmodule TdBgWeb.DataDomainControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
+  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.DataDomain
 
@@ -14,6 +15,11 @@ defmodule TdBgWeb.DataDomainControllerTest do
   def fixture(:data_domain) do
     {:ok, data_domain} = Taxonomies.create_data_domain(@create_attrs)
     data_domain
+  end
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
   end
 
   setup %{conn: conn} do

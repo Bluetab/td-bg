@@ -41,6 +41,25 @@ defmodule TdBgWeb.Authentication do
     user
   end
 
+  def find_or_create_user(user_name, opts \\ []) do
+    user = case get_user_by_name(user_name) do
+      nil ->
+        is_admin = Keyword.get(opts, :is_admin, false)
+        password = Keyword.get(opts, :password, "secret")
+        @td_auth_api.create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password}})
+      user -> user
+    end
+    user
+  end
+
+  def get_user_by_name(user_name) do
+    @td_auth_api.get_user_by_name(user_name)
+  end
+
+  def get_users() do
+    @td_auth_api.index()
+  end
+
   def build_user_token(%User{} = user) do
       case Guardian.encode_and_sign(user) do
         {:ok, jwt, _full_claims} -> jwt
@@ -49,7 +68,7 @@ defmodule TdBgWeb.Authentication do
   end
 
   def build_user_token(user_name, opts \\ []) when is_binary(user_name) do
-    user = create_user(user_name, opts)
+    user = find_or_create_user(user_name, opts)
     build_user_token(user)
   end
 

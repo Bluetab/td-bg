@@ -18,4 +18,16 @@ defmodule TdBgWeb.User do
     Enum.find(json_resp["data"], fn(role) -> role["name"] == role_name end)
   end
 
+  def is_admin_bool(is_admin) do
+    case is_admin do
+      "yes" -> true
+      "no" -> false
+      _ -> is_admin
+    end
+  end
+
+  def gen_id_from_user_name(user_name) do
+    Integer.mod(:binary.decode_unsigned(user_name), 100_000)
+  end
+
 end

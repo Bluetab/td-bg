@@ -5,7 +5,13 @@ defmodule TdBg.SuperAdminTaxonomyTest do
   import TdBgWeb.BusinessConcept, only: :functions
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.ResponseCode, only: :functions
+  alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
 
   # Scenario: Creating a Domain Group without any parent
 

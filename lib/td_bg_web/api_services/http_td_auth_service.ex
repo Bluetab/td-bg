@@ -81,10 +81,11 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     users
   end
 
-  def search(%{"data" => %{"ids" => _ids}} = req) do
+  def search(%{"ids" => _ids} = ids) do
     token = get_api_user_token()
 
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    req = %{"data" => ids}
     body = req |> JSON.encode!
     %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_users_path()}/search", body, headers, [])
     json =

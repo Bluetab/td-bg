@@ -196,7 +196,7 @@ defmodule TdBgWeb.DomainGroupController do
     acl_entries = Permissions.list_acl_entries(%{domain_group: domain_group})
     role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role: acl_entry.role.name} end)
     all_users = @td_auth_api.index()
-    available_users = Enum.filter(all_users, fn(user) -> Enum.find(role_user_id, &(&1.user_id == user.id)) == nil end)
+    available_users = Enum.filter(all_users, fn(user) -> Enum.find(role_user_id, &(&1.user_id == user.id)) == nil and user.is_admin == false end)
     render(conn, UserView, "index.json", users: available_users)
   end
 
