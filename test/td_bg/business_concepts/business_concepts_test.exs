@@ -317,12 +317,21 @@ defmodule TdBg.BusinessConceptsTests do
       end
     end
 
-    test "exist_business_concept_by_type_and_name?/1 invalid type/name" do
+    test "exist_business_concept_by_type_and_name?/2 check exists" do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       type = business_concept_version.business_concept.type
       name = business_concept_version.name
-      assert {:ok, 1} == BusinessConcepts.exist_business_concept_by_type_and_name?(type, name, nil)
+      assert {:ok, 1} == BusinessConcepts.exist_business_concept_by_type_and_name?(type, name)
+    end
+
+    test "exist_business_concept_by_type_and_name?/3 check it doesnt exist" do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      exclude_concept_id = business_concept_version.business_concept.id
+      type = business_concept_version.business_concept.type
+      name = business_concept_version.name
+      assert {:ok, 0} == BusinessConcepts.exist_business_concept_by_type_and_name?(type, name, exclude_concept_id)
     end
 
     test "update_business_concept_version/2 with valid data updates the business_concept_version" do

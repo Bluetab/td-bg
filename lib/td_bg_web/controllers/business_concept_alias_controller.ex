@@ -44,11 +44,14 @@ defmodule TdBgWeb.BusinessConceptAliasController do
   def create(conn, %{"business_concept_id" => business_concept_id, "business_concept_alias" => business_concept_alias_params}) do
 
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+    concept_type = business_concept_version.business_concept.type
+    alias_name = Map.get(business_concept_alias_params, "name")
     creation_attrs = business_concept_alias_params
     |> Map.put("business_concept_id", business_concept_id)
 
     user = get_current_user(conn)
     with true <- can?(user, create_alias(business_concept_version)),
+         {:ok, 0} <- BusinessConcepts.exist_business_concept_by_type_and_name?(concept_type, alias_name),
          {:ok, %BusinessConceptAlias{} = business_concept_alias} <- BusinessConcepts.create_business_concept_alias(creation_attrs) do
       conn
       |> put_status(:created)

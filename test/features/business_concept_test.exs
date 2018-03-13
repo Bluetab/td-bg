@@ -542,7 +542,7 @@ defmodule TdBg.BusinessConceptTest do
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
-  # cenario Outline: Delete alias for a business concept
+  # Scenario Outline: Delete alias for a business concept
 
   defand ~r/^if (?<result>[^"]+) is not "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
@@ -550,6 +550,28 @@ defmodule TdBg.BusinessConceptTest do
     if result != status_code do
       assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields)
     end
+  end
+
+  # Scenario: User should not be able to create a business concept with same type and name as an existing alias
+
+  defand ~r/^business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" does not exist$/,
+    %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version},
+    %{token_admin: token_admin} = _state do
+    business_concept_version = String.to_integer(version)
+    business_concept_tmp = business_concept_by_version_name_and_type(token_admin,
+                                                                    business_concept_version,
+                                                                    business_concept_name,
+                                                                    business_concept_type)
+    assert !business_concept_tmp
+  end
+
+  # Scenario: User should not be able to create an alias with same type and name as an existing business concept
+
+  defand ~r/^user "(?<user_name>[^"]+)" is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+    _state do
+    token = get_user_token(user_name)
+    assert_visible_aliases(token, business_concept_name, business_concept_type, user_name, fields)
   end
 
   defp assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields) do

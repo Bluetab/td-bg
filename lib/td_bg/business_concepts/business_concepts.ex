@@ -23,42 +23,25 @@ defmodule TdBg.BusinessConcepts do
   and status
 
   """
-  # def exist_business_concept_by_type_and_name?(type, name, exclude_id \\ nil)
-  # def exist_business_concept_by_type_and_name?(type, name, _exclude_id) when is_nil(name) or is_nil(type),  do: {:ok, 0}
-  # def exist_business_concept_by_type_and_name?(type, name, exclude_id) do
-  #   status = [BusinessConcept.status.versioned]
-  #   count = BusinessConceptVersion
-  #   |> join(:left, [v], _ in assoc(v, :business_concept))
-  #   |> where([v, c], c.type == ^type and v.name == ^name and v.status not in ^status)
-  #   |> exlude_business_id_where(exclude_id)
-  #   |> select([v, _], count(v.id))
-  #   |> Repo.one!
-  #   {:ok, count}                                                    #                                                     BusinessConcept.published])
-  # end
-  #
-  # defp exlude_business_id_where(query, nil), do: query
-  # defp exlude_business_id_where(query, exclude_id) do
-  #   query |> where([_, c], c.id != ^exclude_id)
-  # end
-
-  def exist_business_concept_by_type_and_name?(type, name, exclude_id \\ nil)
-  def exist_business_concept_by_type_and_name?(type, name, _exclude_id) when is_nil(name) or is_nil(type),  do: {:ok, 0}
-  def exist_business_concept_by_type_and_name?(type, name, exclude_id) do
-    #status = [BusinessConcept.status.versioned, BusinessConcept.status.deprecated]
-    status = [BusinessConcept.status.versioned]
+  def exist_business_concept_by_type_and_name?(type, name, exclude_concept_id \\ nil)
+  def exist_business_concept_by_type_and_name?(type, name, _exclude_concept_id) when is_nil(name) or is_nil(type),  do: {:ok, 0}
+  def exist_business_concept_by_type_and_name?(type, name, exclude_concept_id) do
+    status = [BusinessConcept.status.versioned, BusinessConcept.status.deprecated]
     count = BusinessConcept
     |> join(:left, [c], _ in assoc(c, :aliases))
     |> join(:left, [c, a], _ in assoc(c, :versions))
-    |> where([c, a, v], c.type == ^type and (v.name == ^name or a.name == ^name) and v.status not in ^status)
-    |> exlude_business_id_where(exclude_id)
+    |> where([c, a, v], c.type == ^type and v.status not in ^status)
+    |> include_name_where(name, exclude_concept_id)
     |> select([c, a, v], count(c.id))
     |> Repo.one!
-    {:ok, count}                                                    #                                                     BusinessConcept.published])
+    {:ok, count}
   end
 
-  defp exlude_business_id_where(query, nil), do: query
-  defp exlude_business_id_where(query, exclude_id) do
-    query |> where([c, _, _], c.id != ^exclude_id)
+  defp include_name_where(query, name, nil) do
+    query |> where([_, a, v], (v.name == ^name or a.name == ^name))
+  end
+  defp include_name_where(query, name, exclude_concept_id) do
+    query |> where([c, a, v], ((c.id != ^exclude_concept_id and (v.name == ^name or a.name == ^name)) and (c.id == ^exclude_concept_id and a.name == ^name)))
   end
 
   @doc """
