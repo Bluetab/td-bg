@@ -168,6 +168,8 @@ defmodule TdBg.RolesAdminTest do
 
   defthen ~r/^the system returns an user list with following data:$/, %{table: users}, state do
     available_users = state[:users]["data"]
+    assert length(users) == length(available_users)
+
     Enum.each(users, fn(user) ->
       match_user = Enum.find(available_users, fn(available) ->
         user.user == available["user_name"]
