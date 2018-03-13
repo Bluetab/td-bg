@@ -31,6 +31,6 @@ config :td_bg, :api_services_login,
   api_password: "xxxxx"
 
 config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService,
-  host: "localhost",
-  port: "4001",
-  domain: ""
+  auth_host: "localhost",
+  auth_port: "4001",
+  auth_domain: ""

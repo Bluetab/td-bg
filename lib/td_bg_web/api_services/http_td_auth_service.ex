@@ -21,7 +21,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
 
   defp get_auth_endpoint do
     auth_service_config = get_config()
-    "#{auth_service_config[:protocol]}://#{auth_service_config[:host]}:#{auth_service_config[:port]}"
+    "#{auth_service_config[:protocol]}://#{auth_service_config[:auth_host]}:#{auth_service_config[:auth_port]}"
   end
 
   defp get_users_path do
