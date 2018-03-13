@@ -2,7 +2,14 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
+  alias TdBgWeb.ApiServices.MockTdAuthService
+
   import TdBgWeb.Authentication, only: :functions
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}

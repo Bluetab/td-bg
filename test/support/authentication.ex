@@ -56,7 +56,7 @@ defmodule TdBgWeb.Authentication do
     @td_auth_api.get_user_by_name(user_name)
   end
 
-  def get_users() do
+  def get_users do
     @td_auth_api.index()
   end
 
