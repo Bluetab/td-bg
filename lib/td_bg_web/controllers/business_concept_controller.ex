@@ -87,7 +87,7 @@ defmodule TdBgWeb.BusinessConceptController do
     |> Map.put("version", 1)
 
     with true <- can?(user, create_business_concept(data_domain)),
-         {:ok, 0} <- BusinessConcepts.exist_business_concept_by_type_and_name?(concept_type, concept_name),
+         {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:ok, %BusinessConceptVersion{} = concept} <-
           BusinessConcepts.create_business_concept_version(creation_attrs) do
       conn
@@ -154,7 +154,7 @@ defmodule TdBgWeb.BusinessConceptController do
     |> Map.put("last_change_at", DateTime.utc_now())
 
     with true <- can?(user, update(business_concept_version)),
-         {:ok, 0} <- BusinessConcepts.exist_business_concept_by_type_and_name?(concept_type, concept_name, id),
+         {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, id),
          {:ok, %BusinessConceptVersion{} = concept} <-
       BusinessConcepts.update_business_concept_version(business_concept_version,
                                                               update_params) do

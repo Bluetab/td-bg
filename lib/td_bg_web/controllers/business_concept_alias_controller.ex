@@ -51,7 +51,7 @@ defmodule TdBgWeb.BusinessConceptAliasController do
 
     user = get_current_user(conn)
     with true <- can?(user, create_alias(business_concept_version)),
-         {:ok, 0} <- BusinessConcepts.exist_business_concept_by_type_and_name?(concept_type, alias_name),
+         {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, alias_name),
          {:ok, %BusinessConceptAlias{} = business_concept_alias} <- BusinessConcepts.create_business_concept_alias(creation_attrs) do
       conn
       |> put_status(:created)

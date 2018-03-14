@@ -110,7 +110,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Map.put("version", business_concept_version.version + 1)
 
     with true <- can?(user, update_published(business_concept_version)),
-         {:ok, 0} <- BusinessConcepts.exist_business_concept_by_type_and_name?(concept_type, concept_name, business_concept_id),
+         {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, business_concept_id),
          {:ok, %BusinessConceptVersion{} = new_version} <- BusinessConcepts.create_business_concept_version(draft_attrs) do
       conn
         |> put_status(:created)
