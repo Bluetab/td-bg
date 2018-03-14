@@ -1,0 +1,71 @@
+[
+  {
+    "business_concept": {
+      "mappings": {
+        "_doc": {
+          "properties": {
+            "data_domain_id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "text"
+            },
+            "status": {
+              "type": "text"
+            },
+            "type": {
+              "type": "text"
+            },
+            "content": {
+              "type": "object"
+            },
+            "description": {
+              "type": "text"
+            },
+            "last_change_at": {
+              "type": "date"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "data_domain": {
+      "mappings": {
+        "_doc": {
+          "properties": {
+            "name": {
+              "type": "text"
+            },
+            "description": {
+              "type": "text"
+            },
+            "domain_group_id": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "domain_group": {
+      "mappings": {
+        "_doc": {
+          "properties": {
+            "name": {
+              "type": "text"
+            },
+            "description": {
+              "type": "text"
+            },
+            "parent_id": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+]
