@@ -489,7 +489,7 @@ defmodule TdBg.BusinessConceptsTests do
   defp business_concept_version_preload(business_concept_version) do
     business_concept_version
       |> Repo.preload(:business_concept)
-      |> Repo.preload(business_concept: [:data_domain])
+      |> Repo.preload(business_concept: [:data_domain, :aliases])
       |> Repo.preload(business_concept: [data_domain: [:domain_group]])
   end
 

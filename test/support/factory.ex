@@ -34,6 +34,7 @@ defmodule TdBg.Factory do
       type: "some type",
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
+      aliases: []
     }
   end
 

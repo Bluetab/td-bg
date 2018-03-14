@@ -1,6 +1,7 @@
 defmodule TdBgWeb.BusinessConceptView do
   use TdBgWeb, :view
   alias TdBgWeb.BusinessConceptView
+  alias Ecto
 
   def render("index.json", %{business_concepts: business_concept_versions}) do
     %{data: render_many(business_concept_versions, BusinessConceptView, "business_concept.json")}
@@ -26,6 +27,16 @@ defmodule TdBgWeb.BusinessConceptView do
                          String.to_atom(business_concept_version.status))
     |> add_mod_comments(business_concept_version.mod_comments,
                         business_concept_version.version)
+    |> add_aliases(business_concept_version.business_concept)
+  end
+
+  def render("business_concept_aliases.json", %{business_concept_aliases: business_concept_aliases}) do
+    render_many(business_concept_aliases, BusinessConceptView, "business_concept_alias.json")
+  end
+
+  def render("business_concept_alias.json", %{business_concept_alias: business_concept_alias}) do
+    %{id: business_concept_alias.id,
+      name: business_concept_alias.name}
   end
 
   defp add_reject_reason(concept, reject_reason, :rejected) do
@@ -33,9 +44,18 @@ defmodule TdBgWeb.BusinessConceptView do
   end
   defp add_reject_reason(concept, _reject_reason, _status), do: concept
 
-  defp add_mod_comments(concept, _mod_comments,  1), do: concept
-  defp add_mod_comments(concept, mod_comments,  _version) do
+  defp add_mod_comments(concept, _mod_comments, 1), do: concept
+  defp add_mod_comments(concept, mod_comments, _version) do
     Map.put(concept, :mod_comments, mod_comments)
+  end
+
+  defp add_aliases(concept, business_concept) do
+    if Ecto.assoc_loaded?(business_concept.aliases) do
+      alias_array = render("business_concept_aliases.json", %{business_concept_aliases: business_concept.aliases})
+      Map.put(concept, :aliases, alias_array)
+    else
+      concept
+    end
   end
 
 end
