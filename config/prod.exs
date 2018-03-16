@@ -15,7 +15,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :td_bg, TdBgWeb.Endpoint,
   http: [port: 4002],
-  url: [host: "52.214.3.82", port: 4002],
+  url: [host: "truedat.bluetab.net", port: 4002],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json"
 
@@ -67,4 +67,3 @@ import_config "prod.secret.exs"
 config :td_bg,
   # business concept content  schema location
   bc_schema_location: "bc_schema.prod"
-
