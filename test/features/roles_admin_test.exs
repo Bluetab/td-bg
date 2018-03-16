@@ -247,7 +247,6 @@ defmodule TdBg.RolesAdminTest do
     end)
   end
 
-
   defp data_domain_users_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
