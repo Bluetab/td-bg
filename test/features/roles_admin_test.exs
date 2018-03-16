@@ -195,10 +195,70 @@ defmodule TdBg.RolesAdminTest do
     {:ok, Map.merge(state, %{status_code: status_code, users: users})}
   end
 
+  #Scenario List of user with custom permission in a Domain Group
+  defgiven ~r/^an existing Domain Group called "(?<name>[^"]+)"$/, %{name: name}, state do
+    token_admin = get_user_token("app-admin")
+    state = Map.merge(state, %{token_admin: token_admin})
+    {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
+    assert rc_created() == to_response_code(status_code)
+    {:ok, state}
+  end
+
+  defand ~r/^following users exist with the indicated role in Domain Group "(?<domain_group_name>[^"]+)"$/,
+    %{domain_group_name: domain_group_name, table: table}, state do
+
+    domain_group = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    Enum.map(table, fn(x) ->
+        user_name = x[:user]
+        role_name = x[:role]
+        principal_id = find_or_create_user(user_name).id
+        %{"id" => role_id} = get_role_by_name(state[:token_admin], role_name)
+        acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group["id"], role_id: role_id}
+        {:ok, _, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
+        {:ok, _, json_resp} = user_domain_group_role(state[:token_admin], %{user_id: principal_id, domain_group_id: domain_group["id"]})
+        assert json_resp["data"]["name"] == role_name
+      end)
+  end
+
+  defwhen ~r/^"(?<user_name>[^"]+)" lists all users with custom permissions in Domain Group "(?<domain_group_name>[^"]+)"$/,
+  %{user_name: user_name, domain_group_name: domain_group_name}, state do
+    token = get_user_token(user_name)
+    domain_group_info = get_domain_group_by_name(token, domain_group_name)
+    {:ok, 200,  %{"data" => users_roles}} = domain_group_users_roles(token, %{id: domain_group_info["id"]})
+    {:ok, Map.merge(state, %{users_roles: users_roles})}
+  end
+
+  defthen ~r/^the system returns a result with following data:$/,
+    %{table: expected_list}, state do
+
+    actual_list = state[:users_roles]
+    expected_list = Enum.reduce(expected_list, [], fn(item, acc) ->
+      nitem = Map.new(item, fn {k, v} -> {Atom.to_string(k), v} end)
+      acc ++ [nitem]
+    end
+    )
+    assert length(expected_list) == length(actual_list)
+    Enum.each(expected_list, fn(e_user_role_entry) ->
+      user_role = Enum.find(actual_list, fn(c_user_role_entry) ->
+        e_user_role_entry["user"] == c_user_role_entry["user_name"]
+      end)
+      assert user_role["user_name"] == e_user_role_entry["user"] &&
+        user_role["role_name"] == e_user_role_entry["role"]
+    end)
+  end
+
+
   defp data_domain_users_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(data_domain_data_domain_url(@endpoint, :users_roles, attrs.id), [], headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp domain_group_users_roles(token, attrs) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.post!(domain_group_domain_group_url(@endpoint, :users_roles, attrs.id), [], headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

@@ -16,4 +16,17 @@ defmodule TdBgWeb.DomainGroupView do
       name: domain_group.name,
       description: domain_group.description}
   end
+
+  def render("index_user_roles.json", %{users_roles: users_roles}) do
+    %{data: render_many(users_roles, DomainGroupView, "users_role.json")}
+  end
+
+  def render("users_role.json", %{domain_group: user_role}) do
+    %{
+      user_id: user_role.user_id,
+      user_name: user_role.user_name,
+      role_name: user_role.role_name,
+      role_id: user_role.role_id
+    }
+  end
 end
