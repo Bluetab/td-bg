@@ -284,4 +284,29 @@ defmodule TdBg.Taxonomies do
   def change_data_domain(%DataDomain{} = data_domain) do
     DataDomain.changeset(data_domain, %{})
   end
+
+  @doc """
+    Returns map of taxonomy tree structure
+  """
+  def tree do
+    dg_list = list_root_domain_groups() |> Enum.sort(&(&1.name < &2.name))
+    dg_all = list_domain_groups() |> Enum.sort(&(&1.name < &2.name))
+    dd_all = list_data_domains() |> Enum.sort(&(&1.name < &2.name))
+    Enum.map(dg_list, fn(dg) -> build_node(dg, dg_all, dd_all) end)
+  end
+
+  defp build_node(dg, dg_all, dd_all) do
+    Map.merge(dg, %{children: list_children(dg, dg_all, dd_all)})
+  end
+
+  defp list_children(node, dg_all, dd_all) do
+    dg_children = Enum.filter(dg_all, fn(dg) -> node.id == dg.parent_id end)
+    dg_children = dg_children ++ Enum.filter(dd_all, fn(dd) -> node.id == dd.domain_group_id end)
+    if dg_children do
+      Enum.map(dg_children, fn(dg) -> build_node(dg, dg_all, dd_all) end)
+    else
+      []
+    end
+  end
+
 end
