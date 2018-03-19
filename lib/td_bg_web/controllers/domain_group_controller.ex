@@ -229,35 +229,34 @@ defmodule TdBgWeb.DomainGroupController do
   end
 
   def tree(conn, _params) do
-    dg_list = Taxonomies.list_root_domain_groups()
-    out = Enum.map(dg_list, fn(dg)-> build_node(dg) end)
-    IO.inspect out
+    dg_list = Taxonomies.list_root_domain_groups() |> Enum.sort(&(&1.name < &2.name))
+    dg_all = Taxonomies.list_domain_groups() |> Enum.sort(&(&1.name < &2.name))
+    dd_all = Taxonomies.list_data_domains() |> Enum.sort(&(&1.name < &2.name))
+    out = Enum.map(dg_list, fn(dg) -> build_node(dg, dg_all, dd_all) end)
     json conn, out |> JSON.encode!
   end
 
-  defp list_children(node) do
-    IO.inspect node
-    IO.inspect node[:id]
-    dg_children = Taxonomies.list_domain_group_children(node[:id])
-    dg_children = dg_children ++ Taxonomies.list_children_data_domain(node[:id])
-    if(dg_children) do
-      Enum.map(dg_children, fn(dg)-> build_node(dg) end)
+  defp build_node(dg, dg_all, dd_all) do
+    dg_map = build_map(dg)
+    Map.merge(dg_map, %{children: list_children(dg_map, dg_all, dd_all)})
+  end
+
+  defp list_children(node, dg_all, dd_all) do
+    dg_children = Enum.filter(dg_all, fn(dg) -> node[:id] == dg.parent_id end)
+    dg_children = dg_children ++ Enum.filter(dd_all, fn(dd) -> node[:id] == dd.domain_group_id end)
+    if dg_children do
+      Enum.map(dg_children, fn(dg) -> build_node(dg, dg_all, dd_all) end)
     else
       []
     end
   end
 
-  defp build_node(dg) do
-    dg_map = build_map(dg)
-    Map.merge(dg_map, %{children: list_children(dg_map)})
-  end
-
   defp build_map(%DomainGroup{} = dg) do
-    %{id: dg.id, parent_id: dg.parent_id, type: "DG", children: []}
+    %{id: dg.id, name: dg.name, description: dg.description, parent_id: dg.parent_id, type: "DG", children: []}
   end
 
   defp build_map(%DataDomain{} = dd) do
-    %{id: dd.id, parent_id: dd.domain_group_id, type: "DD", children: []}
+    %{id: dd.id, name: dd.name, description: dd.description, parent_id: dd.domain_group_id, type: "DD", children: []}
   end
 
 end

@@ -107,3 +107,40 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
        And an existing Data Domain called "My Data Domain" child of Domain Group "My Child Group"
        And an existing Data Domain called "My Second Data Domain" child of Domain Group "My Child Group"
        When user "app-admin" tries to list taxonomy tree"
+       Then user sees following tree structure:
+         """
+          [
+            {
+              "type": "DG",
+              "name": "My Root Group",
+              "description": null,
+              "children": [
+                {
+                  "type": "DG",
+                  "name": "My Child Group",
+                  "description": null,
+                  "children": [
+                    {
+                      "type": "DD",
+                      "name": "My Data Domain",
+                      "description": null,
+                      "children": []
+                    },
+                    {
+                      "type": "DD",
+                      "name": "My Second Data Domain",
+                      "description": null,
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "DG",
+              "name": "My Root Group 2",
+              "description": null,
+              "children": []
+            }
+          ]
+         """

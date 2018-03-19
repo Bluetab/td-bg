@@ -172,8 +172,32 @@ defmodule TdBg.TaxonomyNavigationTest do
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to list taxonomy tree"$/, %{user_name: user_name}, state do
     token = get_user_token(user_name)
-    taxonomy_structure = get_tree(token)
-    IO.inspect taxonomy_structure
+    {:ok, 200, taxonomy_structure} = get_tree(token)
+    {:ok, Map.merge(state, %{taxonomy_tree: taxonomy_structure})}
+  end
+
+  defp remove_tree_keys(nil), do: nil
+
+  defp remove_tree_keys(tree) do
+    Enum.map(tree, fn(node) ->
+      build_node(node)
+    end)
+  end
+
+  defp build_node(node) do
+    %{"type"=> node["type"], "name"=> node["name"], "description"=> node["description"], "children"=> remove_tree_keys(node["children"])}
+  end
+
+  defthen ~r/^user sees following tree structure:$/,
+    %{doc_string: json_string},
+    state do
+    actual_tree = state[:taxonomy_tree] |> JSON.decode!
+    expected_tree = json_string |> JSON.decode!
+
+    #remove id and parent_id from comparison
+    actual_tree = remove_tree_keys(actual_tree)
+
+    assert JSONDiff.diff(actual_tree, expected_tree) == []
   end
 
   defp get_tree(token) do
