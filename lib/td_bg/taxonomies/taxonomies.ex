@@ -295,13 +295,18 @@ defmodule TdBg.Taxonomies do
     Enum.map(dg_list, fn(dg) -> build_node(dg, dg_all, dd_all) end)
   end
 
-  defp build_node(dg, dg_all, dd_all) do
+  defp build_node(%DataDomain{} = dd, _dg_all, _dd_all) do
+    Map.merge(dd, %{children: []})
+  end
+
+  defp build_node(%DomainGroup{} = dg, dg_all, dd_all) do
     Map.merge(dg, %{children: list_children(dg, dg_all, dd_all)})
   end
 
-  defp list_children(node, dg_all, dd_all) do
+  defp list_children(%DomainGroup{} = node, dg_all, dd_all) do
     dg_children = Enum.filter(dg_all, fn(dg) -> node.id == dg.parent_id end)
     dg_children = dg_children ++ Enum.filter(dd_all, fn(dd) -> node.id == dd.domain_group_id end)
+    IO.inspect dg_children
     if dg_children do
       Enum.map(dg_children, fn(dg) -> build_node(dg, dg_all, dd_all) end)
     else
