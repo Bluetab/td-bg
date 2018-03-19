@@ -7,9 +7,11 @@ defmodule TdBgWeb.DomainGroupController do
   alias TdBg.Taxonomies
   alias TdBg.Permissions
   alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.Taxonomies.DataDomain
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
   alias Guardian.Plug, as: GuardianPlug
+  alias Poison, as: JSON
   import Canada
 
   action_fallback TdBgWeb.FallbackController
@@ -224,6 +226,38 @@ defmodule TdBgWeb.DomainGroupController do
   end
   defp user_map(user) do
     %{"user_id": user.id, "user_name": user.user_name}
+  end
+
+  def tree(conn, _params) do
+    dg_list = Taxonomies.list_root_domain_groups()
+    out = Enum.map(dg_list, fn(dg)-> build_node(dg) end)
+    IO.inspect out
+    json conn, out |> JSON.encode!
+  end
+
+  defp list_children(node) do
+    IO.inspect node
+    IO.inspect node[:id]
+    dg_children = Taxonomies.list_domain_group_children(node[:id])
+    dg_children = dg_children ++ Taxonomies.list_children_data_domain(node[:id])
+    if(dg_children) do
+      Enum.map(dg_children, fn(dg)-> build_node(dg) end)
+    else
+      []
+    end
+  end
+
+  defp build_node(dg) do
+    dg_map = build_map(dg)
+    Map.merge(dg_map, %{children: list_children(dg_map)})
+  end
+
+  defp build_map(%DomainGroup{} = dg) do
+    %{id: dg.id, parent_id: dg.parent_id, type: "DG", children: []}
+  end
+
+  defp build_map(%DataDomain{} = dd) do
+    %{id: dd.id, parent_id: dd.domain_group_id, type: "DD", children: []}
   end
 
 end

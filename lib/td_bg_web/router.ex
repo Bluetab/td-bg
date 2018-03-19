@@ -54,6 +54,7 @@ defmodule TdBgWeb.Router do
       post "/users_roles", DataDomainController, :users_roles
       get "/available_users", DataDomainController, :available_users
     end
+    get "/taxonomy", DomainGroupController, :tree
 
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
     resources "/business_concepts", BusinessConceptController do

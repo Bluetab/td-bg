@@ -109,7 +109,7 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, file} = File.open filename, [:read, :write, :utf8]
     content = File.read! filename
     map_content =
-      case File.read! filename do
+      case content do
         "" -> Map.new
         _ -> JSON.decode!(content)
       end
@@ -168,6 +168,19 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, status_code, json_resp} = index_data_domain_children_business_concept(token, %{data_domain_id: data_domain_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
+  end
+
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to list taxonomy tree"$/, %{user_name: user_name}, state do
+    token = get_user_token(user_name)
+    taxonomy_structure = get_tree(token)
+    IO.inspect taxonomy_structure
+  end
+
+  defp get_tree(token) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(domain_group_url(@endpoint, :tree), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp index_domain_group_children_data_domain(token, attrs) do
