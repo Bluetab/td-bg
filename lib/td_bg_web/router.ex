@@ -15,6 +15,10 @@ defmodule TdBgWeb.Router do
     plug Guardian.Plug.LoadResource
   end
 
+  scope "/api/swagger" do
+    forward "/", PhoenixSwagger.Plug.SwaggerUI, otp_app: :td_bg, swagger_file: "swagger.json"
+  end
+
   scope "/api", TdBgWeb do
     pipe_through :api
     get  "/ping", PingController, :ping
