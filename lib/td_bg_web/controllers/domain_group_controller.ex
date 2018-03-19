@@ -228,6 +228,13 @@ defmodule TdBgWeb.DomainGroupController do
     %{"user_id": user.id, "user_name": user.user_name}
   end
 
+  swagger_path :tree do
+    get "/taxonomy/tree"
+    description "Returns tree of DGs and DDs"
+    produces "application/json"
+    response 200, "Ok", Schema.ref(:TaxonomyTreeResponse)
+    response 400, "Client error"
+  end
   def tree(conn, _params) do
     tree = Taxonomies.tree
     tree_output = tree |> format_tree |> JSON.encode!

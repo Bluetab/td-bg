@@ -146,6 +146,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       UsersResponse: swagger_schema do
         type :array
         items Schema.ref(:UserResponse)
+      end,
+      TaxonomyTreeResponse: swagger_schema do
+        properties do
+          data :object
+        end
       end
     }
   end
