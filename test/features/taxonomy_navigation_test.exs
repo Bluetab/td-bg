@@ -78,6 +78,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
          %{name: name, domain_group_name: domain_group_name}, state do
     domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    assert domain_group_info["name"] == domain_group_name
     {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, parent_id: domain_group_info["id"]})
     assert rc_created() == to_response_code(status_code)
     assert json_resp["data"]["parent_id"] == domain_group_info["id"]

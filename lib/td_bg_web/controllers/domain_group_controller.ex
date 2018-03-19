@@ -228,7 +228,6 @@ defmodule TdBgWeb.DomainGroupController do
     %{"user_id": user.id, "user_name": user.user_name}
   end
 
-
   def tree(conn, _params) do
     tree = Taxonomies.tree
     tree_output = tree |> format_tree |> JSON.encode!

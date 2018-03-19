@@ -104,6 +104,7 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
        Given an existing Domain Group called "My Root Group"
        And an existing Domain Group called "My Root Group 2"
        And an existing Domain Group called "My Child Group" child of Domain Group "My Root Group"
+       And an existing Domain Group called "My Child Group child" child of Domain Group "My Child Group"
        And an existing Data Domain called "My Data Domain" child of Domain Group "My Child Group"
        And an existing Data Domain called "My Second Data Domain" child of Domain Group "My Child Group"
        When user "app-admin" tries to list taxonomy tree"
@@ -120,6 +121,12 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
                   "name": "My Child Group",
                   "description": null,
                   "children": [
+                    {
+                      "type": "DG",
+                      "name": "My Child Group child",
+                      "description": null,
+                      "children": []
+                    },
                     {
                       "type": "DD",
                       "name": "My Data Domain",
@@ -144,3 +151,11 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
             }
           ]
          """
+
+  Scenario: List Domain Groups and Data Domains structure (empty structure)
+    When user "app-admin" tries to list taxonomy tree"
+    Then user sees following tree structure:
+         """
+          []
+         """
+
