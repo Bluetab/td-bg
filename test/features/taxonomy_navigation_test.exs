@@ -174,7 +174,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to list taxonomy tree"$/, %{user_name: user_name}, state do
     token = get_user_token(user_name)
     {:ok, 200, taxonomy_structure} = get_tree(token)
-    {:ok, Map.merge(state, %{taxonomy_tree: taxonomy_structure})}
+    {:ok, Map.merge(state, %{taxonomy_tree: taxonomy_structure["data"]})}
   end
 
   defp remove_tree_keys(nil), do: nil
