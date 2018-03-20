@@ -272,11 +272,7 @@ defmodule TdBgWeb.DomainGroupController do
     response 400, "Client error"
   end
   def roles(conn, params) do
-    tree = Taxonomies.tree()
-    all_acls = Permissions.list_acl_entries_by_principal(%{principal_id: params["principal_id"]})
-    all_dgs = Taxonomies.list_domain_groups()
-    all_dds = Taxonomies.list_data_domains()
-    roles = Permissions.assemble_roles(tree, params["principal_id"], all_acls, all_dgs, all_dds)
+    roles = Permissions.assemble_roles(%{user_id: params["principal_id"]})
     #transform to front expected format
     roles = Enum.group_by(roles, &(&1.type), &(%{id: &1.id, role: &1.role, inherited: &1.inherited}))
     json conn, %{"data": roles}

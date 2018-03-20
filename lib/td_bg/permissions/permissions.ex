@@ -44,8 +44,8 @@ defmodule TdBg.Permissions do
   @doc """
 
   """
-  def list_acl_entries_by_principal(%{principal_id: principal_id}) do
-    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.principal_type == "user" and acl_entry.resource_id == ^principal_id)
+  def list_acl_entries_by_principal(%{principal_id: principal_id, principal_type: principal_type}) do
+    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.principal_type == ^principal_type and acl_entry.resource_id == ^principal_id)
     acl_entries |> Repo.preload(:role)
   end
 
@@ -352,7 +352,11 @@ defmodule TdBg.Permissions do
   @doc """
     Returns flat list of DG and DDs user roles
   """
-  def assemble_roles(tree, user_id, all_acls, all_dgs, all_dds) do
+  def assemble_roles(%{user_id: user_id}) do
+    tree = Taxonomies.tree()
+    all_acls = list_acl_entries_by_principal(%{principal_id: user_id, principal_type: "user"})
+    all_dgs = Taxonomies.list_domain_groups()
+    all_dds = Taxonomies.list_data_domains()
     roles = []
     roles = Enum.reduce(tree, roles, fn(node, acc) ->
       branch_roles = assemble_node_role(node, user_id, all_acls, roles, all_dgs, all_dds)
