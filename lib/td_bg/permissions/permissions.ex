@@ -44,6 +44,14 @@ defmodule TdBg.Permissions do
   @doc """
 
   """
+  def list_acl_entries_by_principal(%{principal_id: principal_id}) do
+    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.principal_type == "user" and acl_entry.resource_id == ^principal_id)
+    acl_entries |> Repo.preload(:role)
+  end
+
+  @doc """
+
+  """
   def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, domain_group: domain_group}) do
     Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group.id)
   end
