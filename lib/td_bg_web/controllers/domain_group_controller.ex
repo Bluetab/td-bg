@@ -272,33 +272,28 @@ defmodule TdBgWeb.DomainGroupController do
     response 400, "Client error"
   end
   def roles(conn, params) do
-    IO.inspect params
-    #assert params.principal_id != nil
-
     tree = Taxonomies.tree()
     all_acls = Permissions.list_acl_entries_by_principal(%{principal_id: params["principal_id"]})
     all_dgs = Taxonomies.list_domain_groups()
     all_dds = Taxonomies.list_data_domains()
     roles = assemble_roles(tree, params["principal_id"], all_acls, all_dgs, all_dds)
-    IO.inspect roles
     json conn, %{"data": roles}
   end
 
   defp assemble_roles(tree, user_id, all_acls, all_dgs, all_dds) do
     roles = []
-    roles = Enum.map(tree, fn(node) ->
-      roles = assemble_node_role(node, user_id, all_acls, roles, all_dgs, all_dds)
+    roles = Enum.reduce(tree, roles, fn(node, acc) ->
+      branch_roles = assemble_node_role(node, user_id, all_acls, roles, all_dgs, all_dds)
+      acc ++ branch_roles
     end)
-    roles = List.flatten(roles)
-    IO.inspect roles
     roles
   end
 
   defp assemble_node_role(%DomainGroup{parent_id: nil} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
     custom_role = Permissions.get_role_in_resource(%{user_id: user_id, domain_group_id: user_id})
     roles = roles ++ [%{id: dg.id, type: "DG", role: custom_role.name, inherited: false}]
-    roles = Enum.map(dg.children, fn(child_dg)->
-      roles = assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)
+    Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
+      acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]
     end)
   end
 
@@ -309,17 +304,17 @@ defmodule TdBgWeb.DomainGroupController do
     else
       roles ++ [get_closest_role(dg, roles, all_dgs, all_dds)]
     end
-    roles = Enum.map(dg.children, fn(child_dg)->
-      roles = assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)
+    Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
+      acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]
     end)
   end
 
-  defp assemble_node_role(%DataDomain{} = dd, user_id, all_acls, roles, all_dgs, all_dds) do
+  defp assemble_node_role(%DataDomain{} = dd, _user_id, all_acls, roles, all_dgs, all_dds) do
     custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "data_domain" && acl.resource_id == dd.id end)
-    roles = if custom_acl do
-      roles ++ [%{id: dd.id, type: "DD", role: custom_acl.role.name, inherited: false}]
+    if custom_acl do
+      %{id: dd.id, type: "DD", role: custom_acl.role.name, inherited: false}
     else
-      roles ++ [get_closest_role(dd, roles, all_dgs, all_dds)]
+      get_closest_role(dd, roles, all_dgs, all_dds)
     end
   end
 
