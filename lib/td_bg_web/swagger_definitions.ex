@@ -151,6 +151,26 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data :object
         end
+          example %{
+          data: [
+            %{
+              type: "DG",
+              name: "dg 1",
+              id: 1,
+              description: "dg root 1",
+              children:
+              [
+                  %{
+                    type: "DD",
+                    name: "dd1",
+                    id: 1,
+                    description: "dd1 child of dg1",
+                    children: []
+                  }
+              ]
+              }
+            ]
+          }
       end
     }
   end

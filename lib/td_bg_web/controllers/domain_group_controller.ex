@@ -237,7 +237,7 @@ defmodule TdBgWeb.DomainGroupController do
   def tree(conn, _params) do
     tree = Taxonomies.tree
     tree_output = tree |> format_tree
-    json conn, tree_output
+    json conn, %{"data": tree_output}
   end
 
   defp format_tree(nil), do: nil
