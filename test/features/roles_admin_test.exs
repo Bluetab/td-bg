@@ -214,8 +214,8 @@ defmodule TdBg.RolesAdminTest do
         principal_id = find_or_create_user(user_name).id
         %{"id" => role_id} = get_role_by_name(state[:token_admin], role_name)
         acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group["id"], role_id: role_id}
-        {:ok, _, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
-        {:ok, _, json_resp} = user_domain_group_role(state[:token_admin], %{user_id: principal_id, domain_group_id: domain_group["id"]})
+        {:ok, 201, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
+        {:ok, 200, json_resp} = user_domain_group_role(state[:token_admin], %{user_id: principal_id, domain_group_id: domain_group["id"]})
         assert json_resp["data"]["name"] == role_name
       end)
   end
@@ -247,6 +247,23 @@ defmodule TdBg.RolesAdminTest do
     end)
   end
 
+  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/, %{name: name, domain_group_name: domain_group_name}, state do
+    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, parent_id: domain_group_info["id"]})
+    assert rc_created() == to_response_code(status_code)
+    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
+    {:ok, state}
+  end
+
+  defwhen ~r/^user "(?<user_name>[^"]+)" lists taxonomy roles of user "(?<target_user_name>[^"]+)"$/,
+    %{user_name: user_name, target_user_name: target_user_name},
+    state do
+    token = get_user_token(user_name)
+    principal_id = find_or_create_user(target_user_name).id
+    {:ok, 200,  %{"data" => taxonomy_roles}} = get_taxonomy_roles(token, %{principal_id: principal_id})
+    {:ok, Map.merge(state, %{taxonomy_roles: taxonomy_roles})}
+  end
+
   defp data_domain_users_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
@@ -258,6 +275,13 @@ defmodule TdBg.RolesAdminTest do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(domain_group_domain_group_url(@endpoint, :users_roles, attrs.id), [], headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
+  defp get_taxonomy_roles(token, attrs) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(domain_group_url(@endpoint, :roles, principal_id: attrs.principal_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

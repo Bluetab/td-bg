@@ -45,7 +45,7 @@ defmodule TdBg.Permissions do
 
   """
   def list_acl_entries_by_principal(%{principal_id: principal_id, principal_type: principal_type}) do
-    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.principal_type == ^principal_type and acl_entry.resource_id == ^principal_id)
+    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.principal_type == ^principal_type and acl_entry.principal_id == ^principal_id)
     acl_entries |> Repo.preload(:role)
   end
 
@@ -190,10 +190,14 @@ defmodule TdBg.Permissions do
   end
 
   defp get_resource_role(%{user_id: principal_id, data_domain: %DataDomain{} = data_domain} = attrs) do
-    role = get_role_by_principal_and_resource(attrs)
-    parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group_id)
-    parent_domain_group = parent_domain_group |> Repo.preload(:parent)
-    get_resource_role(%{user_id: principal_id, domain_group: parent_domain_group, role: role})
+    case get_role_by_principal_and_resource(attrs) do
+      nil ->
+        parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group_id)
+        parent_domain_group = parent_domain_group |> Repo.preload(:parent)
+        get_resource_role(%{user_id: principal_id, domain_group: parent_domain_group, role: nil})
+      %Role{name: name} ->
+        name
+    end
   end
 
   defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{parent_id: nil}, role: nil} = attrs) do
@@ -360,16 +364,17 @@ defmodule TdBg.Permissions do
     roles = []
     roles = Enum.reduce(tree, roles, fn(node, acc) ->
       branch_roles = assemble_node_role(node, user_id, all_acls, roles, all_dgs, all_dds)
-      acc ++ branch_roles
+      Enum.uniq(List.flatten(acc ++ branch_roles))
     end)
     roles
   end
 
   defp assemble_node_role(%DomainGroup{parent_id: nil} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
-    custom_role = get_role_in_resource(%{user_id: user_id, domain_group_id: user_id})
-    roles = roles ++ [%{id: dg.id, type: "DG", role: custom_role.name, inherited: false}]
+    custom_role = get_role_in_resource(%{user_id: user_id, domain_group_id: dg.id})
+    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain_group" && acl.resource_id == dg.id end)
+    roles = roles ++ [%{id: dg.id, type: "DG", role: custom_role.name, inherited: custom_acl == nil}]
     Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
-      acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]
+      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]))
     end)
   end
 
@@ -381,7 +386,7 @@ defmodule TdBg.Permissions do
       roles ++ [get_closest_role(dg, roles, all_dgs, all_dds)]
     end
     Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
-      acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]
+      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]))
     end)
   end
 
