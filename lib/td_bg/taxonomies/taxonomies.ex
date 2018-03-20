@@ -306,7 +306,6 @@ defmodule TdBg.Taxonomies do
   defp list_children(%DomainGroup{} = node, dg_all, dd_all) do
     dg_children = Enum.filter(dg_all, fn(dg) -> node.id == dg.parent_id end)
     dg_children = dg_children ++ Enum.filter(dd_all, fn(dd) -> node.id == dd.domain_group_id end)
-    IO.inspect dg_children
     if dg_children do
       Enum.map(dg_children, fn(dg) -> build_node(dg, dg_all, dd_all) end)
     else

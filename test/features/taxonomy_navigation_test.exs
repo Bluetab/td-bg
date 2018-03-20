@@ -192,7 +192,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   defthen ~r/^user sees following tree structure:$/,
     %{doc_string: json_string},
     state do
-    actual_tree = state[:taxonomy_tree] |> JSON.decode!
+    actual_tree = state[:taxonomy_tree]
     expected_tree = json_string |> JSON.decode!
 
     #remove id and parent_id from comparison

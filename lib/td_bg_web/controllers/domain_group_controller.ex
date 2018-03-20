@@ -11,7 +11,6 @@ defmodule TdBgWeb.DomainGroupController do
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
   alias Guardian.Plug, as: GuardianPlug
-  alias Poison, as: JSON
   import Canada
 
   action_fallback TdBgWeb.FallbackController
@@ -237,7 +236,7 @@ defmodule TdBgWeb.DomainGroupController do
   end
   def tree(conn, _params) do
     tree = Taxonomies.tree
-    tree_output = tree |> format_tree |> JSON.encode!
+    tree_output = tree |> format_tree
     json conn, tree_output
   end
 
