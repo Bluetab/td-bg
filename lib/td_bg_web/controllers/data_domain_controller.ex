@@ -10,6 +10,7 @@ defmodule TdBgWeb.DataDomainController do
   alias TdBg.Taxonomies.DataDomain
   alias TdBg.Taxonomies.DomainGroup
   alias TdBgWeb.SwaggerDefinitions
+  alias TdBg.SearchApi
 
   action_fallback TdBgWeb.FallbackController
 
@@ -65,10 +66,12 @@ defmodule TdBgWeb.DataDomainController do
   def create(conn, %{"domain_group_id" => domain_group_id, "data_domain" => data_domain_params}) do
     data_domain_params = Map.put(data_domain_params, "domain_group_id", domain_group_id)
     with {:ok, %DataDomain{} = data_domain} <- Taxonomies.create_data_domain(data_domain_params) do
-      conn
+      conn = conn
       |> put_status(:created)
       |> put_resp_header("location", data_domain_path(conn, :show, data_domain))
       |> render("show.json", data_domain: data_domain)
+      SearchApi.put_search(data_domain)
+      conn
     end
   end
 
@@ -104,6 +107,7 @@ defmodule TdBgWeb.DataDomainController do
     data_domain = Taxonomies.get_data_domain!(id)
 
     with {:ok, %DataDomain{} = data_domain} <- Taxonomies.update_data_domain(data_domain, data_domain_params) do
+      SearchApi.put_search(data_domain)
       render(conn, "show.json", data_domain: data_domain)
     end
   end
@@ -123,6 +127,7 @@ defmodule TdBgWeb.DataDomainController do
     data_domain = Taxonomies.get_data_domain!(id)
     with {:count, :business_concept, 0} <- Taxonomies.count_data_domain_business_concept_children(id),
          {:ok, %DataDomain{}} <- Taxonomies.delete_data_domain(data_domain) do
+      SearchApi.delete_search(data_domain)
       send_resp(conn, :no_content, "")
     else
       {:count, :business_concept, n}  when is_integer(n) ->

@@ -20,6 +20,20 @@ defmodule TdBg.Search do
 
   end
 
+  def index_content(index_name, id, body) do
+    %HTTPoison.Response{body: response, status_code: status} =
+      put!(get_search_path(index_name, id), body)
+  end
+
+  def delete_content(index_name, id) do
+    %HTTPoison.Response{body: response, status_code: status} =
+      delete!(get_search_path(index_name, id))
+  end
+
+  defp get_search_path(index_name, id) do
+    "#{index_name}/" <> "_doc/" <> "#{id}"
+  end
+
   @doc """
   Deletes all indexes in elasticsearch
   """

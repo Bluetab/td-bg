@@ -11,6 +11,7 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBg.Taxonomies.DataDomain
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
+  alias TdBg.SearchApi
 
   alias Poison, as: JSON
 
@@ -90,10 +91,12 @@ defmodule TdBgWeb.BusinessConceptController do
          {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:ok, %BusinessConceptVersion{} = concept} <-
           BusinessConcepts.create_business_concept_version(creation_attrs) do
-      conn
+      conn = conn
       |> put_status(:created)
       |> put_resp_header("location", business_concept_path(conn, :show, concept.business_concept))
       |> render("show.json", business_concept: concept)
+      SearchApi.put_search(concept)
+      conn
     else
       false ->
         conn
@@ -158,6 +161,7 @@ defmodule TdBgWeb.BusinessConceptController do
          {:ok, %BusinessConceptVersion{} = concept} <-
       BusinessConcepts.update_business_concept_version(business_concept_version,
                                                               update_params) do
+      SearchApi.put_search(business_concept_version)
       render(conn, "show.json", business_concept: concept)
     else
       false ->
@@ -189,6 +193,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
     with true <- can?(user, delete(business_concept_version)),
          {:ok, %BusinessConceptVersion{}} <- BusinessConcepts.delete_business_concept_version(business_concept_version) do
+      SearchApi.delete_search(business_concept_version)
       send_resp(conn, :no_content, "")
     else
       false ->
@@ -250,6 +255,7 @@ defmodule TdBgWeb.BusinessConceptController do
     with true <- can?(user, send_for_approval(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.update_business_concept_version_status(business_concept_version, attrs) do
+       SearchApi.put_search(business_concept_version)
        render(conn, "show.json", business_concept: concept)
     else
       false ->
@@ -268,6 +274,7 @@ defmodule TdBgWeb.BusinessConceptController do
     with true <- can?(user, reject(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
+       SearchApi.put_search(business_concept_version)
        render(conn, "show.json", business_concept: concept)
     else
       false ->
@@ -303,6 +310,7 @@ defmodule TdBgWeb.BusinessConceptController do
     with true <- can?(user, deprecate(business_concept_version)),
           {:ok, %BusinessConceptVersion{} = concept} <-
             BusinessConcepts.update_business_concept_version_status(business_concept_version, attrs) do
+         SearchApi.put_search(business_concept_version)
          render(conn, "show.json", business_concept: concept)
     else
       false ->
