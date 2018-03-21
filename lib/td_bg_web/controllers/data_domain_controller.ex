@@ -70,7 +70,7 @@ defmodule TdBgWeb.DataDomainController do
       |> put_status(:created)
       |> put_resp_header("location", data_domain_path(conn, :show, data_domain))
       |> render("show.json", data_domain: data_domain)
-      # SearchApi.put_search(data_domain)
+      SearchApi.put_search(data_domain)
       conn
     end
   end
@@ -107,7 +107,7 @@ defmodule TdBgWeb.DataDomainController do
     data_domain = Taxonomies.get_data_domain!(id)
 
     with {:ok, %DataDomain{} = data_domain} <- Taxonomies.update_data_domain(data_domain, data_domain_params) do
-      # SearchApi.put_search(data_domain)
+      SearchApi.put_search(data_domain)
       render(conn, "show.json", data_domain: data_domain)
     end
   end
@@ -127,7 +127,7 @@ defmodule TdBgWeb.DataDomainController do
     data_domain = Taxonomies.get_data_domain!(id)
     with {:count, :business_concept, 0} <- Taxonomies.count_data_domain_business_concept_children(id),
          {:ok, %DataDomain{}} <- Taxonomies.delete_data_domain(data_domain) do
-      # SearchApi.delete_search(data_domain)
+      SearchApi.delete_search(data_domain)
       send_resp(conn, :no_content, "")
     else
       {:count, :business_concept, n}  when is_integer(n) ->
