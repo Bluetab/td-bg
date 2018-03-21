@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Bg.EsInit do
   use Mix.Task
-  alias TdBg.Search
+  alias TdBg.ESClientApi
 
   @shortdoc "Initialize ES indexes"
 
@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Bg.EsInit do
   def run(_args) do
     Mix.Task.run "app.start"
 
-    Search.create_indexes
+    ESClientApi.create_indexes
 
 # create indexes if we use library  {:elastix, "~> 0.5"}
 #

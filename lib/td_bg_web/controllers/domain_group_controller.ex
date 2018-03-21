@@ -9,7 +9,6 @@ defmodule TdBgWeb.DomainGroupController do
   alias TdBg.Taxonomies.DomainGroup
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
-  alias TdBg.SearchApi
   alias Guardian.Plug, as: GuardianPlug
   import Canada
 
@@ -17,6 +16,7 @@ defmodule TdBgWeb.DomainGroupController do
 
   plug :load_and_authorize_resource, model: DomainGroup, id_name: "id", persisted: true, only: [:update, :delete]
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
+  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   def swagger_definitions do
     SwaggerDefinitions.domain_group_swagger_definitions()
@@ -98,7 +98,7 @@ defmodule TdBgWeb.DomainGroupController do
         |> put_status(:created)
         |> put_resp_header("location", domain_group_path(conn, :show, domain_group))
         |> render("show.json", domain_group: domain_group)
-        SearchApi.put_search(domain_group)
+        @search_service.put_search(domain_group)
         conn
       {:error, %Ecto.Changeset{} = _ecto_changeset} ->
         conn
@@ -147,7 +147,7 @@ defmodule TdBgWeb.DomainGroupController do
     domain_group = Taxonomies.get_domain_group!(id)
 
     with {:ok, %DomainGroup{} = domain_group} <- Taxonomies.update_domain_group(domain_group, domain_group_params) do
-      SearchApi.put_search(domain_group)
+      @search_service.put_search(domain_group)
       render(conn, "show.json", domain_group: domain_group)
     end
   end
@@ -168,7 +168,7 @@ defmodule TdBgWeb.DomainGroupController do
     with {:count, :domain_group, 0} <- Taxonomies.count_domain_group_domain_group_children(id),
          {:count, :data_domain, 0} <- Taxonomies.count_domain_group_data_domain_children(id),
          {:ok, %DomainGroup{}} <- Taxonomies.delete_domain_group(domain_group) do
-      SearchApi.delete_search(domain_group)
+      @search_service.delete_search(domain_group)
       send_resp(conn, :no_content, "")
     else
       {:count, :domain_group, n}  when is_integer(n) ->

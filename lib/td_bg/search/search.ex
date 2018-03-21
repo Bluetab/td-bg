@@ -1,76 +1,39 @@
 defmodule TdBg.Search do
-  use HTTPoison.Base
-  require Logger
+  alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.ESClientApi
 
-  @moduledoc false
-
-  @doc """
-  Loads all index configuration into elasticsearch
+  @moduledoc """
+    Search Engine calls
   """
-  def create_indexes do
-    json = File.read!(Path.join(:code.priv_dir(:td_bg), "static/indexes.json"))
-    json_decode = json |> Poison.decode!
-    Enum.map(json_decode, fn(x) ->
-     index_name = x |> Map.keys |> List.first
-     mapping = x[index_name] |> Poison.encode!
-     %HTTPoison.Response{body: _response, status_code: status} =
-       put!(index_name, mapping)
-      Logger.info "Create index #{index_name} status #{status}"
-    end)
 
+  # CREATE AND UPDATE
+  def put_search(%DomainGroup{} = domain_group) do
+    ESClientApi.index_content("domain_group", domain_group.id, %{name: domain_group.name, description: domain_group.description, parent_id: domain_group.parent_id} |> Poison.encode!)
   end
 
-  def index_content(index_name, id, body) do
-    %HTTPoison.Response{body: response, status_code: status} =
-      put!(get_search_path(index_name, id), body)
+  def put_search(%DataDomain{} = data_domain) do
+    ESClientApi.index_content("data_domain", data_domain.id, %{name: data_domain.name, description: data_domain.description, domain_group_id: data_domain.domain_group_id}  |> Poison.encode!)
   end
 
-  def delete_content(index_name, id) do
-    %HTTPoison.Response{body: response, status_code: status} =
-      delete!(get_search_path(index_name, id))
+  def put_search(%BusinessConceptVersion{} = concept) do
+    ESClientApi.index_content("business_concept", concept.id,
+      %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
+        description: concept.description, last_change_at: concept.business_concept.last_change_at}  |> Poison.encode!)
   end
 
-  defp get_search_path(index_name, id) do
-    "#{index_name}/" <> "_doc/" <> "#{id}"
+  # DELETE
+  def delete_search(%DomainGroup{} = domain_group) do
+    ESClientApi.delete_content("domain_group", domain_group.id)
   end
 
-  @doc """
-  Deletes all indexes in elasticsearch
-  """
-  def delete_indexes(options \\ []) do
-    json = File.read!(Path.join(:code.priv_dir(:td_bg), "static/indexes.json"))
-    json_decode = json |> Poison.decode!
-    Enum.map(json_decode, fn(x) ->
-      index_name = x |> Map.keys |> List.first
-      %HTTPoison.Response{body: _response, status_code: status} =
-        delete!(index_name, options)
-      Logger.info "Delete index #{index_name} status #{status}"
-    end)
-
+  def delete_search(%DataDomain{} = data_domain) do
+    ESClientApi.delete_content("data_domain", data_domain.id)
   end
 
-  @doc """
-    Concatenates elasticsearch path at the beggining of HTTPoison requests
-  """
-  def process_url(path) do
-    es_config = Application.get_env(:td_bg, :elasticsearch)
-    "#{es_config[:es_host]}:#{es_config[:es_port]}/" <> path
-  end
-
-  @doc """
-    Decodes response body
-  """
-  def process_response_body(body) do
-    body
-    |> Poison.decode!
-  end
-
-  @doc """
-    Adds requests headers
-  """
-  def process_request_headers(_headers) do
-    headers = [{"Content-Type", "application/json"}]
-    headers
+  def delete_search(%BusinessConceptVersion{} = concept) do
+    ESClientApi.delete_content("business_concept", concept.id)
   end
 
 end
