@@ -78,6 +78,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
          %{name: name, domain_group_name: domain_group_name}, state do
     domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    assert domain_group_info["name"] == domain_group_name
     {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, parent_id: domain_group_info["id"]})
     assert rc_created() == to_response_code(status_code)
     assert json_resp["data"]["parent_id"] == domain_group_info["id"]
@@ -109,7 +110,7 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, file} = File.open filename, [:read, :write, :utf8]
     content = File.read! filename
     map_content =
-      case File.read! filename do
+      case content do
         "" -> Map.new
         _ -> JSON.decode!(content)
       end
@@ -168,6 +169,43 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, status_code, json_resp} = index_data_domain_children_business_concept(token, %{data_domain_id: data_domain_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
+  end
+
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to list taxonomy tree"$/, %{user_name: user_name}, state do
+    token = get_user_token(user_name)
+    {:ok, 200, taxonomy_structure} = get_tree(token)
+    {:ok, Map.merge(state, %{taxonomy_tree: taxonomy_structure["data"]})}
+  end
+
+  defp remove_tree_keys(nil), do: nil
+
+  defp remove_tree_keys(tree) do
+    Enum.map(tree, fn(node) ->
+      build_node(node)
+    end)
+  end
+
+  defp build_node(node) do
+    %{"type"=> node["type"], "name"=> node["name"], "description"=> node["description"], "children"=> remove_tree_keys(node["children"])}
+  end
+
+  defthen ~r/^user sees following tree structure:$/,
+    %{doc_string: json_string},
+    state do
+    actual_tree = state[:taxonomy_tree]
+    expected_tree = json_string |> JSON.decode!
+
+    #remove id and parent_id from comparison
+    actual_tree = remove_tree_keys(actual_tree)
+
+    assert JSONDiff.diff(actual_tree, expected_tree) == []
+  end
+
+  defp get_tree(token) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(domain_group_url(@endpoint, :tree), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp index_domain_group_children_data_domain(token, attrs) do

@@ -153,3 +153,32 @@ Feature: Roles Admin
         | Peter.sellers  |
         | publisher      |
         | tomclancy      |
+
+    Scenario: List taxonomy DGs DDs roles
+      Given an existing Domain Group called "DG 1"
+      And an existing Domain Group called "DG 1.1" child of Domain Group "DG 1"
+      And an existing Domain Group called "DG 1.1.1" child of Domain Group "DG 1.1"
+      And an existing Domain Group called "DG 1.1.2" child of Domain Group "DG 1.1"
+      And an existing Domain Group called "DG 2"
+      And an existing Domain Group called "DG 2.1" child of Domain Group "DG 2"
+      And an existing Data Domain called "DD 1.1" child of Domain Group "DG 1"
+      And an existing Data Domain called "DD 1.2" child of Domain Group "DG 1"
+      And following users exist in the application:
+        | user           |
+        | pietro.alpin   |
+      And following users exist with the indicated role in Domain Group "DG 1"
+        | user           | role    |
+        | pietro.alpin   | publish |
+      And following users exist with the indicated role in Domain Group "DG 1.1.2"
+        | user           | role    |
+        | pietro.alpin   | watch   |
+      And following users exist with the indicated role in Domain Group "DG 2"
+        | user           | role    |
+        | pietro.alpin   | create  |
+      And following users exist with the indicated role in Data Domain "DD 1.1"
+        | user           | role    |
+        | pietro.alpin   | admin   |
+      When user "app-admin" lists taxonomy roles of user "pietro.alpin"
+#      Then the system return a list with following data:
+#        | type | name | parent_name | role | inherited
+#

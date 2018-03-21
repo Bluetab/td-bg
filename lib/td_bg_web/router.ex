@@ -1,6 +1,8 @@
 defmodule TdBgWeb.Router do
   use TdBgWeb, :router
 
+  @endpoint_url "#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:host]}:#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:http][:port]}"
+
   pipeline :api do
     plug TdBg.Auth.Pipeline.Unsecure
     plug :accepts, ["json"]
@@ -13,6 +15,10 @@ defmodule TdBgWeb.Router do
   pipeline :api_authorized do
     plug TdBg.Permissions.Plug.CurrentUser
     plug Guardian.Plug.LoadResource
+  end
+
+  scope "/api/swagger" do
+    forward "/", PhoenixSwagger.Plug.SwaggerUI, otp_app: :td_bg, swagger_file: "swagger.json"
   end
 
   scope "/api", TdBgWeb do
@@ -54,6 +60,8 @@ defmodule TdBgWeb.Router do
       post "/users_roles", DataDomainController, :users_roles
       get "/available_users", DataDomainController, :available_users
     end
+    get "/taxonomy/tree", DomainGroupController, :tree
+    get "/taxonomy/roles", DomainGroupController, :roles
 
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
     resources "/business_concepts", BusinessConceptController do
@@ -82,6 +90,7 @@ defmodule TdBgWeb.Router do
         version: "1.0",
         title: "TdBg"
       },
+      "host": @endpoint_url,
       "basePath": "/api",
       "securityDefinitions":
         %{

@@ -50,7 +50,8 @@ defmodule TdBg.Mixfile do
       {:ex_machina, "~> 2.1", only: :test},
       {:cors_plug, "~> 1.2"},
       {:phoenix_swagger, "~> 0.7.0"},
-      {:ex_json_schema, "~> 0.5"}
+      {:ex_json_schema, "~> 0.5"},
+      {:json_diff, "~> 0.1.0"}
     ]
   end
 

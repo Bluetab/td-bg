@@ -44,6 +44,14 @@ defmodule TdBg.Permissions do
   @doc """
 
   """
+  def list_acl_entries_by_principal(%{principal_id: principal_id, principal_type: principal_type}) do
+    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.principal_type == ^principal_type and acl_entry.principal_id == ^principal_id)
+    acl_entries |> Repo.preload(:role)
+  end
+
+  @doc """
+
+  """
   def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, domain_group: domain_group}) do
     Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group.id)
   end
@@ -182,10 +190,14 @@ defmodule TdBg.Permissions do
   end
 
   defp get_resource_role(%{user_id: principal_id, data_domain: %DataDomain{} = data_domain} = attrs) do
-    role = get_role_by_principal_and_resource(attrs)
-    parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group_id)
-    parent_domain_group = parent_domain_group |> Repo.preload(:parent)
-    get_resource_role(%{user_id: principal_id, domain_group: parent_domain_group, role: role})
+    case get_role_by_principal_and_resource(attrs) do
+      nil ->
+        parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group_id)
+        parent_domain_group = parent_domain_group |> Repo.preload(:parent)
+        get_resource_role(%{user_id: principal_id, domain_group: parent_domain_group, role: nil})
+      %Role{name: name} ->
+        name
+    end
   end
 
   defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{parent_id: nil}, role: nil} = attrs) do
@@ -339,5 +351,71 @@ defmodule TdBg.Permissions do
   """
   def change_role(%Role{} = role) do
     Role.changeset(role, %{})
+  end
+
+  @doc """
+    Returns flat list of DG and DDs user roles
+  """
+  def assemble_roles(%{user_id: user_id}) do
+    tree = Taxonomies.tree()
+    all_acls = list_acl_entries_by_principal(%{principal_id: user_id, principal_type: "user"})
+    all_dgs = Taxonomies.list_domain_groups()
+    all_dds = Taxonomies.list_data_domains()
+    roles = []
+    roles = Enum.reduce(tree, roles, fn(node, acc) ->
+      branch_roles = assemble_node_role(node, user_id, all_acls, roles, all_dgs, all_dds)
+      Enum.uniq(List.flatten(acc ++ branch_roles))
+    end)
+    roles
+  end
+
+  defp assemble_node_role(%DomainGroup{parent_id: nil} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
+    custom_role = get_role_in_resource(%{user_id: user_id, domain_group_id: dg.id})
+    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain_group" && acl.resource_id == dg.id end)
+    roles = roles ++ [%{id: dg.id, type: "DG", role: custom_role.name, inherited: custom_acl == nil}]
+    Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
+      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]))
+    end)
+  end
+
+  defp assemble_node_role(%DomainGroup{} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
+    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain_group" && acl.resource_id == dg.id end)
+    roles = if custom_acl do
+      roles ++ [%{id: dg.id, type: "DG", role: custom_acl.role.name, inherited: false}]
+    else
+      roles ++ [get_closest_role(dg, roles, all_dgs, all_dds)]
+    end
+    Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
+      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]))
+    end)
+  end
+
+  defp assemble_node_role(%DataDomain{} = dd, _user_id, all_acls, roles, all_dgs, all_dds) do
+    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "data_domain" && acl.resource_id == dd.id end)
+    if custom_acl do
+      %{id: dd.id, type: "DD", role: custom_acl.role.name, inherited: false}
+    else
+      get_closest_role(dd, roles, all_dgs, all_dds)
+    end
+  end
+
+  defp get_closest_role(%DomainGroup{} = dg, roles, all_dgs, all_dds) do
+    role = Enum.find(roles, fn(role) -> role.id == dg.parent_id && role.type == "DG" end)
+    if role do
+      %{id: dg.id, type: "DG", role: role.role, inherited: true}
+    else
+      parent_dg = Enum.find(all_dgs, fn(i_dg) -> i_dg.id == dg.parent_id end)
+      get_closest_role(parent_dg, roles, all_dgs, all_dds)
+    end
+  end
+
+  defp get_closest_role(%DataDomain{} = dd, roles, all_dgs, all_dds) do
+    role = Enum.find(roles, fn(role) -> role.id == dd.domain_group_id && role.type == "DG" end)
+    if role do
+      %{id: dd.id, type: "DD", role: role.role, inherited: true}
+    else
+      parent_dg = Enum.find(all_dgs, fn(i_dg) -> i_dg.id == dd.parent_id end)
+      get_closest_role(parent_dg, roles, all_dgs, all_dds)
+    end
   end
 end

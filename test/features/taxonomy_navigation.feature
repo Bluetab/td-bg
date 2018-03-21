@@ -99,3 +99,63 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
        | My First Business Concept of this type  | Business Term  | draft  | This is the first description of my first business term  |
        | My Second Business Concept of this type | Business Term  | draft  | This is the first description of my second business term |
        | My First Business Concept of this type  | Policy         | draft  | This is the first description of my first policy         |
+
+     Scenario: List Domain Groups and Data Domains structure
+       Given an existing Domain Group called "My Root Group"
+       And an existing Domain Group called "My Root Group 2"
+       And an existing Domain Group called "My Child Group" child of Domain Group "My Root Group"
+       And an existing Domain Group called "My Child Group child" child of Domain Group "My Child Group"
+       And an existing Data Domain called "My Data Domain" child of Domain Group "My Child Group"
+       And an existing Data Domain called "My Second Data Domain" child of Domain Group "My Child Group"
+       When user "app-admin" tries to list taxonomy tree"
+       Then user sees following tree structure:
+         """
+          [
+            {
+              "type": "DG",
+              "name": "My Root Group",
+              "description": null,
+              "children": [
+                {
+                  "type": "DG",
+                  "name": "My Child Group",
+                  "description": null,
+                  "children": [
+                    {
+                      "type": "DG",
+                      "name": "My Child Group child",
+                      "description": null,
+                      "children": []
+                    },
+                    {
+                      "type": "DD",
+                      "name": "My Data Domain",
+                      "description": null,
+                      "children": []
+                    },
+                    {
+                      "type": "DD",
+                      "name": "My Second Data Domain",
+                      "description": null,
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "DG",
+              "name": "My Root Group 2",
+              "description": null,
+              "children": []
+            }
+          ]
+         """
+
+  Scenario: List Domain Groups and Data Domains structure (empty structure)
+    When user "app-admin" tries to list taxonomy tree"
+    Then user sees following tree structure:
+         """
+          []
+         """
+

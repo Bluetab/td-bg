@@ -56,7 +56,7 @@ defmodule TdBgWeb.BusinessConceptController do
     description "Creates a Business Concept child of Data Domain"
     produces "application/json"
     parameters do
-      data_domain :body, Schema.ref(:BusinessConceptCreate), "Business Concept create attrs"
+      business_concept :body, Schema.ref(:BusinessConceptCreate), "Business Concept create attrs"
       data_domain_id :path, :integer, "Data Domain ID", required: true
     end
     response 201, "Created", Schema.ref(:BusinessConceptResponse)
