@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Bg.EsInit do
     Mix.Task.run "app.start"
 
     Search.create_indexes
-    
+
 # create indexes if we use library  {:elastix, "~> 0.5"}
 #
 #    elastic_url = "http://127.0.0.1:9200"
