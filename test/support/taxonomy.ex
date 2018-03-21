@@ -107,4 +107,11 @@ defmodule TdBgWeb.Taxonomy do
       end)
   end
 
+  def remove_tree_keys(nil), do: nil
+  def remove_tree_keys(tree) do
+    Enum.map(tree, fn(node) ->
+      %{"type"=> node["type"], "name"=> node["name"], "description"=> node["description"], "children"=> remove_tree_keys(node["children"])}
+    end)
+  end
+
 end

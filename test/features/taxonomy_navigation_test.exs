@@ -177,18 +177,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, Map.merge(state, %{taxonomy_tree: taxonomy_structure["data"]})}
   end
 
-  defp remove_tree_keys(nil), do: nil
-
-  defp remove_tree_keys(tree) do
-    Enum.map(tree, fn(node) ->
-      build_node(node)
-    end)
-  end
-
-  defp build_node(node) do
-    %{"type"=> node["type"], "name"=> node["name"], "description"=> node["description"], "children"=> remove_tree_keys(node["children"])}
-  end
-
   defthen ~r/^user sees following tree structure:$/,
     %{doc_string: json_string},
     state do
