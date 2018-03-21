@@ -146,7 +146,12 @@ defmodule TdBgWeb.SwaggerDefinitions do
       UsersResponse: swagger_schema do
         type :array
         items Schema.ref(:UserResponse)
-      end,
+      end
+    }
+  end
+
+  def taxonomy_swagger_definitions do
+    %{
       TaxonomyTreeResponse: swagger_schema do
         properties do
           data :object
@@ -159,18 +164,18 @@ defmodule TdBgWeb.SwaggerDefinitions do
               id: 1,
               description: "dg root 1",
               children:
-              [
-                  %{
-                    type: "DD",
-                    name: "dd1",
-                    id: 1,
-                    description: "dd1 child of dg1",
-                    children: []
-                  }
+                [
+                %{
+                  type: "DD",
+                  name: "dd1",
+                  id: 1,
+                  description: "dd1 child of dg1",
+                  children: []
+                }
               ]
-              }
-            ]
-          }
+            }
+          ]
+        }
       end,
       TaxonomyRolesResponse: swagger_schema do
         properties do
@@ -178,10 +183,10 @@ defmodule TdBgWeb.SwaggerDefinitions do
         end
         example %{
           data: [
-          %{
-            DD: [%{id: 22093, inherited: false, role: "admin"}, %{id: 22094, inherited: true, role: "publish"}],
-            DG: [%{id: 39269, inherited: false, role: "publish"}, %{id: 39270, inherited: true, role: "publish"}]
-           }
+            %{
+              DD: [%{id: 22093, inherited: false, role: "admin"}, %{id: 22094, inherited: true, role: "publish"}],
+              DG: [%{id: 39269, inherited: false, role: "publish"}, %{id: 39270, inherited: true, role: "publish"}]
+            }
           ]
         }
       end

@@ -204,7 +204,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   defp get_tree(token) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_url(@endpoint, :tree), headers, [])
+      HTTPoison.get!(taxonomy_url(@endpoint, :tree), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

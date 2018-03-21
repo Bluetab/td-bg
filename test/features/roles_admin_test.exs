@@ -303,7 +303,7 @@ defmodule TdBg.RolesAdminTest do
   defp get_taxonomy_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_url(@endpoint, :roles, principal_id: attrs.principal_id), headers, [])
+      HTTPoison.get!(taxonomy_url(@endpoint, :roles, principal_id: attrs.principal_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
