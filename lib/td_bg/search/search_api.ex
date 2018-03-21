@@ -4,6 +4,10 @@ defmodule TdBg.SearchApi do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Search
 
+  @moduledoc """
+    Elastic Search calls
+  """
+
   # CREATE AND UPDATE
   def put_search(%DomainGroup{} = domain_group) do
     Search.index_content("domain_group", domain_group.id, %{name: domain_group.name, description: domain_group.description, parent_id: domain_group.parent_id} |> Poison.encode!)
@@ -14,7 +18,9 @@ defmodule TdBg.SearchApi do
   end
 
   def put_search(%BusinessConceptVersion{} = concept) do
-    Search.index_content("business_concept", concept.id, %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content, description: concept.description, last_change_at: concept.business_concept.last_change_at}  |> Poison.encode!)
+    Search.index_content("business_concept", concept.id,
+      %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
+        description: concept.description, last_change_at: concept.business_concept.last_change_at}  |> Poison.encode!)
   end
 
   # DELETE
