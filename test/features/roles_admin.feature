@@ -179,6 +179,13 @@ Feature: Roles Admin
         | user           | role    |
         | pietro.alpin   | admin   |
       When user "app-admin" lists taxonomy roles of user "pietro.alpin"
-#      Then the system return a list with following data:
-#        | type | name | parent_name | role | inherited
-#
+      Then the system returns a taxonomy roles list with following data:
+        | type | name     | parent_name | role    | inherited
+        | DG   | DG 1     |             | publish | false
+        | DG   | DG 1.1   | DG 1        | publish | true
+        | DG   | DG 1.1.1 | DG 1.1      | publish | true
+        | DG   | DG 1.1.2 | DG 1.1      | watch   | false
+        | DD   | DD 1.1   | DG 1        | admin   | false
+        | DD   | DD 1.2   | DG 1        | publish | true
+        | DG   | DG 2     |             | create  | false
+        | DG   | DG 2.1   | DG 2        | create  | true
