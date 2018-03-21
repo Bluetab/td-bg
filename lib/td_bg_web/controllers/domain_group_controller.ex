@@ -273,7 +273,7 @@ defmodule TdBgWeb.DomainGroupController do
     parameters do
       principal_id :path, :integer, "user id", required: true
     end
-    response 200, "Ok" #, Schema.ref(:TaxonomyTreeResponse)
+    response 200, "Ok" , Schema.ref(:TaxonomyRolesResponse)
     response 400, "Client error"
   end
   def roles(conn, params) do

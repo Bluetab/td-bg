@@ -151,7 +151,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data :object
         end
-          example %{
+        example %{
           data: [
             %{
               type: "DG",
@@ -171,6 +171,19 @@ defmodule TdBgWeb.SwaggerDefinitions do
               }
             ]
           }
+      end,
+      TaxonomyRolesResponse: swagger_schema do
+        properties do
+          data :object
+        end
+        example %{
+          data: [
+          %{
+            DD: [%{id: 22093, inherited: false, role: "admin"}, %{id: 22094, inherited: true, role: "publish"}],
+            DG: [%{id: 39269, inherited: false, role: "publish"}, %{id: 39270, inherited: true, role: "publish"}]
+           }
+          ]
+        }
       end
     }
   end
