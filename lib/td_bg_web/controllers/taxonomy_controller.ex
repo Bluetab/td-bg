@@ -62,6 +62,17 @@ defmodule TdBgWeb.TaxonomyController do
     roles = Permissions.assemble_roles(%{user_id: params["principal_id"]})
     #transform to front expected format
     roles = Enum.group_by(roles, &(&1.type), &(%{id: &1.id, role: &1.role, inherited: &1.inherited}))
+    roles_dg = roles["DG"]
+    roles_dg = case roles_dg do
+      nil -> []
+      _ -> roles_dg
+    end
+    roles_dd = roles["DD"]
+    roles_dd = case roles_dd do
+      nil -> []
+      _ -> roles_dd
+    end
+    roles = %{"DG": roles_dg, "DD": roles_dd}
     json conn, %{"data": roles}
   end
 

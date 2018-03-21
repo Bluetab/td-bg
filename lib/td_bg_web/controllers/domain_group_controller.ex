@@ -7,7 +7,6 @@ defmodule TdBgWeb.DomainGroupController do
   alias TdBg.Taxonomies
   alias TdBg.Permissions
   alias TdBg.Taxonomies.DomainGroup
-  alias TdBg.Taxonomies.DataDomain
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
   alias TdBg.SearchApi

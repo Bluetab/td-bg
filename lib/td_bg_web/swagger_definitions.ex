@@ -184,8 +184,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
         example %{
           data: [
             %{
-              DD: [%{id: 22093, inherited: false, role: "admin"}, %{id: 22094, inherited: true, role: "publish"}],
-              DG: [%{id: 39269, inherited: false, role: "publish"}, %{id: 39270, inherited: true, role: "publish"}]
+              DD: [%{id: 93, inherited: false, role: "admin"}, %{id: 94, inherited: true, role: "publish"}],
+              DG: [%{id: 69, inherited: false, role: "publish"}, %{id: 70, inherited: true, role: "publish"}]
             }
           ]
         }
