@@ -283,6 +283,17 @@ defmodule TdBg.RolesAdminTest do
       %{id: node_id, type: role_entry.type, inherited: role_entry.inherited == "true", role: role_entry.role}
     end)
     expected_list = Enum.group_by(expected_list, &(&1.type), &(%{"id" => &1.id, "role" => &1.role, "inherited" => &1.inherited}))
+    roles_dg = expected_list["DG"]
+    roles_dg = case roles_dg do
+      nil -> []
+      _ -> roles_dg
+    end
+    roles_dd = expected_list["DD"]
+    roles_dd = case roles_dd do
+      nil -> []
+      _ -> roles_dd
+    end
+    expected_list = %{"domain_groups" => roles_dg, "data_domains" => roles_dd}
     assert JSONDiff.diff(actual_list, expected_list) == []
   end
 

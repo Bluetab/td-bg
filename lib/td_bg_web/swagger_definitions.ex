@@ -152,40 +152,72 @@ defmodule TdBgWeb.SwaggerDefinitions do
 
   def taxonomy_swagger_definitions do
     %{
+      TreeItem: swagger_schema do
+        properties do
+          id :integer
+          type :string
+          name :string
+          description :string
+          children :object
+        end
+      end,
       TaxonomyTreeResponse: swagger_schema do
         properties do
-          data :object
+          data (Schema.new do
+            properties do
+              type :array
+              items Schema.ref(:TreeItem)
+            end
+          end)
         end
-        example %{
-          data: [
-            %{
-              type: "DG",
-              name: "dg 1",
-              id: 1,
-              description: "dg root 1",
-              children:
-                [
-                %{
-                  type: "DD",
-                  name: "dd1",
-                  id: 1,
-                  description: "dd1 child of dg1",
-                  children: []
-                }
-              ]
-            }
-          ]
-        }
+#        example %{
+#          data: [
+#            %{
+#              type: "DG",
+#              name: "dg 1",
+#              id: 1,
+#              description: "dg root 1",
+#              children:
+#                [
+#                %{
+#                  type: "DD",
+#                  name: "dd1",
+#                  id: 1,
+#                  description: "dd1 child of dg1",
+#                  children: []
+#                }
+#              ]
+#            }
+#          ]
+#        }
+      end,
+      DGDDItem: swagger_schema do
+        properties do
+            id :integer
+            role :string
+            inherited :boolean
+        end
       end,
       TaxonomyRolesResponse: swagger_schema do
         properties do
-          data :object
+          data (Schema.new do
+            properties do
+              domain_groups (Schema.new do
+                type :array
+                items Schema.ref(:DGDDItem)
+              end)
+              data_domains (Schema.new do
+                 type :array
+                 items Schema.ref(:DGDDItem)
+               end)
+            end
+          end)
         end
         example %{
           data: [
             %{
-              DD: [%{id: 93, inherited: false, role: "admin"}, %{id: 94, inherited: true, role: "publish"}],
-              DG: [%{id: 69, inherited: false, role: "publish"}, %{id: 70, inherited: true, role: "publish"}]
+              data_domains: [%{id: 93, inherited: false, role: "admin"}, %{id: 94, inherited: true, role: "publish"}],
+              domain_groups: [%{id: 69, inherited: false, role: "publish"}, %{id: 70, inherited: true, role: "publish"}]
             }
           ]
         }

@@ -72,7 +72,7 @@ defmodule TdBgWeb.TaxonomyController do
       nil -> []
       _ -> roles_dd
     end
-    roles = %{"DG": roles_dg, "DD": roles_dd}
+    roles = %{"domain_groups": roles_dg, "data_domains": roles_dd}
     json conn, %{"data": roles}
   end
 

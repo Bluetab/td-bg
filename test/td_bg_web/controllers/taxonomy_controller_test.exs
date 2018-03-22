@@ -31,7 +31,7 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       conn = get conn, taxonomy_path(conn, :tree)
 
       actual_tree = json_response(conn, 200)["data"]
-      actual_tree = actual_tree |> Enum.map(fn(node)-> Map.take(node, ["children", "description", "name", "type"]) end)
+      actual_tree = actual_tree |> Enum.map(fn(node) -> Map.take(node, ["children", "description", "name", "type"]) end)
       assert actual_tree == [%{"children" => [], "description" => "My domain group description", "name" => "My domain group", "type" => "DG"}]
     end
 
@@ -56,7 +56,7 @@ defmodule TdBgWeb.TaxonomyControllerTest do
     test "List empty taxonomy roles list", %{conn: conn} do
       user = build(:user)
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
-      assert json_response(conn, 200)["data"] == %{"DD" => [], "DG" => []}
+      assert json_response(conn, 200)["data"] == %{"data_domains" => [], "domain_groups" => []}
     end
 
     @tag :admin_authenticated
@@ -71,7 +71,7 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       actual_response = json_response(conn, 200)["data"]
       actual_response_no_ids = remove_ids_from_role_list(actual_response)
 
-      assert actual_response_no_ids == %{"DG" => [%{"inherited" => false, "role" => "create"}], "DD" => []}
+      assert actual_response_no_ids == %{"domain_groups" => [%{"inherited" => false, "role" => "create"}], "data_domains" => []}
     end
 
     @tag :admin_authenticated
@@ -85,12 +85,12 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       actual_response = json_response(conn, 200)["data"]
       actual_response_no_ids = remove_ids_from_role_list(actual_response)
 
-      assert actual_response_no_ids == %{"DG" => [%{"inherited" => true, "role" => "watch"}], "DD" => [%{"inherited" => false, "role" => "publish"}]}
+      assert actual_response_no_ids == %{"domain_groups" => [%{"inherited" => true, "role" => "watch"}], "data_domains" => [%{"inherited" => false, "role" => "publish"}]}
     end
   end
 
   defp remove_ids_from_role_list(role_list) do
-    %{"DG" => Enum.map(role_list["DG"], fn(dg) -> %{"inherited" => dg["inherited"], "role" => dg["role"]} end),
-      "DD" => Enum.map(role_list["DD"], fn(dd) -> %{"inherited" => dd["inherited"], "role" => dd["role"]} end)}
+    %{"domain_groups" => Enum.map(role_list["domain_groups"], fn(dg) -> %{"inherited" => dg["inherited"], "role" => dg["role"]} end),
+      "data_domains" => Enum.map(role_list["data_domains"], fn(dd) -> %{"inherited" => dd["inherited"], "role" => dd["role"]} end)}
   end
 end
