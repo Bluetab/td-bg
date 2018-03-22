@@ -13,7 +13,9 @@ defmodule TdBgWeb.UserView do
   def render("user.json", %{user: user}) do
     %{id: user.id,
       user_name: user.user_name,
-      is_admin: user.is_admin
+      is_admin: user.is_admin,
+      email: user.email,
+      full_name: user.full_name
     }
   end
 end

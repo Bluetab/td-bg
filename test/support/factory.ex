@@ -4,6 +4,7 @@ defmodule TdBg.Factory do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptAlias
+  alias TdBg.Permissions.Role
 
   def user_factory do
     %TdBg.Accounts.User {
@@ -59,8 +60,32 @@ defmodule TdBg.Factory do
   end
 
   def role_factory do
-    %TdBg.Permissions.Role {
+    %Role {
       name: "watch"
+    }
+  end
+
+  def role_watch_factory do
+    %Role {
+      name: Atom.to_string(Role.watch)
+    }
+  end
+
+  def role_admin_factory do
+    %Role {
+      name: Atom.to_string(Role.admin)
+    }
+  end
+
+  def role_publish_factory do
+    %Role {
+      name: Atom.to_string(Role.publish)
+    }
+  end
+
+  def role_create_factory do
+    %Role {
+      name: Atom.to_string(Role.create)
     }
   end
 

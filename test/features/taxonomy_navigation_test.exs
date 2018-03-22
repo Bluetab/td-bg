@@ -177,18 +177,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, Map.merge(state, %{taxonomy_tree: taxonomy_structure["data"]})}
   end
 
-  defp remove_tree_keys(nil), do: nil
-
-  defp remove_tree_keys(tree) do
-    Enum.map(tree, fn(node) ->
-      build_node(node)
-    end)
-  end
-
-  defp build_node(node) do
-    %{"type"=> node["type"], "name"=> node["name"], "description"=> node["description"], "children"=> remove_tree_keys(node["children"])}
-  end
-
   defthen ~r/^user sees following tree structure:$/,
     %{doc_string: json_string},
     state do
@@ -197,14 +185,13 @@ defmodule TdBg.TaxonomyNavigationTest do
 
     #remove id and parent_id from comparison
     actual_tree = remove_tree_keys(actual_tree)
-
     assert JSONDiff.diff(actual_tree, expected_tree) == []
   end
 
   defp get_tree(token) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_url(@endpoint, :tree), headers, [])
+      HTTPoison.get!(taxonomy_url(@endpoint, :tree), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

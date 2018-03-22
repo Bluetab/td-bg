@@ -261,7 +261,40 @@ defmodule TdBg.RolesAdminTest do
     token = get_user_token(user_name)
     principal_id = find_or_create_user(target_user_name).id
     {:ok, 200,  %{"data" => taxonomy_roles}} = get_taxonomy_roles(token, %{principal_id: principal_id})
-    {:ok, Map.merge(state, %{taxonomy_roles: taxonomy_roles})}
+    {:ok, Map.merge(state, %{taxonomy_roles: taxonomy_roles, token: token})}
+  end
+
+  defthen ~r/^the system returns a taxonomy roles list with following data:$/,
+    %{table: expected_list},
+    state do
+    actual_list = state[:taxonomy_roles]
+
+    expected_list = Enum.map(expected_list, fn(role_entry) ->
+      node_id = case {role_entry.type, role_entry.parent_name} do
+            {"DG", ""} -> get_domain_group_by_name(state[:token], role_entry.name)["id"]
+            {"DG", parent_name} ->
+              parent = get_domain_group_by_name(state[:token], parent_name)
+              get_domain_group_by_name_and_parent(state[:token], role_entry.name, parent["id"])["id"]
+            {"DD", parent_name} ->
+              parent = get_domain_group_by_name(state[:token], parent_name)
+              get_data_domain_by_name_and_parent(state[:token], role_entry.name, parent["id"])["id"]
+            _ -> nil
+      end
+      %{id: node_id, type: role_entry.type, inherited: role_entry.inherited == "true", role: role_entry.role}
+    end)
+    expected_list = Enum.group_by(expected_list, &(&1.type), &(%{"id" => &1.id, "role" => &1.role, "inherited" => &1.inherited}))
+    roles_dg = expected_list["DG"]
+    roles_dg = case roles_dg do
+      nil -> []
+      _ -> roles_dg
+    end
+    roles_dd = expected_list["DD"]
+    roles_dd = case roles_dd do
+      nil -> []
+      _ -> roles_dd
+    end
+    expected_list = %{"domain_groups" => roles_dg, "data_domains" => roles_dd}
+    assert JSONDiff.diff(actual_list, expected_list) == []
   end
 
   defp data_domain_users_roles(token, attrs) do
@@ -281,7 +314,7 @@ defmodule TdBg.RolesAdminTest do
   defp get_taxonomy_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_url(@endpoint, :roles, principal_id: attrs.principal_id), headers, [])
+      HTTPoison.get!(taxonomy_url(@endpoint, :roles, principal_id: attrs.principal_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

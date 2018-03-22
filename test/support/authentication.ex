@@ -37,7 +37,8 @@ defmodule TdBgWeb.Authentication do
   def create_user(user_name, opts \\ []) do
     is_admin = Keyword.get(opts, :is_admin, false)
     password = Keyword.get(opts, :password, "secret")
-    user = @td_auth_api.create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password}})
+    email = Keyword.get(opts, :email, "some@email.com")
+    user = @td_auth_api.create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password, email: email}})
     user
   end
 
@@ -46,7 +47,8 @@ defmodule TdBgWeb.Authentication do
       nil ->
         is_admin = Keyword.get(opts, :is_admin, false)
         password = Keyword.get(opts, :password, "secret")
-        @td_auth_api.create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password}})
+        email = Keyword.get(opts, :email, "some@email.com")
+        @td_auth_api.create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password, email: email}})
       user -> user
     end
     user

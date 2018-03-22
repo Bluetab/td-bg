@@ -13,8 +13,8 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     Agent.update(MockTdAuthService, fn(_) -> user_list end)
   end
 
-  def create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password}}) do
-    new_user = %User{id: User.gen_id_from_user_name(user_name), user_name: user_name, password: password, is_admin: is_admin}
+  def create_user(%{"user" => %{user_name: user_name, is_admin: is_admin, password: password, email: email}}) do
+    new_user = %User{id: User.gen_id_from_user_name(user_name), user_name: user_name, password: password, is_admin: is_admin, email: email}
     Agent.update(MockTdAuthService, &(&1 ++ [new_user]))
     new_user
   end
