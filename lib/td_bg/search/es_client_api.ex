@@ -21,13 +21,11 @@ defmodule TdBg.ESClientApi do
   end
 
   def index_content(index_name, id, body) do
-    %HTTPoison.Response{body: _response, status_code: _status} =
-      put!(get_search_path(index_name, id), body)
+    put(get_search_path(index_name, id), body)
   end
 
   def delete_content(index_name, id) do
-    %HTTPoison.Response{body: _response, status_code: _status} =
-      delete!(get_search_path(index_name, id))
+    delete(get_search_path(index_name, id))
   end
 
   defp get_search_path(index_name, id) do
