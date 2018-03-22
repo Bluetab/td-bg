@@ -158,38 +158,39 @@ defmodule TdBgWeb.SwaggerDefinitions do
           type :string
           name :string
           description :string
-          children :object
+          children (Schema.new do
+                      type :array
+                      items Schema.ref(:TreeItem)
+                    end)
         end
       end,
       TaxonomyTreeResponse: swagger_schema do
         properties do
           data (Schema.new do
-            properties do
               type :array
               items Schema.ref(:TreeItem)
-            end
           end)
         end
-#        example %{
-#          data: [
-#            %{
-#              type: "DG",
-#              name: "dg 1",
-#              id: 1,
-#              description: "dg root 1",
-#              children:
-#                [
-#                %{
-#                  type: "DD",
-#                  name: "dd1",
-#                  id: 1,
-#                  description: "dd1 child of dg1",
-#                  children: []
-#                }
-#              ]
-#            }
-#          ]
-#        }
+        example %{
+          data: [
+            %{
+              type: "DG",
+              name: "dg 1",
+              id: 1,
+              description: "dg root 1",
+              children:
+                [
+                %{
+                  type: "DD",
+                  name: "dd1",
+                  id: 1,
+                  description: "dd1 child of dg1",
+                  children: []
+                }
+              ]
+            }
+          ]
+        }
       end,
       DGDDItem: swagger_schema do
         properties do

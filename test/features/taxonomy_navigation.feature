@@ -152,10 +152,246 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domaing Groups and
           ]
          """
 
-  Scenario: List Domain Groups and Data Domains structure (empty structure)
+
+  Scenario: List of all business concepts child of a Data Domain
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Data Domain" child of Domain Group "My Child Group"
+    And an existing Data Domain called "My Second Data Domain" child of Domain Group "My Child Group"
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept type called "Policy" with empty definition
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Data Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Business Term                                                      |
+      | Name              | My First Business Concept of this type                             |
+      | Description       | This is the first description of my first business term            |
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Data Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Business Term                                                      |
+      | Name              | My Second Business Concept of this type                            |
+      | Description       | This is the first description of my second business term           |
+    And an existing Business Concept of type "Policy" in the Data Domain "My Data Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Policy                                                             |
+      | Name              | My First Business Concept of this type                             |
+      | Description       | This is the first description of my first policy                   |
+    And an existing Business Concept of type "Policy" in the Data Domain "My Second Data Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Policy                                                             |
+      | Name              | My Second Business Concept of this type                            |
+      | Description       | This is the first description of my second policy                  |
+    When user "app-admin" tries to query a list of all Business Concepts children of Data Domain "My Data Domain"
+    Then user sees following business concepts list:
+      | name                                    | type           | status | description                                              |
+      | My First Business Concept of this type  | Business Term  | draft  | This is the first description of my first business term  |
+      | My Second Business Concept of this type | Business Term  | draft  | This is the first description of my second business term |
+      | My First Business Concept of this type  | Policy         | draft  | This is the first description of my first policy         |
+
+  Scenario: List Big Domain Groups and Data Domains structure
+    Given an existing Domain Group called "DG 1"
+    And an existing Domain Group called "DG 2"
+    And an existing Domain Group called "DG 3"
+    And an existing Domain Group called "DG 1.1" child of Domain Group "DG 1"
+    And an existing Domain Group called "DG 1.1.1" child of Domain Group "DG 1.1"
+    And an existing Domain Group called "DG 1.1.1.1" child of Domain Group "DG 1.1.1"
+    And an existing Domain Group called "DG 1.1.1.2" child of Domain Group "DG 1.1.1"
+    And an existing Domain Group called "DG 1.1.1.2.1" child of Domain Group "DG 1.1.1.2"
+    And an existing Domain Group called "DG 1.1.1.2.1.1" child of Domain Group "DG 1.1.1.2.1"
+    And an existing Domain Group called "DG 3.1" child of Domain Group "DG 3"
+    And an existing Domain Group called "DG 3.2" child of Domain Group "DG 3"
+    And an existing Domain Group called "DG 3.3" child of Domain Group "DG 3"
+    And an existing Domain Group called "DG 3.4" child of Domain Group "DG 3"
+    And an existing Domain Group called "DG 3.5" child of Domain Group "DG 3"
+    And an existing Domain Group called "DG 3.2.1" child of Domain Group "DG 3.2"
+    And an existing Domain Group called "DG 3.2.2" child of Domain Group "DG 3.2"
+    And an existing Domain Group called "DG 3.5.1" child of Domain Group "DG 3.5"
+    And an existing Domain Group called "DG 3.5.1.1" child of Domain Group "DG 3.5.1"
+    And an existing Domain Group called "DG 3.5.1.2" child of Domain Group "DG 3.5.1"
+    And an existing Data Domain called "DD 2.1" child of Domain Group "DG 2"
+    And an existing Data Domain called "DD 2.2" child of Domain Group "DG 2"
+    And an existing Data Domain called "DD 3.5.1.1.1" child of Domain Group "DG 3.5.1.1"
+    And an existing Data Domain called "DD 1.1.1.2.1.1.1" child of Domain Group "DG 1.1.1.2.1.1"
+    And an existing Data Domain called "DD 1.1.1.2.1.1.2" child of Domain Group "DG 1.1.1.2.1.1"
+    And an existing Data Domain called "DD 1.1.1.2.1.1.3" child of Domain Group "DG 1.1.1.2.1.1"
+    And an existing Data Domain called "DD 1.1.1.2.1.1.4" child of Domain Group "DG 1.1.1.2.1.1"
+    And an existing Data Domain called "DD 1.1.1.2.1.1.5" child of Domain Group "DG 1.1.1.2.1.1"
     When user "app-admin" tries to list taxonomy tree"
     Then user sees following tree structure:
          """
-          []
+          [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "children": [],
+                          "description": null,
+                          "name": "DG 1.1.1.1",
+                          "type": "DG"
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": [],
+                                      "description": null,
+                                      "name": "DD 1.1.1.2.1.1.1",
+                                      "type": "DD"
+                                    },
+                                    {
+                                      "children": [],
+                                      "description": null,
+                                      "name": "DD 1.1.1.2.1.1.2",
+                                      "type": "DD"
+                                    },
+                                    {
+                                      "children": [],
+                                      "description": null,
+                                      "name": "DD 1.1.1.2.1.1.3",
+                                      "type": "DD"
+                                    },
+                                    {
+                                      "children": [],
+                                      "description": null,
+                                      "name": "DD 1.1.1.2.1.1.4",
+                                      "type": "DD"
+                                    },
+                                    {
+                                      "children": [],
+                                      "description": null,
+                                      "name": "DD 1.1.1.2.1.1.5",
+                                      "type": "DD"
+                                    }
+                                  ],
+                                  "description": null,
+                                  "name": "DG 1.1.1.2.1.1",
+                                  "type": "DG"
+                                }
+                              ],
+                              "description": null,
+                              "name": "DG 1.1.1.2.1",
+                              "type": "DG"
+                            }
+                          ],
+                          "description": null,
+                          "name": "DG 1.1.1.2",
+                          "type": "DG"
+                        }
+                      ],
+                      "description": null,
+                      "name": "DG 1.1.1",
+                      "type": "DG"
+                    }
+                  ],
+                  "description": null,
+                  "name": "DG 1.1",
+                  "type": "DG"
+                }
+              ],
+              "description": null,
+              "name": "DG 1",
+              "type": "DG"
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "description": null,
+                  "name": "DD 2.1",
+                  "type": "DD"
+                },
+                {
+                  "children": [],
+                  "description": null,
+                  "name": "DD 2.2",
+                  "type": "DD"
+                }
+              ],
+              "description": null,
+              "name": "DG 2",
+              "type": "DG"
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "description": null,
+                  "name": "DG 3.1",
+                  "type": "DG"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [],
+                      "description": null,
+                      "name": "DG 3.2.1",
+                      "type": "DG"
+                    },
+                    {
+                      "children": [],
+                      "description": null,
+                      "name": "DG 3.2.2",
+                      "type": "DG"
+                    }
+                  ],
+                  "description": null,
+                  "name": "DG 3.2",
+                  "type": "DG"
+                },
+                {
+                  "children": [],
+                  "description": null,
+                  "name": "DG 3.3",
+                  "type": "DG"
+                },
+                {
+                  "children": [],
+                  "description": null,
+                  "name": "DG 3.4",
+                  "type": "DG"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [],
+                              "description": null,
+                              "name": "DD 3.5.1.1.1",
+                              "type": "DD"
+                            }
+                          ],
+                          "description": null,
+                          "name": "DG 3.5.1.1",
+                          "type": "DG"
+                        },
+                        {
+                          "children": [],
+                          "description": null,
+                          "name": "DG 3.5.1.2",
+                          "type": "DG"
+                        }
+                      ],
+                      "description": null,
+                      "name": "DG 3.5.1",
+                      "type": "DG"
+                    }
+                  ],
+                  "description": null,
+                  "name": "DG 3.5",
+                  "type": "DG"
+                }
+              ],
+              "description": null,
+              "name": "DG 3",
+              "type": "DG"
+            }
+          ]
          """
-

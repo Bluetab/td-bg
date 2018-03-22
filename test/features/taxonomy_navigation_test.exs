@@ -185,7 +185,6 @@ defmodule TdBg.TaxonomyNavigationTest do
 
     #remove id and parent_id from comparison
     actual_tree = remove_tree_keys(actual_tree)
-
     assert JSONDiff.diff(actual_tree, expected_tree) == []
   end
 
