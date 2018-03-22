@@ -1,6 +1,7 @@
 defmodule TdBg.ESClientApi do
   use HTTPoison.Base
   require Logger
+  alias Poison, as: JSON
 
   @moduledoc false
 
@@ -26,6 +27,10 @@ defmodule TdBg.ESClientApi do
 
   def delete_content(index_name, id) do
     delete(get_search_path(index_name, id))
+  end
+
+  def search_api(index_name, query) do
+    post("#{index_name}/" <> "_search/", query |> JSON.encode!)
   end
 
   defp get_search_path(index_name, id) do

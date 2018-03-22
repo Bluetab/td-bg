@@ -74,4 +74,12 @@ defmodule TdBg.Search do
     end
   end
 
+  def search(index_name, query) do
+    response = ESClientApi.search_api(index_name, query)
+    case response do
+      {:ok, %HTTPoison.Response{body: %{"hits" => %{"hits" => results}}}} ->
+        # IO.inspect(results)
+    end
+  end
+
 end

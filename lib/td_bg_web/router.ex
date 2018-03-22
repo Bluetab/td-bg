@@ -81,6 +81,10 @@ defmodule TdBgWeb.Router do
       get  "/aliases", BusinessConceptAliasController, :index
       post "/aliases", BusinessConceptAliasController, :create
     end
+
+    resources "/search", SearchController do
+      post "/", SearchController, :search
+    end
   end
 
   def swagger_info do
