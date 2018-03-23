@@ -3,8 +3,8 @@ defmodule TdBgWeb.SearchController do
   alias TdBg.Search
 
   def search(%{body_params: query} = conn, %{"search_id" => index_name}) do
-    Search.search(index_name, query)
-    conn
+    resp = Search.search(index_name, query)
+    json conn, %{data: resp}
   end
 
 end
