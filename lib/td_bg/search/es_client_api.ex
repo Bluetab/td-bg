@@ -29,7 +29,7 @@ defmodule TdBg.ESClientApi do
     delete(get_search_path(index_name, id))
   end
 
-  def search_api(index_name, query) do
+  def search_es(index_name, query) do
     post("#{index_name}/" <> "_search/", query |> JSON.encode!)
   end
 
