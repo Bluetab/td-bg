@@ -12,7 +12,7 @@ sshpass -p "password" ssh-copy-id -o StrictHostKeyChecking=no deliver@localhost 
 
 echo "Starting deploy"
 
-MIX_ENV=prod
+export MIX_ENV=prod
 
 mix local.hex --force
 mix local.rebar --force

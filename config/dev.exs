@@ -8,6 +8,7 @@ use Mix.Config
 # with brunch.io to recompile .js and .css sources.
 config :td_bg, TdBgWeb.Endpoint,
   http: [port: 4002],
+  url: [host: "localhost", port: 4002],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,

@@ -1,7 +1,7 @@
 defmodule TdBgWeb.Router do
   use TdBgWeb, :router
 
-  @endpoint_url "#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:host]}:#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:http][:port]}"
+  @endpoint_url "#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:host]}:#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:port]}"
 
   pipeline :api do
     plug TdBg.Auth.Pipeline.Unsecure
