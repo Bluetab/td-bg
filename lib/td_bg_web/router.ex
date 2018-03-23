@@ -29,11 +29,10 @@ defmodule TdBgWeb.Router do
 
   scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure]
-    resources "/users", UserController, except: [:new, :edit]
     resources "/roles", RoleController, except: [:new, :edit]
     resources "/acl_entries", AclEntryController, except: [:new, :edit]
 
-    resources "/users", UserController do
+    resources "/users", UserController, except: [:new, :edit] do
       resources "/domain_groups", DomainGroupController do
         get "/roles", RoleController, :user_domain_group_role
       end
@@ -45,7 +44,6 @@ defmodule TdBgWeb.Router do
 
   scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure, :api_authorized]
-    resources "/data_domains", DataDomainController, except: [:new, :edit, :create]
     get "/domain_groups/index_root", DomainGroupController, :index_root
     resources "/domain_groups", DomainGroupController, except: [:new, :edit] do
       get "/index_children", DomainGroupController, :index_children
@@ -54,37 +52,30 @@ defmodule TdBgWeb.Router do
       get "/available_users", DomainGroupController, :available_users
       post "/users_roles", DomainGroupController, :users_roles
     end
-    resources "/data_domains", DataDomainController do
+
+    resources "/data_domains", DataDomainController, except: [:new, :edit] do
       post "/business_concept", BusinessConceptController, :create
       get "/business_concepts", BusinessConceptController, :index_children_business_concept
       post "/users_roles", DataDomainController, :users_roles
       get "/available_users", DataDomainController, :available_users
     end
+    
     get "/taxonomy/tree", TaxonomyController, :tree
     get "/taxonomy/roles", TaxonomyController, :roles
 
-    resources "/business_concepts", BusinessConceptController, except: [:new, :edit]
-    resources "/business_concepts", BusinessConceptController do
-      patch "/status", BusinessConceptController, :update_status
-    end
-
     resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update, :delete]
 
-    resources "/business_concepts", BusinessConceptController do
+    resources "/business_concepts", BusinessConceptController, except: [:new, :edit] do
+      get  "/aliases", BusinessConceptAliasController, :index
+      post "/aliases", BusinessConceptAliasController, :create
+      patch "/status", BusinessConceptController, :update_status
       get "/versions", BusinessConceptVersionController, :versions
       post "/versions", BusinessConceptVersionController, :create
     end
 
     resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]
 
-    resources "/business_concepts", BusinessConceptController do
-      get  "/aliases", BusinessConceptAliasController, :index
-      post "/aliases", BusinessConceptAliasController, :create
-    end
-
-    resources "/search", SearchController do
-      post "/", SearchController, :search
-    end
+    post "/search/{search_id}", SearchController, :search
   end
 
   def swagger_info do
