@@ -19,7 +19,7 @@ mix local.rebar --force
 rm -rf ./_build
 mix deps.clean --all
 mix deps.get
-mix phx.swagger.generate priv/static/swagger.json
+MIX_ENV=prod mix phx.swagger.generate priv/static/swagger.json
 
 ./create_secrets_configuration.sh || exit 1
 
