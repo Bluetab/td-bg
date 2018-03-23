@@ -15,7 +15,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :td_bg, TdBgWeb.Endpoint,
   http: [port: 4002],
-  url: [host: "truedat.bluetab.net", port: 4002],
+  url: [host: "truedat.bluetab.net", port: 8001],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json"
 

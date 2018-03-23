@@ -1,7 +1,7 @@
 defmodule TdBgWeb.Router do
   use TdBgWeb, :router
 
-  @endpoint_url "#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:host]}:#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:http][:port]}"
+  @endpoint_url "#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:host]}:#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:port]}"
 
   pipeline :api do
     plug TdBg.Auth.Pipeline.Unsecure
@@ -50,13 +50,13 @@ defmodule TdBgWeb.Router do
       get "/data_domains", DataDomainController, :index_children_data_domain
       post "/data_domain", DataDomainController, :create
       get "/available_users", DomainGroupController, :available_users
-      post "/users_roles", DomainGroupController, :users_roles
+      get "/users_roles", DomainGroupController, :users_roles
     end
 
     resources "/data_domains", DataDomainController, except: [:new, :edit] do
       post "/business_concept", BusinessConceptController, :create
       get "/business_concepts", BusinessConceptController, :index_children_business_concept
-      post "/users_roles", DataDomainController, :users_roles
+      get "/users_roles", DataDomainController, :users_roles
       get "/available_users", DataDomainController, :available_users
     end
 

@@ -300,14 +300,14 @@ defmodule TdBg.RolesAdminTest do
   defp data_domain_users_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(data_domain_data_domain_url(@endpoint, :users_roles, attrs.id), [], headers, [])
+      HTTPoison.get!(data_domain_data_domain_url(@endpoint, :users_roles, attrs.id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
   defp domain_group_users_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(domain_group_domain_group_url(@endpoint, :users_roles, attrs.id), [], headers, [])
+      HTTPoison.get!(domain_group_domain_group_url(@endpoint, :users_roles, attrs.id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
