@@ -142,7 +142,7 @@ defmodule TdBgWeb.DataDomainController do
   end
 
   swagger_path :users_roles do
-    post "/data_domains/{data_domain_id}/users_roles"
+    get "/data_domains/{data_domain_id}/users_roles"
     description "Lists user-role list of a data domain"
     produces "application/json"
     parameters do

@@ -206,7 +206,7 @@ defmodule TdBgWeb.DomainGroupController do
   end
 
   swagger_path :users_roles do
-    post "/domain_groups/{domain_group_id}/users_roles"
+    get "/domain_groups/{domain_group_id}/users_roles"
     description "Lists user-role list of a domain group"
     produces "application/json"
     parameters do
