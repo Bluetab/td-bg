@@ -59,7 +59,7 @@ defmodule TdBgWeb.Router do
       post "/users_roles", DataDomainController, :users_roles
       get "/available_users", DataDomainController, :available_users
     end
-    
+
     get "/taxonomy/tree", TaxonomyController, :tree
     get "/taxonomy/roles", TaxonomyController, :roles
 
@@ -75,7 +75,7 @@ defmodule TdBgWeb.Router do
 
     resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]
 
-    post "/search/{search_id}", SearchController, :search
+    post "/search/:search_id", SearchController, :search
   end
 
   def swagger_info do
