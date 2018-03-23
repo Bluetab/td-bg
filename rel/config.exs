@@ -51,7 +51,7 @@ release :td_bg do
     :runtime_tools
   ]
   set commands: [
-    "migrate": "rel/commands/migrate.sh"
+    "migrate": "rel/commands/migrate.sh",
     "create_indexes": "rel/commands/create_indexes.sh"
   ]
 end

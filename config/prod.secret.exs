@@ -36,5 +36,6 @@ config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService
   auth_domain: ""
 
 config :td_bg, :elasticsearch,
+  search_service: TdBg.Search,
   es_host: "localhost",
   es_port: 9200
