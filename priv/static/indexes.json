@@ -2,7 +2,7 @@
   {
     "business_concept": {
       "mappings": {
-        "_doc": {
+        "business_concept": {
           "properties": {
             "data_domain_id": {
               "type": "integer"
@@ -33,7 +33,7 @@
   {
     "data_domain": {
       "mappings": {
-        "_doc": {
+        "data_domain": {
           "properties": {
             "name": {
               "type": "text"
@@ -52,7 +52,7 @@
   {
     "domain_group": {
       "mappings": {
-        "_doc": {
+        "domain_group": {
           "properties": {
             "name": {
               "type": "text"
