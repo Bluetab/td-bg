@@ -8,4 +8,9 @@ defmodule TdBgWeb.SearchController do
     json conn, %{data: resp}
   end
 
+  def create(conn, _params) do
+    ESClientApi.create_indexes
+    json conn, %{data: %{status: "created"}}
+  end
+
 end

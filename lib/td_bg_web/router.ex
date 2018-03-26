@@ -76,6 +76,8 @@ defmodule TdBgWeb.Router do
     resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]
 
     post "/search/:search_id", SearchController, :search
+
+    post "/search", SearchController, :create
   end
 
   def swagger_info do
