@@ -10,11 +10,9 @@ defmodule TdBg.ESClientApi do
   """
   def create_indexes do
     json = File.read!(Path.join(:code.priv_dir(:td_bg), "static/indexes.json"))
-    Logger.info "File: #{json}"
     json_decode = json |> Poison.decode!
     Enum.map(json_decode, fn(x) ->
      index_name = x |> Map.keys |> List.first
-     Logger.info "index_name: #{index_name}"
      mapping = x[index_name] |> Poison.encode!
      %HTTPoison.Response{body: _response, status_code: status} =
        put!(index_name, mapping)
