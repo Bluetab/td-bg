@@ -13,4 +13,9 @@ defmodule TdBgWeb.SearchController do
     json conn, %{data: %{status: "created"}}
   end
 
+  def delete(conn, _params) do
+    ESClientApi.delete_indexes
+    json conn, %{data: %{status: "deleted"}}
+  end
+
 end

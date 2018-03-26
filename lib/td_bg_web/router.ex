@@ -78,6 +78,7 @@ defmodule TdBgWeb.Router do
     post "/search/:search_id", SearchController, :search
 
     post "/search", SearchController, :create
+    delete "/search", SearchController, :delete
   end
 
   def swagger_info do
