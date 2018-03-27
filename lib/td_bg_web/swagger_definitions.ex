@@ -194,31 +194,28 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       DGDDItem: swagger_schema do
         properties do
-            id :integer
-            role :string
-            inherited :boolean
+          id (Schema.new do
+            properties do
+              role :string
+              inherited :boolean
+            end
+          end)
         end
       end,
       TaxonomyRolesResponse: swagger_schema do
         properties do
           data (Schema.new do
             properties do
-              domain_groups (Schema.new do
-                type :array
-                items Schema.ref(:DGDDItem)
-              end)
-              data_domains (Schema.new do
-                 type :array
-                 items Schema.ref(:DGDDItem)
-               end)
+              domain_groups Schema.ref(:DGDDItem)
+              data_domains Schema.ref(:DGDDItem)
             end
           end)
         end
         example %{
           data: [
             %{
-              data_domains: [%{id: 93, inherited: false, role: "admin"}, %{id: 94, inherited: true, role: "publish"}],
-              domain_groups: [%{id: 69, inherited: false, role: "publish"}, %{id: 70, inherited: true, role: "publish"}]
+              data_domains: %{"93": %{inherited: false, role: "admin"}, "94": %{inherited: true, role: "publish"}},
+              domain_groups: %{"69": %{inherited: false, role: "publish"}, "70": %{inherited: true, role: "publish"}}
             }
           ]
         }

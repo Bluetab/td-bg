@@ -55,10 +55,10 @@ defmodule TdBgWeb.TaxonomyControllerTest do
 
   describe "Taxonomy roles API call" do
     @tag :admin_authenticated
-    test "List empty taxonomy roles list", %{conn: conn} do
+    test "Map empty taxonomy roles list", %{conn: conn} do
       user = build(:user)
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
-      assert json_response(conn, 200)["data"] == %{"data_domains" => [], "domain_groups" => []}
+      assert json_response(conn, 200)["data"] == %{"data_domains" => %{}, "domain_groups" => %{}}
     end
 
     @tag :admin_authenticated
@@ -66,35 +66,26 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       user = build(:user)
       domain_group = insert(:domain_group)
       role = insert(:role_create)
-      insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
+      acl = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
 
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
       validate_resp_schema(conn, schema, "TaxonomyRolesResponse")
 
       actual_response = json_response(conn, 200)["data"]
-      actual_response_no_ids = remove_ids_from_role_list(actual_response)
-
-      assert actual_response_no_ids == %{"domain_groups" => [%{"inherited" => false, "role" => "create"}], "data_domains" => []}
+      assert actual_response["domain_groups"][to_string(acl.resource_id)] == %{"inherited" => false, "role" => "create"}
     end
 
     @tag :admin_authenticated
     test "List DG DD custom role list", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       data_domain = insert(:data_domain)
-      insert(:acl_entry_data_domain_user, principal_id: user.id, resource_id: data_domain.id, role_id: insert(:role_publish).id)
+      acl = insert(:acl_entry_data_domain_user, principal_id: user.id, resource_id: data_domain.id, role_id: insert(:role_publish).id)
 
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
       validate_resp_schema(conn, schema, "TaxonomyRolesResponse")
 
       actual_response = json_response(conn, 200)["data"]
-      actual_response_no_ids = remove_ids_from_role_list(actual_response)
-
-      assert actual_response_no_ids == %{"domain_groups" => [%{"inherited" => true, "role" => "watch"}], "data_domains" => [%{"inherited" => false, "role" => "publish"}]}
+      assert actual_response["data_domains"][to_string(acl.resource_id)] == %{"inherited" => false, "role" => "publish"}
     end
-  end
-
-  defp remove_ids_from_role_list(role_list) do
-    %{"domain_groups" => Enum.map(role_list["domain_groups"], fn(dg) -> %{"inherited" => dg["inherited"], "role" => dg["role"]} end),
-      "data_domains" => Enum.map(role_list["data_domains"], fn(dd) -> %{"inherited" => dd["inherited"], "role" => dd["role"]} end)}
   end
 end

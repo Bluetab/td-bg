@@ -285,14 +285,15 @@ defmodule TdBg.RolesAdminTest do
     expected_list = Enum.group_by(expected_list, &(&1.type), &(%{"id" => &1.id, "role" => &1.role, "inherited" => &1.inherited}))
     roles_dg = expected_list["DG"]
     roles_dg = case roles_dg do
-      nil -> []
-      _ -> roles_dg
+      nil -> %{}
+      _ -> roles_dg |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, to_string(x["id"]), %{"role" => x["role"], "inherited" => x["inherited"]}) end)
     end
     roles_dd = expected_list["DD"]
     roles_dd = case roles_dd do
-      nil -> []
-      _ -> roles_dd
+      nil -> %{}
+      _ -> roles_dd |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, to_string(x["id"]), %{"role" => x["role"], "inherited" => x["inherited"]}) end)
     end
+
     expected_list = %{"domain_groups" => roles_dg, "data_domains" => roles_dd}
     assert JSONDiff.diff(actual_list, expected_list) == []
   end
