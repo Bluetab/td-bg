@@ -2,8 +2,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Searchable
+
+  @behaviour Searchable
 
   schema "business_concept_versions" do
     field :content, :map
@@ -64,5 +68,13 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(attrs, [:name, :description, :content, :last_change_by, :last_change_at, :status, :version, :reject_reason, :mod_comments])
     |> validate_required([:name, :description, :content, :last_change_by, :last_change_at, :status, :version, :reject_reason, :mod_comments])
+  end
+
+  def search_fields(%BusinessConceptVersion{} = concept) do
+    aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
+    aliases = Enum.map(aliases, fn(a) -> %{name: a.name} end)
+
+    %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
+      description: concept.description, last_change_at: concept.business_concept.last_change_at, bc_aliases: aliases}
   end
 end

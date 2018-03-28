@@ -6,14 +6,36 @@ defmodule TdBg.Search do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ESClientApi
   alias TdBg.BusinessConcepts
+  alias TdBg.Taxonomies
 
   @moduledoc """
     Search Engine calls
   """
 
+  def put_bulk_search(:domain_group) do
+    domain_groups = Taxonomies.list_domain_groups()
+    Enum.each(domain_groups, fn(dg)->
+      put_search(dg)
+    end)
+  end
+
+  def put_bulk_search(:data_domain) do
+    data_domains = Taxonomies.list_data_domains()
+    Enum.each(data_domains, fn(dd)->
+      put_search(dd)
+    end)
+  end
+
+  def put_bulk_search(:business_concept) do
+    business_concepts = BusinessConcepts.list_all_business_concept_versions()
+    Enum.each(business_concepts, fn(bc)->
+      put_search(bc)
+    end)
+  end
+
   # CREATE AND UPDATE
   def put_search(%DomainGroup{} = domain_group) do
-    response = ESClientApi.index_content("domain_group", domain_group.id, %{name: domain_group.name, description: domain_group.description, parent_id: domain_group.parent_id} |> Poison.encode!)
+    response = ESClientApi.index_content("domain_group", domain_group.id, domain_group.__struct__.search_fields(domain_group) |> Poison.encode!)
     case response do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Domain group #{domain_group.name} created/updated status #{status}"
@@ -23,7 +45,7 @@ defmodule TdBg.Search do
   end
 
   def put_search(%DataDomain{} = data_domain) do
-    response = ESClientApi.index_content("data_domain", data_domain.id, %{name: data_domain.name, description: data_domain.description, domain_group_id: data_domain.domain_group_id}  |> Poison.encode!)
+    response = ESClientApi.index_content("data_domain", data_domain.id, data_domain.__struct__.search_fields(data_domain)  |> Poison.encode!)
     case response do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Data domain #{data_domain.name} created/updated status #{status}"
@@ -34,12 +56,7 @@ defmodule TdBg.Search do
 
   def put_search(%BusinessConceptVersion{} = concept) do
 
-    aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
-    aliases = Enum.map(aliases, fn(a) -> %{name: a.name} end)
-
-    response = ESClientApi.index_content("business_concept", concept.id,
-      %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
-        description: concept.description, last_change_at: concept.business_concept.last_change_at, bc_aliases: aliases}  |> Poison.encode!)
+    response = ESClientApi.index_content("business_concept", concept.id, concept.__struct__.search_fields(concept) |> Poison.encode!)
     case response do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Business concept #{concept.name} created/updated status #{status}"

@@ -18,4 +18,11 @@ defmodule TdBgWeb.SearchController do
     json conn, %{data: %{status: "deleted"}}
   end
 
+  def reindex_all(conn, _params) do
+    Search.put_bulk_search(:domain_group)
+    Search.put_bulk_search(:data_domain)
+    Search.put_bulk_search(:business_concept)
+    json conn, %{data: %{status: "ok"}}
+  end
+
 end

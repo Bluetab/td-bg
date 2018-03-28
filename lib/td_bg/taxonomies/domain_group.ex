@@ -3,6 +3,9 @@ defmodule TdBg.Taxonomies.DomainGroup do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.Searchable
+
+  @behaviour Searchable
 
   schema "domain_groups" do
     field :description, :string
@@ -26,6 +29,10 @@ defmodule TdBg.Taxonomies.DomainGroup do
     domain_group
     |> cast(%{}, [])
     |> put_change(:deleted_at, DateTime.utc_now())
+  end
+
+  def search_fields(%DomainGroup{} = domain_group) do
+    %{name: domain_group.name, description: domain_group.description, parent_id: domain_group.parent_id}
   end
 
 end

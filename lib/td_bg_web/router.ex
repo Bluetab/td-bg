@@ -78,6 +78,7 @@ defmodule TdBgWeb.Router do
     post "/search/:search_id", SearchController, :search
 
     post "/search", SearchController, :create
+    get "/search/reindex_all", SearchController, :reindex_all
     delete "/search", SearchController, :delete
   end
 
