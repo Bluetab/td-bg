@@ -5,6 +5,7 @@ defmodule TdBg.Search do
   alias TdBg.Taxonomies.DataDomain
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ESClientApi
+  alias TdBg.BusinessConcepts
 
   @moduledoc """
     Search Engine calls
@@ -32,9 +33,13 @@ defmodule TdBg.Search do
   end
 
   def put_search(%BusinessConceptVersion{} = concept) do
+
+    aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
+    aliases = Enum.map(aliases, fn(a) -> %{name: a.name} end)
+
     response = ESClientApi.index_content("business_concept", concept.id,
       %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
-        description: concept.description, last_change_at: concept.business_concept.last_change_at}  |> Poison.encode!)
+        description: concept.description, last_change_at: concept.business_concept.last_change_at, bc_aliases: aliases}  |> Poison.encode!)
     case response do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Business concept #{concept.name} created/updated status #{status}"
@@ -51,6 +56,8 @@ defmodule TdBg.Search do
         Logger.info "Domain group #{domain_group.name} deleted status 200"
       {_, %HTTPoison.Response{status_code: status_code}} ->
         Logger.error "Error deleting domain group #{domain_group.name} status #{status_code}"
+      {:error, %HTTPoison.Error{reason: :econnrefused}} ->
+        Logger.error "Error connecting to ES"
     end
   end
 
@@ -61,6 +68,8 @@ defmodule TdBg.Search do
         Logger.info "Data domain #{data_domain.name} deleted status 200"
       {_, %HTTPoison.Response{status_code: status_code}} ->
         Logger.error "Error deleting data domain #{data_domain.name} status #{status_code}"
+      {:error, %HTTPoison.Error{reason: :econnrefused}} ->
+        Logger.error "Error connecting to ES"
     end
   end
 
@@ -71,6 +80,8 @@ defmodule TdBg.Search do
         Logger.info "Business concept #{concept.name} deleted status 200"
       {_, %HTTPoison.Response{status_code: status_code}} ->
         Logger.error "Error deleting business concept #{concept.name} status #{status_code}"
+      {:error, %HTTPoison.Error{reason: :econnrefused}} ->
+        Logger.error "Error connecting to ES"
     end
   end
 

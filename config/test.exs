@@ -38,4 +38,5 @@ config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.MockTdAuthService
 config :td_bg, :elasticsearch,
   search_service: TdBg.Search.MockSearch,
   es_host: "localhost",
-  es_port: 9200
+  es_port: 9200,
+  type_name: "doc"

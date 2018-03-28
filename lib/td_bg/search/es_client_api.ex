@@ -34,7 +34,8 @@ defmodule TdBg.ESClientApi do
   end
 
   defp get_search_path(index_name, id) do
-    "#{index_name}/" <> "_doc/" <> "#{id}"
+    type_name = Application.get_env(:td_bg, :elasticsearch)[:type_name]
+    "#{index_name}/" <> "#{type_name}/" <> "#{id}"
   end
 
   @doc """

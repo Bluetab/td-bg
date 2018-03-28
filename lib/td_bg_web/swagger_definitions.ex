@@ -446,9 +446,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptAliasCreate: swagger_schema do
         properties do
-          business_concept_version (Schema.new do
+          business_concept_alias (Schema.new do
             properties do
-              business_concept_id :integer, "Business Concept id", required: true
               name :string, "Business Concept Alias"
             end
           end)

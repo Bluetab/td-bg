@@ -12,6 +12,8 @@ defmodule TdBgWeb.BusinessConceptAliasController do
 
   action_fallback TdBgWeb.FallbackController
 
+  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+
   def swagger_definitions do
     SwaggerDefinitions.business_concept_alias_definitions()
   end
@@ -35,6 +37,7 @@ defmodule TdBgWeb.BusinessConceptAliasController do
     description "Creates a Business Concept Alias"
     produces "application/json"
     parameters do
+      business_concept_id :path, :integer, "Business Concept ID", required: true
       business_concept_alias :body, Schema.ref(:BusinessConceptAliasCreate), "Business Concept Alias create attrs"
     end
     response 200, "Created", Schema.ref(:BusinessConceptAliasResponse)
@@ -53,6 +56,7 @@ defmodule TdBgWeb.BusinessConceptAliasController do
     with true <- can?(user, create_alias(business_concept_version)),
          {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, alias_name),
          {:ok, %BusinessConceptAlias{} = business_concept_alias} <- BusinessConcepts.create_business_concept_alias(creation_attrs) do
+      @search_service.put_search(business_concept_version)
       conn
       |> put_status(:created)
       |> put_resp_header("location", business_concept_alias_path(conn, :show, business_concept_alias))
@@ -74,6 +78,17 @@ defmodule TdBgWeb.BusinessConceptAliasController do
     render(conn, "show.json", business_concept_alias: business_concept_alias)
   end
 
+  swagger_path :delete do
+    delete "/business_concept_aliases/{business_concept_alias_id}"
+    description "Deletes a Business Concept Alias"
+    produces "application/json"
+    parameters do
+      business_concept_alias_id :path, :integer, "Business Concept ID", required: true
+    end
+    response 204, "No content"
+    response 400, "Client Error"
+  end
+
   def delete(conn, %{"id" => id}) do
     business_concept_alias = BusinessConcepts.get_business_concept_alias!(id)
     business_concept_id = business_concept_alias.business_concept_id
@@ -82,6 +97,7 @@ defmodule TdBgWeb.BusinessConceptAliasController do
     user = get_current_user(conn)
     with true <- can?(user, delete_alias(business_concept_version)),
          {:ok, %BusinessConceptAlias{}} <- BusinessConcepts.delete_business_concept_alias(business_concept_alias) do
+      @search_service.put_search(business_concept_version)
       send_resp(conn, :no_content, "")
     else
       false ->
