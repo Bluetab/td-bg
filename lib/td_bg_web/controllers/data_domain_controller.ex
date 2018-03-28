@@ -1,5 +1,6 @@
 defmodule TdBgWeb.DataDomainController do
   use TdBgWeb, :controller
+  use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Plug.Conn
@@ -32,7 +33,9 @@ defmodule TdBgWeb.DataDomainController do
 
   def index(conn, _params) do
     data_domains = Taxonomies.list_data_domains()
-    render(conn, "index.json", data_domains: data_domains)
+    render(conn, "index.json",
+      data_domains: data_domains,
+      hypermedia: hypermedia("data_domain", conn, data_domains))
   end
 
   swagger_path :index_children_data_domain do
@@ -48,7 +51,9 @@ defmodule TdBgWeb.DataDomainController do
 
   def index_children_data_domain(conn, %{"domain_group_id" => id}) do
     data_domains = Taxonomies.list_children_data_domain(id)
-    render(conn, "index.json", data_domains: data_domains)
+    render(conn, "index.json",
+      data_domains: data_domains,
+      hypermedia: hypermedia("data_domain", conn, data_domains))
   end
 
   swagger_path :create do
@@ -88,7 +93,9 @@ defmodule TdBgWeb.DataDomainController do
 
   def show(conn, %{"id" => id}) do
     data_domain = Taxonomies.get_data_domain!(id)
-    render(conn, "show.json", data_domain: data_domain)
+    render(conn, "show.json",
+      data_domain: data_domain,
+      hypermedia: hypermedia("data_domain", conn, data_domain))
   end
 
   swagger_path :update do
@@ -162,7 +169,9 @@ defmodule TdBgWeb.DataDomainController do
       fn(u, acc) ->
         acc ++ [Map.merge(%{role_id: u.role_id, role_name: u.role_name}, user_map(Enum.find(users, &(&1.id == u.user_id))))]
     end)
-    render(conn, "index_user_roles.json", users_roles: users_roles)
+    render(conn, "index_user_roles.json",
+      users_roles: users_roles,
+      hypermedia: hypermedia("users_roles", conn, users_roles))
   end
 
   defp user_map(user) do

@@ -30,7 +30,7 @@ defmodule TdBgWeb.DomainGroupControllerTest do
     @tag :admin_authenticated
     test "lists all domain_groups", %{conn: conn} do
       conn = get conn, domain_group_path(conn, :index)
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"]["collection"] == []
     end
   end
 
@@ -45,11 +45,10 @@ defmodule TdBgWeb.DomainGroupControllerTest do
       conn = get conn, domain_group_path(conn, :show, id)
       json_response_data = json_response(conn, 200)["data"]
       validate_resp_schema(conn, schema, "DomainGroupResponse")
-      assert json_response_data == %{
-        "id" => id,
-        "description" => "some description",
-        "name" => "some name",
-        "parent_id" => nil}
+      assert json_response_data["id"] == id
+      assert json_response_data["description"] == "some description"
+      assert json_response_data["name"] == "some name"
+      assert json_response_data["parent_id"] == nil
     end
 
     @tag :admin_authenticated
@@ -70,11 +69,10 @@ defmodule TdBgWeb.DomainGroupControllerTest do
       conn = recycle_and_put_headers(conn)
       conn = get conn, domain_group_path(conn, :show, id)
       validate_resp_schema(conn, schema, "DomainGroupResponse")
-      assert json_response(conn, 200)["data"] == %{
-        "id" => id,
-        "description" => "some updated description",
-        "name" => "some updated name",
-        "parent_id" => nil}
+      assert json_response(conn, 200)["data"]["id"] == id
+      assert json_response(conn, 200)["data"]["description"] == "some updated description"
+      assert json_response(conn, 200)["data"]["name"] == "some updated name"
+      assert json_response(conn, 200)["data"]["parent_id"] == nil
     end
 
     @tag :admin_authenticated
@@ -91,11 +89,10 @@ defmodule TdBgWeb.DomainGroupControllerTest do
     test "lists root domain groups", %{conn: conn, swagger_schema: schema, domain_group: domain_group} do
       conn = get conn, domain_group_path(conn, :index_root)
       validate_resp_schema(conn, schema, "DomainGroupsResponse")
-      assert json_response(conn, 200)["data"] == [%{
-               "id" => domain_group.id,
-               "description" => domain_group.description,
-               "name" => domain_group.name,
-               "parent_id" => nil}]
+      assert List.first(json_response(conn, 200)["data"]["collection"])["id"] == domain_group.id
+      assert List.first(json_response(conn, 200)["data"]["collection"])["description"] == domain_group.description
+      assert List.first(json_response(conn, 200)["data"]["collection"])["name"] == domain_group.name
+      assert List.first(json_response(conn, 200)["data"]["collection"])["parent_id"] == domain_group.parent_id
     end
   end
 
@@ -106,11 +103,10 @@ defmodule TdBgWeb.DomainGroupControllerTest do
     test "index domain group children", %{conn: conn, swagger_schema: schema, child_domain_group: {:ok, child_domain_group}} do
       conn = get conn, domain_group_domain_group_path(conn,  :index_children, child_domain_group.parent_id)
       validate_resp_schema(conn, schema, "DomainGroupsResponse")
-      assert json_response(conn, 200)["data"] == [%{
-               "id" => child_domain_group.id,
-               "description" => child_domain_group.description,
-               "name" => child_domain_group.name,
-               "parent_id" => child_domain_group.parent_id}]
+      assert List.first(json_response(conn, 200)["data"]["collection"])["id"] == child_domain_group.id
+      assert List.first(json_response(conn, 200)["data"]["collection"])["description"] == child_domain_group.description
+      assert List.first(json_response(conn, 200)["data"]["collection"])["name"] == child_domain_group.name
+      assert List.first(json_response(conn, 200)["data"]["collection"])["parent_id"] == child_domain_group.parent_id
     end
   end
 

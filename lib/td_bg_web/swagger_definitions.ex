@@ -54,7 +54,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       DataDomainsResponse: swagger_schema do
         properties do
-          data Schema.ref(:DataDomains)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:DataDomains)
+            end
+          end)
         end
       end,
       UsersRolesRequest: swagger_schema do
@@ -129,7 +133,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       DomainGroupsResponse: swagger_schema do
         properties do
-          data Schema.ref(:DomainGroups)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:DomainGroups)
+            end
+          end)
         end
       end,
       UserResponse: swagger_schema do
