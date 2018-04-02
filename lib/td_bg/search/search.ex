@@ -14,28 +14,31 @@ defmodule TdBg.Search do
 
   def put_bulk_search(:domain_group) do
     domain_groups = Taxonomies.list_domain_groups()
-    Enum.each(domain_groups, fn(dg)->
-      put_search(dg)
-    end)
+    {:ok, %HTTPoison.Response{body: response}} = ESClientApi.bulk_index_content(domain_groups)
+    cond do
+      response["errors"] == true ->
+        {:error, response["errors"]}
+      response["error"] == true ->
+        {:error, response["error"]}
+      true ->
+      {:ok, response}
+    end
   end
 
   def put_bulk_search(:data_domain) do
     data_domains = Taxonomies.list_data_domains()
-    Enum.each(data_domains, fn(dd)->
-      put_search(dd)
-    end)
+    ESClientApi.bulk_index_content(data_domains)
   end
 
   def put_bulk_search(:business_concept) do
     business_concepts = BusinessConcepts.list_all_business_concept_versions()
-    Enum.each(business_concepts, fn(bc)->
-      put_search(bc)
-    end)
+    ESClientApi.bulk_index_content(business_concepts)
   end
 
   # CREATE AND UPDATE
   def put_search(%DomainGroup{} = domain_group) do
-    response = ESClientApi.index_content("domain_group", domain_group.id, domain_group.__struct__.search_fields(domain_group) |> Poison.encode!)
+    search_fields = domain_group.__struct__.search_fields(domain_group)
+    response = ESClientApi.index_content(domain_group.__struct__.index_name(), domain_group.id, search_fields |> Poison.encode!)
     case response do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Domain group #{domain_group.name} created/updated status #{status}"
@@ -45,7 +48,8 @@ defmodule TdBg.Search do
   end
 
   def put_search(%DataDomain{} = data_domain) do
-    response = ESClientApi.index_content("data_domain", data_domain.id, data_domain.__struct__.search_fields(data_domain)  |> Poison.encode!)
+    search_fields = data_domain.__struct__.search_fields(data_domain)
+    response = ESClientApi.index_content(data_domain.__struct__.index_name(), data_domain.id, search_fields  |> Poison.encode!)
     case response do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Data domain #{data_domain.name} created/updated status #{status}"
@@ -55,8 +59,8 @@ defmodule TdBg.Search do
   end
 
   def put_search(%BusinessConceptVersion{} = concept) do
-
-    response = ESClientApi.index_content("business_concept", concept.id, concept.__struct__.search_fields(concept) |> Poison.encode!)
+    search_fields = concept.__struct__.search_fields(concept)
+    response = ESClientApi.index_content(concept.__struct__.index_name(), concept.id, search_fields |> Poison.encode!)
     case response do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Business concept #{concept.name} created/updated status #{status}"

@@ -19,10 +19,10 @@ defmodule TdBgWeb.SearchController do
   end
 
   def reindex_all(conn, _params) do
-    Search.put_bulk_search(:domain_group)
-    Search.put_bulk_search(:data_domain)
-    Search.put_bulk_search(:business_concept)
-    json conn, %{data: %{status: "ok"}}
+    {:ok, _response} = Search.put_bulk_search(:domain_group)
+    {:ok, _response} = Search.put_bulk_search(:data_domain)
+    {:ok, _response} = Search.put_bulk_search(:business_concept)
+    json conn, %{data: %{status: :ok}}
   end
 
 end

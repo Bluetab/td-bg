@@ -35,4 +35,8 @@ defmodule TdBg.Taxonomies.DomainGroup do
     %{name: domain_group.name, description: domain_group.description, parent_id: domain_group.parent_id}
   end
 
+  def index_name do
+    "domain_group"
+  end
+
 end

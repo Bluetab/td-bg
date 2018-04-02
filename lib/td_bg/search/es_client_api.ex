@@ -21,6 +21,23 @@ defmodule TdBg.ESClientApi do
 
   end
 
+  def bulk_index_content(items) do
+    json_bulk_data = items
+                     |> Enum.map(fn(item) -> [build_bulk_metadata(item.__struct__.index_name, item), build_bulk_doc(item)] end)
+                     |> List.flatten
+                     |> Enum.join("\n")
+    post("_bulk", json_bulk_data <> "\n")
+  end
+
+  defp build_bulk_doc(item) do
+    search_fields = item.__struct__.search_fields(item)
+    "{\"doc\": #{search_fields |> Poison.encode!}}"
+  end
+
+  defp build_bulk_metadata(index_name, item) do
+    "{\"index\": {\"_id\": #{item.id}, \"_type\": \"#{get_type_name()}\", \"_index\": \"#{index_name}\"}}"
+  end
+
   def index_content(index_name, id, body) do
     put(get_search_path(index_name, id), body)
   end
@@ -33,8 +50,12 @@ defmodule TdBg.ESClientApi do
     post("#{index_name}/" <> "_search/", query |> JSON.encode!)
   end
 
+  defp get_type_name do
+    Application.get_env(:td_bg, :elasticsearch)[:type_name]
+  end
+
   defp get_search_path(index_name, id) do
-    type_name = Application.get_env(:td_bg, :elasticsearch)[:type_name]
+    type_name = get_type_name()
     "#{index_name}/" <> "#{type_name}/" <> "#{id}"
   end
 

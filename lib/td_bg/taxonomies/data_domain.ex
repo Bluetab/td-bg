@@ -36,4 +36,8 @@ defmodule TdBg.Taxonomies.DataDomain do
     %{name: data_domain.name, description: data_domain.description, domain_group_id: data_domain.domain_group_id}
   end
 
+  def index_name do
+    "data_domain"
+  end
+
 end

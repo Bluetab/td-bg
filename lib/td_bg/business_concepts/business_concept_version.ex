@@ -77,4 +77,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
       description: concept.description, last_change_at: concept.business_concept.last_change_at, bc_aliases: aliases}
   end
+
+  def index_name do
+    "business_concept"
+  end
+
 end
