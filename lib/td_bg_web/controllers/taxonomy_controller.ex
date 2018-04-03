@@ -59,21 +59,27 @@ defmodule TdBgWeb.TaxonomyController do
     response 400, "Client error"
   end
   def roles(conn, %{"principal_id" => principal_id}) do
-    roles = Permissions.assemble_roles(%{user_id: principal_id})
+    taxonomy_roles = Permissions.assemble_roles(%{user_id: principal_id})
+    all_roles = Permissions.list_roles()
     #transform to front expected format
-    roles = Enum.group_by(roles, &(&1.type), &(%{id: &1.id, role: &1.role, acl_entry_id: &1.acl_entry_id, inherited: &1.inherited}))
-    roles_dg = roles["DG"]
+    taxonomy_roles = Enum.group_by(taxonomy_roles, &(&1.type),
+      &(%{id: &1.id, role: &1.role, role_id: find_role_by_name(all_roles, &1.role).id, acl_entry_id: &1.acl_entry_id, inherited: &1.inherited}))
+    roles_dg = taxonomy_roles["DG"]
     roles_dg = case roles_dg do
       nil -> %{}
-      _ -> roles_dg |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
+      _ -> roles_dg |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, role_id: x.role_id, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
     end
-    roles_dd = roles["DD"]
+    roles_dd = taxonomy_roles["DD"]
     roles_dd = case roles_dd do
       nil -> %{}
-      _ -> roles_dd |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
+      _ -> roles_dd |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, role_id: x.role_id, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
     end
-    roles = %{"domain_groups": roles_dg, "data_domains": roles_dd}
-    json conn, %{"data": roles}
+    taxonomy_roles = %{"domain_groups": roles_dg, "data_domains": roles_dd}
+    json conn, %{"data": taxonomy_roles}
   end
   def roles(conn, _params), do: json conn, %{"data": []}
+
+  defp find_role_by_name(roles, role_name) do
+    Enum.find(roles, fn(role) -> role.name == role_name end)
+  end
 end

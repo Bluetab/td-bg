@@ -301,7 +301,9 @@ defmodule TdBg.RolesAdminTest do
 
   defp remove_acl_entry_id(role_entries) do
     Enum.reduce(Map.keys(role_entries), %{}, fn(resource_id, acc) ->
-     Map.put(acc, resource_id, Map.delete(role_entries[resource_id], "acl_entry_id"))
+     reduced_map = Map.delete(role_entries[resource_id], "acl_entry_id")
+     reduced_map = Map.delete(reduced_map, "role_id")
+     Map.put(acc, resource_id, reduced_map)
     end)
   end
 

@@ -197,6 +197,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
           id (Schema.new do
             properties do
               role :string
+              role_id :integer
+              acl_entry_id :integer
               inherited :boolean
             end
           end)
@@ -214,8 +216,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
         example %{
           data: [
             %{
-              data_domains: %{"93": %{inherited: false, role: "admin"}, "94": %{inherited: true, role: "publish"}},
-              domain_groups: %{"69": %{inherited: false, role: "publish"}, "70": %{inherited: true, role: "publish"}}
+              data_domains: %{"93": %{inherited: false, role: "admin", role_id: 1, acl_entry_id: 1}, "94": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}},
+              domain_groups: %{"69": %{inherited: false, role: "publish", role_id: 2, acl_entry_id: 2}, "70": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}}
             }
           ]
         }
