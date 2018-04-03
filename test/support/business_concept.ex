@@ -191,4 +191,11 @@ defmodule TdBgWeb.BusinessConcept do
      fn(alias_item) -> alias_item["name"] == business_concept_alias end)
   end
 
+  def business_concept_list_with_status(token, status) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(business_concept_url(@endpoint, :index_status, status), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
 end

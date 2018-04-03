@@ -1057,6 +1057,38 @@ Feature: Business Concepts administration
     And user "app-admin" is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
       | name           |
 
+  Scenario Outline: List of Business Concepts in pending_approval for a certain user
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
+    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
+    And following users exist with the indicated role in Data Domain "My Domain"
+      | user      | role    |
+      | watcher   | watch   |
+      | creator   | create  |
+      | publisher | publish |
+      | admin     | admin   |
+    And an existing Business Concept type called "Business Term" with empty definition
+    And some existing Business Concepts in the Data Domain "My Domain" with following data:
+      | Status           | Name  | Type           | Description   |
+      | draft            | bc_1  | Business Term  | description_1 |
+      | pending_approval | bc_2  | Business Term  | description_2 |
+      | pending_approval | bc_3  | Business Term  | description_3 |
+    When "<user>" tries to list all the Business Concepts with status "pending_approval"
+    Then sees following business concepts:
+      | status           | admin      | publisher   | creator | watcher |
+      | pending_approval | bc_2,bc_3  | bc_2,bc_3   |         |         |
+      # | draft            | bc_1       | bc_1        | bc_1    |         |
+      # | rejected         |            |             |         |         |
+      # | published        |            |             |         |         |
+      # | versioned        |            |             |         |         |
+      # | deprecated       |            |             |         |         |
+    Examples:
+      | user      |
+      | watcher   |
+      | creator   |
+      | publisher |
+      | admin     |
+
   Scenario: Create business concept related to other business concepts
     Given an existing Domain Group called "My Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Group"

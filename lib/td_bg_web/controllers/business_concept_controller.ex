@@ -359,6 +359,50 @@ defmodule TdBgWeb.BusinessConceptController do
       |> Map.get(content_type)
   end
 
+  swagger_path :index_status do
+    get "/business_concepts/index_status/{status}"
+    description "List Business Concept with certain status"
+    produces "application/json"
+    parameters do
+      status :path, :string, "Business Concept Status", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 400, "Client Error"
+  end
+
+  def index_status(conn, status) do
+    user = conn.assigns.current_user
+    render(conn, "index.json", business_concepts: build_list(user, status))
+  end
+
+  defp build_list(user, %{"status" => status}) do
+    list_business_concept = BusinessConcepts.list_all_business_concept_with_status([status])
+    case status do
+      "draft" ->
+        nil
+      "pending_approval" -> filter_list(user, list_business_concept)
+      "rejected" ->
+        nil
+      "published" ->
+        nil
+      "versioned" ->
+        nil
+      "deprecated" ->
+        nil
+    end
+  end
+
+  defp filter_list(user, list_business_concept) do
+    Enum.reduce(list_business_concept, [], fn(business_concept, acc) ->
+      if can?(user, publish(business_concept)) or can?(user, reject(business_concept)) do
+        acc ++ [business_concept]
+      else
+        []
+      end
+    end
+    )
+  end
+
   defp check_valid_related_to(_type, []), do: {:valid_related_to}
   defp check_valid_related_to(type, ids) do
     input_count = length(ids)
