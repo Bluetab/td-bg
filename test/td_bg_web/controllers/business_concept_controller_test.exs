@@ -27,6 +27,27 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     end
   end
 
+  describe "search" do
+    @tag authenticated_user: @admin_user_name
+    test "find business_concepts by id and status", %{conn: conn} do
+      published = BusinessConcept.status.published
+      draft = BusinessConcept.status.draft
+      data_domain = insert(:data_domain)
+      id = [create_version(data_domain, "one", draft).business_concept.id]
+      id = [create_version(data_domain, "two", published).business_concept.id | id]
+      id = [create_version(data_domain, "three", published).business_concept.id | id]
+
+      conn = get conn, business_concept_path(conn, :search), %{id: Enum.join(id, ","), status: published}
+      assert 2 == length(json_response(conn, 200)["data"])
+    end
+
+    defp create_version(data_domain, name, status) do
+      business_concept = insert(:business_concept, data_domain: data_domain)
+      insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
+    end
+
+  end
+
   describe "create business_concept" do
     setup [:create_content_schema]
 

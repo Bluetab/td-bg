@@ -40,6 +40,15 @@ defmodule TdBgWeb.BusinessConceptView do
       name: business_concept_alias.name}
   end
 
+  def render("search.json", %{business_concepts: business_concept_versions}) do
+    %{data: render_many(business_concept_versions, BusinessConceptView, "search_item.json")}
+  end
+
+  def render("search_item.json", %{business_concept: business_concept_version}) do
+    %{id: business_concept_version.business_concept.id,
+      name: business_concept_version.name}
+  end
+
   defp add_reject_reason(concept, reject_reason, :rejected) do
     Map.put(concept, :reject_reason, reject_reason)
   end

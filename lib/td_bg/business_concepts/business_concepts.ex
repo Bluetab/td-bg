@@ -185,7 +185,7 @@ defmodule TdBg.BusinessConcepts do
 
   ## Examples
 
-      iex> list_all_business_concept_versions()
+      iex> list_all_business_concept_versions(filter)
       [%BusinessConceptVersion{}, ...]
 
   """
@@ -195,6 +195,38 @@ defmodule TdBg.BusinessConcepts do
     |> preload([_, c], [business_concept: c])
     |> order_by(asc: :version)
     |> Repo.all
+  end
+
+  @doc """
+  Returns the list of business_concept_versions.
+
+  ## Examples
+
+      iex> list_all_business_concept_versions()
+      [%BusinessConceptVersion{}, ...]
+
+  """
+  def find_business_concept_versions(filter) do
+    query = BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> preload([_, c], [business_concept: c])
+    |> order_by(asc: :version)
+
+    query = case Map.has_key?(filter, :id) && length(filter.id) > 0 do
+      true ->
+        id = Map.get(filter, :id)
+        query |> where([_v, c], c.id in ^id)
+      _ -> query
+    end
+
+    query = case Map.has_key?(filter, :status) && length(filter.status) > 0 do
+      true ->
+        status = Map.get(filter, :status)
+        query |> where([v, _c], v.status in ^status)
+      _ -> query
+    end
+
+    query |> Repo.all
   end
 
   @doc """

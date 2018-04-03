@@ -466,6 +466,22 @@ defmodule TdBg.BusinessConceptsTests do
 
     end
 
+    test "find_business_concept_versions/1 returns filtered business_concept_versions" do
+      published = BusinessConcept.status.published
+      draft = BusinessConcept.status.draft
+      data_domain = insert(:data_domain)
+      id = [create_version(data_domain, "one", draft).business_concept.id]
+      id = [create_version(data_domain, "two", published).business_concept.id | id]
+      id = [create_version(data_domain, "three", published).business_concept.id | id]
+      business_concept_versions = BusinessConcepts.find_business_concept_versions(%{id: id, status: [published]})
+      assert  2 == length(business_concept_versions)
+    end
+
+    defp create_version(data_domain, name, status) do
+      business_concept = insert(:business_concept, data_domain: data_domain)
+      insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
+    end
+
     test "list_business_concept_versions/1 returns all business_concept_versions of a business_concept_version" do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id

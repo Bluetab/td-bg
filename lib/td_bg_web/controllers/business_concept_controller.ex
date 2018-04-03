@@ -52,6 +52,15 @@ defmodule TdBgWeb.BusinessConceptController do
     render(conn, "index.json", business_concepts: business_concept_vesions)
   end
 
+  def search(conn, %{"id" => id, "status" => status}) do
+    filter = Map.new
+    |> add_to_filter_as_int_list(:id, id)
+    |> add_to_filter_as_list(:status, status)
+
+    business_concept_versions = BusinessConcepts.find_business_concept_versions(filter)
+    render(conn, "search.json", business_concepts: business_concept_versions)
+  end
+
   swagger_path :create do
     post "/data_domains/{data_domain_id}/business_concept"
     description "Creates a Business Concept child of Data Domain"
@@ -409,4 +418,21 @@ defmodule TdBgWeb.BusinessConceptController do
     actual_count = BusinessConcepts.count_published_business_concepts(type, ids)
     if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
+
+  defp add_to_filter_as_int_list(filter, _name, nil), do: filter
+  defp add_to_filter_as_int_list(filter, name, value) do
+    list_value = value
+    |> String.split(",")
+    |> Enum.map(&String.to_integer(String.trim(&1)))
+    Map.put(filter, name, list_value)
+  end
+
+  defp add_to_filter_as_list(filter, _name, nil), do: filter
+  defp add_to_filter_as_list(filter, name, value) do
+    list_value = value
+    |> String.split(",")
+    |> Enum.map(&String.trim(&1))
+    Map.put(filter, name, list_value)
+  end
+
 end

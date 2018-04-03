@@ -124,6 +124,13 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
+  def business_concept_search(token, filter) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(business_concept_url(@endpoint, :search), headers, filter)
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
   def business_concept_by_name(token, business_concept_name) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
     Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
