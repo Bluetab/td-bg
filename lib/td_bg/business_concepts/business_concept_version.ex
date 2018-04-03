@@ -11,6 +11,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   schema "business_concept_versions" do
     field :content, :map
+    field :related_to, {:array, :integer}
     field :description, :string
     field :last_change_at, :utc_datetime
     field :mod_comments, :string
@@ -27,9 +28,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   @doc false
   def create_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [:content, :name, :description, :last_change_by, :last_change_at, :version, :mod_comments])
+    |> cast(attrs, [:content, :related_to, :name, :description, :last_change_by, :last_change_at, :version, :mod_comments])
     |> put_assoc(:business_concept, attrs.business_concept)
-    |> validate_required([:content, :name, :last_change_by, :last_change_at, :version, :business_concept])
+    |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at, :version, :business_concept])
     |> put_change(:status, BusinessConcept.status.draft)
     |> validate_length(:name, max: 255)
     |> validate_length(:description,  max: 500)
@@ -38,10 +39,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   def update_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [:content, :name, :description, :last_change_by, :last_change_at, :mod_comments])
+    |> cast(attrs, [:content, :related_to, :name, :description, :last_change_by, :last_change_at, :mod_comments])
     |> cast_assoc(:business_concept)
     |> put_change(:status, BusinessConcept.status.draft)
-    |> validate_required([:content, :name, :last_change_by, :last_change_at])
+    |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
     |> validate_length(:mod_comments, max: 500)

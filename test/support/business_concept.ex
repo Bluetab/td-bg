@@ -18,6 +18,29 @@ defmodule TdBgWeb.BusinessConcept do
                   "Modification Comments" => "mod_comments"
                   }
 
+  def add_to_business_concept_schema(type, definition) do
+    filename = Application.get_env(:td_bg, :bc_schema_location)
+
+    {:ok, file} = File.open filename, [:read, :write, :utf8]
+    content = File.read! filename
+    map_content =
+      case content do
+        "" -> Map.new
+        _ -> JSON.decode!(content)
+      end
+
+    json_schema = [{type, definition}]
+                  |> Map.new
+                  |> Map.merge(map_content)
+                  |> JSON.encode!
+    IO.binwrite file, json_schema
+    File.close file
+  end
+
+  def rm_business_concept_schema do
+    File.rm(Application.get_env(:td_bg, :bc_schema_location))
+  end
+
   def business_concept_field_values_to_api_attrs(table) do
     table
       |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(@fixed_values, x."Field", x."Field"), x."Value") end)

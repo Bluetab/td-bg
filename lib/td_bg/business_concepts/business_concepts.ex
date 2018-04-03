@@ -19,9 +19,7 @@ defmodule TdBg.BusinessConcepts do
   @variable_list "variable_list"
 
   @doc """
-  count  business conceps of indicated type name
-  and status
-
+    check business concept name availability
   """
   def check_business_concept_name_availability(type, name, exclude_concept_id \\ nil)
   def check_business_concept_name_availability(type, name, _exclude_concept_id) when is_nil(name) or is_nil(type),  do: {:available}
@@ -42,6 +40,20 @@ defmodule TdBg.BusinessConcepts do
   end
   defp include_name_where(query, name, exclude_concept_id) do
     query |> where([c, a, v], ((c.id != ^exclude_concept_id and (v.name == ^name or a.name == ^name)) and (c.id == ^exclude_concept_id and a.name == ^name)))
+  end
+
+  @doc """
+    count published business concepts
+    business concept must be of indicated type
+    business concept are resticted to indicated id list
+  """
+  def count_published_business_concepts(type, ids) do
+    published = BusinessConcept.status.published
+    BusinessConcept
+    |> join(:left, [c], _ in assoc(c, :versions))
+    |> where([c, v], c.type == ^type and c.id in ^ids and v.status == ^published)
+    |> select([c, _v], count(c.id))
+    |> Repo.one!
   end
 
   @doc """

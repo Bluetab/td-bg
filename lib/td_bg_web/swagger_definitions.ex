@@ -327,18 +327,19 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "Business Concept"
         properties do
           id :integer, "unique identifier", required: true
-          business_concept_version_id :integer, "Business Concept current version id"
-          type :string, "Business Concept type"
-          content :object, "Business Concept content"
-          name :string, "Business Concept name"
-          description :string, "Business Concept description"
-          last_change_by :integer, "Business Concept last updated by"
-          last_change_at :string, "Business Conceptlast updated date"
-          data_domain_id :integer, "Business Concept parent data domain id"
-          status :string, "Business Conceptstatus"
-          version :integer, "Business Concept version"
-          reject_reason [:string, :null], "Business Concept reject reason"
-          mod_comments [:string, :null], "Business Concept modification comments"
+          business_concept_version_id :integer, "Business Concept current version id", required: true
+          type :string, "Business Concept type", required: true
+          content :object, "Business Concept content", required: true
+          related_to :array, "Related Business Concepts", items: %{type: :integer}, required: true
+          name :string, "Business Concept name", required: true
+          description :string, "Business Concept description", required: true
+          last_change_by :integer, "Business Concept last updated by", required: true
+          last_change_at :string, "Business Conceptlast updated date", required: true
+          data_domain_id :integer, "Business Concept parent data domain id", required: true
+          status :string, "Business Conceptstatus", required: true
+          version :integer, "Business Concept version", required: true
+          reject_reason [:string, :null], "Business Concept reject reason", required: false
+          mod_comments [:string, :null], "Business Concept modification comments", required: false
         end
       end,
       BusinessConceptCreate: swagger_schema do
@@ -403,8 +404,9 @@ defmodule TdBgWeb.SwaggerDefinitions do
           business_concept_id :integer, "Business Concept unique id", required: true
           type :string, "Business Concept type", required: true
           content :object, "Business Concept Version content", required: true
+          related_to :array, "Related Business Concepts", items: %{type: :integer}, required: true
           name :string, "Business Concept Version name", required: true
-          description :string, "Business Concept Version description"
+          description :string, "Business Concept Version description", required: true
           last_change_by :integer, "Business Concept Version last change by", required: true
           last_change_at :string, "Business Concept Verion last change at", required: true
           data_domain_id :integer, "Belongs to Data Domain", required: true

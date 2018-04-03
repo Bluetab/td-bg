@@ -43,6 +43,7 @@ defmodule TdBg.Factory do
     %BusinessConceptVersion {
       business_concept: build(:business_concept),
       content: %{},
+      related_to: [],
       name: "My business term",
       description: "My business term description",
       last_change_by: 1,

@@ -29,6 +29,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         content: %{},
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -53,6 +54,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: nil,
         content: %{},
+        related_to: [],
         name: nil,
         description: nil,
         last_change_by: nil,
@@ -87,6 +89,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -120,6 +123,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -155,6 +159,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -188,6 +193,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -220,6 +226,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -279,6 +286,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         content: nil,
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -305,6 +313,7 @@ defmodule TdBg.BusinessConceptsTests do
       creation_attrs = %{
         business_concept: concept_attrs,
         content: %{},
+        related_to: [],
         name: "some name",
         description: "some description",
         last_change_by: user.id,
@@ -334,6 +343,14 @@ defmodule TdBg.BusinessConceptsTests do
       assert {:available} == BusinessConcepts.check_business_concept_name_availability(type, name, exclude_concept_id)
     end
 
+    test "count_published_business_concepts/2 check count" do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id, status: BusinessConcept.status.published)
+      type = business_concept_version.business_concept.type
+      ids = [business_concept_version.business_concept.id]
+      assert 1 == BusinessConcepts.count_published_business_concepts(type, ids)
+    end
+
     test "update_business_concept_version/2 with valid data updates the business_concept_version" do
       user = build(:user)
       business_concept_version = insert(:business_concept_version)
@@ -347,6 +364,7 @@ defmodule TdBg.BusinessConceptsTests do
         business_concept: concept_attrs,
         business_concept_id: business_concept_version.business_concept.id,
         content: %{},
+        related_to: [],
         name: "updated name",
         description: "updated description",
         last_change_by: user.id,
@@ -394,6 +412,7 @@ defmodule TdBg.BusinessConceptsTests do
         business_concept: concept_attrs,
         business_concept_id: business_concept_version.business_concept.id,
         content: update_content,
+        related_to: [],
         name: "updated name",
         description: "updated description",
         last_change_by: user.id,
@@ -414,6 +433,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: nil,
         content: %{},
+        related_to: [],
         name: nil,
         description: nil,
         last_change_by: nil,
