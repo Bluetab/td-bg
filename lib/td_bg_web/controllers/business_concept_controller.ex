@@ -52,12 +52,17 @@ defmodule TdBgWeb.BusinessConceptController do
     render(conn, "index.json", business_concepts: business_concept_vesions)
   end
 
-  def search(conn, %{"id" => id, "status" => status}) do
+  def search(conn, %{} = search_params) do
     filter = Map.new
-    |> add_to_filter_as_int_list(:id, id)
-    |> add_to_filter_as_list(:status, status)
+    |> add_to_filter_as_int_list(:id, Map.get(search_params, "id"))
+    |> add_to_filter_as_list(:status, Map.get(search_params, "status"))
 
-    business_concept_versions = BusinessConcepts.find_business_concept_versions(filter)
+    business_concept_versions = if length(filter.id) > 0 do
+      BusinessConcepts.find_business_concept_versions(filter)
+    else
+      []
+    end
+
     render(conn, "search.json", business_concepts: business_concept_versions)
   end
 
@@ -419,7 +424,7 @@ defmodule TdBgWeb.BusinessConceptController do
     if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
 
-  defp add_to_filter_as_int_list(filter, _name, nil), do: filter
+  defp add_to_filter_as_int_list(filter, name, nil), do: Map.put(filter, name, [])
   defp add_to_filter_as_int_list(filter, name, value) do
     list_value = value
     |> String.split(",")
@@ -427,7 +432,7 @@ defmodule TdBgWeb.BusinessConceptController do
     Map.put(filter, name, list_value)
   end
 
-  defp add_to_filter_as_list(filter, _name, nil), do: filter
+  defp add_to_filter_as_list(filter, name, nil), do: Map.put(filter, name, [])
   defp add_to_filter_as_list(filter, name, value) do
     list_value = value
     |> String.split(",")
