@@ -250,6 +250,19 @@ defmodule TdBgWeb.SwaggerDefinitions do
           end)
         end
       end,
+      AclEntryCreateOrUpdate: swagger_schema do
+        properties do
+          acl_entry (Schema.new do
+                       properties do
+                         principal_id :integer, "id of principal", required: true
+                         principal_type :string, "type of principal: user", required: true
+                         resource_id :integer, "id of resource", required: true
+                         resource_type :string, "type of resource: data_domain / domain_group", required: true
+                         role_name :string, "role name", required: true
+                       end
+                     end)
+        end
+      end,
       AclEntries: swagger_schema do
         title "Acl entries"
         description "A collection of Acl Entry"

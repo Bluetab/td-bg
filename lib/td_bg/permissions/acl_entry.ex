@@ -23,5 +23,6 @@ defmodule TdBg.Permissions.AclEntry do
     |> validate_required([:principal_type, :principal_id, :resource_type, :resource_id, :role_id])
     |> validate_inclusion(:principal_type, ["user"])
     |> validate_inclusion(:resource_type, ["domain_group", "data_domain"])
+    |> unique_constraint(:unique_principal_resource, name: :principal_resource_index)
   end
 end

@@ -52,12 +52,19 @@ defmodule TdBg.Permissions do
   @doc """
 
   """
+  def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, resource_type: resource_type, resource_id: resource_id}) do
+    Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: resource_type, resource_id: resource_id)
+  end
+
+  @doc """
+    Returns acl entry for an user and domain group
+  """
   def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, domain_group: domain_group}) do
     Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group.id)
   end
 
   @doc """
-
+    Returns acl entry for an user and data domain
   """
   def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, data_domain: data_domain}) do
     Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain.id)

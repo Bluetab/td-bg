@@ -4,6 +4,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
 
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.Role
   import TdBgWeb.Authentication, only: :functions
 
   @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain_group"}
@@ -52,9 +53,87 @@ defmodule TdBgWeb.AclEntryControllerTest do
     end
 
     @tag :admin_authenticated
+    test "renders error for duplicated acl_entry", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      domain_group = insert(:domain_group)
+      role = insert(:role)
+      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
+      acl_entry_attrs = acl_entry_attrs |> Map.from_struct
+      conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
+      assert %{"id" => _id} = json_response(conn, 201)["data"]
+      validate_resp_schema(conn, schema, "AclEntryResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
+      assert json_response(conn, 422)["errors"] != %{}
+    end
+
+    @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post conn, acl_entry_path(conn, :create), acl_entry: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
+    end
+  end
+
+  describe "create or update acl_entry" do
+    @tag :admin_authenticated
+    test "renders acl_entry when creating a new acl", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      domain_group = insert(:domain_group)
+      role = get_role_by_name(conn, Atom.to_string(Role.create))
+      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id)
+      acl_entry_attrs = acl_entry_attrs |> Map.from_struct
+      acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role["name"])
+      conn = post conn, acl_entry_path(conn, :create_or_update), acl_entry: acl_entry_attrs
+      assert %{"id" => id} = json_response(conn, 201)["data"]
+      validate_resp_schema(conn, schema, "AclEntryResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, acl_entry_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "AclEntryResponse")
+      assert json_response(conn, 200)["data"] == %{
+               "id" => id,
+               "principal_id" => user.id,
+               "principal_type" => "user",
+               "resource_id" => domain_group.id,
+               "resource_type" => "domain_group",
+               "role_id" => role["id"]
+             }
+    end
+
+    @tag :admin_authenticated
+    test "renders acl_entry when updating an existing acl", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      domain_group = insert(:domain_group)
+      role = build(:role)
+      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id)
+      acl_entry_attrs = acl_entry_attrs |> Map.from_struct
+      acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role.name)
+      conn = post conn, acl_entry_path(conn, :create_or_update), acl_entry: acl_entry_attrs
+      assert %{"id" => _id} = json_response(conn, 201)["data"]
+      validate_resp_schema(conn, schema, "AclEntryResponse")
+
+      role = get_role_by_name(conn, Atom.to_string(Role.admin))
+
+      conn = recycle_and_put_headers(conn)
+      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id)
+      acl_entry_attrs = acl_entry_attrs |> Map.from_struct
+      acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role["name"])
+      conn = post conn, acl_entry_path(conn, :create_or_update), acl_entry: acl_entry_attrs
+      assert %{"id" => id} = json_response(conn, 200)["data"]
+      validate_resp_schema(conn, schema, "AclEntryResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, acl_entry_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "AclEntryResponse")
+      assert json_response(conn, 200)["data"] == %{
+               "id" => id,
+               "principal_id" => user.id,
+               "principal_type" => "user",
+               "resource_id" => domain_group.id,
+               "resource_type" => "domain_group",
+               "role_id" => role["id"]
+             }
     end
   end
 
@@ -106,5 +185,12 @@ defmodule TdBgWeb.AclEntryControllerTest do
     role = insert(:role)
     acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
     {:ok, acl_entry: acl_entry_attrs}
+  end
+
+  defp get_role_by_name(conn, name) do
+    conn = recycle_and_put_headers(conn)
+    conn = get conn, role_path(conn, :index)
+    roles = json_response(conn, 200)["data"]
+    Enum.find(roles, fn(role) -> role["name"] == name end)
   end
 end

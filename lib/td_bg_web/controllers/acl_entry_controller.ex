@@ -61,6 +61,30 @@ defmodule TdBgWeb.AclEntryController do
     end
   end
 
+  swagger_path :create_or_update do
+    post "/acl_entries/create_or_update"
+    description "Creates or Updates an Acl Entry"
+    produces "application/json"
+    parameters do
+      acl_entry :body, Schema.ref(:AclEntryCreateOrUpdate), "Acl entry create or update attrs"
+    end
+    response 201, "OK", Schema.ref(:AclEntryResponse)
+    response 400, "Client Error"
+  end
+
+  def create_or_update(conn, %{"acl_entry" => acl_entry_params}) do
+    role = Permissions.get_role_by_name(acl_entry_params["role_name"])
+    acl_entry_params = Map.put(acl_entry_params, "role_id", role.id)
+    acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
+    acl_query_params = %{user_id: acl_entry.principal_id, resource_type: acl_entry.resource_type, resource_id: acl_entry.resource_id}
+    acl_entry = Permissions.get_acl_entry_by_principal_and_resource(acl_query_params)
+    if acl_entry do
+      update(conn, %{"id" => acl_entry.id, "acl_entry" => acl_entry_params})
+    else
+      create(conn, %{"acl_entry" => acl_entry_params})
+    end
+  end
+
   swagger_path :show do
     get "/acl_entries/{id}"
     description "Show Acl Entry"
