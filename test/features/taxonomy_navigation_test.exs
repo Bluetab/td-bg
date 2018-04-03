@@ -4,13 +4,13 @@ defmodule TdBg.TaxonomyNavigationTest do
   import TdBgWeb.Router.Helpers
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy
+  import TdBgWeb.BusinessConcept
   import TdBgWeb.Authentication, only: :functions
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   @endpoint TdBgWeb.Endpoint
 
   @bc_fixed_fields %{"Description" => "description", "Name" => "name", "Type" => "type"}
-  @headers {"Content-type", "application/json"}
 
   setup_all do
     start_supervised MockTdAuthService
@@ -19,7 +19,7 @@ defmodule TdBg.TaxonomyNavigationTest do
 
   setup do
     on_exit fn ->
-              File.rm(Application.get_env(:td_bg, :bc_schema_location))
+              rm_business_concept_schema()
             end
   end
 
@@ -105,23 +105,7 @@ defmodule TdBg.TaxonomyNavigationTest do
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
     %{business_concept_type: business_concept_type}, state do
-    filename = Application.get_env(:td_bg, :bc_schema_location)
-
-    {:ok, file} = File.open filename, [:read, :write, :utf8]
-    content = File.read! filename
-    map_content =
-      case content do
-        "" -> Map.new
-        _ -> JSON.decode!(content)
-      end
-
-    json_schema = [{business_concept_type, []}]
-                  |> Map.new
-                  |> Map.merge(map_content)
-                  |> JSON.encode!
-    IO.binwrite file, json_schema
-    File.close file
-
+      add_to_business_concept_schema(business_concept_type, [])
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
@@ -231,14 +215,6 @@ defmodule TdBg.TaxonomyNavigationTest do
       |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
       |> Map.split(Map.values(fixed_values))
       |> fn({f, v}) -> Map.put(f, "content", v) end.()
-  end
-
-  defp business_concept_create(token, data_domain_id,  attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(data_domain_business_concept_url(@endpoint, :create, data_domain_id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
   end
 
 end
