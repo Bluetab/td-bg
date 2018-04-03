@@ -58,8 +58,8 @@ defmodule TdBgWeb.TaxonomyController do
     response 200, "Ok" , Schema.ref(:TaxonomyRolesResponse)
     response 400, "Client error"
   end
-  def roles(conn, params) do
-    roles = Permissions.assemble_roles(%{user_id: params["principal_id"]})
+  def roles(conn, %{"principal_id" => principal_id}) do
+    roles = Permissions.assemble_roles(%{user_id: principal_id})
     #transform to front expected format
     roles = Enum.group_by(roles, &(&1.type), &(%{id: &1.id, role: &1.role, inherited: &1.inherited}))
     roles_dg = roles["DG"]
@@ -75,5 +75,5 @@ defmodule TdBgWeb.TaxonomyController do
     roles = %{"domain_groups": roles_dg, "data_domains": roles_dd}
     json conn, %{"data": roles}
   end
-
+  def roles(conn, _params), do: json conn, %{"data": []}
 end
