@@ -294,8 +294,15 @@ defmodule TdBg.RolesAdminTest do
       _ -> roles_dd |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, to_string(x["id"]), %{"role" => x["role"], "inherited" => x["inherited"]}) end)
     end
 
+    actual_list = %{"domain_groups" => remove_acl_entry_id(actual_list["domain_groups"]), "data_domains" => remove_acl_entry_id(actual_list["data_domains"])}
     expected_list = %{"domain_groups" => roles_dg, "data_domains" => roles_dd}
     assert JSONDiff.diff(actual_list, expected_list) == []
+  end
+
+  defp remove_acl_entry_id(role_entries) do
+    Enum.reduce(Map.keys(role_entries), %{}, fn(resource_id, acc) ->
+     Map.put(acc, resource_id, Map.delete(role_entries[resource_id], "acl_entry_id"))
+    end)
   end
 
   defp data_domain_users_roles(token, attrs) do

@@ -72,7 +72,10 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       validate_resp_schema(conn, schema, "TaxonomyRolesResponse")
 
       actual_response = json_response(conn, 200)["data"]
-      assert actual_response["domain_groups"][to_string(acl.resource_id)] == %{"inherited" => false, "role" => "create"}
+      role_response = actual_response["domain_groups"][to_string(acl.resource_id)]
+      assert role_response["inherited"]  == false
+      assert role_response["role"] == "create"
+      assert role_response["acl_entry_id"] != nil
     end
 
     @tag :admin_authenticated
@@ -85,7 +88,10 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       validate_resp_schema(conn, schema, "TaxonomyRolesResponse")
 
       actual_response = json_response(conn, 200)["data"]
-      assert actual_response["data_domains"][to_string(acl.resource_id)] == %{"inherited" => false, "role" => "publish"}
+      role_response = actual_response["data_domains"][to_string(acl.resource_id)]
+      assert role_response["inherited"]  == false
+      assert role_response["role"] == "publish"
+      assert role_response["acl_entry_id"] != nil
     end
   end
 end

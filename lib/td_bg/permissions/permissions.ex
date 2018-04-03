@@ -376,18 +376,23 @@ defmodule TdBg.Permissions do
     roles
   end
 
-  defp build_dg_map(%{"id": id, "role": role, "inherited": inherited}) do
-    %{"id": id, "type": "DG", "role": role, "inherited": inherited}
+  defp build_dg_map(%{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}) do
+    %{"id": id, "type": "DG", "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}
   end
 
-  defp build_dd_map(%{"id": id, "role": role, "inherited": inherited}) do
-    %{"id": id, "type": "DD", "role": role, "inherited": inherited}
+  defp build_dd_map(%{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}) do
+    %{"id": id, "type": "DD", "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}
   end
 
   defp assemble_node_role(%DomainGroup{parent_id: nil} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
     custom_role = get_role_in_resource(%{user_id: user_id, domain_group_id: dg.id})
     custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain_group" && acl.resource_id == dg.id end)
-    roles = roles ++ [build_dg_map(%{id: dg.id, role: custom_role.name, inherited: custom_acl == nil})]
+    custom_acl_id = if custom_acl do
+      custom_acl.id
+    else
+      nil
+    end
+    roles = roles ++ [build_dg_map(%{id: dg.id, role: custom_role.name, acl_entry_id: custom_acl_id, inherited: custom_acl == nil})]
     Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
       Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]))
     end)
@@ -396,7 +401,7 @@ defmodule TdBg.Permissions do
   defp assemble_node_role(%DomainGroup{} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
     custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain_group" && acl.resource_id == dg.id end)
     roles = if custom_acl do
-      roles ++ [build_dg_map(%{id: dg.id, role: custom_acl.role.name, inherited: false})]
+      roles ++ [build_dg_map(%{id: dg.id, role: custom_acl.role.name, acl_entry_id: custom_acl.id, inherited: false})]
     else
       roles ++ [get_closest_role(dg, roles, all_dgs, all_dds)]
     end
@@ -408,7 +413,7 @@ defmodule TdBg.Permissions do
   defp assemble_node_role(%DataDomain{} = dd, _user_id, all_acls, roles, all_dgs, all_dds) do
     custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "data_domain" && acl.resource_id == dd.id end)
     if custom_acl do
-      build_dd_map(%{id: dd.id, role: custom_acl.role.name, inherited: false})
+      build_dd_map(%{id: dd.id, role: custom_acl.role.name, acl_entry_id: custom_acl.id, inherited: false})
     else
       get_closest_role(dd, roles, all_dgs, all_dds)
     end
@@ -417,7 +422,7 @@ defmodule TdBg.Permissions do
   defp get_closest_role(%DomainGroup{} = dg, roles, all_dgs, all_dds) do
     role = Enum.find(roles, fn(role) -> role.id == dg.parent_id && role.type == "DG" end)
     if role do
-      build_dg_map(%{id: dg.id, role: role.role, inherited: true})
+      build_dg_map(%{id: dg.id, role: role.role, acl_entry_id: nil, inherited: true})
     else
       parent_dg = Enum.find(all_dgs, fn(i_dg) -> i_dg.id == dg.parent_id end)
       get_closest_role(parent_dg, roles, all_dgs, all_dds)
@@ -427,7 +432,7 @@ defmodule TdBg.Permissions do
   defp get_closest_role(%DataDomain{} = dd, roles, all_dgs, all_dds) do
     role = Enum.find(roles, fn(role) -> role.id == dd.domain_group_id && role.type == "DG" end)
     if role do
-      build_dd_map(%{id: dd.id, role: role.role, inherited: true})
+      build_dd_map(%{id: dd.id, role: role.role, acl_entry_id: nil, inherited: true})
     else
       parent_dg = Enum.find(all_dgs, fn(i_dg) -> i_dg.id == dd.parent_id end)
       get_closest_role(parent_dg, roles, all_dgs, all_dds)

@@ -61,16 +61,16 @@ defmodule TdBgWeb.TaxonomyController do
   def roles(conn, %{"principal_id" => principal_id}) do
     roles = Permissions.assemble_roles(%{user_id: principal_id})
     #transform to front expected format
-    roles = Enum.group_by(roles, &(&1.type), &(%{id: &1.id, role: &1.role, inherited: &1.inherited}))
+    roles = Enum.group_by(roles, &(&1.type), &(%{id: &1.id, role: &1.role, acl_entry_id: &1.acl_entry_id, inherited: &1.inherited}))
     roles_dg = roles["DG"]
     roles_dg = case roles_dg do
       nil -> %{}
-      _ -> roles_dg |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, inherited: x.inherited}) end)
+      _ -> roles_dg |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
     end
     roles_dd = roles["DD"]
     roles_dd = case roles_dd do
       nil -> %{}
-      _ -> roles_dd |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, inherited: x.inherited}) end)
+      _ -> roles_dd |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
     end
     roles = %{"domain_groups": roles_dg, "data_domains": roles_dd}
     json conn, %{"data": roles}
