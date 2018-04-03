@@ -217,6 +217,15 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all
   end
 
+  def list_all_business_concept_with_status(status) do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> preload([_, c], [business_concept: c])
+    |> include_status_in_where(status)
+    |> order_by(asc: :version)
+    |> Repo.all
+  end
+
   defp include_status_in_where(query, nil), do: query
   defp include_status_in_where(query, status) do
     query |> where([v, _], v.status in ^status)
