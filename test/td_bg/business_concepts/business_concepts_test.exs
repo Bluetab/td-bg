@@ -331,7 +331,7 @@ defmodule TdBg.BusinessConceptsTests do
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       type = business_concept_version.business_concept.type
       name = business_concept_version.name
-      assert {:not_available} == BusinessConcepts.check_business_concept_name_availability(type, name)
+      assert {:name_not_available} == BusinessConcepts.check_business_concept_name_availability(type, name)
     end
 
     test "check_business_concept_name_availability/3 check available" do
@@ -340,7 +340,7 @@ defmodule TdBg.BusinessConceptsTests do
       exclude_concept_id = business_concept_version.business_concept.id
       type = business_concept_version.business_concept.type
       name = business_concept_version.name
-      assert {:available} == BusinessConcepts.check_business_concept_name_availability(type, name, exclude_concept_id)
+      assert {:name_available} == BusinessConcepts.check_business_concept_name_availability(type, name, exclude_concept_id)
     end
 
     test "count_published_business_concepts/2 check count" do

@@ -93,7 +93,7 @@ defmodule TdBgWeb.BusinessConceptController do
     related_to = Map.get(creation_attrs, "related_to")
 
     with true <- can?(user, create_business_concept(data_domain)),
-         {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
+         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = concept} <-
           BusinessConcepts.create_business_concept_version(creation_attrs) do
@@ -108,7 +108,7 @@ defmodule TdBgWeb.BusinessConceptController do
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
-      {:not_available} ->
+      {:name_not_available} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
@@ -175,7 +175,7 @@ defmodule TdBgWeb.BusinessConceptController do
     related_to = Map.get(update_params, "related_to")
 
     with true <- can?(user, update(business_concept_version)),
-         {:available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, id),
+         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, id),
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = concept} <-
       BusinessConcepts.update_business_concept_version(business_concept_version,
@@ -187,7 +187,7 @@ defmodule TdBgWeb.BusinessConceptController do
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
-      {:not_available} ->
+      {:name_not_available} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")

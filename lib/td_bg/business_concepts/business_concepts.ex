@@ -22,7 +22,7 @@ defmodule TdBg.BusinessConcepts do
     check business concept name availability
   """
   def check_business_concept_name_availability(type, name, exclude_concept_id \\ nil)
-  def check_business_concept_name_availability(type, name, _exclude_concept_id) when is_nil(name) or is_nil(type),  do: {:available}
+  def check_business_concept_name_availability(type, name, _exclude_concept_id) when is_nil(name) or is_nil(type),  do: {:name_available}
   def check_business_concept_name_availability(type, name, exclude_concept_id) do
     status = [BusinessConcept.status.versioned, BusinessConcept.status.deprecated]
     count = BusinessConcept
@@ -32,7 +32,7 @@ defmodule TdBg.BusinessConcepts do
     |> include_name_where(name, exclude_concept_id)
     |> select([c, a, v], count(c.id))
     |> Repo.one!
-    if count == 0, do: {:available}, else: {:not_available}
+    if count == 0, do: {:name_available}, else: {:name_not_available}
   end
 
   defp include_name_where(query, name, nil) do

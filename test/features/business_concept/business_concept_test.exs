@@ -583,7 +583,7 @@ defmodule TdBg.BusinessConceptTest do
 
   defand ~r/^"(?<user_name>[^"]+)" is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
     %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
-    %{token_admin: token_admin} = state do
+    %{token_admin: token_admin} = _state do
 
     token = get_user_token(user_name)
     business_concept_tmp = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
