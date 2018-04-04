@@ -55,7 +55,7 @@ defmodule TdBg.Taxonomies do
   """
   def list_children_data_domain(domain_group_id) do
     query = from dd in DataDomain,
-            where: dd.domain_group_id == ^domain_group_id
+            where: dd.domain_group_id == ^domain_group_id and is_nil(dd.deleted_at)
     Repo.all(query)
   end
 
