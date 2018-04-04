@@ -155,12 +155,17 @@ defmodule TdBgWeb.DataDomainController do
   def users_roles(conn, %{"data_domain_id" => id}) do
     data_domain = Taxonomies.get_data_domain!(id)
     acl_entries = Permissions.list_acl_entries(%{data_domain: data_domain})
-    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, role_id: acl_entry.role.id, role_name: acl_entry.role.name} end)
+    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, acl_entry_id: acl_entry.id, role_id: acl_entry.role.id, role_name: acl_entry.role.name} end)
     user_ids = Enum.reduce(role_user_id, [], fn(e, acc) -> acc ++ [e.user_id] end)
     users = @td_auth_api.search(%{"ids" => user_ids})
     users_roles = Enum.reduce(role_user_id, [],
       fn(u, acc) ->
-        acc ++ [Map.merge(%{role_id: u.role_id, role_name: u.role_name}, user_map(Enum.find(users, &(&1.id == u.user_id))))]
+        user = Enum.find(users, fn(r_u) -> r_u.id == u.user_id end)
+        if user do
+          acc ++ [Map.merge(%{role_id: u.role_id, role_name: u.role_name, acl_entry_id: u.acl_entry_id}, user_map(user))]
+        else
+          acc
+        end
     end)
     render(conn, "index_user_roles.json", users_roles: users_roles)
   end

@@ -31,8 +31,8 @@ config :td_bg, :api_services_login,
   api_password: "apipass"
 
 config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.MockTdAuthService,
-  host: "localhost",
-  port: "4001",
+  auth_host: "localhost",
+  auth_port: "4001",
   domain: ""
 
 config :td_bg, :elasticsearch,

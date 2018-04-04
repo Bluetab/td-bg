@@ -26,7 +26,8 @@ defmodule TdBgWeb.DomainGroupView do
       user_id: user_role.user_id,
       user_name: user_role.user_name,
       role_name: user_role.role_name,
-      role_id: user_role.role_id
+      role_id: user_role.role_id,
+      acl_entry_id: user_role.acl_entry_id
     }
   end
 end

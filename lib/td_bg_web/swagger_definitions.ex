@@ -70,6 +70,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
               user_name :string, "user name"
               role_id :integer, "role id"
               role_name :string, "role name"
+              acl_entry_id :integer, "acl entry id"
             end
           end)
         end
