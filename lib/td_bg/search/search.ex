@@ -43,7 +43,7 @@ defmodule TdBg.Search do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Domain group #{domain_group.name} created/updated status #{status}"
       {:error, _error} ->
-        Logger.error "Error creating/updating domain group #{domain_group.name}"
+        Logger.error "ES: Error creating/updating domain group #{domain_group.name}"
     end
   end
 
@@ -54,7 +54,7 @@ defmodule TdBg.Search do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Data domain #{data_domain.name} created/updated status #{status}"
       {:error, _error} ->
-        Logger.error "Error creating/updating data domain #{data_domain.name}"
+        Logger.error "ES: Error creating/updating data domain #{data_domain.name}"
     end
   end
 
@@ -65,7 +65,7 @@ defmodule TdBg.Search do
       {:ok, %HTTPoison.Response{status_code: status}} ->
         Logger.info "Business concept #{concept.name} created/updated status #{status}"
       {:error, _error} ->
-        Logger.error "Error creating/updating business concept #{concept.name}"
+        Logger.error "ES: Error creating/updating business concept #{concept.name}"
     end
   end
 
@@ -76,7 +76,7 @@ defmodule TdBg.Search do
       {_, %HTTPoison.Response{status_code: 200}} ->
         Logger.info "Domain group #{domain_group.name} deleted status 200"
       {_, %HTTPoison.Response{status_code: status_code}} ->
-        Logger.error "Error deleting domain group #{domain_group.name} status #{status_code}"
+        Logger.error "ES: Error deleting domain group #{domain_group.name} status #{status_code}"
       {:error, %HTTPoison.Error{reason: :econnrefused}} ->
         Logger.error "Error connecting to ES"
     end
@@ -88,7 +88,7 @@ defmodule TdBg.Search do
       {_, %HTTPoison.Response{status_code: 200}} ->
         Logger.info "Data domain #{data_domain.name} deleted status 200"
       {_, %HTTPoison.Response{status_code: status_code}} ->
-        Logger.error "Error deleting data domain #{data_domain.name} status #{status_code}"
+        Logger.error "ES: Error deleting data domain #{data_domain.name} status #{status_code}"
       {:error, %HTTPoison.Error{reason: :econnrefused}} ->
         Logger.error "Error connecting to ES"
     end
@@ -100,7 +100,7 @@ defmodule TdBg.Search do
       {_, %HTTPoison.Response{status_code: 200}} ->
         Logger.info "Business concept #{concept.name} deleted status 200"
       {_, %HTTPoison.Response{status_code: status_code}} ->
-        Logger.error "Error deleting business concept #{concept.name} status #{status_code}"
+        Logger.error "ES: Error deleting business concept #{concept.name} status #{status_code}"
       {:error, %HTTPoison.Error{reason: :econnrefused}} ->
         Logger.error "Error connecting to ES"
     end

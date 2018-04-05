@@ -155,7 +155,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
   swagger_path :update do
     put "/business_concepts/{id}"
-    description "Updates Business Ccncepts"
+    description "Updates Business Concepts"
     produces "application/json"
     parameters do
       business_concept :body, Schema.ref(:BusinessConceptUpdate), "Business Concept update attrs"
@@ -374,7 +374,7 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :index_status do
-    get "/business_concepts/index_status/{status}"
+    get "/business_concepts/index/{status}"
     description "List Business Concept with certain status"
     produces "application/json"
     parameters do
@@ -393,16 +393,16 @@ defmodule TdBgWeb.BusinessConceptController do
     list_business_concept = BusinessConcepts.list_all_business_concept_with_status([status])
     case status do
       "draft" ->
-        nil
+        []
       "pending_approval" -> filter_list(user, list_business_concept)
       "rejected" ->
-        nil
+        []
       "published" ->
-        nil
+        []
       "versioned" ->
-        nil
+        []
       "deprecated" ->
-        nil
+        []
     end
   end
 

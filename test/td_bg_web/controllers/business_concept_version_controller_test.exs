@@ -51,7 +51,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         description: "Other description"
       }
 
-      conn = post conn, business_concept_business_concept_version_path(conn, :create, business_concept_id), business_concept: creation_attrs
+      conn = post conn, business_concept_business_concept_version_path(conn, :create, business_concept_id), business_concept_version: creation_attrs
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       assert %{"id" => id} = json_response(conn, 201)["data"] # change response to created?
 

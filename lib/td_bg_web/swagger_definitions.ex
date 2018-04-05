@@ -423,7 +423,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           business_concept_version (Schema.new do
             properties do
-              business_concept_id :integer, "usiness Concept id", required: true
               content :object, "Business Concept Vesion object"
               name :string, "Business Concept Vesion name"
               description :string, "Business Concept Version description"

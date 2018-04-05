@@ -34,7 +34,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     get "/business_concepts/{business_concept_id}/versions"
     description "List Business Concept Versions"
     parameters do
-      id :path, :integer, "Business Concept ID", required: true
+      business_concept_id :path, :integer, "Business Concept ID", required: true
     end
     response 200, "OK", Schema.ref(:BusinessConceptVersionsResponse)
   end
@@ -75,17 +75,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :create do
-    post "/business_concept_versions"
+    post "/business_concepts/{id}/versions"
     description "Creates a Business Concept Version"
     produces "application/json"
     parameters do
-      business_concept :body, Schema.ref(:BusinessConceptVersionCreate), "Business Concept Version create attrs"
+      id :path, :integer, "Business Concept ID", required: true
+      business_concept_version :body, Schema.ref(:BusinessConceptVersionCreate), "Business Concept Version create attrs"
     end
     response 200, "Created", Schema.ref(:BusinessConceptVersionResponse)
     response 400, "Client Error"
   end
 
-  def create(conn, %{"business_concept_id" => business_concept_id, "business_concept" => business_concept_params}) do
+  def create(conn, %{"business_concept_id" => business_concept_id, "business_concept_version" => business_concept_params}) do
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
     business_concept = business_concept_version.business_concept
     concept_type = business_concept.type
@@ -129,7 +130,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :show do
-    get "/business_concept_version/{id}"
+    get "/business_concept_versions/{id}"
     description "Show Business Concept Version"
     produces "application/json"
     parameters do
