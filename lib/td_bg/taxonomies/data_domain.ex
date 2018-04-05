@@ -22,7 +22,7 @@ defmodule TdBg.Taxonomies.DataDomain do
     data_domain
       |> cast(attrs, [:name, :description, :domain_group_id])
       |> validate_required([:name])
-      |> unique_constraint(:domain_group, name: :data_domains_name_domain_group_id_index)
+      |> unique_constraint(:name, name: :data_domains_name_domain_group_id_index)
   end
 
   @doc false

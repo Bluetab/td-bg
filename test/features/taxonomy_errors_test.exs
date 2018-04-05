@@ -50,4 +50,17 @@ defmodule TdBg.TaxonomyErrorsTest do
     assert JSONDiff.diff(actual_data, expected_data) == []
   end
 
+  defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of "(?<domain_group_name>[^"]+)"$/,
+    %{data_domain_name: data_domain_name, domain_group_name: domain_group_name}, state do
+    token_admin = build_user_token("app-admin", is_admin: true)
+    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
+    assert domain_group && domain_group["id"]
+    {_, _status_code, json_resp} = data_domain_create(token_admin, %{name: data_domain_name, description: "", domain_group_id: domain_group["id"]})
+    data_domain = json_resp["data"]
+    assert data_domain["domain_group_id"] == domain_group["id"]
+
+    state = Map.merge(state, %{token_admin: token_admin})
+    {:ok, state}
+  end
+
 end
