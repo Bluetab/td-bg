@@ -65,13 +65,18 @@ defmodule TdBgWeb.DataDomainController do
 
   def create(conn, %{"domain_group_id" => domain_group_id, "data_domain" => data_domain_params}) do
     data_domain_params = Map.put(data_domain_params, "domain_group_id", domain_group_id)
-    with {:ok, %DataDomain{} = data_domain} <- Taxonomies.create_data_domain(data_domain_params) do
-      conn = conn
-      |> put_status(:created)
-      |> put_resp_header("location", data_domain_path(conn, :show, data_domain))
-      |> render("show.json", data_domain: data_domain)
-      @search_service.put_search(data_domain)
-      conn
+    case Taxonomies.create_data_domain(data_domain_params) do
+      {:ok, %DataDomain{} = data_domain} ->
+        conn = conn
+        |> put_status(:created)
+        |> put_resp_header("location", data_domain_path(conn, :show, data_domain))
+        |> render("show.json", data_domain: data_domain)
+        @search_service.put_search(data_domain)
+        conn
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
     end
   end
 

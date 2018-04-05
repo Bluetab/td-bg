@@ -5,6 +5,7 @@ defmodule TdBgWeb.Router do
 
   pipeline :api do
     plug TdBg.Auth.Pipeline.Unsecure
+    plug TdBgWeb.Locale
     plug :accepts, ["json"]
   end
 
