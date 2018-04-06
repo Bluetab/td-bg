@@ -54,3 +54,23 @@ Feature: taxonomy creation/edition errors
       }
     }
     """
+
+  Scenario: Updating a Data Domain and setting a name of another DD in same DG
+    Given an existing Domain Group called "DG 1"
+    And an existing Data Domain called "DD 1" child of "DG 1"
+    And an existing Data Domain called "DD 2" child of "DG 1"
+    When user "app-admin" tries to update a Data Domain called "DD 2" child of Domain Group "DG 1" with following data:
+      | name  | description |
+      | DD 1  | duplic      |
+
+    Then the system returns a result with code "Unprocessable Entity"
+    And the system returns a response with following data:
+    """
+    {
+      "errors": {
+        "name": [
+          "unique"
+        ]
+      }
+    }
+    """
