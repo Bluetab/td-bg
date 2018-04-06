@@ -55,7 +55,7 @@ Feature: taxonomy creation/edition errors
     }
     """
 
-  Scenario: Updating a Data Domain and setting a name of another DD in same DG
+  Scenario: Updating a Data Domain and setting a name of an already existing DD in the same DG
     Given an existing Domain Group called "DG 1"
     And an existing Data Domain called "DD 1" child of "DG 1"
     And an existing Data Domain called "DD 2" child of "DG 1"
@@ -74,3 +74,37 @@ Feature: taxonomy creation/edition errors
       }
     }
     """
+
+  Scenario: Creating a Domain Group without name
+    When user "app-admin" tries to create a Domain Group with following data:
+      | name  | description |
+      |       |             |
+    Then the system returns a result with code "Unprocessable Entity"
+    And the system returns a response with following data:
+    """
+    {
+      "errors": {
+        "name": [
+          "blank"
+        ]
+      }
+    }
+    """
+
+  Scenario: Creating a Domain Group with an already existing name
+    Given an existing Domain Group called "DG 1"
+    When user "app-admin" tries to create a Domain Group with following data:
+      | name  | description |
+      | DG 1  |             |
+    Then the system returns a result with code "Unprocessable Entity"
+    And the system returns a response with following data:
+    """
+    {
+      "errors": {
+        "name": [
+          "unique"
+        ]
+      }
+    }
+    """
+

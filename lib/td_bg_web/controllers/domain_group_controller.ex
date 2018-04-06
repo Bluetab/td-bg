@@ -100,10 +100,10 @@ defmodule TdBgWeb.DomainGroupController do
         |> render("show.json", domain_group: domain_group)
         @search_service.put_search(domain_group)
         conn
-      {:error, %Ecto.Changeset{} = _ecto_changeset} ->
+      {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
       {:error, nil} ->
         conn
         |> put_status(:not_found)
