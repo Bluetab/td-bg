@@ -44,7 +44,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   end
 
   defthen ~r/^user sees following list:$/, %{table: table}, state do
-    dg_list = state[:resp]["data"]
+    dg_list = state[:resp]["data"]["collection"]
     dg_list = Enum.map(dg_list, &(Map.take(&1, ["name", "description"])))
     dg_list = Enum.reduce(dg_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)

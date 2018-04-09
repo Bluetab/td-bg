@@ -83,12 +83,12 @@ defmodule TdBgWeb.Taxonomy do
 
   def get_domain_group_by_name(token, domain_group_name) do
     {:ok, _status_code, json_resp} = domain_group_list(token)
-    Enum.find(json_resp["data"], fn(domain_group) -> domain_group["name"] == domain_group_name end)
+    Enum.find(json_resp["data"]["collection"], fn(domain_group) -> domain_group["name"] == domain_group_name end)
   end
 
   def get_domain_group_by_name_and_parent(token, domain_group_name, parent_id) do
     {:ok, _status_code, json_resp} = domain_group_list(token)
-    Enum.find(json_resp["data"], fn(domain_group) ->
+    Enum.find(json_resp["data"]["collection"], fn(domain_group) ->
                                       domain_group["name"] == domain_group_name &&
                                       domain_group["parent_id"] == parent_id
                                   end)
@@ -96,12 +96,12 @@ defmodule TdBgWeb.Taxonomy do
 
   def get_data_domain_by_name(token, data_domain_name) do
     {:ok, _status_code, json_resp} = data_domain_list(token)
-    Enum.find(json_resp["data"], fn(data_domain) -> data_domain["name"] == data_domain_name end)
+    Enum.find(json_resp["data"]["collection"], fn(data_domain) -> data_domain["name"] == data_domain_name end)
   end
 
   def get_data_domain_by_name_and_parent(token, data_domain_name, domain_group_id) do
     {:ok, _status_code, json_resp} = data_domain_list(token)
-    Enum.find(json_resp["data"], fn(data_domain) ->
+    Enum.find(json_resp["data"]["collection"], fn(data_domain) ->
         data_domain["name"] == data_domain_name &&
         data_domain["domain_group_id"] == domain_group_id
       end)
