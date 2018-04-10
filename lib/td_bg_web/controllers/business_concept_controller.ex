@@ -148,7 +148,6 @@ defmodule TdBgWeb.BusinessConceptController do
       |> json(%{"errors": %{"#{validationError.field}": [validationError.error]}})
   end
 
-
   defp validate_required_bc_fields(attrs) do
     if not Map.has_key?(attrs, "content") do
       raise ValidationError, field: "content", error: "blank"
