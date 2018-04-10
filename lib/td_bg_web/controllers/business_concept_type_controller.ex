@@ -3,7 +3,6 @@ defmodule TdBgWeb.BusinessConceptTypeController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 
-
   alias TdBg.BusinessConcepts
   alias TdBgWeb.SwaggerDefinitions
 
