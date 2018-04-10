@@ -1,9 +1,18 @@
 defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
+  use TdBg.Hypermedia, :view
   alias TdBgWeb.BusinessConceptVersionView
+
+  def render("index.json", %{business_concept_versions: business_concept_versions, hypermedia: hypermedia}) do
+    %{data: render_many_hypermedia(business_concept_versions, hypermedia, BusinessConceptVersionView, "business_concept_version.json")}
+  end
 
   def render("index.json", %{business_concept_versions: business_concept_versions}) do
     %{data: render_many(business_concept_versions, BusinessConceptVersionView, "business_concept_version.json")}
+  end
+
+  def render("show.json", %{business_concept_version: business_concept_version, hypermedia: hypermedia}) do
+    %{data: render_one_hypermedia(business_concept_version, hypermedia, BusinessConceptVersionView, "business_concept_version.json")}
   end
 
   def render("show.json", %{business_concept_version: business_concept_version}) do

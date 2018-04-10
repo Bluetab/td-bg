@@ -399,7 +399,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptsResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConcepts)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConcepts)
+            end
+          end)
         end
       end
     }
@@ -447,12 +451,20 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptVersionResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConceptVersion)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConceptVersion)
+            end
+          end)
         end
       end,
       BusinessConceptVersionsResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConceptVersions)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConceptVersions)
+            end
+          end)
         end
       end
     }
@@ -491,7 +503,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptAliasesResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConceptAliases)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConceptAliases)
+            end
+          end)
         end
       end
     }

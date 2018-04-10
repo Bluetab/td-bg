@@ -1,6 +1,11 @@
 defmodule TdBgWeb.BusinessConceptAliasView do
   use TdBgWeb, :view
+  use TdBg.Hypermedia, :view
   alias TdBgWeb.BusinessConceptAliasView
+
+  def render("index.json", %{business_concept_aliases: business_concept_aliases, hypermedia: hypermedia}) do
+    %{data: render_many_hypermedia(business_concept_aliases, hypermedia, BusinessConceptAliasView, "business_concept_alias.json")}
+  end
 
   def render("index.json", %{business_concept_aliases: business_concept_aliases}) do
     %{data: render_many(business_concept_aliases, BusinessConceptAliasView, "business_concept_alias.json")}

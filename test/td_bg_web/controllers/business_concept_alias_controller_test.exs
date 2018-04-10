@@ -21,7 +21,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
     @tag authenticated_user: @admin_user_name
     test "lists all business_concept_aliases", %{conn: conn} do
       conn = get conn, business_concept_business_concept_alias_path(conn, :index, 123)
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"]["collection"] == []
     end
   end
 

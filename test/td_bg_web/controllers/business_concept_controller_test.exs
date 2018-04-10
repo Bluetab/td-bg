@@ -23,7 +23,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     @tag authenticated_user: @admin_user_name
     test "lists all business_concepts", %{conn: conn} do
       conn = get conn, business_concept_path(conn, :index)
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"]["collection"] == []
     end
   end
 

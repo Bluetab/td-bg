@@ -133,12 +133,12 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_by_name(token, business_concept_name) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
+    Enum.find(json_resp["data"]["collection"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
   end
 
   def business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"],
+    Enum.find(json_resp["data"]["collection"],
      fn(business_concept) -> business_concept["name"] == business_concept_name
      and  business_concept["type"] == business_concept_type end)
   end
@@ -147,7 +147,7 @@ defmodule TdBgWeb.BusinessConcept do
                                                       business_concept_name,
                                                       business_concept_type) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"],
+    Enum.find(json_resp["data"]["collection"],
      fn(business_concept) ->
        business_concept["version"] == business_concept_version &&
        business_concept["name"] == business_concept_name &&
@@ -194,7 +194,7 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_alias_by_name(token, business_concept_id, business_concept_alias) do
     {:ok, _status_code, json_resp} = business_concept_alias_list(token, business_concept_id)
-    Enum.find(json_resp["data"],
+    Enum.find(json_resp["data"]["collection"],
      fn(alias_item) -> alias_item["name"] == business_concept_alias end)
   end
 

@@ -1,5 +1,6 @@
 defmodule TdBgWeb.BusinessConceptAliasController do
   use TdBgWeb, :controller
+  use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -22,14 +23,14 @@ defmodule TdBgWeb.BusinessConceptAliasController do
     get "/business_concepts/{business_concept_id}/aliases"
     description "List Business Concept Aliases"
     parameters do
-      id :path, :integer, "Business Concept ID", required: true
+      business_concept_id :path, :integer, "Business Concept ID", required: true
     end
     response 200, "OK", Schema.ref(:BusinessConceptAliasesResponse)
   end
 
   def index(conn, %{"business_concept_id" => business_concept_id} = _params) do
     business_concept_aliases = BusinessConcepts.list_business_concept_aliases(business_concept_id)
-    render(conn, "index.json", business_concept_aliases: business_concept_aliases)
+    render(conn, "index.json", business_concept_aliases: business_concept_aliases, hypermedia: hypermedia("business_concept_business_concept_alias", conn, business_concept_aliases))
   end
 
   swagger_path :create do

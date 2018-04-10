@@ -1,6 +1,7 @@
 defmodule TdBgWeb.BusinessConceptController do
   require Logger
   use TdBgWeb, :controller
+  use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -33,7 +34,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
   def index(conn, _params) do
     business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
-    render(conn, "index.json", business_concepts: business_concept_versions)
+    render(conn, "index.json", business_concepts: business_concept_versions, hypermedia: hypermedia("business_concept", conn, business_concept_versions))
   end
 
   swagger_path :index_children_business_concept do
@@ -48,8 +49,8 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def index_children_business_concept(conn, %{"data_domain_id" => id}) do
-    business_concept_vesions = BusinessConcepts.get_data_domain_children_versions!(id)
-    render(conn, "index.json", business_concepts: business_concept_vesions)
+    business_concept_versions = BusinessConcepts.get_data_domain_children_versions!(id)
+    render(conn, "index.json", business_concepts: business_concept_versions, hypermedia: hypermedia("business_concept", conn, business_concept_versions))
   end
 
   def search(conn, %{} = search_params) do
@@ -150,7 +151,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
   def show(conn, %{"id" => id}) do
     business_concept = BusinessConcepts.get_current_version_by_business_concept_id!(id)
-    render(conn, "show.json", business_concept: business_concept)
+    render(conn, "show.json", business_concept: business_concept, hypermedia: hypermedia("business_concept", conn, business_concept))
   end
 
   swagger_path :update do
@@ -386,7 +387,8 @@ defmodule TdBgWeb.BusinessConceptController do
 
   def index_status(conn, status) do
     user = conn.assigns.current_user
-    render(conn, "index.json", business_concepts: build_list(user, status))
+    business_concepts = build_list(user, status)
+    render(conn, "index.json", business_concepts: business_concepts, hypermedia: hypermedia("business_concept", conn, business_concepts))
   end
 
   defp build_list(user, %{"status" => status}) do
