@@ -331,6 +331,27 @@ defmodule TdBgWeb.SwaggerDefinitions do
     }
   end
 
+  def business_concept_type_definitions do
+    %{
+     BusinessConceptType: swagger_schema do
+       properties do
+        type_name :string
+       end
+     end,
+     BusinessConceptTypes: swagger_schema do
+      title "Business Concept Types"
+      description "A collection of Business Concept Types"
+      type :array
+      items Schema.ref(:BusinessConceptType)
+      end,
+      BusinessConceptTypesResponse: swagger_schema do
+        properties do
+          data Schema.ref(:BusinessConceptTypes)
+        end
+      end
+    }
+  end
+
   def business_concept_definitions do
     %{
       BusinessConcept: swagger_schema do

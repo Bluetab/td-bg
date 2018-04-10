@@ -31,7 +31,7 @@ defmodule TdBg.ESClientApi do
 
   defp build_bulk_doc(item) do
     search_fields = item.__struct__.search_fields(item)
-    "{\"doc\": #{search_fields |> Poison.encode!}}"
+    "#{search_fields |> Poison.encode!}"
   end
 
   defp build_bulk_metadata(index_name, item) do
