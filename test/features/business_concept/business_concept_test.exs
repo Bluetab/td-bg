@@ -618,6 +618,25 @@ defmodule TdBg.BusinessConceptTest do
     assert_attrs(attrs, business_concept)
   end
 
+  defwhen ~r/^"(?<user_name>[^"]+)" tries to get the list of business concept types$/,
+    %{user_name: user_name},
+    state do
+
+    token = get_user_token(user_name)
+    {:ok, status_code, %{"data" => resp}} = business_concept_type_list(token)
+    {:ok, Map.merge(state, %{status_code: status_code, user_name: user_name, business_concept_types: resp})}
+  end
+
+  defthen ~r/^user "(?<user_name>[^"]+)" is able to see following list of Business Concept Types$/,
+    %{user_name: user_name, table: expected_list},
+    state do
+
+      assert user_name == state[:user_name]
+      expected_list = Enum.map(expected_list, fn(type) -> type.type_name end)
+      actual_list = Enum.map(state[:business_concept_types], fn(type) -> type["type_name"] end)
+      assert Enum.sort(expected_list) == Enum.sort(actual_list)
+  end
+
   defp assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields) do
     business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     business_concept_id = business_concept_version["id"]

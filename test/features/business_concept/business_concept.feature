@@ -1185,15 +1185,15 @@ Feature: Business Concepts administration
       | Description       | This is my Origin Term                                                   |
       | Related To        | My Target_1 Term                                                              |
 
-   # Scenario: list of Business Concept types
-   #   Given an existing Business Concept type called "Business Concept Type 1" with empty definition
-   #   And an existing Business Concept type called "Business Concept Type 2" with empty definition
-   #   And an existing Business Concept type called "Business Concept Type 3" with empty definition
-   #   And an existing Business Concept type called "Business Concept Type 4" with empty definition
-   #   When "app-admin" tries to get the list of business concept types
-   #   Then user "app-admin" is able to see following list of Business Concept Types
-   #     | name                    |
-   #     | Business Concept Type 1 |
-   #     | Business Concept Type 2 |
-   #     | Business Concept Type 3 |
-   #     | Business Concept Type 4 |
+    Scenario: list of Business Concept types
+      Given an existing Business Concept type called "Business Concept Type 1" with empty definition
+      And an existing Business Concept type called "Business Concept Type 2" with empty definition
+      And an existing Business Concept type called "Business Concept Type 3" with empty definition
+      And an existing Business Concept type called "Business Concept Type 4" with empty definition
+      When "app-admin" tries to get the list of business concept types
+      Then user "app-admin" is able to see following list of Business Concept Types
+        | type_name               |
+        | Business Concept Type 1 |
+        | Business Concept Type 2 |
+        | Business Concept Type 3 |
+        | Business Concept Type 4 |
