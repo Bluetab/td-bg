@@ -79,61 +79,82 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def create(conn, %{"business_concept" => business_concept_params}) do
+      #validate fields that if not present are throwing internal server errors in bc creation
+      validate_required_bc_fields(business_concept_params)
 
-    concept_type = Map.get(business_concept_params, "type")
-    content_schema = get_content_schema(concept_type)
+      concept_type = Map.get(business_concept_params, "type")
+      content_schema = get_content_schema(concept_type)
 
-    concept_name = Map.get(business_concept_params, "name")
+      concept_name = Map.get(business_concept_params, "name")
 
-    user = conn.assigns.current_user
-    data_domain = conn.assigns.data_domain
+      user = conn.assigns.current_user
+      data_domain = conn.assigns.data_domain
 
-    business_concept_attrs = %{}
-    |> Map.put("data_domain_id", data_domain.id)
-    |> Map.put("type", concept_type)
-    |> Map.put("last_change_by", user.id)
-    |> Map.put("last_change_at", DateTime.utc_now())
+      business_concept_attrs = %{}
+      |> Map.put("data_domain_id", data_domain.id)
+      |> Map.put("type", concept_type)
+      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_at", DateTime.utc_now())
 
-    creation_attrs = business_concept_params
-    |> Map.put("business_concept", business_concept_attrs)
-    |> Map.put("content_schema", content_schema)
-    |> Map.update("content", %{},  &(&1))
-    |> Map.update("related_to", [],  &(&1))
-    |> Map.put("last_change_by", conn.assigns.current_user.id)
-    |> Map.put("last_change_at", DateTime.utc_now())
-    |> Map.put("status", BusinessConcept.status.draft)
-    |> Map.put("version", 1)
+      creation_attrs = business_concept_params
+      |> Map.put("business_concept", business_concept_attrs)
+      |> Map.put("content_schema", content_schema)
+      |> Map.update("content", %{},  &(&1))
+      |> Map.update("related_to", [],  &(&1))
+      |> Map.put("last_change_by", conn.assigns.current_user.id)
+      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("status", BusinessConcept.status.draft)
+      |> Map.put("version", 1)
 
-    related_to = Map.get(creation_attrs, "related_to")
+      related_to = Map.get(creation_attrs, "related_to")
 
-    with true <- can?(user, create_business_concept(data_domain)),
-         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
-         {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
-         {:ok, %BusinessConceptVersion{} = concept} <-
-          BusinessConcepts.create_business_concept_version(creation_attrs) do
-      conn = conn
-      |> put_status(:created)
-      |> put_resp_header("location", business_concept_path(conn, :show, concept.business_concept))
-      |> render("show.json", business_concept: concept)
-      @search_service.put_search(concept)
+      with true <- can?(user, create_business_concept(data_domain)),
+           {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
+           {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
+           {:ok, %BusinessConceptVersion{} = concept} <-
+            BusinessConcepts.create_business_concept_version(creation_attrs) do
+        conn = conn
+        |> put_status(:created)
+        |> put_resp_header("location", business_concept_path(conn, :show, concept.business_concept))
+        |> render("show.json", business_concept: concept)
+        @search_service.put_search(concept)
+        conn
+      else
+        false ->
+          conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+        {:name_not_available} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{"errors": %{name: ["unique"]}})
+        {:not_valid_related_to} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{"errors": %{related_to: ["invalid"]}})
+        {:error, %Ecto.Changeset{} = changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
+        _error ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(ErrorView, :"422.json")
+      end
+  rescue
+    validationError in ValidationError ->
       conn
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-      {:name_not_available} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
-      {:not_valid_related_to} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+      |> put_status(:unprocessable_entity)
+      |> json(%{"errors": %{"#{validationError.field}": [validationError.error]}})
+  end
+
+
+  defp validate_required_bc_fields(attrs) do
+    if not Map.has_key?(attrs, "content") do
+      raise ValidationError, field: "content", error: "blank"
+    end
+    if not Map.has_key?(attrs, "type") do
+      raise ValidationError, field: "type", error: "blank"
     end
   end
 

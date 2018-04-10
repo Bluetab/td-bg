@@ -108,3 +108,77 @@ Feature: taxonomy creation/edition errors
     }
     """
 
+  Scenario: Creating a Business Concept with an already existing name
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Data Domain called "My Domain" child of "My Parent Group"
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Business Term                                                      |
+      | Name              | My Date Business Term                                              |
+      | Description       | This is the first description of my business term which is a date  |
+
+    When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                                   |
+      | Type              | Business Term                                                           |
+      | Name              | My Date Business Term                                                   |
+      | Description       | This is the first description of my business term which is very simple  |
+    Then the system returns a result with code "Unprocessable Entity"
+    And the system returns a response with following data:
+    """
+    {
+      "errors": {
+        "name": [
+          "unique"
+        ]
+      }
+    }
+    """
+
+
+  Scenario: Can not create a relation between not published business concepts
+    Given an existing Domain Group called "My Group"
+    And an existing Data Domain called "My Domain" child of "My Group"
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                             |
+      | Type              | Business Term                                     |
+      | Name              | My Target Term                                    |
+      | Description       | This is my Target Term                            |
+    When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
+      | Field             | Value                                             |
+      | Type              | Business Term                                     |
+      | Name              | My Origin Term                                    |
+      | Description       | This is my origin term                            |
+      | Related To        | My Target Term                                    |
+    Then the system returns a result with code "Unprocessable Entity"
+    And the system returns a response with following data:
+    """
+    {
+      "errors": {
+        "related_to": [
+          "invalid"
+        ]
+      }
+    }
+    """
+
+  Scenario: Creating a Business Concept without type
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Data Domain called "My Domain" child of "My Parent Group"
+    When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                                   |
+      | Name              | My Date Business Term                                                   |
+      | Description       | This is the first description of my business term which is very simple  |
+    Then the system returns a result with code "Unprocessable Entity"
+    And the system returns a response with following data:
+    """
+    {
+      "errors": {
+        "type": [
+          "blank"
+        ]
+      }
+    }
+    """
+
