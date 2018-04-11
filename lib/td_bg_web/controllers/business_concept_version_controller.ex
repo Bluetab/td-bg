@@ -35,7 +35,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     get "/business_concepts/{business_concept_id}/versions"
     description "List Business Concept Versions"
     parameters do
-      business_concept_id :path, :integer, "Business Concept ID", required: true
+      id :path, :integer, "Business Concept ID", required: true
     end
     response 200, "OK", Schema.ref(:BusinessConceptVersionsResponse)
   end
