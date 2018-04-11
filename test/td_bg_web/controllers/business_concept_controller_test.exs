@@ -59,10 +59,11 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
         content: %{},
         type: "some type",
         name: "Some name",
-        description: "Some description"
+        description: "Some description",
+        data_domain_id: data_domain.id
       }
 
-      conn = post conn, data_domain_business_concept_path(conn, :create, data_domain.id), business_concept: creation_attrs
+      conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
       validate_resp_schema(conn, schema, "BusinessConceptResponse")
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
@@ -87,8 +88,9 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
         type: "some type",
         name: nil,
         description: "Some description",
+        data_domain_id: data_domain.id
       }
-      conn = post conn, data_domain_business_concept_path(conn, :create, data_domain.id), business_concept: creation_attrs
+      conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
       validate_resp_schema(conn, schema, "BusinessConceptResponse")
       assert json_response(conn, 422)["errors"] != %{}
     end

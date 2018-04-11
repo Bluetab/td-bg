@@ -381,7 +381,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
               type :string, "Business Concept type (empty,...)", required: true
               content :object, "Business Concept content", required: true
               name :string, "Business Concept name", required: true
-              description :string, "Business Conceptdescription", required: true
+              description :string, "Business Concept description", required: true
+              data_domain_id :integer, "Business Concept Data Domain ID", required: true
             end
           end)
         end

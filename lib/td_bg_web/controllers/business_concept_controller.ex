@@ -9,13 +9,12 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
 
   alias Poison, as: JSON
 
-  plug :load_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update_status]
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
@@ -38,7 +37,7 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :index_children_business_concept do
-    get "/data_domains/{id}/business_concepts"
+    get "/business_concepts/data_domains/{id}"
     description "List Business Concepts children of Data Domain"
     produces "application/json"
     parameters do
@@ -68,12 +67,11 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :create do
-    post "/data_domains/{data_domain_id}/business_concept"
+    post "/business_concepts"
     description "Creates a Business Concept child of Data Domain"
     produces "application/json"
     parameters do
       business_concept :body, Schema.ref(:BusinessConceptCreate), "Business Concept create attrs"
-      data_domain_id :path, :integer, "Data Domain ID", required: true
     end
     response 201, "Created", Schema.ref(:BusinessConceptResponse)
     response 400, "Client Error"
@@ -87,10 +85,11 @@ defmodule TdBgWeb.BusinessConceptController do
     concept_name = Map.get(business_concept_params, "name")
 
     user = conn.assigns.current_user
-    data_domain = conn.assigns.data_domain
+    data_domain_id = Map.get(business_concept_params, "data_domain_id")
+    data_domain = Taxonomies.get_data_domain!(data_domain_id)
 
     business_concept_attrs = %{}
-    |> Map.put("data_domain_id", data_domain.id)
+    |> Map.put("data_domain_id", data_domain_id)
     |> Map.put("type", concept_type)
     |> Map.put("last_change_by", user.id)
     |> Map.put("last_change_at", DateTime.utc_now())
