@@ -7,12 +7,27 @@ defmodule TdBg.BusinessConceptsTests do
   describe "business_concepts" do
     alias TdBg.BusinessConcepts.BusinessConcept
     alias TdBg.BusinessConcepts.BusinessConceptVersion
+    alias TdBg.BusinessConcepts.BusinessConceptAlias
 
     test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       object = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_version.business_concept.id)
       assert  object |> business_concept_version_preload() == business_concept_version
+    end
+
+    test "get_current_version_by_business_concept_id!/1 returns the business concept with several aliases" do
+      business_concept_version = insert(:business_concept_version)
+      business_concept_id = business_concept_version.business_concept.id
+
+      creation_attrs = %{business_concept_id: business_concept_id, name: "Alias 1"}
+      assert {:ok, %BusinessConceptAlias{} = _bc} = BusinessConcepts.create_business_concept_alias(creation_attrs)
+
+      creation_attrs = %{business_concept_id: business_concept_id, name: "Alias 2"}
+      assert {:ok, %BusinessConceptAlias{} = _bc} = BusinessConcepts.create_business_concept_alias(creation_attrs)
+
+      business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+      assert length(business_concept_version.business_concept.aliases) == 2
     end
 
     test "create_business_concept_version/1 with valid data creates a business_concept" do

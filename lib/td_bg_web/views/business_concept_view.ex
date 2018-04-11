@@ -40,15 +40,6 @@ defmodule TdBgWeb.BusinessConceptView do
     |> add_aliases(business_concept_version.business_concept)
   end
 
-  def render("business_concept_aliases.json", %{business_concept_aliases: business_concept_aliases}) do
-    render_many(business_concept_aliases, BusinessConceptView, "business_concept_alias.json")
-  end
-
-  def render("business_concept_alias.json", %{business_concept_alias: business_concept_alias}) do
-    %{id: business_concept_alias.id,
-      name: business_concept_alias.name}
-  end
-
   def render("search.json", %{business_concepts: business_concept_versions}) do
     %{data: render_many(business_concept_versions, BusinessConceptView, "search_item.json")}
   end
@@ -70,7 +61,7 @@ defmodule TdBgWeb.BusinessConceptView do
 
   defp add_aliases(concept, business_concept) do
     if Ecto.assoc_loaded?(business_concept.aliases) do
-      alias_array = render("business_concept_aliases.json", %{business_concept_aliases: business_concept.aliases})
+      alias_array = Enum.map(business_concept.aliases, &(%{id: &1.id, name: &1.name}))
       Map.put(concept, :aliases, alias_array)
     else
       concept

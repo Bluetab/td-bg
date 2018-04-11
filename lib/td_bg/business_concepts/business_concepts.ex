@@ -85,12 +85,10 @@ defmodule TdBg.BusinessConcepts do
   """
   def get_current_version_by_business_concept_id!(business_concept_id) do
      BusinessConceptVersion
-     |> join(:left, [v], _ in assoc(v, :business_concept))
-     |> join(:left, [_, c], _ in assoc(c, :aliases))
-     |> preload([_, c, a], [business_concept: {c, aliases: a}])
-     |> where([_, c], c.id == ^business_concept_id)
+     |> where([v], v.business_concept_id == ^business_concept_id)
      |> order_by(desc: :version)
      |> limit(1)
+     |> preload([business_concept: [:aliases]])
      |> Repo.one!
    end
 
