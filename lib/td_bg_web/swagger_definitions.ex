@@ -27,6 +27,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             properties do
               name :string, "data domain name", required: true
               description :string, "data domain description"
+              domain_group_id :integer, "domain group id", required: true
             end
           end)
         end

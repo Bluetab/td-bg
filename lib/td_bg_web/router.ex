@@ -49,12 +49,11 @@ defmodule TdBgWeb.Router do
     get "/domain_groups/index_root", DomainGroupController, :index_root
     resources "/domain_groups", DomainGroupController, except: [:new, :edit] do
       get "/index_children", DomainGroupController, :index_children
-      get "/data_domains", DataDomainController, :index_children_data_domain
-      post "/data_domain", DataDomainController, :create
       get "/available_users", DomainGroupController, :available_users
       get "/users_roles", DomainGroupController, :users_roles
     end
 
+    get "/data_domains/domain_groups/:domain_group_id", DataDomainController, :index_children_data_domain
     resources "/data_domains", DataDomainController, except: [:new, :edit] do
       get "/users_roles", DataDomainController, :users_roles
       get "/available_users", DataDomainController, :available_users

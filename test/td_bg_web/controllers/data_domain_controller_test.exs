@@ -39,7 +39,13 @@ defmodule TdBgWeb.DataDomainControllerTest do
     test "renders data_domain when data is valid", %{conn: conn, swagger_schema: schema} do
       domain_group = insert(:domain_group)
 
-      conn = post conn, domain_group_data_domain_path(conn, :create, domain_group.id), data_domain: @create_attrs
+      creation_attrs = %{
+        description: "some description",
+        name: "some name",
+        domain_group_id: domain_group.id
+      }
+
+      conn = post conn, data_domain_path(conn, :create), data_domain: creation_attrs
       validate_resp_schema(conn, schema, "DataDomainResponse")
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
@@ -56,7 +62,14 @@ defmodule TdBgWeb.DataDomainControllerTest do
     @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn} do
       domain_group = insert(:domain_group)
-      conn = post conn, domain_group_data_domain_path(conn, :create, domain_group.id), data_domain: @invalid_attrs
+
+      creation_attrs = %{
+        description: nil,
+        name: nil,
+        domain_group_id: domain_group.id
+      }
+
+      conn = post conn, data_domain_path(conn, :create), data_domain: creation_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
   end

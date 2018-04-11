@@ -4,19 +4,19 @@ defmodule TdBgWeb.DataDomainController do
   use PhoenixSwagger
 
   import Plug.Conn
+  import Canada
   alias TdBgWeb.ErrorView
   alias TdBgWeb.UserView
   alias TdBg.Taxonomies
   alias TdBg.Permissions
   alias TdBg.Taxonomies.DataDomain
-  alias TdBg.Taxonomies.DomainGroup
   alias TdBgWeb.SwaggerDefinitions
+  alias Guardian.Plug, as: GuardianPlug
 
   action_fallback TdBgWeb.FallbackController
 
   plug :load_canary_action, phoenix_action: :create, canary_action: :create_data_domain
-  plug :load_and_authorize_resource, model: DomainGroup, id_name: "domain_group_id", persisted: true, only: :create_data_domain
-  plug :load_and_authorize_resource, model: DataDomain, id_name: "id", persisted: true, only: [:update, :delete]
+  plug :load_and_authorize_resource, model: DataDomain, id_name: "id", persisted: true, only: [:update, :delete, :create]
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
@@ -39,7 +39,7 @@ defmodule TdBgWeb.DataDomainController do
   end
 
   swagger_path :index_children_data_domain do
-    get "/domain_groups/{domain_group_id}/data_domains"
+    get "/data_domains/domain_groups/{domain_group_id}"
     description "List Data Domain children of Domain Group"
     produces "application/json"
     parameters do
@@ -57,19 +57,31 @@ defmodule TdBgWeb.DataDomainController do
   end
 
   swagger_path :create do
-    post "/domain_groups/{domain_group_id}/data_domain"
+    post "/data_domains"
     description "Creates a Data Domain child of Domain Group"
     produces "application/json"
     parameters do
       data_domain :body, Schema.ref(:DataDomainCreate), "Data Domain create attrs"
-      domain_group_id :path, :integer, "Domain Group ID", required: true
     end
     response 201, "Created", Schema.ref(:DataDomainResponse)
     response 400, "Client Error"
   end
 
-  def create(conn, %{"domain_group_id" => domain_group_id, "data_domain" => data_domain_params}) do
-    data_domain_params = Map.put(data_domain_params, "domain_group_id", domain_group_id)
+  def create(conn, %{"data_domain" => data_domain_params}) do
+    current_user = GuardianPlug.current_resource(conn)
+    domain_group = Taxonomies.get_domain_group!(data_domain_params["domain_group_id"])
+
+    if can?(current_user, create_data_domain(domain_group)) do
+      do_create(conn, data_domain_params)
+    else
+      conn
+      |> put_status(403)
+      |> render(ErrorView, :"403")
+    end
+
+  end
+
+  defp do_create(conn, data_domain_params) do
     case Taxonomies.create_data_domain(data_domain_params) do
       {:ok, %DataDomain{} = data_domain} ->
         conn = conn

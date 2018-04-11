@@ -46,9 +46,8 @@ defmodule TdBgWeb.Taxonomy do
   def data_domain_create(token, data_domain_params) do
     headers = get_header(token)
     body = %{data_domain: data_domain_params} |> JSON.encode!
-    domain_group_id = data_domain_params[:domain_group_id]
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(domain_group_data_domain_url(@endpoint, :create, domain_group_id), body, headers, [])
+      HTTPoison.post!(data_domain_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
