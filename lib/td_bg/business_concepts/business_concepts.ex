@@ -41,7 +41,7 @@ defmodule TdBg.BusinessConcepts do
     query |> where([_, a, v], (v.name == ^name or a.name == ^name))
   end
   defp include_name_where(query, name, exclude_concept_id) do
-    query |> where([c, a, v], ((c.id != ^exclude_concept_id and (v.name == ^name or a.name == ^name)) and (c.id == ^exclude_concept_id and a.name == ^name)))
+    query |> where([c, a, v], ((c.id != ^exclude_concept_id and (v.name == ^name or a.name == ^name)) or (c.id == ^exclude_concept_id and a.name == ^name)))
   end
 
   @doc """

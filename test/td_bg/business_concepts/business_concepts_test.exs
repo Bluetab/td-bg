@@ -349,13 +349,23 @@ defmodule TdBg.BusinessConceptsTests do
       assert {:name_not_available} == BusinessConcepts.check_business_concept_name_availability(type, name)
     end
 
-    test "check_business_concept_name_availability/3 check available" do
+    test "check_business_concept_name_availability/2 check available" do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       exclude_concept_id = business_concept_version.business_concept.id
       type = business_concept_version.business_concept.type
       name = business_concept_version.name
       assert {:name_available} == BusinessConcepts.check_business_concept_name_availability(type, name, exclude_concept_id)
+    end
+
+    test "check_business_concept_name_availability/3 check not available" do
+      user = build(:user)
+      data_domain = insert(:data_domain)
+      bc1 = insert(:business_concept, data_domain: data_domain)
+      bc2 = insert(:business_concept, data_domain: data_domain)
+      _first = insert(:business_concept_version, last_change_by: user.id, name: "first", business_concept: bc1)
+      second = insert(:business_concept_version, last_change_by: user.id, name: "second", business_concept: bc2)
+      assert {:name_not_available} == BusinessConcepts.check_business_concept_name_availability(second.business_concept.type, "first", second.id)
     end
 
     test "count_published_business_concepts/2 check count" do
