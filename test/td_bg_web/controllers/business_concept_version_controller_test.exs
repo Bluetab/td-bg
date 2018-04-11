@@ -23,7 +23,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag authenticated_user: @admin_user_name
     test "lists all business_concept_versions", %{conn: conn} do
       conn = get conn, business_concept_version_path(conn, :index)
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"]["collection"] == []
     end
   end
 
@@ -33,7 +33,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id
       conn = get conn, business_concept_business_concept_version_path(conn, :versions, business_concept_id)
-      [data] = json_response(conn, 200)["data"]
+      [data] = json_response(conn, 200)["data"]["collection"]
       assert data["name"] == business_concept_version.name
     end
   end

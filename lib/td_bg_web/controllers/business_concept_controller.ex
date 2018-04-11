@@ -1,6 +1,7 @@
 defmodule TdBgWeb.BusinessConceptController do
   require Logger
   use TdBgWeb, :controller
+  use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -8,13 +9,12 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
 
   alias Poison, as: JSON
 
-  plug :load_resource, model: DataDomain, id_name: "data_domain_id", persisted: true, only: :create
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update_status]
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
@@ -33,11 +33,11 @@ defmodule TdBgWeb.BusinessConceptController do
 
   def index(conn, _params) do
     business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
-    render(conn, "index.json", business_concepts: business_concept_versions)
+    render(conn, "index.json", business_concepts: business_concept_versions, hypermedia: hypermedia("business_concept", conn, business_concept_versions))
   end
 
   swagger_path :index_children_business_concept do
-    get "/data_domains/{id}/business_concepts"
+    get "/business_concepts/data_domains/{id}"
     description "List Business Concepts children of Data Domain"
     produces "application/json"
     parameters do
@@ -48,8 +48,8 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def index_children_business_concept(conn, %{"data_domain_id" => id}) do
-    business_concept_vesions = BusinessConcepts.get_data_domain_children_versions!(id)
-    render(conn, "index.json", business_concepts: business_concept_vesions)
+    business_concept_versions = BusinessConcepts.get_data_domain_children_versions!(id)
+    render(conn, "index.json", business_concepts: business_concept_versions, hypermedia: hypermedia("business_concept", conn, business_concept_versions))
   end
 
   def search(conn, %{} = search_params) do
@@ -67,12 +67,11 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :create do
-    post "/data_domains/{data_domain_id}/business_concept"
+    post "/business_concepts"
     description "Creates a Business Concept child of Data Domain"
     produces "application/json"
     parameters do
       business_concept :body, Schema.ref(:BusinessConceptCreate), "Business Concept create attrs"
-      data_domain_id :path, :integer, "Data Domain ID", required: true
     end
     response 201, "Created", Schema.ref(:BusinessConceptResponse)
     response 400, "Client Error"
@@ -87,14 +86,15 @@ defmodule TdBgWeb.BusinessConceptController do
 
       concept_name = Map.get(business_concept_params, "name")
 
-      user = conn.assigns.current_user
-      data_domain = conn.assigns.data_domain
+    user = conn.assigns.current_user
+    data_domain_id = Map.get(business_concept_params, "data_domain_id")
+    data_domain = Taxonomies.get_data_domain!(data_domain_id)
 
-      business_concept_attrs = %{}
-      |> Map.put("data_domain_id", data_domain.id)
-      |> Map.put("type", concept_type)
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+    business_concept_attrs = %{}
+    |> Map.put("data_domain_id", data_domain_id)
+    |> Map.put("type", concept_type)
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
 
       creation_attrs = business_concept_params
       |> Map.put("business_concept", business_concept_attrs)
@@ -170,7 +170,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
   def show(conn, %{"id" => id}) do
     business_concept = BusinessConcepts.get_current_version_by_business_concept_id!(id)
-    render(conn, "show.json", business_concept: business_concept)
+    render(conn, "show.json", business_concept: business_concept, hypermedia: hypermedia("business_concept", conn, business_concept))
   end
 
   swagger_path :update do
@@ -406,7 +406,8 @@ defmodule TdBgWeb.BusinessConceptController do
 
   def index_status(conn, status) do
     user = conn.assigns.current_user
-    render(conn, "index.json", business_concepts: build_list(user, status))
+    business_concepts = build_list(user, status)
+    render(conn, "index.json", business_concepts: business_concepts, hypermedia: hypermedia("business_concept", conn, business_concepts))
   end
 
   defp build_list(user, %{"status" => status}) do

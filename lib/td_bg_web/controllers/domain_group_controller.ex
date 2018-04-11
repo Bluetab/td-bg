@@ -1,5 +1,6 @@
 defmodule TdBgWeb.DomainGroupController do
   use TdBgWeb, :controller
+  use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   alias TdBgWeb.ErrorView
@@ -30,7 +31,9 @@ defmodule TdBgWeb.DomainGroupController do
 
   def index(conn, _params) do
     domain_groups = Taxonomies.list_domain_groups()
-    render(conn, "index.json", domain_groups: domain_groups)
+    render(conn, "index.json",
+      domain_groups: domain_groups,
+      hypermedia: hypermedia("domain_group", conn, domain_groups))
   end
 
   swagger_path :index_root do
@@ -43,7 +46,9 @@ defmodule TdBgWeb.DomainGroupController do
 
   def index_root(conn, _params) do
     domain_groups = Taxonomies.list_root_domain_groups()
-    render(conn, "index.json", domain_groups: domain_groups)
+    render(conn, "index.json",
+      domain_groups: domain_groups,
+      hypermedia: hypermedia("domain_group", conn, domain_groups))
   end
 
   swagger_path :index_children do
@@ -59,7 +64,9 @@ defmodule TdBgWeb.DomainGroupController do
 
   def index_children(conn, %{"domain_group_id" => id}) do
     domain_groups = Taxonomies.list_domain_group_children(id)
-    render(conn, "index.json", domain_groups: domain_groups)
+    render(conn, "index.json",
+      domain_groups: domain_groups,
+      hypermedia: hypermedia("domain_group", conn, domain_groups))
   end
 
   swagger_path :create do
@@ -77,7 +84,7 @@ defmodule TdBgWeb.DomainGroupController do
     current_user = GuardianPlug.current_resource(conn)
     domain_group = %DomainGroup{} |> Map.merge(CollectionUtils.to_struct(DomainGroup, domain_group_params))
 
-    if current_user |> can?(create(domain_group)) do
+    if can?(current_user, create(domain_group)) do
       do_create(conn, domain_group_params)
     else
       conn
@@ -128,7 +135,9 @@ defmodule TdBgWeb.DomainGroupController do
 
   def show(conn, %{"id" => id}) do
     domain_group = Taxonomies.get_domain_group!(id)
-    render(conn, "show.json", domain_group: domain_group)
+    render(conn, "show.json",
+      domain_group: domain_group,
+      hypermedia: hypermedia("domain_group", conn, domain_group))
   end
 
   swagger_path :update do
@@ -230,7 +239,9 @@ defmodule TdBgWeb.DomainGroupController do
           acc
         end
     end)
-    render(conn, "index_user_roles.json", users_roles: users_roles)
+    render(conn, "index_user_roles.json",
+      users_roles: users_roles,
+      hypermedia: hypermedia("users_roles", conn, users_roles))
   end
   defp user_map(user) do
     %{"user_id": user.id, "user_name": user.user_name}

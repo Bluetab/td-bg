@@ -1,11 +1,20 @@
 defmodule TdBgWeb.DataDomainView do
   use TdBgWeb, :view
   alias TdBgWeb.DataDomainView
+  use TdBg.Hypermedia, :view
 
+  def render("index.json", %{data_domains: data_domains, hypermedia: hypermedia}) do
+    %{data: render_many_hypermedia(data_domains,
+      hypermedia, DataDomainView, "data_domain.json")}
+  end
   def render("index.json", %{data_domains: data_domains}) do
     %{data: render_many(data_domains, DataDomainView, "data_domain.json")}
   end
 
+  def render("show.json", %{data_domain: data_domain, hypermedia: hypermedia}) do
+    %{data: render_one_hypermedia(data_domain,
+      hypermedia, DataDomainView, "data_domain.json")}
+  end
   def render("show.json", %{data_domain: data_domain}) do
     %{data: render_one(data_domain, DataDomainView, "data_domain.json")}
   end
@@ -18,6 +27,10 @@ defmodule TdBgWeb.DataDomainView do
     }
   end
 
+  def render("index_user_roles.json", %{users_roles: users_roles, hypermedia: hypermedia}) do
+    %{data: render_many_hypermedia(users_roles,
+    hypermedia, DataDomainView, "users_role.json")}
+  end
   def render("index_user_roles.json", %{users_roles: users_roles}) do
     %{data: render_many(users_roles, DataDomainView, "users_role.json")}
   end

@@ -7,12 +7,27 @@ defmodule TdBg.BusinessConceptsTests do
   describe "business_concepts" do
     alias TdBg.BusinessConcepts.BusinessConcept
     alias TdBg.BusinessConcepts.BusinessConceptVersion
+    alias TdBg.BusinessConcepts.BusinessConceptAlias
 
     test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       object = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_version.business_concept.id)
       assert  object |> business_concept_version_preload() == business_concept_version
+    end
+
+    test "get_current_version_by_business_concept_id!/1 returns the business concept with several aliases" do
+      business_concept_version = insert(:business_concept_version)
+      business_concept_id = business_concept_version.business_concept.id
+
+      creation_attrs = %{business_concept_id: business_concept_id, name: "Alias 1"}
+      assert {:ok, %BusinessConceptAlias{} = _bc} = BusinessConcepts.create_business_concept_alias(creation_attrs)
+
+      creation_attrs = %{business_concept_id: business_concept_id, name: "Alias 2"}
+      assert {:ok, %BusinessConceptAlias{} = _bc} = BusinessConcepts.create_business_concept_alias(creation_attrs)
+
+      business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+      assert length(business_concept_version.business_concept.aliases) == 2
     end
 
     test "create_business_concept_version/1 with valid data creates a business_concept" do
@@ -334,13 +349,23 @@ defmodule TdBg.BusinessConceptsTests do
       assert {:name_not_available} == BusinessConcepts.check_business_concept_name_availability(type, name)
     end
 
-    test "check_business_concept_name_availability/3 check available" do
+    test "check_business_concept_name_availability/2 check available" do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       exclude_concept_id = business_concept_version.business_concept.id
       type = business_concept_version.business_concept.type
       name = business_concept_version.name
       assert {:name_available} == BusinessConcepts.check_business_concept_name_availability(type, name, exclude_concept_id)
+    end
+
+    test "check_business_concept_name_availability/3 check not available" do
+      user = build(:user)
+      data_domain = insert(:data_domain)
+      bc1 = insert(:business_concept, data_domain: data_domain)
+      bc2 = insert(:business_concept, data_domain: data_domain)
+      _first = insert(:business_concept_version, last_change_by: user.id, name: "first", business_concept: bc1)
+      second = insert(:business_concept_version, last_change_by: user.id, name: "second", business_concept: bc2)
+      assert {:name_not_available} == BusinessConcepts.check_business_concept_name_availability(second.business_concept.type, "first", second.id)
     end
 
     test "count_published_business_concepts/2 check count" do

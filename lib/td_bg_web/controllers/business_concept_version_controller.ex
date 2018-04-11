@@ -1,5 +1,6 @@
 defmodule TdBgWeb.BusinessConceptVersionController do
   use TdBgWeb, :controller
+  use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -27,14 +28,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def index(conn, _params) do
     business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
-    render(conn, "index.json", business_concept_versions: business_concept_versions)
+    render(conn, "index.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia("business_concept_version", conn, business_concept_versions))
   end
 
   swagger_path :versions do
     get "/business_concepts/{business_concept_id}/versions"
     description "List Business Concept Versions"
     parameters do
-      business_concept_id :path, :integer, "Business Concept ID", required: true
+      id :path, :integer, "Business Concept ID", required: true
     end
     response 200, "OK", Schema.ref(:BusinessConceptVersionsResponse)
   end
@@ -48,7 +49,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, view_versions(business_concept_version)) do
       allowed_status = get_allowed_version_status_by_role(user, business_concept)
       business_concept_versions = BusinessConcepts.list_business_concept_versions(business_concept.id, allowed_status)
-      render(conn, "index.json", business_concept_versions: business_concept_versions)
+      render(conn, "index.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia("business_concept_version", conn, business_concept_versions))
     else
       false ->
         conn
@@ -142,7 +143,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def show(conn, %{"id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    render(conn, "show.json", business_concept_version: business_concept_version)
+    render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept_version", conn, business_concept_version))
   end
 
   defp get_content_schema(content_type) do

@@ -44,7 +44,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   end
 
   defthen ~r/^user sees following list:$/, %{table: table}, state do
-    dg_list = state[:resp]["data"]
+    dg_list = state[:resp]["data"]["collection"]
     dg_list = Enum.map(dg_list, &(Map.take(&1, ["name", "description"])))
     dg_list = Enum.reduce(dg_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)
@@ -55,7 +55,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   end
 
   defthen ~r/^user sees following business concepts list:$/, %{table: table}, state do
-    bc_list = state[:resp]["data"]
+    bc_list = state[:resp]["data"]["collection"]
     bc_list = Enum.map(bc_list, &(Map.take(&1, ["name", "type", "status", "description"])))
     bc_list = Enum.reduce(bc_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)
@@ -183,7 +183,7 @@ defmodule TdBg.TaxonomyNavigationTest do
     headers = get_header(token)
     id = attrs[:domain_group_id]
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_data_domain_url(@endpoint, :index_children_data_domain, id), headers, [])
+      HTTPoison.get!(data_domain_url(@endpoint, :index_children_data_domain, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
@@ -191,7 +191,7 @@ defmodule TdBg.TaxonomyNavigationTest do
     headers = get_header(token)
     id = attrs[:data_domain_id]
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(data_domain_business_concept_url(@endpoint, :index_children_business_concept, id), headers, [])
+      HTTPoison.get!(business_concept_url(@endpoint, :index_children_business_concept, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

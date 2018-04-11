@@ -27,6 +27,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             properties do
               name :string, "data domain name", required: true
               description :string, "data domain description"
+              domain_group_id :integer, "domain group id", required: true
             end
           end)
         end
@@ -54,7 +55,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       DataDomainsResponse: swagger_schema do
         properties do
-          data Schema.ref(:DataDomains)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:DataDomains)
+            end
+          end)
         end
       end,
       UsersRolesRequest: swagger_schema do
@@ -130,7 +135,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       DomainGroupsResponse: swagger_schema do
         properties do
-          data Schema.ref(:DomainGroups)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:DomainGroups)
+            end
+          end)
         end
       end,
       UserResponse: swagger_schema do
@@ -400,7 +409,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
               type :string, "Business Concept type (empty,...)", required: true
               content :object, "Business Concept content", required: true
               name :string, "Business Concept name", required: true
-              description :string, "Business Conceptdescription", required: true
+              description :string, "Business Concept description", required: true
+              data_domain_id :integer, "Business Concept Data Domain ID", required: true
             end
           end)
         end
@@ -439,7 +449,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptsResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConcepts)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConcepts)
+            end
+          end)
         end
       end
     }
@@ -487,12 +501,20 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptVersionResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConceptVersion)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConceptVersion)
+            end
+          end)
         end
       end,
       BusinessConceptVersionsResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConceptVersions)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConceptVersions)
+            end
+          end)
         end
       end
     }
@@ -531,7 +553,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptAliasesResponse: swagger_schema do
         properties do
-          data Schema.ref(:BusinessConceptAliases)
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConceptAliases)
+            end
+          end)
         end
       end
     }

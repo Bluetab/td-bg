@@ -49,15 +49,12 @@ defmodule TdBgWeb.Router do
     get "/domain_groups/index_root", DomainGroupController, :index_root
     resources "/domain_groups", DomainGroupController, except: [:new, :edit] do
       get "/index_children", DomainGroupController, :index_children
-      get "/data_domains", DataDomainController, :index_children_data_domain
-      post "/data_domain", DataDomainController, :create
       get "/available_users", DomainGroupController, :available_users
       get "/users_roles", DomainGroupController, :users_roles
     end
 
+    get "/data_domains/domain_groups/:domain_group_id", DataDomainController, :index_children_data_domain
     resources "/data_domains", DataDomainController, except: [:new, :edit] do
-      post "/business_concept", BusinessConceptController, :create
-      get "/business_concepts", BusinessConceptController, :index_children_business_concept
       get "/users_roles", DataDomainController, :users_roles
       get "/available_users", DataDomainController, :available_users
     end
@@ -71,6 +68,7 @@ defmodule TdBgWeb.Router do
     get "/business_concept_types", BusinessConceptTypeController, :index
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
     get "/business_concepts/search", BusinessConceptController, :search
+    get "/business_concepts/data_domains/:data_domain_id", BusinessConceptController, :index_children_business_concept
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit] do
       get  "/aliases", BusinessConceptAliasController, :index
       post "/aliases", BusinessConceptAliasController, :create
