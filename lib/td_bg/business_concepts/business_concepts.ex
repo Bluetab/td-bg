@@ -7,6 +7,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.Repo
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias ValidationError
   alias Ecto.Changeset
   alias Ecto.Multi
   alias Poison, as: JSON
