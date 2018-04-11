@@ -12,6 +12,7 @@ defmodule TdBg.BusinessConceptTest do
 
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Utils.CollectionUtils
 
   @fixed_values %{"Type" => "type",
                   "Name" => "name",
@@ -151,13 +152,7 @@ defmodule TdBg.BusinessConceptTest do
 
     schema = table
     |> Enum.map(fn(row) ->
-      Map.new
-      |> add_schema_field(:name, row."Field")
-      |> add_schema_field(:type, row."Format")
-      |> add_schema_field(:max_size, row."Max Size")
-      |> add_schema_field(:values, row."Values")
-      |> add_schema_field(:required, row."Mandatory")
-      |> add_schema_field(:default, row."Default Value")
+      add_all_schema_fields(row)
     end)
 
     add_to_business_concept_schema(business_concept_type, schema)
@@ -635,6 +630,43 @@ defmodule TdBg.BusinessConceptTest do
       expected_list = Enum.map(expected_list, fn(type) -> type.type_name end)
       actual_list = Enum.map(state[:business_concept_types], fn(type) -> type["type_name"] end)
       assert Enum.sort(expected_list) == Enum.sort(actual_list)
+  end
+
+  defwhen ~r/^"(?<user_name>[^"]+)" tries to get the list of fields of business concept type "(?<bc_type>[^"]+)"$/,
+    %{user_name: user_name, bc_type: bc_type},
+    state do
+    token = get_user_token(user_name)
+    {:ok, status_code, %{"data" => resp}} = business_concept_type_fields_list(token, bc_type)
+    {:ok, Map.merge(state, %{status_code: status_code, user_name: user_name, business_concept_type_fields: resp})}
+  end
+
+  defthen ~r/^user "(?<user_name>[^"]+)" is able to see following list of Business Concept Type Fields$/,
+    %{user_name: user_name, table: expected_fields},
+    state do
+
+    assert user_name == state[:user_name]
+    expected_fields = expected_fields
+    |> Enum.map(fn(row) ->
+      add_all_schema_fields(row)
+    end)
+    expected_fields = Enum.map(expected_fields, fn(field) -> CollectionUtils.stringify_keys(field) end)
+    Enum.each(expected_fields, fn(expected_field) ->
+      actual_field = Enum.find(state[:business_concept_type_fields], &(&1["name"] == expected_field["name"]))
+      expected_field |> Map.keys |> Enum.map(fn(field_name) ->
+        assert expected_field[field_name] == actual_field[field_name]
+      end)
+    end)
+  end
+
+  defp add_all_schema_fields(field_data) do
+    Map.new
+    |> add_schema_field(:name, field_data."Field")
+    |> add_schema_field(:type, field_data."Format")
+    |> add_schema_field(:max_size, field_data."Max Size")
+    |> add_schema_field(:values, field_data."Values")
+    |> add_schema_field(:required, field_data."Mandatory")
+    |> add_schema_field(:default, field_data."Default Value")
+    |> add_schema_field(:group, field_data."Group")
   end
 
   defp assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields) do

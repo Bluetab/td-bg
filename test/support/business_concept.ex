@@ -212,4 +212,11 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
+  def business_concept_type_fields_list(token, bc_type) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(business_concept_type_field_url(@endpoint, :index, business_concept_type: bc_type), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
 end

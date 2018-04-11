@@ -344,6 +344,33 @@ defmodule TdBgWeb.SwaggerDefinitions do
     }
   end
 
+  def business_concept_type_fields_definitions do
+    %{
+      BusinessConceptTypeField: swagger_schema do
+        properties do
+          name :string
+          type :string
+          max_size [:integer, :null]
+          values [:array, :null]
+          required :boolean
+          default [:string, :null]
+          group :string
+        end
+      end,
+      BusinessConceptTypeFields: swagger_schema do
+        title "Business Concept Type Fields"
+        description "A collection of Business Concept Type Fields"
+        type :array
+        items Schema.ref(:BusinessConceptTypeField)
+      end,
+      BusinessConceptTypeFieldsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:BusinessConceptTypeFields)
+        end
+      end
+    }
+  end
+
   def business_concept_definitions do
     %{
       BusinessConcept: swagger_schema do

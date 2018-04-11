@@ -577,4 +577,13 @@ defmodule TdBg.BusinessConcepts do
     |> JSON.decode!
     |> Map.keys
   end
+
+  def list_business_concept_type_fields(bc_type) do
+    filename = Application.get_env(:td_bg, :bc_schema_location)
+    bc_types = filename
+    |> File.read!
+    |> JSON.decode!
+    bc_types[bc_type]
+  end
+
 end

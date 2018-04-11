@@ -55,15 +55,15 @@ Feature: Business Concepts administration
     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
     And an existing Business Concept type called "Business Term" with following definition:
-     | Field            | Format        | Max Size | Values                                        | Mandatory | Default Value |
-     | Formula          | string        | 100      |                                               |    NO     |               |
-     | Format           | list          |          | Date, Numeric, Amount, Text                   |    YES    |               |
-     | List of Values   | variable_list | 100      |                                               |    NO     |               |
-     | Sensitive Data   | list          |          | N/A, Personal Data, Related to personal Data  |    NO     | N/A           |
-     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly   |    NO     | Not defined   |
-     | Related Area     | string        | 100      |                                               |    NO     |               |
-     | Default Value    | string        | 100      |                                               |    NO     |               |
-     | Additional Data  | string        | 500      |                                               |    NO     |               |
+     | Field            | Format        | Max Size | Values                                        | Mandatory | Default Value | Group      |
+     | Formula          | string        | 100      |                                               |    NO     |               | General    |
+     | Format           | list          |          | Date, Numeric, Amount, Text                   |    YES    |               | General    |
+     | List of Values   | variable_list | 100      |                                               |    NO     |               | Functional |
+     | Sensitive Data   | list          |          | N/A, Personal Data, Related to personal Data  |    NO     | N/A           | Functional |
+     | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly   |    NO     | Not defined   | General    |
+     | Related Area     | string        | 100      |                                               |    NO     |               | Functional |
+     | Default Value    | string        | 100      |                                               |    NO     |               | General    |
+     | Additional Data  | string        | 500      |                                               |    NO     |               | Functional |
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Field             | Value                                                                    |
       | Type              | Business Term                                                            |
@@ -129,15 +129,15 @@ Feature: Business Concepts administration
      | publisher | publish |
      | admin     | admin   |
    And an existing Business Concept type called "Business Term" with following definition:
-    | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value |
-    | Formula          | string        | 100      |                                              |    NO     |               |
-    | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               |
-    | List of Values   | variable_list | 100      |                                              |    NO     |               |
-    | Sensitive Data    | list         |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           |
-    | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   |
-    | Related Area     | string        | 100      |                                              |    NO     |               |
-    | Default Value    | string        | 100      |                                              |    NO     |               |
-    | Additional Data  | string        | 500      |                                              |    NO     |               |
+    | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value | Group      |
+    | Formula          | string        | 100      |                                              |    NO     |               | General    |
+    | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               | General    |
+    | List of Values   | variable_list | 100      |                                              |    NO     |               | Functional |
+    | Sensitive Data    | list         |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           | Functional |
+    | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   | General    |
+    | Related Area     | string        | 100      |                                              |    NO     |               | Functional |
+    | Default Value    | string        | 100      |                                              |    NO     |               | General    |
+    | Additional Data  | string        | 500      |                                              |    NO     |               | Functional |
    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
      | Field             | Value                                                                    |
      | Type              | Business Term                                                            |
@@ -1197,3 +1197,26 @@ Feature: Business Concepts administration
         | Business Concept Type 2 |
         | Business Concept Type 3 |
         | Business Concept Type 4 |
+
+  Scenario: List business concept type fields
+    Given an existing Business Concept type called "Business Term" with following definition:
+      | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value | Group      |
+      | Formula          | string        | 100      |                                              |    NO     |               | General    |
+      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               | General    |
+      | List of Values   | variable_list | 100      |                                              |    NO     |               | Functional |
+      | Sensitive Data   | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           | Functional |
+      | Update Frequency | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   | General    |
+      | Related Area     | string        | 100      |                                              |    NO     |               | Functional |
+      | Default Value    | string        | 100      |                                              |    NO     |               | General    |
+      | Additional Data  | string        | 500      |                                              |    NO     |               | Functional |
+    When "app-admin" tries to get the list of fields of business concept type "Business Term"
+    Then user "app-admin" is able to see following list of Business Concept Type Fields
+      | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value | Group      |
+      | Formula          | string        | 100      |                                              |    NO     |               | General    |
+      | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               | General    |
+      | List of Values   | variable_list | 100      |                                              |    NO     |               | Functional |
+      | Sensitive Data   | list          |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           | Functional |
+      | Update Frequency | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   | General    |
+      | Related Area     | string        | 100      |                                              |    NO     |               | Functional |
+      | Default Value    | string        | 100      |                                              |    NO     |               | General    |
+      | Additional Data  | string        | 500      |                                              |    NO     |               | Functional |

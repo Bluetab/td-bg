@@ -11,4 +11,12 @@ defmodule TdBg.Utils.CollectionUtils do
     end
   end
 
+  def stringify_keys(%{} = map) do
+    map
+    |> Enum.map(fn {k, v} -> {stringify_key(k), v} end)
+    |> Enum.into(%{})
+  end
+  defp stringify_key(key) when is_atom(key), do: Atom.to_string(key)
+  defp stringify_key(key), do: key
+
 end
