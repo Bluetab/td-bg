@@ -143,8 +143,6 @@ defmodule TdBg.TaxonomyErrorsTest do
     {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
   end
 
-
-
   defp field_value_to_api_attrs(table, token, fixed_values) do
     table
     |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
