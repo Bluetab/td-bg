@@ -7,6 +7,7 @@ defmodule TdBg.TaxonomyErrorsTest do
   import TdBgWeb.BusinessConcept
   alias Poison, as: JSON
   alias TdBgWeb.ApiServices.MockTdAuthService
+  alias TdBg.BusinessConcepts.BusinessConcept
 
   @fixed_values %{"Type" => "type",
     "Name" => "name",
@@ -123,6 +124,26 @@ defmodule TdBg.TaxonomyErrorsTest do
     {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
 
   end
+
+  defwhen ~r/^"(?<user_name>[^"]+)" tries to modify a business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
+          %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+          %{token_admin: token_admin} = state do
+    token = get_user_token(user_name)
+    business_concept = business_concept_by_name(token_admin, business_concept_name)
+    {_, _, %{"data" => current_business_concept}} = business_concept_show(token, business_concept["id"])
+    business_concept_id = current_business_concept["id"]
+    assert business_concept_type == current_business_concept["type"]
+    attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+    status = current_business_concept["status"]
+    {:ok, status_code, json_resp} = if status == BusinessConcept.status.published do
+      business_concept_version_create(token, business_concept_id,  attrs)
+    else
+      business_concept_update(token, business_concept_id,  attrs)
+    end
+    {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
+  end
+
+
 
   defp field_value_to_api_attrs(table, token, fixed_values) do
     table

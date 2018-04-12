@@ -117,7 +117,6 @@ Feature: taxonomy creation/edition errors
       | Type              | Business Term                                                      |
       | Name              | My Date Business Term                                              |
       | Description       | This is the first description of my business term which is a date  |
-
     When "app-admin" tries to create a business concept in the Data Domain "My Domain" with following data:
       | Field             | Value                                                                   |
       | Type              | Business Term                                                           |
@@ -181,4 +180,33 @@ Feature: taxonomy creation/edition errors
       }
     }
     """
+
+  Scenario: Updating a Business Concept name to an already existing one
+    Given an existing Domain Group called "My Parent Group"
+    And an existing Data Domain called "My Domain" child of "My Parent Group"
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Business Term                                                      |
+      | Name              | My Date Business Term                                              |
+      | Description       | This is the first description of my business term which is a date  |
+    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      | Field             | Value                                                              |
+      | Type              | Business Term                                                      |
+      | Name              | Business Term 2                                                    |
+      | Description       | This is the first description of my business term which is a date  |
+    When "app-admin" tries to modify a business concept "My Date Business Term" of type "Business Term" with following data:
+      | Field             | Value                                                              |
+      | Name              | Business Term 2                                                    |
+    Then the system returns a result with code "Unprocessable Entity"
+    And the system returns a response with following data:
+      """
+      {
+        "errors": {
+          "name": [
+            "unique"
+          ]
+        }
+      }
+      """
 
