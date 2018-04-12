@@ -120,6 +120,18 @@ defmodule TdBgWeb.BusinessConceptController do
       @search_service.put_search(concept)
       conn
     else
+      error ->
+        handle_bc_errors(conn, error)
+    end
+  rescue
+    validationError in ValidationError ->
+      conn
+      |> put_status(:unprocessable_entity)
+      |> json(%{"errors": %{"#{validationError.field}": [validationError.error]}})
+  end
+
+  defp handle_bc_errors(conn, error) do
+    case error do
       false ->
         conn
         |> put_status(:forbidden)
@@ -141,11 +153,6 @@ defmodule TdBgWeb.BusinessConceptController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
-  rescue
-    validationError in ValidationError ->
-      conn
-      |> put_status(:unprocessable_entity)
-      |> json(%{"errors": %{"#{validationError.field}": [validationError.error]}})
   end
 
   defp validate_required_bc_fields(attrs) do
@@ -217,26 +224,8 @@ defmodule TdBgWeb.BusinessConceptController do
       @search_service.put_search(business_concept_version)
       render(conn, "show.json", business_concept: concept)
     else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-      {:name_not_available} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{name: ["unique"]}})
-      {:not_valid_related_to} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{related_to: ["invalid"]}})
-      {:error, %Ecto.Changeset{} = changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+      error ->
+        handle_bc_errors(conn, error)
     end
   end
 
