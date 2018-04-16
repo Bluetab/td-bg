@@ -40,7 +40,7 @@ defmodule TdBg.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:cabbage, "~> 0.3.0"},
+      {:cabbage, git: "https://github.com/eriosv/cabbage.git"},
       {:httpoison, "~> 1.0"},
       {:edeliver, "~> 1.4.5"},
       {:distillery, ">= 0.8.0", warn_missing: false},

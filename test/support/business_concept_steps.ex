@@ -1,9 +1,9 @@
-defmodule TdBg.BusinessConceptTest do
-  use Cabbage.Feature, async: false, file: "business_concept/business_concept.feature"
-  use TdBgWeb.FeatureCase
+defmodule TdBg.BusinessConceptSteps do
+  @moduledoc false
+  use Cabbage.Feature
+  use ExUnit.CaseTemplate
   import TdBgWeb.BusinessConcept
 
-  # import TdBgWeb.Router.Helpers
   import TdBgWeb.ResponseCode
   import TdBgWeb.User, only: :functions
   import TdBgWeb.Taxonomy, only: :functions
@@ -14,7 +14,7 @@ defmodule TdBg.BusinessConceptTest do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils
 
-  @fixed_values %{"Type" => "type",
+  def fixed_values, do: %{"Type" => "type",
                   "Name" => "name",
                   "Description" => "description",
                   "Status" => "status",
@@ -25,17 +25,6 @@ defmodule TdBg.BusinessConceptTest do
                   "Modification Comments" => "mod_comments",
                   "Related To" => "related_to"
                   }
-
-  setup_all do
-    start_supervised MockTdAuthService
-    :ok
-  end
-
-  setup do
-    on_exit fn ->
-      rm_business_concept_schema()
-    end
-  end
 
   # Scenario: Create a simple business concept
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
@@ -76,7 +65,7 @@ defmodule TdBg.BusinessConceptTest do
           %{token_admin: token_admin} = state do
 
     token = get_user_token(user_name)
-    attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
 
     {_, status_code, _} = business_concept_create(token, data_domain["id"], attrs)
@@ -110,7 +99,7 @@ defmodule TdBg.BusinessConceptTest do
     assert value == target[attr]
   end
 
-  defp assert_attrs(%{} = attrs, %{} = target) do
+  def assert_attrs(%{} = attrs, %{} = target) do
     Enum.each(attrs, fn {attr, value} -> assert_attr(attr, value, target) end)
   end
 
@@ -125,26 +114,26 @@ defmodule TdBg.BusinessConceptTest do
       assert rc_ok() == to_response_code(http_status_code)
       assert business_concept["name"] == business_concept_name
       assert business_concept["data_domain_id"] == data_domain["id"]
-      attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       assert_attrs(attrs, business_concept)
       {:ok, state}
   end
 
   # Scenario: Create a business concept with dinamic data
-  defp add_schema_field(map, _name, ""), do: map
-  defp add_schema_field(map, :max_size, value) do
+  def add_schema_field(map, _name, ""), do: map
+  def add_schema_field(map, :max_size, value) do
     Map.put(map, :max_size,  String.to_integer(value))
   end
-  defp add_schema_field(map, :values, values) do
+  def add_schema_field(map, :values, values) do
     diff_values = values
       |> String.split(",")
       |> Enum.map(&(String.trim(&1)))
     Map.put(map, :values, diff_values)
   end
-  defp add_schema_field(map, :required, required) do
+  def add_schema_field(map, :required, required) do
     Map.put(map, :required, required == "YES")
   end
-  defp add_schema_field(map, name, value), do: Map.put(map, name, value)
+  def add_schema_field(map, name, value), do: Map.put(map, name, value)
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with following definition:$/,
           %{business_concept_type: business_concept_type, table: table},
@@ -194,7 +183,7 @@ defmodule TdBg.BusinessConceptTest do
     #Retrieve data domain by name in order to create a business concept
     data_domain = get_data_domain_by_name(token_admin, data_domain_name)
     #Create Business Concept with the given data and the admin token
-    attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
     # Creamos el busines concept para cuando tenga que recuperarlo
     business_concept_create(token_admin, data_domain["id"], attrs)
   end
@@ -219,7 +208,7 @@ defmodule TdBg.BusinessConceptTest do
   defand ~r/^an existing Business Concept of type "(?<business_concept_type>[^"]+)" in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
     %{business_concept_type: _business_concept_type, data_domain_name: data_domain_name,  table: fields},
     %{token_admin: token_admin} = state do
-      attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       data_domain = get_data_domain_by_name(token_admin, data_domain_name)
       business_concept_create(token_admin, data_domain["id"], attrs)
     {:ok, state}
@@ -233,7 +222,7 @@ defmodule TdBg.BusinessConceptTest do
       {_, _, %{"data" => current_business_concept}} = business_concept_show(token, business_concept["id"])
       business_concept_id = current_business_concept["id"]
       assert business_concept_type == current_business_concept["type"]
-      attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       status = current_business_concept["status"]
       {_, status_code, _} = if status == BusinessConcept.status.published do
         business_concept_version_create(token, business_concept_id,  attrs)
@@ -253,7 +242,7 @@ defmodule TdBg.BusinessConceptTest do
       assert business_concept_type == business_concept_tmp["type"]
       {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
       assert rc_ok() == to_response_code(http_status_code)
-      attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       assert_attrs(attrs, business_concept)
       {:ok, Map.merge(state, %{business_concept: business_concept})}
     else
@@ -323,7 +312,7 @@ defmodule TdBg.BusinessConceptTest do
         assert business_concept_type == business_concept_tmp["type"]
         {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
         assert rc_ok() == to_response_code(http_status_code)
-        attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+        attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
         assert_attrs(attrs, business_concept)
         {:ok, Map.merge(state, %{business_concept: business_concept})}
       else
@@ -356,7 +345,7 @@ defmodule TdBg.BusinessConceptTest do
   %{token_admin: token_admin} = state do
     business_concept = business_concept_by_name(token_admin, business_concept_name)
     assert business_concept_type == business_concept["type"]
-    attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
     status = business_concept["status"]
     {_, _, _} = if status == BusinessConcept.status.published do
       business_concept_version_create(token_admin, business_concept["id"],  attrs)
@@ -409,7 +398,7 @@ defmodule TdBg.BusinessConceptTest do
         assert business_concept_type == business_concept_tmp["type"]
         {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
         assert rc_ok() == to_response_code(http_status_code)
-        attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+        attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
         assert_attrs(attrs, business_concept)
         {:ok, state}
       else
@@ -432,7 +421,7 @@ defmodule TdBg.BusinessConceptTest do
       token = get_user_token(user_name)
       {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
       assert rc_ok() == to_response_code(http_status_code)
-      attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       assert_attrs(attrs, business_concept)
       {:ok, state}
   end
@@ -497,7 +486,7 @@ defmodule TdBg.BusinessConceptTest do
     end
   end
 
-  defp update_business_concept_version_map(field_map), do: update_in(field_map[:version], &String.to_integer(&1))
+  def update_business_concept_version_map(field_map), do: update_in(field_map[:version], &String.to_integer(&1))
 
   # Scenario Outline: Create a alias for a business concept
 
@@ -609,7 +598,7 @@ defmodule TdBg.BusinessConceptTest do
     business_concept_tmp = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
     assert rc_ok() == to_response_code(http_status_code)
-    attrs = field_value_to_api_attrs(fields, token_admin, @fixed_values)
+    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
     assert_attrs(attrs, business_concept)
   end
 
@@ -658,7 +647,7 @@ defmodule TdBg.BusinessConceptTest do
     end)
   end
 
-  defp add_all_schema_fields(field_data) do
+  def add_all_schema_fields(field_data) do
     Map.new
     |> add_schema_field(:name, field_data."Field")
     |> add_schema_field(:type, field_data."Format")
@@ -669,7 +658,7 @@ defmodule TdBg.BusinessConceptTest do
     |> add_schema_field(:group, field_data."Group")
   end
 
-  defp assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields) do
+  def assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields) do
     business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     business_concept_id = business_concept_version["id"]
     token = get_user_token(user_name)
@@ -691,9 +680,9 @@ defmodule TdBg.BusinessConceptTest do
 
   end
 
-  defp map_keys_to_atoms(version), do: Map.new(version, &({String.to_atom(elem(&1, 0)), elem(&1, 1)}))
+  def map_keys_to_atoms(version), do: Map.new(version, &({String.to_atom(elem(&1, 0)), elem(&1, 1)}))
 
-  defp change_business_concept_status(token_admin, business_concept_id, status) do
+  def change_business_concept_status(token_admin, business_concept_id, status) do
     {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
     assert rc_ok() == to_response_code(status_code)
 
@@ -714,7 +703,7 @@ defmodule TdBg.BusinessConceptTest do
     end
   end
 
-  defp field_value_to_api_attrs(table, token, fixed_values) do
+  def field_value_to_api_attrs(table, token, fixed_values) do
     table
     |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
     |> Map.split(Map.values(fixed_values))
@@ -722,25 +711,25 @@ defmodule TdBg.BusinessConceptTest do
     |> load_related_to_ids(token)
   end
 
-  defp business_concept_with_state_create(table, token, data_domain) do
+  def business_concept_with_state_create(table, token, data_domain) do
     Enum.each(table, fn(item) ->
       create_by_status_flow(item, token, data_domain)
     end)
   end
 
-  defp create_by_status_flow(%{Status: status} = business_concept, token, data_domain) do
+  def create_by_status_flow(%{Status: status} = business_concept, token, data_domain) do
     case status do
       "draft" ->
         attrs = business_concept
         |> Map.delete(:Status)
         |> Enum.map(fn({k, v}) -> %{"Field": Atom.to_string(k), "Value": v} end)
-        |> field_value_to_api_attrs(token, @fixed_values)
+        |> field_value_to_api_attrs(token, fixed_values())
         {_, 201, _} = business_concept_create(token, data_domain["id"], attrs)
       "pending_approval" ->
         attrs = business_concept
         |> Map.delete(:Status)
         |> Enum.map(fn({k, v}) -> %{"Field": Atom.to_string(k), "Value": v} end)
-        |> field_value_to_api_attrs(token, @fixed_values)
+        |> field_value_to_api_attrs(token, fixed_values())
         {_, 201, %{"data" => business_concept}} = business_concept_create(token, data_domain["id"], attrs)
         {_, 200} = business_concept_send_for_approval(token, business_concept["id"])
       "rejected" -> nil
@@ -750,7 +739,7 @@ defmodule TdBg.BusinessConceptTest do
     end
   end
 
-  defp load_related_to_ids(attrs, token) do
+  def load_related_to_ids(attrs, token) do
     related_to = case Map.has_key?(attrs, "related_to") do
       true -> Map.get(attrs, "related_to")
       _ -> ""
