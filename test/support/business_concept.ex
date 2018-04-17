@@ -7,7 +7,8 @@ defmodule TdBgWeb.BusinessConcept do
 
   @endpoint TdBgWeb.Endpoint
   @headers {"Content-type", "application/json"}
-  @fixed_values %{"Type" => "type",
+
+  def fixed_values, do: %{"Type" => "type",
                   "Name" => "name",
                   "Description" => "description",
                   "Status" => "status",
@@ -15,7 +16,8 @@ defmodule TdBgWeb.BusinessConcept do
                   "Last User" => "last_change_by",
                   "Version" => "version",
                   "Reject Reason" => "reject_reason",
-                  "Modification Comments" => "mod_comments"
+                  "Modification Comments" => "mod_comments",
+                  "Related To" => "related_to"
                   }
 
   def add_to_business_concept_schema(type, definition) do
@@ -43,8 +45,8 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_field_values_to_api_attrs(table) do
     table
-      |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(@fixed_values, x."Field", x."Field"), x."Value") end)
-      |> Map.split(Map.values(@fixed_values))
+      |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values(), x."Field", x."Field"), x."Value") end)
+      |> Map.split(Map.values(fixed_values()))
       |> fn({f, v}) -> Map.put(f, "content", v) end.()
   end
 

@@ -8,13 +8,20 @@ defmodule TdBg.BusinessConceptAliasTest do
   import TdBgWeb.Taxonomy, only: :functions
   import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
-  import TdBg.BusinessConceptSteps
 
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils
 
-  import_feature TdBg.BusinessConceptSteps
+  import_steps TdBg.BusinessConceptSteps
+  import_steps TdBg.DomainGroupSteps
+  import_steps TdBg.DataDomainSteps
+  import_steps TdBg.ResultSteps
+  import_steps TdBg.UsersSteps
+
+  import TdBg.BusinessConceptSteps
+  import TdBg.ResultSteps
+  import TdBg.UsersSteps
 
   setup_all do
     start_supervised MockTdAuthService

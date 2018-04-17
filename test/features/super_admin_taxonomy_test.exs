@@ -6,32 +6,24 @@ defmodule TdBg.SuperAdminTaxonomyTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.ResponseCode, only: :functions
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias Poison, as: JSON
+
+  import_steps TdBg.BusinessConceptSteps
+  import_steps TdBg.DomainGroupSteps
+  import_steps TdBg.DataDomainSteps
+  import_steps TdBg.ResultSteps
+
+  import TdBg.ResultSteps
+  import TdBg.BusinessConceptSteps
 
   setup_all do
     start_supervised MockTdAuthService
     :ok
   end
 
-  # Scenario: Creating a Domain Group without any parent
-
-  defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
-    %{domain_group_name: domain_group_name}, _state do
-    token = get_user_token("app-admin")
-    {_, status_code, _json_resp} = domain_group_create(token, %{name: domain_group_name})
-    assert rc_created() == to_response_code(status_code)
-  end
-
   defwhen ~r/^user "app-admin" tries to create a Domain Group with the name "(?<name>[^"]+)" and following data:$/, %{name: name, table: [%{Description: description}]}, state do
     token = get_user_token("app-admin")
     {_, status_code, _json_resp} = domain_group_create(token,  %{name: name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
-  end
-
-  defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/,
-          %{status_code: status_code}, %{status_code: http_status_code} = state do
-    assert status_code == to_response_code(http_status_code)
-    {:ok, Map.merge(state, %{})}
   end
 
   defand ~r/^the user "app-admin" is able to see the Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
@@ -64,16 +56,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     assert child["parent_id"] == parent["id"]
   end
 
-  # Scenario: Creating a Data Domain depending on an existing Domain Group
-  defwhen ~r/^user "(?<user_name>[^"]+)" tries to create a Data Domain with the name "(?<data_domain_name>[^"]+)" as child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-          %{user_name: _user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    token = get_user_token("app-admin")
-    parent = get_domain_group_by_name(token, domain_group_name)
-    assert parent["name"] == domain_group_name
-    {_, status_code, _json_resp} = data_domain_create(token, %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
-    {:ok, Map.merge(state, %{status_code: status_code})}
-  end
-
   defand ~r/^the user "(?<user_name>[^"]+)" is able to see the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
          %{user_name: _user_name, data_domain_name: data_domain_name, table: [%{Description: description}]}, state do
     token = get_user_token("app-admin")
@@ -97,15 +79,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     assert data_domain_info["domain_group_id"] == domain_group_info["id"]
   end
 
-  defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
-      %{name: name, domain_group_name: domain_group_name}, _state do
-    token = get_user_token("app-admin")
-    domain_group_info = get_domain_group_by_name(token, domain_group_name)
-    assert domain_group_info["name"] == domain_group_name
-    {_, _status_code, json_resp} = data_domain_create(token, %{name: name, domain_group_id: domain_group_info["id"]})
-    data_domain = json_resp["data"]
-    assert data_domain["domain_group_id"] == domain_group_info["id"]
-  end
 
   # Scenario: Modifying a Domain Group and seeing the new version
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/,
@@ -196,25 +169,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
       parent = get_domain_group_by_name(token, parent_name)
       child  = get_data_domain_by_name_and_parent(token, child_name, parent["id"])
       assert !child
-  end
-
-  defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
-    %{business_concept_type: business_concept_type},
-    _state do
-      filename = Application.get_env(:td_bg, :bc_schema_location)
-      {:ok, file} = File.open filename, [:write, :utf8]
-      json_schema = [{business_concept_type, []}] |> Map.new |> JSON.encode!
-      IO.binwrite file, json_schema
-      File.close file
-  end
-
-  defand ~r/^an existing Business Concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-    %{data_domain_name: data_domain_name, table: fields},
-    _state do
-      token = get_user_token("app-admin")
-      data_domain = get_data_domain_by_name(token, data_domain_name)
-      attrs = business_concept_field_values_to_api_attrs(fields)
-      business_concept_create(token, data_domain["id"], attrs)
   end
 
 end

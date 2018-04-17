@@ -14,8 +14,16 @@ defmodule TdBg.BusinessConceptWorkflowTest do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils
 
-  import_feature TdBg.BusinessConceptSteps
+  import_steps TdBg.BusinessConceptSteps
+  import_steps TdBg.DataDomainSteps
+  import_steps TdBg.DomainGroupSteps
+  import_steps TdBg.ResultSteps
+  import_steps TdBg.UsersSteps
 
+  import TdBg.BusinessConceptSteps
+  import TdBg.ResultSteps
+  import TdBg.UsersSteps
+  
   setup_all do
     start_supervised MockTdAuthService
     :ok

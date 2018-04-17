@@ -1,6 +1,7 @@
 defmodule TdBg.TaxonomyTest do
   use Cabbage.Feature, async: false, file: "taxonomy.feature"
   use TdBgWeb.FeatureCase
+  import TdBgWeb.BusinessConcept
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy
   import TdBgWeb.User, only: :functions
@@ -9,57 +10,19 @@ defmodule TdBg.TaxonomyTest do
 
   alias TdBgWeb.ApiServices.MockTdAuthService
 
+  import_steps TdBg.BusinessConceptSteps
+  import_steps TdBg.DataDomainSteps
+  import_steps TdBg.DomainGroupSteps
+  import_steps TdBg.ResultSteps
+  import_steps TdBg.UsersSteps
+
+  import TdBg.ResultSteps
+  import TdBg.BusinessConceptSteps
+  import TdBg.UsersSteps
+
   setup_all do
     start_supervised MockTdAuthService
     :ok
-  end
-
-  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
-     %{domain_group_name: name}, state do
-
-    token_admin = build_user_token("app-admin", is_admin: true)
-    state = Map.merge(state, %{token_admin: token_admin})
-    {:ok, status_code, _json_resp} = domain_group_create(token_admin,  %{name: name})
-    assert rc_created() == to_response_code(status_code)
-    {:ok, state}
-  end
-
-  defand ~r/^following users exist with the indicated role in Domain Group "(?<domain_group_name>[^"]+)"$/,
-     %{domain_group_name: domain_group_name, table: table}, %{token_admin: token_admin} = state do
-
-    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
-    assert domain_group_name == domain_group["name"]
-
-    create_user_and_acl_entries_fn = fn(x) ->
-      user_name = x[:user]
-      role_name = x[:role]
-      principal_id = create_user(user_name).id
-      %{"id" => role_id} = get_role_by_name(token_admin, role_name)
-      acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group["id"], role_id: role_id}
-      {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)
-    end
-
-    users = table |> Enum.map(create_user_and_acl_entries_fn)
-
-    {:ok, Map.merge(state, %{users: users})}
-  end
-
-  # Scenario: Creating a Data Domain depending on an existing Domain Group
-  defwhen ~r/^user "(?<user_name>[^"]+)" tries to create a Data Domain with the name "(?<data_domain_name>[^"]+)" as child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-    %{user_name: user_name, data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]},
-    %{token_admin: token_admin} = state do
-
-    parent = get_domain_group_by_name(token_admin, domain_group_name)
-    assert parent["name"] == domain_group_name
-    token = build_user_token(user_name)
-    {_, status_code, _json_resp} = data_domain_create(token, %{name: data_domain_name, description: description, domain_group_id: parent["id"]})
-    {:ok, Map.merge(state, %{status_code: status_code})}
-  end
-
-  defthen ~r/^the system returns a result with code "(?<status_code>[^"]+)"$/,
-          %{status_code: status_code}, %{status_code: http_status_code} = state do
-    assert status_code == to_response_code(http_status_code)
-    {:ok, Map.merge(state, %{})}
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", user "(?<user_name>[^"]+)" is able to see the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
@@ -154,75 +117,12 @@ defmodule TdBg.TaxonomyTest do
     end
   end
 
-  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
-    %{name: name, domain_group_name: domain_group_name}, state do
-    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, parent_id: domain_group_info["id"]})
-    assert rc_created() == to_response_code(status_code)
-    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
-    {:ok, state}
-  end
-
-  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-    %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, description: description, parent_id: domain_group_info["id"]})
-    assert rc_created() == to_response_code(status_code)
-    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
-    {:ok, state}
-  end
-
   defand ~r/^user "(?<user_name>[^"]+)" tries to modify a Domain Group with the name "(?<domain_group_name>[^"]+)" introducing following data:$/,
     %{user_name: user_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
     token = get_user_token(user_name)
     domain_group = get_domain_group_by_name(token, domain_group_name)
     {_, status_code, _json_resp} = domain_group_update(token, domain_group["id"], %{name: domain_group_name, description: description})
     {:ok, Map.merge(state, %{status_code: status_code})}
-  end
-
-  defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
-         %{data_domain_name: data_domain_name, domain_group_name: domain_group_name}, state do
-    token_admin = build_user_token("app-admin", is_admin: true)
-    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
-    assert domain_group && domain_group["id"]
-    {_, _status_code, json_resp} = data_domain_create(token_admin, %{name: data_domain_name, domain_group_id: domain_group["id"]})
-    data_domain = json_resp["data"]
-    assert data_domain["domain_group_id"] == domain_group["id"]
-    state = Map.merge(state, %{token_admin: token_admin})
-    {:ok, state}
-  end
-
-  defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-    %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    token_admin = build_user_token("app-admin", is_admin: true)
-    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
-    assert domain_group && domain_group["id"]
-    {_, _status_code, json_resp} = data_domain_create(token_admin, %{name: data_domain_name, description: description, domain_group_id: domain_group["id"]})
-    data_domain = json_resp["data"]
-    assert data_domain["domain_group_id"] == domain_group["id"]
-    assert data_domain["description"] == description
-    state = Map.merge(state, %{token_admin: token_admin})
-    {:ok, state}
-  end
-
-  defand ~r/^following users exist with the indicated role in Data Domain "(?<data_domain_name>[^"]+)"$/,
-    %{data_domain_name: data_domain_name, table: table}, %{token_admin: token_admin} = state do
-
-    data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-    assert data_domain_name == data_domain["name"]
-
-    create_user_and_acl_entries_fn = fn(x) ->
-      user_name = x[:user]
-      role_name = x[:role]
-      principal_id = create_user(user_name).id
-      %{"id" => role_id} = get_role_by_name(token_admin, role_name)
-      acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain["id"], role_id: role_id}
-      {_, _status_code, _json_resp} = acl_entry_create(token_admin , acl_entry_params)
-    end
-
-    users = table |> Enum.map(create_user_and_acl_entries_fn)
-
-    {:ok, Map.merge(state, %{users: users})}
   end
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to modify a Data Domain with the name "(?<data_domain_name>[^"]+)" introducing following data:$/,

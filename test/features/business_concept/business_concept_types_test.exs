@@ -4,9 +4,7 @@ defmodule TdBg.BusinessConceptTypesTest do
   import TdBgWeb.BusinessConcept
 
   import TdBgWeb.ResponseCode
-  import TdBgWeb.User, only: :functions
   import TdBgWeb.Taxonomy, only: :functions
-  import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
   import TdBg.BusinessConceptSteps
 
@@ -15,7 +13,11 @@ defmodule TdBg.BusinessConceptTypesTest do
   alias TdBg.Utils.CollectionUtils
 
   import_feature TdBg.BusinessConceptSteps
+  import_steps TdBg.ResultSteps
 
+  import TdBg.BusinessConceptSteps
+  import TdBg.ResultSteps
+  
   setup_all do
     start_supervised MockTdAuthService
     :ok

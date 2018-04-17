@@ -10,7 +10,11 @@ defmodule TdBg.TaxonomyNavigationTest do
   alias Poison, as: JSON
   @endpoint TdBgWeb.Endpoint
 
-  @bc_fixed_fields %{"Description" => "description", "Name" => "name", "Type" => "type"}
+  import_steps TdBg.BusinessConceptSteps
+  import_steps TdBg.DomainGroupSteps
+  import_steps TdBg.DataDomainSteps
+
+  import TdBg.BusinessConceptSteps
 
   setup_all do
     start_supervised MockTdAuthService
@@ -21,18 +25,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     on_exit fn ->
               rm_business_concept_schema()
             end
-  end
-
-  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/,
-         %{domain_group_name: name, table: [%{Description: description}]}, state do
-
-    token_admin = build_user_token("app-admin", is_admin: true)
-    state = Map.merge(state, %{token_admin: token_admin})
-    {:ok, status_code, json_resp} = domain_group_create(token_admin,  %{name: name, description: description})
-    assert rc_created() == to_response_code(status_code)
-    domain_group = json_resp["data"]
-    assert domain_group["description"] == description
-    {:ok, state}
   end
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domain Groups without parent$/, %{user_name: user_name}, state do
@@ -65,59 +57,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     assert Enum.sort(table) == Enum.sort(bc_list)
   end
 
-  #Scenario
-  defand ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)"$/,
-         %{domain_group_name: name}, state do
-    token_admin = build_user_token("app-admin", is_admin: true)
-    state = Map.merge(state, %{token_admin: token_admin})
-    {:ok, status_code, _json_resp} = domain_group_create(state[:token_admin],  %{name: name})
-    assert rc_created() == to_response_code(status_code)
-    {:ok, state}
-  end
-
-  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
-         %{name: name, domain_group_name: domain_group_name}, state do
-    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    assert domain_group_info["name"] == domain_group_name
-    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, parent_id: domain_group_info["id"]})
-    assert rc_created() == to_response_code(status_code)
-    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
-    {:ok, state}
-  end
-
-  defand ~r/^an existing Domain Group called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-         %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, status_code, json_resp} = domain_group_create(state[:token_admin],  %{name: name, description: description, parent_id: domain_group_info["id"]})
-    assert rc_created() == to_response_code(status_code)
-    assert json_resp["data"]["parent_id"] == domain_group_info["id"]
-    {:ok, state}
-  end
-
-  defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)"$/,
-          %{name: name, domain_group_name: domain_group_name}, %{token_admin: token_admin} = _state do
-    domain_group = get_domain_group_by_name(token_admin, domain_group_name)
-    assert domain_group["name"] == domain_group_name
-    {_, _status_code, json_resp} = data_domain_create(token_admin, %{name: name, domain_group_id: domain_group["id"]})
-    data_domain = json_resp["data"]
-    assert data_domain["domain_group_id"] == domain_group["id"]
-  end
-
-  defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
-    %{business_concept_type: business_concept_type}, state do
-      add_to_business_concept_schema(business_concept_type, [])
-    {:ok, Map.merge(state, %{bc_type: business_concept_type})}
-  end
-
-  defand ~r/^an existing Business Concept of type "(?<business_concept_type>[^"]+)" in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-    %{business_concept_type: _business_concept_type, data_domain_name: data_domain_name,  table: fields},
-    %{token_admin: token_admin} = state do
-      attrs = field_value_to_api_attrs(fields, @bc_fixed_fields)
-      data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-      business_concept_create(token_admin, data_domain["id"], attrs)
-    {:ok, Map.merge(state, %{})}
-  end
-
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domain Groups children of Domain Group "(?<domain_group_name>[^"]+)"$/,
     %{user_name: user_name, domain_group_name: domain_group_name}, state do
     token = get_user_token(user_name)
@@ -125,16 +64,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, status_code, json_resp} = index_domain_group_children(token, %{domain_group_id: domain_group_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
-  end
-
-  # Scenario
-
-  defand ~r/^an existing Data Domain called "(?<name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
-         %{name: name, domain_group_name: domain_group_name, table: [%{Description: description}]}, state do
-    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, _status_code, json_resp} = data_domain_create(state[:token_admin],  %{name: name, description: description, domain_group_id: domain_group_info["id"]})
-    assert json_resp["data"]["domain_group_id"] == domain_group_info["id"]
-    {:ok, state}
   end
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Data Domains children of Domain Group "(?<domain_group_name>[^"]+)"$/,
@@ -208,13 +137,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(domain_group_url(@endpoint, :index_root), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp field_value_to_api_attrs(table, fixed_values) do
-    table
-      |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value") end)
-      |> Map.split(Map.values(fixed_values))
-      |> fn({f, v}) -> Map.put(f, "content", v) end.()
   end
 
 end
