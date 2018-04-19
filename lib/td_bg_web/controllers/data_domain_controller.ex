@@ -39,7 +39,7 @@ defmodule TdBgWeb.DataDomainController do
   end
 
   swagger_path :index_children_data_domain do
-    get "/data_domains/domain_groups/{domain_group_id}"
+    get "/domain_groups/{domain_group_id}/data_domains"
     description "List Data Domain children of Domain Group"
     produces "application/json"
     parameters do
