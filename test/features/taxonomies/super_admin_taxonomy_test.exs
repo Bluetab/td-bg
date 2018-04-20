@@ -1,5 +1,5 @@
 defmodule TdBg.SuperAdminTaxonomyTest do
-  use Cabbage.Feature, async: false, file: "super_admin_taxonomy.feature"
+  use Cabbage.Feature, async: false, file: "taxonomies/super_admin_taxonomy.feature"
   use TdBgWeb.FeatureCase
   import TdBgWeb.Taxonomy, only: :functions
   import TdBgWeb.BusinessConcept, only: :functions
@@ -79,8 +79,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     assert data_domain_info["domain_group_id"] == domain_group_info["id"]
   end
 
-
-  # Scenario: Modifying a Domain Group and seeing the new version
   defgiven ~r/^an existing Domain Group called "(?<domain_group_name>[^"]+)" with following data:$/,
         %{domain_group_name: domain_group_name, table: [%{Description: description}]}, _state do
     token = get_user_token("app-admin")
@@ -97,7 +95,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
-  # Scenario: Modifying a Data Domain and seeing the new version
   defand ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of Domain Group "(?<domain_group_name>[^"]+)" with following data:$/,
         %{data_domain_name: data_domain_name, domain_group_name: domain_group_name, table: [%{Description: description}]}, _state do
     token = get_user_token("app-admin")

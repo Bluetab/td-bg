@@ -1,5 +1,5 @@
 defmodule TdBg.RolesAdminTest do
-  use Cabbage.Feature, async: false, file: "roles_admin.feature"
+  use Cabbage.Feature, async: false, file: "roles/roles_admin.feature"
   use TdBgWeb.FeatureCase
   import TdBgWeb.Router.Helpers
   import TdBgWeb.ResponseCode

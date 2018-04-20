@@ -320,7 +320,8 @@ defmodule TdBg.BusinessConceptSteps do
   end
 
   defwhen ~r/^"(?<user_name>[^"]+)" tries to create a new alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-    %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type}, %{token_admin: token_admin} = state do
+    %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin} = state do
       business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
       business_concept_id = business_concept_version["id"]
       token = get_user_token(user_name)
@@ -330,14 +331,16 @@ defmodule TdBg.BusinessConceptSteps do
   end
 
   defand ~r/^if (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields}, %{token_admin: token_admin} = _state do
+    %{result: result, status_code: status_code, user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},
+     %{token_admin: token_admin} = _state do
     if result == status_code do
       assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields)
     end
   end
 
   defand ~r/^business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" has an alias "(?<business_concept_alias>[^"]+)"$/,
-    %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, business_concept_alias: business_concept_alias}, %{token_admin: token_admin} = _state do
+    %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, business_concept_alias: business_concept_alias},
+     %{token_admin: token_admin} = _state do
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
       business_concept_id = business_concept["id"]
       creation_attrs = %{name: business_concept_alias}
@@ -346,7 +349,8 @@ defmodule TdBg.BusinessConceptSteps do
   end
 
   defwhen ~r/^(?<user_name>[^"]+) tries to delete alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-    %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type}, %{token_admin: token_admin} = state do
+    %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
+    %{token_admin: token_admin} = state do
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
       business_concept_id = business_concept["id"]
       business_concept_alias = business_concept_alias_by_name(token_admin, business_concept_id, business_concept_alias)
@@ -363,7 +367,6 @@ defmodule TdBg.BusinessConceptSteps do
     end
   end
 
-
   defand ~r/^business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" does not exist$/,
     %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, version: version}, %{token_admin: token_admin} = _state do
     business_concept_version = String.to_integer(version)
@@ -375,7 +378,7 @@ defmodule TdBg.BusinessConceptSteps do
   end
 
   defand ~r/^user "(?<user_name>[^"]+)" is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields},_state do
+    %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type, table: fields}, _state do
     token = get_user_token(user_name)
     assert_visible_aliases(token, business_concept_name, business_concept_type, user_name, fields)
   end

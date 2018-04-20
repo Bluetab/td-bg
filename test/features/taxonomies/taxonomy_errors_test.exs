@@ -1,5 +1,5 @@
 defmodule TdBg.TaxonomyErrorsTest do
-  use Cabbage.Feature, async: false, file: "taxonomy_errors.feature"
+  use Cabbage.Feature, async: false, file: "taxonomies/taxonomy_errors.feature"
   use TdBgWeb.FeatureCase
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy

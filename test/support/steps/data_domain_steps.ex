@@ -20,7 +20,7 @@ defmodule TdBg.DataDomainSteps do
     {:ok, state}
   end
 
-  #TODO: Unify???
+  #Check if this step an be unified with other similar
   defgiven ~r/^an existing Data Domain called "(?<data_domain_name>[^"]+)" child of "(?<domain_group_name>[^"]+)"$/,
     %{data_domain_name: data_domain_name, domain_group_name: domain_group_name}, state do
     token_admin = build_user_token("app-admin", is_admin: true)

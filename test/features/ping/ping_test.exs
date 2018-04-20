@@ -1,5 +1,5 @@
 defmodule TdBg.PingTest do
-  use Cabbage.Feature, async: false, file: "ping.feature"
+  use Cabbage.Feature, async: false, file: "ping/ping.feature"
   import TdBgWeb.Router.Helpers
   @endpoint TdBgWeb.Endpoint
 

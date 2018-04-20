@@ -1,5 +1,5 @@
 defmodule TdBg.SuperAdminRolesAdminTest do
-  use Cabbage.Feature, async: false, file: "super_admin_roles_admin.feature"
+  use Cabbage.Feature, async: false, file: "roles/super_admin_roles_admin.feature"
   use TdBgWeb.FeatureCase
   import TdBgWeb.Router.Helpers
   import TdBgWeb.ResponseCode
@@ -16,7 +16,6 @@ defmodule TdBg.SuperAdminRolesAdminTest do
   alias Poison, as: JSON
   @endpoint TdBgWeb.Endpoint
 
-  #TODO:Refactor. Import private functions when importing steps
   import TdBg.ResultSteps
 
   setup_all do
@@ -53,7 +52,6 @@ defmodule TdBg.SuperAdminRolesAdminTest do
     {:ok, _status_code, role_data} = user_data_domain_role(state[:token_admin], %{user_id: user.id, data_domain_id: data_domain_info["id"]})
     assert role_data["data"]["name"] == role_name
   end
-
 
   defp user_domain_group_role(token, attrs) do
     headers = get_header(token)

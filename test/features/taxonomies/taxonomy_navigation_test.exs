@@ -1,5 +1,5 @@
 defmodule TdBg.TaxonomyNavigationTest do
-  use Cabbage.Feature, async: false, file: "taxonomy_navigation.feature"
+  use Cabbage.Feature, async: false, file: "taxonomies/taxonomy_navigation.feature"
   use TdBgWeb.FeatureCase
   import TdBgWeb.Router.Helpers
   import TdBgWeb.ResponseCode

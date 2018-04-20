@@ -29,7 +29,7 @@ defmodule TdBg.ResultSteps do
     end
   end
 
-  #TODO: Refactor
+  #We have to refactor this when importing steps functionallity works properly
   def map_keys_to_atoms_refactor(version), do: Map.new(version, &({String.to_atom(elem(&1, 0)), elem(&1, 1)}))
 
   def update_business_concept_version_map_refactor(field_map), do: update_in(field_map[:version], &String.to_integer(&1))
