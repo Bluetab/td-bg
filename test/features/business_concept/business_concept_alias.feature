@@ -1,14 +1,14 @@
 Scenario Outline: Create a alias for a business concept
-  Given an existing Domain Group called "My Group"
-  And an existing Data Domain called "My Domain" child of Domain Group "My Group"
-  And following users exist with the indicated role in Data Domain "My Domain"
+  Given an existing Domain called "My Parent Domain"
+  And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+  And following users exist with the indicated role in Domain "My Child Domain"
     | user      | role    |
     | watcher   | watch   |
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
   And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  And an existing Business Concept of type "Business Term" in the Domain "My Child Domain" with following data:
     | Field             | Value                                             |
     | Type              | Business Term                                     |
     | Name              | My Business Term                                  |
@@ -27,16 +27,16 @@ Examples:
   | admin     | Created      |
 
 Scenario Outline: Delete alias for a business concept
-  Given an existing Domain Group called "My Group"
-  And an existing Data Domain called "My Domain" child of Domain Group "My Group"
-  And following users exist with the indicated role in Data Domain "My Domain"
+  Given an existing Domain called "My Parent Domain"
+  And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+  And following users exist with the indicated role in Domain "My Child Domain"
     | user      | role    |
     | watcher   | watch   |
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
   And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  And an existing Business Concept of type "Business Term" in the Domain "My Child Domain" with following data:
     | Field             | Value                                             |
     | Type              | Business Term                                     |
     | Name              | My Business Term                                  |
@@ -61,17 +61,17 @@ Scenario Outline: Delete alias for a business concept
     | admin     | Deleted      |
 
   Scenario: User should not be able to create an alias with same type and name as an existing business concept
-    Given an existing Domain Group called "My Parent Group"
-    And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"
+    Given an existing Domain called "My Parent Group"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Group"
     And an existing Business Concept type called "Business Term" with empty definition
-    And an existing Business Concept in the Data Domain "My Domain" with following data:
+    And an existing Business Concept in the Domain "My Child Domain" with following data:
      | Field             | Value                                                                   |
      | Type              | Business Term                                                           |
      | Name              | My Business Term                                                        |
      | Description       | This is the first description of my business term which is very simple  |
-    And an existing Domain Group called "My Second Parent Group"
-    And an existing Data Domain called "My Second Domain" child of Domain Group "My Second Parent Group"
-    And an existing Business Concept in the Data Domain "My Domain" with following data:
+    And an existing Domain called "My Second Parent Group"
+    And an existing Domain called "My Second Domain" child of Domain "My Second Parent Group"
+    And an existing Business Concept in the Domain "My Child Domain" with following data:
      | Field             | Value                                                                          |
      | Type              | Business Term                                                                  |
      | Name              | Second Business Term                                                           |

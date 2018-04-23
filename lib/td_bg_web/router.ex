@@ -36,7 +36,7 @@ defmodule TdBgWeb.Router do
 
     resources "/users", UserController, except: [:new, :edit] do
       resources "/domains", DomainController do
-        get "/roles", RoleController, :user_domain_group_role
+        get "/roles", RoleController, :user_domain_role
       end
       resources "/data_domains", DataDomainController do
         get "/roles", RoleController, :user_data_domain_role

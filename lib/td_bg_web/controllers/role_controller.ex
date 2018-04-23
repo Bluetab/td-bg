@@ -97,35 +97,20 @@ defmodule TdBgWeb.RoleController do
     end
   end
 
-  swagger_path :user_domain_group_role do
-    get "/users/{user_id}/domain_groups/{domain_group_id}/roles"
+  swagger_path :user_domain_role do
+    get "/users/{user_id}/domains/{domain_id}/roles"
     produces "application/json"
     parameters do
       user_id :path, :integer, "user id", required: true
-      domain_group_id :path, :integer, "domain group id", required: true
+      domain_id :path, :integer, "domain id", required: true
     end
     response 200, "OK", Schema.ref(:RoleResponse)
     response 400, "Client Error"
   end
 
-  def user_domain_group_role(conn, %{"user_id" => user_id, "domain_group_id" => domain_group_id}) do
-    role = Permissions.get_role_in_resource(%{user_id: user_id, domain_group_id: domain_group_id})
+  def user_domain_role(conn, %{"user_id" => user_id, "domain_id" => domain_id}) do
+    role = Permissions.get_role_in_resource(%{user_id: user_id, domain_id: domain_id})
     render(conn, "show.json", role: role)
   end
 
-  swagger_path :user_data_domain_role do
-    get "/users/{user_id}/data_domains/{data_domain_id}/roles"
-    produces "application/json"
-    parameters do
-      user_id :path, :integer, "user id", required: true
-      data_domain_id :path, :integer, "data domain id", required: true
-    end
-    response 200, "OK", Schema.ref(:RoleResponse)
-    response 400, "Client Error"
-  end
-
-  def user_data_domain_role(conn, %{"user_id" => user_id, "data_domain_id" => data_domain_id}) do
-    role = Permissions.get_role_in_resource(%{user_id: user_id, data_domain_id: data_domain_id})
-    render(conn, "show.json", role: role)
-  end
 end
