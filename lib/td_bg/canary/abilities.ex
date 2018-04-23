@@ -33,6 +33,10 @@ defmodule TdBg.Canary.Abilities do
       TaxonomyAbilities.can?(user, :create, acl_entry)
     end
 
+    def can?(%User{} = user, :create_business_concept, %Domain{} = domain) do
+      BusinessConceptAbilities.can?(user, :create_business_concept, domain)
+    end
+
     def can?(%User{}, _action, BusinessConceptVersion) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
       true
     end

@@ -66,7 +66,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     if user.is_admin do
       BusinessConcept.get_allowed_version_status_by_role(Role.admin)
     else
-      role_name = %{user_id: user.id, data_domain_id:  business_concept.data_domain_id}
+      role_name = %{user_id: user.id, domain_id:  business_concept.domain_id}
       role_name
       |> Permissions.get_role_in_resource
       |> Map.get(:name)

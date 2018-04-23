@@ -1,15 +1,15 @@
 Scenario Outline: Deprecation of existing Business Concept in Published status
-  Given an existing Domain Group called "My Parent Group"
-  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  And following users exist with the indicated role in Data Domain "My Domain"
+  Given an existing Domain called "My Parent Domain"
+  And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+  And an existing Domain called "My Domain" child of Domain "My Child Domain"
+  And following users exist with the indicated role in Domain "My Domain"
     | user      | role    |
     | watcher   | watch   |
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
   And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
     | Field             | Value                                             |
     | Type              | Business Term                                     |
     | Name              | My Business Term                                  |
@@ -32,17 +32,17 @@ Scenario Outline: Deprecation of existing Business Concept in Published status
     | admin     | Ok           |
 
 Scenario Outline: Deprecate a BC that has a second version published
-  Given an existing Domain Group called "My Parent Group"
-  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  And following users exist with the indicated role in Data Domain "My Domain"
+  Given an existing Domain called "My Parent Domain"
+  And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+  And an existing Domain called "My Domain" child of Domain "My Child Domain"
+  And following users exist with the indicated role in Domain "My Domain"
     | user      | role    |
     | watcher   | watch   |
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
   And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
     | Field             | Value                                             |
     | Type              | Business Term                                     |
     | Name              | My Business Term                                  |

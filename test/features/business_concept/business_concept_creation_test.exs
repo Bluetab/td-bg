@@ -14,8 +14,7 @@ defmodule TdBg.BusinessConceptCreationTest do
   alias TdBg.Utils.CollectionUtils
 
   import_steps TdBg.BusinessConceptSteps
-  import_steps TdBg.DomainGroupSteps
-  import_steps TdBg.DataDomainSteps
+  import_steps TdBg.DomainSteps
   import_steps TdBg.ResultSteps
   import_steps TdBg.UsersSteps
 
