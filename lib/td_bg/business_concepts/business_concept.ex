@@ -2,7 +2,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptAlias
@@ -25,7 +25,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
             deprecated: "deprecated"}
 
   schema "business_concepts" do
-    belongs_to :data_domain, DataDomain
+    belongs_to :domain, Domain
     field :type, :string
     field :last_change_by, :integer
     field :last_change_at, :utc_datetime
@@ -62,8 +62,8 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   @doc false
   def changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
-    |> cast(attrs, [:data_domain_id, :type, :last_change_by, :last_change_at])
-    |> validate_required([:data_domain_id, :type, :last_change_by, :last_change_at])
+    |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at])
+    |> validate_required([:domain_id, :type, :last_change_by, :last_change_at])
   end
 
 end

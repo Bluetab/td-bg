@@ -5,156 +5,150 @@ defmodule TdBg.Taxonomies do
 
   import Ecto.Query, warn: false
   alias TdBg.Repo
-  alias TdBg.Taxonomies.DataDomain
-  alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.AclEntry
   alias Ecto.Multi
 
   @doc """
-  Returns the list of domain_groups.
+  Returns the list of domains.
 
   ## Examples
 
-      iex> list_domain_groups()
-      [%DomainGroup{}, ...]
+      iex> list_domains()
+      [%Domain{}, ...]
 
   """
-  def list_domain_groups do
-    Repo.all from r in DomainGroup, where: is_nil(r.deleted_at)
+  def list_domains do
+    Repo.all from r in Domain
   end
 
   @doc """
-  Returns the list of root domain_groups (no parent)
+  Returns the list of root domains (no parent)
   """
-  def list_root_domain_groups do
-    Repo.all from r in DomainGroup, where: is_nil(r.parent_id) and is_nil(r.deleted_at)
+  def list_root_domains do
+    Repo.all from r in Domain, where: is_nil(r.parent_id)
   end
 
   @doc """
-  Returns children of domain group id passed as argument
+  Returns children of domain id passed as argument
   """
-  def count_domain_group_domain_group_children(id) do
-    count = Repo.one from r in DomainGroup, select: count(r.id), where: r.parent_id == ^id and is_nil(r.deleted_at)
-    {:count, :domain_group, count}
-  end
-
-  def count_domain_group_data_domain_children(id) do
-    count = Repo.one from r in DataDomain, select: count(r.id), where: r.domain_group_id == ^id and is_nil(r.deleted_at)
-    {:count, :data_domain, count}
+  def count_domain_children(id) do
+    count = Repo.one from r in Domain, select: count(r.id), where: r.parent_id == ^id
+    {:count, :domain, count}
   end
 
   @doc """
-  Returns children of domain group id passed as argument
+  Returns children of domain id passed as argument
   """
-  def list_domain_group_children(id) do
-    Repo.all from r in DomainGroup, where: r.parent_id == ^id and is_nil(r.deleted_at)
+  def list_domain_children(id) do
+    Repo.all from r in Domain, where: r.parent_id == ^id
   end
 
   @doc """
   """
-  def list_children_data_domain(domain_group_id) do
+  def list_children_data_domain(domain_id) do
     query = from dd in DataDomain,
-            where: dd.domain_group_id == ^domain_group_id and is_nil(dd.deleted_at)
+            where: dd.domain_id == ^domain_id
     Repo.all(query)
   end
 
   @doc """
-  Gets a single domain_group.
+  Gets a single domain.
 
-  Raises `Ecto.NoResultsError` if the Domain group does not exist.
+  Raises `Ecto.NoResultsError` if the Domain does not exist.
 
   ## Examples
 
-      iex> get_domain_group!(123)
-      %DomainGroup{}
+      iex> get_domain!(123)
+      %Domain{}
 
-      iex> get_domain_group!(456)
+      iex> get_domain!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_domain_group!(id) do
-    Repo.one! from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
+  def get_domain!(id) do
+    Repo.one! from r in Domain, where: r.id == ^id
   end
 
-  def get_domain_group(id) do
-    Repo.one from r in DomainGroup, where: r.id == ^id and is_nil(r.deleted_at)
+  def get_domain(id) do
+    Repo.one from r in Domain, where: r.id == ^id
   end
 
-  def get_domain_group_by_name(name) do
-    Repo.one from r in DomainGroup, where: r.name == ^name and is_nil(r.deleted_at)
+  def get_domain_by_name(name) do
+    Repo.one from r in Domain, where: r.name == ^name
   end
 
   @doc """
-  Creates a domain_group.
+  Creates a domain.
 
   ## Examples
 
-      iex> create_domain_group(%{field: value})
-      {:ok, %DomainGroup{}}
+      iex> create_domain(%{field: value})
+      {:ok, %Domain{}}
 
-      iex> create_domain_group(%{field: bad_value})
+      iex> create_domain(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_domain_group(attrs \\ %{}) do
-    %DomainGroup{}
-    |> DomainGroup.changeset(attrs)
+  def create_domain(attrs \\ %{}) do
+    %Domain{}
+    |> Domain.changeset(attrs)
     |> Repo.insert()
   end
 
   @doc """
-  Updates a domain_group.
+  Updates a domain.
 
   ## Examples
 
-      iex> update_domain_group(domain_group, %{field: new_value})
-      {:ok, %DomainGroup{}}
+      iex> update_domain(domain, %{field: new_value})
+      {:ok, %Domain{}}
 
-      iex> update_domain_group(domain_group, %{field: bad_value})
+      iex> update_domain(domain, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_domain_group(%DomainGroup{} = domain_group, attrs) do
-    domain_group
-    |> DomainGroup.changeset(attrs)
+  def update_domain(%Domain{} = domain, attrs) do
+    domain
+    |> Domain.changeset(attrs)
     |> Repo.update()
   end
 
   @doc """
-  Deletes a DomainGroup.
+  Deletes a Domain.
 
   ## Examples
 
-      iex> delete_domain_group(domain_group)
-      {:ok, %DomainGroup{}}
+      iex> delete_domain(domain)
+      {:ok, %Domain{}}
 
-      iex> delete_domain_group(domain_group)
+      iex> delete_domain(domain)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_domain_group(%DomainGroup{} = domain_group) do
+  def delete_domain(%Domain{} = domain) do
     Multi.new
-    |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "domain_group" and acl.resource_id == ^domain_group.id))
-    |> Multi.update(:domain_group, DomainGroup.delete_changeset(domain_group))
+    |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "domain" and acl.resource_id == ^domain.id))
+    |> Multi.delete(:domain, Domain.delete_changeset(domain))
     |> Repo.transaction
     |> case do
-      {:ok, %{acl_entry: _acl_entry, domain_group: domain_group}} ->
-        {:ok, domain_group}
+      {:ok, %{acl_entry: _acl_entry, domain: domain}} ->
+        {:ok, domain}
      end
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking domain_group changes.
+  Returns an `%Ecto.Changeset{}` for tracking domain changes.
 
   ## Examples
 
-      iex> change_domain_group(domain_group)
-      %Ecto.Changeset{source: %DomainGroup{}}
+      iex> change_domain(domain)
+      %Ecto.Changeset{source: %Domain{}}
 
   """
-  def change_domain_group(%DomainGroup{} = domain_group) do
-    DomainGroup.changeset(domain_group, %{})
+  def change_domain(%Domain{} = domain) do
+    Domain.changeset(domain, %{})
   end
 
   @doc """
@@ -167,147 +161,34 @@ defmodule TdBg.Taxonomies do
     {:ok, nil}
   end
   def get_parent_id(%{"parent_id": parent_id}) do
-    get_parent_id(get_domain_group(parent_id))
+    get_parent_id(get_domain(parent_id))
   end
   def get_parent_id(parent_id) do
     {:ok, parent_id}
   end
 
-  @doc """
-  Returns the list of data_domains.
-
-  ## Examples
-
-      iex> list_data_domains()
-      [%DataDomain{}, ...]
-
-  """
-  def list_data_domains do
-    Repo.all from r in DataDomain, where: is_nil(r.deleted_at)
-  end
-
-  def count_data_domain_business_concept_children(id) do
-    count = Repo.one from r in BusinessConcept, select: count(r.id), where: r.data_domain_id == ^id #and is_nil(r.deleted_at)
+  def count_domain_business_concept_children(id) do
+    count = Repo.one from r in BusinessConcept, select: count(r.id), where: r.domain_id == ^id
     {:count, :business_concept, count}
-  end
-
-  def get_data_domain_by_name(name) do
-    Repo.one from r in DataDomain, where: r.name == ^name and is_nil(r.deleted_at)
-  end
-
-  @doc """
-  Gets a single data_domain.
-
-  Raises `Ecto.NoResultsError` if the Data domain does not exist.
-
-  ## Examples
-
-      iex> get_data_domain!(123)
-      %DataDomain{}
-
-      iex> get_data_domain!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_data_domain!(id) do
-    Repo.one! from r in DataDomain, where: r.id == ^id and is_nil(r.deleted_at)
-  end
-
-  @doc """
-  Creates a data_domain.
-
-  ## Examples
-
-      iex> create_data_domain(%{field: value})
-      {:ok, %DataDomain{}}
-
-      iex> create_data_domain(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_data_domain(attrs \\ %{}) do
-    %DataDomain{}
-    |> DataDomain.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a data_domain.
-
-  ## Examples
-
-      iex> update_data_domain(data_domain, %{field: new_value})
-      {:ok, %DataDomain{}}
-
-      iex> update_data_domain(data_domain, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_data_domain(%DataDomain{} = data_domain, attrs) do
-    data_domain
-    |> DataDomain.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a DataDomain.
-
-  ## Examples
-
-      iex> delete_data_domain(data_domain)
-      {:ok, %DataDomain{}}
-
-      iex> delete_data_domain(data_domain)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_data_domain(%DataDomain{} = data_domain) do
-    Multi.new
-    |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "data_domain" and acl.resource_id == ^data_domain.id))
-    |> Multi.update(:data_domain, DataDomain.delete_changeset(data_domain))
-    |> Repo.transaction
-    |> case do
-         {:ok, %{acl_entry: _acl_entry, data_domain: data_domain}} ->
-           {:ok, data_domain}
-       end
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking data_domain changes.
-
-  ## Examples
-
-      iex> change_data_domain(data_domain)
-      %Ecto.Changeset{source: %DataDomain{}}
-
-  """
-  def change_data_domain(%DataDomain{} = data_domain) do
-    DataDomain.changeset(data_domain, %{})
   end
 
   @doc """
     Returns map of taxonomy tree structure
   """
   def tree do
-    dg_list = list_root_domain_groups() |> Enum.sort(&(&1.name < &2.name))
-    dg_all = list_domain_groups() |> Enum.sort(&(&1.name < &2.name))
-    dd_all = list_data_domains() |> Enum.sort(&(&1.name < &2.name))
-    Enum.map(dg_list, fn(dg) -> build_node(dg, dg_all, dd_all) end)
+    d_list = list_root_domains() |> Enum.sort(&(&1.name < &2.name))
+    d_all = list_domains() |> Enum.sort(&(&1.name < &2.name))
+    Enum.map(d_list, fn(d) -> build_node(d, d_all) end)
   end
 
-  defp build_node(%DataDomain{} = dd, _dg_all, _dd_all) do
-    Map.merge(dd, %{children: []})
+  defp build_node(%Domain{} = d, d_all) do
+    Map.merge(d, %{children: list_children(d, d_all)})
   end
 
-  defp build_node(%DomainGroup{} = dg, dg_all, dd_all) do
-    Map.merge(dg, %{children: list_children(dg, dg_all, dd_all)})
-  end
-
-  defp list_children(%DomainGroup{} = node, dg_all, dd_all) do
-    dg_children = Enum.filter(dg_all, fn(dg) -> node.id == dg.parent_id end)
-    dg_children = dg_children ++ Enum.filter(dd_all, fn(dd) -> node.id == dd.domain_group_id end)
-    if dg_children do
-      Enum.map(dg_children, fn(dg) -> build_node(dg, dg_all, dd_all) end)
+  defp list_children(%Domain{} = node, d_all) do
+    d_children = Enum.filter(d_all, fn(d) -> node.id == d.parent_id end)
+    if d_children do
+      Enum.map(d_children, fn(d) -> build_node(d, d_all) end)
     else
       []
     end

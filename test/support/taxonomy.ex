@@ -6,110 +6,60 @@ defmodule TdBgWeb.Taxonomy do
   import TdBgWeb.Authentication, only: :functions
   @endpoint TdBgWeb.Endpoint
 
-  def domain_group_create(token, domain_group_params) do
+  def domain_create(token, domain_params) do
     headers = get_header(token)
-    body = %{domain_group: domain_group_params} |> JSON.encode!
+    body = %{domain: domain_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(domain_group_url(@endpoint, :create), body, headers, [])
+        HTTPoison.post!(domain_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def domain_group_list(token) do
+  def domain_list(token) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_url(@endpoint, :index), headers, [])
+      HTTPoison.get!(domain_url(@endpoint, :index), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def domain_group_show(token, id) do
+  def domain_show(token, id) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_url(@endpoint, :show, id), headers, [])
+      HTTPoison.get!(domain_url(@endpoint, :show, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def domain_group_update(token, id, domain_group_params) do
+  def domain_update(token, id, domain_params) do
     headers = get_header(token)
-    body = %{domain_group: domain_group_params} |> JSON.encode!
+    body = %{domain: domain_params} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.patch!(domain_group_url(@endpoint, :update, id), body, headers, [])
+        HTTPoison.patch!(domain_url(@endpoint, :update, id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def domain_group_delete(token, id) do
+  def domain_delete(token, id) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code} =
-        HTTPoison.delete!(domain_group_url(@endpoint, :delete , id), headers, [])
+        HTTPoison.delete!(domain_url(@endpoint, :delete , id), headers, [])
     {:ok, status_code}
   end
 
-  def data_domain_create(token, data_domain_params) do
-    headers = get_header(token)
-    body = %{data_domain: data_domain_params} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(data_domain_url(@endpoint, :create), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
+  def get_domain_by_name(token, domain_name) do
+    {:ok, _status_code, json_resp} = domain_list(token)
+    Enum.find(json_resp["data"]["collection"], fn(domain) -> domain["name"] == domain_name end)
   end
 
-  def data_domain_update(token, id, data_domain_params) do
-    headers = get_header(token)
-    body = %{data_domain: data_domain_params} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.patch!(data_domain_url(@endpoint, :update, id), body, headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def data_domain_show(token, id) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(data_domain_url(@endpoint, :show, id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def data_domain_list(token) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(data_domain_url(@endpoint, :index), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def data_domain_delete(token, id) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code} =
-        HTTPoison.delete!(data_domain_url(@endpoint, :delete , id), headers, [])
-    {:ok, status_code}
-  end
-
-  def get_domain_group_by_name(token, domain_group_name) do
-    {:ok, _status_code, json_resp} = domain_group_list(token)
-    Enum.find(json_resp["data"]["collection"], fn(domain_group) -> domain_group["name"] == domain_group_name end)
-  end
-
-  def get_domain_group_by_name_and_parent(token, domain_group_name, parent_id) do
-    {:ok, _status_code, json_resp} = domain_group_list(token)
-    Enum.find(json_resp["data"]["collection"], fn(domain_group) ->
-                                      domain_group["name"] == domain_group_name &&
-                                      domain_group["parent_id"] == parent_id
+  def get_domain_by_name_and_parent(token, domain_name, parent_id) do
+    {:ok, _status_code, json_resp} = domain_list(token)
+    Enum.find(json_resp["data"]["collection"], fn(domain) ->
+                                      domain["name"] == domain_name &&
+                                      domain["parent_id"] == parent_id
                                   end)
-  end
-
-  def get_data_domain_by_name(token, data_domain_name) do
-    {:ok, _status_code, json_resp} = data_domain_list(token)
-    Enum.find(json_resp["data"]["collection"], fn(data_domain) -> data_domain["name"] == data_domain_name end)
-  end
-
-  def get_data_domain_by_name_and_parent(token, data_domain_name, domain_group_id) do
-    {:ok, _status_code, json_resp} = data_domain_list(token)
-    Enum.find(json_resp["data"]["collection"], fn(data_domain) ->
-        data_domain["name"] == data_domain_name &&
-        data_domain["domain_group_id"] == domain_group_id
-      end)
   end
 
   def remove_tree_keys(nil), do: nil
   def remove_tree_keys(tree) do
     Enum.map(tree, fn(node) ->
-      %{"type"=> node["type"], "name"=> node["name"], "description"=> node["description"], "children"=> remove_tree_keys(node["children"])}
+      %{"name"=> node["name"], "description"=> node["description"], "children"=> remove_tree_keys(node["children"])}
     end)
   end
 

@@ -50,9 +50,9 @@ defmodule TdBgWeb.BusinessConcept do
       |> fn({f, v}) -> Map.put(f, "content", v) end.()
   end
 
-  def business_concept_create(token, data_domain_id,  attrs) do
+  def business_concept_create(token, domain_id,  attrs) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    attrs = Map.put(attrs, "data_domain_id", data_domain_id)
+    attrs = Map.put(attrs, "domain_id", domain_id)
     body = %{"business_concept" => attrs} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.post!(business_concept_url(@endpoint, :create), body, headers, [])

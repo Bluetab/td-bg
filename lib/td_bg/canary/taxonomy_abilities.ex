@@ -1,45 +1,28 @@
 defmodule TdBg.Canary.TaxonomyAbilities do
   @moduledoc false
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies.DomainGroup
-  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Taxonomies.Domain
   alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
 
-  def can?(%User{id: user_id}, :create_data_domain, %DomainGroup{id: domain_group_id}) do
-    has_admin_role(%{user_id: user_id, domain_group_id: domain_group_id})
-  end
-
-  def can?(%User{id: user_id}, :update, %DomainGroup{id: domain_group_id}) do
-    has_admin_role(%{user_id: user_id, domain_group_id: domain_group_id})
-  end
-
-  def can?(%User{id: user_id}, :delete, %DomainGroup{id: domain_group_id}) do
-    has_admin_role(%{user_id: user_id, domain_group_id: domain_group_id})
-  end
-
-  def can?(%User{id: user_id}, :update, %DataDomain{id: data_domain_id}) do
-    has_admin_role(%{user_id: user_id, data_domain_id: data_domain_id})
-  end
-
-  def can?(%User{id: user_id}, :delete, %DataDomain{id: data_domain_id}) do
-    has_admin_role(%{user_id: user_id, data_domain_id: data_domain_id})
-  end
-
-  def can?(%User{id: user_id}, :create, %DomainGroup{parent_id: parent_domain_group_id}) do
-    if parent_domain_group_id == nil do
+  def can?(%User{id: user_id}, :create, %Domain{parent_id: parent_id}) do
+    if parent_id == nil do
       false
     else
-      has_admin_role(%{user_id: user_id, domain_group_id: parent_domain_group_id})
+      has_admin_role(%{user_id: user_id, domain_id: parent_id})
     end
   end
 
-  def can?( %User{id: user_id}, :create, %AclEntry{principal_type: "user", resource_type: "data_domain", resource_id: resource_id}) do
-    has_admin_role(%{user_id: user_id, data_domain_id: resource_id})
+  def can?(%User{id: user_id}, :update, %Domain{id: domain_id}) do
+    has_admin_role(%{user_id: user_id, domain_id: domain_id})
   end
 
-  def can?( %User{id: user_id}, :create, %AclEntry{principal_type: "user", resource_type: "domain_group", resource_id: resource_id}) do
-    has_admin_role(%{user_id: user_id, domain_group_id: resource_id})
+  def can?(%User{id: user_id}, :delete, %Domain{id: domain_id}) do
+    has_admin_role(%{user_id: user_id, domain_id: domain_id})
+  end
+
+  def can?( %User{id: user_id}, :create, %AclEntry{principal_type: "user", resource_type: "domain", resource_id: resource_id}) do
+    has_admin_role(%{user_id: user_id, domain_id: resource_id})
   end
 
   defp has_admin_role(acl_params) do

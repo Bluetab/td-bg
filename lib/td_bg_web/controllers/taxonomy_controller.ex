@@ -4,8 +4,7 @@ defmodule TdBgWeb.TaxonomyController do
 
   alias TdBg.Taxonomies
   alias TdBg.Permissions
-  alias TdBg.Taxonomies.DomainGroup
-  alias TdBg.Taxonomies.DataDomain
+  alias TdBg.Taxonomies.Domain
   alias TdBgWeb.SwaggerDefinitions
 
   action_fallback TdBgWeb.FallbackController
@@ -16,7 +15,7 @@ defmodule TdBgWeb.TaxonomyController do
 
   swagger_path :tree do
     get "/taxonomy/tree"
-    description "Returns tree of DGs and DDs"
+    description "Returns tree of Domains"
     produces "application/json"
     response 200, "Ok", Schema.ref(:TaxonomyTreeResponse)
     response 400, "Client error"
@@ -35,22 +34,18 @@ defmodule TdBgWeb.TaxonomyController do
     end)
   end
 
-  defp build_node(dg) do
-    dg_map = build_map(dg)
-    Map.merge(dg_map, %{children: format_tree(dg.children)})
+  defp build_node(domain) do
+    domain_map = build_map(domain)
+    Map.merge(domain_map, %{children: format_tree(domain.children)})
   end
 
-  defp build_map(%DomainGroup{} = dg) do
-    %{id: dg.id, name: dg.name, description: dg.description, type: "DG", children: []}
-  end
-
-  defp build_map(%DataDomain{} = dd) do
-    %{id: dd.id, name: dd.name, description: dd.description, type: "DD", children: []}
+  defp build_map(%Domain{} = domain) do
+    %{id: domain.id, name: domain.name, description: domain.description, children: []}
   end
 
   swagger_path :roles do
     get "/taxonomy/roles?principal_id={principal_id}"
-    description "Returns tree of DGs and DDs"
+    description "Returns tree of Domains"
     produces "application/json"
     parameters do
       principal_id :path, :integer, "user id", required: true
@@ -61,20 +56,14 @@ defmodule TdBgWeb.TaxonomyController do
   def roles(conn, %{"principal_id" => principal_id}) do
     taxonomy_roles = Permissions.assemble_roles(%{user_id: principal_id})
     all_roles = Permissions.list_roles()
-    #transform to front expected format
-    taxonomy_roles = Enum.group_by(taxonomy_roles, &(&1.type),
-      &(%{id: &1.id, role: &1.role, role_id: find_role_by_name(all_roles, &1.role).id, acl_entry_id: &1.acl_entry_id, inherited: &1.inherited}))
-    roles_dg = taxonomy_roles["DG"]
-    roles_dg = case roles_dg do
+    taxonomy_roles = Enum.map(taxonomy_roles, &(%{id: &1.id, role: &1.role, role_id: find_role_by_name(all_roles, &1.role).id, acl_entry_id: &1.acl_entry_id, inherited: &1.inherited}))
+
+    roles_domain = case taxonomy_roles do
       nil -> %{}
-      _ -> roles_dg |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, role_id: x.role_id, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
+      tr -> tr |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, role_id: x.role_id, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
     end
-    roles_dd = taxonomy_roles["DD"]
-    roles_dd = case roles_dd do
-      nil -> %{}
-      _ -> roles_dd |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.id, %{role: x.role, role_id: x.role_id, acl_entry_id: x.acl_entry_id, inherited: x.inherited}) end)
-    end
-    taxonomy_roles = %{"domain_groups": roles_dg, "data_domains": roles_dd}
+
+    taxonomy_roles = %{"domains": roles_domain}
     json conn, %{"data": taxonomy_roles}
   end
   def roles(conn, _params), do: json conn, %{"data": []}

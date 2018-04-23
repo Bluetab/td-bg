@@ -32,17 +32,17 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     test "find business_concepts by id and status", %{conn: conn} do
       published = BusinessConcept.status.published
       draft = BusinessConcept.status.draft
-      data_domain = insert(:data_domain)
-      id = [create_version(data_domain, "one", draft).business_concept.id]
-      id = [create_version(data_domain, "two", published).business_concept.id | id]
-      id = [create_version(data_domain, "three", published).business_concept.id | id]
+      domain = insert(:domain)
+      id = [create_version(domain, "one", draft).business_concept.id]
+      id = [create_version(domain, "two", published).business_concept.id | id]
+      id = [create_version(domain, "three", published).business_concept.id | id]
 
       conn = get conn, business_concept_path(conn, :search), %{id: Enum.join(id, ","), status: published}
       assert 2 == length(json_response(conn, 200)["data"])
     end
 
-    defp create_version(data_domain, name, status) do
-      business_concept = insert(:business_concept, data_domain: data_domain)
+    defp create_version(domain, name, status) do
+      business_concept = insert(:business_concept, domain: domain)
       insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
     end
 
@@ -53,14 +53,14 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
 
     @tag authenticated_user: @admin_user_name
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       creation_attrs = %{
         content: %{},
         type: "some type",
         name: "Some name",
         description: "Some description",
-        data_domain_id: data_domain.id
+        domain_id: domain.id
       }
 
       conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
@@ -82,13 +82,13 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
 
     @tag authenticated_user: @admin_user_name
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
       creation_attrs = %{
         content: %{},
         type: "some type",
         name: nil,
         description: "Some description",
-        data_domain_id: data_domain.id
+        domain_id: domain.id
       }
       conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
       validate_resp_schema(conn, schema, "BusinessConceptResponse")

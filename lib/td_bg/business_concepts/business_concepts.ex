@@ -59,13 +59,13 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Returns children of data domain id passed as argument
+  Returns children of domain id passed as argument
   """
-  def get_data_domain_children_versions!(data_domain_id) do
+  def get_domain_children_versions!(domain_id) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> preload([_, c], [business_concept: c])
-    |> where([_, c], c.data_domain_id == ^data_domain_id)
+    |> where([_, c], c.domain_id == ^domain_id)
     |> Repo.all
   end
 

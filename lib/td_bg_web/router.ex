@@ -35,7 +35,7 @@ defmodule TdBgWeb.Router do
     post "/acl_entries/create_or_update", AclEntryController, :create_or_update
 
     resources "/users", UserController, except: [:new, :edit] do
-      resources "/domain_groups", DomainGroupController do
+      resources "/domains", DomainController do
         get "/roles", RoleController, :user_domain_group_role
       end
       resources "/data_domains", DataDomainController do
@@ -46,11 +46,11 @@ defmodule TdBgWeb.Router do
 
   scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure, :api_authorized]
-    get "/domain_groups/index_root", DomainGroupController, :index_root
-    resources "/domain_groups", DomainGroupController, except: [:new, :edit] do
-      get "/index_children", DomainGroupController, :index_children
-      get "/available_users", DomainGroupController, :available_users
-      get "/users_roles", DomainGroupController, :users_roles
+    get "/domains/index_root", DomainController, :index_root
+    resources "/domains", DomainController, except: [:new, :edit] do
+      get "/index_children", DomainController, :index_children
+      get "/available_users", DomainController, :available_users
+      get "/users_roles", DomainController, :users_roles
       get "/data_domains", DataDomainController, :index_children_data_domain
     end
 

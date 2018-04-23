@@ -1,8 +1,7 @@
 defmodule TdBg.Canary.Abilities do
   @moduledoc false
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies.DataDomain
-  alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canary.TaxonomyAbilities
   alias TdBg.Canary.BusinessConceptAbilities
@@ -18,40 +17,19 @@ defmodule TdBg.Canary.Abilities do
     end
     # Data domain
 
-    # This is the creation of a business concept in a data domain
-    def can?(%User{} = user, :create_business_concept, %DataDomain{} = data_domain)  do
-      BusinessConceptAbilities.can?(user, :create_business_concept, data_domain)
+    def can?(%User{} = user, :create, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :create, domain)
     end
 
-    def can?(%User{} = user, :update, %DataDomain{} = data_domain) do
-      TaxonomyAbilities.can?(user, :update, data_domain)
+    def can?(%User{} = user, :update, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :update, domain)
     end
 
-    def can?(%User{} = user, :delete, %DataDomain{} = data_domain) do
-      TaxonomyAbilities.can?(user, :delete, data_domain)
+    def can?(%User{} = user, :delete, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :delete, domain)
     end
 
-    def can?(%User{} = user, :create_data_domain, %DomainGroup{} = domain_group) do
-      TaxonomyAbilities.can?(user, :create_data_domain, domain_group)
-    end
-
-    def can?(%User{} = user, :create, %DomainGroup{} = domain_group) do
-      TaxonomyAbilities.can?(user, :create, domain_group)
-    end
-
-    def can?(%User{} = user, :update, %DomainGroup{} = domain_group) do
-      TaxonomyAbilities.can?(user, :update, domain_group)
-    end
-
-    def can?(%User{} = user, :delete, %DomainGroup{} = domain_group) do
-      TaxonomyAbilities.can?(user, :delete, domain_group)
-    end
-
-    def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "domain_group"} = acl_entry) do
-      TaxonomyAbilities.can?(user, :create, acl_entry)
-    end
-
-    def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "data_domain"} = acl_entry) do
+    def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "domain"} = acl_entry) do
       TaxonomyAbilities.can?(user, :create, acl_entry)
     end
 

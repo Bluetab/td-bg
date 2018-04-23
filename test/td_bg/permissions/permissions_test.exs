@@ -11,9 +11,9 @@ defmodule TdBg.PermissionsTest do
 
     def acl_entry_fixture do
       user = build(:user)
-      domain_group = insert(:domain_group)
+      domain = insert(:domain)
       role = insert(:role)
-      acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
+      acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
       acl_entry_attrs
     end
 

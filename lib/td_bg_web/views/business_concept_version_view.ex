@@ -29,7 +29,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       description: business_concept_version.description,
       last_change_by: business_concept_version.last_change_by,
       last_change_at: business_concept_version.last_change_at,
-      data_domain_id: business_concept_version.business_concept.data_domain_id,
+      domain_id: business_concept_version.business_concept.domain_id,
       status: business_concept_version.status,
       version: business_concept_version.version}
       |> add_reject_reason(business_concept_version.reject_reason,

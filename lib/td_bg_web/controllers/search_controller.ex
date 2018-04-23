@@ -44,8 +44,7 @@ defmodule TdBgWeb.SearchController do
     response 500, "Client Error"
   end
   def reindex_all(conn, _params) do
-    {:ok, _response} = Search.put_bulk_search(:domain_group)
-    {:ok, _response} = Search.put_bulk_search(:data_domain)
+    {:ok, _response} = Search.put_bulk_search(:domain)
     {:ok, _response} = Search.put_bulk_search(:business_concept)
     send_resp(conn, :ok, "")
   end

@@ -14,24 +14,24 @@ defmodule TdBg.Factory do
     }
   end
 
-  def domain_group_factory do
-    %TdBg.Taxonomies.DomainGroup {
-      name: "My domain group",
-      description: "My domain group description",
+  def domain_factory do
+    %TdBg.Taxonomies.Domain {
+      name: "My domain",
+      description: "My domain description",
     }
   end
 
-  def data_domain_factory do
-    %TdBg.Taxonomies.DataDomain {
-      name: "My data domain",
-      description: "My data domain description",
-      domain_group: build(:domain_group)
+  def child_domain_factory do
+    %TdBg.Taxonomies.Domain {
+      name: "My child domain",
+      description: "My child domain description",
+      parent: build(:domain)
     }
   end
 
   def business_concept_factory do
     %BusinessConcept {
-      data_domain: build(:data_domain),
+      domain: build(:domain),
       type: "some type",
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
@@ -90,23 +90,14 @@ defmodule TdBg.Factory do
     }
   end
 
-  def acl_entry_domain_group_user_factory do
+  def acl_entry_domain_user_factory do
     %TdBg.Permissions.AclEntry {
       principal_id: nil,
       principal_type: "user",
       resource_id: nil,
-      resource_type: "domain_group",
+      resource_type: "domain",
       role: nil
     }
   end
 
-  def acl_entry_data_domain_user_factory do
-    %TdBg.Permissions.AclEntry {
-      principal_id: nil,
-      principal_type: "user",
-      resource_id: nil,
-      resource_type: "data_domain",
-      role: nil
-    }
-  end
 end

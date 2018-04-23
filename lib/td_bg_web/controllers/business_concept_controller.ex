@@ -47,8 +47,8 @@ defmodule TdBgWeb.BusinessConceptController do
     response 400, "Client Error"
   end
 
-  def index_children_business_concept(conn, %{"data_domain_id" => id}) do
-    business_concept_versions = BusinessConcepts.get_data_domain_children_versions!(id)
+  def index_children_business_concept(conn, %{"domain_id" => id}) do
+    business_concept_versions = BusinessConcepts.get_domain_children_versions!(id)
     render(conn, "index.json", business_concepts: business_concept_versions, hypermedia: hypermedia("business_concept", conn, business_concept_versions))
   end
 
@@ -87,11 +87,11 @@ defmodule TdBgWeb.BusinessConceptController do
     concept_name = Map.get(business_concept_params, "name")
 
     user = conn.assigns.current_user
-    data_domain_id = Map.get(business_concept_params, "data_domain_id")
-    data_domain = Taxonomies.get_data_domain!(data_domain_id)
+    domain_id = Map.get(business_concept_params, "domain_id")
+    domain = Taxonomies.get_domain!(domain_id)
 
     business_concept_attrs = %{}
-    |> Map.put("data_domain_id", data_domain_id)
+    |> Map.put("domain_id", domain_id)
     |> Map.put("type", concept_type)
     |> Map.put("last_change_by", user.id)
     |> Map.put("last_change_at", DateTime.utc_now())
@@ -108,7 +108,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
     related_to = Map.get(creation_attrs, "related_to")
 
-    with true <- can?(user, create_business_concept(data_domain)),
+    with true <- can?(user, create_business_concept(domain)),
          {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = concept} <-

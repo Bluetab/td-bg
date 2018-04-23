@@ -23,23 +23,23 @@ defmodule TdBgWeb.TaxonomyControllerTest do
     end
 
     @tag :admin_authenticated
-    test "List one DG taxonomy tree", %{conn: conn, swagger_schema: schema} do
+    test "List one Domain taxonomy tree", %{conn: conn, swagger_schema: schema} do
 
       build(:user)
-      insert(:domain_group)
+      insert(:domain)
 
       conn = get conn, taxonomy_path(conn, :tree)
       validate_resp_schema(conn, schema, "TaxonomyTreeResponse")
 
       actual_tree = json_response(conn, 200)["data"]
-      actual_tree = actual_tree |> Enum.map(fn(node) -> Map.take(node, ["children", "description", "name", "type"]) end)
-      assert actual_tree == [%{"children" => [], "description" => "My domain group description", "name" => "My domain group", "type" => "DG"}]
+      actual_tree = actual_tree |> Enum.map(fn(node) -> Map.take(node, ["children", "description", "name"]) end)
+      assert actual_tree == [%{"children" => [], "description" => "My domain description", "name" => "My domain"}]
     end
 
     @tag :admin_authenticated
-    test "List DG DD taxonomy tree", %{conn: conn, swagger_schema: schema} do
+    test "List Domains taxonomy tree", %{conn: conn, swagger_schema: schema} do
       build(:user)
-      insert(:data_domain)
+      insert(:child_domain)
 
       conn = get conn, taxonomy_path(conn, :tree)
       validate_resp_schema(conn, schema, "TaxonomyTreeResponse")
@@ -48,8 +48,8 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       actual_tree = remove_tree_keys(actual_tree)
 
       assert actual_tree == [%{"children" =>
-                                [%{"children" => [], "description" => "My data domain description", "name" => "My data domain", "type" => "DD"}],
-                              "description" => "My domain group description", "name" => "My domain group", "type" => "DG"}]
+                                [%{"children" => [], "description" => "My child domain description", "name" => "My child domain"}],
+                              "description" => "My domain description", "name" => "My domain"}]
     end
   end
 
@@ -58,37 +58,37 @@ defmodule TdBgWeb.TaxonomyControllerTest do
     test "Map empty taxonomy roles list", %{conn: conn} do
       user = build(:user)
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
-      assert json_response(conn, 200)["data"] == %{"data_domains" => %{}, "domain_groups" => %{}}
+      assert json_response(conn, 200)["data"] == %{"domains" => %{}}
     end
 
     @tag :admin_authenticated
-    test "List DGs custom role list", %{conn: conn, swagger_schema: schema} do
+    test "List domains custom role list", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      domain_group = insert(:domain_group)
+      domain = insert(:domain)
       role = insert(:role_create)
-      acl = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
+      acl = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
 
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
       validate_resp_schema(conn, schema, "TaxonomyRolesResponse")
 
       actual_response = json_response(conn, 200)["data"]
-      role_response = actual_response["domain_groups"][to_string(acl.resource_id)]
+      role_response = actual_response["domains"][to_string(acl.resource_id)]
       assert role_response["inherited"]  == false
       assert role_response["role"] == "create"
       assert role_response["acl_entry_id"] != nil
     end
 
     @tag :admin_authenticated
-    test "List DG DD custom role list", %{conn: conn, swagger_schema: schema} do
+    test "List children domain custom role list", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      data_domain = insert(:data_domain)
-      acl = insert(:acl_entry_data_domain_user, principal_id: user.id, resource_id: data_domain.id, role_id: insert(:role_publish).id)
+      child_domain = insert(:child_domain)
+      acl = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: child_domain.id, role_id: insert(:role_publish).id)
 
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
       validate_resp_schema(conn, schema, "TaxonomyRolesResponse")
 
       actual_response = json_response(conn, 200)["data"]
-      role_response = actual_response["data_domains"][to_string(acl.resource_id)]
+      role_response = actual_response["domains"][to_string(acl.resource_id)]
       assert role_response["inherited"]  == false
       assert role_response["role"] == "publish"
       assert role_response["acl_entry_id"] != nil

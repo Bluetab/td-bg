@@ -5,9 +5,8 @@ defmodule TdBg.TaxonomiesTest do
   alias TdBg.Permissions
   alias Ecto.Changeset
 
-  describe "domain_groups" do
-    alias TdBg.Taxonomies.DomainGroup
-    alias TdBg.Taxonomies.DataDomain
+  describe "domains" do
+    alias TdBg.Taxonomies.Domain
 
     @valid_attrs %{description: "some description", name: "some name"}
     @update_attrs %{description: "some updated description", name: "some updated name"}
@@ -17,170 +16,94 @@ defmodule TdBg.TaxonomiesTest do
 
     #@parent_attrs %{description: "parent description", name: "parent name"}
 
-    def domain_group_fixture(attrs \\ %{}) do
-      {:ok, domain_group} =
+    def domain_fixture(attrs \\ %{}) do
+      {:ok, domain} =
         attrs
         |> Enum.into(@valid_attrs)
-        |> Taxonomies.create_domain_group()
-      domain_group
+        |> Taxonomies.create_domain()
+      domain
     end
 
-    def acl_entry_fixture(%DomainGroup{} = domain_group) do
+    def acl_entry_fixture(%Domain{} = domain) do
       user = build(:user)
       role = insert(:role)
-      acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
+      acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
       acl_entry_attrs
     end
 
-    def acl_entry_fixture(%DataDomain{} = data_domain) do
-      user = build(:user)
-      role = insert(:role)
-      acl_entry_attrs = insert(:acl_entry_data_domain_user, principal_id: user.id, resource_id: data_domain.id, role: role)
-      acl_entry_attrs
+    test "list_domains/0 returns all domains" do
+      domain = domain_fixture()
+      assert Taxonomies.list_domains() == [domain]
     end
 
-    test "list_domain_groups/0 returns all domain_groups" do
-      domain_group = domain_group_fixture()
-      assert Taxonomies.list_domain_groups() == [domain_group]
+    test "get_domain!/1 returns the domain with given id" do
+      domain = domain_fixture()
+      assert Taxonomies.get_domain!(domain.id) == domain
     end
 
-    test "get_domain_group!/1 returns the domain_group with given id" do
-      domain_group = domain_group_fixture()
-      assert Taxonomies.get_domain_group!(domain_group.id) == domain_group
+    test "create_domain/1 with valid data creates a domain" do
+      assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
+      assert domain.description == "some description"
+      assert domain.name == "some name"
     end
 
-    test "create_domain_group/1 with valid data creates a domain_group" do
-      assert {:ok, %DomainGroup{} = domain_group} = Taxonomies.create_domain_group(@valid_attrs)
-      assert domain_group.description == "some description"
-      assert domain_group.name == "some name"
+    test "create_domain/1 tow domains with valid data" do
+      assert {:ok, %Domain{}} = Taxonomies.create_domain(@valid_attrs)
+      assert {:error, %Changeset{}} = Taxonomies.create_domain(@valid_attrs)
     end
 
-    test "create_domain_group/1 tow domain groups with valid data" do
-      assert {:ok, %DomainGroup{}} = Taxonomies.create_domain_group(@valid_attrs)
-      assert {:error, %Changeset{}} = Taxonomies.create_domain_group(@valid_attrs)
+    test "create_domain/2 child of a parent domain" do
+      parent_domain = domain_fixture()
+      child_attrs = Map.put(@child_attrs, :parent_id, parent_domain.id)
+
+      assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(child_attrs)
+      assert domain.description == child_attrs.description
+      assert domain.name == child_attrs.name
+      assert domain.parent_id == parent_domain.id
     end
 
-    test "create_domain_group/2 child of a parent group" do
-      parent_domain_group = domain_group_fixture()
-      child_attrs = Map.put(@child_attrs, :parent_id, parent_domain_group.id)
-
-      assert {:ok, %DomainGroup{} = domain_group} = Taxonomies.create_domain_group(child_attrs)
-      assert domain_group.description == child_attrs.description
-      assert domain_group.name == child_attrs.name
-      assert domain_group.parent_id == parent_domain_group.id
+    test "create_domain/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Taxonomies.create_domain(@invalid_attrs)
     end
 
-    test "create_domain_group/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Taxonomies.create_domain_group(@invalid_attrs)
+    test "update_domain/2 with valid data updates the domain" do
+      domain = domain_fixture()
+      assert {:ok, domain} = Taxonomies.update_domain(domain, @update_attrs)
+      assert %Domain{} = domain
+      assert domain.description == "some updated description"
+      assert domain.name == "some updated name"
     end
 
-    test "update_domain_group/2 with valid data updates the domain_group" do
-      domain_group = domain_group_fixture()
-      assert {:ok, domain_group} = Taxonomies.update_domain_group(domain_group, @update_attrs)
-      assert %DomainGroup{} = domain_group
-      assert domain_group.description == "some updated description"
-      assert domain_group.name == "some updated name"
+    test "update_domain/2 with invalid data returns error changeset" do
+      domain = domain_fixture()
+      assert {:error, %Ecto.Changeset{}} = Taxonomies.update_domain(domain, @invalid_attrs)
+      assert domain == Taxonomies.get_domain!(domain.id)
     end
 
-    test "update_domain_group/2 with invalid data returns error changeset" do
-      domain_group = domain_group_fixture()
-      assert {:error, %Ecto.Changeset{}} = Taxonomies.update_domain_group(domain_group, @invalid_attrs)
-      assert domain_group == Taxonomies.get_domain_group!(domain_group.id)
+    test "delete_domain/1 deletes the domain" do
+      domain = domain_fixture()
+      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
+      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain!(domain.id) end
     end
 
-    test "delete_domain_group/1 deletes the domain_group" do
-      domain_group = domain_group_fixture()
-      assert {:ok, %DomainGroup{}} = Taxonomies.delete_domain_group(domain_group)
-      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain_group!(domain_group.id) end
+    test "delete_domain/1 deletes the domain an create the same domain" do
+      assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
+      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
+      assert {:ok, %Domain{}} = Taxonomies.create_domain(@valid_attrs)
     end
 
-    test "delete_domain_group/1 deletes the domain_group an create the same group" do
-      assert {:ok, %DomainGroup{} = domain_group} = Taxonomies.create_domain_group(@valid_attrs)
-      assert {:ok, %DomainGroup{}} = Taxonomies.delete_domain_group(domain_group)
-      assert {:ok, %DomainGroup{}} = Taxonomies.create_domain_group(@valid_attrs)
-    end
-
-    test "delete acl_entries when deleting domain_group with acl_entries" do
-      domain_group = domain_group_fixture()
-      acl_entry = acl_entry_fixture(domain_group)
-      assert {:ok, %DomainGroup{}} = Taxonomies.delete_domain_group(domain_group)
+    test "delete acl_entries when deleting domain with acl_entries" do
+      domain = domain_fixture()
+      acl_entry = acl_entry_fixture(domain)
+      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
       assert_raise Ecto.NoResultsError, fn -> Permissions.get_acl_entry!(acl_entry.id) == nil end
-      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain_group!(domain_group.id) end
+      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain!(domain.id) end
     end
 
-    test "change_domain_group/1 returns a domain_group changeset" do
-      domain_group = domain_group_fixture()
-      assert %Ecto.Changeset{} = Taxonomies.change_domain_group(domain_group)
+    test "change_domain/1 returns a domain changeset" do
+      domain = domain_fixture()
+      assert %Ecto.Changeset{} = Taxonomies.change_domain(domain)
     end
   end
 
-  describe "data_domains" do
-    alias TdBg.Taxonomies.DataDomain
-
-    @valid_attrs %{description: "some description", name: "some name"}
-    @update_attrs %{description: "some updated description", name: "some updated name"}
-    @invalid_attrs %{description: nil, name: nil}
-
-    def data_domain_fixture(attrs \\ %{}) do
-      {:ok, data_domain} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> Taxonomies.create_data_domain()
-
-      data_domain
-    end
-
-    test "list_data_domains/0 returns all data_domains" do
-      data_domain = data_domain_fixture()
-      assert Taxonomies.list_data_domains() == [data_domain]
-    end
-
-    test "get_data_domain!/1 returns the data_domain with given id" do
-      data_domain = data_domain_fixture()
-      assert Taxonomies.get_data_domain!(data_domain.id) == data_domain
-    end
-
-    test "create_data_domain/1 with valid data creates a data_domain" do
-      assert {:ok, %DataDomain{} = data_domain} = Taxonomies.create_data_domain(@valid_attrs)
-      assert data_domain.description == "some description"
-      assert data_domain.name == "some name"
-    end
-
-    test "create_data_domain/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Taxonomies.create_data_domain(@invalid_attrs)
-    end
-
-    test "update_data_domain/2 with valid data updates the data_domain" do
-      data_domain = data_domain_fixture()
-      assert {:ok, data_domain} = Taxonomies.update_data_domain(data_domain, @update_attrs)
-      assert %DataDomain{} = data_domain
-      assert data_domain.description == "some updated description"
-      assert data_domain.name == "some updated name"
-    end
-
-    test "update_data_domain/2 with invalid data returns error changeset" do
-      data_domain = data_domain_fixture()
-      assert {:error, %Ecto.Changeset{}} = Taxonomies.update_data_domain(data_domain, @invalid_attrs)
-      assert data_domain == Taxonomies.get_data_domain!(data_domain.id)
-    end
-
-    test "delete_data_domain/1 deletes the data_domain" do
-      data_domain = data_domain_fixture()
-      assert {:ok, %DataDomain{}} = Taxonomies.delete_data_domain(data_domain)
-      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_data_domain!(data_domain.id) end
-    end
-
-    test "delete acl_entries when deleting data_domain with acl_entries" do
-      data_domain = data_domain_fixture()
-      acl_entry = acl_entry_fixture(data_domain)
-      assert {:ok, %DataDomain{}} = Taxonomies.delete_data_domain(data_domain)
-      assert_raise Ecto.NoResultsError, fn -> Permissions.get_acl_entry!(acl_entry.id) == nil end
-      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_data_domain!(data_domain.id) end
-    end
-
-    test "change_data_domain/1 returns a data_domain changeset" do
-      data_domain = data_domain_fixture()
-      assert %Ecto.Changeset{} = Taxonomies.change_data_domain(data_domain)
-    end
-  end
 end

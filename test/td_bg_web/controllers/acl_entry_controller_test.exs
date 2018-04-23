@@ -7,7 +7,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
   alias TdBg.Permissions.Role
   import TdBgWeb.Authentication, only: :functions
 
-  @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain_group"}
+  @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain"}
   @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
 
   setup_all do
@@ -31,9 +31,9 @@ defmodule TdBgWeb.AclEntryControllerTest do
     @tag :admin_authenticated
     test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      domain_group = insert(:domain_group)
+      domain = insert(:domain)
       role = insert(:role)
-      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
+      acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
       assert %{"id" => id} = json_response(conn, 201)["data"]
@@ -46,8 +46,8 @@ defmodule TdBgWeb.AclEntryControllerTest do
         "id" => id,
         "principal_id" => user.id,
         "principal_type" => "user",
-        "resource_id" => domain_group.id,
-        "resource_type" => "domain_group",
+        "resource_id" => domain.id,
+        "resource_type" => "domain",
         "role_id" => role.id
       }
     end
@@ -55,9 +55,9 @@ defmodule TdBgWeb.AclEntryControllerTest do
     @tag :admin_authenticated
     test "renders error for duplicated acl_entry", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      domain_group = insert(:domain_group)
+      domain = insert(:domain)
       role = insert(:role)
-      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role_id: role.id)
+      acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
       assert %{"id" => _id} = json_response(conn, 201)["data"]
@@ -79,9 +79,9 @@ defmodule TdBgWeb.AclEntryControllerTest do
     @tag :admin_authenticated
     test "renders acl_entry when creating a new acl", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      domain_group = insert(:domain_group)
+      domain = insert(:domain)
       role = get_role_by_name(conn, Atom.to_string(Role.create))
-      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id)
+      acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role["name"])
       conn = post conn, acl_entry_path(conn, :create_or_update), acl_entry: acl_entry_attrs
@@ -95,8 +95,8 @@ defmodule TdBgWeb.AclEntryControllerTest do
                "id" => id,
                "principal_id" => user.id,
                "principal_type" => "user",
-               "resource_id" => domain_group.id,
-               "resource_type" => "domain_group",
+               "resource_id" => domain.id,
+               "resource_type" => "domain",
                "role_id" => role["id"]
              }
     end
@@ -104,9 +104,9 @@ defmodule TdBgWeb.AclEntryControllerTest do
     @tag :admin_authenticated
     test "renders acl_entry when updating an existing acl", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      domain_group = insert(:domain_group)
+      domain = insert(:domain)
       role = build(:role)
-      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id)
+      acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role.name)
       conn = post conn, acl_entry_path(conn, :create_or_update), acl_entry: acl_entry_attrs
@@ -116,7 +116,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
       role = get_role_by_name(conn, Atom.to_string(Role.admin))
 
       conn = recycle_and_put_headers(conn)
-      acl_entry_attrs = build(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id)
+      acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role["name"])
       conn = post conn, acl_entry_path(conn, :create_or_update), acl_entry: acl_entry_attrs
@@ -130,8 +130,8 @@ defmodule TdBgWeb.AclEntryControllerTest do
                "id" => id,
                "principal_id" => user.id,
                "principal_type" => "user",
-               "resource_id" => domain_group.id,
-               "resource_type" => "domain_group",
+               "resource_id" => domain.id,
+               "resource_type" => "domain",
                "role_id" => role["id"]
              }
     end
@@ -181,9 +181,9 @@ defmodule TdBgWeb.AclEntryControllerTest do
 
   defp create_acl_entry(_) do
     user = build(:user)
-    domain_group = insert(:domain_group)
+    domain = insert(:domain)
     role = insert(:role)
-    acl_entry_attrs = insert(:acl_entry_domain_group_user, principal_id: user.id, resource_id: domain_group.id, role: role)
+    acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
     {:ok, acl_entry: acl_entry_attrs}
   end
 

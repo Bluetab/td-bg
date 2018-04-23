@@ -32,11 +32,11 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version/1 with valid data creates a business_concept" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -60,7 +60,7 @@ defmodule TdBg.BusinessConceptsTests do
       assert object.last_change_by == version_attrs.last_change_by
       assert object.version == version_attrs.version
       assert object.business_concept.type == concept_attrs.type
-      assert object.business_concept.data_domain_id == concept_attrs.data_domain_id
+      assert object.business_concept.domain_id == concept_attrs.domain_id
       assert object.business_concept.last_change_by == concept_attrs.last_change_by
 
     end
@@ -83,7 +83,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with content" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       content_schema = [
         %{"name" => "Field1", "type" => "string"},
@@ -96,7 +96,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -119,7 +119,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with invalid content: required" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       content_schema = [
         %{"name" => "Field1", "type" => "string", "required" => true},
@@ -130,7 +130,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -155,7 +155,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with content: default values" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       content_schema = [
         %{"name" => "Field1", "type" => "string", "default" => "Hello"},
@@ -166,7 +166,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -190,7 +190,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with invalid content: not in list" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       content_schema = [
         %{"name" => "Field1", "type" => "list", "values" => ["Hello"]},
@@ -200,7 +200,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -223,7 +223,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with invalid content: invalid variable list" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       content_schema = [
         %{"name" => "Field1", "type" => "variable_list"},
@@ -233,7 +233,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -256,7 +256,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with no content" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       content_schema = [
         %{"name" => "Field1", "type" => "variable_list"},
@@ -264,7 +264,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -285,7 +285,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with nil content" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       content_schema = [
         %{"name" => "Field1", "type" => "variable_list"},
@@ -293,7 +293,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -316,11 +316,11 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "create_business_concept_version_version/1 with no content schema" do
       user = build(:user)
-      data_domain = insert(:data_domain)
+      domain = insert(:domain)
 
       concept_attrs = %{
         type: "some type",
-        data_domain_id: data_domain.id,
+        domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
       }
@@ -360,9 +360,9 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "check_business_concept_name_availability/3 check not available" do
       user = build(:user)
-      data_domain = insert(:data_domain)
-      bc1 = insert(:business_concept, data_domain: data_domain)
-      bc2 = insert(:business_concept, data_domain: data_domain)
+      domain = insert(:domain)
+      bc1 = insert(:business_concept, domain: domain)
+      bc2 = insert(:business_concept, domain: domain)
       _first = insert(:business_concept_version, last_change_by: user.id, name: "first", business_concept: bc1)
       second = insert(:business_concept_version, last_change_by: user.id, name: "second", business_concept: bc2)
       assert {:name_not_available} == BusinessConcepts.check_business_concept_name_availability(second.business_concept.type, "first", second.id)
@@ -494,16 +494,16 @@ defmodule TdBg.BusinessConceptsTests do
     test "find_business_concept_versions/1 returns filtered business_concept_versions" do
       published = BusinessConcept.status.published
       draft = BusinessConcept.status.draft
-      data_domain = insert(:data_domain)
-      id = [create_version(data_domain, "one", draft).business_concept.id]
-      id = [create_version(data_domain, "two", published).business_concept.id | id]
-      id = [create_version(data_domain, "three", published).business_concept.id | id]
+      domain = insert(:domain)
+      id = [create_version(domain, "one", draft).business_concept.id]
+      id = [create_version(domain, "two", published).business_concept.id | id]
+      id = [create_version(domain, "three", published).business_concept.id | id]
       business_concept_versions = BusinessConcepts.find_business_concept_versions(%{id: id, status: [published]})
       assert  2 == length(business_concept_versions)
     end
 
-    defp create_version(data_domain, name, status) do
-      business_concept = insert(:business_concept, data_domain: data_domain)
+    defp create_version(domain, name, status) do
+      business_concept = insert(:business_concept, domain: domain)
       insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
     end
 
@@ -550,8 +550,7 @@ defmodule TdBg.BusinessConceptsTests do
   defp business_concept_version_preload(business_concept_version) do
     business_concept_version
       |> Repo.preload(:business_concept)
-      |> Repo.preload(business_concept: [:data_domain, :aliases])
-      |> Repo.preload(business_concept: [data_domain: [:domain_group]])
+      |> Repo.preload(business_concept: [:domain, :aliases])
   end
 
   defp assert_expected_validation(changeset, field, expected_validation) do

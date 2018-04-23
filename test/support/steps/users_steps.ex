@@ -6,18 +6,18 @@ defmodule TdBg.UsersSteps do
   import TdBgWeb.Authentication, only: :functions
   alias Poison, as: JSON
 
-  defgiven ~r/^following users exist with the indicated role in Domain Group "(?<domain_group_name>[^"]+)"$/,
-    %{domain_group_name: domain_group_name, table: table}, state do
+  defgiven ~r/^following users exist with the indicated role in Domain Group "(?<domain_name>[^"]+)"$/,
+    %{domain_name: domain_name, table: table}, state do
 
-    domain_group = get_domain_group_by_name(state[:token_admin], domain_group_name)
+    domain = get_domain_by_name(state[:token_admin], domain_name)
     Enum.map(table, fn(x) ->
         user_name = x[:user]
         role_name = x[:role]
         principal_id = find_or_create_user(user_name).id
         %{"id" => role_id} = get_role_by_name(state[:token_admin], role_name)
-        acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group["id"], role_id: role_id}
+        acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain", resource_id: domain["id"], role_id: role_id}
         {:ok, _, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
-        {:ok, _, json_resp} = user_domain_group_role(state[:token_admin], %{user_id: principal_id, domain_group_id: domain_group["id"]})
+        {:ok, _, json_resp} = user_domain_role(state[:token_admin], %{user_id: principal_id, domain_id: domain["id"]})
         assert json_resp["data"]["name"] == role_name
       end)
   end
@@ -53,10 +53,10 @@ defmodule TdBg.UsersSteps do
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
-  def user_domain_group_role(token, attrs) do
+  def user_domain_role(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(user_domain_group_role_url(TdBgWeb.Endpoint, :user_domain_group_role, attrs.user_id, attrs.domain_group_id), headers, [])
+      HTTPoison.get!(user_domain_role_url(TdBgWeb.Endpoint, :user_domain_role, attrs.user_id, attrs.domain_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

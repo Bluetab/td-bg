@@ -8,8 +8,7 @@ defmodule TdBg.Permissions do
 
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
-  alias TdBg.Taxonomies.DataDomain
-  alias TdBg.Taxonomies.DomainGroup
+  alias TdBg.Taxonomies.Domain
   alias TdBg.Taxonomies
 
   @doc """
@@ -26,18 +25,10 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
-    Returns a list of users-role with acl_entries in the data_domain passed as argument
+    Returns a list of users-role with acl_entries in the domain passed as argument
   """
-  def list_acl_entries(%{data_domain: data_domain}) do
-    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.resource_type == "data_domain" and acl_entry.resource_id == ^data_domain.id)
-    acl_entries |> Repo.preload(:role)
-  end
-
-  @doc """
-    Returns a list of users-role with acl_entries in the domain_group passed as argument
-  """
-  def list_acl_entries(%{domain_group: domain_group}) do
-    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.resource_type == "domain_group" and acl_entry.resource_id == ^domain_group.id)
+  def list_acl_entries(%{domain: domain}) do
+    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.resource_type == "domain" and acl_entry.resource_id == ^domain.id)
     acl_entries |> Repo.preload(:role)
   end
 
@@ -57,17 +48,10 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
-    Returns acl entry for an user and domain group
+    Returns acl entry for an user and domain
   """
-  def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, domain_group: domain_group}) do
-    Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "domain_group", resource_id: domain_group.id)
-  end
-
-  @doc """
-    Returns acl entry for an user and data domain
-  """
-  def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, data_domain: data_domain}) do
-    Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "data_domain", resource_id: data_domain.id)
+  def get_acl_entry_by_principal_and_resource(%{user_id: principal_id, domain: domain}) do
+    Repo.get_by(AclEntry, principal_type: "user", principal_id: principal_id, resource_type: "domain", resource_id: domain.id)
   end
 
   @doc """
@@ -159,26 +143,16 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
-    Returns role of user in a data domain
+    Returns role of user in domain
   """
-  def get_role_in_resource(%{user_id: principal_id, data_domain_id: resource_id}) do
-    data_domain = Taxonomies.get_data_domain!(resource_id)
-    data_domain = data_domain |> Repo.preload(:domain_group)
-    role_name = get_resource_role(%{user_id: principal_id, data_domain: data_domain})
+  def get_role_in_resource(%{user_id: principal_id, domain_id: resource_id}) do
+    domain = Taxonomies.get_domain(resource_id)
+    domain = domain |> Repo.preload(:parent)
+    role_name = get_resource_role(%{user_id: principal_id, domain: domain, role: nil})
     %Role{name: role_name}
   end
 
-  @doc """
-    Returns role of user in domain_group
-  """
-  def get_role_in_resource(%{user_id: principal_id, domain_group_id: resource_id}) do
-    domain_group = Taxonomies.get_domain_group(resource_id)
-    domain_group = domain_group |> Repo.preload(:parent)
-    role_name = get_resource_role(%{user_id: principal_id, domain_group: domain_group, role: nil})
-    %Role{name: role_name}
-  end
-
-  defp get_resource_role(%{user_id: _principal_id, data_domain: %DataDomain{domain_group_id: nil}, role: nil} = attrs) do
+  defp get_resource_role(%{user_id: _principal_id, domain: %Domain{parent_id: nil}, role: nil} = attrs) do
     case get_role_by_principal_and_resource(attrs) do
       nil ->
         get_default_role()
@@ -187,7 +161,7 @@ defmodule TdBg.Permissions do
     end
   end
 
-  defp get_resource_role(%{user_id: _principal_id, data_domain: %DataDomain{domain_group_id: nil}, role: role} = attrs) do
+  defp get_resource_role(%{user_id: _principal_id, domain: %Domain{parent_id: nil}, role: role} = attrs) do
     case get_role_by_principal_and_resource(attrs) do
       nil ->
         role.name
@@ -196,43 +170,14 @@ defmodule TdBg.Permissions do
     end
   end
 
-  defp get_resource_role(%{user_id: principal_id, data_domain: %DataDomain{} = data_domain} = attrs) do
-    case get_role_by_principal_and_resource(attrs) do
-      nil ->
-        parent_domain_group = Taxonomies.get_domain_group(data_domain.domain_group_id)
-        parent_domain_group = parent_domain_group |> Repo.preload(:parent)
-        get_resource_role(%{user_id: principal_id, domain_group: parent_domain_group, role: nil})
-      %Role{name: name} ->
-        name
-    end
-  end
-
-  defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{parent_id: nil}, role: nil} = attrs) do
-    case get_role_by_principal_and_resource(attrs) do
-      nil ->
-        get_default_role()
-      %Role{name: name} ->
-        name
-    end
-  end
-
-  defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{parent_id: nil}, role: role} = attrs) do
-    case get_role_by_principal_and_resource(attrs) do
-      nil ->
-        role.name
-      %Role{name: name} ->
-        name
-    end
-  end
-
-  defp get_resource_role(%{user_id: principal_id, domain_group: %DomainGroup{} = domain_group, role: nil} = attrs) do
+  defp get_resource_role(%{user_id: principal_id, domain: %Domain{} = domain, role: nil} = attrs) do
     role = get_role_by_principal_and_resource(attrs)
-    parent_domain_group = Taxonomies.get_domain_group(domain_group.parent_id)
-    parent_domain_group = parent_domain_group |> Repo.preload(:parent)
-    get_resource_role(%{user_id: principal_id, role: role, domain_group: parent_domain_group})
+    parent_domain = Taxonomies.get_domain(domain.parent_id)
+    parent_domain = parent_domain |> Repo.preload(:parent)
+    get_resource_role(%{user_id: principal_id, role: role, domain: parent_domain})
   end
 
-  defp get_resource_role(%{user_id: _principal_id, domain_group: %DomainGroup{} = _domain_group, role: role}) do
+  defp get_resource_role(%{user_id: _principal_id, domain: %Domain{} = _domain, role: role}) do
     role.name
   end
 
@@ -240,19 +185,7 @@ defmodule TdBg.Permissions do
     Role.watch |> Atom.to_string
   end
 
-  defp get_role_by_principal_and_resource(%{user_id: _principal_id, domain_group: %DomainGroup{}} = attrs) do
-    acl_entry =
-      case get_acl_entry_by_principal_and_resource(attrs) do
-        nil ->  nil
-        acl_entry -> acl_entry |> Repo.preload(:role)
-      end
-    case acl_entry do
-      nil -> nil
-      acl_entry -> acl_entry.role
-    end
-  end
-
-  defp get_role_by_principal_and_resource(%{user_id: _principal_id, data_domain: %DataDomain{}} = attrs) do
+  defp get_role_by_principal_and_resource(%{user_id: _principal_id, domain: %Domain{}} = attrs) do
     acl_entry =
       case get_acl_entry_by_principal_and_resource(attrs) do
         nil ->  nil
@@ -365,77 +298,53 @@ defmodule TdBg.Permissions do
   """
   def assemble_roles(%{user_id: user_id}) do
     tree = Taxonomies.tree()
-    all_acls = list_acl_entries_by_principal(%{principal_id: user_id, principal_type: "user"})
-    all_dgs = Taxonomies.list_domain_groups()
-    all_dds = Taxonomies.list_data_domains()
-    roles = []
-    roles = Enum.reduce(tree, roles, fn(node, acc) ->
-      branch_roles = assemble_node_role(node, user_id, all_acls, roles, all_dgs, all_dds)
+    acls = list_acl_entries_by_principal(%{principal_id: user_id, principal_type: "user"})
+    domains = Taxonomies.list_domains()
+    roles = Enum.reduce(tree, [], fn(node, acc) ->
+      branch_roles = assemble_node_role(node, user_id, acls, [], domains)
       Enum.uniq(List.flatten(acc ++ branch_roles))
     end)
     roles
   end
 
-  defp build_dg_map(%{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}) do
-    %{"id": id, "type": "DG", "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}
+  defp build_domain_map(%{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}) do
+    %{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}
   end
 
-  defp build_dd_map(%{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}) do
-    %{"id": id, "type": "DD", "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}
-  end
-
-  defp assemble_node_role(%DomainGroup{parent_id: nil} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
-    custom_role = get_role_in_resource(%{user_id: user_id, domain_group_id: dg.id})
-    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain_group" && acl.resource_id == dg.id end)
+  defp assemble_node_role(%Domain{parent_id: nil} = domain, user_id, all_acls, roles, domains) do
+    custom_role = get_role_in_resource(%{user_id: user_id, domain_id: domain.id})
+    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain" && acl.resource_id == domain.id end)
     custom_acl_id = if custom_acl do
       custom_acl.id
     else
       nil
     end
-    roles = roles ++ [build_dg_map(%{id: dg.id, role: custom_role.name, acl_entry_id: custom_acl_id, inherited: custom_acl == nil})]
-    Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
-      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]))
+    roles = roles ++ [build_domain_map(%{id: domain.id, role: custom_role.name, acl_entry_id: custom_acl_id, inherited: custom_acl == nil})]
+    Enum.reduce(domain.children, roles, fn(child_domain, acc) ->
+      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_domain, user_id, all_acls, roles, domains)]))
     end)
   end
 
-  defp assemble_node_role(%DomainGroup{} = dg, user_id, all_acls, roles, all_dgs, all_dds) do
-    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain_group" && acl.resource_id == dg.id end)
+  defp assemble_node_role(%Domain{} = domain, user_id, all_acls, roles, domains) do
+    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain" && acl.resource_id == domain.id end)
     roles = if custom_acl do
-      roles ++ [build_dg_map(%{id: dg.id, role: custom_acl.role.name, acl_entry_id: custom_acl.id, inherited: false})]
+      roles ++ [build_domain_map(%{id: domain.id, role: custom_acl.role.name, acl_entry_id: custom_acl.id, inherited: false})]
     else
-      roles ++ [get_closest_role(dg, roles, all_dgs, all_dds)]
+      roles ++ [get_closest_role(domain, roles, domains)]
     end
-    Enum.reduce(dg.children, roles, fn(child_dg, acc) ->
-      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_dg, user_id, all_acls, roles, all_dgs, all_dds)]))
+    Enum.reduce(domain.children, roles, fn(child_domain, acc) ->
+      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_domain, user_id, all_acls, roles, domains)]))
     end)
   end
 
-  defp assemble_node_role(%DataDomain{} = dd, _user_id, all_acls, roles, all_dgs, all_dds) do
-    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "data_domain" && acl.resource_id == dd.id end)
-    if custom_acl do
-      build_dd_map(%{id: dd.id, role: custom_acl.role.name, acl_entry_id: custom_acl.id, inherited: false})
+  defp get_closest_role(%Domain{} = domain, roles, domains) do
+    role = Enum.find(roles, fn(role) -> role.id == domain.parent_id end)
+    if role do
+      build_domain_map(%{id: domain.id, role: role.role, acl_entry_id: nil, inherited: true})
     else
-      get_closest_role(dd, roles, all_dgs, all_dds)
+      parent_domain = Enum.find(domains, fn(d) -> d.id == domain.parent_id end)
+      get_closest_role(parent_domain, roles, domains)
     end
   end
 
-  defp get_closest_role(%DomainGroup{} = dg, roles, all_dgs, all_dds) do
-    role = Enum.find(roles, fn(role) -> role.id == dg.parent_id && role.type == "DG" end)
-    if role do
-      build_dg_map(%{id: dg.id, role: role.role, acl_entry_id: nil, inherited: true})
-    else
-      parent_dg = Enum.find(all_dgs, fn(i_dg) -> i_dg.id == dg.parent_id end)
-      get_closest_role(parent_dg, roles, all_dgs, all_dds)
-    end
-  end
-
-  defp get_closest_role(%DataDomain{} = dd, roles, all_dgs, all_dds) do
-    role = Enum.find(roles, fn(role) -> role.id == dd.domain_group_id && role.type == "DG" end)
-    if role do
-      build_dd_map(%{id: dd.id, role: role.role, acl_entry_id: nil, inherited: true})
-    else
-      parent_dg = Enum.find(all_dgs, fn(i_dg) -> i_dg.id == dd.parent_id end)
-      get_closest_role(parent_dg, roles, all_dgs, all_dds)
-    end
-  end
 end

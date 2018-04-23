@@ -4,63 +4,80 @@ defmodule TdBgWeb.SwaggerDefinitions do
   """
   import PhoenixSwagger
 
-  def data_domain_swagger_definitions do
+
+  def domain_swagger_definitions do
     %{
-      DataDomain: swagger_schema do
-        title "Data Domain"
-        description "A Data Domain child of a Domain Group"
+      Domain: swagger_schema do
+        title "Domain"
+        description "A Domain"
         properties do
           id :integer, "Unique identifier", required: true
           name :string, "data domain name", required: true
-          descritpion :string, "descritpion"
-          domain_group_id [:integer, :null], "Domain Group Id", required: true
+          description :string, "descritpion"
+          parent_id [:integer, :null], "Domain id"
         end
         example %{
-        id: 123,
-        name: "Data domain name",
-        domain_group_id: 742
+          id: 12,
+          name: "Domain name",
+          description: "domain description",
+          parent_id: 1
         }
       end,
-      DataDomainCreate: swagger_schema do
+      DomainCreate: swagger_schema do
         properties do
-          data_domain (Schema.new do
+          domain (Schema.new do
             properties do
-              name :string, "data domain name", required: true
-              description :string, "data domain description"
-              domain_group_id :integer, "domain group id", required: true
+              name :string, "domain name", required: true
+              description :string, "domain description"
+              parent_id :integer, "parent domain id"
+             end
+          end)
+        end
+      end,
+      DomainUpdate: swagger_schema do
+        properties do
+          domain (Schema.new do
+            properties do
+              name :string, "domain name", required: true
+              description :string, "domain description"
             end
           end)
         end
       end,
-      DataDomainUpdate: swagger_schema do
-        properties do
-          data_domain (Schema.new do
-            properties do
-             name :string, "data domain name"
-             description :string, "data domain description"
-            end
-          end)
-        end
-      end,
-      DataDomains: swagger_schema do
-        title "Data Domains"
-        description "A collection of Data Domains"
+      Domains: swagger_schema do
+        title "Domains"
+        description "A collection of Domains"
         type :array
-        items Schema.ref(:DataDomain)
+        items Schema.ref(:Domain)
       end,
-      DataDomainResponse: swagger_schema do
+      DomainResponse: swagger_schema do
         properties do
-          data Schema.ref(:DataDomain)
+          data Schema.ref(:Domain)
         end
       end,
-      DataDomainsResponse: swagger_schema do
+      DomainsResponse: swagger_schema do
         properties do
           data (Schema.new do
             properties do
-              collection Schema.ref(:DataDomains)
+              collection Schema.ref(:Domains)
             end
           end)
         end
+      end,
+      UserResponse: swagger_schema do
+        properties do
+          data (Schema.new do
+            properties do
+              id :integer, "user id"
+              user_name :string, "username"
+              is_admin :boolean, "is admin"
+            end
+          end)
+        end
+      end,
+      UsersResponse: swagger_schema do
+        type :array
+        items Schema.ref(:UserResponse)
       end,
       UsersRolesRequest: swagger_schema do
         properties do
@@ -83,89 +100,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
     }
   end
 
-  def domain_group_swagger_definitions do
-    %{
-      DomainGroup: swagger_schema do
-        title "Domain Group"
-        description "A Domain Group"
-        properties do
-          id :integer, "Unique identifier", required: true
-          name :string, "data domain name", required: true
-          descritpion :string, "descritpion"
-          parent_id [:integer, :null], "Domain Group id", required: true
-        end
-        example %{
-          id: 12,
-          name: "Domain group name",
-          description: "dg description",
-          parent_id: 1
-        }
-      end,
-      DomainGroupCreate: swagger_schema do
-        properties do
-          domain_group (Schema.new do
-            properties do
-              name :string, "domain group name", required: true
-              description :string, "domain group description"
-              parent_id :integer, "parent domain group id"
-             end
-          end)
-        end
-      end,
-      DomainGroupUpdate: swagger_schema do
-        properties do
-          domain_group (Schema.new do
-            properties do
-              name :string, "domain group name", required: true
-              description :string, "domain group description"
-            end
-          end)
-        end
-      end,
-      DomainGroups: swagger_schema do
-        title "Domain Groups"
-        description "A collection of Domain Groups"
-        type :array
-        items Schema.ref(:DomainGroup)
-      end,
-      DomainGroupResponse: swagger_schema do
-        properties do
-          data Schema.ref(:DomainGroup)
-        end
-      end,
-      DomainGroupsResponse: swagger_schema do
-        properties do
-          data (Schema.new do
-            properties do
-              collection Schema.ref(:DomainGroups)
-            end
-          end)
-        end
-      end,
-      UserResponse: swagger_schema do
-        properties do
-          data (Schema.new do
-            properties do
-              id :integer, "user id"
-              user_name :string, "username"
-              is_admin :boolean, "is admin"
-            end
-          end)
-        end
-      end,
-      UsersResponse: swagger_schema do
-        type :array
-        items Schema.ref(:UserResponse)
-      end
-    }
-  end
-
   def taxonomy_swagger_definitions do
     %{
       TreeItem: swagger_schema do
         properties do
           id :integer
-          type :string
           name :string
           description :string
           children (Schema.new do
@@ -184,17 +123,15 @@ defmodule TdBgWeb.SwaggerDefinitions do
         example %{
           data: [
             %{
-              type: "DG",
-              name: "dg 1",
+              name: "domain 1",
               id: 1,
-              description: "dg root 1",
+              description: "domain root 1",
               children:
                 [
                 %{
-                  type: "DD",
-                  name: "dd1",
+                  name: "domain 2",
                   id: 1,
-                  description: "dd1 child of dg1",
+                  description: "domain 2 child of domain 1",
                   children: []
                 }
               ]
@@ -218,7 +155,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data (Schema.new do
             properties do
-              domain_groups Schema.ref(:DGDDItem)
+              domains Schema.ref(:DGDDItem)
               data_domains Schema.ref(:DGDDItem)
             end
           end)
@@ -227,7 +164,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           data: [
             %{
               data_domains: %{"93": %{inherited: false, role: "admin", role_id: 1, acl_entry_id: 1}, "94": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}},
-              domain_groups: %{"69": %{inherited: false, role: "publish", role_id: 2, acl_entry_id: 2}, "70": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}}
+              domains: %{"69": %{inherited: false, role: "publish", role_id: 2, acl_entry_id: 2}, "70": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}}
             }
           ]
         }
@@ -245,7 +182,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           principal_id :integer, "id of principal", required: true
           principal_type :string, "type of principal: user", required: true
           resource_id :integer, "id of resource", required: true
-          resource_type :string, "type of resource: data_domain / domain_group", required: true
+          resource_type :string, "type of resource: domain", required: true
           role_id :integer, "id of role", required: true
         end
       end,
@@ -256,7 +193,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
               principal_id :integer, "id of principal", required: true
               principal_type :string, "type of principal: user", required: true
               resource_id :integer, "id of resource", required: true
-              resource_type :string, "type of resource: data_domain / domain_group", required: true
+              resource_type :string, "type of resource: domain", required: true
               role_id :integer, "id of role", required: true
             end
           end)
@@ -269,7 +206,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                          principal_id :integer, "id of principal", required: true
                          principal_type :string, "type of principal: user", required: true
                          resource_id :integer, "id of resource", required: true
-                         resource_type :string, "type of resource: data_domain / domain_group", required: true
+                         resource_type :string, "type of resource: domain", required: true
                          role_name :string, "role name", required: true
                        end
                      end)
@@ -395,7 +332,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description :string, "Business Concept description", required: true
           last_change_by :integer, "Business Concept last updated by", required: true
           last_change_at :string, "Business Conceptlast updated date", required: true
-          data_domain_id :integer, "Business Concept parent data domain id", required: true
+          domain_id :integer, "Business Concept parent domain id", required: true
           status :string, "Business Conceptstatus", required: true
           version :integer, "Business Concept version", required: true
           reject_reason [:string, :null], "Business Concept reject reason", required: false
@@ -410,7 +347,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
               content :object, "Business Concept content", required: true
               name :string, "Business Concept name", required: true
               description :string, "Business Concept description", required: true
-              data_domain_id :integer, "Business Concept Data Domain ID", required: true
+              domain_id :integer, "Business Concept Domain ID", required: true
             end
           end)
         end
@@ -474,7 +411,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description :string, "Business Concept Version description", required: true
           last_change_by :integer, "Business Concept Version last change by", required: true
           last_change_at :string, "Business Concept Verion last change at", required: true
-          data_domain_id :integer, "Belongs to Data Domain", required: true
+          domain_id :integer, "Belongs to Domain", required: true
           status :string, "Business Concept Version status", required: true
           version :integer, "Business Concept Version version number", required: true
           reject_reason [:string, :null], "Business Concept Version rejection reason", required: false
