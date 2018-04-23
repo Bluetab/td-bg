@@ -12,28 +12,28 @@ defmodule TdBg.BusinessConceptSteps do
       {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
-  defand ~r/^"(?<user_name>[^"]+)" tries to create a business concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-    %{user_name: user_name, data_domain_name: data_domain_name, table: fields},
+  defand ~r/^"(?<user_name>[^"]+)" tries to create a business concept in the Domain "(?<domain_name>[^"]+)" with following data:$/,
+    %{user_name: user_name, domain_name: domain_name, table: fields},
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
-      data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-      {_, status_code, json_resp} = business_concept_create(token, data_domain["id"], attrs)
+      domain = get_domain_by_name(token_admin, domain_name)
+      {_, status_code, json_resp} = business_concept_create(token, domain["id"], attrs)
       {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
 
   end
 
-  defand ~r/^"(?<user_name>[^"]+)" is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-    %{user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name, table: fields},
+  defand ~r/^"(?<user_name>[^"]+)" is able to view business concept "(?<business_concept_name>[^"]+)" as a child of Domain "(?<domain_name>[^"]+)" with following data:$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, domain_name: domain_name, table: fields},
     %{token_admin: token_admin} = state do
 
       token = get_user_token(user_name)
-      data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+      domain = get_domain_by_name(token_admin, domain_name)
       business_concept = business_concept_by_name(token, business_concept_name)
       {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
       assert rc_ok() == to_response_code(http_status_code)
       assert business_concept["name"] == business_concept_name
-      assert business_concept["data_domain_id"] == data_domain["id"]
+      assert business_concept["domain_id"] == domain["id"]
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       assert_attrs(attrs, business_concept)
       {:ok, state}
@@ -50,37 +50,37 @@ defmodule TdBg.BusinessConceptSteps do
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
-  defand ~r/^an existing Business Concept in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-    %{data_domain_name: data_domain_name, table: fields}, state do
+  defand ~r/^an existing Business Concept in the Domain "(?<domain_name>[^"]+)" with following data:$/,
+    %{domain_name: domain_name, table: fields}, state do
     token_admin = case state[:token_admin] do
                 nil -> build_user_token("app-admin", is_admin: true)
                 _ -> state[:token_admin]
               end
-    data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    domain = get_domain_by_name(token_admin, domain_name)
     attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
-    business_concept_create(token_admin, data_domain["id"], attrs)
+    business_concept_create(token_admin, domain["id"], attrs)
   end
 
-  defand ~r/^"(?<user_name>[^"]+)" is not able to view business concept "(?<business_concept_name>[^"]+)" as a child of Data Domain "(?<data_domain_name>[^"]+)"$/,
-    %{user_name: user_name, business_concept_name: business_concept_name, data_domain_name: data_domain_name},
+  defand ~r/^"(?<user_name>[^"]+)" is not able to view business concept "(?<business_concept_name>[^"]+)" as a child of Domain "(?<domain_name>[^"]+)"$/,
+    %{user_name: user_name, business_concept_name: business_concept_name, domain_name: domain_name},
     %{token_admin: token_admin} = state do
 
     token = get_user_token(user_name)
-    data_domain = get_data_domain_by_name(token_admin, data_domain_name)
+    domain = get_domain_by_name(token_admin, domain_name)
     business_concept = business_concept_by_name(token, business_concept_name)
     {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept["name"] == business_concept_name
-    assert business_concept["data_domain_id"] !== data_domain["id"]
+    assert business_concept["domain_id"] !== domain["id"]
     {:ok, state}
   end
 
-  defand ~r/^an existing Business Concept of type "(?<business_concept_type>[^"]+)" in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-    %{business_concept_type: _business_concept_type, data_domain_name: data_domain_name,  table: fields},
+  defand ~r/^an existing Business Concept of type "(?<business_concept_type>[^"]+)" in the Domain "(?<domain_name>[^"]+)" with following data:$/,
+    %{business_concept_type: _business_concept_type, domain_name: domain_name,  table: fields},
     %{token_admin: token_admin} = state do
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
-      data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-      business_concept_create(token_admin, data_domain["id"], attrs)
+      domain = get_domain_by_name(token_admin, domain_name)
+      business_concept_create(token_admin, domain["id"], attrs)
     {:ok, state}
   end
 
@@ -383,11 +383,11 @@ defmodule TdBg.BusinessConceptSteps do
     assert_visible_aliases(token, business_concept_name, business_concept_type, user_name, fields)
   end
 
-  defand ~r/^some existing Business Concepts in the Data Domain "(?<data_domain_name>[^"]+)" with following data:$/,
-    %{data_domain_name: data_domain_name,  table: fields},
+  defand ~r/^some existing Business Concepts in the Domain "(?<domain_name>[^"]+)" with following data:$/,
+    %{domain_name: domain_name,  table: fields},
     %{token_admin: token_admin} = state do
-      data_domain = get_data_domain_by_name(token_admin, data_domain_name)
-      business_concept_with_state_create(fields, token_admin, data_domain)
+      domain = get_domain_by_name(token_admin, domain_name)
+      business_concept_with_state_create(fields, token_admin, domain)
     {:ok, state}
   end
 
@@ -569,26 +569,26 @@ defmodule TdBg.BusinessConceptSteps do
     |> load_related_to_ids(token)
   end
 
-  def business_concept_with_state_create(table, token, data_domain) do
+  def business_concept_with_state_create(table, token, domain) do
     Enum.each(table, fn(item) ->
-      create_by_status_flow(item, token, data_domain)
+      create_by_status_flow(item, token, domain)
     end)
   end
 
-  def create_by_status_flow(%{Status: status} = business_concept, token, data_domain) do
+  def create_by_status_flow(%{Status: status} = business_concept, token, domain) do
     case status do
       "draft" ->
         attrs = business_concept
         |> Map.delete(:Status)
         |> Enum.map(fn({k, v}) -> %{"Field": Atom.to_string(k), "Value": v} end)
         |> field_value_to_api_attrs(token, fixed_values())
-        {_, 201, _} = business_concept_create(token, data_domain["id"], attrs)
+        {_, 201, _} = business_concept_create(token, domain["id"], attrs)
       "pending_approval" ->
         attrs = business_concept
         |> Map.delete(:Status)
         |> Enum.map(fn({k, v}) -> %{"Field": Atom.to_string(k), "Value": v} end)
         |> field_value_to_api_attrs(token, fixed_values())
-        {_, 201, %{"data" => business_concept}} = business_concept_create(token, data_domain["id"], attrs)
+        {_, 201, %{"data" => business_concept}} = business_concept_create(token, domain["id"], attrs)
         {_, 200} = business_concept_send_for_approval(token, business_concept["id"])
       "rejected" -> nil
       "published" -> nil
