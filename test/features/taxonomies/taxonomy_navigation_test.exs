@@ -65,15 +65,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
 
-  # defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Data Domains children of Domain "(?<domain_name>[^"]+)"$/,
-  #   %{user_name: user_name, domain_name: domain_name}, state do
-  #   token = get_user_token(user_name)
-  #   domain_info = get_domain_by_name(state[:token_admin], domain_name)
-  #   {:ok, status_code, json_resp} = index_domain_group_children_data_domain(token , %{domain_group_id: domain_info["id"]})
-  #   assert rc_ok() == to_response_code(status_code)
-  #   {:ok, Map.merge(state, %{resp: json_resp})}
-  # end
-
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Business Concepts children of Domain "(?<domain_name>[^"]+)"$/,
     %{user_name: user_name, domain_name: domain_name}, state do
     token = get_user_token(user_name)
@@ -106,14 +97,6 @@ defmodule TdBg.TaxonomyNavigationTest do
       HTTPoison.get!(taxonomy_url(@endpoint, :tree), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
-
-  # defp index_domain_group_children_data_domain(token, attrs) do
-  #   headers = get_header(token)
-  #   id = attrs[:domain_group_id]
-  #   %HTTPoison.Response{status_code: status_code, body: resp} =
-  #     HTTPoison.get!(domain_group_data_domain_url(@endpoint, :index_children_data_domain, id), headers, [])
-  #   {:ok, status_code, resp |> JSON.decode!}
-  # end
 
   defp index_domain_children_business_concept(token, attrs) do
     headers = get_header(token)

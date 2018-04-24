@@ -25,17 +25,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
-  # defand ~r/^the user "app-admin" is able to see the Domain "(?<domain_name>[^"]+)" with following data:$/,
-  #   %{domain_name: domain_name, table: [%{Description: description}]}, _state do
-  #     token = get_user_token("app-admin")
-  #     domain =  get_domain_by_name(token, domain_name)
-  #     {_, status_code, json_resp} = domain_show(token, domain["id"])
-  #     assert rc_ok() == to_response_code(status_code)
-  #     domain = json_resp["data"]
-  #     assert domain["description"] == description
-  #     assert domain["name"] == domain_name
-  # end
-
   #Scenario Creating a Domain as child of an existing Domain
   defwhen ~r/^user "app-admin" tries to create a Domain with the name "(?<name>[^"]+)" as child of Domain "(?<parent_name>[^"]+)" with following data:$/,
           %{name: name, parent_name: parent_name, table: [%{Description: description}]}, state do

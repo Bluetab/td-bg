@@ -45,20 +45,6 @@ defmodule TdBg.SuperAdminRolesAdminTest do
     assert role_data["data"]["name"] == role_name
   end
 
-  defand ~r/^the user "(?<user_name>[^"]+)" has (?<role_name>[^"]+) role in Domain "(?<domain_name>[^"]+)"$/, %{user_name: user_name, role_name: role_name, domain_name: domain_name}, state do
-    user = create_user(user_name)
-    domain_info = get_domain_by_name(state[:token_admin], domain_name)
-    {:ok, _status_code, role_data} = user_domain_role(state[:token_admin], %{user_id: user.id, domain_id: domain_info["id"]})
-    assert role_data["data"]["name"] == role_name
-  end
-
-  defp user_domain_role(token, attrs) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(user_domain_role_url(@endpoint, :user_domain_role, attrs.user_id, attrs.domain_id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
   defp user_domain_role(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =

@@ -43,29 +43,6 @@ Feature: Taxonomy Navigation allows to navigate throw all the Domains in order t
       | My Third Child Domain   | First version of My Third Child Domain   |
       | My Fourth Child Domain  | First version of My Fourth Child Domain  |
 
-  # Scenario: List of all Domains that are child of a certain Domain
-  #   Given an existing Domain called "My Parent Domain"
-  #   And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
-  #   And an existing Domain called "My Data Domain" child of Domain "My Child Domain" with following data:
-  #     | Description |
-  #     | First version of My Data Domain |
-  #   And an existing Domain called "My Second Data Domain" child of Domain "My Child Domain" with following data:
-  #     | Description |
-  #     | First version of My Second Data Domain |
-  #   And an existing Domain called "My Third Data Domain" child of Domain "My Child Domain" with following data:
-  #     | Description |
-  #     | First version of My Third Data Domain |
-  #   And an existing Domain called "My Fourth Data Domain" child of Domain "My Child Domain" with following data:
-  #     | Description |
-  #     | First version of My Fourth Data Domain |
-  #   When user "app-admin" tries to query a list of all Domains children of Domain "My Child Domain"
-  #   Then user sees following list:
-  #     | name                   | description                             |
-  #     | My Data Domain         | First version of My Data Domain         |
-  #     | My Second Data Domain  | First version of My Second Data Domain  |
-  #     | My Third Data Domain   | First version of My Third Data Domain   |
-  #     | My Fourth Data Domain  | First version of My Fourth Data Domain  |
-
    Scenario: List of all business concepts child of a Domain
      Given an existing Domain called "My Parent Domain"
      And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
