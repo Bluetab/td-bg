@@ -8,6 +8,7 @@ Feature: Roles Admin
   # Background:
   #   Given an existing Domain called "My Parent Domain"
   #   And an existing Domain called "My Child Domain" as child of Domain "My Parent Domain"
+  #   And an existing Domain called "My Domain" as child of Domain "My Child Domain"
 
   Scenario Outline: Granting roles to parent Domain
     Given an existing Domain called "My Parent Domain"
