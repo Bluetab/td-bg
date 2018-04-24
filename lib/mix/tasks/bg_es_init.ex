@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Bg.EsInit do
 #      # Add mapping
 #    business_concept_mapping = %{
 #      properties: %{
-#        data_domain_id: %{type: "integer"},
+#        domain_id: %{type: "integer"},
 #        name: %{type: "text"},
 #        status: %{type: "text"},
 #        type: %{type: "text"},
@@ -32,24 +32,18 @@ defmodule Mix.Tasks.Bg.EsInit do
 #        last_change_at: %{type: "date"}
 #      }
 #    }
-#      domain_group_mapping = %{
+#      domain_mapping = %{
 #      properties: %{
 #        name: %{type: "text"},
+#        type: %{type: "text"},
 #        description: %{type: "text"},
 #        parent_id: %{type: "integer"}
 #      }
 #    }
-#      data_domain_mapping = %{
-#      properties: %{
-#        name: %{type: "text"},
-#        description: %{type: "text"},
-#        domain_group_id: %{type: "integer"}
-#      }
-#    }
-#      doc_types = ["business_concept", "domain_group", "data_domain"]
+#
+#      doc_types = ["business_concept", "domain"]
 #    mappings = [ {"business_concept", business_concept_mapping},
-#                 {"domain_group", domain_group_mapping},
-#                 {"data_domain", data_domain_mapping}
+#                 {"domain", domain_mapping}
 #    ]
 #    doc_type = "_doc"
 #     Enum.map(mappings, fn({index_name, mapping})->

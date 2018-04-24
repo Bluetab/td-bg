@@ -3,7 +3,6 @@ defmodule TdBg.TaxonomiesTest do
 
   alias TdBg.Taxonomies
   alias TdBg.Permissions
-  alias Ecto.Changeset
 
   describe "domains" do
     alias TdBg.Taxonomies.Domain

@@ -4,7 +4,7 @@
       "mappings": {
         "doc": {
           "properties": {
-            "data_domain_id": {
+            "domain_id": {
               "type": "integer"
             },
             "name": {
@@ -34,30 +34,14 @@
     }
   },
   {
-    "data_domain": {
+    "domain": {
       "mappings": {
         "doc": {
           "properties": {
             "name": {
               "type": "text"
             },
-            "description": {
-              "type": "text"
-            },
-            "domain_group_id": {
-              "type": "integer"
-            }
-          }
-        }
-      }
-    }
-  },
-  {
-    "domain_group": {
-      "mappings": {
-        "doc": {
-          "properties": {
-            "name": {
+            "type": {
               "type": "text"
             },
             "description": {
