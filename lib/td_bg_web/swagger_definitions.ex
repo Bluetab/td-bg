@@ -12,12 +12,14 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           id :integer, "Unique identifier", required: true
           name :string, "Domain name", required: true
+          description :string, "type"
           description :string, "descritpion"
           parent_id [:integer, :null], "Domain id"
         end
         example %{
           id: 12,
           name: "Domain name",
+          type: "Domain type",
           description: "domain description",
           parent_id: 1
         }
@@ -27,6 +29,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           domain (Schema.new do
             properties do
               name :string, "domain name", required: true
+              type :string, "domain type"
               description :string, "domain description"
               parent_id :integer, "parent domain id"
              end
@@ -38,6 +41,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           domain (Schema.new do
             properties do
               name :string, "domain name", required: true
+              type :string, "domain type"
               description :string, "domain description"
             end
           end)
