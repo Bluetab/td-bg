@@ -9,6 +9,7 @@ defmodule TdBg.Taxonomies.Domain do
 
   schema "domains" do
     field :description, :string
+    field :type, :string
     field :name, :string
     belongs_to :parent, Domain
 
@@ -18,7 +19,7 @@ defmodule TdBg.Taxonomies.Domain do
   @doc false
   def changeset(%Domain{} = domain, attrs) do
     domain
-      |> cast(attrs, [:name, :description, :parent_id])
+      |> cast(attrs, [:name, :type, :description, :parent_id])
       |> validate_required([:name])
       |> unique_constraint(:name)
       # Just in case
