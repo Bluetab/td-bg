@@ -107,13 +107,13 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp index_domain_group_children_data_domain(token, attrs) do
-    headers = get_header(token)
-    id = attrs[:domain_group_id]
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_data_domain_url(@endpoint, :index_children_data_domain, id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
+  # defp index_domain_group_children_data_domain(token, attrs) do
+  #   headers = get_header(token)
+  #   id = attrs[:domain_group_id]
+  #   %HTTPoison.Response{status_code: status_code, body: resp} =
+  #     HTTPoison.get!(domain_group_data_domain_url(@endpoint, :index_children_data_domain, id), headers, [])
+  #   {:ok, status_code, resp |> JSON.decode!}
+  # end
 
   defp index_domain_children_business_concept(token, attrs) do
     headers = get_header(token)

@@ -1,23 +1,22 @@
 Feature: Taxonomy administration
   This feature will allow to create all levels of taxonomy necessary to classify the content defined within the application.
-  We will have data domains as containers of content and Domain Groups as grouping entities for domains or other Domain Groups
 
-  Scenario Outline: Creating a Data Domain as child of an existing Domain Group by Group Manager
-    Given an existing Domain Group called "My Group"
-    And following users exist with the indicated role in Domain Group "My Group"
+  Scenario Outline: Creating a Domain as child of an existing Domain by Group Manager
+    Given an existing Domain called "My Domain Parent"
+    And following users exist with the indicated role in Domain "My Domain Parent"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    When user "<user>" tries to create a Data Domain with the name "My Data Domain" as child of Domain Group "My Group" with following data:
+    When user "<user>" tries to create a Domain with the name "My Domain" as child of Domain "My Domain Parent" with following data:
        | Description |
-       | First version of my Data Domain |
+       | First version of my Domain |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Created", user "<user>" is able to see the Data Domain "My Data Domain" with following data:
+    And if result <result> is "Created", user "<user>" is able to see the Domain "My Domain" with following data:
        | Description |
-       | First version of my Data Domain |
-    And if result <result> is "Created", Data Domain "My Data Domain" is a child of Domain Group "My Group"
+       | First version of my Domain |
+    And if result <result> is "Created", Domain "My Domain" is a child of Domain "My Domain Parent"
 
     Examples:
       | user      | result       |
@@ -26,22 +25,22 @@ Feature: Taxonomy administration
       | publisher | Unauthorized |
       | admin     | Created      |
 
-  Scenario Outline: Creating a Domain Group as child of an existing Domain Group by Group Manager
-    Given an existing Domain Group called "My Group"
-    And following users exist with the indicated role in Domain Group "My Group"
+  Scenario Outline: Creating a Domain as child of an existing Domain by Group Manager
+    Given an existing Domain called "My Parent Domain"
+    And following users exist with the indicated role in Domain "My Parent Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    When user "<user>" tries to create a Domain Group with the name "My Child Group" as child of Domain Group "My Group" with following data:
+    When user "<user>" tries to create a Domain with the name "My Child Domain" as child of Domain "My Parent Domain" with following data:
       | Description |
-      | First version of my Child Domain Group |
+      | First version of my Child Domain |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Created", user "<user>" is able to see the Domain Group "My Child Group" with following data:
+    And if result <result> is "Created", user "<user>" is able to see the Domain "My Child Domain" with following data:
       | Description |
-      | First version of my Child Domain Group |
-    And if result <result> is "Created", Domain Group "My Child Group" is a child of Domain Group "My Group"
+      | First version of my Child Domain |
+    And if result <result> is "Created", Domain "My Child Domain" is a child of Domain "My Parent Domain"
 
     Examples:
       | user      | result       |
@@ -50,27 +49,27 @@ Feature: Taxonomy administration
       | publisher | Unauthorized |
       | admin     | Created      |
 
-  Scenario Outline: Modifying a Domain Group and seeing the new version by Group Manager
-    Given an existing Domain Group called "My Group"
-    And an existing Domain Group called "My Child Group" child of Domain Group "My Group" with following data:
+  Scenario Outline: Modifying a Domain and seeing the new version by Group Manager
+    Given an existing Domain called "My Parent Domain"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain" with following data:
       | Description |
-      | First version of Child Group |
-    And following users exist with the indicated role in Domain Group "My Child Group"
+      | First version of Child Domain |
+    And following users exist with the indicated role in Domain "My Child Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    When user "<user>" tries to modify a Domain Group with the name "My Child Group" introducing following data:
+    When user "<user>" tries to modify a Domain with the name "My Child Domain" introducing following data:
       | Description |
-      | Second version of My Child Group |
+      | Second version of My Child Domain |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user "<user>" is able to see the Domain Group "My Child Group" with following data:
+    And if result <result> is "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
       | Description |
-      | Second version of My Child Group |
-    And if result <result> is not "Ok", user "<user>" is able to see the Domain Group "My Child Group" with following data:
+      | Second version of My Child Domain |
+    And if result <result> is not "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
       | Description |
-      | First version of Child Group |
+      | First version of Child Domain |
 
     Examples:
       | user      | result       |
@@ -79,27 +78,27 @@ Feature: Taxonomy administration
       | publisher | Unauthorized |
       | admin     | Ok           |
 
-  Scenario Outline: Modifying a Data Domain and seeing the new version by Domain Manager
-    Given an existing Domain Group called "My Group"
-    And an existing Data Domain called "My Domain" child of Domain Group "My Group" with following data:
+  Scenario Outline: Modifying a Domain and seeing the new version by Domain Manager
+    Given an existing Domain called "My Parent Domain"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain" with following data:
       | Description |
-      | First version of My Domain |
-    And following users exist with the indicated role in Data Domain "My Domain"
+      | First version of My Child Domain |
+    And following users exist with the indicated role in Domain "My Child Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    When user "<user>" tries to modify a Data Domain with the name "My Domain" introducing following data:
+    When user "<user>" tries to modify a Domain with the name "My Child Domain" introducing following data:
       | Description |
-      | Second version of My Domain |
+      | Second version of My Child Domain |
     Then the system returns a result with code "<result>"
-    And if result <result> is "Ok", user "<user>" is able to see the Data Domain "My Domain" with following data:
+    And if result <result> is "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
       | Description |
-      | Second version of My Domain |
-    And if result <result> is not "Ok", user "<user>" is able to see the Data Domain "My Domain" with following data:
+      | Second version of My Child Domain |
+    And if result <result> is not "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
       | Description |
-      | First version of My Domain |
+      | First version of My Child Domain |
 
     Examples:
       | user      | result       |
@@ -108,19 +107,19 @@ Feature: Taxonomy administration
       | publisher | Unauthorized |
       | admin     | Ok           |
 
-  Scenario Outline: Deleting a Domain Group without any Group or Domain pending on it by Group Manager
-    Given an existing Domain Group called "My Parent Group"
-    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-    And following users exist with the indicated role in Domain Group "My Child Group"
+  Scenario Outline: Deleting a Domain without any Group or Domain pending on it by Group Manager
+    Given an existing Domain called "My Parent Group"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Group"
+    And following users exist with the indicated role in Domain "My Child Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    When user "<user>" tries to delete a Domain Group with the name "My Child Group"
+    When user "<user>" tries to delete a Domain with the name "My Child Domain"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Deleted", Domain Group "My Child Group" does not exist as child of Domain Group "My Parent Group"
-    And if result <result> is not "Deleted", Domain Group "My Child Group" is a child of Domain Group "My Parent Group"
+    And if result <result> is "Deleted", Domain "My Child Domain" does not exist as child of Domain "My Parent Group"
+    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Group"
 
     Examples:
       | user      | result       |
@@ -129,19 +128,19 @@ Feature: Taxonomy administration
       | publisher | Unauthorized |
       | admin     | Deleted      |
 
-  Scenario Outline: Deleting a Data Domain without any Business Concept by Group Manager
-    Given an existing Domain Group called "My Parent Group"
-    And an existing Data Domain called "My Domain" child of Domain Group "My Parent Group"
-    And following users exist with the indicated role in Data Domain "My Domain"
+  Scenario Outline: Deleting a Domain without any Business Concept by Group Manager
+    Given an existing Domain called "My Parent Domain"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+    And following users exist with the indicated role in Domain "My Child Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
-    When user "<user>" tries to delete a Data Domain with the name "My Domain"
+    When user "<user>" tries to delete a Domain with the name "My Child Domain"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Deleted", Data Domain "My Domain" does not exist as child of Domain Group "My Parent Group"
-    And if result <result> is not "Deleted", Data Domain "My Domain" is a child of Domain Group "My Parent Group"
+    And if result <result> is "Deleted", Domain "My Child Domain" does not exist as child of Domain "My Parent Domain"
+    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
 
     Examples:
       | user      | result       |
