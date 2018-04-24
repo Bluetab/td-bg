@@ -6,22 +6,22 @@ Feature: Super-admin Taxonomy administration
 
   Scenario: Creating a Domain without any parent
     When user "app-admin" tries to create a Domain with the name "Financial Metrics" and following data:
-      | Description |
-      | First version of Financial Metrics |
+      | Description                        | Type              |
+      | First version of Financial Metrics | General Direction |
     Then the system returns a result with code "Created"
     And the user "app-admin" is able to see the Domain "Financial Metrics" with following data:
-      | Description |
-      | First version of Financial Metrics |
+      | Description                        | Type              |
+      | First version of Financial Metrics | General Direction |
 
   Scenario: Creating a Domain as child of an existing Domain
     Given an existing Domain called "Risks"
     When user "app-admin" tries to create a Domain with the name "Markets" as child of Domain "Risks" with following data:
-      | Description |
-      | First version of Markets |
+      | Description              | Type              |
+      | First version of Markets | General Direction |
     Then the system returns a result with code "Created"
     And the user "app-admin" is able to see the Domain "Markets" with following data:
-      | Description |
-      | First version of Markets |
+      | Description              | Type              |
+      | First version of Markets | General Direction |
     And Domain "Markets" is a child of Domain "Risks"
 
   # Scenario: Creating a Domain as child of a non existing Domain
@@ -36,12 +36,12 @@ Feature: Super-admin Taxonomy administration
   Scenario: Creating a Domain depending on an existing Domain
     Given an existing Domain called "Risks"
     When user "app-admin" tries to create a Domain with the name "Operational Risk" as child of Domain "Risks" with following data:
-       | Description |
-       | First version of Operational Risk |
+       | Description                       | Type              |
+       | First version of Operational Risk | General Direction |
     Then the system returns a result with code "Created"
     And the user "app-admin" is able to see the Domain "Operational Risk" with following data:
-       | Description |
-       | First version of Operational Risk |
+       | Description                       | Type              |
+       | First version of Operational Risk | General Direction |
     And Domain "Operational Risk" is a child of Domain "Risks"
 
   # Scenario: Creating a Data Domain depending on a non existing Domain
@@ -55,15 +55,15 @@ Feature: Super-admin Taxonomy administration
 
   Scenario: Modifying a Domain and seeing the new version
      Given an existing Domain called "Risks" with following data:
-       | Description |
-       | First version of Risks |
+       | Description            | Type              |
+       | First version of Risks | General Direction |
      When user "app-admin" tries to modify a Domain with the name "Risks" introducing following data:
-       | Description |
-       | Second version of Risks |
+       | Description             | Type              |
+       | Second version of Risks | General Direction |
      Then the system returns a result with code "Ok"
      And the user "app-admin" is able to see the Domain "Risks" with following data:
-       | Description |
-       | Second version of Risks |
+       | Description             | Type              |
+       | Second version of Risks | General Direction |
 
   # Scenario: Trying to modify a non existing Domain
   #   Given user "app-admin" is logged in the application
@@ -76,15 +76,15 @@ Feature: Super-admin Taxonomy administration
    Scenario: Modifying a Domain and seeing the new version
      Given an existing Domain called "Risks"
      And an existing Domain called "Credit Risks" child of Domain "Risks" with following data:
-       | Description |
-       | First version of Credit Risks |
+       | Description                   | Type              |
+       | First version of Credit Risks | General Direction |
      When user "app-admin" tries to modify a Domain with the name "Credit Risks" introducing following data:
-       | Description |
-       | Second version of Credit Risks |
+       | Description                    | Type              |
+       | Second version of Credit Risks | General Direction |
      Then the system returns a result with code "Ok"
      And the user "app-admin" is able to see the Domain "Credit Risks" with following data:
-       | Description |
-       | Second version of Credit Risks |
+       | Description                    | Type              |
+       | Second version of Credit Risks | General Direction |
 
    Scenario: Deleting a Domain without any Domain pending on it
      Given an existing Domain called "My Parent Domain"
