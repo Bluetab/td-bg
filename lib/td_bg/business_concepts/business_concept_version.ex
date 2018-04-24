@@ -75,7 +75,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, fn(a) -> %{name: a.name} end)
 
-    %{data_domain_id: concept.business_concept.data_domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
+    %{domain_id: concept.business_concept.domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
       description: concept.description, last_change_at: concept.business_concept.last_change_at, bc_aliases: aliases}
   end
 
