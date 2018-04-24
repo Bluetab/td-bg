@@ -23,6 +23,7 @@ defmodule TdBgWeb.DomainView do
     %{id: domain.id,
       parent_id: domain.parent_id,
       name: domain.name,
+      type: domain.type,
       description: domain.description}
   end
 

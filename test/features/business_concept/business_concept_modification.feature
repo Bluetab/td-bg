@@ -1,8 +1,8 @@
   Scenario Outline: Modification of existing Business Concept in Draft status
-   Given an existing Domain Group called "My Parent Group"
-   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-   And following users exist with the indicated role in Data Domain "My Domain"
+   Given an existing Domain called "My Parent Domain"
+   And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+   And an existing Domain called "My Domain" child of Domain "My Child Domain"
+   And following users exist with the indicated role in Domain "My Domain"
      | user      | role    |
      | watcher   | watch   |
      | creator   | create  |
@@ -18,7 +18,7 @@
     | Related Area     | string        | 100      |                                              |    NO     |               | Functional |
     | Default Value    | string        | 100      |                                              |    NO     |               | General    |
     | Additional Data  | string        | 500      |                                              |    NO     |               | Functional |
-   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+   And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
      | Field             | Value                                                                    |
      | Type              | Business Term                                                            |
      | Name              | My Date Business Term                                                    |
@@ -66,17 +66,17 @@
      | admin     | Ok           |
 
   Scenario Outline: Modification of existing Business Concept in Published status
-   Given an existing Domain Group called "My Parent Group"
-   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-   And following users exist with the indicated role in Data Domain "My Domain"
+   Given an existing Domain called "My Parent Domain"
+   And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+   And an existing Domain called "My Domain" child of Domain "My Child Domain"
+   And following users exist with the indicated role in Domain "My Domain"
      | user      | role    |
      | watcher   | watch   |
      | creator   | create  |
      | publisher | publish |
      | admin     | admin   |
    And an existing Business Concept type called "Business Term" with empty definition
-   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+   And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
      | Field             | Value                                             |
      | Type              | Business Term                                     |
      | Name              | My Business Term                                  |
@@ -109,17 +109,17 @@
      | admin     | Created      |
 
    Scenario Outline: Modify a second version of a published Business Concept
-     Given an existing Domain Group called "My Parent Group"
-     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-     And following users exist with the indicated role in Data Domain "My Domain"
+     Given an existing Domain called "My Parent Domain"
+     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+     And an existing Domain called "My Domain" child of Domain "My Child Domain"
+     And following users exist with the indicated role in Domain "My Domain"
        | user      | role    |
        | watcher   | watch   |
        | creator   | create  |
        | publisher | publish |
        | admin     | admin   |
      And an existing Business Concept type called "Business Term" with empty definition
-     And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+     And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
        | Field             | Value                                             |
        | Type              | Business Term                                     |
        | Name              | My Business Term                                  |
@@ -154,17 +154,17 @@
        | admin     | Created      |
 
    Scenario Outline: Modification of existing Business Concept in Reject status
-    Given an existing Domain Group called "My Parent Group"
-    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-    And following users exist with the indicated role in Data Domain "My Domain"
+    Given an existing Domain called "My Parent Domain"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+    And an existing Domain called "My Domain" child of Domain "My Child Domain"
+    And following users exist with the indicated role in Domain "My Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with empty definition
-    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+    And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
       | Field             | Value                                             |
       | Type              | Business Term                                     |
       | Name              | My Business Term                                  |
@@ -194,17 +194,17 @@
       | admin     | Ok           |
 
     Scenario Outline: Modify a Draft version of a BC previously published
-      Given an existing Domain Group called "My Parent Group"
-      And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-      And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-      And following users exist with the indicated role in Data Domain "My Domain"
+      Given an existing Domain called "My Parent Domain"
+      And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+      And an existing Domain called "My Domain" child of Domain "My Child Domain"
+      And following users exist with the indicated role in Domain "My Domain"
         | user      | role    |
         | watcher   | watch   |
         | creator   | create  |
         | publisher | publish |
         | admin     | admin   |
       And an existing Business Concept type called "Business Term" with empty definition
-      And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+      And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
         | Field             | Value                                             |
         | Type              | Business Term                                     |
         | Name              | My Business Term                                  |

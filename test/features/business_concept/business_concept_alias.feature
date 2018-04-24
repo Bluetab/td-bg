@@ -1,3 +1,4 @@
+
 Scenario Outline: Create a alias for a business concept
   Given an existing Domain called "My Parent Domain"
   And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
