@@ -18,24 +18,6 @@ Feature: taxonomy creation/edition errors
     }
     """
 
-  Scenario: Creating a Domain with a name already existing in a Domain
-    Given an existing Domain called "Domain Parent 1"
-    And an existing Domain called "Domain Child 1" child of Domain "Domain Parent 1"
-    When user "app-admin" tries to create a Domain as child of Domain "Domain Parent 1" with following data:
-      | name           | description |
-      | Domain Child 1 |             |
-    Then the system returns a result with code "Unprocessable Entity"
-    And the system returns a response with following data:
-    """
-      {
-        "errors": {
-          "name": [
-            "unique"
-          ]
-        }
-      }
-    """
-
   Scenario: Updating a Domain without name
     Given an existing Domain called "Domain Parent 1"
     And an existing Domain called "Domain Child 1" child of Domain "Domain Parent 1"
@@ -55,26 +37,6 @@ Feature: taxonomy creation/edition errors
     }
     """
 
-    Scenario: Updating a Domain and setting a name of an already existing Domain in the same Domain Parent
-    Given an existing Domain called "Domain Parent 1"
-    And an existing Domain called "Domain Child 1" child of Domain "Domain Parent 1"
-    And an existing Domain called "Domain Child 2" child of Domain "Domain Parent 1"
-    When user "app-admin" tries to update a Domain called "Domain Child 2" child of Domain "Domain Parent 1" with following data:
-      | name            | description |
-      | Domain Child 1  | duplic      |
-
-    Then the system returns a result with code "Unprocessable Entity"
-    And the system returns a response with following data:
-    """
-    {
-      "errors": {
-        "name": [
-          "unique"
-        ]
-      }
-    }
-    """
-
   Scenario: Creating a Domain without name
     When user "app-admin" tries to create a Domain with following data:
       | name  | description |
@@ -86,23 +48,6 @@ Feature: taxonomy creation/edition errors
       "errors": {
         "name": [
           "blank"
-        ]
-      }
-    }
-    """
-
-  Scenario: Creating a Domain with an already existing name
-    Given an existing Domain called "Domain Parent 1"
-    When user "app-admin" tries to create a Domain with following data:
-      | name             | description |
-      | Domain Parent 1  |             |
-    Then the system returns a result with code "Unprocessable Entity"
-    And the system returns a response with following data:
-    """
-    {
-      "errors": {
-        "name": [
-          "unique"
         ]
       }
     }

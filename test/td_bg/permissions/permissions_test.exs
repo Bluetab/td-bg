@@ -6,7 +6,7 @@ defmodule TdBg.PermissionsTest do
   describe "acl_entries" do
     alias TdBg.Permissions.AclEntry
 
-    @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain_group"}
+    @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain"}
     @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
 
     def acl_entry_fixture do
@@ -36,14 +36,14 @@ defmodule TdBg.PermissionsTest do
 
     test "create_acl_entry/1 with valid data creates a acl_entry" do
       user = build(:user)
-      domain_group = insert(:domain_group)
+      domain = insert(:domain)
       role = insert(:role)
-      valid_attrs = %{principal_id: user.id, principal_type: "user", resource_id: domain_group.id, resource_type: "domain_group", role_id: role.id}
+      valid_attrs = %{principal_id: user.id, principal_type: "user", resource_id: domain.id, resource_type: "domain", role_id: role.id}
       {:ok, acl_entry = %AclEntry{}} = Permissions.create_acl_entry(valid_attrs)
       assert acl_entry.principal_id == user.id
       assert acl_entry.principal_type == "user"
-      assert acl_entry.resource_id == domain_group.id
-      assert acl_entry.resource_type == "domain_group"
+      assert acl_entry.resource_id == domain.id
+      assert acl_entry.resource_type == "domain"
       assert acl_entry.role_id == role.id
     end
 

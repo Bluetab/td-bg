@@ -33,13 +33,6 @@ Feature: Super-admin Taxonomy administration
   #   And the user "app-admin" is not able to see the Domain "Imaginary Group"
 
 
-  Scenario: Creating a duplicated Domain
-    Given an existing Domain called "Risks"
-    When user "app-admin" tries to create a Domain with the name "Risks" and following data:
-      | Description |
-      | First version of Risks |
-    Then the system returns a result with code "Unprocessable Entity"
-
   Scenario: Creating a Domain depending on an existing Domain
     Given an existing Domain called "Risks"
     When user "app-admin" tries to create a Domain with the name "Operational Risk" as child of Domain "Risks" with following data:
@@ -59,14 +52,6 @@ Feature: Super-admin Taxonomy administration
   #   Then the system returns a result with code "Forbidden"
   #   And the user "app-admin" is not able to see the Domain "Imaginary Group"
   #
-
-  Scenario: Creating a duplicated Domain depending on the same existing Domain
-    Given an existing Domain called "Risks"
-    And an existing Domain called "Operational Risk" child of Domain "Risks"
-    When user "app-admin" tries to create a Domain with the name "Operational Risk" as child of Domain "Risks" with following data:
-      | Description |
-      | First version of Operational Risk |
-    Then the system returns a result with code "Unprocessable Entity"
 
   Scenario: Modifying a Domain and seeing the new version
      Given an existing Domain called "Risks" with following data:
