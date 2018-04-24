@@ -12,7 +12,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "A Domain"
         properties do
           id :integer, "Unique identifier", required: true
-          name :string, "data domain name", required: true
+          name :string, "Domain name", required: true
           description :string, "descritpion"
           parent_id [:integer, :null], "Domain id"
         end
