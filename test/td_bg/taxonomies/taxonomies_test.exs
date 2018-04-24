@@ -47,11 +47,6 @@ defmodule TdBg.TaxonomiesTest do
       assert domain.name == "some name"
     end
 
-    test "create_domain/1 tow domains with valid data" do
-      assert {:ok, %Domain{}} = Taxonomies.create_domain(@valid_attrs)
-      assert {:error, %Changeset{}} = Taxonomies.create_domain(@valid_attrs)
-    end
-
     test "create_domain/2 child of a parent domain" do
       parent_domain = domain_fixture()
       child_attrs = Map.put(@child_attrs, :parent_id, parent_domain.id)

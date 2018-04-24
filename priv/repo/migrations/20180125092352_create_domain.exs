@@ -9,8 +9,5 @@ defmodule TdBg.Repo.Migrations.CreateDomain do
       add :parent_id, references(:domains), null: true
       timestamps()
     end
-
-    create unique_index(:domains, [:name])
-
   end
 end
