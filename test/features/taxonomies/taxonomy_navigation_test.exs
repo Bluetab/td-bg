@@ -11,8 +11,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   @endpoint TdBgWeb.Endpoint
 
   import_steps TdBg.BusinessConceptSteps
-  import_steps TdBg.DomainGroupSteps
-  import_steps TdBg.DataDomainSteps
+  import_steps TdBg.DomainSteps
 
   import TdBg.BusinessConceptSteps
 
@@ -27,10 +26,10 @@ defmodule TdBg.TaxonomyNavigationTest do
             end
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domain Groups without parent$/, %{user_name: user_name}, state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domains without parent$/, %{user_name: user_name}, state do
     # Your implementation here
     token = get_user_token(user_name)
-    {:ok, status_code, json_resp} = root_domain_group_list(token)
+    {:ok, status_code, json_resp} = root_domain_list(token)
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
@@ -57,29 +56,29 @@ defmodule TdBg.TaxonomyNavigationTest do
     assert Enum.sort(table) == Enum.sort(bc_list)
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domain Groups children of Domain Group "(?<domain_group_name>[^"]+)"$/,
-    %{user_name: user_name, domain_group_name: domain_group_name}, state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Domains children of Domain "(?<domain_name>[^"]+)"$/,
+    %{user_name: user_name, domain_name: domain_name}, state do
     token = get_user_token(user_name)
-    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, status_code, json_resp} = index_domain_group_children(token, %{domain_group_id: domain_group_info["id"]})
+    domain_info = get_domain_by_name(state[:token_admin], domain_name)
+    {:ok, status_code, json_resp} = index_domain_children(token, %{domain_id: domain_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Data Domains children of Domain Group "(?<domain_group_name>[^"]+)"$/,
-    %{user_name: user_name, domain_group_name: domain_group_name}, state do
-    token = get_user_token(user_name)
-    domain_group_info = get_domain_group_by_name(state[:token_admin], domain_group_name)
-    {:ok, status_code, json_resp} = index_domain_group_children_data_domain(token , %{domain_group_id: domain_group_info["id"]})
-    assert rc_ok() == to_response_code(status_code)
-    {:ok, Map.merge(state, %{resp: json_resp})}
-  end
+  # defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Data Domains children of Domain "(?<domain_name>[^"]+)"$/,
+  #   %{user_name: user_name, domain_name: domain_name}, state do
+  #   token = get_user_token(user_name)
+  #   domain_info = get_domain_by_name(state[:token_admin], domain_name)
+  #   {:ok, status_code, json_resp} = index_domain_group_children_data_domain(token , %{domain_group_id: domain_info["id"]})
+  #   assert rc_ok() == to_response_code(status_code)
+  #   {:ok, Map.merge(state, %{resp: json_resp})}
+  # end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Business Concepts children of Data Domain "(?<data_domain_name>[^"]+)"$/,
-    %{user_name: user_name, data_domain_name: data_domain_name}, state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" tries to query a list of all Business Concepts children of Domain "(?<domain_name>[^"]+)"$/,
+    %{user_name: user_name, domain_name: domain_name}, state do
     token = get_user_token(user_name)
-    data_domain_info = get_data_domain_by_name(state[:token_admin], data_domain_name)
-    {:ok, status_code, json_resp} = index_data_domain_children_business_concept(token, %{data_domain_id: data_domain_info["id"]})
+    domain_info = get_domain_by_name(state[:token_admin], domain_name)
+    {:ok, status_code, json_resp} = index_domain_children_business_concept(token, %{domain_id: domain_info["id"]})
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{resp: json_resp})}
   end
@@ -116,26 +115,26 @@ defmodule TdBg.TaxonomyNavigationTest do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp index_data_domain_children_business_concept(token, attrs) do
+  defp index_domain_children_business_concept(token, attrs) do
     headers = get_header(token)
-    id = attrs[:data_domain_id]
+    id = attrs[:domain_id]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(business_concept_url(@endpoint, :index_children_business_concept, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp index_domain_group_children(token, attrs) do
+  defp index_domain_children(token, attrs) do
     headers = get_header(token)
-    id = attrs[:domain_group_id]
+    id = attrs[:domain_id]
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_domain_group_url(@endpoint, :index_children, id), headers, [])
+      HTTPoison.get!(domain_domain_url(@endpoint, :index_children, id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  defp root_domain_group_list(token) do
+  defp root_domain_list(token) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_group_url(@endpoint, :index_root), headers, [])
+      HTTPoison.get!(domain_url(@endpoint, :index_root), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

@@ -37,11 +37,11 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :index_children_business_concept do
-    get "/business_concepts/data_domains/{id}"
-    description "List Business Concepts children of Data Domain"
+    get "/business_concepts/domains/{id}"
+    description "List Business Concepts children of Domain"
     produces "application/json"
     parameters do
-      id :path, :integer, "Data Domain ID", required: true
+      id :path, :integer, "Domain ID", required: true
     end
     response 200, "OK", Schema.ref(:BusinessConceptsResponse)
     response 400, "Client Error"
