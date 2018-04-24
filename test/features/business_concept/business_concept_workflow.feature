@@ -1,15 +1,15 @@
 Scenario Outline: Sending business concept for approval
-  Given an existing Domain Group called "My Parent Group"
-  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  And following users exist with the indicated role in Data Domain "My Domain"
+  Given an existing Domain called "My Parent Domain"
+  And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+  And an existing Domain called "My Domain" child of Domain "My Child Domain"
+  And following users exist with the indicated role in Domain "My Domain"
     | user      | role    |
     | watcher   | watch   |
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
   And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
     | Field             | Value                                                              |
     | Type              | Business Term                                                      |
     | Name              | My Date Business Term                                              |
@@ -33,17 +33,17 @@ Scenario Outline: Sending business concept for approval
     | admin     | Ok           |
 
 Scenario Outline: Publish existing Business Concept in Pending Approval status
-  Given an existing Domain Group called "My Parent Group"
-  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  And following users exist with the indicated role in Data Domain "My Domain"
+  Given an existing Domain called "My Parent Domain"
+  And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+  And an existing Domain called "My Domain" child of Domain "My Child Domain"
+  And following users exist with the indicated role in Domain "My Domain"
     | user      | role    |
     | watcher   | watch   |
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
   And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
     | Field             | Value                                                              |
     | Type              | Business Term                                                      |
     | Name              | My Business Term                                                   |
@@ -69,17 +69,17 @@ Scenario Outline: Publish existing Business Concept in Pending Approval status
     | admin     | Ok           |
 
 Scenario Outline: Reject existing Business Concept in Pending Approval status
-  Given an existing Domain Group called "My Parent Group"
-  And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-  And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-  And following users exist with the indicated role in Data Domain "My Domain"
+  Given an existing Domain called "My Parent Domain"
+  And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+  And an existing Domain called "My Domain" child of Domain "My Child Domain"
+  And following users exist with the indicated role in Domain "My Domain"
     | user      | role    |
     | creator   | create  |
     | watcher   | watch   |
     | publisher | publish |
     | admin     | admin   |
   And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+  And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
     | Field             | Value                                             |
     | Type              | Business Term                                     |
     | Name              | My Business Term                                  |
@@ -106,17 +106,17 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
     | admin     | Ok           |
 
   Scenario Outline: Publish a second version of a Business Concept
-    Given an existing Domain Group called "My Parent Group"
-    And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-    And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-    And following users exist with the indicated role in Data Domain "My Domain"
+    Given an existing Domain called "My Parent Domain"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+    And an existing Domain called "My Domain" child of Domain "My Child Domain"
+    And following users exist with the indicated role in Domain "My Domain"
       | user      | role    |
       | watcher   | watch   |
       | creator   | create  |
       | publisher | publish |
       | admin     | admin   |
     And an existing Business Concept type called "Business Term" with empty definition
-    And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+    And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
       | Field             | Value                                             |
       | Type              | Business Term                                     |
       | Name              | My Business Term                                  |
@@ -158,17 +158,17 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
       | admin     | Ok           |
 
   Scenario Outline: Sending Business Concept in Reject Status for approval
-   Given an existing Domain Group called "My Parent Group"
-   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-   And following users exist with the indicated role in Data Domain "My Domain"
+   Given an existing Domain called "My Parent Domain"
+   And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+   And an existing Domain called "My Domain" child of Domain "My Child Domain"
+   And following users exist with the indicated role in Domain "My Domain"
      | user      | role    |
      | watcher   | watch   |
      | creator   | create  |
      | publisher | publish |
      | admin     | admin   |
    And an existing Business Concept type called "Business Term" with empty definition
-   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+   And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
      | Field             | Value                                             |
      | Type              | Business Term                                     |
      | Name              | My Business Term                                  |
@@ -194,17 +194,17 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
      | admin     | Ok           |
 
    Scenario Outline: Send for Approval a draft version of a BC previously published
-     Given an existing Domain Group called "My Parent Group"
-     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-     And following users exist with the indicated role in Data Domain "My Domain"
+     Given an existing Domain called "My Parent Domain"
+     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+     And an existing Domain called "My Domain" child of Domain "My Child Domain"
+     And following users exist with the indicated role in Domain "My Domain"
        | user      | role    |
        | watcher   | watch   |
        | creator   | create  |
        | publisher | publish |
        | admin     | admin   |
      And an existing Business Concept type called "Business Term" with empty definition
-     And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+     And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
        | Field             | Value                                             |
        | Type              | Business Term                                     |
        | Name              | My Business Term                                  |
@@ -239,17 +239,17 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
        | admin     | Ok           |
 
   Scenario Outline: Send for Approval a rejected version of a BC prevously published
-   Given an existing Domain Group called "My Parent Group"
-   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-   And following users exist with the indicated role in Data Domain "My Domain"
+   Given an existing Domain called "My Parent Domain"
+   And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+   And an existing Domain called "My Domain" child of Domain "My Child Domain"
+   And following users exist with the indicated role in Domain "My Domain"
      | user      | role    |
      | watcher   | watch   |
      | creator   | create  |
      | publisher | publish |
      | admin     | admin   |
    And an existing Business Concept type called "Business Term" with empty definition
-   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+   And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
      | Field             | Value                                             |
      | Type              | Business Term                                     |
      | Name              | My Business Term                                  |
@@ -284,17 +284,17 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
      | admin     | Ok           |
 
  Scenario Outline: Reject a pending approval BC that has previously been published
-   Given an existing Domain Group called "My Parent Group"
-   And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-   And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-   And following users exist with the indicated role in Data Domain "My Domain"
+   Given an existing Domain called "My Parent Domain"
+   And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+   And an existing Domain called "My Domain" child of Domain "My Child Domain"
+   And following users exist with the indicated role in Domain "My Domain"
      | user      | role    |
      | watcher   | watch   |
      | creator   | create  |
      | publisher | publish |
      | admin     | admin   |
    And an existing Business Concept type called "Business Term" with empty definition
-   And an existing Business Concept of type "Business Term" in the Data Domain "My Domain" with following data:
+   And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
      | Field             | Value                                             |
      | Type              | Business Term                                     |
      | Name              | My Business Term                                  |
@@ -330,17 +330,17 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
        | admin     | Ok           |
 
    Scenario Outline: List of Business Concepts in pending_approval for a certain user
-     Given an existing Domain Group called "My Parent Group"
-     And an existing Domain Group called "My Child Group" child of Domain Group "My Parent Group"
-     And an existing Data Domain called "My Domain" child of Domain Group "My Child Group"
-     And following users exist with the indicated role in Data Domain "My Domain"
+     Given an existing Domain called "My Parent Domain"
+     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+     And an existing Domain called "My Domain" child of Domain "My Child Domain"
+     And following users exist with the indicated role in Domain "My Domain"
        | user      | role    |
        | watcher   | watch   |
        | creator   | create  |
        | publisher | publish |
        | admin     | admin   |
      And an existing Business Concept type called "Business Term" with empty definition
-     And some existing Business Concepts in the Data Domain "My Domain" with following data:
+     And some existing Business Concepts in the Domain "My Domain" with following data:
        | Status           | Name  | Type           | Description   |
        | draft            | bc_1  | Business Term  | description_1 |
        | pending_approval | bc_2  | Business Term  | description_2 |

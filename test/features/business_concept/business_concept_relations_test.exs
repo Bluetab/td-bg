@@ -12,13 +12,12 @@ defmodule TdBg.BusinessConceptRelationsTest do
   alias TdBg.Utils.CollectionUtils
 
   import_steps TdBg.BusinessConceptSteps
-  import_steps TdBg.DataDomainSteps
-  import_steps TdBg.DomainGroupSteps
+  import_steps TdBg.DomainSteps
   import_steps TdBg.ResultSteps
 
   import TdBg.BusinessConceptSteps
   import TdBg.ResultSteps
-  
+
   setup_all do
     start_supervised MockTdAuthService
     :ok
