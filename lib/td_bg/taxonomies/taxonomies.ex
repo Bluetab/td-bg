@@ -48,8 +48,8 @@ defmodule TdBg.Taxonomies do
   @doc """
   """
   def list_children_data_domain(domain_id) do
-    query = from dd in DataDomain,
-            where: dd.domain_id == ^domain_id
+    query = from d in Domain,
+            where: d.domain_id == ^domain_id
     Repo.all(query)
   end
 

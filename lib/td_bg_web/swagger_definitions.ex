@@ -4,7 +4,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
   """
   import PhoenixSwagger
 
-
   def domain_swagger_definitions do
     %{
       Domain: swagger_schema do

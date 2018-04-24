@@ -38,9 +38,6 @@ defmodule TdBgWeb.Router do
       resources "/domains", DomainController do
         get "/roles", RoleController, :user_domain_role
       end
-      # resources "/data_domains", DataDomainController do
-      #   get "/roles", RoleController, :user_data_domain_role
-      # end
     end
   end
 
@@ -51,13 +48,7 @@ defmodule TdBgWeb.Router do
       get "/index_children", DomainController, :index_children
       get "/available_users", DomainController, :available_users
       get "/users_roles", DomainController, :users_roles
-      #get "/data_domains", DataDomainController, :index_children_data_domain
     end
-
-    # resources "/data_domains", DataDomainController, except: [:new, :edit] do
-    #   get "/users_roles", DataDomainController, :users_roles
-    #   get "/available_users", DataDomainController, :available_users
-    # end
 
     get "/taxonomy/tree", TaxonomyController, :tree
     get "/taxonomy/roles", TaxonomyController, :roles
