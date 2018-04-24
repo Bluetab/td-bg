@@ -48,8 +48,8 @@ defmodule TdBgWeb.TaxonomyControllerTest do
       actual_tree = remove_tree_keys(actual_tree)
 
       assert actual_tree == [%{"children" =>
-                                [%{"children" => [], "description" => "My child domain description", "name" => "My child domain"}],
-                              "description" => "My domain description", "name" => "My domain"}]
+                                [%{"children" => [], "description" => "My child domain description", "name" => "My child domain", "type" => nil}],
+                                   "description" => "My domain description", "name" => "My domain", "type" => nil}]
     end
   end
 

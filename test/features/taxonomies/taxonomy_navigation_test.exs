@@ -35,14 +35,14 @@ defmodule TdBg.TaxonomyNavigationTest do
   end
 
   defthen ~r/^user sees following list:$/, %{table: table}, state do
-    dg_list = state[:resp]["data"]["collection"]
-    dg_list = Enum.map(dg_list, &(Map.take(&1, ["name", "description"])))
-    dg_list = Enum.reduce(dg_list, [], fn(item, acc) ->
+    domains = state[:resp]["data"]["collection"]
+    domains = Enum.map(domains, &(Map.take(&1, ["name", "description"])))
+    domains = Enum.reduce(domains, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)
       acc ++ [nitem]
       end
     )
-    assert Enum.sort(table) == Enum.sort(dg_list)
+    assert Enum.sort(table) == Enum.sort(domains)
   end
 
   defthen ~r/^user sees following business concepts list:$/, %{table: table}, state do
@@ -88,6 +88,7 @@ defmodule TdBg.TaxonomyNavigationTest do
 
     #remove id and parent_id from comparison
     actual_tree = remove_tree_keys(actual_tree)
+
     assert JSONDiff.diff(actual_tree, expected_tree) == []
   end
 

@@ -40,7 +40,7 @@ defmodule TdBgWeb.TaxonomyController do
   end
 
   defp build_map(%Domain{} = domain) do
-    %{id: domain.id, name: domain.name, description: domain.description, children: []}
+    %{id: domain.id, name: domain.name, type: domain.type, description: domain.description, children: []}
   end
 
   swagger_path :roles do
