@@ -75,6 +75,8 @@ defmodule TdBgWeb.Router do
     post "/search", SearchController, :create
     get "/search/reindex_all", SearchController, :reindex_all
     delete "/search", SearchController, :delete
+
+    resources "/templates", TemplateController, except: [:new, :edit]
   end
 
   def swagger_info do

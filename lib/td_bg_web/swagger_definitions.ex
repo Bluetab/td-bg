@@ -502,5 +502,50 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end
     }
   end
+  def template_swagger_definitions do
+    %{
+      Template: swagger_schema do
+        title "Template"
+        description "A Template"
+        properties do
+          name :string, "Name", required: true
+          content :array, "Content", required: true
+        end
+        example %{
+          name: "Template1",
+          content: [
+            %{name: "name1", max_size: 100, type: "type1", required: true},
+            %{related_area: "related_area1", max_size: 100, type: "type2", required: false}
+          ]
+        }
+      end,
+      TemplateCreateUpdate: swagger_schema do
+        properties do
+          template (Schema.new do
+            properties do
+              name :string, "Name", required: true
+              content :array, "Content", required: true
+            end
+          end)
+        end
+      end,
+      Templates: swagger_schema do
+        title "Templates"
+        description "A collection of Templates"
+        type :array
+        items Schema.ref(:Template)
+      end,
+      TemplateResponse: swagger_schema do
+        properties do
+          data Schema.ref(:Template)
+        end
+      end,
+      TemplatesResponse: swagger_schema do
+        properties do
+          data Schema.ref(:Templates)
+        end
+      end
+    }
+  end
 
 end
