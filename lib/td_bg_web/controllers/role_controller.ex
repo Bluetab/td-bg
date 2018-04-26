@@ -104,7 +104,7 @@ defmodule TdBgWeb.RoleController do
       user_id :path, :integer, "user id", required: true
       domain_id :path, :integer, "domain id", required: true
     end
-    response 200, "OK", Schema.ref(:RoleResponse)
+    response 200, "OK", Schema.ref(:RolesResponse)
     response 400, "Client Error"
   end
 

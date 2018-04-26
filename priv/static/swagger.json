@@ -28,7 +28,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/RoleResponse"
+              "$ref": "#/definitions/RolesResponse"
             },
             "description": "OK"
           }
