@@ -3,6 +3,21 @@ defmodule TdBg.PermissionsTest do
 
   alias TdBg.Permissions
 
+  describe "permissions" do
+    alias TdBg.Permissions.Permission
+
+    test "list_permissions/0 returns all permissions" do
+      current_permissions = Permission.permissions |> Map.values |> Enum.sort
+      stored_permissions  = Permissions.list_permissions() |> Enum.map(&Map.get(&1, :name)) |> Enum.sort
+      assert current_permissions == stored_permissions
+    end
+
+    test "get_permission!/1 returns the premission with given id" do
+      permission = List.first(Permissions.list_permissions())
+      assert Permissions.get_permission!(permission.id) == permission
+    end
+  end
+
   describe "acl_entries" do
     alias TdBg.Permissions.AclEntry
 
@@ -12,7 +27,7 @@ defmodule TdBg.PermissionsTest do
     def acl_entry_fixture do
       user = build(:user)
       domain = insert(:domain)
-      role = insert(:role)
+      role = Permissions.get_role_by_name("watch")
       acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
       acl_entry_attrs
     end
@@ -37,7 +52,7 @@ defmodule TdBg.PermissionsTest do
     test "create_acl_entry/1 with valid data creates a acl_entry" do
       user = build(:user)
       domain = insert(:domain)
-      role = insert(:role)
+      role = Permissions.get_role_by_name("watch")
       valid_attrs = %{principal_id: user.id, principal_type: "user", resource_id: domain.id, resource_type: "domain", role_id: role.id}
       {:ok, acl_entry = %AclEntry{}} = Permissions.create_acl_entry(valid_attrs)
       assert acl_entry.principal_id == user.id
@@ -101,7 +116,7 @@ defmodule TdBg.PermissionsTest do
     end
 
     test "list_roles/0 returns all roles" do
-      assert length(Permissions.list_roles()) == length(Role.get_roles())
+      assert length(Permissions.list_roles()) == 4 # admin, watch, create, publish
     end
 
     test "get_role!/1 returns the role with given id" do
@@ -140,6 +155,58 @@ defmodule TdBg.PermissionsTest do
     test "change_role/1 returns a role changeset" do
       role = role_fixture()
       assert %Ecto.Changeset{} = Permissions.change_role(role)
+    end
+  end
+
+  describe "role permissions" do
+    alias TdBg.Permissions.Role
+    alias TdBg.Permissions.Permission
+
+    @role_attrs %{name: "rolename"}
+
+    test "get_role_permissions/0 returns all roles" do
+      admin = Permissions.get_role_by_name(Atom.to_string(:admin))
+      assert length(Permissions.get_role_permissions(admin)) != 0
+    end
+
+    test "add_permissions_to_role/2 adds permissions to a role" do
+      Permissions.create_role(@role_attrs)
+
+      permissions = Permissions.list_permissions
+      permissions = Enum.sort(permissions, &(&1.name < &2.name))
+
+      role = Permissions.get_role_by_name(@role_attrs.name)
+      Permissions.add_permissions_to_role(role, permissions)
+
+      role = Permissions.get_role_by_name(@role_attrs.name)
+      stored_permissions = Permissions.get_role_permissions(role)
+      stored_permissions = Enum.sort(stored_permissions, &(&1.name < &2.name))
+
+      assert permissions == stored_permissions
+    end
+
+    test "add_permissions_to_role/2 delete all permissions" do
+      Permissions.create_role(@role_attrs)
+
+      permissions = Permissions.list_permissions
+      permissions = Enum.sort(permissions, &(&1.name < &2.name))
+
+      role = Permissions.get_role_by_name(@role_attrs.name)
+      Permissions.add_permissions_to_role(role, permissions)
+
+      role = Permissions.get_role_by_name(@role_attrs.name)
+      stored_permissions = Permissions.get_role_permissions(role)
+      stored_permissions = Enum.sort(stored_permissions, &(&1.name < &2.name))
+
+      assert permissions == stored_permissions
+
+      role = Permissions.get_role_by_name(@role_attrs.name)
+      Permissions.add_permissions_to_role(role, [])
+
+      role = Permissions.get_role_by_name(@role_attrs.name)
+      stored_permissions = Permissions.get_role_permissions(role)
+
+      assert [] == stored_permissions
     end
   end
 end

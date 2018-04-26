@@ -6,16 +6,6 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptAlias
-  alias TdBg.Permissions.Role
-
-  @permissions %{
-    admin:   [:create, :update, :send_for_approval, :delete, :publish, :reject,
-              :deprecate, :view_versions, :manage_alias],
-    publish: [:create, :update, :send_for_approval, :delete, :publish, :reject,
-              :deprecate, :view_versions, :manage_alias],
-    create:  [:create, :update, :send_for_approval, :delete, :view_versions],
-    watch:   [:view_versions]
-  }
 
   @status %{draft: "draft",
             pending_approval: "pending_approval",
@@ -36,27 +26,12 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
     timestamps()
   end
 
-  def get_permissions do
-    @permissions
-  end
-
-  def get_allowed_version_status_by_role(role) do
-    if role == Role.create or role == Role.watch do
-      [BusinessConcept.status.published,
-       BusinessConcept.status.versioned,
-       BusinessConcept.status.deprecated]
-    else
-      [BusinessConcept.status.draft,
-       BusinessConcept.status.pending_approval,
-       BusinessConcept.status.rejected,
-       BusinessConcept.status.published,
-       BusinessConcept.status.versioned,
-       BusinessConcept.status.deprecated]
-    end
-  end
-
   def status do
     @status
+  end
+
+  def status_values do
+    @status |> Map.values
   end
 
   @doc false

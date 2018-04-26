@@ -234,6 +234,50 @@ defmodule TdBgWeb.SwaggerDefinitions do
     }
   end
 
+  def permission_swagger_definitions do
+    %{
+      Permission: swagger_schema do
+        title "Permission"
+        description "Permission"
+        properties do
+          id :integer, "unique identifier", required: true
+          name :string, "permission name", required: true
+        end
+      end,
+      PermissionItem: swagger_schema do
+        properties do
+          id :integer, "unique identifier", required: true
+          name :string, "permission name"
+        end
+      end,
+      PermissionItems: swagger_schema do
+        type :array
+        items Schema.ref(:PermissionItem)
+      end,
+      AddPermissionsToRole: swagger_schema do
+        properties do
+          permissions Schema.ref(:PermissionItems)
+        end
+      end,
+      Permissions: swagger_schema do
+        title "Roles"
+        description "A collection of Permissions"
+        type :array
+        items Schema.ref(:Role)
+      end,
+      PermissionResponse: swagger_schema do
+        properties do
+          data Schema.ref(:Permission)
+        end
+      end,
+      PermissionsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:Permissions)
+        end
+      end
+    }
+  end
+
   def role_swagger_definitions do
     %{
       Role: swagger_schema do

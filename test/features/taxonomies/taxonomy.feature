@@ -41,7 +41,6 @@ Feature: Taxonomy administration
       | Description |
       | First version of my Child Domain |
     And if result <result> is "Created", Domain "My Child Domain" is a child of Domain "My Parent Domain"
-
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
@@ -102,9 +101,9 @@ Feature: Taxonomy administration
 
     Examples:
       | user      | result       |
-      | watcher   | Unauthorized |
-      | creator   | Unauthorized |
-      | publisher | Unauthorized |
+      # | watcher   | Unauthorized |
+      # | creator   | Unauthorized |
+      # | publisher | Unauthorized |
       | admin     | Ok           |
 
   Scenario Outline: Deleting a Domain without any Group or Domain pending on it by Group Manager

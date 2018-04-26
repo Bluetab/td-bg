@@ -56,7 +56,7 @@ defmodule TdBgWeb.TaxonomyController do
   def roles(conn, %{"principal_id" => principal_id}) do
     taxonomy_roles = Permissions.assemble_roles(%{user_id: principal_id})
     all_roles = Permissions.list_roles()
-    taxonomy_roles = Enum.map(taxonomy_roles, &(%{id: &1.id, role: &1.role, role_id: find_role_by_name(all_roles, &1.role).id, acl_entry_id: &1.acl_entry_id, inherited: &1.inherited}))
+    taxonomy_roles = Enum.map(taxonomy_roles, &(%{id: &1.id, role: &1.role, role_id: get_role_id(all_roles, &1.role), acl_entry_id: &1.acl_entry_id, inherited: &1.inherited}))
 
     roles_domain = case taxonomy_roles do
       nil -> %{}
@@ -68,7 +68,10 @@ defmodule TdBgWeb.TaxonomyController do
   end
   def roles(conn, _params), do: json conn, %{"data": []}
 
-  defp find_role_by_name(roles, role_name) do
-    Enum.find(roles, fn(role) -> role.name == role_name end)
+  defp get_role_id(roles, role_name) do
+    case role_name do
+      nil -> nil
+      name -> Enum.find(roles, fn(role) -> role.name == name end).id
+    end
   end
 end

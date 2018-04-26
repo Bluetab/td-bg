@@ -5,16 +5,19 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Permissions
+  alias TdBg.Permissions.Permission
+  alias TdBg.Repo
 
   def can?(%User{id: user_id}, :create_business_concept, %Domain{id: domain_id})  do
     %{user_id: user_id,
-      action: :create,
+      action: Permission.permissions.create_business_concept,
       domain_id: domain_id}
     |> can_execute_action?
   end
 
   def can?(%User{id: user_id}, :update, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :update,
+    %{user_id: user_id,
+      action: Permission.permissions.update_business_concept,
       current_status: status,
       required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
       domain_id: domain_id}
@@ -22,7 +25,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :send_for_approval, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :send_for_approval,
+    %{user_id: user_id,
+      action: Permission.permissions.send_business_concept_for_approval,
       current_status: status,
       required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
       domain_id: domain_id}
@@ -30,7 +34,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :reject, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :reject,
+    %{user_id: user_id,
+      action: Permission.permissions.reject_business_concept,
       current_status: status,
       required_statuses: [BusinessConcept.status.pending_approval, BusinessConcept.status.rejected],
       domain_id: domain_id}
@@ -38,7 +43,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :publish, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :publish,
+    %{user_id: user_id,
+      action: Permission.permissions.publish_business_concept,
       current_status: status,
       required_statuses: [BusinessConcept.status.pending_approval],
       domain_id: domain_id}
@@ -46,7 +52,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :deprecate, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :deprecate,
+    %{user_id: user_id,
+      action: Permission.permissions.deprecate_business_concept,
       current_status: status,
       required_statuses: [BusinessConcept.status.published],
       domain_id: domain_id}
@@ -54,7 +61,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :update_published, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :update,
+    %{user_id: user_id,
+      action: Permission.permissions.update_business_concept,
       current_status: status,
       required_statuses: [BusinessConcept.status.published],
       domain_id: domain_id}
@@ -62,7 +70,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :delete, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :delete,
+    %{user_id: user_id,
+      action: Permission.permissions.delete_business_concept,
       current_status: status,
       required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
       domain_id: domain_id}
@@ -70,7 +79,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :view_versions, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :view_versions,
+    %{user_id: user_id,
+      action: Permission.permissions.view_versioned_business_concepts,
       current_status: status,
       required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.pending_approval, BusinessConcept.status.rejected,
                           BusinessConcept.status.published, BusinessConcept.status.versioned, BusinessConcept.status.deprecated],
@@ -79,7 +89,8 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   def can?(%User{id: user_id}, :manage_alias, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
-    %{user_id: user_id, action: :manage_alias,
+    %{user_id: user_id,
+      action: Permission.permissions.manage_business_concept_alias,
       current_status: status,
       required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.published],
       domain_id: domain_id}
@@ -104,12 +115,17 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
   end
 
   defp allowed_action?(%{user_id: user_id, action: action, domain_id: domain_id}) do
-    role_in_resource = Permissions.get_role_in_resource(%{user_id: user_id, domain_id: domain_id})
-    if role_in_resource do
-      role_name = role_in_resource |> Map.get(:name) |> String.to_atom
-      BusinessConcept.get_permissions() |> Map.get(role_name) |> Enum.member?(action)
-    else
-      false
+    acl_input = %{user_id: user_id, domain_id: domain_id}
+    role_name = Permissions.get_role_in_resource(acl_input)
+    role = Permissions.get_role_by_name(role_name.name)
+    case role do
+      nil -> false
+      _ ->
+        role
+        |> Repo.preload(:permissions)
+        |> Map.get(:permissions)
+        |> Enum.map(&(&1.name))
+        |> Enum.member?(action)
     end
   end
 

@@ -42,7 +42,9 @@ defmodule TdBg.SuperAdminRolesAdminTest do
     user = create_user(user_name)
     domain_info = get_domain_by_name(state[:token_admin], domain_name)
     {:ok, _status_code, role_data} = user_domain_role(state[:token_admin], %{user_id: user.id, domain_id: domain_info["id"]})
-    assert role_data["data"]["name"] == role_name
+    name = role_data["data"]["name"]
+    name = if name, do: name, else: "none"
+    assert name == role_name
   end
 
   defp user_domain_role(token, attrs) do

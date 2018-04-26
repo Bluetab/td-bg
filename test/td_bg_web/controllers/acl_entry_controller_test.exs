@@ -4,7 +4,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
 
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Permissions.AclEntry
-  alias TdBg.Permissions.Role
+  alias TdBg.Permissions
   import TdBgWeb.Authentication, only: :functions
 
   @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain"}
@@ -32,7 +32,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = insert(:role)
+      role = Permissions.get_role_by_name("watch")
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
@@ -56,7 +56,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders error for duplicated acl_entry", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = insert(:role)
+      role = Permissions.get_role_by_name("watch")
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
@@ -80,7 +80,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders acl_entry when creating a new acl", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = get_role_by_name(conn, Atom.to_string(Role.create))
+      role = get_role_by_name(conn, Atom.to_string(:create))
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role["name"])
@@ -105,7 +105,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders acl_entry when updating an existing acl", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = build(:role)
+      role = Permissions.get_role_by_name("watch")
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role.name)
@@ -113,7 +113,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
       assert %{"id" => _id} = json_response(conn, 201)["data"]
       validate_resp_schema(conn, schema, "AclEntryResponse")
 
-      role = get_role_by_name(conn, Atom.to_string(Role.admin))
+      role = get_role_by_name(conn, Atom.to_string(:admin))
 
       conn = recycle_and_put_headers(conn)
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
@@ -182,7 +182,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
   defp create_acl_entry(_) do
     user = build(:user)
     domain = insert(:domain)
-    role = insert(:role)
+    role = Permissions.get_role_by_name("watch")
     acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
     {:ok, acl_entry: acl_entry_attrs}
   end

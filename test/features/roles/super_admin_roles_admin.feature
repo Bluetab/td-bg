@@ -23,11 +23,11 @@ Feature: Roles Admin
     Examples:
       | role    | group             | parent_domain_role  | child_domain_role | domain_role |
       | admin   | My Parent Domain  | admin               | admin             | admin       |
-      | admin   | My Child Domain   | watch               | admin             | admin       |
+      | admin   | My Child Domain   | none                | admin             | admin       |
       | publish | My Parent Domain  | publish             | publish           | publish     |
-      | publish | My Child Domain   | watch               | publish           | publish     |
+      | publish | My Child Domain   | none                | publish           | publish     |
       | create  | My Parent Domain  | create              | create            | create      |
-      | create  | My Child Domain   | watch               | create            | create      |
+      | create  | My Child Domain   | none                | create            | create      |
 
   Scenario Outline: Granting roles to leaf Domain
     Given an existing Domain called "My Parent Domain"
@@ -41,6 +41,6 @@ Feature: Roles Admin
 
     Examples:
       | role    | parent_domain_role  | child_domain_role | domain_role |
-      | admin   | watch               | watch             | admin       |
-      | publish | watch               | watch             | publish     |
-      | create  | watch               | watch             | create      |
+      | admin   | none                | none              | admin       |
+      | publish | none                | none              | publish     |
+      | create  | none                | none              | create      |

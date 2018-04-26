@@ -6,6 +6,8 @@ defmodule TdBgWeb.TaxonomyControllerTest do
 
   import TdBgWeb.Taxonomy
 
+  alias TdBg.Permissions
+
   setup_all do
     start_supervised MockTdAuthService
     :ok
@@ -65,7 +67,7 @@ defmodule TdBgWeb.TaxonomyControllerTest do
     test "List domains custom role list", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = insert(:role_create)
+      role = Permissions.get_role_by_name("create")
       acl = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
 
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
@@ -82,7 +84,8 @@ defmodule TdBgWeb.TaxonomyControllerTest do
     test "List children domain custom role list", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       child_domain = insert(:child_domain)
-      acl = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: child_domain.id, role_id: insert(:role_publish).id)
+      role = Permissions.get_role_by_name("publish")
+      acl = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: child_domain.id, role_id: role.id)
 
       conn = get conn, taxonomy_path(conn, :roles, principal_id: user.id)
       validate_resp_schema(conn, schema, "TaxonomyRolesResponse")

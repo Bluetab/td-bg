@@ -31,7 +31,7 @@ defmodule TdBgWeb.RoleControllerTest do
     test "lists all roles", %{conn: conn, swagger_schema: schema} do
       conn = get conn, role_path(conn, :index)
       validate_resp_schema(conn, schema, "RolesResponse")
-      assert length(json_response(conn, 200)["data"]) == length(Role.get_roles())
+      assert length(json_response(conn, 200)["data"]) == 4 # admin, watch, publish, create
     end
   end
 

@@ -4,11 +4,11 @@ defmodule TdBg.Permissions.Role do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.Permissions.Role
-
-  @roles [:admin, :watch, :create, :publish]
+  alias TdBg.Permissions.Permission
 
   schema "roles" do
     field :name, :string
+    many_to_many :permissions, Permission, join_through: "roles_permissions", on_replace: :delete, on_delete: :delete_all
 
     timestamps()
   end
@@ -18,26 +18,6 @@ defmodule TdBg.Permissions.Role do
     role
     |> cast(attrs, [:name])
     |> validate_required([:name])
-  end
-
-  def get_roles do
-    @roles
-  end
-
-  def admin do
-    :admin
-  end
-
-  def watch do
-    :watch
-  end
-
-  def create do
-    :create
-  end
-
-  def publish do
-    :publish
   end
 
 end

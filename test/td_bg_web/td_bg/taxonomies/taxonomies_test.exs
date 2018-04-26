@@ -25,7 +25,7 @@ defmodule TdBg.TaxonomiesTest do
 
     def acl_entry_fixture(%Domain{} = domain) do
       user = build(:user)
-      role = insert(:role)
+      role = Permissions.get_role_by_name("watch")
       acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
       acl_entry_attrs
     end

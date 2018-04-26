@@ -4,12 +4,43 @@ defmodule TdBg.Permissions do
   """
 
   import Ecto.Query, warn: false
+  alias Ecto.Changeset
   alias TdBg.Repo
 
+  alias TdBg.Permissions.Permission
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBg.Taxonomies.Domain
   alias TdBg.Taxonomies
+
+  @doc """
+  Returns the list of permissions.
+
+  ## Examples
+
+      iex> list_permissions()
+      [%Permission{}, ...]
+
+  """
+  def list_permissions do
+    Repo.all(Permission)
+  end
+
+  @doc """
+  Gets a single permission.
+
+  Raises `Ecto.NoResultsError` if the Permission does not exist.
+
+  ## Examples
+
+      iex> get_permissions!(123)
+      %Permission{}
+
+      iex> get_permissions!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_permission!(id), do: Repo.get!(Permission, id)
 
   @doc """
   Returns the list of acl_entries.
@@ -149,13 +180,15 @@ defmodule TdBg.Permissions do
     domain = Taxonomies.get_domain(resource_id)
     domain = domain |> Repo.preload(:parent)
     role_name = get_resource_role(%{user_id: principal_id, domain: domain, role: nil})
-    %Role{name: role_name}
+    case role_name do
+      nil -> nil
+      name -> %Role{name: name}
+    end
   end
 
   defp get_resource_role(%{user_id: _principal_id, domain: %Domain{parent_id: nil}, role: nil} = attrs) do
     case get_role_by_principal_and_resource(attrs) do
-      nil ->
-        get_default_role()
+      nil -> nil
       %Role{name: name} ->
         name
     end
@@ -179,10 +212,6 @@ defmodule TdBg.Permissions do
 
   defp get_resource_role(%{user_id: _principal_id, domain: %Domain{} = _domain, role: role}) do
     role.name
-  end
-
-  def get_default_role do
-    Role.watch |> Atom.to_string
   end
 
   defp get_role_by_principal_and_resource(%{user_id: _principal_id, domain: %Domain{}} = attrs) do
@@ -294,6 +323,38 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
+  Returns the list of Permissions asociated to a Role.
+
+  ## Examples
+
+      iex> get_role_permissions()
+      [%Permission{}, ...]
+
+  """
+  def get_role_permissions(%Role{} = role) do
+    role
+    |> Repo.preload(:permissions)
+    |> Map.get(:permissions)
+  end
+
+  @doc """
+  Associate Permissions to a Role.
+
+  ## Examples
+
+      iex> add_permissions_to_role!()
+      %Role{}
+
+  """
+  def add_permissions_to_role(%Role{} = role, permissions) do
+    role
+    |> Repo.preload(:permissions)
+    |> Changeset.change
+    |> Changeset.put_assoc(:permissions, permissions)
+    |> Repo.update!
+  end
+
+  @doc """
     Returns flat list of DG and DDs user roles
   """
   def assemble_roles(%{user_id: user_id}) do
@@ -314,12 +375,17 @@ defmodule TdBg.Permissions do
   defp assemble_node_role(%Domain{parent_id: nil} = domain, user_id, all_acls, roles, domains) do
     custom_role = get_role_in_resource(%{user_id: user_id, domain_id: domain.id})
     custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain" && acl.resource_id == domain.id end)
+    custom_role_name = if custom_role do
+      custom_role.name
+    else
+      nil
+    end
     custom_acl_id = if custom_acl do
       custom_acl.id
     else
       nil
     end
-    roles = roles ++ [build_domain_map(%{id: domain.id, role: custom_role.name, acl_entry_id: custom_acl_id, inherited: custom_acl == nil})]
+    roles = roles ++ [build_domain_map(%{id: domain.id, role: custom_role_name, acl_entry_id: custom_acl_id, inherited: custom_acl == nil})]
     Enum.reduce(domain.children, roles, fn(child_domain, acc) ->
       Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_domain, user_id, all_acls, roles, domains)]))
     end)
