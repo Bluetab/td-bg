@@ -142,7 +142,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           ]
         }
       end,
-      DGDDItem: swagger_schema do
+      DomainItem: swagger_schema do
         properties do
           id (Schema.new do
             properties do
@@ -158,15 +158,13 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data (Schema.new do
             properties do
-              domains Schema.ref(:DGDDItem)
-              data_domains Schema.ref(:DGDDItem)
+              domains Schema.ref(:DomainItem)
             end
           end)
         end
         example %{
           data: [
             %{
-              data_domains: %{"93": %{inherited: false, role: "admin", role_id: 1, acl_entry_id: 1}, "94": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}},
               domains: %{"69": %{inherited: false, role: "publish", role_id: 2, acl_entry_id: 2}, "70": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}}
             }
           ]
