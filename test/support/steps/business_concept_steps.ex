@@ -8,7 +8,7 @@ defmodule TdBg.BusinessConceptSteps do
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
     %{business_concept_type: business_concept_type}, state do
-      add_to_business_concept_schema(business_concept_type, [])
+      create_template(business_concept_type, [])
       {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
@@ -46,7 +46,7 @@ defmodule TdBg.BusinessConceptSteps do
     |> Enum.map(fn(row) ->
       add_all_schema_fields(row)
     end)
-    add_to_business_concept_schema(business_concept_type, schema)
+    create_template(business_concept_type, schema)
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
@@ -424,7 +424,8 @@ defmodule TdBg.BusinessConceptSteps do
     state do
 
     token = get_user_token(user_name)
-    {:ok, status_code, %{"data" => resp}} = business_concept_type_list(token)
+    {:ok, status_code, %{"data" => resp}} = index_templates(token)
+    resp = Enum.map(resp, fn(x) -> %{type_name: Map.get(x, "name")} end)
     {:ok, Map.merge(state, %{status_code: status_code, user_name: user_name, business_concept_types: resp})}
   end
 
@@ -434,7 +435,7 @@ defmodule TdBg.BusinessConceptSteps do
 
       assert user_name == state[:user_name]
       expected_list = Enum.map(expected_list, fn(type) -> type.type_name end)
-      actual_list = Enum.map(state[:business_concept_types], fn(type) -> type["type_name"] end)
+      actual_list = Enum.map(state[:business_concept_types], fn(type) -> type[:type_name] end)
       assert Enum.sort(expected_list) == Enum.sort(actual_list)
   end
 
@@ -442,7 +443,8 @@ defmodule TdBg.BusinessConceptSteps do
     %{user_name: user_name, bc_type: bc_type},
     state do
     token = get_user_token(user_name)
-    {:ok, status_code, %{"data" => resp}} = business_concept_type_fields_list(token, bc_type)
+    {:ok, status_code, %{"data" => resp}} = index_templates(token)
+    [%{"content" => resp}] = Enum.filter(resp, fn(%{"name" => name}) -> name == bc_type end)
     {:ok, Map.merge(state, %{status_code: status_code, user_name: user_name, business_concept_type_fields: resp})}
   end
 

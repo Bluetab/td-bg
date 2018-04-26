@@ -8,11 +8,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias Poison, as: JSON
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
   alias TdBg.Permissions.Role
+  alias TdBg.Templates
 
   action_fallback TdBgWeb.FallbackController
 
@@ -92,7 +92,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept = business_concept_version.business_concept
     concept_type = business_concept.type
     concept_name = Map.get(business_concept_params, "name")
-    content_schema = get_content_schema(concept_type)
+    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
 
     user = conn.assigns.current_user
 
@@ -144,14 +144,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def show(conn, %{"id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept_version", conn, business_concept_version))
-  end
-
-  defp get_content_schema(content_type) do
-    filename = Application.get_env(:td_bg, :bc_schema_location)
-    filename
-      |> File.read!
-      |> JSON.decode!
-      |> Map.get(content_type)
   end
 
 end

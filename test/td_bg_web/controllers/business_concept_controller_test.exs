@@ -49,7 +49,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   end
 
   describe "create business_concept" do
-    setup [:create_content_schema]
+    setup [:create_template]
 
     @tag authenticated_user: @admin_user_name
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
@@ -97,7 +97,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   end
 
   describe "update business_concept" do
-    setup [:create_content_schema]
+    setup [:create_template]
 
     @tag authenticated_user: @admin_user_name
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
@@ -145,7 +145,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   end
 
   describe "update business_concept status" do
-    setup [:create_content_schema]
+    setup [:create_template]
 
     @transitions  [{BusinessConcept.status.draft, BusinessConcept.status.pending_approval},
                    {BusinessConcept.status.pending_approval, BusinessConcept.status.published},
@@ -200,9 +200,13 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   #   end
   # end
 
-  def create_content_schema(_) do
-    json_schema = %{"some type" => []} |> JSON.encode!
-    path = Application.get_env(:td_bg, :bc_schema_location)
-    File.write!(path, json_schema, [:write, :utf8])
+  def create_template(_) do
+    headers = get_header(get_user_token("app-admin"))
+    attrs = %{}
+      |> Map.put("name", "some type")
+      |> Map.put("content", [])
+    body = %{template: attrs} |> JSON.encode!
+    HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
+    :ok
   end
 end

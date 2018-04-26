@@ -39,7 +39,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "create business_concept_version" do
-    setup [:create_content_schema]
+    setup [:create_template]
 
     @tag authenticated_user: @admin_user_name
     test "renders business_concept_version when data is valid", %{conn: conn, swagger_schema: schema} do
@@ -66,10 +66,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
-  def create_content_schema(_) do
-    json_schema = %{"some type" => []} |> JSON.encode!
-    path = Application.get_env(:td_bg, :bc_schema_location)
-    File.write!(path, json_schema, [:write, :utf8])
+  def create_template(_) do
+    headers = get_header(get_user_token("app-admin"))
+    attrs = %{}
+      |> Map.put("name", "some type")
+      |> Map.put("content", [])
+    body = %{template: attrs} |> JSON.encode!
+    HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
+    :ok
   end
 
 end

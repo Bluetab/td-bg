@@ -20,23 +20,22 @@ defmodule TdBgWeb.BusinessConcept do
                   "Related To" => "related_to"
                   }
 
-  def add_to_business_concept_schema(type, definition) do
-    filename = Application.get_env(:td_bg, :bc_schema_location)
+  def create_template(type, definition) do
+    headers = get_header(get_user_token("app-admin"))
+    attrs = %{}
+      |> Map.put("name", type)
+      |> Map.put("content", definition)
+    body = %{template: attrs} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
 
-    {:ok, file} = File.open filename, [:read, :write, :utf8]
-    content = File.read! filename
-    map_content =
-      case content do
-        "" -> Map.new
-        _ -> JSON.decode!(content)
-      end
-
-    json_schema = [{type, definition}]
-                  |> Map.new
-                  |> Map.merge(map_content)
-                  |> JSON.encode!
-    IO.binwrite file, json_schema
-    File.close file
+  def index_templates(token) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(template_url(@endpoint, :index), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
   end
 
   def rm_business_concept_schema do
@@ -205,20 +204,6 @@ defmodule TdBgWeb.BusinessConcept do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(business_concept_url(@endpoint, :index_status, status), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def business_concept_type_list(token) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_type_url(@endpoint, :index), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def business_concept_type_fields_list(token, bc_type) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_type_field_url(@endpoint, :index, business_concept_type: bc_type), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

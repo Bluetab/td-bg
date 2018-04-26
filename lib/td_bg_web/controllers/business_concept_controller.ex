@@ -12,8 +12,7 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
-
-  alias Poison, as: JSON
+  alias TdBg.Templates
 
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update_status]
 
@@ -82,7 +81,7 @@ defmodule TdBgWeb.BusinessConceptController do
     validate_required_bc_fields(business_concept_params)
 
     concept_type = Map.get(business_concept_params, "type")
-    content_schema = get_content_schema(concept_type)
+    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
 
     concept_name = Map.get(business_concept_params, "name")
 
@@ -197,7 +196,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
     concept_type = business_concept_version.business_concept.type
     concept_name = Map.get(business_concept_params, "name")
-    content_schema = get_content_schema(concept_type)
+    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
 
     user = conn.assigns.current_user
 
@@ -376,14 +375,6 @@ defmodule TdBgWeb.BusinessConceptController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
-  end
-
-  defp get_content_schema(content_type) do
-    filename = Application.get_env(:td_bg, :bc_schema_location)
-    filename
-      |> File.read!
-      |> JSON.decode!
-      |> Map.get(content_type)
   end
 
   swagger_path :index_status do

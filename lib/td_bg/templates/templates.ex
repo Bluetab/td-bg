@@ -37,6 +37,9 @@ defmodule TdBg.Templates do
   """
   def get_template!(id), do: Repo.get!(Template, id)
 
+  def get_template_by_name(name) do
+    Repo.one from r in Template, where: r.name == ^name
+  end
   @doc """
   Creates a template.
 
