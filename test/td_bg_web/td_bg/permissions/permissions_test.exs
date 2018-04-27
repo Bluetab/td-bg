@@ -209,6 +209,15 @@ defmodule TdBg.PermissionsTest do
       assert [] == stored_permissions
     end
 
+    test "get_permissios_in_resource?/1 get permissions in resource" do
+      user = build(:user)
+      domain = insert(:domain)
+      permission = insert(:permission)
+      role = insert(:role, permissions: [permission])
+      insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
+      assert Permissions.get_permissions_in_resource(%{user_id: user.id, domain_id: domain.id}) == [permission.name]
+    end
+
     test "authorize?/1 check permission" do
       user = build(:user)
       domain = insert(:domain)

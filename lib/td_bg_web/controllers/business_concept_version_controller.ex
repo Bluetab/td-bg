@@ -12,8 +12,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
   alias TdBg.Templates
-  alias TdBg.Repo
-
+  
   action_fallback TdBgWeb.FallbackController
 
   def swagger_definitions do
@@ -66,27 +65,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case user.is_admin do
       true -> BusinessConcept.status_values
       false ->
-        acl_input = %{user_id: user.id, domain_id:  business_concept.domain_id}
-        case Permissions.get_role_in_resource(acl_input) do
-          nil -> []
-          role -> get_role_status(role.name)
-        end
+        permissions_to_status = BusinessConcept.permissions_to_status
+        %{user_id: user.id, domain_id:  business_concept.domain_id}
+        |> Permissions.get_permissions_in_resource
+        |> Enum.reduce([], fn(permission, acc) ->
+          acc ++ case Map.get(permissions_to_status, permission) do
+            nil -> []
+            status -> [status]
+          end
+        end)
     end
-  end
-
-  defp get_role_status(role_name) do
-    permissions_to_status = BusinessConcept.permissions_to_status
-    role_name
-    |> Permissions.get_role_by_name
-    |> Repo.preload(:permissions)
-    |> Map.get(:permissions)
-    |> Enum.map(&(&1.name))
-    |> Enum.reduce([], fn(permission, acc) ->
-      acc ++ case Map.get(permissions_to_status, permission) do
-        nil -> []
-        status -> [status]
-      end
-    end)
   end
 
   swagger_path :create do

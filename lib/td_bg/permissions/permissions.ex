@@ -355,6 +355,30 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
+  Return array of user permissions in a resource
+
+  ## Examples
+
+      iex> get_permissions_in_resource?()
+      true
+
+  """
+  def get_permissions_in_resource(%{user_id: user_id, domain_id: domain_id}) do
+    acl_input = %{user_id: user_id, domain_id: domain_id}
+    role_in_resource = get_role_in_resource(acl_input)
+    case role_in_resource do
+      nil -> []
+      role ->
+        role
+        |> Map.get(:name)
+        |> get_role_by_name
+        |> Repo.preload(:permissions)
+        |> Map.get(:permissions)
+        |> Enum.map(&(&1.name))
+    end
+  end
+
+  @doc """
   Check if user has a permission in a domain.
 
   ## Examples
@@ -364,19 +388,9 @@ defmodule TdBg.Permissions do
 
   """
   def authorized?(%{user_id: user_id, permission: permission, domain_id: domain_id}) do
-    acl_input = %{user_id: user_id, domain_id: domain_id}
-    role_in_resource = get_role_in_resource(acl_input)
-    case role_in_resource do
-      nil -> false
-      role ->
-        role
-        |> Map.get(:name)
-        |> get_role_by_name
-        |> Repo.preload(:permissions)
-        |> Map.get(:permissions)
-        |> Enum.map(&(&1.name))
-        |> Enum.member?(permission)
-    end
+    %{user_id: user_id, domain_id: domain_id}
+    |> get_permissions_in_resource
+    |> Enum.member?(permission)
   end
 
   @doc """
