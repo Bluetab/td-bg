@@ -355,6 +355,30 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
+  Check if user has a permission in a domain.
+
+  ## Examples
+
+      iex> authorized?()
+      true
+
+  """
+  def authorized?(%{user_id: user_id, permission: permission, domain_id: domain_id}) do
+    acl_input = %{user_id: user_id, domain_id: domain_id}
+    role_in_resource = get_role_in_resource(acl_input)
+    role = get_role_by_name(role_in_resource.name)
+    case role do
+      nil -> false
+      _ ->
+        role
+        |> Repo.preload(:permissions)
+        |> Map.get(:permissions)
+        |> Enum.map(&(&1.name))
+        |> Enum.member?(permission)
+    end
+  end
+
+  @doc """
     Returns flat list of DG and DDs user roles
   """
   def assemble_roles(%{user_id: user_id}) do
@@ -412,5 +436,4 @@ defmodule TdBg.Permissions do
       get_closest_role(parent_domain, roles, domains)
     end
   end
-
 end

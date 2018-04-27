@@ -59,6 +59,19 @@ defmodule TdBg.Factory do
     }
   end
 
+  def permission_factory do
+    %TdBg.Permissions.Permission {
+      name: "custom_permission"
+    }
+  end
+
+  def role_factory do
+    %TdBg.Permissions.Role {
+      name: "custom_role",
+      permissions: []
+    }
+  end
+
   def acl_entry_domain_user_factory do
     %TdBg.Permissions.AclEntry {
       principal_id: nil,
