@@ -22,16 +22,8 @@ defmodule TdBgWeb.PermissionController do
   end
 
   def index(conn, _params) do
-    current_user = get_current_user(conn)
-    case can?(current_user, index(Permission)) do
-      true ->
-        permissions = Permissions.list_permissions()
-        render(conn, "index.json", permissions: permissions)
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-    end
+    permissions = Permissions.list_permissions()
+    render(conn, "index.json", permissions: permissions)
   end
 
   swagger_path :show do
@@ -46,16 +38,8 @@ defmodule TdBgWeb.PermissionController do
   end
 
   def show(conn, %{"id" => id}) do
-    current_user = get_current_user(conn)
     permission = Permissions.get_permission!(id)
-    case can?(current_user, show(permission)) do
-      true ->
-        render(conn, "show.json", permission: permission)
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-    end
+    render(conn, "show.json", permission: permission)
   end
 
   swagger_path :get_role_permissions do
@@ -68,17 +52,9 @@ defmodule TdBgWeb.PermissionController do
   end
 
   def get_role_permissions(conn, %{"role_id" => role_id}) do
-    current_user = get_current_user(conn)
     role = Permissions.get_role!(role_id)
-    case can?(current_user, get_role(role)) do
-      true ->
-        permissions = Permissions.get_role_permissions(role)
-        render(conn, "index.json", permissions: permissions)
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-    end
+    permissions = Permissions.get_role_permissions(role)
+    render(conn, "index.json", permissions: permissions)
   end
 
   swagger_path :add_permissions_to_role do

@@ -2,9 +2,13 @@ defmodule TdBgWeb.RoleController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 
+  import Canada, only: [can?: 2]
+
+  alias TdBgWeb.ErrorView
   alias TdBg.Permissions
   alias TdBg.Permissions.Role
   alias TdBgWeb.SwaggerDefinitions
+  alias Guardian.Plug, as: GuardianPlug
 
   action_fallback TdBgWeb.FallbackController
 
@@ -35,11 +39,24 @@ defmodule TdBgWeb.RoleController do
   end
 
   def create(conn, %{"role" => role_params}) do
-    with {:ok, %Role{} = role} <- Permissions.create_role(role_params) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", role_path(conn, :show, role))
-      |> render("show.json", role: role)
+    current_user = get_current_user(conn)
+    case can?(current_user, create(Role)) do
+      true ->
+        with {:ok, %Role{} = role} <- Permissions.create_role(role_params) do
+          conn
+          |> put_status(:created)
+          |> put_resp_header("location", role_path(conn, :show, role))
+          |> render("show.json", role: role)
+        else
+          _error ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(ErrorView, :"422.json")
+        end
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
     end
   end
 
@@ -72,10 +89,22 @@ defmodule TdBgWeb.RoleController do
   end
 
   def update(conn, %{"id" => id, "role" => role_params}) do
+    current_user = get_current_user(conn)
     role = Permissions.get_role!(id)
-
-    with {:ok, %Role{} = role} <- Permissions.update_role(role, role_params) do
-      render(conn, "show.json", role: role)
+    case can?(current_user, update(role)) do
+      true ->
+        with {:ok, %Role{} = role} <- Permissions.update_role(role, role_params) do
+          render(conn, "show.json", role: role)
+        else
+          _error ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(ErrorView, :"422.json")
+        end
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
     end
   end
 
@@ -91,9 +120,22 @@ defmodule TdBgWeb.RoleController do
   end
 
   def delete(conn, %{"id" => id}) do
+    current_user = get_current_user(conn)
     role = Permissions.get_role!(id)
-    with {:ok, %Role{}} <- Permissions.delete_role(role) do
-      send_resp(conn, :no_content, "")
+    case can?(current_user, delete(role)) do
+      true ->
+        with {:ok, %Role{}} <- Permissions.delete_role(role) do
+          send_resp(conn, :no_content, "")
+        else
+          _error ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(ErrorView, :"422.json")
+        end
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
     end
   end
 
@@ -111,6 +153,10 @@ defmodule TdBgWeb.RoleController do
   def user_domain_role(conn, %{"user_id" => user_id, "domain_id" => domain_id}) do
     role = Permissions.get_role_in_resource(%{user_id: user_id, domain_id: domain_id})
     render(conn, "show.json", role: role)
+  end
+
+  defp get_current_user(conn) do
+    GuardianPlug.current_resource(conn)
   end
 
 end
