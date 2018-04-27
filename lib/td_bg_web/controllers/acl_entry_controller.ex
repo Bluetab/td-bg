@@ -114,10 +114,22 @@ defmodule TdBgWeb.AclEntryController do
   end
 
   def update(conn, %{"id" => id, "acl_entry" => acl_entry_params}) do
+    current_user = GuardianPlug.current_resource(conn)
     acl_entry = Permissions.get_acl_entry!(id)
 
-    with {:ok, %AclEntry{} = acl_entry} <- Permissions.update_acl_entry(acl_entry, acl_entry_params) do
-      render(conn, "show.json", acl_entry: acl_entry)
+    if current_user |> can?(update(acl_entry)) do
+      with {:ok, %AclEntry{} = acl_entry} <- Permissions.update_acl_entry(acl_entry, acl_entry_params) do
+        render(conn, "show.json", acl_entry: acl_entry)
+      else
+        _error ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(ErrorView, :"422.json")
+      end
+    else
+      conn
+      |> put_status(:forbidden)
+      |> render(ErrorView, :"403.json")
     end
   end
 
@@ -133,9 +145,22 @@ defmodule TdBgWeb.AclEntryController do
   end
 
   def delete(conn, %{"id" => id}) do
+    current_user = GuardianPlug.current_resource(conn)
     acl_entry = Permissions.get_acl_entry!(id)
-    with {:ok, %AclEntry{}} <- Permissions.delete_acl_entry(acl_entry) do
-      send_resp(conn, :no_content, "")
+
+    if current_user |> can?(delete(acl_entry)) do
+      with {:ok, %AclEntry{}} <- Permissions.delete_acl_entry(acl_entry) do
+        send_resp(conn, :no_content, "")
+      else
+        _error ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(ErrorView, :"422.json")
+      end
+    else
+      conn
+      |> put_status(:forbidden)
+      |> render(ErrorView, :"403.json")
     end
   end
 end

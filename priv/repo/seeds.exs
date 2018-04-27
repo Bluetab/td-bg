@@ -36,14 +36,14 @@ add_permissions_to_role = fn(permissions, role) ->
   |> Repo.update!
 end
 
-admin   = :admin   |> Atom.to_string |> get_role.()
-watch   = :watch   |> Atom.to_string |> get_role.()
-create  = :create  |> Atom.to_string |> get_role.()
-publish = :publish |> Atom.to_string |> get_role.()
+admin   = get_role.("admin")
+watch   = get_role.("watch")
+create  = get_role.("create")
+publish = get_role.("publish")
 
 create_acl_entry = Permission.permissions.create_acl_entry |> get_permission.()
-# update_acl_entry = Permission.permissions.update_acl_entry |> get_permission.()
-# delete_acl_entry = Permission.permissions.delete_acl_entry |> get_permission.()
+update_acl_entry = Permission.permissions.update_acl_entry |> get_permission.()
+delete_acl_entry = Permission.permissions.delete_acl_entry |> get_permission.()
 
 create_domain = Permission.permissions.create_domain |> get_permission.()
 update_domain = Permission.permissions.update_domain |> get_permission.()
@@ -65,6 +65,8 @@ view_rejected_business_concepts = Permission.permissions.view_rejected_business_
 view_deprecated_business_concepts = Permission.permissions.view_deprecated_business_concepts |> get_permission.()
 
 admin_permissions = [create_acl_entry,
+                     update_acl_entry,
+                     delete_acl_entry,
                      create_domain,
                      update_domain,
                      delete_domain,

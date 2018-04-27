@@ -80,7 +80,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders acl_entry when creating a new acl", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = get_role_by_name(conn, Atom.to_string(:create))
+      role = get_role_by_name(conn, "create")
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role["name"])
@@ -113,7 +113,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
       assert %{"id" => _id} = json_response(conn, 201)["data"]
       validate_resp_schema(conn, schema, "AclEntryResponse")
 
-      role = get_role_by_name(conn, Atom.to_string(:admin))
+      role = get_role_by_name(conn, "admin")
 
       conn = recycle_and_put_headers(conn)
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)

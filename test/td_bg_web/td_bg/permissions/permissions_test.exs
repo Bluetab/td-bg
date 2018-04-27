@@ -165,7 +165,7 @@ defmodule TdBg.PermissionsTest do
     @role_attrs %{name: "rolename"}
 
     test "get_role_permissions/0 returns all roles" do
-      admin = Permissions.get_role_by_name(Atom.to_string(:admin))
+      admin = Permissions.get_role_by_name("admin")
       assert length(Permissions.get_role_permissions(admin)) != 0
     end
 

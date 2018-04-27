@@ -7,8 +7,8 @@ defmodule TdBg.Permissions.Permission do
   alias TdBg.Permissions.Role
 
   @permissions %{create_acl_entry: "create_acl_entry",
-                 # update_acl_entry: "update_acl_entry",
-                 # delete_acl_entry: "delete_acl_entry",
+                 update_acl_entry: "update_acl_entry",
+                 delete_acl_entry: "delete_acl_entry",
                  create_domain: "create_domain",
                  update_domain: "update_domain",
                  delete_domain: "delete_domain",
