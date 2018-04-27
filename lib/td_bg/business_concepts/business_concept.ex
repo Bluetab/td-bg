@@ -3,6 +3,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Permissions.Permission
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptAlias
@@ -32,6 +33,17 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
 
   def status_values do
     @status |> Map.values
+  end
+
+  def permissions_to_status do
+    permissions = Permission.permissions
+    status = BusinessConcept.status
+    %{permissions.view_draft_business_concepts => status.draft,
+      permissions.view_approval_pending_business_concepts => status.pending_approval,
+      permissions.view_published_business_concepts => status.published,
+      permissions.view_versioned_business_concepts => status.versioned,
+      permissions.view_rejected_business_concepts => status.rejected,
+      permissions.view_deprecated_business_concepts => status.deprecated}
   end
 
   @doc false

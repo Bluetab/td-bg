@@ -10,7 +10,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
-  alias TdBg.Permissions.Permission
   alias TdBg.Permissions
   alias TdBg.Templates
   alias TdBg.Repo
@@ -76,29 +75,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp get_role_status(role_name) do
-    status_map = permission_status_map()
+    permissions_to_status = BusinessConcept.permissions_to_status
     role_name
     |> Permissions.get_role_by_name
     |> Repo.preload(:permissions)
     |> Map.get(:permissions)
     |> Enum.map(&(&1.name))
     |> Enum.reduce([], fn(permission, acc) ->
-      acc ++ case Map.get(status_map, permission) do
+      acc ++ case Map.get(permissions_to_status, permission) do
         nil -> []
         status -> [status]
       end
     end)
-  end
-
-  defp permission_status_map do
-    permissions = Permission.permissions
-    status = BusinessConcept.status
-    %{permissions.view_draft_business_concepts => status.draft,
-      permissions.view_approval_pending_business_concepts => status.pending_approval,
-      permissions.view_published_business_concepts => status.published,
-      permissions.view_versioned_business_concepts => status.versioned,
-      permissions.view_rejected_business_concepts => status.rejected,
-      permissions.view_deprecated_business_concepts => status.deprecated}
   end
 
   swagger_path :create do

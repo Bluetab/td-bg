@@ -366,11 +366,12 @@ defmodule TdBg.Permissions do
   def authorized?(%{user_id: user_id, permission: permission, domain_id: domain_id}) do
     acl_input = %{user_id: user_id, domain_id: domain_id}
     role_in_resource = get_role_in_resource(acl_input)
-    role = get_role_by_name(role_in_resource.name)
-    case role do
+    case role_in_resource do
       nil -> false
-      _ ->
+      role ->
         role
+        |> Map.get(:name)
+        |> get_role_by_name
         |> Repo.preload(:permissions)
         |> Map.get(:permissions)
         |> Enum.map(&(&1.name))
