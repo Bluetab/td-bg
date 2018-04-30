@@ -12,7 +12,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
   alias TdBg.Templates
-  
+
   action_fallback TdBgWeb.FallbackController
 
   def swagger_definitions do
@@ -69,11 +69,15 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         %{user_id: user.id, domain_id:  business_concept.domain_id}
         |> Permissions.get_permissions_in_resource
         |> Enum.reduce([], fn(permission, acc) ->
-          acc ++ case Map.get(permissions_to_status, permission) do
-            nil -> []
-            status -> [status]
-          end
+          acc ++ get_from_persimissions(permissions_to_status, permission)
         end)
+    end
+  end
+
+  defp get_from_persimissions(permissions_to_status, permission) do
+    case Map.get(permissions_to_status, permission) do
+      nil -> []
+      status -> [status]
     end
   end
 
