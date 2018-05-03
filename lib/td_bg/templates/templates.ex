@@ -7,6 +7,8 @@ defmodule TdBg.Templates do
   alias TdBg.Repo
 
   alias TdBg.Templates.Template
+  alias TdBg.Taxonomies.Domain
+  alias Ecto.Changeset
 
   @doc """
   Returns the list of templates.
@@ -104,4 +106,24 @@ defmodule TdBg.Templates do
   def change_template(%Template{} = template) do
     Template.changeset(template, %{})
   end
+
+  def get_domain_templates(%Domain{} = domain) do
+    domain
+    |> Repo.preload(:templates)
+    |> Map.get(:templates)
+  end
+
+  def add_templates_to_domain(%Domain{} = domain, templates) do
+    domain
+    |> Repo.preload(:templates)
+    |> Changeset.change
+    |> Changeset.put_assoc(:templates, templates)
+    |> Repo.update!
+  end
+
+  def count_related_domains(id) do
+    count = Repo.one from r in "domains_templates", select: count(r.template_id), where: r.template_id == ^id
+    {:count, :domain, count}
+  end
+
 end

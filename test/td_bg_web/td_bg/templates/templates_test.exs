@@ -64,4 +64,37 @@ defmodule TdBg.TemplatesTest do
       assert %Ecto.Changeset{} = Templates.change_template(template)
     end
   end
+
+  describe "domain templates" do
+    alias TdBg.Taxonomies
+
+    @domain_attrs %{description: "some description", name: "some name"}
+    @empty_template_attrs %{content: [], name: "some name"}
+    @other_empty_template_attrs %{content: [], name: "other name"}
+
+    test "add_templates_to_domain/2 and get_domain_templates/1 adds empty template to a domain" do
+      {:ok, template} = Templates.create_template(@empty_template_attrs)
+      {:ok, domain} = Taxonomies.create_domain(@domain_attrs)
+      Templates.add_templates_to_domain(domain, [template])
+      [stored_template] = Templates.get_domain_templates(domain)
+      assert template == stored_template
+    end
+
+    test "add_templates_to_domain/2 and get_domain_templates/1 adds two templates to a domain" do
+      {:ok, template1} = Templates.create_template(@empty_template_attrs)
+      {:ok, template2} = Templates.create_template(@other_empty_template_attrs)
+      {:ok, domain} = Taxonomies.create_domain(@domain_attrs)
+      Templates.add_templates_to_domain(domain, [template1, template2])
+      stored_templates = Templates.get_domain_templates(domain)
+      assert [template1, template2] == stored_templates
+    end
+
+    test "delete_template/1 deletes template with related domain" do
+      {:ok, template} = Templates.create_template(@empty_template_attrs)
+      {:ok, domain} = Taxonomies.create_domain(@domain_attrs)
+      Templates.add_templates_to_domain(domain, [template])
+      assert_raise Ecto.ConstraintError, fn -> Templates.delete_template(template) end
+    end
+
+  end
 end

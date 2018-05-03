@@ -16,10 +16,10 @@
     "http"
   ],
   "paths": {
-    "/users/{user_id}/domains/{domain_id}/roles": {
+    "/domains/{domain_id}/index_children": {
       "get": {
         "tags": [
-          "Role"
+          "Domain"
         ],
         "summary": "",
         "responses": {
@@ -28,7 +28,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/RolesResponse"
+              "$ref": "#/definitions/DomainsResponse"
             },
             "description": "OK"
           }
@@ -40,20 +40,338 @@
           {
             "type": "integer",
             "required": true,
-            "name": "user_id",
+            "name": "domain_id",
             "in": "path",
-            "description": "user id"
+            "description": "Domain ID"
+          }
+        ],
+        "operationId": "TdBgWeb.DomainController.index_children",
+        "description": "List non-root Domains"
+      }
+    },
+    "/business_concept_versions/{id}": {
+      "get": {
+        "tags": [
+          "BusinessConceptVersion"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
           },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptVersionResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
           {
             "type": "integer",
             "required": true,
-            "name": "domain_id",
+            "name": "id",
             "in": "path",
-            "description": "domain id"
+            "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBgWeb.RoleController.user_domain_role",
-        "description": ""
+        "operationId": "TdBgWeb.BusinessConceptVersionController.show",
+        "description": "Show Business Concept Version"
+      }
+    },
+    "/domains": {
+      "post": {
+        "tags": [
+          "Domain"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/DomainResponse"
+            },
+            "description": "Created"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/DomainCreate"
+            },
+            "required": false,
+            "name": "domain",
+            "in": "body",
+            "description": "Domain create attrs"
+          }
+        ],
+        "operationId": "TdBgWeb.DomainController.create",
+        "description": "Creates a Domain"
+      },
+      "get": {
+        "tags": [
+          "Domain"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/DomainsResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TdBgWeb.DomainController.index",
+        "description": "List Domains"
+      }
+    },
+    "/business_concept_versions": {
+      "get": {
+        "tags": [
+          "BusinessConceptVersion"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptVersionResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TdBgWeb.BusinessConceptVersionController.index",
+        "description": "List Business Concept Versions"
+      }
+    },
+    "/business_concepts/{business_concept_id}/versions": {
+      "get": {
+        "tags": [
+          "BusinessConceptVersion"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptVersionsResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Business Concept ID"
+          }
+        ],
+        "operationId": "TdBgWeb.BusinessConceptVersionController.versions",
+        "description": "List Business Concept Versions"
+      }
+    },
+    "/roles": {
+      "post": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/RoleResponse"
+            },
+            "description": "Created"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/RoleCreateUpdate"
+            },
+            "required": false,
+            "name": "role",
+            "in": "body",
+            "description": "Role create attrs"
+          }
+        ],
+        "operationId": "TdBgWeb.RoleController.create",
+        "description": "Creates a Role"
+      },
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/RolesResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TdBgWeb.RoleController.index",
+        "description": "List Roles"
+      }
+    },
+    "/acl_entries/create_or_update": {
+      "post": {
+        "tags": [
+          "AclEntry"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/AclEntryResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/AclEntryCreateOrUpdate"
+            },
+            "required": false,
+            "name": "acl_entry",
+            "in": "body",
+            "description": "Acl entry create or update attrs"
+          }
+        ],
+        "operationId": "TdBgWeb.AclEntryController.create_or_update",
+        "description": "Creates or Updates an Acl Entry"
+      }
+    },
+    "/search/reindex_all": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "",
+        "responses": {
+          "500": {
+            "description": "Client Error"
+          },
+          "200": {
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "operationId": "TdBgWeb.SearchController.reindex_all",
+        "description": "Reindex all ES indexes with DB content"
+      }
+    },
+    "/acl_entries": {
+      "post": {
+        "tags": [
+          "AclEntry"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/AclEntryResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/AclEntryCreateUpdate"
+            },
+            "required": false,
+            "name": "acl_entry",
+            "in": "body",
+            "description": "Acl entry create attrs"
+          }
+        ],
+        "operationId": "TdBgWeb.AclEntryController.create",
+        "description": "Creates an Acl Entry"
+      },
+      "get": {
+        "tags": [
+          "AclEntry"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/AclEntriesResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TdBgWeb.AclEntryController.index",
+        "description": "List Acl Entries"
+      }
+    },
+    "/taxonomy/roles?principal_id={principal_id}": {
+      "get": {
+        "tags": [
+          "Taxonomy"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/TaxonomyRolesResponse"
+            },
+            "description": "Ok"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "principal_id",
+            "in": "path",
+            "description": "user id"
+          }
+        ],
+        "operationId": "TdBgWeb.TaxonomyController.roles",
+        "description": "Returns tree of Domains"
       }
     },
     "/templates/{id}": {
@@ -157,245 +475,10 @@
         "description": "Delete Template"
       }
     },
-    "/templates": {
-      "post": {
-        "tags": [
-          "Template"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "201": {
-            "schema": {
-              "$ref": "#/definitions/TemplateResponse"
-            },
-            "description": "Created"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/definitions/TemplateCreateUpdate"
-            },
-            "required": false,
-            "name": "template",
-            "in": "body",
-            "description": "Template create attrs"
-          }
-        ],
-        "operationId": "TdBgWeb.TemplateController.create",
-        "description": "Creates a Template"
-      },
-      "get": {
-        "tags": [
-          "Template"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/TemplatesResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "parameters": [],
-        "operationId": "TdBgWeb.TemplateController.index",
-        "description": "List Templates"
-      }
-    },
-    "/taxonomy/tree": {
-      "get": {
-        "tags": [
-          "Taxonomy"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/TaxonomyTreeResponse"
-            },
-            "description": "Ok"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [],
-        "operationId": "TdBgWeb.TaxonomyController.tree",
-        "description": "Returns tree of Domains"
-      }
-    },
-    "/taxonomy/roles?principal_id={principal_id}": {
-      "get": {
-        "tags": [
-          "Taxonomy"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/TaxonomyRolesResponse"
-            },
-            "description": "Ok"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "principal_id",
-            "in": "path",
-            "description": "user id"
-          }
-        ],
-        "operationId": "TdBgWeb.TaxonomyController.roles",
-        "description": "Returns tree of Domains"
-      }
-    },
-    "/search/reindex_all": {
-      "get": {
-        "tags": [
-          "Search"
-        ],
-        "summary": "",
-        "responses": {
-          "500": {
-            "description": "Client Error"
-          },
-          "200": {
-            "description": "OK"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [],
-        "operationId": "TdBgWeb.SearchController.reindex_all",
-        "description": "Reindex all ES indexes with DB content"
-      }
-    },
-    "/search": {
-      "post": {
-        "tags": [
-          "Search"
-        ],
-        "summary": "",
-        "responses": {
-          "500": {
-            "description": "Client Error"
-          },
-          "201": {
-            "description": "Created"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [],
-        "operationId": "TdBgWeb.SearchController.create",
-        "description": "Creates ES indexes"
-      },
-      "delete": {
-        "tags": [
-          "Search"
-        ],
-        "summary": "",
-        "responses": {
-          "500": {
-            "description": "Client Error"
-          },
-          "204": {
-            "description": "Deleted"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [],
-        "operationId": "TdBgWeb.SearchController.delete",
-        "description": "Deletes ES indexes"
-      }
-    },
-    "/roles/{role_id}/permissions": {
-      "post": {
-        "tags": [
-          "Permission"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/PermissionsResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "role_id",
-            "in": "path",
-            "description": "Role ID"
-          },
-          {
-            "schema": {
-              "$ref": "#/definitions/AddPermissionsToRole"
-            },
-            "required": false,
-            "name": "permissions",
-            "in": "body",
-            "description": "Add Permissions to Role attrs"
-          }
-        ],
-        "operationId": "TdBgWeb.PermissionController.add_permissions_to_role",
-        "description": "Add Permissions to Role"
-      },
-      "get": {
-        "tags": [
-          "Permission"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/PermissionsResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "role_id",
-            "in": "path",
-            "description": "Role ID"
-          }
-        ],
-        "operationId": "TdBgWeb.PermissionController.get_role_permissions",
-        "description": "List Role Permissions"
-      }
-    },
-    "/roles/{id}": {
+    "/business_concepts/{id}": {
       "put": {
         "tags": [
-          "Role"
+          "BusinessConcept"
         ],
         "summary": "",
         "responses": {
@@ -404,7 +487,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/RoleResponse"
+              "$ref": "#/definitions/BusinessConceptResponse"
             },
             "description": "OK"
           }
@@ -415,27 +498,27 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/RoleCreateUpdate"
+              "$ref": "#/definitions/BusinessConceptUpdate"
             },
             "required": false,
-            "name": "data_domain",
+            "name": "business_concept",
             "in": "body",
-            "description": "Role update attrs"
+            "description": "Business Concept update attrs"
           },
           {
             "type": "integer",
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Role ID"
+            "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBgWeb.RoleController.update",
-        "description": "Updates Role"
+        "operationId": "TdBgWeb.BusinessConceptController.update",
+        "description": "Updates Business Concepts"
       },
       "get": {
         "tags": [
-          "Role"
+          "BusinessConcept"
         ],
         "summary": "",
         "responses": {
@@ -444,7 +527,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/RoleResponse"
+              "$ref": "#/definitions/BusinessConceptResponse"
             },
             "description": "OK"
           }
@@ -458,15 +541,15 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Role ID"
+            "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBgWeb.RoleController.show",
-        "description": "Show Role"
+        "operationId": "TdBgWeb.BusinessConceptController.show",
+        "description": "Show Business Concepts"
       },
       "delete": {
         "tags": [
-          "Role"
+          "BusinessConcept"
         ],
         "summary": "",
         "responses": {
@@ -474,7 +557,7 @@
             "description": "Client Error"
           },
           "204": {
-            "description": "OK"
+            "description": "No Content"
           }
         },
         "produces": [
@@ -486,115 +569,11 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Role ID"
+            "description": "Business Concept ID"
           }
         ],
-        "operationId": "TdBgWeb.RoleController.delete",
-        "description": "Delete Role"
-      }
-    },
-    "/roles": {
-      "post": {
-        "tags": [
-          "Role"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "201": {
-            "schema": {
-              "$ref": "#/definitions/RoleResponse"
-            },
-            "description": "Created"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/definitions/RoleCreateUpdate"
-            },
-            "required": false,
-            "name": "role",
-            "in": "body",
-            "description": "Role create attrs"
-          }
-        ],
-        "operationId": "TdBgWeb.RoleController.create",
-        "description": "Creates a Role"
-      },
-      "get": {
-        "tags": [
-          "Role"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/RolesResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "parameters": [],
-        "operationId": "TdBgWeb.RoleController.index",
-        "description": "List Roles"
-      }
-    },
-    "/permissions/{id}": {
-      "get": {
-        "tags": [
-          "Permission"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/PermissionResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Permission ID"
-          }
-        ],
-        "operationId": "TdBgWeb.PermissionController.show",
-        "description": "Show Permission"
-      }
-    },
-    "/permissions": {
-      "get": {
-        "tags": [
-          "Permission"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/PermissionsResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "parameters": [],
-        "operationId": "TdBgWeb.PermissionController.index",
-        "description": "List Permissions"
+        "operationId": "TdBgWeb.BusinessConceptController.delete",
+        "description": "Delete Business Concepts"
       }
     },
     "/domains/{id}": {
@@ -698,59 +677,20 @@
         "description": "Delete Domain"
       }
     },
-    "/domains/{domain_id}/users_roles": {
-      "get": {
+    "/domains/{domain_id}/templates": {
+      "post": {
         "tags": [
-          "Domain"
+          "Template"
         ],
         "summary": "",
         "responses": {
-          "400": {
-            "description": "Client Error"
-          },
           "200": {
             "schema": {
-              "$ref": "#/definitions/UsersRolesResponse"
-            },
-            "description": "Ok"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "domain_id",
-            "in": "path",
-            "description": "Domain ID"
-          }
-        ],
-        "operationId": "TdBgWeb.DomainController.users_roles",
-        "description": "Lists user-role list of a domain group"
-      }
-    },
-    "/domains/{domain_id}/index_children": {
-      "get": {
-        "tags": [
-          "Domain"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/DomainsResponse"
+              "$ref": "#/definitions/TemplatesResponse"
             },
             "description": "OK"
           }
         },
-        "produces": [
-          "application/json"
-        ],
         "parameters": [
           {
             "type": "integer",
@@ -758,32 +698,33 @@
             "name": "domain_id",
             "in": "path",
             "description": "Domain ID"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/AddTemplatesToDomain"
+            },
+            "required": false,
+            "name": "templates",
+            "in": "body",
+            "description": "Add Templates to Domain attrs"
           }
         ],
-        "operationId": "TdBgWeb.DomainController.index_children",
-        "description": "List non-root Domains"
-      }
-    },
-    "/domains/{domain_id}/available_users": {
+        "operationId": "TdBgWeb.TemplateController.add_templates_to_domain",
+        "description": "Add Templates to Domain"
+      },
       "get": {
         "tags": [
-          "Domain"
+          "Template"
         ],
         "summary": "",
         "responses": {
-          "400": {
-            "description": "Client Error"
-          },
           "200": {
             "schema": {
-              "$ref": "#/definitions/UsersResponse"
+              "$ref": "#/definitions/TemplatesResponse"
             },
-            "description": "Ok"
+            "description": "OK"
           }
         },
-        "produces": [
-          "application/json"
-        ],
         "parameters": [
           {
             "type": "integer",
@@ -793,8 +734,8 @@
             "description": "Domain ID"
           }
         ],
-        "operationId": "TdBgWeb.DomainController.available_users",
-        "description": "Lists users available in a domain group"
+        "operationId": "TdBgWeb.TemplateController.get_domain_templates",
+        "description": "List Domain Templates"
       }
     },
     "/domains/index_root": {
@@ -822,232 +763,52 @@
         "description": "List Root Domain"
       }
     },
-    "/domains": {
+    "/search": {
       "post": {
         "tags": [
-          "Domain"
+          "Search"
         ],
         "summary": "",
         "responses": {
-          "400": {
+          "500": {
             "description": "Client Error"
           },
           "201": {
-            "schema": {
-              "$ref": "#/definitions/DomainResponse"
-            },
             "description": "Created"
           }
         },
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/definitions/DomainCreate"
-            },
-            "required": false,
-            "name": "domain",
-            "in": "body",
-            "description": "Domain create attrs"
-          }
-        ],
-        "operationId": "TdBgWeb.DomainController.create",
-        "description": "Creates a Domain"
-      },
-      "get": {
-        "tags": [
-          "Domain"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/DomainsResponse"
-            },
-            "description": "OK"
-          }
-        },
         "parameters": [],
-        "operationId": "TdBgWeb.DomainController.index",
-        "description": "List Domains"
-      }
-    },
-    "/business_concepts/{id}/versions": {
-      "post": {
-        "tags": [
-          "BusinessConceptVersion"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptVersionResponse"
-            },
-            "description": "Created"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Business Concept ID"
-          },
-          {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptVersionCreate"
-            },
-            "required": false,
-            "name": "business_concept_version",
-            "in": "body",
-            "description": "Business Concept Version create attrs"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptVersionController.create",
-        "description": "Creates a Business Concept Version"
-      }
-    },
-    "/business_concepts/{id}": {
-      "put": {
-        "tags": [
-          "BusinessConcept"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptUpdate"
-            },
-            "required": false,
-            "name": "business_concept",
-            "in": "body",
-            "description": "Business Concept update attrs"
-          },
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Business Concept ID"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptController.update",
-        "description": "Updates Business Concepts"
-      },
-      "get": {
-        "tags": [
-          "BusinessConcept"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Business Concept ID"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptController.show",
-        "description": "Show Business Concepts"
+        "operationId": "TdBgWeb.SearchController.create",
+        "description": "Creates ES indexes"
       },
       "delete": {
         "tags": [
-          "BusinessConcept"
+          "Search"
         ],
         "summary": "",
         "responses": {
-          "400": {
+          "500": {
             "description": "Client Error"
           },
           "204": {
-            "description": "No Content"
+            "description": "Deleted"
           }
         },
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Business Concept ID"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptController.delete",
-        "description": "Delete Business Concepts"
+        "parameters": [],
+        "operationId": "TdBgWeb.SearchController.delete",
+        "description": "Deletes ES indexes"
       }
     },
-    "/business_concepts/{business_concept_id}/versions": {
+    "/permissions/{id}": {
       "get": {
         "tags": [
-          "BusinessConceptVersion"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptVersionsResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Business Concept ID"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptVersionController.versions",
-        "description": "List Business Concept Versions"
-      }
-    },
-    "/business_concepts/{business_concept_id}/status": {
-      "patch": {
-        "tags": [
-          "BusinessConcept"
+          "Permission"
         ],
         "summary": "",
         "responses": {
@@ -1056,149 +817,7 @@
           },
           "200": {
             "schema": {
-              "$ref": "#/definitions/BusinessConceptResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptUpdateStatus"
-            },
-            "required": false,
-            "name": "business_concept",
-            "in": "body",
-            "description": "Business Concept status update attrs"
-          },
-          {
-            "type": "integer",
-            "required": true,
-            "name": "business_concept_id",
-            "in": "path",
-            "description": "Business Concept ID"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptController.update_status",
-        "description": "Updates Business Ccncept status"
-      }
-    },
-    "/business_concepts/{business_concept_id}/aliases": {
-      "post": {
-        "tags": [
-          "BusinessConceptAlias"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptAliasResponse"
-            },
-            "description": "Created"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "business_concept_id",
-            "in": "path",
-            "description": "Business Concept ID"
-          },
-          {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptAliasCreate"
-            },
-            "required": false,
-            "name": "business_concept_alias",
-            "in": "body",
-            "description": "Business Concept Alias create attrs"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptAliasController.create",
-        "description": "Creates a Business Concept Alias"
-      },
-      "get": {
-        "tags": [
-          "BusinessConceptAlias"
-        ],
-        "summary": "",
-        "responses": {
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptAliasesResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "business_concept_id",
-            "in": "path",
-            "description": "Business Concept ID"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptAliasController.index",
-        "description": "List Business Concept Aliases"
-      }
-    },
-    "/business_concepts/index/{status}": {
-      "get": {
-        "tags": [
-          "BusinessConcept"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptResponse"
-            },
-            "description": "OK"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "string",
-            "required": true,
-            "name": "status",
-            "in": "path",
-            "description": "Business Concept Status"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptController.index_status",
-        "description": "List Business Concept with certain status"
-      }
-    },
-    "/business_concepts/domains/{id}": {
-      "get": {
-        "tags": [
-          "BusinessConcept"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "200": {
-            "schema": {
-              "$ref": "#/definitions/BusinessConceptsResponse"
+              "$ref": "#/definitions/PermissionResponse"
             },
             "description": "OK"
           }
@@ -1212,11 +831,11 @@
             "required": true,
             "name": "id",
             "in": "path",
-            "description": "Domain ID"
+            "description": "Permission ID"
           }
         ],
-        "operationId": "TdBgWeb.BusinessConceptController.index_children_business_concept",
-        "description": "List Business Concepts children of Domain"
+        "operationId": "TdBgWeb.PermissionController.show",
+        "description": "Show Permission"
       }
     },
     "/business_concepts": {
@@ -1271,8 +890,41 @@
         "description": "List Business Concepts"
       }
     },
-    "/business_concept_versions/{id}": {
+    "/domains/{domain_id}/users_roles": {
       "get": {
+        "tags": [
+          "Domain"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/UsersRolesResponse"
+            },
+            "description": "Ok"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "domain_id",
+            "in": "path",
+            "description": "Domain ID"
+          }
+        ],
+        "operationId": "TdBgWeb.DomainController.users_roles",
+        "description": "Lists user-role list of a domain group"
+      }
+    },
+    "/business_concepts/{id}/versions": {
+      "post": {
         "tags": [
           "BusinessConceptVersion"
         ],
@@ -1285,7 +937,7 @@
             "schema": {
               "$ref": "#/definitions/BusinessConceptVersionResponse"
             },
-            "description": "OK"
+            "description": "Created"
           }
         },
         "produces": [
@@ -1298,29 +950,52 @@
             "name": "id",
             "in": "path",
             "description": "Business Concept ID"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptVersionCreate"
+            },
+            "required": false,
+            "name": "business_concept_version",
+            "in": "body",
+            "description": "Business Concept Version create attrs"
           }
         ],
-        "operationId": "TdBgWeb.BusinessConceptVersionController.show",
-        "description": "Show Business Concept Version"
+        "operationId": "TdBgWeb.BusinessConceptVersionController.create",
+        "description": "Creates a Business Concept Version"
       }
     },
-    "/business_concept_versions": {
+    "/business_concepts/index/{status}": {
       "get": {
         "tags": [
-          "BusinessConceptVersion"
+          "BusinessConcept"
         ],
         "summary": "",
         "responses": {
+          "400": {
+            "description": "Client Error"
+          },
           "200": {
             "schema": {
-              "$ref": "#/definitions/BusinessConceptVersionResponse"
+              "$ref": "#/definitions/BusinessConceptResponse"
             },
             "description": "OK"
           }
         },
-        "parameters": [],
-        "operationId": "TdBgWeb.BusinessConceptVersionController.index",
-        "description": "List Business Concept Versions"
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "required": true,
+            "name": "status",
+            "in": "path",
+            "description": "Business Concept Status"
+          }
+        ],
+        "operationId": "TdBgWeb.BusinessConceptController.index_status",
+        "description": "List Business Concept with certain status"
       }
     },
     "/business_concept_aliases/{business_concept_alias_id}": {
@@ -1351,6 +1026,184 @@
         ],
         "operationId": "TdBgWeb.BusinessConceptAliasController.delete",
         "description": "Deletes a Business Concept Alias"
+      }
+    },
+    "/templates": {
+      "post": {
+        "tags": [
+          "Template"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/TemplateResponse"
+            },
+            "description": "Created"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/TemplateCreateUpdate"
+            },
+            "required": false,
+            "name": "template",
+            "in": "body",
+            "description": "Template create attrs"
+          }
+        ],
+        "operationId": "TdBgWeb.TemplateController.create",
+        "description": "Creates a Template"
+      },
+      "get": {
+        "tags": [
+          "Template"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/TemplatesResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TdBgWeb.TemplateController.index",
+        "description": "List Templates"
+      }
+    },
+    "/taxonomy/tree": {
+      "get": {
+        "tags": [
+          "Taxonomy"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/TaxonomyTreeResponse"
+            },
+            "description": "Ok"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "operationId": "TdBgWeb.TaxonomyController.tree",
+        "description": "Returns tree of Domains"
+      }
+    },
+    "/roles/{role_id}/permissions": {
+      "post": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/PermissionsResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "role_id",
+            "in": "path",
+            "description": "Role ID"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/AddPermissionsToRole"
+            },
+            "required": false,
+            "name": "permissions",
+            "in": "body",
+            "description": "Add Permissions to Role attrs"
+          }
+        ],
+        "operationId": "TdBgWeb.PermissionController.add_permissions_to_role",
+        "description": "Add Permissions to Role"
+      },
+      "get": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/PermissionsResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "role_id",
+            "in": "path",
+            "description": "Role ID"
+          }
+        ],
+        "operationId": "TdBgWeb.PermissionController.get_role_permissions",
+        "description": "List Role Permissions"
+      }
+    },
+    "/users/{user_id}/domains/{domain_id}/roles": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/RolesResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "user_id",
+            "in": "path",
+            "description": "user id"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "domain_id",
+            "in": "path",
+            "description": "domain id"
+          }
+        ],
+        "operationId": "TdBgWeb.RoleController.user_domain_role",
+        "description": ""
       }
     },
     "/acl_entries/{id}": {
@@ -1454,21 +1307,21 @@
         "description": "Delete Acl Entry"
       }
     },
-    "/acl_entries/create_or_update": {
-      "post": {
+    "/domains/{domain_id}/available_users": {
+      "get": {
         "tags": [
-          "AclEntry"
+          "Domain"
         ],
         "summary": "",
         "responses": {
           "400": {
             "description": "Client Error"
           },
-          "201": {
+          "200": {
             "schema": {
-              "$ref": "#/definitions/AclEntryResponse"
+              "$ref": "#/definitions/UsersResponse"
             },
-            "description": "OK"
+            "description": "Ok"
           }
         },
         "produces": [
@@ -1476,32 +1329,30 @@
         ],
         "parameters": [
           {
-            "schema": {
-              "$ref": "#/definitions/AclEntryCreateOrUpdate"
-            },
-            "required": false,
-            "name": "acl_entry",
-            "in": "body",
-            "description": "Acl entry create or update attrs"
+            "type": "integer",
+            "required": true,
+            "name": "domain_id",
+            "in": "path",
+            "description": "Domain ID"
           }
         ],
-        "operationId": "TdBgWeb.AclEntryController.create_or_update",
-        "description": "Creates or Updates an Acl Entry"
+        "operationId": "TdBgWeb.DomainController.available_users",
+        "description": "Lists users available in a domain group"
       }
     },
-    "/acl_entries": {
-      "post": {
+    "/roles/{id}": {
+      "put": {
         "tags": [
-          "AclEntry"
+          "Role"
         ],
         "summary": "",
         "responses": {
           "400": {
             "description": "Client Error"
           },
-          "201": {
+          "200": {
             "schema": {
-              "$ref": "#/definitions/AclEntryResponse"
+              "$ref": "#/definitions/RoleResponse"
             },
             "description": "OK"
           }
@@ -1512,33 +1363,243 @@
         "parameters": [
           {
             "schema": {
-              "$ref": "#/definitions/AclEntryCreateUpdate"
+              "$ref": "#/definitions/RoleCreateUpdate"
             },
             "required": false,
-            "name": "acl_entry",
+            "name": "data_domain",
             "in": "body",
-            "description": "Acl entry create attrs"
+            "description": "Role update attrs"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Role ID"
           }
         ],
-        "operationId": "TdBgWeb.AclEntryController.create",
-        "description": "Creates an Acl Entry"
+        "operationId": "TdBgWeb.RoleController.update",
+        "description": "Updates Role"
       },
       "get": {
         "tags": [
-          "AclEntry"
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/RoleResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Role ID"
+          }
+        ],
+        "operationId": "TdBgWeb.RoleController.show",
+        "description": "Show Role"
+      },
+      "delete": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "204": {
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Role ID"
+          }
+        ],
+        "operationId": "TdBgWeb.RoleController.delete",
+        "description": "Delete Role"
+      }
+    },
+    "/business_concepts/{business_concept_id}/status": {
+      "patch": {
+        "tags": [
+          "BusinessConcept"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptUpdateStatus"
+            },
+            "required": false,
+            "name": "business_concept",
+            "in": "body",
+            "description": "Business Concept status update attrs"
+          },
+          {
+            "type": "integer",
+            "required": true,
+            "name": "business_concept_id",
+            "in": "path",
+            "description": "Business Concept ID"
+          }
+        ],
+        "operationId": "TdBgWeb.BusinessConceptController.update_status",
+        "description": "Updates Business Ccncept status"
+      }
+    },
+    "/permissions": {
+      "get": {
+        "tags": [
+          "Permission"
         ],
         "summary": "",
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/AclEntriesResponse"
+              "$ref": "#/definitions/PermissionsResponse"
             },
             "description": "OK"
           }
         },
         "parameters": [],
-        "operationId": "TdBgWeb.AclEntryController.index",
-        "description": "List Acl Entries"
+        "operationId": "TdBgWeb.PermissionController.index",
+        "description": "List Permissions"
+      }
+    },
+    "/business_concepts/{business_concept_id}/aliases": {
+      "post": {
+        "tags": [
+          "BusinessConceptAlias"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptAliasResponse"
+            },
+            "description": "Created"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "business_concept_id",
+            "in": "path",
+            "description": "Business Concept ID"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptAliasCreate"
+            },
+            "required": false,
+            "name": "business_concept_alias",
+            "in": "body",
+            "description": "Business Concept Alias create attrs"
+          }
+        ],
+        "operationId": "TdBgWeb.BusinessConceptAliasController.create",
+        "description": "Creates a Business Concept Alias"
+      },
+      "get": {
+        "tags": [
+          "BusinessConceptAlias"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptAliasesResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "business_concept_id",
+            "in": "path",
+            "description": "Business Concept ID"
+          }
+        ],
+        "operationId": "TdBgWeb.BusinessConceptAliasController.index",
+        "description": "List Business Concept Aliases"
+      }
+    },
+    "/business_concepts/domains/{id}": {
+      "get": {
+        "tags": [
+          "BusinessConcept"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BusinessConceptsResponse"
+            },
+            "description": "OK"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Domain ID"
+          }
+        ],
+        "operationId": "TdBgWeb.BusinessConceptController.index_children_business_concept",
+        "description": "List Business Concepts children of Domain"
       }
     }
   },
@@ -1548,224 +1609,11 @@
   },
   "host": "localhost:4002",
   "definitions": {
-    "BusinessConceptAliasCreate": {
-      "type": "object",
-      "properties": {
-        "business_concept_alias": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Business Concept Alias"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptUpdate": {
-      "type": "object",
-      "properties": {
-        "business_concept": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Business Concept name"
-            },
-            "description": {
-              "type": "string",
-              "description": "Business Concept description"
-            },
-            "content": {
-              "type": "object",
-              "description": "Business Concept content"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptVersionsResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "collection": {
-              "$ref": "#/definitions/BusinessConceptVersions"
-            }
-          }
-        }
-      }
-    },
-    "PermissionResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Permission"
-        }
-      }
-    },
-    "BusinessConceptAliases": {
-      "type": "array",
-      "title": "Business Concept Aliases",
-      "items": {
-        "$ref": "#/definitions/BusinessConceptAlias"
-      },
-      "description": "A collection of Business Concept Aliases"
-    },
-    "Templates": {
-      "type": "array",
-      "title": "Templates",
-      "items": {
-        "$ref": "#/definitions/Template"
-      },
-      "description": "A collection of Templates"
-    },
-    "Permissions": {
-      "type": "array",
-      "title": "Roles",
-      "items": {
-        "$ref": "#/definitions/Role"
-      },
-      "description": "A collection of Permissions"
-    },
-    "Permission": {
-      "type": "object",
-      "title": "Permission",
-      "required": [
-        "name",
-        "id"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "permission name"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        }
-      },
-      "description": "Permission"
-    },
-    "UsersResponse": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/UserResponse"
-      }
-    },
-    "DomainUpdate": {
-      "type": "object",
-      "properties": {
-        "domain": {
-          "type": "object",
-          "required": [
-            "name"
-          ],
-          "properties": {
-            "type": {
-              "type": "string",
-              "description": "domain type"
-            },
-            "name": {
-              "type": "string",
-              "description": "domain name"
-            },
-            "description": {
-              "type": "string",
-              "description": "domain description"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptAlias": {
-      "type": "object",
-      "title": "Business Concept Alias",
-      "required": [
-        "name",
-        "business_concept_id",
-        "id"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Business Concept Alias"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        },
-        "business_concept_id": {
-          "type": "integer",
-          "description": "Business Concept unique id"
-        }
-      },
-      "description": "Business Concept Alias"
-    },
-    "BusinessConceptAliasesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "collection": {
-              "$ref": "#/definitions/BusinessConceptAliases"
-            }
-          }
-        }
-      }
-    },
-    "AclEntryResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/AclEntry"
-        }
-      }
-    },
     "TemplateResponse": {
       "type": "object",
       "properties": {
         "data": {
           "$ref": "#/definitions/Template"
-        }
-      }
-    },
-    "BusinessConceptsResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "collection": {
-              "$ref": "#/definitions/BusinessConcepts"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptUpdateStatus": {
-      "type": "object",
-      "properties": {
-        "business_concept": {
-          "type": "object",
-          "required": [
-            "status"
-          ],
-          "properties": {
-            "status": {
-              "type": "string",
-              "description": "Business Concept status (rejected, published, deprecated...)"
-            },
-            "reject_reason": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Business Concept reject reason"
-            }
-          }
         }
       }
     },
@@ -1798,276 +1646,26 @@
         }
       }
     },
-    "BusinessConcept": {
-      "type": "object",
-      "title": "Business Concept",
-      "required": [
-        "version",
-        "status",
-        "domain_id",
-        "last_change_at",
-        "last_change_by",
-        "description",
-        "name",
-        "related_to",
-        "content",
-        "type",
-        "business_concept_version_id",
-        "id"
-      ],
-      "properties": {
-        "version": {
-          "type": "integer",
-          "description": "Business Concept version"
-        },
-        "type": {
-          "type": "string",
-          "description": "Business Concept type"
-        },
-        "status": {
-          "type": "string",
-          "description": "Business Conceptstatus"
-        },
-        "related_to": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          },
-          "description": "Related Business Concepts"
-        },
-        "reject_reason": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Business Concept reject reason"
-        },
-        "name": {
-          "type": "string",
-          "description": "Business Concept name"
-        },
-        "mod_comments": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Business Concept modification comments"
-        },
-        "last_change_by": {
-          "type": "integer",
-          "description": "Business Concept last updated by"
-        },
-        "last_change_at": {
-          "type": "string",
-          "description": "Business Conceptlast updated date"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        },
-        "domain_id": {
-          "type": "integer",
-          "description": "Business Concept parent domain id"
-        },
-        "description": {
-          "type": "string",
-          "description": "Business Concept description"
-        },
-        "content": {
-          "type": "object",
-          "description": "Business Concept content"
-        },
-        "business_concept_version_id": {
-          "type": "integer",
-          "description": "Business Concept current version id"
-        }
-      },
-      "description": "Business Concept"
-    },
-    "Template": {
-      "type": "object",
-      "title": "Template",
-      "required": [
-        "content",
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name"
-        },
-        "content": {
-          "type": "array",
-          "description": "Content"
-        }
-      },
-      "example": {
-        "name": "Template1",
-        "content": [
-          {
-            "type": "type1",
-            "required": true,
-            "name": "name1",
-            "max_size": 100
-          },
-          {
-            "type": "type2",
-            "required": false,
-            "related_area": "related_area1",
-            "max_size": 100
-          }
-        ]
-      },
-      "description": "A Template"
-    },
-    "UsersRolesRequest": {
+    "DomainUpdate": {
       "type": "object",
       "properties": {
-        "data": {
-          "type": "object"
-        }
-      }
-    },
-    "DomainsResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "collection": {
-              "$ref": "#/definitions/Domains"
-            }
-          }
-        }
-      }
-    },
-    "TreeItem": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "id": {
-          "type": "integer"
-        },
-        "description": {
-          "type": "string"
-        },
-        "children": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TreeItem"
-          }
-        }
-      }
-    },
-    "BusinessConcepts": {
-      "type": "array",
-      "title": "Business Concepts",
-      "items": {
-        "$ref": "#/definitions/BusinessConcept"
-      },
-      "description": "A collection of Business Concepts"
-    },
-    "BusinessConceptAliasResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/BusinessConceptAlias"
-        }
-      }
-    },
-    "BusinessConceptVersionCreate": {
-      "type": "object",
-      "properties": {
-        "business_concept_version": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Business Concept Vesion name"
-            },
-            "mod_comments": {
-              "type": "string",
-              "description": "Business Concept Version modification comments"
-            },
-            "description": {
-              "type": "string",
-              "description": "Business Concept Version description"
-            },
-            "content": {
-              "type": "object",
-              "description": "Business Concept Vesion object"
-            }
-          }
-        }
-      }
-    },
-    "Domain": {
-      "type": "object",
-      "title": "Domain",
-      "required": [
-        "name",
-        "id"
-      ],
-      "properties": {
-        "parent_id": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "description": "Domain id"
-        },
-        "name": {
-          "type": "string",
-          "description": "Domain name"
-        },
-        "id": {
-          "type": "integer",
-          "description": "Unique identifier"
-        },
-        "description": {
-          "type": "string",
-          "description": "descritpion"
-        }
-      },
-      "example": {
-        "type": "Domain type",
-        "parent_id": 1,
-        "name": "Domain name",
-        "id": 12,
-        "description": "domain description"
-      },
-      "description": "A Domain"
-    },
-    "AclEntries": {
-      "type": "array",
-      "title": "Acl entries",
-      "items": {
-        "$ref": "#/definitions/AclEntry"
-      },
-      "description": "A collection of Acl Entry"
-    },
-    "RoleResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Role"
-        }
-      }
-    },
-    "RoleCreateUpdate": {
-      "type": "object",
-      "properties": {
-        "role": {
+        "domain": {
           "type": "object",
           "required": [
             "name"
           ],
           "properties": {
+            "type": {
+              "type": "string",
+              "description": "domain type"
+            },
             "name": {
               "type": "string",
-              "description": "role name"
+              "description": "domain name"
+            },
+            "description": {
+              "type": "string",
+              "description": "domain description"
             }
           }
         }
@@ -2112,35 +1710,74 @@
       },
       "description": "An Acl entry"
     },
-    "TemplatesResponse": {
+    "BusinessConceptVersions": {
+      "type": "array",
+      "title": "Business Concept Versions",
+      "items": {
+        "$ref": "#/definitions/BusinessConceptVersion"
+      },
+      "description": "A collection of Business Concept Versions"
+    },
+    "BusinessConceptVersionsResponse": {
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/Templates"
-        }
-      }
-    },
-    "TemplateCreateUpdate": {
-      "type": "object",
-      "properties": {
-        "template": {
           "type": "object",
-          "required": [
-            "content",
-            "name"
-          ],
           "properties": {
-            "name": {
-              "type": "string",
-              "description": "Name"
-            },
-            "content": {
-              "type": "array",
-              "description": "Content"
+            "collection": {
+              "$ref": "#/definitions/BusinessConceptVersions"
             }
           }
         }
       }
+    },
+    "PermissionItem": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "permission name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        }
+      }
+    },
+    "UsersRolesRequest": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "BusinessConceptAlias": {
+      "type": "object",
+      "title": "Business Concept Alias",
+      "required": [
+        "name",
+        "business_concept_id",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Business Concept Alias"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        },
+        "business_concept_id": {
+          "type": "integer",
+          "description": "Business Concept unique id"
+        }
+      },
+      "description": "Business Concept Alias"
     },
     "BusinessConceptCreate": {
       "type": "object",
@@ -2179,25 +1816,468 @@
         }
       }
     },
-    "PermissionItems": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/PermissionItem"
+    "Template": {
+      "type": "object",
+      "title": "Template",
+      "required": [
+        "content",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name"
+        },
+        "content": {
+          "type": "array",
+          "description": "Content"
+        }
+      },
+      "example": {
+        "name": "Template1",
+        "content": [
+          {
+            "type": "type1",
+            "required": true,
+            "name": "name1",
+            "max_size": 100
+          },
+          {
+            "type": "type2",
+            "required": false,
+            "related_area": "related_area1",
+            "max_size": 100
+          }
+        ]
+      },
+      "description": "A Template"
+    },
+    "Role": {
+      "type": "object",
+      "title": "Role",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "role name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        }
+      },
+      "description": "Role"
+    },
+    "TemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Templates"
+        }
       }
     },
-    "Roles": {
+    "BusinessConcepts": {
       "type": "array",
-      "title": "Roles",
+      "title": "Business Concepts",
       "items": {
-        "$ref": "#/definitions/Role"
+        "$ref": "#/definitions/BusinessConcept"
       },
-      "description": "A collection of Roles"
+      "description": "A collection of Business Concepts"
+    },
+    "DomainsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "collection": {
+              "$ref": "#/definitions/Domains"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptAliasCreate": {
+      "type": "object",
+      "properties": {
+        "business_concept_alias": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Business Concept Alias"
+            }
+          }
+        }
+      }
+    },
+    "AclEntryResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntry"
+        }
+      }
+    },
+    "BusinessConceptResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConcept"
+        }
+      }
     },
     "AclEntriesResponse": {
       "type": "object",
       "properties": {
         "data": {
           "$ref": "#/definitions/AclEntries"
+        }
+      }
+    },
+    "TaxonomyRolesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "domains": {
+              "$ref": "#/definitions/DomainItem"
+            }
+          }
+        }
+      },
+      "example": {
+        "data": [
+          {
+            "domains": {
+              "70": {
+                "role_id": 2,
+                "role": "publish",
+                "inherited": true
+              },
+              "69": {
+                "role_id": 2,
+                "role": "publish",
+                "inherited": false,
+                "acl_entry_id": 2
+              }
+            }
+          }
+        ]
+      }
+    },
+    "BusinessConceptUpdate": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Business Concept name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Business Concept description"
+            },
+            "content": {
+              "type": "object",
+              "description": "Business Concept content"
+            }
+          }
+        }
+      }
+    },
+    "AclEntryCreateUpdate": {
+      "type": "object",
+      "properties": {
+        "acl_entry": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "resource_type",
+            "resource_id",
+            "principal_type",
+            "principal_id"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "integer",
+              "description": "id of role"
+            },
+            "resource_type": {
+              "type": "string",
+              "description": "type of resource: domain"
+            },
+            "resource_id": {
+              "type": "integer",
+              "description": "id of resource"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "type of principal: user"
+            },
+            "principal_id": {
+              "type": "integer",
+              "description": "id of principal"
+            }
+          }
+        }
+      }
+    },
+    "AddTemplatesToDomain": {
+      "type": "object",
+      "properties": {
+        "templates": {
+          "$ref": "#/definitions/TemplateItems"
+        }
+      }
+    },
+    "PermissionResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Permission"
+        }
+      }
+    },
+    "BusinessConceptAliasResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConceptAlias"
+        }
+      }
+    },
+    "Domains": {
+      "type": "array",
+      "title": "Domains",
+      "items": {
+        "$ref": "#/definitions/Domain"
+      },
+      "description": "A collection of Domains"
+    },
+    "UsersRolesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "user_name": {
+              "type": "string",
+              "description": "user name"
+            },
+            "user_id": {
+              "type": "integer",
+              "description": "user id"
+            },
+            "role_name": {
+              "type": "string",
+              "description": "role name"
+            },
+            "role_id": {
+              "type": "integer",
+              "description": "role id"
+            },
+            "acl_entry_id": {
+              "type": "integer",
+              "description": "acl entry id"
+            }
+          }
+        }
+      }
+    },
+    "AclEntries": {
+      "type": "array",
+      "title": "Acl entries",
+      "items": {
+        "$ref": "#/definitions/AclEntry"
+      },
+      "description": "A collection of Acl Entry"
+    },
+    "RoleResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Role"
+        }
+      }
+    },
+    "TemplateItems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TemplateItem"
+      }
+    },
+    "AddPermissionsToRole": {
+      "type": "object",
+      "properties": {
+        "permissions": {
+          "$ref": "#/definitions/PermissionItems"
+        }
+      }
+    },
+    "TreeItem": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreeItem"
+          }
+        }
+      }
+    },
+    "UsersResponse": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/UserResponse"
+      }
+    },
+    "TaxonomyTreeResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreeItem"
+          }
+        }
+      },
+      "example": {
+        "data": [
+          {
+            "name": "domain 1",
+            "id": 1,
+            "description": "domain root 1",
+            "children": [
+              {
+                "name": "domain 2",
+                "id": 1,
+                "description": "domain 2 child of domain 1",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "DomainItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "object",
+          "properties": {
+            "role_id": {
+              "type": "integer"
+            },
+            "role": {
+              "type": "string"
+            },
+            "inherited": {
+              "type": "boolean"
+            },
+            "acl_entry_id": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "TemplateItem": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name"
+        }
+      }
+    },
+    "DomainResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Domain"
+        }
+      }
+    },
+    "BusinessConceptAliases": {
+      "type": "array",
+      "title": "Business Concept Aliases",
+      "items": {
+        "$ref": "#/definitions/BusinessConceptAlias"
+      },
+      "description": "A collection of Business Concept Aliases"
+    },
+    "UserResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "user_name": {
+              "type": "string",
+              "description": "username"
+            },
+            "is_admin": {
+              "type": "boolean",
+              "description": "is admin"
+            },
+            "id": {
+              "type": "integer",
+              "description": "user id"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptVersionCreate": {
+      "type": "object",
+      "properties": {
+        "business_concept_version": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Business Concept Vesion name"
+            },
+            "mod_comments": {
+              "type": "string",
+              "description": "Business Concept Version modification comments"
+            },
+            "description": {
+              "type": "string",
+              "description": "Business Concept Version description"
+            },
+            "content": {
+              "type": "object",
+              "description": "Business Concept Vesion object"
+            }
+          }
+        }
+      }
+    },
+    "PermissionsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Permissions"
         }
       }
     },
@@ -2287,33 +2367,89 @@
       },
       "description": "Business Concept Version"
     },
-    "UserResponse": {
+    "Permissions": {
+      "type": "array",
+      "title": "Roles",
+      "items": {
+        "$ref": "#/definitions/Role"
+      },
+      "description": "A collection of Permissions"
+    },
+    "Permission": {
+      "type": "object",
+      "title": "Permission",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "permission name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        }
+      },
+      "description": "Permission"
+    },
+    "Domain": {
+      "type": "object",
+      "title": "Domain",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "parent_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Domain id"
+        },
+        "name": {
+          "type": "string",
+          "description": "Domain name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier"
+        },
+        "description": {
+          "type": "string",
+          "description": "descritpion"
+        }
+      },
+      "example": {
+        "type": "Domain type",
+        "parent_id": 1,
+        "name": "Domain name",
+        "id": 12,
+        "description": "domain description"
+      },
+      "description": "A Domain"
+    },
+    "TemplateCreateUpdate": {
       "type": "object",
       "properties": {
-        "data": {
+        "template": {
           "type": "object",
+          "required": [
+            "content",
+            "name"
+          ],
           "properties": {
-            "user_name": {
+            "name": {
               "type": "string",
-              "description": "username"
+              "description": "Name"
             },
-            "is_admin": {
-              "type": "boolean",
-              "description": "is admin"
-            },
-            "id": {
-              "type": "integer",
-              "description": "user id"
+            "content": {
+              "type": "array",
+              "description": "Content"
             }
           }
-        }
-      }
-    },
-    "RolesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Roles"
         }
       }
     },
@@ -2330,31 +2466,184 @@
         }
       }
     },
-    "PermissionsResponse": {
+    "RolesResponse": {
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/Permissions"
+          "$ref": "#/definitions/Roles"
         }
       }
     },
-    "DomainItem": {
+    "PermissionItems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PermissionItem"
+      }
+    },
+    "Roles": {
+      "type": "array",
+      "title": "Roles",
+      "items": {
+        "$ref": "#/definitions/Role"
+      },
+      "description": "A collection of Roles"
+    },
+    "Templates": {
+      "type": "array",
+      "title": "Templates",
+      "items": {
+        "$ref": "#/definitions/Template"
+      },
+      "description": "A collection of Templates"
+    },
+    "BusinessConcept": {
+      "type": "object",
+      "title": "Business Concept",
+      "required": [
+        "version",
+        "status",
+        "domain_id",
+        "last_change_at",
+        "last_change_by",
+        "description",
+        "name",
+        "related_to",
+        "content",
+        "type",
+        "business_concept_version_id",
+        "id"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "description": "Business Concept version"
+        },
+        "type": {
+          "type": "string",
+          "description": "Business Concept type"
+        },
+        "status": {
+          "type": "string",
+          "description": "Business Conceptstatus"
+        },
+        "related_to": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Related Business Concepts"
+        },
+        "reject_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Business Concept reject reason"
+        },
+        "name": {
+          "type": "string",
+          "description": "Business Concept name"
+        },
+        "mod_comments": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Business Concept modification comments"
+        },
+        "last_change_by": {
+          "type": "integer",
+          "description": "Business Concept last updated by"
+        },
+        "last_change_at": {
+          "type": "string",
+          "description": "Business Conceptlast updated date"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        },
+        "domain_id": {
+          "type": "integer",
+          "description": "Business Concept parent domain id"
+        },
+        "description": {
+          "type": "string",
+          "description": "Business Concept description"
+        },
+        "content": {
+          "type": "object",
+          "description": "Business Concept content"
+        },
+        "business_concept_version_id": {
+          "type": "integer",
+          "description": "Business Concept current version id"
+        }
+      },
+      "description": "Business Concept"
+    },
+    "RoleCreateUpdate": {
       "type": "object",
       "properties": {
-        "id": {
+        "role": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "role name"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptAliasesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
           "type": "object",
           "properties": {
-            "role_id": {
-              "type": "integer"
+            "collection": {
+              "$ref": "#/definitions/BusinessConceptAliases"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptUpdateStatus": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Business Concept status (rejected, published, deprecated...)"
             },
-            "role": {
-              "type": "string"
-            },
-            "inherited": {
-              "type": "boolean"
-            },
-            "acl_entry_id": {
-              "type": "integer"
+            "reject_reason": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Business Concept reject reason"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "collection": {
+              "$ref": "#/definitions/BusinessConcepts"
             }
           }
         }
@@ -2394,208 +2683,6 @@
               "description": "id of principal"
             }
           }
-        }
-      }
-    },
-    "AddPermissionsToRole": {
-      "type": "object",
-      "properties": {
-        "permissions": {
-          "$ref": "#/definitions/PermissionItems"
-        }
-      }
-    },
-    "TaxonomyTreeResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TreeItem"
-          }
-        }
-      },
-      "example": {
-        "data": [
-          {
-            "name": "domain 1",
-            "id": 1,
-            "description": "domain root 1",
-            "children": [
-              {
-                "name": "domain 2",
-                "id": 1,
-                "description": "domain 2 child of domain 1",
-                "children": []
-              }
-            ]
-          }
-        ]
-      }
-    },
-    "Domains": {
-      "type": "array",
-      "title": "Domains",
-      "items": {
-        "$ref": "#/definitions/Domain"
-      },
-      "description": "A collection of Domains"
-    },
-    "Role": {
-      "type": "object",
-      "title": "Role",
-      "required": [
-        "name",
-        "id"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "role name"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        }
-      },
-      "description": "Role"
-    },
-    "UsersRolesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "user_name": {
-              "type": "string",
-              "description": "user name"
-            },
-            "user_id": {
-              "type": "integer",
-              "description": "user id"
-            },
-            "role_name": {
-              "type": "string",
-              "description": "role name"
-            },
-            "role_id": {
-              "type": "integer",
-              "description": "role id"
-            },
-            "acl_entry_id": {
-              "type": "integer",
-              "description": "acl entry id"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptVersions": {
-      "type": "array",
-      "title": "Business Concept Versions",
-      "items": {
-        "$ref": "#/definitions/BusinessConceptVersion"
-      },
-      "description": "A collection of Business Concept Versions"
-    },
-    "TaxonomyRolesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "domains": {
-              "$ref": "#/definitions/DomainItem"
-            }
-          }
-        }
-      },
-      "example": {
-        "data": [
-          {
-            "domains": {
-              "70": {
-                "role_id": 2,
-                "role": "publish",
-                "inherited": true
-              },
-              "69": {
-                "role_id": 2,
-                "role": "publish",
-                "inherited": false,
-                "acl_entry_id": 2
-              }
-            }
-          }
-        ]
-      }
-    },
-    "AclEntryCreateUpdate": {
-      "type": "object",
-      "properties": {
-        "acl_entry": {
-          "type": "object",
-          "required": [
-            "role_id",
-            "resource_type",
-            "resource_id",
-            "principal_type",
-            "principal_id"
-          ],
-          "properties": {
-            "role_id": {
-              "type": "integer",
-              "description": "id of role"
-            },
-            "resource_type": {
-              "type": "string",
-              "description": "type of resource: domain"
-            },
-            "resource_id": {
-              "type": "integer",
-              "description": "id of resource"
-            },
-            "principal_type": {
-              "type": "string",
-              "description": "type of principal: user"
-            },
-            "principal_id": {
-              "type": "integer",
-              "description": "id of principal"
-            }
-          }
-        }
-      }
-    },
-    "DomainResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Domain"
-        }
-      }
-    },
-    "BusinessConceptResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/BusinessConcept"
-        }
-      }
-    },
-    "PermissionItem": {
-      "type": "object",
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "permission name"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
         }
       }
     }

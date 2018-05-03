@@ -1,9 +1,10 @@
 defmodule TdBg.Templates.Template do
   @moduledoc false
-  
+
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.Templates.Template
+  alias TdBg.Taxonomies.Domain
 
   schema "templates" do
     field :content, {:array, :map}

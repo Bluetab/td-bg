@@ -11,6 +11,7 @@ defmodule TdBgWeb.TemplateControllerTest do
   @create_attrs %{content: [], name: "some name"}
   @update_attrs %{content: [], name: "some updated name"}
   @invalid_attrs %{content: nil, name: nil}
+  @domain_attrs %{name: "domain1", type: "type", parent_id: "", description: "description"}
 
   def fixture(:template) do
     {:ok, template} = Templates.create_template(@create_attrs)
@@ -94,6 +95,36 @@ defmodule TdBgWeb.TemplateControllerTest do
       assert_error_sent 404, fn ->
         get conn, template_path(conn, :show, template)
       end
+    end
+  end
+
+  describe "domain templates" do
+
+    @tag :admin_authenticated
+    test "relate domain and template", %{conn: conn, swagger_schema: schema} do
+      conn = post conn, template_path(conn, :create), template: @create_attrs
+      validate_resp_schema(conn, schema, "TemplateResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = post conn, domain_path(conn, :create), domain: @domain_attrs
+      validate_resp_schema(conn, schema, "DomainResponse")
+      assert %{"id" => domain_id} = json_response(conn, 201)["data"]
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, template_path(conn, :index)
+      templates = json_response(conn, 200)["data"]
+
+      conn = recycle_and_put_headers(conn)
+      conn = post conn, template_path(conn, :add_templates_to_domain, domain_id), templates: templates
+      validate_resp_schema(conn, schema, "TemplatesResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, template_path(conn, :get_domain_templates, domain_id)
+      validate_resp_schema(conn, schema, "TemplatesResponse")
+      stored_templates = json_response(conn, 200)["data"]
+      stored_templates = Enum.sort(stored_templates, &(Map.get(&1, "name") < Map.get(&2, "name")))
+
+      assert templates == stored_templates
     end
   end
 

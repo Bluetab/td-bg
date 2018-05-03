@@ -538,6 +538,20 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data Schema.ref(:Templates)
         end
+      end,
+      TemplateItem: swagger_schema do
+        properties do
+          name :string, "Name", required: true
+        end
+      end,
+      TemplateItems: swagger_schema do
+        type :array
+        items Schema.ref(:TemplateItem)
+      end,
+      AddTemplatesToDomain: swagger_schema do
+        properties do
+          templates Schema.ref(:TemplateItems)
+        end
       end
     }
   end

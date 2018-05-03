@@ -5,6 +5,8 @@ defmodule TdBgWeb.TemplateController do
   alias TdBg.Templates
   alias TdBg.Templates.Template
   alias TdBgWeb.SwaggerDefinitions
+  alias TdBg.Taxonomies
+  alias TdBgWeb.ErrorView
 
   action_fallback TdBgWeb.FallbackController
 
@@ -87,8 +89,44 @@ defmodule TdBgWeb.TemplateController do
   end
   def delete(conn, %{"id" => id}) do
     template = Templates.get_template!(id)
-    with {:ok, %Template{}} <- Templates.delete_template(template) do
+    with {:count, :domain, 0} <- Templates.count_related_domains(String.to_integer(id)),
+         {:ok, %Template{}} <- Templates.delete_template(template) do
       send_resp(conn, :no_content, "")
+    else
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
+  end
+
+  swagger_path :get_domain_templates do
+    get "/domains/{domain_id}/templates"
+    description "List Domain Templates"
+    parameters do
+      domain_id :path, :integer, "Domain ID", required: true
+    end
+    response 200, "OK", Schema.ref(:TemplatesResponse)
+  end
+  def get_domain_templates(conn, %{"domain_id" => domain_id}) do
+    domain = Taxonomies.get_domain!(domain_id)
+    templates = Templates.get_domain_templates(domain)
+    render(conn, "index.json", templates: templates)
+  end
+
+  swagger_path :add_templates_to_domain do
+    post "/domains/{domain_id}/templates"
+    description "Add Templates to Domain"
+    parameters do
+      domain_id :path, :integer, "Domain ID", required: true
+      templates :body, Schema.ref(:AddTemplatesToDomain), "Add Templates to Domain attrs"
+    end
+    response 200, "OK", Schema.ref(:TemplatesResponse)
+  end
+  def add_templates_to_domain(conn, %{"domain_id" => domain_id, "templates" => templ}) do
+    domain = Taxonomies.get_domain!(domain_id)
+    templates = Enum.map(templ, &Templates.get_template_by_name(Map.get(&1, "name")))
+    Templates.add_templates_to_domain(domain, templates)
+    render(conn, "index.json", templates: templates)
   end
 end
