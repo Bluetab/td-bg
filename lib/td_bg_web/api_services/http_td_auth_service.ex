@@ -4,6 +4,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   alias Poison, as: JSON
   alias TdBg.Utils.CollectionUtils
   alias TdBg.Accounts.User
+  alias TdBg.Accounts.Group
 
   defp get_config do
     Application.get_env(:td_bg, :auth_service)
@@ -32,6 +33,11 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   defp get_sessions_path do
     auth_service_config = get_config()
     "#{get_auth_endpoint()}#{auth_service_config[:sessions_path]}"
+  end
+
+  defp get_groups_path do
+    auth_service_config = get_config()
+    "#{get_auth_endpoint()}#{auth_service_config[:groups_path]}"
   end
 
   def create(%{"user" => _user_params} = body) do
@@ -94,6 +100,46 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     json = json["data"]
     users = Enum.map(json, fn(user) -> %User{} |> Map.merge(CollectionUtils.to_struct(User, user)) end)
     users
+  end
+
+  def get_user(id) do
+    token = get_api_user_token()
+
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.get!("#{get_users_path()}/#{id}", headers, [])
+    json_user =
+      resp
+      |> JSON.decode!
+    json_user = json_user["data"]
+    user = %User{} |> Map.merge(CollectionUtils.to_struct(User, json_user))
+    user
+  end
+
+  def index_groups do
+    token = get_api_user_token()
+
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.get!("#{get_groups_path()}", headers, [])
+    json =
+      resp
+      |> JSON.decode!
+    json = json["data"]
+    groups = Enum.map(json, fn(group) -> %Group{} |> Map.merge(CollectionUtils.to_struct(Group, group)) end)
+    groups
+  end
+
+  def create_group(%{"group" => _group_params} = req) do
+    token = get_api_user_token()
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+
+    body = req |> JSON.encode!
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_groups_path()}", body, headers, [])
+    json_group =
+      resp
+      |> JSON.decode!
+    json_group = json_group["data"]
+    group = %Group{} |> Map.merge(CollectionUtils.to_struct(Group, json_group))
+    group
   end
 
 end

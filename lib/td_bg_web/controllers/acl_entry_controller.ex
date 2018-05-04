@@ -76,7 +76,7 @@ defmodule TdBgWeb.AclEntryController do
     role = Permissions.get_role_by_name(acl_entry_params["role_name"])
     acl_entry_params = Map.put(acl_entry_params, "role_id", role.id)
     acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
-    acl_query_params = %{user_id: acl_entry.principal_id, resource_type: acl_entry.resource_type, resource_id: acl_entry.resource_id}
+    acl_query_params = %{principal_type: acl_entry.principal_type, principal_id: acl_entry.principal_id, resource_type: acl_entry.resource_type, resource_id: acl_entry.resource_id}
     acl_entry = Permissions.get_acl_entry_by_principal_and_resource(acl_query_params)
     if acl_entry do
       update(conn, %{"id" => acl_entry.id, "acl_entry" => acl_entry_params})

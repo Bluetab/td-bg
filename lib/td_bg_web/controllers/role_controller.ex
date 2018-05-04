@@ -151,8 +151,9 @@ defmodule TdBgWeb.RoleController do
   end
 
   def user_domain_role(conn, %{"user_id" => user_id, "domain_id" => domain_id}) do
-    role = Permissions.get_role_in_resource(%{user_id: user_id, domain_id: domain_id})
-    render(conn, "show.json", role: role)
+    #role = Permissions.get_role_in_resource(%{user_id: user_id, domain_id: domain_id})
+    roles = Permissions.get_all_roles(%{user_id: user_id, domain_id: domain_id})
+    render(conn, "index.json", roles: roles)
   end
 
   defp get_current_user(conn) do

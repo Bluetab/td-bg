@@ -2,6 +2,14 @@ defmodule TdBg.PermissionsTest do
   use TdBg.DataCase
 
   alias TdBg.Permissions
+  alias TdBgWeb.ApiServices.MockTdAuthService
+
+  import TdBgWeb.Authentication, only: :functions
+
+  setup_all do
+    start_supervised MockTdAuthService
+    :ok
+  end
 
   describe "permissions" do
     alias TdBg.Permissions.Permission
@@ -211,6 +219,7 @@ defmodule TdBg.PermissionsTest do
 
     test "get_permissios_in_resource?/1 get permissions in resource" do
       user = build(:user)
+      user = create_user(user.user_name)
       domain = insert(:domain)
       permission = insert(:permission)
       role = insert(:role, permissions: [permission])
@@ -220,6 +229,7 @@ defmodule TdBg.PermissionsTest do
 
     test "authorize?/1 check permission" do
       user = build(:user)
+      user = create_user(user.user_name)
       domain = insert(:domain)
       permission = insert(:permission)
       role = insert(:role, permissions: [permission])

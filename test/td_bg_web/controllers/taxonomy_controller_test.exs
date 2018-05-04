@@ -2,11 +2,10 @@ defmodule TdBgWeb.TaxonomyControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
-
   import TdBgWeb.Taxonomy
-
+  import TdBgWeb.Authentication, only: :functions
   alias TdBg.Permissions
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised MockTdAuthService
@@ -83,6 +82,7 @@ defmodule TdBgWeb.TaxonomyControllerTest do
     @tag :admin_authenticated
     test "List children domain custom role list", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
+      user = create_user(user.user_name)
       child_domain = insert(:child_domain)
       role = Permissions.get_role_by_name("publish")
       acl = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: child_domain.id, role_id: role.id)

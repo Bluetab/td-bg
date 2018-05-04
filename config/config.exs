@@ -38,7 +38,8 @@ config :canary, repo: TdBg.Repo,
 config :td_bg, :auth_service,
   protocol: "http",
   users_path: "/api/users/",
-  sessions_path: "/api/sessions/"
+  sessions_path: "/api/sessions/",
+  groups_path: "/api/groups"
 
 config :td_bg, :phoenix_swagger,
        swagger_files: %{

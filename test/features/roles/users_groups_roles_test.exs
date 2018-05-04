@@ -1,5 +1,5 @@
-defmodule TdBg.SuperAdminRolesAdminTest do
-  use Cabbage.Feature, async: false, file: "roles/super_admin_roles_admin.feature"
+defmodule TdBg.UserGroupsRolesTest do
+  use Cabbage.Feature, async: false, file: "roles/users_groups_roles.feature"
   use TdBgWeb.FeatureCase
   import TdBgWeb.Router.Helpers
   import TdBgWeb.ResponseCode
@@ -16,33 +16,33 @@ defmodule TdBg.SuperAdminRolesAdminTest do
   @endpoint TdBgWeb.Endpoint
 
   import TdBg.ResultSteps
+  import TdBgWeb.AclEntry, only: :functions
 
   setup_all do
     start_supervised MockTdAuthService
     :ok
   end
 
-  defand ~r/^user "app-admin" is logged in the application$/, %{}, state do
-    token_admin = build_user_token("app-admin", is_admin: true)
-    {:ok, Map.merge(state, %{token: token_admin})}
+  defand ~r/^an user "(?<user_name>[^"]+)" that belongs to the group "(?<group_name>[^"]+)"$/,
+    %{user_name: user_name, group_name: group_name}, _state do
+    create_user(user_name, groups: [%{"name" => group_name}])
   end
 
-  defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to user "(?<principal_name>[^"]+)" in Domain (?<resource_name>[^"]+)$/,
+  defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to group "(?<principal_name>[^"]+)" in Domain (?<resource_name>[^"]+)$/,
           %{user_name: user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
     domain_info = get_domain_by_name(state[:token_admin], resource_name)
-    user = create_user(principal_name)
+    %{"id" => group_id} = get_group_by_name(principal_name)
     role_info = get_role_by_name(state[:token_admin], role_name)
-    acl_entry_params = %{principal_type: "user", principal_id: user.id, resource_type: "domain", resource_id: domain_info["id"], role_id: role_info["id"]}
+    acl_entry_params = %{principal_type: "group", principal_id: group_id, resource_type: "domain", resource_id: domain_info["id"], role_id: role_info["id"]}
     token = get_user_token(user_name)
     {_, status_code, json_resp} = acl_entry_create(token , acl_entry_params)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
   end
 
   defand ~r/^the user "(?<user_name>[^"]+)" has (?<role_name>[^"]+) role in Domain "(?<domain_name>[^"]+)"$/, %{user_name: user_name, role_name: role_name, domain_name: domain_name}, state do
-    user = create_user(user_name)
+    user = get_user_by_name(user_name)
     domain_info = get_domain_by_name(state[:token_admin], domain_name)
     {:ok, _status_code, json_resp} = user_domain_role(state[:token_admin], %{user_id: user.id, domain_id: domain_info["id"]})
-    #assert Enum.member?(Enum.map(json_resp["data"], &(if &1["name"], do: &1["name"], else: "none")), role_name)
     case json_resp["data"] do
       [] -> assert role_name == "none"
       roles -> assert Enum.member?(Enum.map(roles, &(&1["name"])), role_name)
@@ -53,14 +53,6 @@ defmodule TdBg.SuperAdminRolesAdminTest do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(user_domain_role_url(@endpoint, :user_domain_role, attrs.user_id, attrs.domain_id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  defp acl_entry_create(token, acl_entry_params) do
-    headers = get_header(token)
-    body = %{acl_entry: acl_entry_params} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(acl_entry_url(@endpoint, :create), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

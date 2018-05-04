@@ -18,7 +18,7 @@ defmodule TdBg.UsersSteps do
         acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain", resource_id: domain["id"], role_id: role_id}
         {:ok, _, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
         {:ok, _, json_resp} = user_domain_role(state[:token_admin], %{user_id: principal_id, domain_id: domain["id"]})
-        assert json_resp["data"]["name"] == role_name
+        assert Enum.member?(Enum.map(json_resp["data"], &(&1["name"])), role_name)
       end)
   end
 

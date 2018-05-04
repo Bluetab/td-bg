@@ -14,4 +14,11 @@ defmodule TdBgWeb.AclEntry do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
+  def get_acls(token) do
+    headers = get_header(token)
+    %HTTPoison.Response{status_code: status_code, body: resp} =
+      HTTPoison.get!(acl_entry_url(@endpoint, :index), headers, [])
+    {:ok, status_code, resp |> JSON.decode!}
+  end
+
 end

@@ -46,7 +46,7 @@ defmodule TdBg.RolesAdminTest do
       principal_id = get_user_by_name(user_name).id
       acl_entry_params = %{user_id: principal_id, domain_id: domain_info["id"]}
       {:ok, _status_code, json_resp} = user_domain_role(state[:token_admin], acl_entry_params)
-      assert json_resp["data"]["name"] == role_name
+      assert Enum.member?(Enum.map(json_resp["data"], &(&1["name"])), role_name)
     end
   end
 

@@ -5,6 +5,7 @@ defmodule TdBgWeb.User do
   import TdBgWeb.Router.Helpers
   import TdBgWeb.Authentication, only: :functions
   @endpoint TdBgWeb.Endpoint
+  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   def role_list(token) do
     headers = get_header(token)
@@ -24,5 +25,9 @@ defmodule TdBgWeb.User do
       "no" -> false
       _ -> is_admin
     end
+  end
+
+  def get_group_by_name(group_name) do
+    @td_auth_api.get_group_by_name(group_name)
   end
 end
