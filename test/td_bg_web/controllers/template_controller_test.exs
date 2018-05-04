@@ -7,8 +7,13 @@ defmodule TdBgWeb.TemplateControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Templates
   alias TdBg.Templates.Template
+  alias Poison, as: JSON
 
   @create_attrs %{content: [], name: "some name"}
+  @generic_attrs %{content: [%{"type": "type1", "required": true, "name": "name1", "max_size": 100}], name: "generic_true"}
+  @create_attrs_generic_true %{content: [%{"includes": ["generic_true"]}, %{"other_field": "other_field"}], name: "some name"}
+  @create_attrs_generic_false %{content: [%{"includes": ["generic_false"]}, %{"other_field": "other_field"}], name: "some name"}
+  @others_create_attrs_generic_true %{content: [%{"includes": ["generic_true", "generic_false"]}, %{"other_field": "other_field"}], name: "some name"}
   @update_attrs %{content: [], name: "some updated name"}
   @invalid_attrs %{content: nil, name: nil}
   @domain_attrs %{name: "domain1", type: "type", parent_id: "", description: "description"}
@@ -57,6 +62,63 @@ defmodule TdBgWeb.TemplateControllerTest do
       conn = post conn, template_path(conn, :create), template: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
+
+    @tag :admin_authenticated
+    test "renders template with valid includes", %{conn: conn, swagger_schema: schema} do
+      conn = post conn, template_path(conn, :create), template: @generic_attrs
+      validate_resp_schema(conn, schema, "TemplateResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = post conn, template_path(conn, :create), template: @create_attrs_generic_true
+      validate_resp_schema(conn, schema, "TemplateResponse")
+      assert %{"id" => id} = json_response(conn, 201)["data"]
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, template_path(conn, :load_and_show, id)
+      validate_resp_schema(conn, schema, "TemplateResponse")
+      assert JSON.encode(json_response(conn, 200)["data"]) == JSON.encode(%{
+        "id" => id,
+        "content" => [%{"other_field": "other_field"}, %{"type": "type1", "required": true, "name": "name1", "max_size": 100}],
+        "name" => "some name"})
+      end
+
+      @tag :admin_authenticated
+      test "renders template with invalid includes", %{conn: conn, swagger_schema: schema} do
+        conn = post conn, template_path(conn, :create), template: @generic_attrs
+        validate_resp_schema(conn, schema, "TemplateResponse")
+
+        conn = recycle_and_put_headers(conn)
+        conn = post conn, template_path(conn, :create), template: @create_attrs_generic_false
+        validate_resp_schema(conn, schema, "TemplateResponse")
+        assert %{"id" => id} = json_response(conn, 201)["data"]
+
+        conn = recycle_and_put_headers(conn)
+        conn = get conn, template_path(conn, :load_and_show, id)
+        validate_resp_schema(conn, schema, "TemplateResponse")
+        assert JSON.encode(json_response(conn, 200)["data"]) == JSON.encode(%{
+          "id" => id,
+          "content" => [%{"other_field": "other_field"}],
+          "name" => "some name"})
+        end
+
+      @tag :admin_authenticated
+      test "renders template with valid and invalid includes", %{conn: conn, swagger_schema: schema} do
+        conn = post conn, template_path(conn, :create), template: @generic_attrs
+        validate_resp_schema(conn, schema, "TemplateResponse")
+
+        conn = recycle_and_put_headers(conn)
+        conn = post conn, template_path(conn, :create), template: @others_create_attrs_generic_true
+        validate_resp_schema(conn, schema, "TemplateResponse")
+        assert %{"id" => id} = json_response(conn, 201)["data"]
+
+        conn = recycle_and_put_headers(conn)
+        conn = get conn, template_path(conn, :load_and_show, id)
+        validate_resp_schema(conn, schema, "TemplateResponse")
+        assert JSON.encode(json_response(conn, 200)["data"]) == JSON.encode(%{
+          "id" => id,
+          "content" => [%{"other_field": "other_field"}, %{"type": "type1", "required": true, "name": "name1", "max_size": 100}],
+          "name" => "some name"})
+        end
   end
 
   describe "update template" do

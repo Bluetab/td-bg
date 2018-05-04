@@ -34,12 +34,23 @@ defmodule TdBgWeb.TemplateController do
     response 201, "Created", Schema.ref(:TemplateResponse)
     response 400, "Client Error"
   end
-  def create(conn, %{"template" => template_params}) do
-    with {:ok, %Template{} = template} <- Templates.create_template(template_params) do
+  def create(conn, %{"template" => template}) do
+    with  false <- (is_nil(template["name"])),
+          true <- (is_nil(Templates.get_template_by_name(template["name"]))),
+          {:ok, %Template{} = template} <- Templates.create_template(template) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", template_path(conn, :show, template))
       |> render("show.json", template: template)
+    else
+      false ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{"errors": %{name: ["unique"]}})
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 
@@ -56,6 +67,45 @@ defmodule TdBgWeb.TemplateController do
   def show(conn, %{"id" => id}) do
     template = Templates.get_template!(id)
     render(conn, "show.json", template: template)
+  end
+
+  swagger_path :load_and_show do
+    get "/templates/load/{id}"
+    description "Load and show Template"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Template ID", required: true
+    end
+    response 200, "OK", Schema.ref(:TemplateResponse)
+    response 400, "Client Error"
+  end
+  def load_and_show(conn, %{"id" => id}) do
+    {:ok, template} = load_template(Templates.get_template!(id))
+    render(conn, "show.json", template: template)
+  end
+
+  defp load_template(template) do
+    includes = List.first(Enum.filter(Map.get(template, :content), fn(field) -> field["includes"] end))["includes"]
+    case includes do
+      nil -> {:ok, template}
+      _ -> load_template(template, includes)
+    end
+  end
+  defp load_template(template, includes) do
+    includes = Enum.reduce(includes, [], fn(name, acc) ->
+      case Templates.get_template_by_name(name) do
+        nil -> acc
+        _ -> [name] ++ acc
+      end
+    end)
+    my_fields = Enum.reject(Map.get(template, :content), fn(field) -> field["includes"] end)
+    template =
+      case length(includes) do
+        0 -> {:ok, Map.put(template, :content, my_fields)}
+        _ ->
+          final_fields = my_fields ++ Enum.reduce(includes, [], fn(templ, acc) -> Map.get(Templates.get_template_by_name(templ), :content) ++ acc  end)
+          {:ok, Map.put(template, :content, final_fields)}
+      end
   end
 
   swagger_path :update do
