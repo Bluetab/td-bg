@@ -93,7 +93,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             properties do
               principal (Schema.new do
                 properties do
-                  id :integer, 1234
+                  id :integer, "principal_id"
                   name :string, "group1"
                 end
               end)

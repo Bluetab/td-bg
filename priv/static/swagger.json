@@ -1675,14 +1675,6 @@
   },
   "host": "localhost:4002",
   "definitions": {
-    "AclEntriesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/AclEntries"
-        }
-      }
-    },
     "TemplateItem": {
       "type": "object",
       "required": [
@@ -1702,6 +1694,14 @@
         "$ref": "#/definitions/BusinessConceptAlias"
       },
       "description": "A collection of Business Concept Aliases"
+    },
+    "AclEntryResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntry"
+        }
+      }
     },
     "TemplateResponse": {
       "type": "object",
@@ -1736,43 +1736,6 @@
             "id": {
               "type": "integer",
               "description": "user id"
-            }
-          }
-        }
-      }
-    },
-    "AclEntryCreateOrUpdate": {
-      "type": "object",
-      "properties": {
-        "acl_entry": {
-          "type": "object",
-          "required": [
-            "role_name",
-            "resource_type",
-            "resource_id",
-            "principal_type",
-            "principal_id"
-          ],
-          "properties": {
-            "role_name": {
-              "type": "string",
-              "description": "role name"
-            },
-            "resource_type": {
-              "type": "string",
-              "description": "type of resource: domain"
-            },
-            "resource_id": {
-              "type": "integer",
-              "description": "id of resource"
-            },
-            "principal_type": {
-              "type": "string",
-              "description": "type of principal: user"
-            },
-            "principal_id": {
-              "type": "integer",
-              "description": "id of principal"
             }
           }
         }
@@ -1978,7 +1941,7 @@
                 },
                 "id": {
                   "type": "integer",
-                  "description": 1234
+                  "description": "principal_id"
                 }
               }
             },
@@ -2103,6 +2066,43 @@
       },
       "description": "A collection of Permissions"
     },
+    "AclEntryCreateUpdate": {
+      "type": "object",
+      "properties": {
+        "acl_entry": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "resource_type",
+            "resource_id",
+            "principal_type",
+            "principal_id"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "integer",
+              "description": "id of role"
+            },
+            "resource_type": {
+              "type": "string",
+              "description": "type of resource: domain"
+            },
+            "resource_id": {
+              "type": "integer",
+              "description": "id of resource"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "type of principal: user"
+            },
+            "principal_id": {
+              "type": "integer",
+              "description": "id of principal"
+            }
+          }
+        }
+      }
+    },
     "DomainCreate": {
       "type": "object",
       "properties": {
@@ -2172,43 +2172,6 @@
         ]
       }
     },
-    "AclEntryCreateUpdate": {
-      "type": "object",
-      "properties": {
-        "acl_entry": {
-          "type": "object",
-          "required": [
-            "role_id",
-            "resource_type",
-            "resource_id",
-            "principal_type",
-            "principal_id"
-          ],
-          "properties": {
-            "role_id": {
-              "type": "integer",
-              "description": "id of role"
-            },
-            "resource_type": {
-              "type": "string",
-              "description": "type of resource: domain"
-            },
-            "resource_id": {
-              "type": "integer",
-              "description": "id of resource"
-            },
-            "principal_type": {
-              "type": "string",
-              "description": "type of principal: user"
-            },
-            "principal_id": {
-              "type": "integer",
-              "description": "id of principal"
-            }
-          }
-        }
-      }
-    },
     "BusinessConceptCreate": {
       "type": "object",
       "properties": {
@@ -2276,6 +2239,14 @@
         }
       }
     },
+    "AclEntriesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntries"
+        }
+      }
+    },
     "DomainsResponse": {
       "type": "object",
       "properties": {
@@ -2289,47 +2260,40 @@
         }
       }
     },
-    "Template": {
+    "AclEntryCreateOrUpdate": {
       "type": "object",
-      "title": "Template",
-      "required": [
-        "content",
-        "name"
-      ],
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name"
-        },
-        "content": {
-          "type": "array",
-          "description": "Content"
-        }
-      },
-      "example": {
-        "name": "Template1",
-        "content": [
-          {
-            "type": "type1",
-            "required": true,
-            "name": "name1",
-            "max_size": 100
-          },
-          {
-            "type": "type2",
-            "required": false,
-            "related_area": "related_area1",
-            "max_size": 100
+        "acl_entry": {
+          "type": "object",
+          "required": [
+            "role_name",
+            "resource_type",
+            "resource_id",
+            "principal_type",
+            "principal_id"
+          ],
+          "properties": {
+            "role_name": {
+              "type": "string",
+              "description": "role name"
+            },
+            "resource_type": {
+              "type": "string",
+              "description": "type of resource: domain"
+            },
+            "resource_id": {
+              "type": "integer",
+              "description": "id of resource"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "type of principal: user"
+            },
+            "principal_id": {
+              "type": "integer",
+              "description": "id of principal"
+            }
           }
-        ]
-      },
-      "description": "A Template"
-    },
-    "AclEntryResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/AclEntry"
         }
       }
     },
@@ -2558,6 +2522,42 @@
           "$ref": "#/definitions/Permissions"
         }
       }
+    },
+    "Template": {
+      "type": "object",
+      "title": "Template",
+      "required": [
+        "content",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name"
+        },
+        "content": {
+          "type": "array",
+          "description": "Content"
+        }
+      },
+      "example": {
+        "name": "Template1",
+        "content": [
+          {
+            "type": "type1",
+            "required": true,
+            "name": "name1",
+            "max_size": 100
+          },
+          {
+            "type": "type2",
+            "required": false,
+            "related_area": "related_area1",
+            "max_size": 100
+          }
+        ]
+      },
+      "description": "A Template"
     },
     "DomainItem": {
       "type": "object",
