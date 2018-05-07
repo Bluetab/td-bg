@@ -411,6 +411,21 @@ defmodule TdBgWeb.BusinessConceptController do
     end
   end
 
+  swagger_path :search_by_name do
+    get "/business_concepts/search_by_name/{name}"
+    description "List Business Concepts by name"
+    produces "application/json"
+    parameters do
+      status :path, :string, "Business Concept Name", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 400, "Client Error"
+  end
+  def search_by_name(conn, %{"name" => name}) do
+    business_concept_versions = BusinessConcepts.get_business_concept_by_name(name)
+    render(conn, "index.json", business_concepts: business_concept_versions)
+  end
+
   defp filter_list(user, list_business_concept) do
     Enum.reduce(list_business_concept, [], fn(business_concept, acc) ->
       if can?(user, publish(business_concept)) or can?(user, reject(business_concept)) do

@@ -567,4 +567,14 @@ defmodule TdBg.BusinessConcepts do
     BusinessConceptAlias.changeset(business_concept_alias, %{})
   end
 
+  def get_business_concept_by_name(name) do
+    # Repo.all from r in BusinessConceptVersion, where:
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> where([v], ilike(v.name, ^"%#{name}%"))
+    |> preload([_, c], [business_concept: c])
+    |> order_by(asc: :version)
+    |> Repo.all
+  end
+
 end

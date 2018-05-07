@@ -62,6 +62,7 @@ defmodule TdBgWeb.Router do
 
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
     get "/business_concepts/search", BusinessConceptController, :search
+    get "/business_concepts/search_by_name/:name", BusinessConceptController, :search_by_name
     get "/business_concepts/domains/:domain_id", BusinessConceptController, :index_children_business_concept
     resources "/business_concepts", BusinessConceptController, except: [:new, :edit] do
       get  "/aliases", BusinessConceptAliasController, :index

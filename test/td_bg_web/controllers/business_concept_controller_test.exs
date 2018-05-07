@@ -48,6 +48,25 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
 
   end
 
+  describe "search_by_name" do
+    @tag authenticated_user: @admin_user_name
+    test "find business concept by name", %{conn: conn} do
+      published = BusinessConcept.status.published
+      draft = BusinessConcept.status.draft
+      domain = insert(:domain)
+      id = [create_version(domain, "one", draft).business_concept.id]
+      id = [create_version(domain, "two", published).business_concept.id | id]
+      [create_version(domain, "two", published).business_concept.id | id]
+
+      conn = get conn, business_concept_path(conn, :search_by_name, "two")
+      assert 2 == length(json_response(conn, 200)["data"])
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, business_concept_path(conn, :search_by_name, "one")
+      assert 1 == length(json_response(conn, 200)["data"])
+    end
+  end
+
   describe "create business_concept" do
     setup [:create_template]
 
