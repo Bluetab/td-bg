@@ -1,6 +1,10 @@
 defmodule TdBgWeb.DomainView do
   use TdBgWeb, :view
   alias TdBgWeb.DomainView
+  alias TdBgWeb.GroupView
+  alias TdBgWeb.UserView
+  alias TdBg.Accounts.User
+  alias TdBg.Accounts.Group
   use TdBg.Hypermedia, :view
 
   def render("index.json", %{domains: domains, hypermedia: hypermedia}) do
@@ -27,21 +31,29 @@ defmodule TdBgWeb.DomainView do
       description: domain.description}
   end
 
-  def render("index_user_roles.json", %{users_roles: users_roles, hypermedia: hypermedia}) do
-    %{data: render_many_hypermedia(users_roles,
-    hypermedia, DomainView, "users_role.json")}
+  def render("index_acl_entries.json", %{acl_entries: acl_entries, hypermedia: hypermedia}) do
+    %{data: render_many_hypermedia(acl_entries,
+    hypermedia, DomainView, "acl_entry.json")}
   end
-  def render("index_user_roles.json", %{users_roles: users_roles}) do
-    %{data: render_many(users_roles, DomainView, "users_role.json")}
+  def render("index_acl_entries.json", %{acl_entries: acl_entries}) do
+    %{data: render_many(acl_entries, DomainView, "acl_entry.json")}
   end
 
-  def render("users_role.json", %{domain: user_role}) do
+  def render("acl_entry.json", %{domain: acl_entry}) do
     %{
-      user_id: user_role.user_id,
-      user_name: user_role.user_name,
-      role_name: user_role.role_name,
-      role_id: user_role.role_id,
-      acl_entry_id: user_role.acl_entry_id
+      principal: render_principal(acl_entry.principal),
+      principal_type: acl_entry.principal_type,
+      role_name: acl_entry.role_name,
+      role_id: acl_entry.role_id,
+      acl_entry_id: acl_entry.acl_entry_id
     }
+  end
+
+  def render_principal(%Group{} = group) do
+    render_one(group, GroupView, "group.json")
+
+  end
+  def render_principal(%User{} = user) do
+    render_one(user, UserView, "user.json")
   end
 end

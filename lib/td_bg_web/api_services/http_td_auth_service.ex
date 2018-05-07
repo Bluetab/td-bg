@@ -87,7 +87,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     users
   end
 
-  def search(%{"ids" => _ids} = ids) do
+  def search_users(%{"ids" => _ids} = ids) do
     token = get_api_user_token()
 
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
@@ -140,6 +140,21 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     json_group = json_group["data"]
     group = %Group{} |> Map.merge(CollectionUtils.to_struct(Group, json_group))
     group
+  end
+
+  def search_groups(%{"ids" => _ids} = ids) do
+    token = get_api_user_token()
+
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    req = %{"data" => ids}
+    body = req |> JSON.encode!
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_groups_path()}/search", body, headers, [])
+    json =
+      resp
+      |> JSON.decode!
+    json = json["data"]
+    groups = Enum.map(json, fn(group) -> %Group{} |> Map.merge(CollectionUtils.to_struct(Group, group)) end)
+    groups
   end
 
 end

@@ -99,13 +99,12 @@ defmodule TdBgWeb.TemplateController do
       end
     end)
     my_fields = Enum.reject(Map.get(template, :content), fn(field) -> field["includes"] end)
-    template =
-      case length(includes) do
-        0 -> {:ok, Map.put(template, :content, my_fields)}
-        _ ->
-          final_fields = my_fields ++ Enum.reduce(includes, [], fn(templ, acc) -> Map.get(Templates.get_template_by_name(templ), :content) ++ acc  end)
-          {:ok, Map.put(template, :content, final_fields)}
-      end
+    case length(includes) do
+      0 -> {:ok, Map.put(template, :content, my_fields)}
+      _ ->
+        final_fields = my_fields ++ Enum.reduce(includes, [], fn(templ, acc) -> Map.get(Templates.get_template_by_name(templ), :content) ++ acc  end)
+        {:ok, Map.put(template, :content, final_fields)}
+    end
   end
 
   swagger_path :update do

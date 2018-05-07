@@ -54,8 +54,8 @@ defmodule TdBg.RolesAdminTest do
     %{user_name: user_name, domain_name: domain_name}, state do
     token = get_user_token(user_name)
     domain_info = get_domain_by_name(token, domain_name)
-    {:ok, 200,  %{"data" => users_roles}} = domain_users_roles(token, %{id: domain_info["id"]})
-    {:ok, Map.merge(state, %{users_roles: users_roles})}
+    {:ok, 200,  %{"data" => acl_entries}} = domain_acl_entries(token, %{id: domain_info["id"]})
+    {:ok, Map.merge(state, %{acl_entries: acl_entries})}
   end
 
   defand ~r/^following users exist in the application:$/, %{table: users}, _state do
@@ -105,7 +105,7 @@ defmodule TdBg.RolesAdminTest do
   defthen ~r/^the system returns a result with following data:$/,
     %{table: expected_list}, state do
 
-    actual_list = state[:users_roles]["collection"]
+    actual_list = state[:acl_entries]["collection"]
     expected_list = Enum.reduce(expected_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {Atom.to_string(k), v} end)
       acc ++ [nitem]
@@ -114,9 +114,9 @@ defmodule TdBg.RolesAdminTest do
     assert length(expected_list) == length(actual_list)
     Enum.each(expected_list, fn(e_user_role_entry) ->
       user_role = Enum.find(actual_list, fn(c_user_role_entry) ->
-        e_user_role_entry["user"] == c_user_role_entry["user_name"]
+        e_user_role_entry["user"] == c_user_role_entry["principal"]["user_name"]
       end)
-      assert user_role["user_name"] == e_user_role_entry["user"] &&
+      assert user_role["principal"]["user_name"] == e_user_role_entry["user"] &&
         user_role["role_name"] == e_user_role_entry["role"]
     end)
   end
@@ -163,10 +163,10 @@ defmodule TdBg.RolesAdminTest do
     end)
   end
 
-  defp domain_users_roles(token, attrs) do
+  defp domain_acl_entries(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(domain_domain_url(TdBgWeb.Endpoint, :users_roles, attrs.id), headers, [])
+      HTTPoison.get!(domain_domain_url(TdBgWeb.Endpoint, :acl_entries, attrs.id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

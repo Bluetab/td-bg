@@ -52,7 +52,7 @@ defmodule TdBgWeb.Router do
     resources "/domains", DomainController, except: [:new, :edit] do
       get "/index_children", DomainController, :index_children
       get "/available_users", DomainController, :available_users
-      get "/users_roles", DomainController, :users_roles
+      get "/acl_entries", DomainController, :acl_entries
     end
 
     get "/taxonomy/tree", TaxonomyController, :tree

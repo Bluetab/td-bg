@@ -216,8 +216,8 @@ defmodule TdBgWeb.DomainController do
     render(conn, UserView, "index.json", users: available_users)
   end
 
-  swagger_path :users_roles do
-    get "/domains/{domain_id}/users_roles"
+  swagger_path :acl_entries do
+    get "/domains/{domain_id}/acl_entries"
     description "Lists user-role list of a domain group"
     produces "application/json"
     parameters do
@@ -227,27 +227,28 @@ defmodule TdBgWeb.DomainController do
     response 400, "Client Error"
   end
 
-  def users_roles(conn, %{"domain_id" => id}) do
+  def acl_entries(conn, %{"domain_id" => id}) do
     domain = Taxonomies.get_domain!(id)
     acl_entries = Permissions.list_acl_entries(%{domain: domain})
-    role_user_id = Enum.map(acl_entries, fn(acl_entry) -> %{user_id: acl_entry.principal_id, acl_entry_id: acl_entry.id, role_id: acl_entry.role.id, role_name: acl_entry.role.name} end)
-    user_ids = Enum.reduce(role_user_id, [], fn(e, acc) -> acc ++ [e.user_id] end)
-    users = @td_auth_api.search(%{"ids" => user_ids})
-    users_roles = Enum.reduce(role_user_id, [],
+    acl_entries_map_ids = acl_entries |> Enum.group_by(&(&1.principal_type), &(&1.principal_id))
+    users = @td_auth_api.search_users(%{"ids" => acl_entries_map_ids["user"]})
+    groups = @td_auth_api.search_groups(%{"ids" => acl_entries_map_ids["group"]})
+    acl_entries = Enum.reduce(acl_entries, [],
       fn(u, acc) ->
-        user = Enum.find(users, fn(r_u) -> r_u.id == u.user_id end)
-        if user do
-          acc ++ [Map.merge(%{role_id: u.role_id, role_name: u.role_name, acl_entry_id: u.acl_entry_id}, user_map(user))]
+        principal =
+          case u.principal_type do
+            "user" -> Enum.find(users, fn(r_u) -> r_u.id == u.principal_id end)
+            "group" -> Enum.find(groups, fn(r_u) -> r_u.id == u.principal_id end)
+          end
+        if principal do
+          acc ++ [%{principal: principal, principal_type: u.principal_type, role_id: u.role.id, role_name: u.role.name, acl_entry_id: u.id}]
         else
           acc
         end
     end)
-    render(conn, "index_user_roles.json",
-      users_roles: users_roles,
-      hypermedia: hypermedia("users_roles", conn, users_roles))
-  end
-  defp user_map(user) do
-    %{"user_id": user.id, "user_name": user.user_name}
+    render(conn, "index_acl_entries.json",
+      acl_entries: acl_entries,
+      hypermedia: hypermedia("acl_entries", conn, acl_entries))
   end
 
 end

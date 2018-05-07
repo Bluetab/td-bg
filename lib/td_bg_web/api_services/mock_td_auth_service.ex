@@ -29,7 +29,7 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     List.first(Enum.filter(index(), &(&1.user_name == user_name)))
   end
 
-  def search(%{"ids" => ids}) do
+  def search_users(%{"ids" => ids}) do
     Enum.filter(index(), fn(user) -> Enum.find(ids, &(&1 == user.id)) != nil end)
   end
 
@@ -59,5 +59,9 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
 
   def get_group_by_name(name) do
     List.first(Enum.filter(index_groups(), &(&1["name"] == name)))
+  end
+
+  def search_groups(%{"ids" => ids}) do
+    Enum.filter(index_groups(), fn(group) -> Enum.find(ids, &(&1 == group.id)) != nil end)
   end
 end
