@@ -223,7 +223,7 @@ defmodule TdBgWeb.DomainController do
     parameters do
       domain_id :path, :integer, "Domain ID", required: true
     end
-    response 200, "Ok", Schema.ref(:UsersRolesResponse)
+    response 200, "Ok", Schema.ref(:DomainAclEntriesResponse)
     response 400, "Client Error"
   end
 
@@ -231,8 +231,14 @@ defmodule TdBgWeb.DomainController do
     domain = Taxonomies.get_domain!(id)
     acl_entries = Permissions.list_acl_entries(%{domain: domain})
     acl_entries_map_ids = acl_entries |> Enum.group_by(&(&1.principal_type), &(&1.principal_id))
-    users = @td_auth_api.search_users(%{"ids" => acl_entries_map_ids["user"]})
-    groups = @td_auth_api.search_groups(%{"ids" => acl_entries_map_ids["group"]})
+    users = case acl_entries_map_ids["user"] do
+      nil -> []
+      user_ids -> @td_auth_api.search_users(%{"ids" => user_ids})
+    end
+    groups = case acl_entries_map_ids["group"] do
+      nil -> []
+      group_ids -> @td_auth_api.search_groups(%{"ids" => group_ids})
+    end
     acl_entries = Enum.reduce(acl_entries, [],
       fn(u, acc) ->
         principal =

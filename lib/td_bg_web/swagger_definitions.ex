@@ -87,12 +87,17 @@ defmodule TdBgWeb.SwaggerDefinitions do
           data :object
         end
       end,
-      UsersRolesResponse: swagger_schema do
+      DomainAclEntriesResponse: swagger_schema do
         properties do
           data (Schema.new do
             properties do
-              user_id :integer, "user id"
-              user_name :string, "user name"
+              principal (Schema.new do
+                properties do
+                  id :integer, 1234
+                  name :string, "group1"
+                end
+              end)
+              principal_type :string, "principal_type"
               role_id :integer, "role id"
               role_name :string, "role name"
               acl_entry_id :integer, "acl entry id"
