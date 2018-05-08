@@ -30,7 +30,7 @@ defmodule TdBg.BusinessConceptsTests do
       assert length(business_concept_version.business_concept.aliases) == 2
     end
 
-    test "create_business_concept_version/1 with valid data creates a business_concept" do
+    test "create_business_concept/1 with valid data creates a business_concept" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -53,11 +53,12 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
-      assert {:ok, %BusinessConceptVersion{} = object} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:ok, %BusinessConceptVersion{} = object} = BusinessConcepts.create_business_concept(creation_attrs)
       assert object.content == version_attrs.content
       assert object.name == version_attrs.name
       assert object.description == version_attrs.description
       assert object.last_change_by == version_attrs.last_change_by
+      assert object.current == true
       assert object.version == version_attrs.version
       assert object.business_concept.type == concept_attrs.type
       assert object.business_concept.domain_id == concept_attrs.domain_id
@@ -65,7 +66,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     end
 
-    test "create_business_concept_version/1 with invalid data returns error changeset" do
+    test "/1 with invalid data returns error changeset" do
       version_attrs = %{
         business_concept: nil,
         content: %{},
@@ -78,10 +79,10 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
-      assert {:error, %Ecto.Changeset{}} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:error, %Ecto.Changeset{}} = BusinessConcepts.create_business_concept(creation_attrs)
     end
 
-    test "create_business_concept_version_version/1 with content" do
+    test "create_business_concept/1 with content" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -113,11 +114,11 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:ok, %BusinessConceptVersion{} = object} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:ok, %BusinessConceptVersion{} = object} = BusinessConcepts.create_business_concept(creation_attrs)
       assert object.content == content
     end
 
-    test "create_business_concept_version_version/1 with invalid content: required" do
+    test "create_business_concept/1 with invalid content: required" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -147,13 +148,13 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
       changeset
       |> assert_expected_validation("Field1", :required)
       |> assert_expected_validation("Field2", :required)
     end
 
-    test "create_business_concept_version_version/1 with content: default values" do
+    test "create_business_concept/1 with content: default values" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -183,12 +184,12 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:ok, %BusinessConceptVersion{} = business_concept_version} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:ok, %BusinessConceptVersion{} = business_concept_version} = BusinessConcepts.create_business_concept(creation_attrs)
       assert business_concept_version.content["Field1"] == "Hello"
       assert business_concept_version.content["Field2"] == "World"
     end
 
-    test "create_business_concept_version_version/1 with invalid content: not in list" do
+    test "create_business_concept/1 with invalid content: not in list" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -217,11 +218,11 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
       assert_expected_validation(changeset, "Field1", :inclusion)
     end
 
-    test "create_business_concept_version_version/1 with invalid content: invalid variable list" do
+    test "create_business_concept/1 with invalid content: invalid variable list" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -250,11 +251,11 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
       assert_expected_validation(changeset, "Field1", :cast)
     end
 
-    test "create_business_concept_version_version/1 with no content" do
+    test "create_business_concept/1 with no content" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -279,11 +280,11 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "create_business_concept_version_version/1 with nil content" do
+    test "create_business_concept/1 with nil content" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -310,11 +311,11 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept_version(creation_attrs)
+      assert {:error, %Ecto.Changeset{} = changeset} = BusinessConcepts.create_business_concept(creation_attrs)
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "create_business_concept_version_version/1 with no content schema" do
+    test "create_business_concept/1 with no content schema" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -337,7 +338,7 @@ defmodule TdBg.BusinessConceptsTests do
       }
 
       assert_raise RuntimeError, "Content Schema is not defined for Business Concept", fn ->
-        BusinessConcepts.create_business_concept_version(creation_attrs)
+        BusinessConcepts.create_business_concept(creation_attrs)
       end
     end
 
@@ -403,6 +404,7 @@ defmodule TdBg.BusinessConceptsTests do
       assert object.name == version_attrs.name
       assert object.description == version_attrs.description
       assert object.last_change_by == version_attrs.last_change_by
+      assert object.current == true
       assert object.version == version_attrs.version
 
       assert object.business_concept.id == business_concept_version.business_concept.id
@@ -470,6 +472,31 @@ defmodule TdBg.BusinessConceptsTests do
       assert {:error, %Ecto.Changeset{}} = BusinessConcepts.update_business_concept_version(business_concept_version, update_attrs)
       object = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_version.business_concept.id)
       assert  object |> business_concept_version_preload() == business_concept_version
+    end
+
+    test "version_business_concept/2 creates a new version" do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version,
+                                         last_change_by:  user.id,
+                                         status: BusinessConcept.status.published)
+
+      draft_attrs = %{
+        business_concept: business_concept_version.business_concept,
+        content_schema: [],
+        content: %{},
+        related_to: [],
+        name: "new draft name",
+        description: "new draft name",
+        last_change_by: user.id,
+        last_change_at: DateTime.utc_now(),
+        status: BusinessConcept.status.draft,
+        version: 2
+      }
+
+      assert {:ok, %{current: new_version}} = BusinessConcepts.version_business_concept(business_concept_version, draft_attrs)
+      assert %BusinessConceptVersion{} = new_version
+      assert BusinessConcepts.get_business_concept_version!(business_concept_version.id).current == false
+      assert BusinessConcepts.get_business_concept_version!(new_version.id).current == true
     end
 
     test "change_business_concept/1 returns a business_concept changeset" do

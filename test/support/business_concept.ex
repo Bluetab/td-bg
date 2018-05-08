@@ -14,6 +14,7 @@ defmodule TdBgWeb.BusinessConcept do
                   "Status" => "status",
                   "Last Modification" => "last_change_at",
                   "Last User" => "last_change_by",
+                  "Current" => "current",
                   "Version" => "version",
                   "Reject Reason" => "reject_reason",
                   "Modification Comments" => "mod_comments",

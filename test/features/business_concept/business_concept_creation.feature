@@ -19,6 +19,7 @@ Scenario: Create a simple business concept
     | Status            | draft                                                                    |
     | Last Modification | Some Timestamp                                                           |
     | Last User         | app-admin                                                                |
+    | Current           | true                                                                     |
     | Version           | 1                                                                        |
 
 Scenario: Create a business concept with dinamic data
@@ -62,6 +63,7 @@ Scenario: Create a business concept with dinamic data
     | Status            | draft                                                              |
     | Last Modification | Some timestamp                                                     |
     | Last User         | app-admin                                                          |
+    | Current           | true                                                               |
     | Version           | 1                                                                  |
 
 Scenario Outline: Creating a business concept depending on your role
@@ -111,6 +113,7 @@ Scenario Outline: Creating a business concept depending on your role
       | Status            | draft                                                                   |
       | Last Modification | Some Timestamp                                                          |
       | Last User         | app-admin                                                               |
+      | Current           | true                                                                    |
       | Version           | 1                                                                       |
     And "app-admin" is not able to view business concept "My Business Term" as a child of Domain "My Second Domain"
 

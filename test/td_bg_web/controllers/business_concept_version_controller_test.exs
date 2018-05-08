@@ -61,6 +61,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       #validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       business_concept_version = json_response(conn, 200)["data"]
 
+      assert business_concept_version["current"] == true
       assert business_concept_version["version"] == 2
 
     end

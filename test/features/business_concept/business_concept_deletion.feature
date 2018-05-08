@@ -90,6 +90,7 @@ Scenario Outline: Delete existing Business Concept in Draft Status
         | Description       | This is the first description of my business term                  |
         | Last Modification | Some timestamp                                                     |
         | Last User         | app-admin                                                          |
+        | Current           | false                                                               |
         | Version           | 1                                                                  |
         | Status            | published                                                          |
       And if result <result> is "Deleted",  business concept "My Business Term" of type "Business Term" and version "2" does not exist

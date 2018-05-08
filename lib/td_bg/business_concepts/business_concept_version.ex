@@ -19,6 +19,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     field :name, :string
     field :reject_reason, :string
     field :status, :string
+    field :current, :boolean, default: true
     field :version, :integer
     belongs_to :business_concept, BusinessConcept, on_replace: :update
 
@@ -54,6 +55,13 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> cast(attrs, [:status])
     |> validate_required([:status])
     |> validate_inclusion(:status, Map.values(BusinessConcept.status))
+  end
+
+  @doc false
+  def not_anymore_current_changeset(%BusinessConceptVersion{} = business_concept_version) do
+    business_concept_version
+    |> cast(%{}, [])
+    |> put_change(:current, false)
   end
 
   @doc false

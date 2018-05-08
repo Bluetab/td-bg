@@ -478,6 +478,10 @@ defmodule TdBg.BusinessConceptSteps do
     assert target[attr] != nil
   end
 
+  def assert_attr("current" = attr, value, %{} = target) do
+    assert String.to_existing_atom(value) == target[attr]
+  end
+
   def assert_attr("version" = attr, value, %{} = target) do
     assert Integer.parse(value) == {target[attr], ""}
   end

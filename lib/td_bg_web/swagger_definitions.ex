@@ -336,6 +336,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           last_change_at :string, "Business Conceptlast updated date", required: true
           domain_id :integer, "Business Concept parent domain id", required: true
           status :string, "Business Conceptstatus", required: true
+          current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept version", required: true
           reject_reason [:string, :null], "Business Concept reject reason", required: false
           mod_comments [:string, :null], "Business Concept modification comments", required: false
@@ -415,6 +416,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           last_change_at :string, "Business Concept Verion last change at", required: true
           domain_id :integer, "Belongs to Domain", required: true
           status :string, "Business Concept Version status", required: true
+          current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept Version version number", required: true
           reject_reason [:string, :null], "Business Concept Version rejection reason", required: false
           mod_comments [:string, :null], "Business Concept Version modification comments", required: false

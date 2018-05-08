@@ -96,14 +96,14 @@ defmodule TdBg.BusinessConcepts do
 
   ## Examples
 
-      iex> create_business_concept_version(%{field: value})
+      iex> create_business_concept(%{field: value})
       {:ok, %BusinessConceptVersion{}}
 
-      iex> create_business_concept_version(%{field: bad_value})
+      iex> create_business_concept(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_business_concept_version(attrs \\ %{}) do
+  def create_business_concept(attrs \\ %{}) do
     attrs
     |> attrs_keys_to_atoms
     |> raise_error_if_no_content_schema
@@ -111,6 +111,28 @@ defmodule TdBg.BusinessConcepts do
     |> validate_new_concept
     |> validate_concept_content
     |> insert_concept
+  end
+
+  @doc """
+  Creates a new business_concept version.
+
+  ## Examples
+
+      iex> version_business_concept(%{field: value})
+      {:ok, %BusinessConceptVersion{}}
+
+      iex> version_business_concept(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def version_business_concept(%BusinessConceptVersion{} = business_concept_version, attrs \\ %{}) do
+    attrs
+    |> attrs_keys_to_atoms
+    |> raise_error_if_no_content_schema
+    |> set_content_defaults
+    |> validate_new_concept
+    |> validate_concept_content
+    |> version_concept(business_concept_version)
   end
 
   @doc """
@@ -483,6 +505,18 @@ defmodule TdBg.BusinessConcepts do
     else
       {:error, changeset}
     end
+  end
+
+  defp version_concept(attrs, business_concept_version) do
+      changeset = Map.get(attrs, @changeset)
+      if changeset.valid? do
+        Multi.new
+        |> Multi.update(:not_current, BusinessConceptVersion.not_anymore_current_changeset(business_concept_version))
+        |> Multi.insert(:current, changeset)
+        |> Repo.transaction
+      else
+        {:error, %{current: changeset}}
+      end
   end
 
   alias TdBg.BusinessConcepts.BusinessConceptAlias

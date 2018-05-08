@@ -57,6 +57,7 @@ Scenario Outline: Deprecate a BC that has a second version published
     | Description       | This is the first description of my business term                  |
     | Last Modification | Some timestamp                                                     |
     | Last User         | app-admin                                                          |
+    | Current           | false                                                              |
     | Version           | 1                                                                  |
     | Status            | versioned                                                          |
   And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:

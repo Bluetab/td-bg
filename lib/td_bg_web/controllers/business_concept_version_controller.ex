@@ -34,7 +34,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     get "/business_concepts/{business_concept_id}/versions"
     description "List Business Concept Versions"
     parameters do
-      id :path, :integer, "Business Concept ID", required: true
+      business_concept_id :path, :integer, "Business Concept ID", required: true
     end
     response 200, "OK", Schema.ref(:BusinessConceptVersionsResponse)
   end
@@ -119,7 +119,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     with true <- can?(user, update_published(business_concept_version)),
          {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, business_concept_id),
-         {:ok, %BusinessConceptVersion{} = new_version} <- BusinessConcepts.create_business_concept_version(draft_attrs) do
+         {:ok, %{current: %BusinessConceptVersion{} = new_version}}
+            <- BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
+
       conn
         |> put_status(:created)
         |> put_resp_header("location", business_concept_version_path(conn, :show, business_concept_version))
@@ -129,7 +131,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
-      __error ->
+      _error ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")

@@ -23,6 +23,7 @@ Scenario Outline: Sending business concept for approval
    | Description       | This is the first description of my business term which is a date  |
    | Last Modification | Some timestamp                                                     |
    | Last User         | app-admin                                                          |
+   | Current           | true                                                               |
    | Version           | 1                                                                  |
    | Status            | pending_approval                                                   |
   Examples:
@@ -58,6 +59,7 @@ Scenario Outline: Publish existing Business Concept in Pending Approval status
    | Description       | This is the first description of my business term which is a date  |
    | Last Modification | Some timestamp                                                     |
    | Last User         | app-admin                                                          |
+   | Current           | true                                                               |
    | Version           | 1                                                                  |
    | Status            | published                                                          |
 
@@ -94,6 +96,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
    | Description       | This is the first description of my business term                  |
    | Last Modification | Some timestamp                                                     |
    | Last User         | app-admin                                                          |
+   | Current           | true                                                                  |
    | Version           | 1                                                                  |
    | Status            | rejected                                                           |
    | Reject Reason     | Description is not accurate                                        |
@@ -138,15 +141,17 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
       | Description       | This is the second description of my business term                 |
       | Last Modification | Some timestamp                                                     |
       | Last User         | <user>                                                             |
+      | Current           | true                                                               |
       | Version           | 2                                                                  |
       | Status            | published                                                          |
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
       | Field             | Value                                                              |
       | Name              | My Business Term                                                   |
       | Type              | Business Term                                                      |
-      | Description       | This is the first description of my business term                 |
+      | Description       | This is the first description of my business term                  |
       | Last Modification | Some timestamp                                                     |
       | Last User         | <user>                                                             |
+      | Current           | false                                                              |
       | Version           | 1                                                                  |
       | Status            | versioned                                                          |
 
@@ -183,6 +188,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
     | Description       | This is the first description of my business term  |
     | Last Modification | Some timestamp                                     |
     | Last User         | app-admin                                          |
+    | Current           | true                                                  |
     | Version           | 1                                                  |
     | Status            | pending_approval                                   |
 
@@ -219,6 +225,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
        | Description       | This is the first description of my business term                  |
        | Last Modification | Some timestamp                                                     |
        | Last User         | app-admin                                                          |
+       | Current           | false                                                              |
        | Version           | 1                                                                  |
        | Status            | published                                                          |
      And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
@@ -228,6 +235,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
        | Description           | This is the first description of my business term                  |
        | Last Modification     | Some timestamp                                                     |
        | Last User             | app-admin                                                          |
+       | Current               | true                                                               |
        | Version               | 2                                                                  |
        | Status                | pending_approval                                                   |
 
@@ -264,6 +272,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
      | Description       | This is the first description of my business term                  |
      | Last Modification | Some timestamp                                                     |
      | Last User         | app-admin                                                          |
+     | Current           | false                                                              |
      | Version           | 1                                                                  |
      | Status            | published                                                          |
    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
@@ -273,6 +282,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
      | Description           | This is the first description of my business term                  |
      | Last Modification     | Some timestamp                                                     |
      | Last User             | app-admin                                                          |
+     | Current               | true                                                               |
      | Version               | 2                                                                  |
      | Status                | pending_approval                                                   |
 
@@ -309,6 +319,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
      | Description       | This is the first description of my business term                  |
      | Last Modification | Some timestamp                                                     |
      | Last User         | app-admin                                                          |
+     | Current           | false                                                              |
      | Version           | 1                                                                  |
      | Status            | published                                                          |
    And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
@@ -318,6 +329,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
      | Description           | This is the first description of my business term                  |
      | Last Modification     | Some timestamp                                                     |
      | Last User             | app-admin                                                          |
+     | Current               | true                                                               |
      | Version               | 2                                                                  |
      | Status                | rejected                                                           |
      | Reject Reason         | Description is not accurate                                        |
@@ -327,7 +339,7 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
      | watcher   | Unauthorized |
      | creator   | Unauthorized |
      | publisher | Ok           |
-       | admin     | Ok           |
+     | admin     | Ok           |
 
    Scenario Outline: List of Business Concepts in pending_approval for a certain user
      Given an existing Domain called "My Parent Domain"

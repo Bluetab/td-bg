@@ -31,6 +31,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       last_change_at: business_concept_version.last_change_at,
       domain_id: business_concept_version.business_concept.domain_id,
       status: business_concept_version.status,
+      current: business_concept_version.current,
       version: business_concept_version.version}
       |> add_reject_reason(business_concept_version.reject_reason,
                            String.to_atom(business_concept_version.status))
