@@ -1675,72 +1675,21 @@
   },
   "host": "localhost:4002",
   "definitions": {
-    "UserResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "user_name": {
-              "type": "string",
-              "description": "username"
-            },
-            "is_admin": {
-              "type": "boolean",
-              "description": "is admin"
-            },
-            "id": {
-              "type": "integer",
-              "description": "user id"
-            }
-          }
-        }
-      }
-    },
-    "AddPermissionsToRole": {
-      "type": "object",
-      "properties": {
-        "permissions": {
-          "$ref": "#/definitions/PermissionItems"
-        }
-      }
-    },
-    "Domain": {
-      "type": "object",
-      "title": "Domain",
-      "required": [
-        "name",
-        "id"
-      ],
-      "properties": {
-        "parent_id": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "description": "Domain id"
-        },
-        "name": {
-          "type": "string",
-          "description": "Domain name"
-        },
-        "id": {
-          "type": "integer",
-          "description": "Unique identifier"
-        },
-        "description": {
-          "type": "string",
-          "description": "descritpion"
-        }
+    "Domains": {
+      "type": "array",
+      "title": "Domains",
+      "items": {
+        "$ref": "#/definitions/Domain"
       },
-      "example": {
-        "type": "Domain type",
-        "parent_id": 1,
-        "name": "Domain name",
-        "id": 12,
-        "description": "domain description"
+      "description": "A collection of Domains"
+    },
+    "BusinessConceptVersions": {
+      "type": "array",
+      "title": "Business Concept Versions",
+      "items": {
+        "$ref": "#/definitions/BusinessConceptVersion"
       },
-      "description": "A Domain"
+      "description": "A collection of Business Concept Versions"
     },
     "BusinessConceptUpdate": {
       "type": "object",
@@ -1764,31 +1713,19 @@
         }
       }
     },
-    "TemplateCreateUpdate": {
+    "TemplateResponse": {
       "type": "object",
       "properties": {
-        "template": {
-          "type": "object",
-          "required": [
-            "content",
-            "name"
-          ],
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Name"
-            },
-            "content": {
-              "type": "array",
-              "description": "Content"
-            }
-          }
+        "data": {
+          "$ref": "#/definitions/Template"
         }
       }
     },
-    "PermissionItem": {
+    "Permission": {
       "type": "object",
+      "title": "Permission",
       "required": [
+        "name",
         "id"
       ],
       "properties": {
@@ -1800,27 +1737,269 @@
           "type": "integer",
           "description": "unique identifier"
         }
-      }
+      },
+      "description": "Permission"
     },
-    "DomainItem": {
+    "PermissionsResponse": {
       "type": "object",
       "properties": {
+        "data": {
+          "$ref": "#/definitions/Permissions"
+        }
+      }
+    },
+    "AclEntries": {
+      "type": "array",
+      "title": "Acl entries",
+      "items": {
+        "$ref": "#/definitions/AclEntry"
+      },
+      "description": "A collection of Acl Entry"
+    },
+    "AclEntriesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntries"
+        }
+      }
+    },
+    "AddTemplatesToDomain": {
+      "type": "object",
+      "properties": {
+        "templates": {
+          "$ref": "#/definitions/TemplateItems"
+        }
+      }
+    },
+    "TreeItem": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
         "id": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreeItem"
+          }
+        }
+      }
+    },
+    "DomainCreate": {
+      "type": "object",
+      "properties": {
+        "domain": {
           "type": "object",
+          "required": [
+            "name"
+          ],
           "properties": {
-            "role_id": {
-              "type": "integer"
+            "type": {
+              "type": "string",
+              "description": "domain type"
             },
-            "role": {
-              "type": "string"
+            "parent_id": {
+              "type": "integer",
+              "description": "parent domain id"
             },
-            "inherited": {
-              "type": "boolean"
+            "name": {
+              "type": "string",
+              "description": "domain name"
             },
-            "acl_entry_id": {
-              "type": "integer"
+            "description": {
+              "type": "string",
+              "description": "domain description"
             }
           }
+        }
+      }
+    },
+    "Permissions": {
+      "type": "array",
+      "title": "Roles",
+      "items": {
+        "$ref": "#/definitions/Role"
+      },
+      "description": "A collection of Permissions"
+    },
+    "TemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Templates"
+        }
+      }
+    },
+    "DomainAclEntriesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "role_name": {
+              "type": "string",
+              "description": "role name"
+            },
+            "role_id": {
+              "type": "integer",
+              "description": "role id"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "principal_type"
+            },
+            "principal": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "group1"
+                },
+                "id": {
+                  "type": "integer",
+                  "description": "principal_id"
+                }
+              }
+            },
+            "acl_entry_id": {
+              "type": "integer",
+              "description": "acl entry id"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptAliasesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "collection": {
+              "$ref": "#/definitions/BusinessConceptAliases"
+            }
+          }
+        }
+      }
+    },
+    "BusinessConceptAlias": {
+      "type": "object",
+      "title": "Business Concept Alias",
+      "required": [
+        "name",
+        "business_concept_id",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Business Concept Alias"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        },
+        "business_concept_id": {
+          "type": "integer",
+          "description": "Business Concept unique id"
+        }
+      },
+      "description": "Business Concept Alias"
+    },
+    "Roles": {
+      "type": "array",
+      "title": "Roles",
+      "items": {
+        "$ref": "#/definitions/Role"
+      },
+      "description": "A collection of Roles"
+    },
+    "AclEntryCreateUpdate": {
+      "type": "object",
+      "properties": {
+        "acl_entry": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "resource_type",
+            "resource_id",
+            "principal_type",
+            "principal_id"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "integer",
+              "description": "id of role"
+            },
+            "resource_type": {
+              "type": "string",
+              "description": "type of resource: domain"
+            },
+            "resource_id": {
+              "type": "integer",
+              "description": "id of resource"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "type of principal: user"
+            },
+            "principal_id": {
+              "type": "integer",
+              "description": "id of principal"
+            }
+          }
+        }
+      }
+    },
+    "AddPermissionsToRole": {
+      "type": "object",
+      "properties": {
+        "permissions": {
+          "$ref": "#/definitions/PermissionItems"
+        }
+      }
+    },
+    "BusinessConceptVersionResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "collection": {
+              "$ref": "#/definitions/BusinessConceptVersion"
+            }
+          }
+        }
+      }
+    },
+    "PermissionResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Permission"
+        }
+      }
+    },
+    "DomainResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Domain"
+        }
+      }
+    },
+    "BusinessConceptResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/BusinessConcept"
         }
       }
     },
@@ -1863,77 +2042,53 @@
       },
       "description": "An Acl entry"
     },
-    "TemplateItem": {
+    "BusinessConceptCreate": {
       "type": "object",
-      "required": [
-        "name"
-      ],
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name"
+        "business_concept": {
+          "type": "object",
+          "required": [
+            "domain_id",
+            "description",
+            "name",
+            "content",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Business Concept type (empty,...)"
+            },
+            "name": {
+              "type": "string",
+              "description": "Business Concept name"
+            },
+            "domain_id": {
+              "type": "integer",
+              "description": "Business Concept Domain ID"
+            },
+            "description": {
+              "type": "string",
+              "description": "Business Concept description"
+            },
+            "content": {
+              "type": "object",
+              "description": "Business Concept content"
+            }
+          }
         }
       }
     },
-    "TaxonomyRolesResponse": {
+    "BusinessConceptVersionsResponse": {
       "type": "object",
       "properties": {
         "data": {
           "type": "object",
           "properties": {
-            "domains": {
-              "$ref": "#/definitions/DomainItem"
+            "collection": {
+              "$ref": "#/definitions/BusinessConceptVersions"
             }
           }
-        }
-      },
-      "example": {
-        "data": [
-          {
-            "domains": {
-              "70": {
-                "role_id": 2,
-                "role": "publish",
-                "inherited": true
-              },
-              "69": {
-                "role_id": 2,
-                "role": "publish",
-                "inherited": false,
-                "acl_entry_id": 2
-              }
-            }
-          }
-        ]
-      }
-    },
-    "DomainResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Domain"
-        }
-      }
-    },
-    "AclEntriesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/AclEntries"
-        }
-      }
-    },
-    "PermissionItems": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/PermissionItem"
-      }
-    },
-    "TemplateResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Template"
         }
       }
     },
@@ -2028,53 +2183,222 @@
       },
       "description": "Business Concept"
     },
-    "AclEntryCreateUpdate": {
-      "type": "object",
-      "properties": {
-        "acl_entry": {
-          "type": "object",
-          "required": [
-            "role_id",
-            "resource_type",
-            "resource_id",
-            "principal_type",
-            "principal_id"
-          ],
-          "properties": {
-            "role_id": {
-              "type": "integer",
-              "description": "id of role"
-            },
-            "resource_type": {
-              "type": "string",
-              "description": "type of resource: domain"
-            },
-            "resource_id": {
-              "type": "integer",
-              "description": "id of resource"
-            },
-            "principal_type": {
-              "type": "string",
-              "description": "type of principal: user"
-            },
-            "principal_id": {
-              "type": "integer",
-              "description": "id of principal"
-            }
-          }
-        }
-      }
-    },
-    "BusinessConceptAliasesResponse": {
+    "TaxonomyRolesResponse": {
       "type": "object",
       "properties": {
         "data": {
           "type": "object",
           "properties": {
-            "collection": {
-              "$ref": "#/definitions/BusinessConceptAliases"
+            "domains": {
+              "$ref": "#/definitions/DomainItem"
             }
           }
+        }
+      },
+      "example": {
+        "data": [
+          {
+            "domains": {
+              "70": {
+                "role_id": 2,
+                "role": "publish",
+                "inherited": true
+              },
+              "69": {
+                "role_id": 2,
+                "role": "publish",
+                "inherited": false,
+                "acl_entry_id": 2
+              }
+            }
+          }
+        ]
+      }
+    },
+    "UserResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "user_name": {
+              "type": "string",
+              "description": "username"
+            },
+            "is_admin": {
+              "type": "boolean",
+              "description": "is admin"
+            },
+            "id": {
+              "type": "integer",
+              "description": "user id"
+            }
+          }
+        }
+      }
+    },
+    "AclEntryResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/AclEntry"
+        }
+      }
+    },
+    "BusinessConceptUpdateStatus": {
+      "type": "object",
+      "properties": {
+        "business_concept": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Business Concept status (rejected, published, deprecated...)"
+            },
+            "reject_reason": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Business Concept reject reason"
+            }
+          }
+        }
+      }
+    },
+    "UsersResponse": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/UserResponse"
+      }
+    },
+    "TemplateCreateUpdate": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "type": "object",
+          "required": [
+            "content",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name"
+            },
+            "content": {
+              "type": "array",
+              "description": "Content"
+            }
+          }
+        }
+      }
+    },
+    "PermissionItem": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "permission name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "unique identifier"
+        }
+      }
+    },
+    "Domain": {
+      "type": "object",
+      "title": "Domain",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "parent_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Domain id"
+        },
+        "name": {
+          "type": "string",
+          "description": "Domain name"
+        },
+        "id": {
+          "type": "integer",
+          "description": "Unique identifier"
+        },
+        "description": {
+          "type": "string",
+          "description": "descritpion"
+        }
+      },
+      "example": {
+        "type": "Domain type",
+        "parent_id": 1,
+        "name": "Domain name",
+        "id": 12,
+        "description": "domain description"
+      },
+      "description": "A Domain"
+    },
+    "UsersRolesRequest": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "TaxonomyTreeResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreeItem"
+          }
+        }
+      },
+      "example": {
+        "data": [
+          {
+            "name": "domain 1",
+            "id": 1,
+            "description": "domain root 1",
+            "children": [
+              {
+                "name": "domain 2",
+                "id": 1,
+                "description": "domain 2 child of domain 1",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "RoleResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Role"
+        }
+      }
+    },
+    "RolesResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Roles"
         }
       }
     },
@@ -2097,59 +2421,121 @@
       },
       "description": "Role"
     },
-    "BusinessConceptCreate": {
+    "TemplateItem": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name"
+        }
+      }
+    },
+    "BusinessConcepts": {
+      "type": "array",
+      "title": "Business Concepts",
+      "items": {
+        "$ref": "#/definitions/BusinessConcept"
+      },
+      "description": "A collection of Business Concepts"
+    },
+    "DomainItem": {
       "type": "object",
       "properties": {
-        "business_concept": {
+        "id": {
           "type": "object",
-          "required": [
-            "domain_id",
-            "description",
-            "name",
-            "content",
-            "type"
-          ],
           "properties": {
-            "type": {
-              "type": "string",
-              "description": "Business Concept type (empty,...)"
+            "role_id": {
+              "type": "integer"
             },
-            "name": {
-              "type": "string",
-              "description": "Business Concept name"
+            "role": {
+              "type": "string"
             },
-            "domain_id": {
-              "type": "integer",
-              "description": "Business Concept Domain ID"
+            "inherited": {
+              "type": "boolean"
             },
-            "description": {
-              "type": "string",
-              "description": "Business Concept description"
-            },
-            "content": {
-              "type": "object",
-              "description": "Business Concept content"
+            "acl_entry_id": {
+              "type": "integer"
             }
           }
         }
       }
     },
-    "PermissionsResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Permissions"
-        }
-      }
-    },
-    "BusinessConceptVersionsResponse": {
+    "DomainsResponse": {
       "type": "object",
       "properties": {
         "data": {
           "type": "object",
           "properties": {
             "collection": {
-              "$ref": "#/definitions/BusinessConceptVersions"
+              "$ref": "#/definitions/Domains"
+            }
+          }
+        }
+      }
+    },
+    "AclEntryCreateOrUpdate": {
+      "type": "object",
+      "properties": {
+        "acl_entry": {
+          "type": "object",
+          "required": [
+            "role_name",
+            "resource_type",
+            "resource_id",
+            "principal_type",
+            "principal_id"
+          ],
+          "properties": {
+            "role_name": {
+              "type": "string",
+              "description": "role name"
+            },
+            "resource_type": {
+              "type": "string",
+              "description": "type of resource: domain"
+            },
+            "resource_id": {
+              "type": "integer",
+              "description": "id of resource"
+            },
+            "principal_type": {
+              "type": "string",
+              "description": "type of principal: user"
+            },
+            "principal_id": {
+              "type": "integer",
+              "description": "id of principal"
+            }
+          }
+        }
+      }
+    },
+    "TemplateItems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TemplateItem"
+      }
+    },
+    "Templates": {
+      "type": "array",
+      "title": "Templates",
+      "items": {
+        "$ref": "#/definitions/Template"
+      },
+      "description": "A collection of Templates"
+    },
+    "BusinessConceptAliasCreate": {
+      "type": "object",
+      "properties": {
+        "business_concept_alias": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Business Concept Alias"
             }
           }
         }
@@ -2206,18 +2592,55 @@
         }
       }
     },
-    "DomainsResponse": {
+    "Template": {
       "type": "object",
+      "title": "Template",
+      "required": [
+        "content",
+        "name"
+      ],
       "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "collection": {
-              "$ref": "#/definitions/Domains"
-            }
-          }
+        "name": {
+          "type": "string",
+          "description": "Name"
+        },
+        "content": {
+          "type": "array",
+          "description": "Content"
         }
+      },
+      "example": {
+        "name": "Template1",
+        "content": [
+          {
+            "type": "type1",
+            "required": true,
+            "name": "name1",
+            "max_size": 100
+          },
+          {
+            "type": "type2",
+            "required": false,
+            "related_area": "related_area1",
+            "max_size": 100
+          }
+        ]
+      },
+      "description": "A Template"
+    },
+    "PermissionItems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PermissionItem"
       }
+    },
+    "BusinessConceptAliases": {
+      "type": "array",
+      "title": "Business Concept Aliases",
+      "items": {
+        "$ref": "#/definitions/BusinessConceptAlias"
+      },
+      "description": "A collection of Business Concept Aliases"
     },
     "BusinessConceptsResponse": {
       "type": "object",
@@ -2232,287 +2655,12 @@
         }
       }
     },
-    "BusinessConceptAliases": {
-      "type": "array",
-      "title": "Business Concept Aliases",
-      "items": {
-        "$ref": "#/definitions/BusinessConceptAlias"
-      },
-      "description": "A collection of Business Concept Aliases"
-    },
-    "BusinessConceptResponse": {
+    "BusinessConceptAliasResponse": {
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/BusinessConcept"
+          "$ref": "#/definitions/BusinessConceptAlias"
         }
-      }
-    },
-    "BusinessConcepts": {
-      "type": "array",
-      "title": "Business Concepts",
-      "items": {
-        "$ref": "#/definitions/BusinessConcept"
-      },
-      "description": "A collection of Business Concepts"
-    },
-    "TaxonomyTreeResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TreeItem"
-          }
-        }
-      },
-      "example": {
-        "data": [
-          {
-            "name": "domain 1",
-            "id": 1,
-            "description": "domain root 1",
-            "children": [
-              {
-                "name": "domain 2",
-                "id": 1,
-                "description": "domain 2 child of domain 1",
-                "children": []
-              }
-            ]
-          }
-        ]
-      }
-    },
-    "Permission": {
-      "type": "object",
-      "title": "Permission",
-      "required": [
-        "name",
-        "id"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "permission name"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        }
-      },
-      "description": "Permission"
-    },
-    "AclEntryCreateOrUpdate": {
-      "type": "object",
-      "properties": {
-        "acl_entry": {
-          "type": "object",
-          "required": [
-            "role_name",
-            "resource_type",
-            "resource_id",
-            "principal_type",
-            "principal_id"
-          ],
-          "properties": {
-            "role_name": {
-              "type": "string",
-              "description": "role name"
-            },
-            "resource_type": {
-              "type": "string",
-              "description": "type of resource: domain"
-            },
-            "resource_id": {
-              "type": "integer",
-              "description": "id of resource"
-            },
-            "principal_type": {
-              "type": "string",
-              "description": "type of principal: user"
-            },
-            "principal_id": {
-              "type": "integer",
-              "description": "id of principal"
-            }
-          }
-        }
-      }
-    },
-    "DomainAclEntriesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "properties": {
-            "role_name": {
-              "type": "string",
-              "description": "role name"
-            },
-            "role_id": {
-              "type": "integer",
-              "description": "role id"
-            },
-            "principal_type": {
-              "type": "string",
-              "description": "principal_type"
-            },
-            "principal": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "group1"
-                },
-                "id": {
-                  "type": "integer",
-                  "description": "principal_id"
-                }
-              }
-            },
-            "acl_entry_id": {
-              "type": "integer",
-              "description": "acl entry id"
-            }
-          }
-        }
-      }
-    },
-    "DomainCreate": {
-      "type": "object",
-      "properties": {
-        "domain": {
-          "type": "object",
-          "required": [
-            "name"
-          ],
-          "properties": {
-            "type": {
-              "type": "string",
-              "description": "domain type"
-            },
-            "parent_id": {
-              "type": "integer",
-              "description": "parent domain id"
-            },
-            "name": {
-              "type": "string",
-              "description": "domain name"
-            },
-            "description": {
-              "type": "string",
-              "description": "domain description"
-            }
-          }
-        }
-      }
-    },
-    "Permissions": {
-      "type": "array",
-      "title": "Roles",
-      "items": {
-        "$ref": "#/definitions/Role"
-      },
-      "description": "A collection of Permissions"
-    },
-    "BusinessConceptAliasCreate": {
-      "type": "object",
-      "properties": {
-        "business_concept_alias": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Business Concept Alias"
-            }
-          }
-        }
-      }
-    },
-    "UsersRolesRequest": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object"
-        }
-      }
-    },
-    "Domains": {
-      "type": "array",
-      "title": "Domains",
-      "items": {
-        "$ref": "#/definitions/Domain"
-      },
-      "description": "A collection of Domains"
-    },
-    "UsersResponse": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/UserResponse"
-      }
-    },
-    "RolesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Roles"
-        }
-      }
-    },
-    "BusinessConceptUpdateStatus": {
-      "type": "object",
-      "properties": {
-        "business_concept": {
-          "type": "object",
-          "required": [
-            "status"
-          ],
-          "properties": {
-            "status": {
-              "type": "string",
-              "description": "Business Concept status (rejected, published, deprecated...)"
-            },
-            "reject_reason": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Business Concept reject reason"
-            }
-          }
-        }
-      }
-    },
-    "RoleCreateUpdate": {
-      "type": "object",
-      "properties": {
-        "role": {
-          "type": "object",
-          "required": [
-            "name"
-          ],
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "role name"
-            }
-          }
-        }
-      }
-    },
-    "AclEntryResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/AclEntry"
-        }
-      }
-    },
-    "TemplateItems": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/TemplateItem"
       }
     },
     "BusinessConceptVersion": {
@@ -2606,168 +2754,20 @@
       },
       "description": "Business Concept Version"
     },
-    "AddTemplatesToDomain": {
+    "RoleCreateUpdate": {
       "type": "object",
       "properties": {
-        "templates": {
-          "$ref": "#/definitions/TemplateItems"
-        }
-      }
-    },
-    "TreeItem": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "id": {
-          "type": "integer"
-        },
-        "description": {
-          "type": "string"
-        },
-        "children": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TreeItem"
-          }
-        }
-      }
-    },
-    "Templates": {
-      "type": "array",
-      "title": "Templates",
-      "items": {
-        "$ref": "#/definitions/Template"
-      },
-      "description": "A collection of Templates"
-    },
-    "TemplatesResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Templates"
-        }
-      }
-    },
-    "BusinessConceptAliasResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/BusinessConceptAlias"
-        }
-      }
-    },
-    "BusinessConceptVersionResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
+        "role": {
           "type": "object",
+          "required": [
+            "name"
+          ],
           "properties": {
-            "collection": {
-              "$ref": "#/definitions/BusinessConceptVersion"
+            "name": {
+              "type": "string",
+              "description": "role name"
             }
           }
-        }
-      }
-    },
-    "PermissionResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Permission"
-        }
-      }
-    },
-    "AclEntries": {
-      "type": "array",
-      "title": "Acl entries",
-      "items": {
-        "$ref": "#/definitions/AclEntry"
-      },
-      "description": "A collection of Acl Entry"
-    },
-    "Template": {
-      "type": "object",
-      "title": "Template",
-      "required": [
-        "content",
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name"
-        },
-        "content": {
-          "type": "array",
-          "description": "Content"
-        }
-      },
-      "example": {
-        "name": "Template1",
-        "content": [
-          {
-            "type": "type1",
-            "required": true,
-            "name": "name1",
-            "max_size": 100
-          },
-          {
-            "type": "type2",
-            "required": false,
-            "related_area": "related_area1",
-            "max_size": 100
-          }
-        ]
-      },
-      "description": "A Template"
-    },
-    "Roles": {
-      "type": "array",
-      "title": "Roles",
-      "items": {
-        "$ref": "#/definitions/Role"
-      },
-      "description": "A collection of Roles"
-    },
-    "BusinessConceptAlias": {
-      "type": "object",
-      "title": "Business Concept Alias",
-      "required": [
-        "name",
-        "business_concept_id",
-        "id"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Business Concept Alias"
-        },
-        "id": {
-          "type": "integer",
-          "description": "unique identifier"
-        },
-        "business_concept_id": {
-          "type": "integer",
-          "description": "Business Concept unique id"
-        }
-      },
-      "description": "Business Concept Alias"
-    },
-    "BusinessConceptVersions": {
-      "type": "array",
-      "title": "Business Concept Versions",
-      "items": {
-        "$ref": "#/definitions/BusinessConceptVersion"
-      },
-      "description": "A collection of Business Concept Versions"
-    },
-    "RoleResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Role"
         }
       }
     }
