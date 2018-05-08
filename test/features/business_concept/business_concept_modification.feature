@@ -105,9 +105,9 @@
    Examples:
      | user      | result       |
      | watcher   | Unauthorized |
-     | creator   | Created      |
-     | publisher | Created      |
-     | admin     | Created      |
+     | creator   | Ok           |
+     | publisher | Ok           |
+     | admin     | Ok           |
 
    Scenario Outline: Modify a second version of a published Business Concept
      Given an existing Domain called "My Parent Domain"
@@ -150,9 +150,9 @@
      Examples:
        | user      | result       |
        | watcher   | Unauthorized |
-       | creator   | Created      |
-       | publisher | Created      |
-       | admin     | Created      |
+       | creator   | Ok           |
+       | publisher | Ok           |
+       | admin     | Ok           |
 
    Scenario Outline: Modification of existing Business Concept in Reject status
     Given an existing Domain called "My Parent Domain"

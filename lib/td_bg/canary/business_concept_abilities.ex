@@ -19,7 +19,7 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
       permission: Permission.permissions.update_business_concept,
       is_current: is_current,
       current_status: status,
-      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
+      required_statuses: [BusinessConcept.status.draft],
       domain_id: domain_id}
     |> authorized?
   end
@@ -44,6 +44,16 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     |> authorized?
   end
 
+  def can?(%User{id: user_id}, :undo_rejection, %BusinessConceptVersion{current: is_current, status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
+    %{user_id: user_id,
+      permission: Permission.permissions.update_business_concept,
+      is_current: is_current,
+      current_status: status,
+      required_statuses: [BusinessConcept.status.rejected],
+      domain_id: domain_id}
+    |> authorized?
+  end
+
   def can?(%User{id: user_id}, :publish, %BusinessConceptVersion{current: is_current, status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
     %{user_id: user_id,
       permission: Permission.permissions.publish_business_concept,
@@ -54,9 +64,9 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     |> authorized?
   end
 
-  def can?(%User{id: user_id}, :deprecate, %BusinessConceptVersion{current: is_current, status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
+  def can?(%User{id: user_id}, :version, %BusinessConceptVersion{current: is_current, status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
     %{user_id: user_id,
-      permission: Permission.permissions.deprecate_business_concept,
+      permission: Permission.permissions.update_business_concept,
       is_current: is_current,
       current_status: status,
       required_statuses: [BusinessConcept.status.published],
@@ -64,9 +74,9 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     |> authorized?
   end
 
-  def can?(%User{id: user_id}, :update_published, %BusinessConceptVersion{current: is_current, status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
+  def can?(%User{id: user_id}, :deprecate, %BusinessConceptVersion{current: is_current, status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
     %{user_id: user_id,
-      permission: Permission.permissions.update_business_concept,
+      permission: Permission.permissions.deprecate_business_concept,
       is_current: is_current,
       current_status: status,
       required_statuses: [BusinessConcept.status.published],

@@ -293,8 +293,12 @@ defmodule TdBgWeb.BusinessConceptController do
         reject(conn, user,  business_concept_version, business_concept_params)
       {^rejected, ^pending_approval} ->
         send_for_approval(conn, user, business_concept_version, business_concept_params)
+      {^rejected, ^draft} ->
+        undo_rejection(conn, user, business_concept_version, business_concept_params)
       {^published, ^deprecated} ->
         deprecate(conn, user, business_concept_version, business_concept_params)
+      {^published, ^draft} ->
+        do_version(conn, user, business_concept_version, business_concept_params)
       _ ->
         Logger.info "No status action for {#{status}, #{new_status}} combination"
         conn
@@ -341,6 +345,25 @@ defmodule TdBgWeb.BusinessConceptController do
     end
   end
 
+  defp undo_rejection(conn, user, business_concept_version, _business_concept_params) do
+    attrs = %{status: BusinessConcept.status.draft}
+    with true <- can?(user, undo_rejection(business_concept_version)),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+           BusinessConcepts.update_business_concept_version_status(business_concept_version, attrs) do
+       @search_service.put_search(business_concept_version)
+       render(conn, "show.json", business_concept: concept)
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
   defp publish(conn, user, business_concept_version, _business_concept_params) do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
@@ -370,6 +393,42 @@ defmodule TdBgWeb.BusinessConceptController do
         conn
           |> put_status(:forbidden)
           |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  defp do_version(conn, user, business_concept_version, _business_concept_params) do
+    business_concept = business_concept_version.business_concept
+    concept_type = business_concept.type
+    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
+
+    business_concept = business_concept
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    draft_attrs = Map.from_struct(business_concept_version)
+    draft_attrs = draft_attrs
+    |> Map.put("business_concept", business_concept)
+    |> Map.put("content_schema", content_schema)
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+    |> Map.put("status", BusinessConcept.status.draft)
+    |> Map.put("version", business_concept_version.version + 1)
+
+    with true <- can?(user, version(business_concept_version)),
+         {:ok, %{current: %BusinessConceptVersion{} = new_version}}
+            <- BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
+      conn
+        |> put_status(:created)
+        |> render("show.json", business_concept: new_version)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
       _error ->
         conn
         |> put_status(:unprocessable_entity)

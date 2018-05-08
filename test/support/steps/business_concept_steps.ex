@@ -94,11 +94,15 @@ defmodule TdBg.BusinessConceptSteps do
       assert business_concept_type == current_business_concept["type"]
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       status = current_business_concept["status"]
-      {_, status_code, json_resp} = if status == BusinessConcept.status.published do
-        business_concept_version_create(token, business_concept_id,  attrs)
-      else
-        business_concept_update(token, business_concept_id,  attrs)
+      published = BusinessConcept.status.published
+      rejected  = BusinessConcept.status.rejected
+
+      case status do
+          ^published -> business_concept_version(token, business_concept_id)
+          ^rejected -> business_concept_undo_rejection(token, business_concept_id)
+          _ -> nil
       end
+      {_, status_code, json_resp} = business_concept_update(token, business_concept_id,  attrs)
       {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
   end
 
@@ -209,11 +213,14 @@ defmodule TdBg.BusinessConceptSteps do
     assert business_concept_type == business_concept["type"]
     attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
     status = business_concept["status"]
-    {_, _, _} = if status == BusinessConcept.status.published do
-      business_concept_version_create(token_admin, business_concept["id"],  attrs)
-    else
-      business_concept_update(token_admin, business_concept["id"],  attrs)
+
+    case status == BusinessConcept.status.published do
+      true -> business_concept_version(token_admin, business_concept["id"])
+      _ -> nil
     end
+
+    business_concept_update(token_admin, business_concept["id"],  attrs)
+
     {:ok, state}
   end
 
@@ -563,7 +570,7 @@ defmodule TdBg.BusinessConceptSteps do
         business_concept_send_for_approval(token_admin, business_concept_id)
         business_concept_publish(token_admin, business_concept_id)
       {:published, :draft} ->
-        business_concept_version_create(token_admin, business_concept_id,  %{})
+        business_concept_version(token_admin, business_concept_id)
     end
   end
 

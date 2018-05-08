@@ -7,11 +7,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
-  alias TdBg.Templates
 
   action_fallback TdBgWeb.FallbackController
 
@@ -78,63 +76,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case Map.get(permissions_to_status, permission) do
       nil -> []
       status -> [status]
-    end
-  end
-
-  swagger_path :create do
-    post "/business_concepts/{id}/versions"
-    description "Creates a Business Concept Version"
-    produces "application/json"
-    parameters do
-      id :path, :integer, "Business Concept ID", required: true
-      business_concept_version :body, Schema.ref(:BusinessConceptVersionCreate), "Business Concept Version create attrs"
-    end
-    response 200, "Created", Schema.ref(:BusinessConceptVersionResponse)
-    response 400, "Client Error"
-  end
-
-  def create(conn, %{"business_concept_id" => business_concept_id, "business_concept_version" => business_concept_params}) do
-    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
-    business_concept = business_concept_version.business_concept
-    concept_type = business_concept.type
-    concept_name = Map.get(business_concept_params, "name")
-    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
-
-    user = conn.assigns.current_user
-
-    business_concept = business_concept
-    |> Map.put("last_change_by", user.id)
-    |> Map.put("last_change_at", DateTime.utc_now())
-
-    draft_attrs = Map.from_struct(business_concept_version)
-    draft_attrs = draft_attrs
-    |> Map.merge(business_concept_params)
-    |> Map.put("business_concept", business_concept)
-    |> Map.put("content_schema", content_schema)
-    |> Map.put("last_change_by", user.id)
-    |> Map.put("last_change_at", DateTime.utc_now())
-    |> Map.put("mod_comments", business_concept_params["mod_comments"])
-    |> Map.put("status", BusinessConcept.status.draft)
-    |> Map.put("version", business_concept_version.version + 1)
-
-    with true <- can?(user, update_published(business_concept_version)),
-         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, business_concept_id),
-         {:ok, %{current: %BusinessConceptVersion{} = new_version}}
-            <- BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
-
-      conn
-        |> put_status(:created)
-        |> put_resp_header("location", business_concept_version_path(conn, :show, business_concept_version))
-        |> render("show.json", business_concept_version: new_version)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
     end
   end
 

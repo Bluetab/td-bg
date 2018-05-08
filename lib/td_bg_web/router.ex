@@ -69,8 +69,7 @@ defmodule TdBgWeb.Router do
       post "/aliases", BusinessConceptAliasController, :create
       patch "/status", BusinessConceptController, :update_status
       get "/versions", BusinessConceptVersionController, :versions
-      post "/versions", BusinessConceptVersionController, :create
-    end
+  end
 
     resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]
 

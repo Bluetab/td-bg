@@ -83,6 +83,14 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code}
   end
 
+  def business_concept_undo_rejection(token, business_concept_id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"business_concept" => %{"status" => "draft"}} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.patch!(business_concept_business_concept_url(@endpoint, :update_status, business_concept_id), body, headers, [])
+    {:ok, status_code}
+  end
+
   def business_concept_deprecate(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{"business_concept" => %{"status" => "deprecated"}} |> JSON.encode!
@@ -94,6 +102,14 @@ defmodule TdBgWeb.BusinessConcept do
   def business_concept_publish(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{"business_concept" => %{"status" => "published"}} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.patch!(business_concept_business_concept_url(@endpoint, :update_status, business_concept_id), body, headers, [])
+    {:ok, status_code}
+  end
+
+  def business_concept_version(token, business_concept_id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"business_concept" => %{"status" => "draft"}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.patch!(business_concept_business_concept_url(@endpoint, :update_status, business_concept_id), body, headers, [])
     {:ok, status_code}
@@ -162,14 +178,6 @@ defmodule TdBgWeb.BusinessConcept do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(business_concept_version_url(@endpoint, :show, id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
-  end
-
-  def business_concept_version_create(token, business_concept_id, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept_version" => attrs} |> JSON.encode!
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-        HTTPoison.post!(business_concept_business_concept_version_url(@endpoint, :create, business_concept_id), body, headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 

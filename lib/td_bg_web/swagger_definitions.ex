@@ -422,18 +422,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
           mod_comments [:string, :null], "Business Concept Version modification comments", required: false
         end
       end,
-      BusinessConceptVersionCreate: swagger_schema do
-        properties do
-          business_concept_version (Schema.new do
-            properties do
-              content :object, "Business Concept Vesion object"
-              name :string, "Business Concept Vesion name"
-              description :string, "Business Concept Version description"
-              mod_comments :string, "Business Concept Version modification comments"
-            end
-          end)
-        end
-      end,
       BusinessConceptVersions: swagger_schema do
         title "Business Concept Versions"
         description "A collection of Business Concept Versions"

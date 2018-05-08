@@ -6,7 +6,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
-  alias TdBg.BusinessConcepts.BusinessConcept
 
   setup_all do
     start_supervised MockTdAuthService
@@ -35,35 +34,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn = get conn, business_concept_business_concept_version_path(conn, :versions, business_concept_id)
       [data] = json_response(conn, 200)["data"]["collection"]
       assert data["name"] == business_concept_version.name
-    end
-  end
-
-  describe "create business_concept_version" do
-    setup [:create_template]
-
-    @tag authenticated_user: @admin_user_name
-    test "renders business_concept_version when data is valid", %{conn: conn, swagger_schema: schema} do
-      business_concept_version = insert(:business_concept_version, status: BusinessConcept.status.published)
-      business_concept_id = business_concept_version.business_concept.id
-      creation_attrs = %{
-        content: %{},
-        name: "Other name",
-        description: "Other description"
-      }
-
-      conn = post conn, business_concept_business_concept_version_path(conn, :create, business_concept_id), business_concept_version: creation_attrs
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert %{"id" => id} = json_response(conn, 201)["data"] # change response to created?
-
-      conn = recycle_and_put_headers(conn)
-
-      conn = get conn, business_concept_version_path(conn, :show, id)
-      #validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      business_concept_version = json_response(conn, 200)["data"]
-
-      assert business_concept_version["current"] == true
-      assert business_concept_version["version"] == 2
-
     end
   end
 
