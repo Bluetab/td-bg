@@ -167,6 +167,31 @@ defmodule TdBg.Permissions do
     AclEntry.changeset(acl_entry, %{})
   end
 
+  def get_list_acl_from_domain(domain) do
+    acl_entries = list_acl_entries(%{domain: domain})
+    acl_entries_map_ids = acl_entries |> Enum.group_by(&(&1.principal_type), &(&1.principal_id))
+    users = case acl_entries_map_ids["user"] do
+      nil -> []
+      user_ids -> @td_auth_api.search_users(%{"ids" => user_ids})
+    end
+    groups = case acl_entries_map_ids["group"] do
+      nil -> []
+      group_ids -> @td_auth_api.search_groups(%{"ids" => group_ids})
+    end
+    acl_entries = Enum.reduce(acl_entries, [],
+      fn(u, acc) ->
+        principal =
+          case u.principal_type do
+            "user" -> Enum.find(users, fn(r_u) -> r_u.id == u.principal_id end)
+            "group" -> Enum.find(groups, fn(r_u) -> r_u.id == u.principal_id end)
+          end
+        if principal do
+          acc ++ [%{principal: principal, principal_type: u.principal_type, role_id: u.role.id, role_name: u.role.name, acl_entry_id: u.id}]
+        else
+          acc
+        end
+    end)
+  end
   @doc """
     Returns Role with name role_name
   """

@@ -21,3 +21,9 @@ Feature: Taxonomy Roles of A BusinessConcept
     And following users exist with the indicated role in Domain "Domain 1.1.2"
       | user           | role    |
       | pietro.alpin   | watch   |
+    When user "app-admin" lists taxonomy roles of the business concept "My Business Term"
+    Then the system returns a result with code "Ok"
+    # And if result "Ok" the user "app-admin" is able to see the user "pietro.alpin" with a role "watch" in the domain "Domain 1"
+    # Then And the system returns a response with following data:
+    #
+    #   """
