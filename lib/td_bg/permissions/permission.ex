@@ -11,6 +11,7 @@ defmodule TdBg.Permissions.Permission do
                  create_domain: "create_domain",
                  update_domain: "update_domain",
                  delete_domain: "delete_domain",
+                 view_domain: "view_domain",
                  create_business_concept: "create_business_concept",
                  update_business_concept: "update_business_concept",
                  send_business_concept_for_approval: "send_business_concept_for_approval",
