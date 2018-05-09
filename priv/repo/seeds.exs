@@ -48,6 +48,7 @@ delete_acl_entry = Permission.permissions.delete_acl_entry |> get_permission.()
 create_domain = Permission.permissions.create_domain |> get_permission.()
 update_domain = Permission.permissions.update_domain |> get_permission.()
 delete_domain = Permission.permissions.delete_domain |> get_permission.()
+view_domain = Permission.permissions.view_domain |> get_permission.()
 
 create_business_concept = Permission.permissions.create_business_concept |> get_permission.()
 update_business_concept = Permission.permissions.update_business_concept |> get_permission.()
@@ -70,6 +71,7 @@ admin_permissions = [create_acl_entry,
                      create_domain,
                      update_domain,
                      delete_domain,
+                     view_domain,
                      create_business_concept,
                      update_business_concept,
                      send_business_concept_for_approval,
@@ -86,12 +88,14 @@ admin_permissions = [create_acl_entry,
                      view_deprecated_business_concepts
                    ]
 
-watch_permissions = [view_published_business_concepts,
+watch_permissions = [view_domain,
+                     view_published_business_concepts,
                      view_versioned_business_concepts,
                      view_deprecated_business_concepts
                     ]
 
-create_permissions = [create_business_concept,
+create_permissions = [view_domain,
+                      create_business_concept,
                       update_business_concept,
                       send_business_concept_for_approval,
                       delete_business_concept,
@@ -100,7 +104,8 @@ create_permissions = [create_business_concept,
                       view_deprecated_business_concepts
                     ]
 
-publish_permissions = [create_business_concept,
+publish_permissions = [view_domain,
+                       create_business_concept,
                        update_business_concept,
                        send_business_concept_for_approval,
                        delete_business_concept,

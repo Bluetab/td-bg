@@ -8,6 +8,7 @@ defmodule TdBg.Templates do
 
   alias TdBg.Templates.Template
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Taxonomies
   alias Ecto.Changeset
 
   @doc """
@@ -108,6 +109,18 @@ defmodule TdBg.Templates do
   end
 
   def get_domain_templates(%Domain{} = domain) do
+    get_domain_templates(%{domain_id: domain.id}, [])
+  end
+  def get_domain_templates(%{domain_id: nil}, templates), do: templates |> Enum.uniq_by(&(&1.id))
+  def get_domain_templates(%{domain_id: domain_id}, templates) do
+    domain = domain_id
+      |> Taxonomies.get_domain!
+      |> Repo.preload(:parent)
+    templates = templates ++ get_templates_from_domain(domain)
+    get_domain_templates(%{domain_id: domain.parent_id}, templates)
+  end
+
+  defp get_templates_from_domain(%Domain{} = domain) do
     domain
     |> Repo.preload(:templates)
     |> Map.get(:templates)

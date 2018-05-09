@@ -96,5 +96,24 @@ defmodule TdBg.TemplatesTest do
       assert_raise Ecto.ConstraintError, fn -> Templates.delete_template(template) end
     end
 
+    test "add_templates_to_domain_parent/2 and get_domain_templates/1 adds empty template to a domain" do
+      {:ok, template} = Templates.create_template(@empty_template_attrs)
+      {:ok, domain_parent} = Taxonomies.create_domain(@domain_attrs)
+      {:ok, domain} = Taxonomies.create_domain(Map.put(@domain_attrs, :parent_id, domain_parent.id))
+      Templates.add_templates_to_domain(domain_parent, [template])
+      [stored_template] = Templates.get_domain_templates(domain)
+      assert template == stored_template
+    end
+
+    test "add_multiple_templates_to_domain_parent/2 and get_domain_templates_unique/1 adds empty template to a domain" do
+      {:ok, template} = Templates.create_template(@empty_template_attrs)
+      {:ok, domain_parent} = Taxonomies.create_domain(@domain_attrs)
+      {:ok, domain} = Taxonomies.create_domain(Map.put(@domain_attrs, :parent_id, domain_parent.id))
+      Templates.add_templates_to_domain(domain_parent, [template])
+      Templates.add_templates_to_domain(domain, [template])
+      stored_template = Templates.get_domain_templates(domain)
+      assert [template] == stored_template
+    end
+
   end
 end

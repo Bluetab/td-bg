@@ -81,9 +81,9 @@ defmodule TdBgWeb.Router do
     delete "/search", SearchController, :delete
 
     resources "/templates", TemplateController, except: [:new, :edit]
-      get "/templates/load/:id", TemplateController, :load_and_show
-      get "/domains/:domain_id/templates", TemplateController, :get_domain_templates
-      post "/domains/:domain_id/templates", TemplateController, :add_templates_to_domain
+    get "/templates/load/:id", TemplateController, :load_and_show
+    get "/domains/:domain_id/templates", TemplateController, :get_domain_templates
+    post "/domains/:domain_id/templates", TemplateController, :add_templates_to_domain
   end
 
   def swagger_info do
