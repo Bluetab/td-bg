@@ -196,7 +196,7 @@ defmodule TdBg.Permissions do
     Returns Role with name role_name
   """
   def get_role_by_name(role_name) do
-    Repo.get_by(Role, name: String.downcase(role_name))
+    Repo.get_by(Role, name: role_name)
   end
 
   def get_roles_in_resource(%{domain_id: nil}, roles), do: roles
