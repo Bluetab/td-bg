@@ -58,6 +58,16 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
       %{status_code: status_code,  resp: business_concept_taxonomy_roles})}
   end
 
+  defand ~r/^if result "(?<result>[^"]+)" the system will return the user "(?<user_name_role>[^"]+)" with a role "(?<role_name>[^"]+)" in the domain "(?<domain_name>[^"]+)"$/,
+    %{result: result, user_name_role: user_name_role, role_name: role_name, domain_name: domain_name}, state do
+    collection = state[:resp]["collection"]
+    assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain_name)
+    domain_collection_roles = Enum.find(collection, &(&1["domain_name"] == domain_name))["roles"]
+    assert Enum.member?(Enum.map(domain_collection_roles, &(&1["principal"]["user_name"])), user_name_role)
+    user_roles = Enum.find(domain_collection_roles, &(&1["principal"]["user_name"] == user_name_role))
+    assert user_roles["role_name"] == role_name
+  end
+
   defp get_business_concept_taxonomy_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =

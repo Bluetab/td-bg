@@ -23,7 +23,4 @@ Feature: Taxonomy Roles of A BusinessConcept
       | pietro.alpin   | watch   |
     When user "app-admin" lists taxonomy roles of the business concept "My Business Term"
     Then the system returns a result with code "Ok"
-    # And if result "Ok" the user "app-admin" is able to see the user "pietro.alpin" with a role "watch" in the domain "Domain 1"
-    # Then And the system returns a response with following data:
-    #
-    #   """
+    And if result "Ok" the system will return the user "pietro.alpin" with a role "publish" in the domain "Domain 1"
