@@ -7,6 +7,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Permissions
 
   setup_all do
     start_supervised MockTdAuthService
@@ -46,6 +47,27 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
     end
 
+  end
+
+  describe "query_business_concept_taxonomy" do
+    @tag authenticated_user: @admin_user_name
+    test "list the taxonomies of a business concept", %{conn: conn} do
+      published = BusinessConcept.status.published
+      user = build(:user)
+      user = create_user(user.user_name, is_admin: true)
+      domain = insert(:domain)
+      role = Permissions.get_role_by_name("watch")
+      insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
+      business_concept_version = create_version(domain, "one", published)
+      id = business_concept_version.business_concept.id
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, business_concept_business_concept_path(conn, :taxonomy_roles, id)
+      collection = json_response(conn, 200)["data"]["collection"]
+      assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain.name)
+      assert Enum.member?(Enum.map(collection, &(&1["domain_id"])), domain.id)
+      roles = Enum.find(collection, &(&1["domain_name"] == domain.name))["roles"]
+      assert Enum.member?(Enum.map(roles, &(&1["principal"]["id"])), user.id)
+    end
   end
 
   describe "search_by_name" do

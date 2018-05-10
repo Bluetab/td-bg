@@ -178,7 +178,7 @@ defmodule TdBg.Permissions do
       nil -> []
       group_ids -> @td_auth_api.search_groups(%{"ids" => group_ids})
     end
-    acl_entries = Enum.reduce(acl_entries, [],
+    Enum.reduce(acl_entries, [],
       fn(u, acc) ->
         principal =
           case u.principal_type do

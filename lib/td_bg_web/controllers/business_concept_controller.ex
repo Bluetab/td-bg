@@ -309,6 +309,18 @@ defmodule TdBgWeb.BusinessConceptController do
     end
   end
 
+  swagger_path :taxonomy_roles do
+    get "/business_concepts/{business_concept_id}/taxonomy_roles"
+    description "Lists all the roles within the taxonomy of a given business concept"
+    produces "application/json"
+    parameters do
+      business_concept_id :path, :integer, "Business Concept Id", required: true
+    end
+    response 200, "Ok", Schema.ref(:BusinessConceptTaxonomyResponse)
+    response 403, "Invalid authorization"
+    response 422, "Unprocessable Entity"
+  end
+
   def taxonomy_roles(conn, %{"business_concept_id" => id}) do
     # We should fetch the user in order to check its permissions over the
     # current version of the business concept

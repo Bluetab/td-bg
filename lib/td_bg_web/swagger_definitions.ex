@@ -395,6 +395,52 @@ defmodule TdBgWeb.SwaggerDefinitions do
             end
           end)
         end
+      end,
+      BusinessConceptTaxonomyResponse: swagger_schema do
+        properties do
+          data (Schema.new do
+            properties do
+              collection Schema.ref(:BusinessConceptTaxonomyEntries)
+            end
+          end)
+        end
+      end,
+      BusinessConceptTaxonomyEntries: swagger_schema do
+        title "Business Concept Taxonomy entries"
+        description "A collection of Business Concepts Taxonomies"
+        type :array
+        items Schema.ref(:BusinessConceptTaxonomyEntry)
+      end,
+      BusinessConceptTaxonomyEntry: swagger_schema do
+        title "Business Concept Taxonomy entry"
+        description "Taxonomy of a Business concept"
+        type :object
+        properties do
+          domain_id :integer, "Domain Identifier", required: true
+          domain_name :string, "Domain Name", required: true
+          roles :array, "Roles Business Concepts", items: Schema.ref(:BusinessConceptAclEntry), required: true
+        end
+      end,
+      BusinessConceptAclEntry: swagger_schema do
+        title "Business Concept Acl entry"
+        description "Acl of a Business concept"
+        type :object
+        properties do
+          principal (Schema.new do
+            properties do
+              id :integer, "principal_id"
+              name :string, "group1"
+              user_name :string, "user name"
+              is_admin :string, "admin user"
+              full_name :string, "full user name"
+              email :string, "user email"
+            end
+          end)
+          principal_type :string, "principal_type"
+          role_id :integer, "role id"
+          role_name :string, "role name"
+          acl_entry_id :integer, "acl entry id"
+        end
       end
     }
   end
