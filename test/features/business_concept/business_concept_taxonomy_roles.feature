@@ -15,12 +15,19 @@ Feature: Taxonomy Roles of A BusinessConcept
     And following users exist in the application:
       | user           |
       | pietro.alpin   |
+      | watcher        |
+      | unauth         |
     And following users exist with the indicated role in Domain "Domain 1"
       | user           | role    |
       | pietro.alpin   | publish |
     And following users exist with the indicated role in Domain "Domain 1.1.2"
       | user           | role    |
       | pietro.alpin   | watch   |
-    When user "app-admin" lists taxonomy roles of the business concept "My Business Term"
+    And following users exist with the indicated role in Domain "Domain 1"
+      | user      | role    |
+      | watcher   | watch   |
+    When user "watcher" lists taxonomy roles of the business concept "My Business Term"
     Then the system returns a result with code "Ok"
     And if result "Ok" the system will return the user "pietro.alpin" with a role "publish" in the domain "Domain 1"
+    When user "unauth" lists taxonomy roles of the business concept "My Business Term"
+    Then the system returns a result with code "Unauthorized"
