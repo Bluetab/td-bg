@@ -51,17 +51,17 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept["name"] == bc_name
     # Now, we should be able to query the taxonomies of a BC
-    {_, status_code, json_resp } =
+    {_, status_code, json_resp} =
       get_business_concept_taxonomy_roles(token,
       %{business_concept_id: business_concept["id"]})
     {:ok, Map.merge(state,
-      %{status_code: status_code,  resp: json_resp })}
+      %{status_code: status_code,  resp: json_resp})}
   end
 
   defand ~r/^if result "(?<result>[^"]+)" the system will return the user "(?<user_name_role>[^"]+)" with a role "(?<role_name>[^"]+)" in the domain "(?<domain_name>[^"]+)"$/,
     %{result: result, user_name_role: user_name_role, role_name: role_name, domain_name: domain_name}, state do
     assert result == to_response_code(state[:status_code])
-    %{ "data" => data } = state[:resp]
+    %{"data" => data} = state[:resp]
     collection = data["collection"]
     assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain_name)
     domain_collection_roles = Enum.find(collection, &(&1["domain_name"] == domain_name))["roles"]
