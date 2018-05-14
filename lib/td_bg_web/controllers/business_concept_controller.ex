@@ -32,8 +32,13 @@ defmodule TdBgWeb.BusinessConceptController do
     response 200, "OK", Schema.ref(:BusinessConceptsResponse)
   end
 
-  def index(conn, _params) do
-    business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
+  def index(conn, params) do
+    search_term = Map.get(params, "search_term")
+    business_concept_versions =
+      case search_term do
+        "" -> BusinessConcepts.list_all_business_concept_versions()
+        _ -> BusinessConcepts.get_business_concept_by_term(search_term)
+      end
     render(conn, "index.json", business_concepts: business_concept_versions, hypermedia: hypermedia("business_concept", conn, business_concept_versions))
   end
 
@@ -521,21 +526,6 @@ defmodule TdBgWeb.BusinessConceptController do
       "deprecated" ->
         []
     end
-  end
-
-  swagger_path :search_by_name do
-    get "/business_concepts/search_by_name/{name}"
-    description "List Business Concepts by name"
-    produces "application/json"
-    parameters do
-      status :path, :string, "Business Concept Name", required: true
-    end
-    response 200, "OK", Schema.ref(:BusinessConceptResponse)
-    response 400, "Client Error"
-  end
-  def search_by_name(conn, %{"name" => name}) do
-    business_concept_versions = BusinessConcepts.get_business_concept_by_name(name)
-    render(conn, "index.json", business_concepts: business_concept_versions)
   end
 
   defp filter_list(user, list_business_concept) do

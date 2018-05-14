@@ -611,4 +611,12 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all
   end
 
+  def get_business_concept_by_term(term) do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> where([v], ilike(v.name, ^"%#{term}%") or ilike(v.description, ^"%#{term}%"))
+    |> preload([_, c], [business_concept: c])
+    |> order_by(asc: :version)
+    |> Repo.all
+  end
 end
