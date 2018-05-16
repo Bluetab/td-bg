@@ -152,26 +152,38 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_by_name(token, business_concept_name) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"]["collection"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
+    business_concept = Enum.find(json_resp["data"], fn(%{"data" => business_concept}) -> business_concept["name"] == business_concept_name end)
+    case business_concept do
+      nil -> nil
+      %{"data" => business_concept} -> business_concept
+    end
   end
 
   def business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"]["collection"],
-     fn(business_concept) -> business_concept["name"] == business_concept_name
+    business_concept = Enum.find(json_resp["data"],
+     fn(%{"data" => business_concept}) -> business_concept["name"] == business_concept_name
      and  business_concept["type"] == business_concept_type end)
+    case business_concept do
+      nil -> nil
+      %{"data" => business_concept} -> business_concept
+    end
   end
 
   def business_concept_by_version_name_and_type(token, business_concept_version,
                                                       business_concept_name,
                                                       business_concept_type) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"]["collection"],
-     fn(business_concept) ->
+    business_concept = Enum.find(json_resp["data"],
+     fn(%{"data" => business_concept}) ->
        business_concept["version"] == business_concept_version &&
        business_concept["name"] == business_concept_name &&
        business_concept["type"] == business_concept_type
      end)
+     case business_concept do
+       nil -> nil
+       %{"data" => business_concept} -> business_concept
+     end
   end
 
   def business_concept_version_show(token, id) do
@@ -205,8 +217,12 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_alias_by_name(token, business_concept_id, business_concept_alias) do
     {:ok, _status_code, json_resp} = business_concept_alias_list(token, business_concept_id)
-    Enum.find(json_resp["data"]["collection"],
-     fn(alias_item) -> alias_item["name"] == business_concept_alias end)
+    business_concept = Enum.find(json_resp["data"],
+     fn(%{"data" => alias_item}) -> alias_item["name"] == business_concept_alias end)
+    case business_concept do
+      nil -> nil
+      %{"data" => business_concept} -> business_concept
+    end
   end
 
   def business_concept_list_with_status(token, status) do

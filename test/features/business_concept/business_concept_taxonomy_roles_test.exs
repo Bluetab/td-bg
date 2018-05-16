@@ -46,6 +46,7 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
     token = get_user_token(user_name)
     # We get our BC by name
     business_concept = business_concept_by_name(token, bc_name)
+
     # we should verify that the Bc has been properly retrieved
     {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
     assert rc_ok() == to_response_code(http_status_code)
@@ -62,7 +63,7 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
     %{result: result, user_name_role: user_name_role, role_name: role_name, domain_name: domain_name}, state do
     assert result == to_response_code(state[:status_code])
     %{"data" => data} = state[:resp]
-    collection = data["collection"]
+    collection = data
     assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain_name)
     domain_collection_roles = Enum.find(collection, &(&1["domain_name"] == domain_name))["roles"]
     assert Enum.member?(Enum.map(domain_collection_roles, &(&1["principal"]["user_name"])), user_name_role)

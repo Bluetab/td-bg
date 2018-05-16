@@ -105,7 +105,7 @@ defmodule TdBg.RolesAdminTest do
   defthen ~r/^the system returns a result with following data:$/,
     %{table: expected_list}, state do
 
-    actual_list = state[:acl_entries]["collection"]
+    actual_list = state[:acl_entries]
     expected_list = Enum.reduce(expected_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {Atom.to_string(k), v} end)
       acc ++ [nitem]
@@ -113,7 +113,7 @@ defmodule TdBg.RolesAdminTest do
     )
     assert length(expected_list) == length(actual_list)
     Enum.each(expected_list, fn(e_user_role_entry) ->
-      user_role = Enum.find(actual_list, fn(c_user_role_entry) ->
+      %{"data" => user_role} = Enum.find(actual_list, fn(%{"data" => c_user_role_entry}) ->
         e_user_role_entry["user"] == c_user_role_entry["principal"]["user_name"]
       end)
       assert user_role["principal"]["user_name"] == e_user_role_entry["user"] &&

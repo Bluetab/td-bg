@@ -16,6 +16,7 @@ defmodule TdBg.ResultSteps do
 
       field_atoms = [:name, :type, :description, :version, :status]
       cooked_versions = business_concept_versions
+      |> Enum.map(&(&1["data"]))
       |> Enum.reduce([], &([map_keys_to_atoms_refactor(&1)| &2]))
       |> Enum.map(&(Map.take(&1, field_atoms)))
       |> Enum.sort

@@ -51,20 +51,18 @@ defmodule TdBgWeb.SwaggerDefinitions do
         title "Domains"
         description "A collection of Domains"
         type :array
-        items Schema.ref(:Domain)
+        items Schema.ref(:DomainResponse)
       end,
       DomainResponse: swagger_schema do
         properties do
           data Schema.ref(:Domain)
+          actions Schema.ref(:DomainActions)
         end
       end,
       DomainsResponse: swagger_schema do
         properties do
-          data (Schema.new do
-            properties do
-              collection Schema.ref(:Domains)
-            end
-          end)
+          data Schema.ref(:Domains)
+          actions Schema.ref(:DomainActions)
         end
       end,
       UserResponse: swagger_schema do
@@ -104,6 +102,26 @@ defmodule TdBgWeb.SwaggerDefinitions do
             end
           end)
         end
+      end,
+      DomainActions: swagger_schema do
+        title "Actions"
+        description "Domain actions"
+        properties do
+          action (Schema.new do
+            properties do
+              method :string
+              input :object
+              link :string
+            end
+          end)
+        end
+        example %{
+          "create": %{
+             "method": "POST",
+             "link": "/api/domains",
+             "input": %{}
+           }
+        }
       end
     }
   end

@@ -321,7 +321,7 @@ defmodule TdBg.BusinessConceptSteps do
       business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
       business_concept_id = business_concept_version["id"]
       token = get_user_token(user_name)
-      {_, status_code, %{"data" => %{"collection" => business_concept_versions}}} = business_concept_versions(token, business_concept_id)
+      {_, status_code, %{"data" => business_concept_versions}} = business_concept_versions(token, business_concept_id)
       assert rc_ok() == to_response_code(status_code)
       {:ok, Map.merge(state, %{business_concept_versions: business_concept_versions})}
   end
@@ -401,7 +401,7 @@ defmodule TdBg.BusinessConceptSteps do
   defwhen ~r/^"(?<user_name>[^"]+)" tries to list all the Business Concepts with status "(?<status>[^"]+)"$/,
            %{user_name: user_name, status: status}, state do
      token = get_user_token(user_name)
-     {:ok, 200, %{"data" => %{"collection" => list_by_status}}} = business_concept_list_with_status(token, status)
+     {:ok, 200, %{"data" => list_by_status}} = business_concept_list_with_status(token, status)
      {:ok, Map.merge(state, %{list_by_status: list_by_status, user_name: user_name})}
   end
 
@@ -410,7 +410,7 @@ defmodule TdBg.BusinessConceptSteps do
     actual_list = state[:list_by_status]
     user_name = state[:user_name]
     expected_list = String.split(table[String.to_atom(user_name)], ",", trim: true)
-    actual_list =  Enum.map(actual_list, fn(%{"name" => name}) -> name end)
+    actual_list =  Enum.map(actual_list, fn(%{"data" => %{"name" => name}}) -> name end)
     assert Enum.sort(actual_list) == Enum.sort(expected_list)
   end
 
@@ -533,12 +533,13 @@ defmodule TdBg.BusinessConceptSteps do
     business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
     business_concept_id = business_concept_version["id"]
     token = get_user_token(user_name)
-    {_, status_code, %{"data" => %{"collection" => business_concept_aliases}}} = business_concept_alias_list(token, business_concept_id)
+    {_, status_code, %{"data" => business_concept_aliases}} = business_concept_alias_list(token, business_concept_id)
     assert rc_ok() == to_response_code(status_code)
 
     field_atoms = [:name]
 
     cooked_aliases = business_concept_aliases
+    |> Enum.map(&(&1["data"]))
     |> Enum.reduce([], &([map_keys_to_atoms(&1)| &2]))
     |> Enum.map(&(Map.take(&1, field_atoms)))
     |> Enum.sort
