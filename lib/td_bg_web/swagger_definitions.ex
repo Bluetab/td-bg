@@ -476,11 +476,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptVersionResponse: swagger_schema do
         properties do
-          data (Schema.new do
-            properties do
-              collection Schema.ref(:BusinessConceptVersion)
-            end
-          end)
+          data (Schema.ref(:BusinessConceptVersion))
         end
       end,
       BusinessConceptVersionsResponse: swagger_schema do
