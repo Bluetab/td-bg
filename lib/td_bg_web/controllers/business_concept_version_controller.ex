@@ -67,12 +67,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         %{user_id: user.id, domain_id:  business_concept.domain_id}
         |> Permissions.get_permissions_in_resource
         |> Enum.reduce([], fn(permission, acc) ->
-          acc ++ get_from_persimissions(permissions_to_status, permission)
+          acc ++ get_from_permissions(permissions_to_status, permission)
         end)
     end
   end
 
-  defp get_from_persimissions(permissions_to_status, permission) do
+  defp get_from_permissions(permissions_to_status, permission) do
     case Map.get(permissions_to_status, permission) do
       nil -> []
       status -> [status]
