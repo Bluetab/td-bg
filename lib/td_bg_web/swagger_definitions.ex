@@ -12,8 +12,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           id :integer, "Unique identifier", required: true
           name :string, "Domain name", required: true
-          description :string, "type"
-          description :string, "descritpion"
+          type :string, "type"
+          description :string, "description"
           parent_id [:integer, :null], "Domain id"
         end
         example %{
