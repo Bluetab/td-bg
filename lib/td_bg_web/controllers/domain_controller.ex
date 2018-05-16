@@ -11,6 +11,7 @@ defmodule TdBgWeb.DomainController do
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
   alias Guardian.Plug, as: GuardianPlug
+  alias TdBg.Permissions.AclEntry
   import Canada
 
   action_fallback TdBgWeb.FallbackController
@@ -233,6 +234,41 @@ defmodule TdBgWeb.DomainController do
     render(conn, "index_acl_entries.json",
       acl_entries: acl_entries,
       hypermedia: hypermedia("acl_entries", conn, acl_entries))
+  end
+
+  swagger_path :create_acl_entry do
+    post "/domains/{domain_id}/acl_entries"
+    description "Creates an Acl Entry"
+    produces "application/json"
+    parameters do
+      domain_id :path, :integer, "Domain ID", required: true
+      acl_entry :body, Schema.ref(:DomainAclEntryCreate), "Acl entry create attrs"
+    end
+    response 201, "OK", Schema.ref(:DomainAclEntryResponse)
+    response 400, "Client Error"
+  end
+
+  def create_acl_entry(conn, %{"domain_id" => id, "acl_entry" => acl_entry_params}) do
+    acl_entry_params = Map.merge(%{"resource_id" => id, "resource_type" => "domain"}, acl_entry_params)
+    acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
+    current_user = GuardianPlug.current_resource(conn)
+
+    if current_user |> can?(create(acl_entry)) do
+      with {:ok, %AclEntry{} = acl_entry} <- Permissions.create_acl_entry(acl_entry_params) do
+        conn
+        |> put_status(:created)
+        |> render("acl_entry_show.json", acl_entry: acl_entry)
+      else
+        _error ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(ErrorView, :"422.json")
+      end
+    else
+      conn
+      |> put_status(403)
+      |> render(ErrorView, :"403")
+    end
   end
 
 end

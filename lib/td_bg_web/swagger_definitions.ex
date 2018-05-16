@@ -122,6 +122,34 @@ defmodule TdBgWeb.SwaggerDefinitions do
              "input": %{}
            }
         }
+      end,
+      DomainAclEntryCreate: swagger_schema do
+        properties do
+          acl_entry (Schema.new do
+            properties do
+              principal_id :integer, "id of principal", required: true
+              principal_type :string, "type of principal: user", required: true
+              role_id :integer, "id of role", required: true
+            end
+          end)
+        end
+      end,
+      DomainAclEntryResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DomainAclEntry)
+        end
+      end,
+      DomainAclEntry: swagger_schema do
+        title "Acl entry"
+        description "An Acl entry"
+        properties do
+          id :integer, "unique identifier", required: true
+          principal_id :integer, "id of principal", required: true
+          principal_type :string, "type of principal: user", required: true
+          resource_id :integer, "id of resource", required: true
+          resource_type :string, "type of resource: domain", required: true
+          role_id :integer, "id of role", required: true
+        end
       end
     }
   end
