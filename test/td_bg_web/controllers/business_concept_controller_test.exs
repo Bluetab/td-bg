@@ -161,10 +161,10 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       conn = get conn, business_concept_path(conn, :show, business_concept_id)
       validate_resp_schema(conn, schema, "BusinessConceptResponse")
 
-      updated_businness_concept = json_response(conn, 200)["data"]
+      updated_business_concept = json_response(conn, 200)["data"]
 
       update_attrs
-        |> Enum.each(&(assert updated_businness_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+        |> Enum.each(&(assert updated_business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
     end
 
     @tag authenticated_user: @admin_user_name
