@@ -29,7 +29,7 @@ defmodule TdBgWeb.BusinessConceptView do
       description: business_concept_version.description,
       last_change_by: business_concept_version.last_change_by,
       last_change_at: business_concept_version.last_change_at,
-      domain_id: business_concept_version.business_concept.domain_id,
+      domain: Map.take(business_concept_version.business_concept.domain, [:id, :name]),
       status: business_concept_version.status,
       current: business_concept_version.current,
       version: business_concept_version.version}

@@ -93,7 +93,7 @@ defmodule TdBg.BusinessConceptsTests do
         %{"name" => "Field3", "type" => "variable_list"},
       ]
 
-      content = %{Field1: "Hello", Field2: "World", Field3: ["Hellow", "World"]}
+      content = %{"Field1" => "Hello", "Field2" => "World", "Field3" => ["Hellow", "World"]}
 
       concept_attrs = %{
         type: "some type",

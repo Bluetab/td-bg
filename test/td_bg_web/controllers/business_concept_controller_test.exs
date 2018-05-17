@@ -118,7 +118,11 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
         |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
 
       creation_attrs
+        |> Map.drop([:domain_id])
         |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+
+      assert business_concept["domain"]["id"] == domain.id
+      assert business_concept["domain"]["name"] == domain.name
     end
 
     @tag authenticated_user: @admin_user_name
