@@ -112,7 +112,7 @@ defmodule TdBg.BusinessConcepts do
       |> validate_concept_content
       |> insert_concept
     case result do
-      {:ok, business_concept_version} -> 
+      {:ok, business_concept_version} ->
         {:ok, get_business_concept_version!(business_concept_version.id)}
       _ -> result
     end
@@ -624,7 +624,9 @@ defmodule TdBg.BusinessConcepts do
   def get_business_concept_by_term(term) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> join(:left, [v, c], _ in assoc(c, :domain))
     |> where([v], ilike(v.name, ^"%#{term}%") or ilike(v.description, ^"%#{term}%"))
+    |> preload([_, c, d], [business_concept: {c, domain: d}])
     |> preload([_, c], [business_concept: c])
     |> order_by(asc: :version)
     |> Repo.all

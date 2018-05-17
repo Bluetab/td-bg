@@ -46,6 +46,10 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
       permissions.view_deprecated_business_concepts => status.deprecated}
   end
 
+  def status_to_permissions do
+    Enum.reduce(BusinessConcept.permissions_to_status(), %{}, fn ({k, v}, acc) -> Map.put(acc, v, k) end)
+  end
+
   @doc false
   def changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
