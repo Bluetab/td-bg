@@ -410,7 +410,7 @@ defmodule TdBg.BusinessConceptSteps do
     actual_list = state[:list_by_status]
     user_name = state[:user_name]
     expected_list = String.split(table[String.to_atom(user_name)], ",", trim: true)
-    actual_list =  Enum.map(actual_list, fn(%{"data" => %{"name" => name}}) -> name end)
+    actual_list =  Enum.map(actual_list, fn(%{"name" => name}) -> name end)
     assert Enum.sort(actual_list) == Enum.sort(expected_list)
   end
 
@@ -539,7 +539,6 @@ defmodule TdBg.BusinessConceptSteps do
     field_atoms = [:name]
 
     cooked_aliases = business_concept_aliases
-    |> Enum.map(&(&1["data"]))
     |> Enum.reduce([], &([map_keys_to_atoms(&1)| &2]))
     |> Enum.map(&(Map.take(&1, field_atoms)))
     |> Enum.sort

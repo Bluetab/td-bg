@@ -38,7 +38,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     domains = state[:resp]["data"]
     domains =
       domains
-      |> Enum.map(&(&1["data"]))
       |> Enum.map(&(Map.take(&1, ["name", "description"])))
     domains = Enum.reduce(domains, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)
@@ -52,7 +51,6 @@ defmodule TdBg.TaxonomyNavigationTest do
     bc_list = state[:resp]["data"]
     bc_list =
       bc_list
-      |> Enum.map(&(&1["data"]))
       |> Enum.map(&(Map.take(&1, ["name", "type", "status", "description"])))
     bc_list = Enum.reduce(bc_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)

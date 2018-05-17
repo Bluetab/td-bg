@@ -113,7 +113,7 @@ defmodule TdBg.RolesAdminTest do
     )
     assert length(expected_list) == length(actual_list)
     Enum.each(expected_list, fn(e_user_role_entry) ->
-      %{"data" => user_role} = Enum.find(actual_list, fn(%{"data" => c_user_role_entry}) ->
+      user_role = Enum.find(actual_list, fn(c_user_role_entry) ->
         e_user_role_entry["user"] == c_user_role_entry["principal"]["user_name"]
       end)
       assert user_role["principal"]["user_name"] == e_user_role_entry["user"] &&

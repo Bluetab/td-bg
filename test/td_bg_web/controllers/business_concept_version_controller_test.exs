@@ -41,7 +41,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id
       conn = get conn, business_concept_business_concept_version_path(conn, :versions, business_concept_id)
-      [%{"data" => data}|_] = json_response(conn, 200)["data"]
+      [data|_] = json_response(conn, 200)["data"]
       assert data["name"] == business_concept_version.name
     end
   end

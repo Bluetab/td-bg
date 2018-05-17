@@ -20,18 +20,19 @@ defmodule TdBgWeb.Hypermedia.HypermediaViewHelper do
 
   defp render_many_hypermedia_element(resources, collection, view, template, assigns) do
     Enum.map(resources, fn resource ->
-      render_one_hypermedia(
-        resource, collection[resource], view, template, assigns)
+      Map.merge(
+        render_hypermedia(collection[resource]),
+        render_one(resource, view, template, assigns))
     end)
   end
 
   defp render_hypermedia(hypermedia) do
-    %{"actions" => Enum.into(Enum.map(hypermedia, &render_link/1), %{})}
+    %{"_actions" => Enum.into(Enum.map(hypermedia, &render_link/1), %{})}
   end
 
   defp render_link(%Link{} = link) do
     {map_action(link.action) , %{
-        "link" => link.path,
+        "href" => link.path,
         "method" => String.upcase(Atom.to_string(link.method)),
         "input" => input_map(link.schema)
       }

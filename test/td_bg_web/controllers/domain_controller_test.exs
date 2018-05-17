@@ -90,10 +90,10 @@ defmodule TdBgWeb.DomainControllerTest do
     test "lists root domain groups", %{conn: conn, swagger_schema: schema, domain: domain} do
       conn = get conn, domain_path(conn, :index_root)
       validate_resp_schema(conn, schema, "DomainsResponse")
-      assert List.first(json_response(conn, 200)["data"])["data"]["id"] == domain.id
-      assert List.first(json_response(conn, 200)["data"])["data"]["description"] == domain.description
-      assert List.first(json_response(conn, 200)["data"])["data"]["name"] == domain.name
-      assert List.first(json_response(conn, 200)["data"])["data"]["parent_id"] == domain.parent_id
+      assert List.first(json_response(conn, 200)["data"])["id"] == domain.id
+      assert List.first(json_response(conn, 200)["data"])["description"] == domain.description
+      assert List.first(json_response(conn, 200)["data"])["name"] == domain.name
+      assert List.first(json_response(conn, 200)["data"])["parent_id"] == domain.parent_id
     end
   end
 
@@ -104,10 +104,10 @@ defmodule TdBgWeb.DomainControllerTest do
     test "index domain children", %{conn: conn, swagger_schema: schema, child_domains: {:ok, child_domains}} do
       conn = get conn, domain_domain_path(conn,  :index_children, child_domains.parent_id)
       validate_resp_schema(conn, schema, "DomainsResponse")
-      assert List.first(json_response(conn, 200)["data"])["data"]["id"] == child_domains.id
-      assert List.first(json_response(conn, 200)["data"])["data"]["description"] == child_domains.description
-      assert List.first(json_response(conn, 200)["data"])["data"]["name"] == child_domains.name
-      assert List.first(json_response(conn, 200)["data"])["data"]["parent_id"] == child_domains.parent_id
+      assert List.first(json_response(conn, 200)["data"])["id"] == child_domains.id
+      assert List.first(json_response(conn, 200)["data"])["description"] == child_domains.description
+      assert List.first(json_response(conn, 200)["data"])["name"] == child_domains.name
+      assert List.first(json_response(conn, 200)["data"])["parent_id"] == child_domains.parent_id
     end
   end
 

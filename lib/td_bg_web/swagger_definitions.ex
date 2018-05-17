@@ -6,6 +6,26 @@ defmodule TdBgWeb.SwaggerDefinitions do
 
   def domain_swagger_definitions do
     %{
+      DomainActions: swagger_schema do
+        title "Domain"
+        description "A Domain"
+        properties do
+          id :integer, "Unique identifier", required: true
+          name :string, "Domain name", required: true
+          description :string, "type"
+          description :string, "descritpion"
+          parent_id [:integer, :null], "Domain id"
+          _actions Schema.ref(:Actions)
+        end
+        example %{
+          id: 12,
+          name: "Domain name",
+          type: "Domain type",
+          description: "domain description",
+          parent_id: 1,
+          _actions: %{}
+        }
+      end,
       Domain: swagger_schema do
         title "Domain"
         description "A Domain"
@@ -51,18 +71,23 @@ defmodule TdBgWeb.SwaggerDefinitions do
         title "Domains"
         description "A collection of Domains"
         type :array
-        items Schema.ref(:DomainResponse)
+        items Schema.ref(:DomainResponseNoData)
+      end,
+      DomainResponseNoData: swagger_schema do
+        properties do
+          data Schema.ref(:DomainActions)
+        end
       end,
       DomainResponse: swagger_schema do
         properties do
           data Schema.ref(:Domain)
-          actions Schema.ref(:DomainActions)
+          _actions Schema.ref(:Actions)
         end
       end,
       DomainsResponse: swagger_schema do
         properties do
           data Schema.ref(:Domains)
-          actions Schema.ref(:DomainActions)
+          actions Schema.ref(:Actions)
         end
       end,
       UserResponse: swagger_schema do
@@ -103,7 +128,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           end)
         end
       end,
-      DomainActions: swagger_schema do
+      Actions: swagger_schema do
         title "Actions"
         description "Domain actions"
         properties do
@@ -118,7 +143,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         example %{
           "create": %{
              "method": "POST",
-             "link": "/api/domains",
+             "href": "/api/domains",
              "input": %{}
            }
         }
