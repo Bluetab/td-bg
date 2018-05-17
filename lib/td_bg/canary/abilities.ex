@@ -85,6 +85,6 @@ defmodule TdBg.Canary.Abilities do
       BusinessConceptAbilities.can?(user, :manage_alias, business_concept_vesion)
     end
 
-    def can?(%User{}, _action, _domain),  do: false
+    def can?(%User{}, _action, _domain), do: false
   end
 end

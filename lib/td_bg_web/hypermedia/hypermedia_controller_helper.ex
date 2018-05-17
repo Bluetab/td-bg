@@ -28,9 +28,6 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
     hypermedia_impl(helper, conn, resource)
   end
 
-  defp hypermedia_impl(helper, conn, %{__struct__: _} = resource) do
-    hypermedia(helper, conn, struct_to_map(resource))
-  end
   defp hypermedia_impl(helper, conn, resource) do
       current_user = Guardian.current_resource(conn)
 
