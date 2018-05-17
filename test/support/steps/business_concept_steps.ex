@@ -33,7 +33,7 @@ defmodule TdBg.BusinessConceptSteps do
       {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
       assert rc_ok() == to_response_code(http_status_code)
       assert business_concept["name"] == business_concept_name
-      assert business_concept["domain_id"] == domain["id"]
+      assert business_concept["domain"]["id"] == domain["id"]
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       assert_attrs(attrs, business_concept)
       {:ok, state}

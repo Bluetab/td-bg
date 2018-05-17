@@ -12,7 +12,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           id :integer, "Unique identifier", required: true
           name :string, "Domain name", required: true
-          type :string, "type"
+          type [:string, :null], "type"
           description :string, "description"
           parent_id [:integer, :null], "Domain id"
         end
@@ -22,6 +22,18 @@ defmodule TdBgWeb.SwaggerDefinitions do
           type: "Domain type",
           description: "domain description",
           parent_id: 1
+        }
+      end,
+      DomainRef: swagger_schema do
+        title "Domain Reference"
+        description "A Domain's id and name"
+        properties do
+          id :integer, "Domain Identifier", required: true
+          name :string, "Domain Name", required: true
+        end
+        example %{
+          id: 12,
+          name: "Domain name"
         }
       end,
       DomainCreate: swagger_schema do
@@ -333,9 +345,9 @@ defmodule TdBgWeb.SwaggerDefinitions do
           name :string, "Business Concept name", required: true
           description :string, "Business Concept description", required: true
           last_change_by :integer, "Business Concept last updated by", required: true
-          last_change_at :string, "Business Conceptlast updated date", required: true
-          domain_id :integer, "Business Concept parent domain id", required: true
-          status :string, "Business Conceptstatus", required: true
+          last_change_at :string, "Business Concept last updated date", required: true
+          domain (Schema.ref(:DomainRef))
+          status :string, "Business Concept status", required: true
           current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept version", required: true
           reject_reason [:string, :null], "Business Concept reject reason", required: false
@@ -416,8 +428,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "Taxonomy of a Business concept"
         type :object
         properties do
-          domain_id :integer, "Domain Identifier", required: true
-          domain_name :string, "Domain Name", required: true
+          domain (Schema.ref(:DomainRef))
           roles :array, "Roles Business Concepts", items: Schema.ref(:BusinessConceptAclEntry), required: true
         end
       end,
@@ -460,7 +471,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description :string, "Business Concept Version description", required: true
           last_change_by :integer, "Business Concept Version last change by", required: true
           last_change_at :string, "Business Concept Verion last change at", required: true
-          domain_id :integer, "Belongs to Domain", required: true
+          domain (Schema.ref(:DomainRef))
           status :string, "Business Concept Version status", required: true
           current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept Version version number", required: true

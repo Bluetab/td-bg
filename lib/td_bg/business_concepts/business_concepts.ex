@@ -87,7 +87,7 @@ defmodule TdBg.BusinessConcepts do
      |> where([v], v.business_concept_id == ^business_concept_id)
      |> order_by(desc: :version)
      |> limit(1)
-     |> preload([business_concept: [:aliases]])
+     |> preload([business_concept: [:aliases, :domain]])
      |> Repo.one!
    end
 
@@ -104,13 +104,18 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def create_business_concept(attrs \\ %{}) do
-    attrs
-    |> attrs_keys_to_atoms
-    |> raise_error_if_no_content_schema
-    |> set_content_defaults
-    |> validate_new_concept
-    |> validate_concept_content
-    |> insert_concept
+    result = attrs
+      |> attrs_keys_to_atoms
+      |> raise_error_if_no_content_schema
+      |> set_content_defaults
+      |> validate_new_concept
+      |> validate_concept_content
+      |> insert_concept
+    case result do
+      {:ok, business_concept_version} -> 
+        {:ok, get_business_concept_version!(business_concept_version.id)}
+      _ -> result
+    end
   end
 
   @doc """
@@ -213,7 +218,8 @@ defmodule TdBg.BusinessConcepts do
   def list_all_business_concept_versions do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> preload([_, c], [business_concept: c])
+    |> join(:left, [v, c], _ in assoc(c, :domain))
+    |> preload([_, c, d], [business_concept: {c, domain: d}])
     |> order_by(asc: :version)
     |> Repo.all
   end
@@ -263,7 +269,8 @@ defmodule TdBg.BusinessConcepts do
   def list_business_concept_versions(business_concept_id, status) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> preload([_, c], [business_concept: c])
+    |> join(:left, [v, c], _ in assoc(c, :domain))
+    |> preload([_, c, d], [business_concept: {c, domain: d}])
     |> where([_, c], c.id == ^business_concept_id)
     |> include_status_in_where(status)
     |> order_by(desc: :version)
@@ -273,7 +280,8 @@ defmodule TdBg.BusinessConcepts do
   def list_all_business_concept_with_status(status) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> preload([_, c], [business_concept: c])
+    |> join(:left, [v, c], _ in assoc(c, :domain))
+    |> preload([_, c, d], [business_concept: {c, domain: d}])
     |> include_status_in_where(status)
     |> order_by(asc: :version)
     |> Repo.all
@@ -301,7 +309,8 @@ defmodule TdBg.BusinessConcepts do
   def get_business_concept_version!(id) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> preload([_, c], [business_concept: c])
+    |> join(:left, [_, c], _ in assoc(c, :domain))
+    |> preload([_, c, d], [business_concept: {c, domain: d}])
     |> where([v, _], v.id == ^id)
     |> Repo.one!
    end
@@ -453,7 +462,7 @@ defmodule TdBg.BusinessConcepts do
       |> Map.new
   end
 
-  defp  get_ecto_type(type) do
+  defp get_ecto_type(type) do
       case type do
         @string -> :string
         @list -> :string
@@ -605,8 +614,9 @@ defmodule TdBg.BusinessConcepts do
     # Repo.all from r in BusinessConceptVersion, where:
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> join(:left, [v, c], _ in assoc(c, :domain))
     |> where([v], ilike(v.name, ^"%#{name}%"))
-    |> preload([_, c], [business_concept: c])
+    |> preload([_, c, d], [business_concept: {c, domain: d}])
     |> order_by(asc: :version)
     |> Repo.all
   end
