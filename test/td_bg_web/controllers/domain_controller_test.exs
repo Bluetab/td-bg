@@ -7,6 +7,7 @@ defmodule TdBgWeb.DomainControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Permissions
 
   @create_attrs %{description: "some description", name: "some name"}
   @update_attrs %{description: "some updated description", name: "some updated name"}
@@ -30,7 +31,7 @@ defmodule TdBgWeb.DomainControllerTest do
     @tag :admin_authenticated
     test "lists all domain_groups", %{conn: conn} do
       conn = get conn, domain_path(conn, :index)
-      assert json_response(conn, 200)["data"]["collection"] == []
+      assert json_response(conn, 200)["data"] == []
     end
   end
 
@@ -89,10 +90,10 @@ defmodule TdBgWeb.DomainControllerTest do
     test "lists root domain groups", %{conn: conn, swagger_schema: schema, domain: domain} do
       conn = get conn, domain_path(conn, :index_root)
       validate_resp_schema(conn, schema, "DomainsResponse")
-      assert List.first(json_response(conn, 200)["data"]["collection"])["id"] == domain.id
-      assert List.first(json_response(conn, 200)["data"]["collection"])["description"] == domain.description
-      assert List.first(json_response(conn, 200)["data"]["collection"])["name"] == domain.name
-      assert List.first(json_response(conn, 200)["data"]["collection"])["parent_id"] == domain.parent_id
+      assert List.first(json_response(conn, 200)["data"])["id"] == domain.id
+      assert List.first(json_response(conn, 200)["data"])["description"] == domain.description
+      assert List.first(json_response(conn, 200)["data"])["name"] == domain.name
+      assert List.first(json_response(conn, 200)["data"])["parent_id"] == domain.parent_id
     end
   end
 
@@ -103,10 +104,10 @@ defmodule TdBgWeb.DomainControllerTest do
     test "index domain children", %{conn: conn, swagger_schema: schema, child_domains: {:ok, child_domains}} do
       conn = get conn, domain_domain_path(conn,  :index_children, child_domains.parent_id)
       validate_resp_schema(conn, schema, "DomainsResponse")
-      assert List.first(json_response(conn, 200)["data"]["collection"])["id"] == child_domains.id
-      assert List.first(json_response(conn, 200)["data"]["collection"])["description"] == child_domains.description
-      assert List.first(json_response(conn, 200)["data"]["collection"])["name"] == child_domains.name
-      assert List.first(json_response(conn, 200)["data"]["collection"])["parent_id"] == child_domains.parent_id
+      assert List.first(json_response(conn, 200)["data"])["id"] == child_domains.id
+      assert List.first(json_response(conn, 200)["data"])["description"] == child_domains.description
+      assert List.first(json_response(conn, 200)["data"])["name"] == child_domains.name
+      assert List.first(json_response(conn, 200)["data"])["parent_id"] == child_domains.parent_id
     end
   end
 
@@ -122,6 +123,60 @@ defmodule TdBgWeb.DomainControllerTest do
       assert_error_sent 404, fn ->
         get conn, domain_path(conn, :show, domain)
       end
+    end
+  end
+
+  describe "create acl_entry from domain route" do
+    @tag :admin_authenticated
+    test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      domain = insert(:domain)
+      role = Permissions.get_role_by_name("watch")
+      acl_entry_attrs = %{
+        principal_id: user.id,
+        principal_type: "user",
+        role_id: role.id
+      }
+      conn = post conn, domain_domain_path(conn, :create_acl_entry, domain.id), acl_entry: acl_entry_attrs
+      assert %{"id" => id} = json_response(conn, 201)["data"]
+      validate_resp_schema(conn, schema, "DomainAclEntryResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, acl_entry_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "DomainAclEntryResponse")
+      assert json_response(conn, 200)["data"] == %{
+        "id" => id,
+        "principal_id" => user.id,
+        "principal_type" => "user",
+        "resource_id" => domain.id,
+        "resource_type" => "domain",
+        "role_id" => role.id
+      }
+    end
+
+    @tag :admin_authenticated
+    test "renders error for duplicated acl_entry from domain route", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      domain = insert(:domain)
+      role = Permissions.get_role_by_name("watch")
+      acl_entry_attrs = %{
+        principal_id: user.id,
+        principal_type: "user",
+        role_id: role.id
+      }
+      conn = post conn, domain_domain_path(conn, :create_acl_entry, domain.id), acl_entry: acl_entry_attrs
+      assert %{"id" => _id} = json_response(conn, 201)["data"]
+      validate_resp_schema(conn, schema, "DomainAclEntryResponse")
+
+      conn = recycle_and_put_headers(conn)
+      conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
+      assert json_response(conn, 422)["errors"] != %{}
+    end
+
+    @tag :admin_authenticated
+    test "renders errors when data is invalid", %{conn: conn} do
+      conn = post conn, acl_entry_path(conn, :create), acl_entry: @invalid_attrs
+      assert json_response(conn, 422)["errors"] != %{}
     end
   end
 

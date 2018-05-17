@@ -53,6 +53,7 @@ defmodule TdBgWeb.Router do
       get "/index_children", DomainController, :index_children
       get "/available_users", DomainController, :available_users
       get "/acl_entries", DomainController, :acl_entries
+      post "/acl_entries", DomainController, :create_acl_entry
     end
 
     get "/taxonomy/tree", TaxonomyController, :tree

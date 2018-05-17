@@ -35,8 +35,10 @@ defmodule TdBg.TaxonomyNavigationTest do
   end
 
   defthen ~r/^user sees following list:$/, %{table: table}, state do
-    domains = state[:resp]["data"]["collection"]
-    domains = Enum.map(domains, &(Map.take(&1, ["name", "description"])))
+    domains = state[:resp]["data"]
+    domains =
+      domains
+      |> Enum.map(&(Map.take(&1, ["name", "description"])))
     domains = Enum.reduce(domains, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)
       acc ++ [nitem]
@@ -46,8 +48,10 @@ defmodule TdBg.TaxonomyNavigationTest do
   end
 
   defthen ~r/^user sees following business concepts list:$/, %{table: table}, state do
-    bc_list = state[:resp]["data"]["collection"]
-    bc_list = Enum.map(bc_list, &(Map.take(&1, ["name", "type", "status", "description"])))
+    bc_list = state[:resp]["data"]
+    bc_list =
+      bc_list
+      |> Enum.map(&(Map.take(&1, ["name", "type", "status", "description"])))
     bc_list = Enum.reduce(bc_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)
       acc ++ [nitem]

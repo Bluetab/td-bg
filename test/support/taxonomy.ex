@@ -45,12 +45,12 @@ defmodule TdBgWeb.Taxonomy do
 
   def get_domain_by_name(token, domain_name) do
     {:ok, _status_code, json_resp} = domain_list(token)
-    Enum.find(json_resp["data"]["collection"], fn(domain) -> domain["name"] == domain_name end)
+    Enum.find(json_resp["data"], fn(domain) -> domain["name"] == domain_name end)
   end
 
   def get_domain_by_name_and_parent(token, domain_name, parent_id) do
     {:ok, _status_code, json_resp} = domain_list(token)
-    Enum.find(json_resp["data"]["collection"], fn(domain) ->
+    Enum.find(json_resp["data"], fn(domain) ->
                                       domain["name"] == domain_name &&
                                       domain["parent_id"] == parent_id
                                   end)

@@ -44,10 +44,11 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
     # First of all we sholud retrieve the token of the user listing the
     # taxonomy roles of the BC in order to check its permissions
     token = get_user_token(user_name)
+    admin_token = get_user_token("app-admin")
     # We get our BC by name
-    business_concept = business_concept_by_name(token, bc_name)
+    business_concept = business_concept_by_name(admin_token, bc_name)
     # we should verify that the Bc has been properly retrieved
-    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
+    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(admin_token, business_concept["id"])
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept["name"] == bc_name
     # Now, we should be able to query the taxonomies of a BC
@@ -62,7 +63,7 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
     %{result: result, user_name_role: user_name_role, role_name: role_name, domain_name: domain_name}, state do
     assert result == to_response_code(state[:status_code])
     %{"data" => data} = state[:resp]
-    collection = data["collection"]
+    collection = data
     assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain_name)
     domain_collection_roles = Enum.find(collection, &(&1["domain_name"] == domain_name))["roles"]
     assert Enum.member?(Enum.map(domain_collection_roles, &(&1["principal"]["user_name"])), user_name_role)

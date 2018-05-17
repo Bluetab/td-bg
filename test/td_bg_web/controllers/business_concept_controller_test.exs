@@ -24,7 +24,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     @tag authenticated_user: @admin_user_name
     test "lists all business_concepts", %{conn: conn} do
       conn = get conn, business_concept_path(conn, :index)
-      assert json_response(conn, 200)["data"]["collection"] == []
+      assert json_response(conn, 200)["data"] == []
     end
   end
 
@@ -62,7 +62,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       id = business_concept_version.business_concept.id
       conn = recycle_and_put_headers(conn)
       conn = get conn, business_concept_business_concept_path(conn, :taxonomy_roles, id)
-      collection = json_response(conn, 200)["data"]["collection"]
+      collection = json_response(conn, 200)["data"]
       assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain.name)
       assert Enum.member?(Enum.map(collection, &(&1["domain_id"])), domain.id)
       roles = Enum.find(collection, &(&1["domain_name"] == domain.name))["roles"]
@@ -81,11 +81,11 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       [create_version(domain, "two", published).business_concept.id | id]
 
       conn = get conn, business_concept_path(conn, :index), %{search_term: "two"}
-      assert 2 == length(json_response(conn, 200)["data"]["collection"])
+      assert 2 == length(json_response(conn, 200)["data"])
 
       conn = recycle_and_put_headers(conn)
       conn = get conn, business_concept_path(conn, :index), %{search_term: "one"}
-      assert 1 == length(json_response(conn, 200)["data"]["collection"])
+      assert 1 == length(json_response(conn, 200)["data"])
     end
   end
 
@@ -118,7 +118,11 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
         |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
 
       creation_attrs
+        |> Map.drop([:domain_id])
         |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+
+      assert business_concept["domain"]["id"] == domain.id
+      assert business_concept["domain"]["name"] == domain.name
     end
 
     @tag authenticated_user: @admin_user_name
