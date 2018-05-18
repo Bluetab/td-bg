@@ -95,4 +95,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept_version", conn, business_concept_version))
   end
 
+  def send_for_approval(conn, %{"id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    # TODO: Send for approval
+    render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept", conn, business_concept_version))
+  end
+
 end
