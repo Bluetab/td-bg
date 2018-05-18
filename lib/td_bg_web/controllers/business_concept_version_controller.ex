@@ -7,9 +7,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
+
+  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   action_fallback TdBgWeb.FallbackController
 
@@ -95,10 +98,36 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept_version", conn, business_concept_version))
   end
 
-  def send_for_approval(conn, %{"id" => id}) do
+  def send_for_approval(conn, %{"business_concept_version_id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    # TODO: Send for approval
-    render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept", conn, business_concept_version))
+    draft = BusinessConcept.status.draft
+    case {business_concept_version.status, business_concept_version.current} do
+      {^draft, true} ->
+        user = conn.assigns.current_user
+        send_for_approval(conn, user, business_concept_version)
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
   end
 
+  defp send_for_approval(conn, user, business_concept_version) do
+    attrs = %{status: BusinessConcept.status.pending_approval}
+    with true <- can?(user, send_for_approval(business_concept_version)),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+           BusinessConcepts.update_business_concept_version_status(business_concept_version, attrs) do
+       @search_service.put_search(business_concept_version)
+       render(conn, "show.json", business_concept_version: concept)
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
 end
