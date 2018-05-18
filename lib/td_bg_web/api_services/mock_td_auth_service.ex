@@ -64,4 +64,10 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
   def search_groups(%{"ids" => ids}) do
     Enum.filter(index_groups(), fn(group) -> Enum.find(ids, &(&1 == group.id)) != nil end)
   end
+
+  def search_groups_by_user_id(id) do
+    user = get_user(id)
+    user.groups
+  end
+
 end

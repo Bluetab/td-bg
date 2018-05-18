@@ -157,4 +157,17 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     groups
   end
 
+  def search_groups_by_user_id(id) do
+    token = get_api_user_token()
+
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.get!("#{get_users_path()}/#{id}/groups", headers, [])
+    json =
+      resp
+      |> JSON.decode!
+    json = json["data"]
+    groups = Enum.map(json, fn(group) -> %Group{} |> Map.merge(CollectionUtils.to_struct(Group, group)) end)
+    groups
+  end
+
 end

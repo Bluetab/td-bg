@@ -39,6 +39,13 @@ defmodule TdBgWeb.DomainView do
     %{data: render_many(acl_entries, DomainView, "acl_entry.json")}
   end
 
+  def render("user_domain_entry.json", %{domain: user_domain_entry}) do
+    %{
+      id: user_domain_entry.id,
+      domain_name: user_domain_entry.name
+    }
+  end
+
   def render("acl_entry.json", %{domain: acl_entry}) do
     %{
       principal: render_principal(acl_entry.principal),

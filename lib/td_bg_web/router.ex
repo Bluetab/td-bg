@@ -40,6 +40,7 @@ defmodule TdBgWeb.Router do
     post "/acl_entries/create_or_update", AclEntryController, :create_or_update
 
     resources "/users", UserController, except: [:new, :edit] do
+      get "/domains", UserController, :user_domains
       resources "/domains", DomainController do
         get "/roles", RoleController, :user_domain_role
       end
