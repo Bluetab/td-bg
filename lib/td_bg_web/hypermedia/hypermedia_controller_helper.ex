@@ -28,14 +28,12 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
     hypermedia_impl(helper, conn, resource)
   end
 
-  defp hypermedia_impl(helper, conn, %{__struct__: _} = resource) do
-    hypermedia(helper, conn, struct_to_map(resource))
-  end
   defp hypermedia_impl(helper, conn, resource) do
       current_user = Guardian.current_resource(conn)
 
       Router.__routes__
-      |> Enum.filter(&(&1.helper == helper))
+      |> Enum.filter(&(!is_nil &1.helper))
+      |> Enum.filter(&(String.starts_with?(&1.helper, helper)))
       |> Enum.filter(&(can?(current_user, &1.opts, resource)))
       |> Enum.map(&(interpolate(&1, resource)))
       |> Enum.filter(&(&1.path != nil))
@@ -49,7 +47,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
   end
 
   defp interpolation(path, resource) do
-    path = Regex.replace(~r/:(\w*)/, path, "%{\\1}")
+    path = Regex.replace(~r/(:\w*id)/, path, "%{id}")
     case path
       |> Interpolation.to_interpolatable
       |> Interpolation.interpolate(resource) do

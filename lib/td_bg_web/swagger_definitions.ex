@@ -6,7 +6,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
 
   def domain_swagger_definitions do
     %{
-      Domain: swagger_schema do
+      DomainActions: swagger_schema do
         title "Domain"
         description "A Domain"
         properties do
@@ -15,6 +15,26 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description :string, "type"
           description :string, "descritpion"
           parent_id [:integer, :null], "Domain id"
+          _actions Schema.ref(:Actions)
+        end
+        example %{
+          id: 12,
+          name: "Domain name",
+          type: "Domain type",
+          description: "domain description",
+          parent_id: 1,
+          _actions: %{}
+        }
+      end,
+      Domain: swagger_schema do
+        title "Domain"
+        description "A Domain"
+        properties do
+          id :integer, "Unique identifier", required: true
+          name :string, "Domain name", required: true
+          type [:string, :null], "type"
+          description :string, "description"
+          parent_id [:integer, :null], "Domain id"
         end
         example %{
           id: 12,
@@ -22,6 +42,18 @@ defmodule TdBgWeb.SwaggerDefinitions do
           type: "Domain type",
           description: "domain description",
           parent_id: 1
+        }
+      end,
+      DomainRef: swagger_schema do
+        title "Domain Reference"
+        description "A Domain's id and name"
+        properties do
+          id :integer, "Domain Identifier", required: true
+          name :string, "Domain Name", required: true
+        end
+        example %{
+          id: 12,
+          name: "Domain name"
         }
       end,
       DomainCreate: swagger_schema do
@@ -51,20 +83,23 @@ defmodule TdBgWeb.SwaggerDefinitions do
         title "Domains"
         description "A collection of Domains"
         type :array
-        items Schema.ref(:Domain)
+        items Schema.ref(:DomainResponseNoData)
+      end,
+      DomainResponseNoData: swagger_schema do
+        properties do
+          data Schema.ref(:DomainActions)
+        end
       end,
       DomainResponse: swagger_schema do
         properties do
           data Schema.ref(:Domain)
+          _actions Schema.ref(:Actions)
         end
       end,
       DomainsResponse: swagger_schema do
         properties do
-          data (Schema.new do
-            properties do
-              collection Schema.ref(:Domains)
-            end
-          end)
+          data Schema.ref(:Domains)
+          actions Schema.ref(:Actions)
         end
       end,
       UserResponse: swagger_schema do
@@ -103,6 +138,54 @@ defmodule TdBgWeb.SwaggerDefinitions do
               acl_entry_id :integer, "acl entry id"
             end
           end)
+        end
+      end,
+      Actions: swagger_schema do
+        title "Actions"
+        description "Domain actions"
+        properties do
+          action (Schema.new do
+            properties do
+              method :string
+              input :object
+              link :string
+            end
+          end)
+        end
+        example %{
+          "create": %{
+             "method": "POST",
+             "href": "/api/domains",
+             "input": %{}
+           }
+        }
+      end,
+      DomainAclEntryCreate: swagger_schema do
+        properties do
+          acl_entry (Schema.new do
+            properties do
+              principal_id :integer, "id of principal", required: true
+              principal_type :string, "type of principal: user", required: true
+              role_id :integer, "id of role", required: true
+            end
+          end)
+        end
+      end,
+      DomainAclEntryResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DomainAclEntry)
+        end
+      end,
+      DomainAclEntry: swagger_schema do
+        title "Acl entry"
+        description "An Acl entry"
+        properties do
+          id :integer, "unique identifier", required: true
+          principal_id :integer, "id of principal", required: true
+          principal_type :string, "type of principal: user", required: true
+          resource_id :integer, "id of resource", required: true
+          resource_type :string, "type of resource: domain", required: true
+          role_id :integer, "id of role", required: true
         end
       end
     }
@@ -333,9 +416,9 @@ defmodule TdBgWeb.SwaggerDefinitions do
           name :string, "Business Concept name", required: true
           description :string, "Business Concept description", required: true
           last_change_by :integer, "Business Concept last updated by", required: true
-          last_change_at :string, "Business Conceptlast updated date", required: true
-          domain_id :integer, "Business Concept parent domain id", required: true
-          status :string, "Business Conceptstatus", required: true
+          last_change_at :string, "Business Concept last updated date", required: true
+          domain (Schema.ref(:DomainRef))
+          status :string, "Business Concept status", required: true
           current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept version", required: true
           reject_reason [:string, :null], "Business Concept reject reason", required: false
@@ -416,8 +499,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "Taxonomy of a Business concept"
         type :object
         properties do
-          domain_id :integer, "Domain Identifier", required: true
-          domain_name :string, "Domain Name", required: true
+          domain (Schema.ref(:DomainRef))
           roles :array, "Roles Business Concepts", items: Schema.ref(:BusinessConceptAclEntry), required: true
         end
       end,
@@ -460,7 +542,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description :string, "Business Concept Version description", required: true
           last_change_by :integer, "Business Concept Version last change by", required: true
           last_change_at :string, "Business Concept Verion last change at", required: true
-          domain_id :integer, "Belongs to Domain", required: true
+          domain (Schema.ref(:DomainRef))
           status :string, "Business Concept Version status", required: true
           current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept Version version number", required: true
@@ -476,11 +558,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptVersionResponse: swagger_schema do
         properties do
-          data (Schema.new do
-            properties do
-              collection Schema.ref(:BusinessConceptVersion)
-            end
-          end)
+          data (Schema.ref(:BusinessConceptVersion))
         end
       end,
       BusinessConceptVersionsResponse: swagger_schema do

@@ -7,7 +7,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaViewHelper do
   def render_many_hypermedia(resources, hypermedia, view, template, assigns \\ %{}) do
     Map.merge(
       render_hypermedia(hypermedia.collection_hypermedia),
-      %{"collection" => render_many_hypermedia_element(resources,
+      %{"data" => render_many_hypermedia_element(resources,
         hypermedia.collection, view, template, assigns)}
       )
   end
@@ -15,23 +15,22 @@ defmodule TdBgWeb.Hypermedia.HypermediaViewHelper do
   def render_one_hypermedia(resource, hypermedia, view, template, assigns \\ %{}) do
     Map.merge(
       render_hypermedia(hypermedia),
-      render_one(resource, view, template, assigns))
+      %{"data" => render_one(resource, view, template, assigns)})
   end
 
-  defp render_many_hypermedia_element(resources, collection, view, template, assigns) do
+  defp render_many_hypermedia_element(resources, _collection, view, template, assigns) do
     Enum.map(resources, fn resource ->
-      render_one_hypermedia(
-        resource, collection[resource], view, template, assigns)
+      render_one(resource, view, template, assigns)
     end)
   end
 
   defp render_hypermedia(hypermedia) do
-    Enum.into(Enum.map(hypermedia, &render_link/1), %{})
+    %{"_actions" => Enum.into(Enum.map(hypermedia, &render_link/1), %{})}
   end
 
   defp render_link(%Link{} = link) do
     {map_action(link.action) , %{
-        "action" => link.path,
+        "href" => link.path,
         "method" => String.upcase(Atom.to_string(link.method)),
         "input" => input_map(link.schema)
       }

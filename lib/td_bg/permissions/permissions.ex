@@ -60,8 +60,15 @@ defmodule TdBg.Permissions do
     Returns a list of users-role with acl_entries in the domain passed as argument
   """
   def list_acl_entries(%{domain: domain}) do
+    list_acl_entries(%{domain: domain}, :role)
+  end
+
+  @doc """
+    Returns a list of users-role with acl_entries in the domain passed as argument, configurable preloading
+  """
+  def list_acl_entries(%{domain: domain}, preload) do
     acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.resource_type == "domain" and acl_entry.resource_id == ^domain.id)
-    acl_entries |> Repo.preload(:role)
+    acl_entries |> Repo.preload(preload)
   end
 
   @doc """
@@ -210,27 +217,47 @@ defmodule TdBg.Permissions do
     Repo.get_by(Role, name: role_name)
   end
 
-  def get_roles_in_resource(%{domain_id: nil}, roles), do: roles
-  def get_roles_in_resource(%{principal_type: principal_type, principal_id: principal_id, domain_id: domain_id}, roles) do
-    domain = Taxonomies.get_domain(domain_id)
-    domain = domain |> Repo.preload(:parent)
-    roles = case get_role_by_principal_and_resource(%{principal_type: principal_type, principal_id: principal_id, domain: domain}) do
-      %Role{} = role -> roles ++ [role]
-      nil -> roles
-    end
-    get_roles_in_resource(%{principal_type: principal_type, principal_id: principal_id, domain_id: domain.parent_id}, roles)
-  end
-  def get_roles_in_resource(%{groups: []}, roles), do: roles
-  def get_roles_in_resource(%{groups: [%{"id" => group_id}|tail], domain_id: domain_id}, roles) do
-    roles = get_roles_in_resource(%{principal_type: "group", principal_id: group_id, domain_id: domain_id}, roles)
-    get_roles_in_resource(%{groups: tail, domain_id: domain_id}, roles)
+  def get_domain_ancestors(nil), do: []
+  def get_domain_ancestors(domain) do
+    [domain | get_ancestors_for_domain_id(domain.parent_id)]
   end
 
+  def get_ancestors_for_domain_id(nil), do: []
+  def get_ancestors_for_domain_id(domain_id) do
+    domain = Taxonomies.get_domain(domain_id)
+    get_domain_ancestors(domain)
+  end
+
+  def acl_matches?(%{principal_type: "user", principal_id: user_id}, user_id, _group_ids), do: true
+  def acl_matches?(%{principal_type: "group", principal_id: group_id}, _user_id, group_ids) do
+    group_ids
+    |> Enum.any?(&(&1 == group_id))
+  end
+  def acl_matches?(_, _, _), do: false
+
   def get_all_roles(%{user_id: user_id, domain_id: domain_id}) do
-    roles = get_roles_in_resource(%{principal_type: "user", principal_id: user_id, domain_id: domain_id}, [])
+    domains = get_ancestors_for_domain_id(domain_id)
+
     user = @td_auth_api.get_user(user_id)
-    roles = get_roles_in_resource(%{groups: user.groups, domain_id: domain_id}, roles)
-    roles |> Enum.uniq_by(&(&1.id))
+    group_ids = @td_auth_api.index_groups()
+      |> Enum.filter(fn(group) -> Enum.any?(user.groups, fn(group_name) -> group_name == group.name end) end)
+      |> Enum.map(&(&1.id))
+
+    roles = domains
+      |> Enum.flat_map(fn(domain) -> list_acl_entries(%{domain: domain}, role: [:permissions]) end)
+      |> Enum.filter(&(acl_matches?(&1, user.id, group_ids)))
+      |> Enum.map(&(&1.role))
+      |> Enum.uniq_by(&(&1.id))
+
+    roles
+  end
+
+  def get_all_permissions(%{user_id: user_id, domain_id: domain_id}) do
+    roles = get_all_roles(%{user_id: user_id, domain_id: domain_id})
+    roles
+      |> Enum.flat_map(&(&1.permissions))
+      |> Enum.uniq_by(&(&1.id))
+      |> Enum.map(&(&1.name))
   end
 
   @doc """
@@ -430,21 +457,7 @@ defmodule TdBg.Permissions do
   def get_permissions_in_resource(%{user_id: user_id, domain_id: domain_id}) do
     acl_input = %{user_id: user_id, domain_id: domain_id}
     acl_input
-    |> get_all_roles()
-    |> get_permissions_from_roles([])
-    |> Enum.uniq()
-  end
-
-  defp get_permissions_from_roles([], accum), do: accum
-  defp get_permissions_from_roles([role|roles], accum) do
-    perm =
-      role
-      |> Map.get(:name)
-      |> get_role_by_name
-      |> Repo.preload(:permissions)
-      |> Map.get(:permissions)
-      |> Enum.map(&(&1.name))
-    get_permissions_from_roles(roles, perm ++ accum)
+    |> get_all_permissions()
   end
 
   @doc """

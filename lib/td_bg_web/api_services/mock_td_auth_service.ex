@@ -18,7 +18,7 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     groups =
       groups
       |> Enum.map(&(create_group(%{"group" => &1})))
-      |> Enum.map(&(%{"id" => &1["id"], "name" => &1["name"]}))
+      |> Enum.map(&(&1.name))
     new_user = %User{id: User.gen_id_from_user_name(user_name), user_name: user_name, password: password, is_admin: is_admin, email: email, groups: groups}
     users = index()
     Agent.update(MockTdAuthService, &Map.put(&1, :users, users ++ [new_user]))
@@ -51,14 +51,16 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
   end
 
   def create_group(%{"group" => %{"name" => name}}) do
-    group = %{"id" => Group.gen_id_from_name(name), "name" => name}
+    group = %{id: Group.gen_id_from_name(name), name: name}
     groups = index_groups()
     Agent.update(MockTdAuthService, &Map.put(&1, :groups, groups ++ [group]))
     group
   end
 
   def get_group_by_name(name) do
-    List.first(Enum.filter(index_groups(), &(&1["name"] == name)))
+    index_groups()
+    |> Enum.filter(&(&1.name == name))
+    |> List.first
   end
 
   def search_groups(%{"ids" => ids}) do

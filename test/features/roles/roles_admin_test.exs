@@ -105,7 +105,7 @@ defmodule TdBg.RolesAdminTest do
   defthen ~r/^the system returns a result with following data:$/,
     %{table: expected_list}, state do
 
-    actual_list = state[:acl_entries]["collection"]
+    actual_list = state[:acl_entries]
     expected_list = Enum.reduce(expected_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {Atom.to_string(k), v} end)
       acc ++ [nitem]

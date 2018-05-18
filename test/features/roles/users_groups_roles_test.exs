@@ -31,7 +31,7 @@ defmodule TdBg.UserGroupsRolesTest do
   defwhen ~r/^"(?<user_name>[^"]+)" grants (?<role_name>[^"]+) role to group "(?<principal_name>[^"]+)" in Domain (?<resource_name>[^"]+)$/,
           %{user_name: user_name, role_name: role_name, principal_name: principal_name, resource_name: resource_name}, state do
     domain_info = get_domain_by_name(state[:token_admin], resource_name)
-    %{"id" => group_id} = get_group_by_name(principal_name)
+    %{id: group_id} = get_group_by_name(principal_name)
     role_info = get_role_by_name(state[:token_admin], role_name)
     acl_entry_params = %{principal_type: "group", principal_id: group_id, resource_type: "domain", resource_id: domain_info["id"], role_id: role_info["id"]}
     token = get_user_token(user_name)
@@ -43,9 +43,10 @@ defmodule TdBg.UserGroupsRolesTest do
     user = get_user_by_name(user_name)
     domain_info = get_domain_by_name(state[:token_admin], domain_name)
     {:ok, _status_code, json_resp} = user_domain_role(state[:token_admin], %{user_id: user.id, domain_id: domain_info["id"]})
-    case json_resp["data"] do
-      [] -> assert role_name == "none"
-      roles -> assert Enum.member?(Enum.map(roles, &(&1["name"])), role_name)
+    data = json_resp["data"]
+    case role_name do
+      "none" -> assert data == []
+      _ -> assert Enum.member?(Enum.map(data, &(&1["name"])), role_name)
     end
   end
 

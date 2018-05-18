@@ -54,12 +54,15 @@ defmodule TdBgWeb.Router do
       get "/index_children", DomainController, :index_children
       get "/available_users", DomainController, :available_users
       get "/acl_entries", DomainController, :acl_entries
+      post "/acl_entries", DomainController, :create_acl_entry
     end
 
     get "/taxonomy/tree", TaxonomyController, :tree
     get "/taxonomy/roles", TaxonomyController, :roles
 
-    resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update, :delete]
+    resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update, :delete] do
+      post "/submit", BusinessConceptVersionController, :send_for_approval
+    end
 
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
     get "/business_concepts/search", BusinessConceptController, :search
