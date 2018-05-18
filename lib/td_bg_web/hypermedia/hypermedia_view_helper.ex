@@ -18,11 +18,9 @@ defmodule TdBgWeb.Hypermedia.HypermediaViewHelper do
       %{"data" => render_one(resource, view, template, assigns)})
   end
 
-  defp render_many_hypermedia_element(resources, collection, view, template, assigns) do
+  defp render_many_hypermedia_element(resources, _collection, view, template, assigns) do
     Enum.map(resources, fn resource ->
-      Map.merge(
-        render_hypermedia(collection[resource]),
-        render_one(resource, view, template, assigns))
+      render_one(resource, view, template, assigns)
     end)
   end
 
