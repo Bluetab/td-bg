@@ -118,7 +118,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.update_business_concept_version_status(business_concept_version, attrs) do
        @search_service.put_search(business_concept_version)
-       render(conn, "show.json", business_concept_version: concept)
+       render(conn, "show.json", business_concept_version: concept, hypermedia: hypermedia("business_concept_version", conn, concept))
     else
       false ->
         conn
