@@ -343,7 +343,7 @@ defmodule TdBgWeb.BusinessConceptController do
     # First of all we should retrieve the business concept for a
     business_concept_version =
       BusinessConcepts.get_current_version_by_business_concept_id!(id)
-    with true <- can?(user, view_versions(business_concept_version)) do
+    with true <- can?(user, view_business_concept(business_concept_version)) do
       business_concept = business_concept_version.business_concept
       business_concept_taxonomy =
         get_taxonomy_levels_from_business_concept(business_concept.domain_id)
