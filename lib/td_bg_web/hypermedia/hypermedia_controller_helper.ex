@@ -47,7 +47,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
   end
 
   defp interpolation(path, resource) do
-    path = Regex.replace(~r/:(\w+_?)id/, path, "%{id}")
+    path = Regex.replace(~r/(:\w*id)/, path, "%{id}")
     case path
       |> Interpolation.to_interpolatable
       |> Interpolation.interpolate(resource) do
