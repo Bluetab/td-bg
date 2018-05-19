@@ -99,7 +99,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :send_for_approval do
-    post "/business_concept_versions/{id}"
+    post "/business_concept_versions/{id}/send_for_approval"
     description "Submit a draft business concept for approval"
     produces "application/json"
     parameters do
@@ -124,9 +124,132 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  swagger_path :publish do
+    post "/business_concept_versions/{id}/publish"
+    description "Publish a business concept which is pending approval"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 403, "User is not authorized to perform this action"
+    response 422, "Business concept invalid state"
+  end
+
+  def publish(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    pending_approval = BusinessConcept.status.pending_approval
+    case {business_concept_version.status, business_concept_version.current} do
+      {^pending_approval, true} ->
+        user = conn.assigns.current_user
+        publish(conn, user, business_concept_version)
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :reject do
+    post "/business_concept_versions/{id}/reject"
+    description "Reject a business concept which is pending approval"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+      reject_reason :body, :string, "Rejection reason"
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 403, "User is not authorized to perform this action"
+    response 422, "Business concept invalid state"
+  end
+
+  def reject(conn, %{"business_concept_version_id" => id} = params) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    pending_approval = BusinessConcept.status.pending_approval
+    case {business_concept_version.status, business_concept_version.current} do
+      {^pending_approval, true} ->
+        user = conn.assigns.current_user
+        reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :deprecate do
+    post "/business_concept_versions/{id}/deprecate"
+    description "Deprecate a published business concept"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 403, "User is not authorized to perform this action"
+    response 422, "Business concept invalid state"
+  end
+
+  def deprecate(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    published = BusinessConcept.status.published
+    case {business_concept_version.status, business_concept_version.current} do
+      {^published, true} ->
+        user = conn.assigns.current_user
+        deprecate(conn, user, business_concept_version)
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
   defp send_for_approval(conn, user, business_concept_version) do
-    attrs = %{status: BusinessConcept.status.pending_approval}
-    with true <- can?(user, send_for_approval(business_concept_version)),
+    update_status(conn, business_concept_version, BusinessConcept.status.pending_approval, can?(user, send_for_approval(business_concept_version)))
+  end
+
+  defp publish(conn, user, business_concept_version) do
+    with true <- can?(user, publish(business_concept_version)),
+         {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
+                    BusinessConcepts.publish_business_concept_version(business_concept_version) do
+       render(conn, "show.json", business_concept_version: concept, hypermedia: hypermedia("business_concept_version", conn, concept))
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  defp reject(conn, user, business_concept_version, reason) do
+    attrs = %{reject_reason: reason}
+    with true <- can?(user, reject(business_concept_version)),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+           BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
+       @search_service.put_search(business_concept_version)
+       render(conn, "show.json", business_concept_version: concept, hypermedia: hypermedia("business_concept_version", conn, concept))
+    else
+      false ->
+        conn
+          |> put_status(:forbidden)
+          |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  defp deprecate(conn, user, business_concept_version) do
+    update_status(conn, business_concept_version, BusinessConcept.status.deprecated, can?(user, deprecate(business_concept_version)))
+  end
+
+  defp update_status(conn, business_concept_version, status, authorized) do
+    attrs = %{status: status}
+    with true <- authorized,
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.update_business_concept_version_status(business_concept_version, attrs) do
        @search_service.put_search(business_concept_version)
@@ -142,4 +265,5 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> render(ErrorView, :"422.json")
     end
   end
+
 end

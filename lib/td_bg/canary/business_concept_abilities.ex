@@ -29,7 +29,7 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
       permission: Permission.permissions.send_business_concept_for_approval,
       is_current: is_current,
       current_status: status,
-      required_statuses: [BusinessConcept.status.draft, BusinessConcept.status.rejected],
+      required_statuses: [BusinessConcept.status.draft],
       domain_id: domain_id}
     |> authorized?
   end
@@ -39,7 +39,7 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
       permission: Permission.permissions.reject_business_concept,
       is_current: is_current,
       current_status: status,
-      required_statuses: [BusinessConcept.status.pending_approval, BusinessConcept.status.rejected],
+      required_statuses: [BusinessConcept.status.pending_approval],
       domain_id: domain_id}
     |> authorized?
   end

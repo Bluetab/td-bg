@@ -91,6 +91,14 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code}
   end
 
+  def business_concept_version_reject(token, business_concept_version_id, reject_reason) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{"reject_reason" => reject_reason} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.post!(business_concept_version_business_concept_version_url(@endpoint, :reject, business_concept_version_id), body, headers, [])
+    {:ok, status_code}
+  end
+
   def business_concept_undo_rejection(token, business_concept_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{"business_concept" => %{"status" => "draft"}} |> JSON.encode!
@@ -99,11 +107,11 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code}
   end
 
-  def business_concept_deprecate(token, business_concept_id) do
+  def business_concept_version_deprecate(token, business_concept_version_id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept" => %{"status" => "deprecated"}} |> JSON.encode!
+    body = %{} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-        HTTPoison.patch!(business_concept_business_concept_url(@endpoint, :update_status, business_concept_id), body, headers, [])
+        HTTPoison.post!(business_concept_version_business_concept_version_url(@endpoint, :deprecate, business_concept_version_id), body, headers, [])
     {:ok, status_code}
   end
 
@@ -112,6 +120,14 @@ defmodule TdBgWeb.BusinessConcept do
     body = %{"business_concept" => %{"status" => "published"}} |> JSON.encode!
     %HTTPoison.Response{status_code: status_code, body: _resp} =
         HTTPoison.patch!(business_concept_business_concept_url(@endpoint, :update_status, business_concept_id), body, headers, [])
+    {:ok, status_code}
+  end
+
+  def business_concept_version_publish(token, business_concept_version_id) do
+    headers = [@headers, {"authorization", "Bearer #{token}"}]
+    body = %{} |> JSON.encode!
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+        HTTPoison.post!(business_concept_version_business_concept_version_url(@endpoint, :publish, business_concept_version_id), body, headers, [])
     {:ok, status_code}
   end
 
@@ -160,7 +176,11 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_by_name(token, business_concept_name) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
-    Enum.find(json_resp["data"], fn(business_concept) -> business_concept["name"] == business_concept_name end)
+    Enum.find(json_resp["data"],
+     fn(business_concept) ->
+       business_concept["name"] == business_concept_name &&
+       business_concept["current"]
+     end)
   end
 
   def business_concept_by_name_and_type(token, business_concept_name, business_concept_type) do
@@ -173,9 +193,7 @@ defmodule TdBgWeb.BusinessConcept do
      end)
   end
 
-  def business_concept_by_version_name_and_type(token, business_concept_version,
-                                                      business_concept_name,
-                                                      business_concept_type) do
+  def business_concept_by_version_name_and_type(token, business_concept_version, business_concept_name, business_concept_type) do
     {:ok, _status_code, json_resp} = business_concept_list(token)
     Enum.find(json_resp["data"],
      fn(business_concept) ->
