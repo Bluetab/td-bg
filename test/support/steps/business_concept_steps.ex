@@ -130,8 +130,8 @@ defmodule TdBg.BusinessConceptSteps do
 
     token = get_user_token(user_name)
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    business_concept_id = business_concept["id"]
-    {_, status_code} = business_concept_send_for_approval(token, business_concept_id)
+    business_concept_version_id = business_concept["business_concept_version_id"]
+    {_, status_code} = business_concept_version_send_for_approval(token, business_concept_version_id)
     {:ok, Map.merge(state, %{status_code: status_code})}
  end
 

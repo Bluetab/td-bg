@@ -98,7 +98,20 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept_version", conn, business_concept_version))
   end
 
-  def send_for_approval(conn, %{"business_concept_version_id" => id}) do
+  swagger_path :send_for_approval do
+    post "/business_concept_versions/{id}"
+    description "Submit a draft business concept for approval"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 403, "User is not authorized to perform this action"
+    response 422, "Business concept invalid state"
+  end
+
+  def send_for_approval(conn, %{"business_concept_version_id" => business_concept_version_id}) do
+    id = String.to_integer(business_concept_version_id)
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     draft = BusinessConcept.status.draft
     case {business_concept_version.status, business_concept_version.current} do
