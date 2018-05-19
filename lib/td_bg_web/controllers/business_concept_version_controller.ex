@@ -110,8 +110,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response 422, "Business concept invalid state"
   end
 
-  def send_for_approval(conn, %{"business_concept_version_id" => business_concept_version_id}) do
-    id = String.to_integer(business_concept_version_id)
+  def send_for_approval(conn, %{"business_concept_version_id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     draft = BusinessConcept.status.draft
     case {business_concept_version.status, business_concept_version.current} do
