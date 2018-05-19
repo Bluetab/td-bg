@@ -233,17 +233,17 @@ defmodule TdBg.BusinessConceptSteps do
                   business_concept_type)
       assert business_concept_tmp
       token = get_user_token(user_name)
-      business_concept_id = business_concept_tmp["id"]
-      {_, status_code} = business_concept_delete(token, business_concept_id)
-      {:ok, Map.merge(state, %{status_code: status_code, deleted_business_concept_id: business_concept_id})}
+      business_concept_version_id = business_concept_tmp["business_concept_version_id"]
+      {_, status_code} = business_concept_version_delete(token, business_concept_version_id)
+      {:ok, Map.merge(state, %{status_code: status_code, deleted_business_concept_version_id: business_concept_version_id})}
   end
 
   defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is not able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
     %{result: result, status_code: status_code, user_name: user_name, business_concept_name: _business_concept_name, business_concept_type: _business_concept_type},
-    %{deleted_business_concept_id: business_concept_id} = state do
+    %{deleted_business_concept_version_id: business_concept_version_id} = state do
       if result == status_code do
         token = get_user_token(user_name)
-        {_, http_status_code, _} = business_concept_show(token, business_concept_id)
+        {_, http_status_code, _} = business_concept_version_show(token, business_concept_version_id)
         assert rc_not_found() == to_response_code(http_status_code)
         {:ok, state}
       else

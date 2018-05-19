@@ -98,6 +98,36 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     render(conn, "show.json", business_concept_version: business_concept_version, hypermedia: hypermedia("business_concept_version", conn, business_concept_version))
   end
 
+  swagger_path :delete do
+    delete "/business_concept_versions/{id}"
+    description "Delete a business concept version"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 204, "No Content"
+    response 400, "Client Error"
+  end
+
+  def delete(conn, %{"id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = conn.assigns.current_user
+    with true <- can?(user, delete(business_concept_version)),
+         {:ok, %BusinessConceptVersion{}} <- BusinessConcepts.delete_business_concept_version(business_concept_version) do
+      @search_service.delete_search(business_concept_version)
+      send_resp(conn, :no_content, "")
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
   swagger_path :send_for_approval do
     post "/business_concept_versions/{id}/send_for_approval"
     description "Submit a draft business concept for approval"

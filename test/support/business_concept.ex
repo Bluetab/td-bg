@@ -146,10 +146,10 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code, resp |> JSON.decode!}
   end
 
-  def business_concept_delete(token, id) do
+  def business_concept_version_delete(token, id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-      HTTPoison.delete!(business_concept_url(@endpoint, :delete, id), headers, [])
+      HTTPoison.delete!(business_concept_version_url(@endpoint, :delete, id), headers, [])
     {:ok, status_code}
   end
 
