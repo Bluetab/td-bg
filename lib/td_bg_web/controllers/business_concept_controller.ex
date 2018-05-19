@@ -245,38 +245,6 @@ defmodule TdBgWeb.BusinessConceptController do
     end
   end
 
-  swagger_path :delete do
-    delete "/business_concepts/{id}"
-    description "Delete Business Concepts"
-    produces "application/json"
-    parameters do
-      id :path, :integer, "Business Concept ID", required: true
-    end
-    response 204, "No Content"
-    response 400, "Client Error"
-  end
-
-  def delete(conn, %{"id" => id}) do
-    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
-
-    user = conn.assigns.current_user
-
-    with true <- can?(user, delete(business_concept_version)),
-         {:ok, %BusinessConceptVersion{}} <- BusinessConcepts.delete_business_concept_version(business_concept_version) do
-      @search_service.delete_search(business_concept_version)
-      send_resp(conn, :no_content, "")
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
-    end
-  end
-
   swagger_path :update_status do
     patch "/business_concepts/{business_concept_id}/status"
     description "Updates Business Ccncept status"

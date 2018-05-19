@@ -227,24 +227,6 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     end)
   end
 
-  # describe "delete business_concept" do
-  #   @tag authenticated_user: @admin_user_name
-  #   test "deletes chosen business_concept", %{conn: conn} do
-  #     user = build(:user)
-  #     business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
-  #     business_concept = business_concept_version.business_concept
-  #
-  #     conn = delete conn, business_concept_path(conn, :delete, business_concept)
-  #     assert response(conn, 204)
-  #
-  #     conn = recycle_and_put_headers(conn)
-  #
-  #     assert_error_sent 404, fn ->
-  #       get conn, business_concept_path(conn, :show, business_concept)
-  #     end
-  #   end
-  # end
-
   def create_template(_) do
     headers = get_header(get_user_token("app-admin"))
     attrs = %{}

@@ -80,6 +80,34 @@
         ],
         "operationId": "TdBgWeb.BusinessConceptVersionController.show",
         "description": "Show Business Concept Version"
+      },
+      "delete": {
+        "tags": [
+          "BusinessConceptVersion"
+        ],
+        "summary": "",
+        "responses": {
+          "400": {
+            "description": "Client Error"
+          },
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "type": "integer",
+            "required": true,
+            "name": "id",
+            "in": "path",
+            "description": "Business Concept Version ID"
+          }
+        ],
+        "operationId": "TdBgWeb.BusinessConceptVersionController.delete",
+        "description": "Delete a business concept version"
       }
     },
     "/domains": {
@@ -661,34 +689,6 @@
         ],
         "operationId": "TdBgWeb.BusinessConceptController.show",
         "description": "Show Business Concepts"
-      },
-      "delete": {
-        "tags": [
-          "BusinessConcept"
-        ],
-        "summary": "",
-        "responses": {
-          "400": {
-            "description": "Client Error"
-          },
-          "204": {
-            "description": "No Content"
-          }
-        },
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "type": "integer",
-            "required": true,
-            "name": "id",
-            "in": "path",
-            "description": "Business Concept ID"
-          }
-        ],
-        "operationId": "TdBgWeb.BusinessConceptController.delete",
-        "description": "Delete Business Concepts"
       }
     },
     "/domains/{id}": {
