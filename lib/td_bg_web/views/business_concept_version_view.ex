@@ -1,7 +1,9 @@
 defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
   use TdBg.Hypermedia, :view
+
   alias TdBgWeb.BusinessConceptVersionView
+  alias TdBgWeb.DomainView
 
   def render("index.json", %{business_concept_versions: business_concept_versions, hypermedia: hypermedia}) do
     render_many_hypermedia(business_concept_versions, hypermedia, BusinessConceptVersionView, "business_concept_version.json")
@@ -35,15 +37,31 @@ defmodule TdBgWeb.BusinessConceptVersionView do
                            String.to_atom(business_concept_version.status))
       |> add_mod_comments(business_concept_version.mod_comments,
                           business_concept_version.version)
-    end
+  end
 
-    defp add_reject_reason(concept, reject_reason, :rejected) do
-      Map.put(concept, :reject_reason, reject_reason)
-    end
-    defp add_reject_reason(concept, _reject_reason, _status), do: concept
+  def render("index_business_concept_taxonomy.json",
+    %{business_concept_taxonomy: business_concept_taxonomy}) do
+      %{data:
+        render_many(business_concept_taxonomy, BusinessConceptVersionView, "business_concept_taxonomy_entry.json")
+      }
+  end
 
-    defp add_mod_comments(concept, _mod_comments,  1), do: concept
-    defp add_mod_comments(concept, mod_comments,  _version) do
-      Map.put(concept, :mod_comments, mod_comments)
-    end
+  def render("business_concept_taxonomy_entry.json",
+    %{business_concept_version: business_concept_version}) do
+      %{
+        domain_id: business_concept_version.domain_id,
+        domain_name: business_concept_version.domain_name,
+        roles: render_many(business_concept_version.roles, DomainView, "acl_entry.json")
+      }
+  end
+
+  defp add_reject_reason(concept, reject_reason, :rejected) do
+    Map.put(concept, :reject_reason, reject_reason)
+  end
+  defp add_reject_reason(concept, _reject_reason, _status), do: concept
+
+  defp add_mod_comments(concept, _mod_comments,  1), do: concept
+  defp add_mod_comments(concept, mod_comments,  _version) do
+    Map.put(concept, :mod_comments, mod_comments)
+  end
 end

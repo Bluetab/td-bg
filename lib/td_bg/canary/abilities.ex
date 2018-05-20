@@ -41,52 +41,52 @@ defmodule TdBg.Canary.Abilities do
       true
     end
 
-    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :update, business_concept_vesion)
+    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :update, business_concept_version)
     end
 
-    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :send_for_approval, business_concept_vesion)
+    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :send_for_approval, business_concept_version)
     end
 
-    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :reject, business_concept_vesion)
+    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :reject, business_concept_version)
     end
 
-    def can?(%User{} = user, :undo_rejection, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :undo_rejection, business_concept_vesion)
+    def can?(%User{} = user, :undo_rejection, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :undo_rejection, business_concept_version)
     end
 
-    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :publish, business_concept_vesion)
+    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :publish, business_concept_version)
     end
 
-    def can?(%User{} = user, :version, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :version, business_concept_vesion)
+    def can?(%User{} = user, :version, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :version, business_concept_version)
     end
 
-    def can?(%User{} = user, :deprecate, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :deprecate, business_concept_vesion)
+    def can?(%User{} = user, :deprecate, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :deprecate, business_concept_version)
     end
 
-    def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :delete, business_concept_vesion)
+    def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :delete, business_concept_version)
     end
 
-    def can?(%User{} = user, :view_versions, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :view_versions, business_concept_vesion)
+    def can?(%User{} = user, :view_versions, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :view_versions, business_concept_version)
     end
 
-    def can?(%User{} = user, :view_business_concept, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :view_business_concept, business_concept_vesion)
+    def can?(%User{} = user, :view_business_concept, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :view_business_concept, business_concept_version)
     end
 
-    def can?(%User{} = user, :create_alias, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :manage_alias, business_concept_vesion)
+    def can?(%User{} = user, :create_alias, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :manage_alias, business_concept_version)
     end
 
-    def can?(%User{} = user, :delete_alias, %BusinessConceptVersion{} = business_concept_vesion) do
-      BusinessConceptAbilities.can?(user, :manage_alias, business_concept_vesion)
+    def can?(%User{} = user, :delete_alias, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :manage_alias, business_concept_version)
     end
 
     def can?(%User{}, _action, _domain), do: false

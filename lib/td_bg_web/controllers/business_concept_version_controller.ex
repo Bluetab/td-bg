@@ -11,6 +11,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
+  alias TdBg.Taxonomies
+  alias TdBg.Templates
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
@@ -207,6 +209,58 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  swagger_path :undo_rejection do
+    post "/business_concept_versions/{id}/undo_rejection"
+    description "Create a draft from a rejected business concept"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 403, "User is not authorized to perform this action"
+    response 422, "Business concept invalid state"
+  end
+
+  def undo_rejection(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    rejected = BusinessConcept.status.rejected
+    case {business_concept_version.status, business_concept_version.current} do
+      {^rejected, true} ->
+        user = conn.assigns.current_user
+        undo_rejection(conn, user, business_concept_version)
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :version do
+    post "/business_concept_versions/{id}/version"
+    description "Create a new draft from a published business concept"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptResponse)
+    response 403, "User is not authorized to perform this action"
+    response 422, "Business concept invalid state"
+  end
+
+  def version(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    published = BusinessConcept.status.published
+    case {business_concept_version.status, business_concept_version.current} do
+      {^published, true} ->
+        user = conn.assigns.current_user
+        do_version(conn, user, business_concept_version)
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
   swagger_path :deprecate do
     post "/business_concept_versions/{id}/deprecate"
     description "Deprecate a published business concept"
@@ -235,6 +289,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp send_for_approval(conn, user, business_concept_version) do
     update_status(conn, business_concept_version, BusinessConcept.status.pending_approval, can?(user, send_for_approval(business_concept_version)))
+  end
+
+  defp undo_rejection(conn, user, business_concept_version) do
+    update_status(conn, business_concept_version, BusinessConcept.status.draft, can?(user, undo_rejection(business_concept_version)))
   end
 
   defp publish(conn, user, business_concept_version) do
@@ -294,6 +352,93 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  defp do_version(conn, user, business_concept_version) do
+    business_concept = business_concept_version.business_concept
+    concept_type = business_concept.type
+    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
+
+    business_concept = business_concept
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    draft_attrs = Map.from_struct(business_concept_version)
+    draft_attrs = draft_attrs
+    |> Map.put("business_concept", business_concept)
+    |> Map.put("content_schema", content_schema)
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+    |> Map.put("status", BusinessConcept.status.draft)
+    |> Map.put("version", business_concept_version.version + 1)
+
+    with true <- can?(user, version(business_concept_version)),
+         {:ok, %{current: %BusinessConceptVersion{} = new_version}}
+            <- BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
+      conn
+        |> put_status(:created)
+        |> render("show.json", business_concept_version: new_version, hypermedia: hypermedia("business_concept_version", conn, new_version))
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :taxonomy_roles do
+    get "/business_concepts/{business_concept_version_id}/taxonomy_roles"
+    description "Lists all the roles within the taxonomy of a given business concept"
+    produces "application/json"
+    parameters do
+      business_concept_version_id :path, :integer, "Business Concept Version Id", required: true
+    end
+    response 200, "Ok", Schema.ref(:BusinessConceptTaxonomyResponse)
+    response 403, "Invalid authorization"
+    response 422, "Unprocessable Entity"
+  end
+
+  def taxonomy_roles(conn, %{"business_concept_version_id" => id}) do
+    # We should fetch the user in order to check its permissions over the
+    # current version of the business concept
+    user = conn.assigns.current_user
+    # First of all we should retrieve the business concept for a
+    business_concept_version =
+      BusinessConcepts.get_business_concept_version!(id)
+    with true <- can?(user, view_business_concept(business_concept_version)) do
+      business_concept = business_concept_version.business_concept
+      business_concept_taxonomy =
+        get_taxonomy_levels_from_business_concept(business_concept.domain_id)
+        render(conn, "index_business_concept_taxonomy.json",
+          business_concept_taxonomy: business_concept_taxonomy)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  defp get_taxonomy_levels_from_business_concept(domain_id, acc \\ [])
+  defp get_taxonomy_levels_from_business_concept(nil, acc) do
+    acc
+  end
+  defp get_taxonomy_levels_from_business_concept(domain_id, acc) do
+    domain = Taxonomies.get_domain!(domain_id)
+    acl_list = Permissions.get_list_acl_from_domain(domain)
+    acc = case acl_list do
+        [] -> acc
+        acl_list -> acc ++ [%{domain_id: domain_id, domain_name: domain.name, roles: acl_list}]
+      end
+    get_taxonomy_levels_from_business_concept(domain.parent_id, acc)
   end
 
 end

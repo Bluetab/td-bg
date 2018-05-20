@@ -64,6 +64,9 @@ defmodule TdBgWeb.Router do
       post "/publish", BusinessConceptVersionController, :publish
       post "/reject", BusinessConceptVersionController, :reject
       post "/deprecate", BusinessConceptVersionController, :deprecate
+      post "/version", BusinessConceptVersionController, :version
+      post "/redraft", BusinessConceptVersionController, :undo_rejection
+      get "/taxonomy_roles", BusinessConceptVersionController, :taxonomy_roles
     end
 
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
@@ -74,7 +77,6 @@ defmodule TdBgWeb.Router do
       post "/aliases", BusinessConceptAliasController, :create
       patch "/status", BusinessConceptController, :update_status
       get "/versions", BusinessConceptVersionController, :versions
-      get "/taxonomy_roles", BusinessConceptController, :taxonomy_roles
     end
 
     resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]
