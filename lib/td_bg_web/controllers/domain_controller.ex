@@ -86,7 +86,12 @@ defmodule TdBgWeb.DomainController do
     current_user = GuardianPlug.current_resource(conn)
     domain = %Domain{} |> Map.merge(CollectionUtils.to_struct(Domain, domain_params))
 
-    if can?(current_user, create(domain)) do
+    domain_parent = case Map.has_key?(domain_params, "parent_id") do
+      false -> domain
+      true -> Taxonomies.get_domain!(domain_params["parent_id"])
+    end
+
+    if can?(current_user, create(domain_parent)) do
       do_create(conn, domain_params)
     else
       conn
