@@ -44,9 +44,33 @@ defmodule TdBg.UserDomainsTest do
     end
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" lists the domains where he has a given permission$/, %{user_name: user_name}, _state do
+  defwhen ~r/^user "(?<user_name>[^"]+)" lists the domains where he has a given permission$/, %{user_name: user_name}, state do
     token = get_user_token(user_name)
     get_domains_from_user(token)
+    {_, status_code, json_resp} = get_domains_from_user(token)
+    {:ok, Map.merge(state,
+      %{status_code: status_code,  resp: json_resp})}
+  end
+
+  defand ~r/^if result "(?<result>[^"]+)" the retrieved list of domains should not be empty$/, %{result: result}, state do
+    # Your implementation here
+    assert result == to_response_code(state[:status_code])
+    %{"data" => data} = state[:resp]
+    assert !Enum.empty?(data)
+  end
+
+  defand ~r/^the following domains should be in the list:$/, %{table: table}, state do
+    %{"data" => data} = state[:resp]
+    assert Enum.all?(Enum.map(table, &(&1.domain)),
+      fn(x) -> Enum.member?(Enum.map(data, &(&1["domain_name"])), x)
+    end)
+  end
+
+  defand ~r/^the following domains should not be in the list:$/, %{table: table}, state do
+    %{"data" => data} = state[:resp]
+    assert Enum.all?(Enum.map(table, &(&1.domain)),
+      fn(x) -> !Enum.member?(Enum.map(data, &(&1["domain_name"])), x)
+    end)
   end
 
   defand ~r/^"(?<group_name>[^"]+)" has a role "(?<role_name>[^"]+)" in Domain "(?<domain_name>[^"]+)"$/, %{group_name: group_name, role_name: role_name, domain_name: domain_name}, state do
