@@ -90,6 +90,15 @@ defmodule TdBg.BusinessConcepts do
      |> preload([business_concept: [:aliases, :domain]])
      |> Repo.one!
    end
+   def get_current_version_by_business_concept_id!(business_concept_id, %{current: current}) do
+      BusinessConceptVersion
+      |> where([v], v.business_concept_id == ^business_concept_id)
+      |> where([v], v.current == ^current)
+      |> order_by(desc: :version)
+      |> limit(1)
+      |> preload([business_concept: [:aliases, :domain]])
+      |> Repo.one!
+    end
 
   @doc """
   Creates a business_concept.
@@ -339,7 +348,16 @@ defmodule TdBg.BusinessConcepts do
            {:ok, version}
        end
      else
-       Repo.delete(business_concept_version)
+       Multi.new
+       |> Multi.delete(:business_concept_version, business_concept_version)
+       |> Multi.update(:current, BusinessConceptVersion.current_changeset(business_concept_version))
+       |> Repo.transaction
+       |> case do
+         {:ok, %{business_concept_version: %BusinessConceptVersion{},
+                 current: %BusinessConceptVersion{} = current_version}} ->
+            {:ok, current_version}
+
+       end
      end
    end
 

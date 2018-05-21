@@ -65,6 +65,15 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   @doc false
+  def current_changeset(%BusinessConceptVersion{} = business_concept_version) do
+    business_concept_version
+    |> Map.get(:business_concept_id)
+    |> BusinessConcepts.get_current_version_by_business_concept_id!(%{current: false})
+    |> cast(%{}, [])
+    |> put_change(:current, true)
+  end
+
+  @doc false
   def reject_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
     |> cast(attrs, [:reject_reason])
