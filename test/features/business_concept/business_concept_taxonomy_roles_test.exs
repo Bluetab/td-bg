@@ -48,13 +48,14 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
     # We get our BC by name
     business_concept = business_concept_by_name(admin_token, bc_name)
     # we should verify that the Bc has been properly retrieved
-    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(admin_token, business_concept["id"])
+    {_, http_status_code, %{"data" => business_concept_version}} = business_concept_version_show(admin_token, business_concept["business_concept_version_id"])
+    business_concept_version_id = business_concept_version["id"]
     assert rc_ok() == to_response_code(http_status_code)
-    assert business_concept["name"] == bc_name
+    assert business_concept_version["name"] == bc_name
     # Now, we should be able to query the taxonomies of a BC
     {_, status_code, json_resp} =
       get_business_concept_taxonomy_roles(token,
-      %{business_concept_id: business_concept["id"]})
+      %{business_concept_version_id: business_concept_version_id})
     {:ok, Map.merge(state,
       %{status_code: status_code,  resp: json_resp})}
   end
@@ -74,7 +75,7 @@ defmodule TdBg.BusinessConceptTaxonomyTest do
   defp get_business_concept_taxonomy_roles(token, attrs) do
     headers = get_header(token)
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_business_concept_url(TdBgWeb.Endpoint, :taxonomy_roles, attrs.business_concept_id), headers, [])
+      HTTPoison.get!(business_concept_version_business_concept_version_url(TdBgWeb.Endpoint, :taxonomy_roles, attrs.business_concept_version_id), headers, [])
     {:ok, status_code, resp |> JSON.decode!}
   end
 end

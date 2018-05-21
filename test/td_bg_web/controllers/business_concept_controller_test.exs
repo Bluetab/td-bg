@@ -7,8 +7,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.Permissions
-
+  
   setup_all do
     start_supervised MockTdAuthService
     :ok
@@ -47,27 +46,6 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
     end
 
-  end
-
-  describe "query_business_concept_taxonomy" do
-    @tag authenticated_user: @admin_user_name
-    test "list the taxonomies of a business concept", %{conn: conn} do
-      published = BusinessConcept.status.published
-      user = build(:user)
-      user = create_user(user.user_name, is_admin: true)
-      domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
-      insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
-      business_concept_version = create_version(domain, "one", published)
-      id = business_concept_version.business_concept.id
-      conn = recycle_and_put_headers(conn)
-      conn = get conn, business_concept_business_concept_path(conn, :taxonomy_roles, id)
-      collection = json_response(conn, 200)["data"]
-      assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain.name)
-      assert Enum.member?(Enum.map(collection, &(&1["domain_id"])), domain.id)
-      roles = Enum.find(collection, &(&1["domain_name"] == domain.name))["roles"]
-      assert Enum.member?(Enum.map(roles, &(&1["principal"]["id"])), user.id)
-    end
   end
 
   describe "index_by_name" do
@@ -226,24 +204,6 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       end
     end)
   end
-
-  # describe "delete business_concept" do
-  #   @tag authenticated_user: @admin_user_name
-  #   test "deletes chosen business_concept", %{conn: conn} do
-  #     user = build(:user)
-  #     business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
-  #     business_concept = business_concept_version.business_concept
-  #
-  #     conn = delete conn, business_concept_path(conn, :delete, business_concept)
-  #     assert response(conn, 204)
-  #
-  #     conn = recycle_and_put_headers(conn)
-  #
-  #     assert_error_sent 404, fn ->
-  #       get conn, business_concept_path(conn, :show, business_concept)
-  #     end
-  #   end
-  # end
 
   def create_template(_) do
     headers = get_header(get_user_token("app-admin"))

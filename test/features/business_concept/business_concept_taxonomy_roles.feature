@@ -1,7 +1,7 @@
 Feature: Taxonomy Roles of A BusinessConcept
   Authenticated users with a minumun "publisher" role sholud be able to query the roles over a taxonomy of a BusinessConcept
 
-  Scenario: List of the taxonomy roles whithin the BusinessConcept hierarchy
+  Scenario: List of the taxonomy roles within the BusinessConcept hierarchy
     Given an existing Domain called "Domain 1"
     And an existing Domain called "Domain 1.1" child of Domain "Domain 1"
     And an existing Domain called "Domain 1.1.1" child of Domain "Domain 1.1"

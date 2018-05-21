@@ -10,11 +10,9 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Taxonomies
-  alias TdBg.Permissions
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Templates
-  alias Guardian.Plug, as: GuardianPlug
 
   plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update_status]
 
@@ -245,38 +243,6 @@ defmodule TdBgWeb.BusinessConceptController do
     end
   end
 
-  swagger_path :delete do
-    delete "/business_concepts/{id}"
-    description "Delete Business Concepts"
-    produces "application/json"
-    parameters do
-      id :path, :integer, "Business Concept ID", required: true
-    end
-    response 204, "No Content"
-    response 400, "Client Error"
-  end
-
-  def delete(conn, %{"id" => id}) do
-    business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
-
-    user = conn.assigns.current_user
-
-    with true <- can?(user, delete(business_concept_version)),
-         {:ok, %BusinessConceptVersion{}} <- BusinessConcepts.delete_business_concept_version(business_concept_version) do
-      @search_service.delete_search(business_concept_version)
-      send_resp(conn, :no_content, "")
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
-    end
-  end
-
   swagger_path :update_status do
     patch "/business_concepts/{business_concept_id}/status"
     description "Updates Business Ccncept status"
@@ -322,57 +288,6 @@ defmodule TdBgWeb.BusinessConceptController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
-  end
-
-  swagger_path :taxonomy_roles do
-    get "/business_concepts/{business_concept_id}/taxonomy_roles"
-    description "Lists all the roles within the taxonomy of a given business concept"
-    produces "application/json"
-    parameters do
-      business_concept_id :path, :integer, "Business Concept Id", required: true
-    end
-    response 200, "Ok", Schema.ref(:BusinessConceptTaxonomyResponse)
-    response 403, "Invalid authorization"
-    response 422, "Unprocessable Entity"
-  end
-
-  def taxonomy_roles(conn, %{"business_concept_id" => id}) do
-    # We should fetch the user in order to check its permissions over the
-    # current version of the business concept
-    user = get_current_user(conn)
-    # First of all we should retrieve the business concept for a
-    business_concept_version =
-      BusinessConcepts.get_current_version_by_business_concept_id!(id)
-    with true <- can?(user, view_business_concept(business_concept_version)) do
-      business_concept = business_concept_version.business_concept
-      business_concept_taxonomy =
-        get_taxonomy_levels_from_business_concept(business_concept.domain_id)
-        render(conn, "index_business_concept_taxonomy.json",
-          business_concept_taxonomy: business_concept_taxonomy)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
-    end
-  end
-
-  defp get_taxonomy_levels_from_business_concept(domain_id, acc \\ [])
-  defp get_taxonomy_levels_from_business_concept(nil, acc) do
-    acc
-  end
-  defp get_taxonomy_levels_from_business_concept(domain_id, acc) do
-    domain = Taxonomies.get_domain!(domain_id)
-    acl_list = Permissions.get_list_acl_from_domain(domain)
-    acc = case acl_list do
-        [] -> acc
-        acl_list -> acc ++ [%{domain_id: domain_id, domain_name: domain.name, roles: acl_list}]
-      end
-    get_taxonomy_levels_from_business_concept(domain.parent_id, acc)
   end
 
   defp send_for_approval(conn, user, business_concept_version, _business_concept_params) do
@@ -570,10 +485,6 @@ defmodule TdBgWeb.BusinessConceptController do
     |> String.split(",")
     |> Enum.map(&String.trim(&1))
     Map.put(filter, name, list_value)
-  end
-
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
   end
 
 end
