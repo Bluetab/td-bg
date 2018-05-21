@@ -75,7 +75,7 @@ defmodule TdBg.Permissions do
     Returns a list of acl_entries querying by several principal_types
   """
   def list_acl_entries_by_principal_types(%{principal_types: principal_types}) do
-    acl_entries = Repo.all(from acl_entry in AclEntry,
+    Repo.all(from acl_entry in AclEntry,
       join: role in assoc(acl_entry, :role),
       join: permission in assoc(role, :permissions),
       where: acl_entry.principal_type in ^principal_types,
