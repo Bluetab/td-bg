@@ -1,5 +1,5 @@
-Feature: Domains where a user has a given permission
-  Authenticated users could list the domains where they have a given permission
+Feature: Domains where a user has a given permission create_business_concept
+  Authenticated users could list the domains where they have a given permission create_business_concept
 
   Scenario: List of the domains where the user have a create permission
     Given an existing Domain called "Domain 1"
