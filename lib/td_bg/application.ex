@@ -17,6 +17,7 @@ defmodule TdBg.Application do
       # Start your own worker by calling:
       # TdBg.Worker.start_link(arg1, arg2, arg3)
       # worker(TdBg.Worker, [arg1, arg2, arg3]),
+      worker(ConCache, [[name: :permissions_cache, ttl_check_interval: false]])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

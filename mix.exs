@@ -21,7 +21,7 @@ defmodule TdBg.Mixfile do
   def application do
     [
       mod: {TdBg.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :con_cache]
     ]
   end
 
@@ -39,6 +39,7 @@ defmodule TdBg.Mixfile do
       {:phoenix_ecto, "~> 3.2"},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
+      {:con_cache, "~> 0.13.0"},
       {:cowboy, "~> 1.0"},
       {:cabbage, git: "https://github.com/eriosv/cabbage.git"},
       {:httpoison, "~> 1.0"},
