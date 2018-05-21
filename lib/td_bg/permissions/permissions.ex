@@ -460,6 +460,11 @@ defmodule TdBg.Permissions do
     |> get_all_permissions()
   end
 
+  def get_permissions_in_resource_cache(%{user_id: user_id, domain_id: domain_id}) do
+    cache_key = %{user_id: user_id, domain_id: domain_id}
+    ConCache.get_or_store(:permissions_cache, cache_key, fn() -> get_permissions_in_resource(cache_key) end)
+  end
+
   @doc """
   Check if user has a permission in a domain.
 
@@ -471,7 +476,7 @@ defmodule TdBg.Permissions do
   """
   def authorized?(%{user_id: user_id, permission: permission, domain_id: domain_id}) do
     %{user_id: user_id, domain_id: domain_id}
-    |> get_permissions_in_resource
+    |> get_permissions_in_resource_cache
     |> Enum.member?(permission)
   end
 
