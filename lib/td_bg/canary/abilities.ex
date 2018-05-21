@@ -2,6 +2,7 @@ defmodule TdBg.Canary.Abilities do
   @moduledoc false
   alias TdBg.Accounts.User
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Permissions.Role
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canary.TaxonomyAbilities
   alias TdBg.Canary.BusinessConceptAbilities
@@ -9,13 +10,24 @@ defmodule TdBg.Canary.Abilities do
 
   defimpl Canada.Can, for: User do
 
-    #def can?(%User{}, _action, nil),  do: false
+    #def can?(%User{}, _action, nil), do: false
 
-    # administrator is superpowerful
-    def can?(%User{is_admin: true}, _action, _domain)  do
+    # administrator is superpowerful for Domain, Role and AclEntry
+    def can?(%User{is_admin: true}, _action, %Domain{}) do
       true
     end
-    # Data domain
+
+    def can?(%User{is_admin: true}, _action, Role) do
+      true
+    end
+
+    def can?(%User{is_admin: true}, _action, %Role{}) do
+      true
+    end
+
+    def can?(%User{is_admin: true}, _action, %AclEntry{}) do
+      true
+    end
 
     def can?(%User{} = user, :create, %Domain{} = domain) do
       TaxonomyAbilities.can?(user, :create, domain)
@@ -35,10 +47,6 @@ defmodule TdBg.Canary.Abilities do
 
     def can?(%User{} = user, :create_business_concept, %Domain{} = domain) do
       BusinessConceptAbilities.can?(user, :create_business_concept, domain)
-    end
-
-    def can?(%User{}, _action, BusinessConceptVersion) do  #when action in [:admin, :watch, :creaBusinte, :publish] do
-      true
     end
 
     def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do

@@ -173,7 +173,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     @transitions  [{BusinessConcept.status.draft, BusinessConcept.status.pending_approval},
                    {BusinessConcept.status.pending_approval, BusinessConcept.status.published},
                    {BusinessConcept.status.pending_approval, BusinessConcept.status.rejected},
-                   {BusinessConcept.status.rejected, BusinessConcept.status.pending_approval},
+                   {BusinessConcept.status.rejected, BusinessConcept.status.draft},
                    {BusinessConcept.status.published, BusinessConcept.status.deprecated},
                   ]
 
