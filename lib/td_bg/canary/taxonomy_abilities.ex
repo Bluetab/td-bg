@@ -6,13 +6,13 @@ defmodule TdBg.Canary.TaxonomyAbilities do
   alias TdBg.Permissions.Permission
   alias TdBg.Permissions.AclEntry
 
-  def can?(%User{id: user_id}, :create, %Domain{parent_id: parent_id}) do
+  def can?(%User{id: user_id}, :create, %Domain{parent_id: parent_id, id: domain_id}) do
     if parent_id == nil do
       false
     else
       %{user_id: user_id,
         permission: Permission.permissions.create_domain,
-        domain_id: parent_id}
+        domain_id: domain_id}
       |> Permissions.authorized?
     end
   end
