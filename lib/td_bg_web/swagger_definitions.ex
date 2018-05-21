@@ -187,6 +187,20 @@ defmodule TdBgWeb.SwaggerDefinitions do
           resource_type :string, "type of resource: domain", required: true
           role_id :integer, "id of role", required: true
         end
+      end,
+      UserDomainResponse: swagger_schema do
+        properties do
+          data (Schema.new do
+                  type :array
+                  items Schema.ref(:UserDomainItem)
+              end)
+        end
+      end,
+      UserDomainItem: swagger_schema do
+        properties do
+          id :integer
+          name :string
+        end
       end
     }
   end

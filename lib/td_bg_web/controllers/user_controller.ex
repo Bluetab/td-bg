@@ -1,9 +1,11 @@
 defmodule TdBgWeb.UserController do
   use TdBgWeb, :controller
+  use PhoenixSwagger
   alias TdBg.Accounts.User
   alias TdBg.Canary.BusinessConceptAbilities
   alias TdBg.Taxonomies.Domain
   alias TdBg.Taxonomies
+  alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.UserView
   alias Guardian.Plug, as: GuardianPlug
 
@@ -17,6 +19,17 @@ defmodule TdBgWeb.UserController do
 
   def search(_conn, %{"ids" => _ids} = req) do
     @td_auth_api.search_users(req)
+  end
+
+  def swagger_definitions do
+    SwaggerDefinitions.domain_swagger_definitions()
+  end
+
+  swagger_path :user_domains do
+    get "/users/permissions/domains"
+    description "Lists all the domains for which has a create_business_concept permission"
+    produces "application/json"
+    response 200, "Ok", Schema.ref(:UserDomainResponse)
   end
 
   def user_domains(conn, _params) do
