@@ -15,9 +15,9 @@ echo "local hex executed"
 mix local.rebar --force
 mix deps.clean --all
 echo "local rebar executed"
-mix compile
 echo "Downloading deps"
 mix deps.get
+mix compile
 echo "Executing credo"
 mix credo --strict || exit 1
 echo "Starting tests"
