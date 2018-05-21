@@ -16,7 +16,7 @@ defmodule TdBgWeb.TemplateControllerTest do
   @others_create_attrs_generic_true %{content: [%{"includes": ["generic_true", "generic_false"]}, %{"other_field": "other_field"}], name: "some name"}
   @update_attrs %{content: [], name: "some updated name"}
   @invalid_attrs %{content: nil, name: nil}
-  @domain_attrs %{name: "domain1", type: "type", parent_id: "", description: "description"}
+  @domain_attrs %{name: "domain1", type: "type", description: "description"}
 
   def fixture(:template) do
     {:ok, template} = Templates.create_template(@create_attrs)

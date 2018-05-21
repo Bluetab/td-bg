@@ -627,7 +627,6 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [v, c], _ in assoc(c, :domain))
     |> where([v], ilike(v.name, ^"%#{term}%") or ilike(v.description, ^"%#{term}%"))
     |> preload([_, c, d], [business_concept: {c, domain: d}])
-    |> preload([_, c], [business_concept: c])
     |> order_by(asc: :version)
     |> Repo.all
   end

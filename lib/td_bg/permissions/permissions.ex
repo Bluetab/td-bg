@@ -75,7 +75,7 @@ defmodule TdBg.Permissions do
     Returns a list of acl_entries querying by several principal_types
   """
   def list_acl_entries_by_principal_types(%{principal_types: principal_types}) do
-    acl_entries = Repo.all(from acl_entry in AclEntry,
+    Repo.all(from acl_entry in AclEntry,
       join: role in assoc(acl_entry, :role),
       join: permission in assoc(role, :permissions),
       where: acl_entry.principal_type in ^principal_types,
@@ -460,6 +460,11 @@ defmodule TdBg.Permissions do
     |> get_all_permissions()
   end
 
+  def get_permissions_in_resource_cache(%{user_id: user_id, domain_id: domain_id}) do
+    cache_key = %{user_id: user_id, domain_id: domain_id}
+    ConCache.get_or_store(:permissions_cache, cache_key, fn() -> get_permissions_in_resource(cache_key) end)
+  end
+
   @doc """
   Check if user has a permission in a domain.
 
@@ -471,7 +476,7 @@ defmodule TdBg.Permissions do
   """
   def authorized?(%{user_id: user_id, permission: permission, domain_id: domain_id}) do
     %{user_id: user_id, domain_id: domain_id}
-    |> get_permissions_in_resource
+    |> get_permissions_in_resource_cache
     |> Enum.member?(permission)
   end
 
