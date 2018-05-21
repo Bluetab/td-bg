@@ -105,7 +105,11 @@ defmodule TdBg.Canary.BusinessConceptAbilities do
     |> authorized?
   end
 
-  def can?(%User{id: user_id}, :view_business_concept, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
+  def can?(user, :view_business_concept, %BusinessConceptVersion{status: status, business_concept: %BusinessConcept{domain_id: domain_id}}) do
+    can?(user, :view_business_concept, {status, domain_id})
+  end
+
+  def can?(%User{id: user_id}, :view_business_concept, {status, domain_id}) do
     %{user_id: user_id,
     permission: Map.get(BusinessConcept.status_to_permissions, status),
     domain_id: domain_id}

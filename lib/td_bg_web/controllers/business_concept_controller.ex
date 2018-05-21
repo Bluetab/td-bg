@@ -39,14 +39,7 @@ defmodule TdBgWeb.BusinessConceptController do
       end
     user = conn.assigns.current_user
     business_concept_versions = business_concept_versions
-      |> Enum.reduce([], fn(business_concept_version, acc) ->
-        acc ++ if can?(user, view_business_concept(business_concept_version)) do
-          [business_concept_version]
-        else
-          []
-        end
-      end
-    )
+      |> Enum.filter(&(can?(user, view_business_concept(&1))))
     render(conn, "index.json", business_concepts: business_concept_versions, hypermedia: hypermedia("business_concept", conn, business_concept_versions))
   end
 
