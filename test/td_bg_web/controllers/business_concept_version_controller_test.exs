@@ -18,10 +18,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  @admin_user_name "app-admin"
-
   describe "show" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "shows the specified business_concept_version including it's name, description, domain and content", %{conn: conn} do
       business_concept_version = insert(:business_concept_version, content: %{"foo" => "bar"}, name: "Concept Name", description: "The awesome concept")
       conn = get conn, business_concept_version_path(conn, :show, business_concept_version.id)
@@ -36,7 +34,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "index" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "lists all business_concept_versions", %{conn: conn} do
       conn = get conn, business_concept_version_path(conn, :index)
       assert json_response(conn, 200)["data"] == []
@@ -44,7 +42,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "search" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "find business_concepts by id and status", %{conn: conn} do
       published = BusinessConcept.status.published
       draft = BusinessConcept.status.draft
@@ -60,7 +58,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "create business_concept" do
     setup [:create_template]
 
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
@@ -82,7 +80,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       validate_resp_schema(conn, schema, "BusinessConceptResponse")
       business_concept = json_response(conn, 200)["data"]
 
-      %{id: id, last_change_by: Integer.mod(:binary.decode_unsigned(@admin_user_name), 100_000), version: 1}
+      %{id: id, last_change_by: Integer.mod(:binary.decode_unsigned("app-admin"), 100_000), version: 1}
         |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
 
       creation_attrs
@@ -93,7 +91,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert business_concept["domain"]["name"] == domain.name
     end
 
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
       creation_attrs = %{
@@ -110,7 +108,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "index_by_name" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "find business concept by name", %{conn: conn} do
     published = BusinessConcept.status.published
       draft = BusinessConcept.status.draft
@@ -129,7 +127,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "versions" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "lists business_concept_versions", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id
@@ -140,7 +138,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "query_business_concept_taxonomy" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "list the taxonomies of a business concept", %{conn: conn} do
       published = BusinessConcept.status.published
       user = build(:user)

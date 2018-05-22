@@ -17,12 +17,10 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  @admin_user_name "app-admin"
-
   describe "update business_concept" do
     setup [:create_template]
 
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
@@ -49,7 +47,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
         |> Enum.each(&(assert updated_business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
     end
 
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
@@ -81,7 +79,8 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       status_from = elem(transition, 0)
       status_to = elem(transition, 1)
 
-      @tag authenticated_user: @admin_user_name, status_from: status_from, status_to: status_to
+      # Why do I need to pass a value ???
+      @tag admin_authenticated: "xyz", status_from: status_from, status_to: status_to
       test "update business_concept status change from #{status_from} to #{status_to}", %{conn: conn, swagger_schema: schema, status_from: status_from, status_to: status_to} do
           user = build(:user)
           business_concept_version = insert(:business_concept_version, status: status_from, last_change_by:  user.id)

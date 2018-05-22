@@ -3,6 +3,8 @@ defmodule TdBgWeb.DomainController do
   use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
+  import Canada, only: [can?: 2]
+
   alias TdBgWeb.ErrorView
   alias TdBgWeb.UserView
   alias TdBg.Taxonomies
@@ -12,7 +14,7 @@ defmodule TdBgWeb.DomainController do
   alias TdBg.Utils.CollectionUtils
   alias Guardian.Plug, as: GuardianPlug
   alias TdBg.Permissions.AclEntry
-  import Canada
+  alias Canada.Can
 
   action_fallback TdBgWeb.FallbackController
 
@@ -45,14 +47,36 @@ defmodule TdBgWeb.DomainController do
   swagger_path :index do
     get "/domains"
     description "List Domains"
+    parameters do
+      actions :query, :string, "List of actions the user must be able to run over the domains", required: false
+    end
     response 200, "OK", Schema.ref(:DomainsResponse)
   end
 
-  def index(conn, _params) do
+  def index(conn, params) do
+    user = get_current_user(conn)
     domains = Taxonomies.list_domains()
-    render(conn, "index.json",
-      domains: domains,
-      hypermedia: hypermedia("domain", conn, domains))
+    case params |> get_actions do
+      [] -> # Check view_domain permission in this block
+        render(conn, "index.json",
+          domains: domains,
+          hypermedia: hypermedia("domain", conn, domains))
+      actions ->
+        filtered_domains = Enum.filter(domains, &can_any?(actions, user, &1))
+        render(conn, "index_tiny.json", domains: filtered_domains)
+    end
+  end
+
+  defp can_any?(actions, user, domain) do
+    Enum.find(actions, nil, &(Can.can?(user, String.to_atom(&1), domain))) != nil
+  end
+
+  defp get_actions(params) do
+    params
+    |> Map.get("actions", "")
+    |> String.split(",")
+    |> Enum.map(&String.trim(&1))
+    |> Enum.filter(&(&1 !== ""))
   end
 
   swagger_path :index_root do
@@ -291,6 +315,10 @@ defmodule TdBgWeb.DomainController do
       |> put_status(403)
       |> render(ErrorView, :"403")
     end
+  end
+
+  defp get_current_user(conn) do
+    GuardianPlug.current_resource(conn)
   end
 
 end

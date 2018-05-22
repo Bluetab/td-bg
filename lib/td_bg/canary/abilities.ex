@@ -45,6 +45,10 @@ defmodule TdBg.Canary.Abilities do
       TaxonomyAbilities.can?(user, :update, domain)
     end
 
+    def can?(%User{} = user, :show, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :show, domain)
+    end
+
     def can?(%User{} = user, :delete, %Domain{} = domain) do
       TaxonomyAbilities.can?(user, :delete, domain)
     end

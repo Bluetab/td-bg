@@ -15,10 +15,8 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  @admin_user_name "app-admin"
-
   describe "index" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "lists all business_concept_aliases", %{conn: conn} do
       conn = get conn, business_concept_business_concept_alias_path(conn, :index, 123)
       assert json_response(conn, 200)["data"] == []
@@ -26,7 +24,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
   end
 
   describe "create business_concept_alias" do
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "renders business_concept_alias when data is valid", %{conn: conn, swagger_schema: schema} do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id
@@ -49,7 +47,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
         "name" => "some name"}
     end
 
-    @tag authenticated_user: @admin_user_name
+    @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id
@@ -64,7 +62,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
     end
   end
 
-  @tag authenticated_user: @admin_user_name
+  @tag :admin_authenticated
   describe "delete business_concept_alias" do
     test "deletes chosen business_concept_alias", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)

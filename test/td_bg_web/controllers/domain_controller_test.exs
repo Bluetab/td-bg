@@ -13,6 +13,8 @@ defmodule TdBgWeb.DomainControllerTest do
   @update_attrs %{description: "some updated description", name: "some updated name"}
   @invalid_attrs %{description: nil, name: nil}
 
+  @user_name "user"
+
   def fixture(:domain) do
     {:ok, domain} = Taxonomies.create_domain(@create_attrs)
     domain
@@ -29,10 +31,39 @@ defmodule TdBgWeb.DomainControllerTest do
 
   describe "index" do
     @tag :admin_authenticated
-    test "lists all domain_groups", %{conn: conn} do
+    test "lists all domains", %{conn: conn} do
       conn = get conn, domain_path(conn, :index)
       assert json_response(conn, 200)["data"] == []
     end
+  end
+
+  describe "index with actions" do
+    @tag authenticated_user: @user_name
+    test "list all domains user can view",
+      %{conn: conn, swagger_schema: schema} do
+        user = create_user(@user_name)
+        domain = insert(:domain)
+        role = Permissions.get_role_by_name("watch")
+        insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
+        parameters = %{actions: "show"}
+        conn = get conn, domain_path(conn, :index, parameters)
+        response_data = json_response(conn, 200)["data"]
+        assert length(response_data) == 1
+        validate_resp_schema(conn, schema, "DomainsResponse")
+    end
+
+    @tag authenticated_user: @user_name
+    test "user cant view any domain",
+      %{conn: conn, swagger_schema: schema} do
+        create_user(@user_name)
+        insert(:domain)
+        parameters = %{actions: "show"}
+        conn = get conn, domain_path(conn, :index, parameters)
+        response_data = json_response(conn, 200)["data"]
+        assert Enum.empty?(response_data)
+        validate_resp_schema(conn, schema, "DomainsResponse")
+    end
+
   end
 
   describe "create domain" do

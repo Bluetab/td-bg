@@ -33,6 +33,13 @@ defmodule TdBg.Canary.TaxonomyAbilities do
     |> Permissions.authorized?
   end
 
+  def can?(%User{id: user_id}, :show, %Domain{id: domain_id}) do
+    %{user_id: user_id,
+      permission: Permission.permissions.view_domain,
+      domain_id: domain_id}
+    |> Permissions.authorized?
+  end
+
   def can?(%User{id: user_id}, :delete, %Domain{id: domain_id}) do
     %{user_id: user_id,
       permission: Permission.permissions.delete_domain,

@@ -14,6 +14,10 @@ defmodule TdBgWeb.DomainView do
     %{data: render_many(domains, DomainView, "domain.json")}
   end
 
+  def render("index_tiny.json", %{domains: domains}) do
+    %{data: render_many(domains, DomainView, "domain_tiny.json")}
+  end
+
   def render("show.json", %{domain: domain, hypermedia: hypermedia}) do
     render_one_hypermedia(domain, hypermedia, DomainView, "domain.json")
   end
@@ -27,6 +31,11 @@ defmodule TdBgWeb.DomainView do
       name: domain.name,
       type: domain.type,
       description: domain.description}
+  end
+
+  def render("domain_tiny.json", %{domain: domain}) do
+    %{id: domain.id,
+      name: domain.name}
   end
 
   def render("index_acl_entries.json", %{acl_entries: acl_entries, hypermedia: hypermedia}) do
