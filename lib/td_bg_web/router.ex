@@ -51,6 +51,7 @@ defmodule TdBgWeb.Router do
   scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure, :api_authorized]
     get "/domains/index_root", DomainController, :index_root
+    options "/domains", DomainController, :options
     resources "/domains", DomainController, except: [:new, :edit] do
       get "/index_children", DomainController, :index_children
       get "/available_users", DomainController, :available_users

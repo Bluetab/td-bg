@@ -90,6 +90,14 @@ defmodule TdBg.Permissions do
     acl_entries |> Repo.preload(:role)
   end
 
+  def list_acl_entries_by_user(%{user_id: user_id}) do
+    list_acl_entries_by_principal(%{principal_id: user_id, principal_type: "user"})
+  end
+
+  def list_acl_entries_by_group(%{group_id: group_id}) do
+    list_acl_entries_by_principal(%{principal_id: group_id, principal_type: "group"})
+  end
+
   @doc """
 
   """
@@ -235,13 +243,17 @@ defmodule TdBg.Permissions do
   end
   def acl_matches?(_, _, _), do: false
 
+  def get_group_ids(user) do
+    @td_auth_api.index_groups()
+      |> Enum.filter(fn(group) -> Enum.any?(user.groups, fn(group_name) -> group_name == group.name end) end)
+      |> Enum.map(&(&1.id))
+  end
+
   def get_all_roles(%{user_id: user_id, domain_id: domain_id}) do
     domains = get_ancestors_for_domain_id(domain_id)
 
     user = @td_auth_api.get_user(user_id)
-    group_ids = @td_auth_api.index_groups()
-      |> Enum.filter(fn(group) -> Enum.any?(user.groups, fn(group_name) -> group_name == group.name end) end)
-      |> Enum.map(&(&1.id))
+    group_ids = get_group_ids(user)
 
     roles = domains
       |> Enum.flat_map(fn(domain) -> list_acl_entries(%{domain: domain}, role: [:permissions]) end)
@@ -258,6 +270,34 @@ defmodule TdBg.Permissions do
       |> Enum.flat_map(&(&1.permissions))
       |> Enum.uniq_by(&(&1.id))
       |> Enum.map(&(&1.name))
+  end
+
+  def has_any_group_permission(user_id, permissions, Domain) do
+    user = @td_auth_api.get_user(user_id)
+    group_ids = get_group_ids(user)
+    query = from a in AclEntry,
+          join: r in assoc(a, :role),
+          join: p in assoc(r, :permissions),
+          where: p.name in ^permissions
+                 and a.principal_id in ^group_ids
+                 and a.principal_type == "group",
+          limit: 1,
+          select: a
+    group_acl = query |> Repo.one
+    if group_acl do true else false end
+  end
+
+  def has_any_permission(user_id, permissions, Domain) do
+    query = from a in AclEntry,
+          join: r in assoc(a, :role),
+          join: p in assoc(r, :permissions),
+          where: p.name in ^permissions
+                 and a.principal_id == ^user_id
+                 and a.principal_type == "user",
+          limit: 1,
+          select: a
+    user_acl = query |> Repo.one
+    if user_acl do true else has_any_group_permission(user_id, permissions, Domain) end
   end
 
   @doc """
@@ -485,7 +525,7 @@ defmodule TdBg.Permissions do
   """
   def assemble_roles(%{user_id: user_id}) do
     tree = Taxonomies.tree()
-    acls = list_acl_entries_by_principal(%{principal_id: user_id, principal_type: "user"})
+    acls = list_acl_entries_by_user(%{user_id: user_id})
     domains = Taxonomies.list_domains()
     roles = Enum.reduce(tree, [], fn(node, acc) ->
       branch_roles = assemble_node_role(node, user_id, acls, [], domains)
