@@ -7,7 +7,16 @@ defmodule TdBg.Canary.TaxonomyAbilities do
   alias TdBg.Permissions.AclEntry
 
   def can?(%User{id: user_id}, :list, Domain) do
-    true # TODO
+    permissions = [
+      Permission.permissions.create_domain,
+      Permission.permissions.update_domain,
+      Permission.permissions.delete_domain,
+      Permission.permissions.create_acl_entry,
+      Permission.permissions.update_acl_entry,
+      Permission.permissions.delete_acl_entry
+    ]
+
+    Permissions.has_any_permission(user_id, permissions, Domain)
   end
 
   def can?(%User{id: user_id}, :create, %Domain{id: domain_id}) do
