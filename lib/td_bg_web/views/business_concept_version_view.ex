@@ -37,6 +37,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
                            String.to_atom(business_concept_version.status))
       |> add_mod_comments(business_concept_version.mod_comments,
                           business_concept_version.version)
+      |> add_aliases(business_concept_version.business_concept)
   end
 
   def render("index_business_concept_taxonomy.json",
@@ -63,5 +64,14 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   defp add_mod_comments(concept, _mod_comments,  1), do: concept
   defp add_mod_comments(concept, mod_comments,  _version) do
     Map.put(concept, :mod_comments, mod_comments)
+  end
+
+  defp add_aliases(concept, business_concept) do
+    if Ecto.assoc_loaded?(business_concept.aliases) do
+      alias_array = Enum.map(business_concept.aliases, &(%{id: &1.id, name: &1.name}))
+      Map.put(concept, :aliases, alias_array)
+    else
+      concept
+    end
   end
 end

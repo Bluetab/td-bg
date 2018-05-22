@@ -7,6 +7,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions
+  alias Poison, as: JSON
 
   setup_all do
     start_supervised MockTdAuthService
@@ -39,6 +40,91 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "lists all business_concept_versions", %{conn: conn} do
       conn = get conn, business_concept_version_path(conn, :index)
       assert json_response(conn, 200)["data"] == []
+    end
+  end
+
+  describe "search" do
+    @tag authenticated_user: @admin_user_name
+    test "find business_concepts by id and status", %{conn: conn} do
+      published = BusinessConcept.status.published
+      draft = BusinessConcept.status.draft
+      domain = insert(:domain)
+      id = [create_version(domain, "one", draft).business_concept_id]
+      id = [create_version(domain, "two", published).business_concept_id | id]
+      id = [create_version(domain, "three", published).business_concept_id | id]
+      conn = get conn, business_concept_path(conn, :search), %{id: Enum.join(id, ","), status: published}
+      assert 2 == length(json_response(conn, 200)["data"])
+    end
+  end
+
+  describe "create business_concept" do
+    setup [:create_template]
+
+    @tag authenticated_user: @admin_user_name
+    test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
+      domain = insert(:domain)
+
+      creation_attrs = %{
+        content: %{},
+        type: "some type",
+        name: "Some name",
+        description: "Some description",
+        domain_id: domain.id
+      }
+
+      conn = post conn, business_concept_version_path(conn, :create), business_concept_version: creation_attrs
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+      assert %{"business_concept_id" => id} = json_response(conn, 201)["data"]
+
+      conn = recycle_and_put_headers(conn)
+
+      conn = get conn, business_concept_path(conn, :show, id)
+      validate_resp_schema(conn, schema, "BusinessConceptResponse")
+      business_concept = json_response(conn, 200)["data"]
+
+      %{id: id, last_change_by: Integer.mod(:binary.decode_unsigned(@admin_user_name), 100_000), version: 1}
+        |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+
+      creation_attrs
+        |> Map.drop([:domain_id])
+        |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+
+      assert business_concept["domain"]["id"] == domain.id
+      assert business_concept["domain"]["name"] == domain.name
+    end
+
+    @tag authenticated_user: @admin_user_name
+    test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
+      domain = insert(:domain)
+      creation_attrs = %{
+        content: %{},
+        type: "some type",
+        name: nil,
+        description: "Some description",
+        domain_id: domain.id
+      }
+      conn = post conn, business_concept_version_path(conn, :create), business_concept_version: creation_attrs
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+      assert json_response(conn, 422)["errors"] != %{}
+    end
+  end
+
+  describe "index_by_name" do
+    @tag authenticated_user: @admin_user_name
+    test "find business concept by name", %{conn: conn} do
+    published = BusinessConcept.status.published
+      draft = BusinessConcept.status.draft
+      domain = insert(:domain)
+      id = [create_version(domain, "one", draft).business_concept.id]
+      id = [create_version(domain, "two", published).business_concept.id | id]
+      [create_version(domain, "two", published).business_concept.id | id]
+
+      conn = get conn, business_concept_version_path(conn, :index), %{search_term: "two"}
+      assert 2 == length(json_response(conn, 200)["data"])
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, business_concept_version_path(conn, :index), %{search_term: "one"}
+      assert 1 == length(json_response(conn, 200)["data"])
     end
   end
 
@@ -79,4 +165,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
   end
 
+  def create_template(_) do
+    headers = get_header(get_user_token("app-admin"))
+    attrs = %{}
+      |> Map.put("name", "some type")
+      |> Map.put("content", [])
+    body = %{template: attrs} |> JSON.encode!
+    HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
+    :ok
+  end
 end

@@ -9,6 +9,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.ErrorView
+  alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
   alias TdBg.Taxonomies
@@ -25,12 +26,103 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   swagger_path :index do
     get "/business_concept_versions"
     description "List Business Concept Versions"
-    response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
+    parameters do
+      search_term :path, :string, "Business Term", required: false
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptVersionsResponse)
   end
 
-  def index(conn, _params) do
-    business_concept_versions = BusinessConcepts.list_all_business_concept_versions()
+  def index(conn, params) do
+    search_term = Map.get(params, "search_term")
+    business_concept_versions =
+      case search_term do
+        "" -> BusinessConcepts.list_all_business_concept_versions()
+        _ -> BusinessConcepts.get_business_concept_by_term(search_term)
+      end
+    user = conn.assigns.current_user
+    business_concept_versions = business_concept_versions
+      |> Enum.filter(&(can?(user, view_business_concept(&1))))
     render(conn, "index.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia("business_concept_version", conn, business_concept_versions))
+  end
+
+  swagger_path :create do
+    post "/business_concept_versions"
+    description "Creates a Business Concept version child of Data Domain"
+    produces "application/json"
+    parameters do
+      business_concept :body, Schema.ref(:BusinessConceptVersionCreate), "Business Concept create attrs"
+    end
+    response 201, "Created", Schema.ref(:BusinessConceptVersionResponse)
+    response 400, "Client Error"
+  end
+
+  def create(conn, %{"business_concept_version" => business_concept_params}) do
+    #validate fields that if not present are throwing internal server errors in bc creation
+    validate_required_bc_fields(business_concept_params)
+
+    concept_type = Map.get(business_concept_params, "type")
+    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
+
+    concept_name = Map.get(business_concept_params, "name")
+
+    user = conn.assigns.current_user
+    domain_id = Map.get(business_concept_params, "domain_id")
+    domain = Taxonomies.get_domain!(domain_id)
+
+    business_concept_attrs = %{}
+    |> Map.put("domain_id", domain_id)
+    |> Map.put("type", concept_type)
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    creation_attrs = business_concept_params
+    |> Map.put("business_concept", business_concept_attrs)
+    |> Map.put("content_schema", content_schema)
+    |> Map.update("content", %{},  &(&1))
+    |> Map.update("related_to", [],  &(&1))
+    |> Map.put("last_change_by", conn.assigns.current_user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+    |> Map.put("status", BusinessConcept.status.draft)
+    |> Map.put("version", 1)
+
+    related_to = Map.get(creation_attrs, "related_to")
+
+    with true <- can?(user, create_business_concept(domain)),
+         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
+         {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
+         {:ok, %BusinessConceptVersion{} = concept} <-
+          BusinessConcepts.create_business_concept(creation_attrs) do
+      conn = conn
+      |> put_status(:created)
+      |> put_resp_header("location", business_concept_path(conn, :show, concept.business_concept))
+      |> render("show.json", business_concept_version: concept)
+      @search_service.put_search(concept)
+      conn
+    else
+      error ->
+        BusinessConceptSupport.handle_bc_errors(conn, error)
+    end
+  rescue
+    validationError in ValidationError ->
+      conn
+      |> put_status(:unprocessable_entity)
+      |> json(%{"errors": %{"#{validationError.field}": [validationError.error]}})
+  end
+
+  defp validate_required_bc_fields(attrs) do
+    if not Map.has_key?(attrs, "content") do
+      raise ValidationError, field: "content", error: "blank"
+    end
+    if not Map.has_key?(attrs, "type") do
+      raise ValidationError, field: "type", error: "blank"
+    end
+  end
+
+  defp check_valid_related_to(_type, []), do: {:valid_related_to}
+  defp check_valid_related_to(type, ids) do
+    input_count = length(ids)
+    actual_count = BusinessConcepts.count_published_business_concepts(type, ids)
+    if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
 
   swagger_path :versions do

@@ -61,7 +61,7 @@ defmodule TdBgWeb.Router do
     get "/taxonomy/tree", TaxonomyController, :tree
     get "/taxonomy/roles", TaxonomyController, :roles
 
-    resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :create, :update] do
+    resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :update] do
       post "/submit", BusinessConceptVersionController, :send_for_approval
       post "/publish", BusinessConceptVersionController, :publish
       post "/reject", BusinessConceptVersionController, :reject
@@ -74,7 +74,7 @@ defmodule TdBgWeb.Router do
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
     get "/business_concepts/search", BusinessConceptController, :search
     get "/business_concepts/domains/:domain_id", BusinessConceptController, :index_children_business_concept
-    resources "/business_concepts", BusinessConceptController, except: [:new, :edit, :delete] do
+    resources "/business_concepts", BusinessConceptController, except: [:index, :new, :edit, :delete] do
       get  "/aliases", BusinessConceptAliasController, :index
       post "/aliases", BusinessConceptAliasController, :create
       patch "/status", BusinessConceptController, :update_status

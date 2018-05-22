@@ -30,7 +30,7 @@ defmodule TdBg.BusinessConceptSteps do
       token = get_user_token(user_name)
       domain = get_domain_by_name(token_admin, domain_name)
       business_concept = business_concept_by_name(token, business_concept_name)
-      {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
+      {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["business_concept_id"])
       assert rc_ok() == to_response_code(http_status_code)
       assert business_concept["name"] == business_concept_name
       assert business_concept["domain"]["id"] == domain["id"]
@@ -68,7 +68,7 @@ defmodule TdBg.BusinessConceptSteps do
     token = get_user_token(user_name)
     domain = get_domain_by_name(token_admin, domain_name)
     business_concept = business_concept_by_name(token, business_concept_name)
-    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["id"])
+    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept["business_concept_id"])
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept["name"] == business_concept_name
     assert business_concept["domain_id"] !== domain["id"]
@@ -89,7 +89,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name(token_admin, business_concept_name)
-      {_, _, %{"data" => current_business_concept}} = business_concept_show(token, business_concept["id"])
+      {_, _, %{"data" => current_business_concept}} = business_concept_show(token, business_concept["business_concept_id"])
       business_concept_id = current_business_concept["id"]
       assert business_concept_type == current_business_concept["type"]
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
@@ -114,7 +114,7 @@ defmodule TdBg.BusinessConceptSteps do
     if result == status_code do
       business_concept_tmp = business_concept_by_name(token_admin, business_concept_name)
       assert business_concept_type == business_concept_tmp["type"]
-      {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
+      {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["business_concept_id"])
       assert rc_ok() == to_response_code(http_status_code)
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       assert_attrs(attrs, business_concept)
@@ -130,7 +130,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     token = get_user_token(user_name)
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    business_concept_version_id = business_concept["business_concept_version_id"]
+    business_concept_version_id = business_concept["id"]
     {_, status_code} = business_concept_version_send_for_approval(token, business_concept_version_id)
     {:ok, Map.merge(state, %{status_code: status_code})}
  end
@@ -139,7 +139,7 @@ defmodule TdBg.BusinessConceptSteps do
   %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, status: status},
   %{token_admin: token_admin} = state do
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    business_concept_id = business_concept["id"]
+    business_concept_id = business_concept["business_concept_id"]
     change_business_concept_status(token_admin, business_concept_id, status)
     {:ok, state}
   end
@@ -149,7 +149,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_version_id = business_concept["business_concept_version_id"]
+      business_concept_version_id = business_concept["id"]
       {_, status_code} = business_concept_version_publish(token, business_concept_version_id)
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
@@ -159,7 +159,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{token_admin: token_admin} = state do
       token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_version_id = business_concept["business_concept_version_id"]
+      business_concept_version_id = business_concept["id"]
       {_, status_code} = business_concept_version_reject(token, business_concept_version_id, reject_reason)
 
       {:ok, Map.merge(state, %{status_code: status_code})}
@@ -178,7 +178,7 @@ defmodule TdBg.BusinessConceptSteps do
                     business_concept_type)
         assert business_concept_version == business_concept_tmp["version"]
         assert business_concept_type == business_concept_tmp["type"]
-        {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
+        {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["id"])
         assert rc_ok() == to_response_code(http_status_code)
         attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
         assert_attrs(attrs, business_concept)
@@ -193,7 +193,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{token_admin: token_admin} = state do
 
     business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    business_concept_id = business_concept["id"]
+    business_concept_id = business_concept["business_concept_id"]
     business_concept_version = String.to_integer(version)
     if business_concept_version > 1 do
       Enum.each(2..business_concept_version, fn(_x) ->
@@ -215,11 +215,11 @@ defmodule TdBg.BusinessConceptSteps do
     status = business_concept["status"]
 
     case status == BusinessConcept.status.published do
-      true -> business_concept_version(token_admin, business_concept["id"])
+      true -> business_concept_version(token_admin, business_concept["business_concept_id"])
       _ -> nil
     end
 
-    business_concept_update(token_admin, business_concept["id"],  attrs)
+    business_concept_update(token_admin, business_concept["business_concept_id"],  attrs)
 
     {:ok, state}
   end
@@ -233,7 +233,7 @@ defmodule TdBg.BusinessConceptSteps do
                   business_concept_type)
       assert business_concept_tmp
       token = get_user_token(user_name)
-      business_concept_version_id = business_concept_tmp["business_concept_version_id"]
+      business_concept_version_id = business_concept_tmp["id"]
       {_, status_code} = business_concept_version_delete(token, business_concept_version_id)
       {:ok, Map.merge(state, %{status_code: status_code, deleted_business_concept_version_id: business_concept_version_id})}
   end
@@ -263,7 +263,7 @@ defmodule TdBg.BusinessConceptSteps do
                     business_concept_type)
         assert business_concept_version == business_concept_tmp["version"]
         assert business_concept_type == business_concept_tmp["type"]
-        {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
+        {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["id"])
         assert rc_ok() == to_response_code(http_status_code)
         attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
         assert_attrs(attrs, business_concept)
@@ -284,7 +284,7 @@ defmodule TdBg.BusinessConceptSteps do
       assert business_concept_tmp
       assert business_concept_type == business_concept_tmp["type"]
       token = get_user_token(user_name)
-      {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["business_concept_version_id"])
+      {_, http_status_code, %{"data" => business_concept}} = business_concept_version_show(token, business_concept_tmp["id"])
       assert rc_ok() == to_response_code(http_status_code)
       attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
       assert_attrs(attrs, business_concept)
@@ -310,7 +310,7 @@ defmodule TdBg.BusinessConceptSteps do
 
       token = get_user_token(user_name)
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_version_id = business_concept["business_concept_version_id"]
+      business_concept_version_id = business_concept["id"]
       {_, status_code} = business_concept_version_deprecate(token, business_concept_version_id)
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
@@ -319,7 +319,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{user_name: user_name, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
     %{token_admin: token_admin} = state do
       business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_id = business_concept_version["id"]
+      business_concept_id = business_concept_version["business_concept_id"]
       token = get_user_token(user_name)
       {_, status_code, %{"data" => business_concept_versions}} = business_concept_versions(token, business_concept_id)
       assert rc_ok() == to_response_code(status_code)
@@ -330,7 +330,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
     %{token_admin: token_admin} = state do
       business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_id = business_concept_version["id"]
+      business_concept_id = business_concept_version["business_concept_id"]
       token = get_user_token(user_name)
       creation_attrs = %{name: business_concept_alias}
       {_, status_code, _} = business_concept_alias_create(token, business_concept_id, creation_attrs)
@@ -349,7 +349,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{business_concept_name: business_concept_name, business_concept_type: business_concept_type, business_concept_alias: business_concept_alias},
      %{token_admin: token_admin} = _state do
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_id = business_concept["id"]
+      business_concept_id = business_concept["business_concept_id"]
       creation_attrs = %{name: business_concept_alias}
       {_, status_code, _} = business_concept_alias_create(token_admin, business_concept_id, creation_attrs)
       assert rc_created() == to_response_code(status_code)
@@ -359,7 +359,7 @@ defmodule TdBg.BusinessConceptSteps do
     %{user_name: user_name, business_concept_alias: business_concept_alias, business_concept_name: business_concept_name, business_concept_type: business_concept_type},
     %{token_admin: token_admin} = state do
       business_concept = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-      business_concept_id = business_concept["id"]
+      business_concept_id = business_concept["business_concept_id"]
       business_concept_alias = business_concept_alias_by_name(token_admin, business_concept_id, business_concept_alias)
       assert business_concept_alias
       token = get_user_token(user_name)
@@ -420,7 +420,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     token = get_user_token(user_name)
     business_concept_tmp = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["id"])
+    {_, http_status_code, %{"data" => business_concept}} = business_concept_show(token, business_concept_tmp["business_concept_id"])
     assert rc_ok() == to_response_code(http_status_code)
     attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
     assert_attrs(attrs, business_concept)
@@ -531,7 +531,7 @@ defmodule TdBg.BusinessConceptSteps do
 
   def assert_visible_aliases(token_admin, business_concept_name, business_concept_type, user_name, fields) do
     business_concept_version = business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
-    business_concept_id = business_concept_version["id"]
+    business_concept_id = business_concept_version["business_concept_id"]
     token = get_user_token(user_name)
     {_, status_code, %{"data" => business_concept_aliases}} = business_concept_alias_list(token, business_concept_id)
     assert rc_ok() == to_response_code(status_code)
@@ -556,7 +556,6 @@ defmodule TdBg.BusinessConceptSteps do
   def change_business_concept_status(token_admin, business_concept_id, status) do
     {_, status_code, %{"data" => business_concept_version}} = business_concept_show(token_admin, business_concept_id)
     assert rc_ok() == to_response_code(status_code)
-
     current_status = String.to_atom(business_concept_version["status"])
     desired_status = String.to_atom(status)
     case {current_status, desired_status} do
@@ -602,7 +601,7 @@ defmodule TdBg.BusinessConceptSteps do
         |> Enum.map(fn({k, v}) -> %{"Field": Atom.to_string(k), "Value": v} end)
         |> field_value_to_api_attrs(token, fixed_values())
         {_, 201, %{"data" => business_concept}} = business_concept_create(token, domain["id"], attrs)
-        {_, 200} = business_concept_send_for_approval(token, business_concept["id"])
+        {_, 200} = business_concept_send_for_approval(token, business_concept["business_concept_id"])
       "rejected" -> nil
       "published" -> nil
       "versioned" -> nil
@@ -621,7 +620,7 @@ defmodule TdBg.BusinessConceptSteps do
       _ ->
         related_to_ids = related_to
         |> String.split(",")
-        |> Enum.map(&(business_concept_by_name(token, String.trim(&1))["id"]))
+        |> Enum.map(&(business_concept_by_name(token, String.trim(&1))["business_concept_id"]))
         Map.put(attrs, "related_to", related_to_ids)
     end
   end

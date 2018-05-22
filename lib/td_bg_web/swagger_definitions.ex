@@ -439,19 +439,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
           mod_comments [:string, :null], "Business Concept modification comments", required: false
         end
       end,
-      BusinessConceptCreate: swagger_schema do
-        properties do
-          business_concept (Schema.new do
-            properties do
-              type :string, "Business Concept type (empty,...)", required: true
-              content :object, "Business Concept content", required: true
-              name :string, "Business Concept name", required: true
-              description :string, "Business Concept description", required: true
-              domain_id :integer, "Business Concept Domain ID", required: true
-            end
-          end)
-        end
-      end,
       BusinessConceptUpdate: swagger_schema do
         properties do
           business_concept (Schema.new do
@@ -580,6 +567,19 @@ defmodule TdBgWeb.SwaggerDefinitions do
           data (Schema.new do
             properties do
               collection Schema.ref(:BusinessConceptVersions)
+            end
+          end)
+        end
+      end,
+      BusinessConceptVersionCreate: swagger_schema do
+        properties do
+          business_concept (Schema.new do
+            properties do
+              type :string, "Business Concept type (empty,...)", required: true
+              content :object, "Business Concept content", required: true
+              name :string, "Business Concept name", required: true
+              description :string, "Business Concept description", required: true
+              domain_id :integer, "Business Concept Domain ID", required: true
             end
           end)
         end

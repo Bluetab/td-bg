@@ -7,7 +7,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
-  
+
   setup_all do
     start_supervised MockTdAuthService
     :ok
@@ -18,106 +18,6 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   end
 
   @admin_user_name "app-admin"
-
-  describe "index" do
-    @tag authenticated_user: @admin_user_name
-    test "lists all business_concepts", %{conn: conn} do
-      conn = get conn, business_concept_path(conn, :index)
-      assert json_response(conn, 200)["data"] == []
-    end
-  end
-
-  describe "search" do
-    @tag authenticated_user: @admin_user_name
-    test "find business_concepts by id and status", %{conn: conn} do
-      published = BusinessConcept.status.published
-      draft = BusinessConcept.status.draft
-      domain = insert(:domain)
-      id = [create_version(domain, "one", draft).business_concept.id]
-      id = [create_version(domain, "two", published).business_concept.id | id]
-      id = [create_version(domain, "three", published).business_concept.id | id]
-
-      conn = get conn, business_concept_path(conn, :search), %{id: Enum.join(id, ","), status: published}
-      assert 2 == length(json_response(conn, 200)["data"])
-    end
-
-    defp create_version(domain, name, status) do
-      business_concept = insert(:business_concept, domain: domain)
-      insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
-    end
-
-  end
-
-  describe "index_by_name" do
-    @tag authenticated_user: @admin_user_name
-    test "find business concept by name", %{conn: conn} do
-      published = BusinessConcept.status.published
-      draft = BusinessConcept.status.draft
-      domain = insert(:domain)
-      id = [create_version(domain, "one", draft).business_concept.id]
-      id = [create_version(domain, "two", published).business_concept.id | id]
-      [create_version(domain, "two", published).business_concept.id | id]
-
-      conn = get conn, business_concept_path(conn, :index), %{search_term: "two"}
-      assert 2 == length(json_response(conn, 200)["data"])
-
-      conn = recycle_and_put_headers(conn)
-      conn = get conn, business_concept_path(conn, :index), %{search_term: "one"}
-      assert 1 == length(json_response(conn, 200)["data"])
-    end
-  end
-
-  describe "create business_concept" do
-    setup [:create_template]
-
-    @tag authenticated_user: @admin_user_name
-    test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
-      domain = insert(:domain)
-
-      creation_attrs = %{
-        content: %{},
-        type: "some type",
-        name: "Some name",
-        description: "Some description",
-        domain_id: domain.id
-      }
-
-      conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
-      validate_resp_schema(conn, schema, "BusinessConceptResponse")
-      assert %{"id" => id} = json_response(conn, 201)["data"]
-
-      conn = recycle_and_put_headers(conn)
-
-      conn = get conn, business_concept_path(conn, :show, id)
-      validate_resp_schema(conn, schema, "BusinessConceptResponse")
-      business_concept = json_response(conn, 200)["data"]
-
-      %{id: id, last_change_by: Integer.mod(:binary.decode_unsigned(@admin_user_name), 100_000), version: 1}
-        |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
-
-      creation_attrs
-        |> Map.drop([:domain_id])
-        |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
-
-      assert business_concept["domain"]["id"] == domain.id
-      assert business_concept["domain"]["name"] == domain.name
-    end
-
-    @tag authenticated_user: @admin_user_name
-    test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
-      domain = insert(:domain)
-      creation_attrs = %{
-        content: %{},
-        type: "some type",
-        name: nil,
-        description: "Some description",
-        domain_id: domain.id
-      }
-      conn = post conn, business_concept_path(conn, :create), business_concept: creation_attrs
-      validate_resp_schema(conn, schema, "BusinessConceptResponse")
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-  end
 
   describe "update business_concept" do
     setup [:create_template]
