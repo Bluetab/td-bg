@@ -9,7 +9,6 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
@@ -53,15 +52,6 @@ defmodule TdBgWeb.BusinessConceptController do
     end
 
     render(conn, "search.json", business_concepts: business_concept_versions)
-  end
-
-  defp validate_required_bc_fields(attrs) do
-    if not Map.has_key?(attrs, "content") do
-      raise ValidationError, field: "content", error: "blank"
-    end
-    if not Map.has_key?(attrs, "type") do
-      raise ValidationError, field: "type", error: "blank"
-    end
   end
 
   swagger_path :show do
