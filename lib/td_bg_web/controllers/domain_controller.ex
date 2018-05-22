@@ -25,6 +25,23 @@ defmodule TdBgWeb.DomainController do
     SwaggerDefinitions.domain_swagger_definitions()
   end
 
+  def options(conn, _params) do
+    current_user = conn.assigns.current_user
+
+    allowed_methods = [
+      ["OPTIONS", true],
+      ["GET", can?(current_user, list(Domain))],
+      ["POST", can?(current_user, create(Domain))]
+    ]
+    |> Enum.filter(fn [_k, v] -> v end)
+    |> Enum.map(fn [k, _v] -> k end)
+    |> Enum.join(", ")
+
+    conn
+    |> put_resp_header("allow", allowed_methods)
+    |> send_resp(:no_content, "")
+  end
+
   swagger_path :index do
     get "/domains"
     description "List Domains"

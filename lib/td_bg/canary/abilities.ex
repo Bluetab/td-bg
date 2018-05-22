@@ -13,6 +13,10 @@ defmodule TdBg.Canary.Abilities do
     #def can?(%User{}, _action, nil), do: false
 
     # administrator is superpowerful for Domain, Role and AclEntry
+    def can?(%User{is_admin: true}, _action, Domain) do
+      true
+    end
+    
     def can?(%User{is_admin: true}, _action, %Domain{}) do
       true
     end
@@ -29,6 +33,14 @@ defmodule TdBg.Canary.Abilities do
       true
     end
 
+    def can?(%User{} = user, :list, Domain) do
+      TaxonomyAbilities.can?(user, :list, Domain)
+    end
+    
+    def can?(%User{} = user, :create, Domain) do
+      TaxonomyAbilities.can?(user, :create, Domain)
+    end
+    
     def can?(%User{} = user, :create, %Domain{} = domain) do
       TaxonomyAbilities.can?(user, :create, domain)
     end

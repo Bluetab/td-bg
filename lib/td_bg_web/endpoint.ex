@@ -36,7 +36,7 @@ defmodule TdBgWeb.Endpoint do
     key: "_TdBg_key",
     signing_salt: "X5RG5d/j"
 
-  plug CORSPlug, origin: ["*"]
+  plug Corsica, origins: "*"
 
   plug TdBgWeb.Router
 

@@ -50,7 +50,7 @@ defmodule TdBg.Mixfile do
       {:canary, "~> 1.1.1"},
       {:canada, "~> 1.0.1"},
       {:ex_machina, "~> 2.1", only: :test},
-      {:cors_plug, "~> 1.2"},
+      {:corsica, "~> 1.0"},
       {:phoenix_swagger, "~> 0.7.0"},
       {:ex_json_schema, "~> 0.5"},
       {:json_diff, "~> 0.1.0"}
