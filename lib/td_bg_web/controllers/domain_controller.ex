@@ -136,8 +136,8 @@ defmodule TdBgWeb.DomainController do
       do_create(conn, domain_params)
     else
       conn
-      |> put_status(403)
-      |> render(ErrorView, :"403")
+      |> put_status(:forbidden)
+      |> render(ErrorView, :"403.json")
     end
   end
 
@@ -182,7 +182,19 @@ defmodule TdBgWeb.DomainController do
   end
 
   def show(conn, %{"id" => id}) do
+    current_user = GuardianPlug.current_resource(conn)
     domain = Taxonomies.get_domain!(id)
+
+    if can?(current_user, show(domain)) do
+      do_show(conn, domain)
+    else
+      conn
+      |> put_status(:forbidden)
+      |> render(ErrorView, :"403.json")
+    end
+  end
+
+  defp do_show(conn, domain) do
     render(conn, "show.json",
       domain: domain,
       hypermedia: hypermedia("domain", conn, domain))
@@ -201,11 +213,22 @@ defmodule TdBgWeb.DomainController do
   end
 
   def update(conn, %{"id" => id, "domain" => domain_params}) do
+    current_user = GuardianPlug.current_resource(conn)
     domain = Taxonomies.get_domain!(id)
 
-    with {:ok, %Domain{} = domain} <- Taxonomies.update_domain(domain, domain_params) do
-      @search_service.put_search(domain)
-      render(conn, "show.json", domain: domain)
+    if can?(current_user, update(domain)) do
+      do_update(conn, domain, domain_params)
+    else
+      conn
+      |> put_status(:forbidden)
+      |> render(ErrorView, :"403.json")
+    end
+  end
+
+  defp do_update(conn, domain, domain_params) do
+    with {:ok, %Domain{} = updated_domain} <- Taxonomies.update_domain(domain, domain_params) do
+      @search_service.put_search(updated_domain)
+      render(conn, "show.json", domain: updated_domain)
     end
   end
 
@@ -221,7 +244,19 @@ defmodule TdBgWeb.DomainController do
   end
 
   def delete(conn, %{"id" => id}) do
+    current_user = GuardianPlug.current_resource(conn)
     domain = Taxonomies.get_domain!(id)
+
+    if can?(current_user, delete(domain)) do
+      do_delete(conn, id, domain)
+    else
+      conn
+      |> put_status(:forbidden)
+      |> render(ErrorView, :"403.json")
+    end
+  end
+
+  defp do_delete(conn, id, domain) do
     with {:count, :domain, 0} <- Taxonomies.count_domain_children(id),
          {:count, :business_concept, 0} <- Taxonomies.count_domain_business_concept_children(id),
          {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
@@ -242,6 +277,7 @@ defmodule TdBgWeb.DomainController do
         |> render(ErrorView, :"422.json")
     end
   end
+
 
   swagger_path :available_users do
     get "/domains/{domain_id}/available_users"
