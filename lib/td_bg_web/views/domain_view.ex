@@ -26,11 +26,14 @@ defmodule TdBgWeb.DomainView do
   end
 
   def render("domain.json", %{domain: domain}) do
+    templates = domain.templates |> Enum.map(&(Map.take(&1, [:id, :name])))
     %{id: domain.id,
       parent_id: domain.parent_id,
       name: domain.name,
       type: domain.type,
-      description: domain.description}
+      description: domain.description,
+      _embedded: %{templates: templates}
+    }
   end
 
   def render("domain_tiny.json", %{domain: domain}) do

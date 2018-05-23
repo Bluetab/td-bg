@@ -77,39 +77,6 @@ defmodule TdBgWeb.DomainController do
     |> Enum.filter(&(&1 !== ""))
   end
 
-  swagger_path :index_root do
-    get "/domains/index_root"
-    description "List Root Domain"
-    produces "application/json"
-    response 200, "OK", Schema.ref(:DomainsResponse)
-    response 400, "Client Error"
-  end
-
-  def index_root(conn, _params) do
-    domains = Taxonomies.list_root_domains()
-    render(conn, "index.json",
-      domains: domains,
-      hypermedia: hypermedia("domain", conn, domains))
-  end
-
-  swagger_path :index_children do
-    get "/domains/{domain_id}/index_children"
-    description "List non-root Domains"
-    produces "application/json"
-    parameters do
-      domain_id :path, :integer, "Domain ID", required: true
-    end
-    response 200, "OK", Schema.ref(:DomainsResponse)
-    response 400, "Client Error"
-  end
-
-  def index_children(conn, %{"domain_id" => id}) do
-    domains = Taxonomies.list_domain_children(id)
-    render(conn, "index.json",
-      domains: domains,
-      hypermedia: hypermedia("domain", conn, domains))
-  end
-
   swagger_path :create do
     post "/domains"
     description "Creates a Domain"

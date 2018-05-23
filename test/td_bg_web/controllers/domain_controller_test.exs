@@ -81,6 +81,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert json_response_data["description"] == "some description"
       assert json_response_data["name"] == "some name"
       assert json_response_data["parent_id"] == nil
+      assert json_response_data["_embedded"]["templates"] == []
     end
 
     @tag :admin_authenticated
@@ -111,34 +112,6 @@ defmodule TdBgWeb.DomainControllerTest do
     test "renders errors when data is invalid", %{conn: conn, domain: domain} do
       conn = put conn, domain_path(conn, :update, domain), domain: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
-    end
-  end
-
-  describe "index root" do
-    setup [:create_domain]
-
-    @tag :admin_authenticated
-    test "lists root domain groups", %{conn: conn, swagger_schema: schema, domain: domain} do
-      conn = get conn, domain_path(conn, :index_root)
-      validate_resp_schema(conn, schema, "DomainsResponse")
-      assert List.first(json_response(conn, 200)["data"])["id"] == domain.id
-      assert List.first(json_response(conn, 200)["data"])["description"] == domain.description
-      assert List.first(json_response(conn, 200)["data"])["name"] == domain.name
-      assert List.first(json_response(conn, 200)["data"])["parent_id"] == domain.parent_id
-    end
-  end
-
-  describe "index_children" do
-    setup [:create_child_domain_group]
-
-    @tag :admin_authenticated
-    test "index domain children", %{conn: conn, swagger_schema: schema, child_domains: {:ok, child_domains}} do
-      conn = get conn, domain_domain_path(conn,  :index_children, child_domains.parent_id)
-      validate_resp_schema(conn, schema, "DomainsResponse")
-      assert List.first(json_response(conn, 200)["data"])["id"] == child_domains.id
-      assert List.first(json_response(conn, 200)["data"])["description"] == child_domains.description
-      assert List.first(json_response(conn, 200)["data"])["name"] == child_domains.name
-      assert List.first(json_response(conn, 200)["data"])["parent_id"] == child_domains.parent_id
     end
   end
 
@@ -214,11 +187,5 @@ defmodule TdBgWeb.DomainControllerTest do
   defp create_domain(_) do
     domain = fixture(:domain)
     {:ok, domain: domain}
-  end
-
-  defp create_child_domain_group(_) do
-    {:ok, domain} =  Taxonomies.create_domain(@create_attrs)
-    child_domains = Taxonomies.create_domain(%{parent_id: domain.id, description: "some child description", name: "some child name"})
-    {:ok, child_domains: child_domains}
   end
 end

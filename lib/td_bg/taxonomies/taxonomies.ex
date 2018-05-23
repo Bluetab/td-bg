@@ -20,7 +20,10 @@ defmodule TdBg.Taxonomies do
 
   """
   def list_domains do
-    Repo.all from r in Domain
+    query = from d in Domain
+    query
+    |> Repo.all
+    |> Repo.preload(:templates)
   end
 
   @doc """
@@ -39,21 +42,6 @@ defmodule TdBg.Taxonomies do
   end
 
   @doc """
-  Returns children of domain id passed as argument
-  """
-  def list_domain_children(id) do
-    Repo.all from r in Domain, where: r.parent_id == ^id
-  end
-
-  @doc """
-  """
-  def list_children_data_domain(domain_id) do
-    query = from d in Domain,
-            where: d.domain_id == ^domain_id
-    Repo.all(query)
-  end
-
-  @doc """
   Gets a single domain.
 
   Raises `Ecto.NoResultsError` if the Domain does not exist.
@@ -68,7 +56,8 @@ defmodule TdBg.Taxonomies do
 
   """
   def get_domain!(id) do
-    Repo.one! from r in Domain, where: r.id == ^id
+    query = from r in Domain, where: r.id == ^id
+    query |> Repo.one! |> Repo.preload(:templates)
   end
 
   def get_domain(id) do
@@ -92,9 +81,14 @@ defmodule TdBg.Taxonomies do
 
   """
   def create_domain(attrs \\ %{}) do
-    %Domain{}
-    |> Domain.changeset(attrs)
-    |> Repo.insert()
+    result = %Domain{}
+      |> Domain.changeset(attrs)
+      |> Repo.insert()
+    case result do
+      {:ok, domain} ->
+        {:ok, get_domain!(domain.id)}
+      _ -> result
+    end
   end
 
   @doc """

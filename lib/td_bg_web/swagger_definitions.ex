@@ -12,10 +12,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           id :integer, "Unique identifier", required: true
           name :string, "Domain name", required: true
-          description :string, "type"
-          description :string, "descritpion"
+          type :string, "type"
+          description :string, "description"
           parent_id [:integer, :null], "Domain id"
           _actions Schema.ref(:Actions)
+          _embedded Schema.ref(:DomainEmbeddings)
         end
         example %{
           id: 12,
@@ -26,6 +27,13 @@ defmodule TdBgWeb.SwaggerDefinitions do
           _actions: %{}
         }
       end,
+      DomainEmbeddings: swagger_schema do
+        title "Domain Embeddings"
+        description "Embedded resources relating to a domain"
+        properties do
+          templates :array, "Templates", items: Schema.ref(:TemplateRef)
+        end
+      end,
       Domain: swagger_schema do
         title "Domain"
         description "A Domain"
@@ -35,6 +43,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           type [:string, :null], "type"
           description :string, "description"
           parent_id [:integer, :null], "Domain id"
+          _embedded Schema.ref(:DomainEmbeddings)
         end
         example %{
           id: 12,
@@ -55,6 +64,14 @@ defmodule TdBgWeb.SwaggerDefinitions do
           id: 12,
           name: "Domain name"
         }
+      end,
+      TemplateRef: swagger_schema do
+        title "Template Reference"
+        description "A Template's id and name"
+        properties do
+          id :integer, "Template Id", required: true
+          name :string, "Template Name", required: true 
+        end
       end,
       DomainCreate: swagger_schema do
         properties do
@@ -207,43 +224,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
 
   def taxonomy_swagger_definitions do
     %{
-      TreeItem: swagger_schema do
-        properties do
-          id :integer
-          name :string
-          description :string
-          children (Schema.new do
-                      type :array
-                      items Schema.ref(:TreeItem)
-                    end)
-        end
-      end,
-      TaxonomyTreeResponse: swagger_schema do
-        properties do
-          data (Schema.new do
-              type :array
-              items Schema.ref(:TreeItem)
-          end)
-        end
-        example %{
-          data: [
-            %{
-              name: "domain 1",
-              id: 1,
-              description: "domain root 1",
-              children:
-                [
-                %{
-                  name: "domain 2",
-                  id: 1,
-                  description: "domain 2 child of domain 1",
-                  children: []
-                }
-              ]
-            }
-          ]
-        }
-      end,
       DomainItem: swagger_schema do
         properties do
           id (Schema.new do

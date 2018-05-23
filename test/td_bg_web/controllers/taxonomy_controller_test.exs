@@ -2,7 +2,6 @@ defmodule TdBgWeb.TaxonomyControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBgWeb.Taxonomy
   import TdBgWeb.Authentication, only: :functions
   alias TdBg.Permissions
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -14,44 +13,6 @@ defmodule TdBgWeb.TaxonomyControllerTest do
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
-  end
-
-  describe "Taxonomy tree API call" do
-    @tag :admin_authenticated
-    test "List empty taxonomy tree", %{conn: conn} do
-      conn = get conn, taxonomy_path(conn, :tree)
-      assert json_response(conn, 200)["data"] == []
-    end
-
-    @tag :admin_authenticated
-    test "List one Domain taxonomy tree", %{conn: conn, swagger_schema: schema} do
-
-      build(:user)
-      insert(:domain)
-
-      conn = get conn, taxonomy_path(conn, :tree)
-      validate_resp_schema(conn, schema, "TaxonomyTreeResponse")
-
-      actual_tree = json_response(conn, 200)["data"]
-      actual_tree = actual_tree |> Enum.map(fn(node) -> Map.take(node, ["children", "description", "name"]) end)
-      assert actual_tree == [%{"children" => [], "description" => "My domain description", "name" => "My domain"}]
-    end
-
-    @tag :admin_authenticated
-    test "List Domains taxonomy tree", %{conn: conn, swagger_schema: schema} do
-      build(:user)
-      insert(:child_domain)
-
-      conn = get conn, taxonomy_path(conn, :tree)
-      validate_resp_schema(conn, schema, "TaxonomyTreeResponse")
-
-      actual_tree = json_response(conn, 200)["data"]
-      actual_tree = remove_tree_keys(actual_tree)
-
-      assert actual_tree == [%{"children" =>
-                                [%{"children" => [], "description" => "My child domain description", "name" => "My child domain", "type" => nil}],
-                                   "description" => "My domain description", "name" => "My domain", "type" => nil}]
-    end
   end
 
   describe "Taxonomy roles API call" do

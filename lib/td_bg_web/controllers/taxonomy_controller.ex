@@ -2,45 +2,13 @@ defmodule TdBgWeb.TaxonomyController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 
-  alias TdBg.Taxonomies
   alias TdBg.Permissions
-  alias TdBg.Taxonomies.Domain
   alias TdBgWeb.SwaggerDefinitions
 
   action_fallback TdBgWeb.FallbackController
 
   def swagger_definitions do
     SwaggerDefinitions.taxonomy_swagger_definitions()
-  end
-
-  swagger_path :tree do
-    get "/taxonomy/tree"
-    description "Returns tree of Domains"
-    produces "application/json"
-    response 200, "Ok", Schema.ref(:TaxonomyTreeResponse)
-    response 400, "Client error"
-  end
-  def tree(conn, _params) do
-    tree = Taxonomies.tree
-    tree_output = tree |> format_tree
-    json conn, %{"data": tree_output}
-  end
-
-  defp format_tree(nil), do: nil
-
-  defp format_tree(tree) do
-    Enum.map(tree, fn(node) ->
-      build_node(node)
-    end)
-  end
-
-  defp build_node(domain) do
-    domain_map = build_map(domain)
-    Map.merge(domain_map, %{children: format_tree(domain.children)})
-  end
-
-  defp build_map(%Domain{} = domain) do
-    %{id: domain.id, name: domain.name, type: domain.type, description: domain.description, children: []}
   end
 
   swagger_path :roles do
