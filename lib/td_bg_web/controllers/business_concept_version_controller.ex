@@ -574,7 +574,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       BusinessConcepts.update_business_concept_version(business_concept_version,
                                                               update_params) do
       @search_service.put_search(business_concept_version)
-      render(conn, "show.json", business_concept_version: concept_version)
+      render(conn, "show.json", business_concept_version: concept_version, hypermedia: hypermedia("business_concept_version", conn, concept_version))
     else
       false ->
         conn
