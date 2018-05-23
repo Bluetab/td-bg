@@ -648,4 +648,11 @@ defmodule TdBg.BusinessConcepts do
     |> order_by(asc: :version)
     |> Repo.all
   end
+
+  def check_valid_related_to(_type, []), do: {:valid_related_to}
+  def check_valid_related_to(type, ids) do
+    input_count = length(ids)
+    actual_count = count_published_business_concepts(type, ids)
+    if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
+  end
 end

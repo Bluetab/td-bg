@@ -107,7 +107,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
     with true <- can?(user, update(business_concept_version)),
          {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, id),
-         {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
+         {:valid_related_to} <- BusinessConcepts.check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = concept} <-
       BusinessConcepts.update_business_concept_version(business_concept_version,
                                                               update_params) do
@@ -338,13 +338,6 @@ defmodule TdBgWeb.BusinessConceptController do
       end
     end
     )
-  end
-
-  defp check_valid_related_to(_type, []), do: {:valid_related_to}
-  defp check_valid_related_to(type, ids) do
-    input_count = length(ids)
-    actual_count = BusinessConcepts.count_published_business_concepts(type, ids)
-    if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
 
   defp add_to_filter_as_int_list(filter, name, nil), do: Map.put(filter, name, [])

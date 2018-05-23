@@ -62,7 +62,8 @@ defmodule TdBgWeb.Router do
     get "/taxonomy/tree", TaxonomyController, :tree
     get "/taxonomy/roles", TaxonomyController, :roles
 
-    resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :update] do
+    put "/business_concept_versions/:id", BusinessConceptVersionController, :update
+    resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit] do
       post "/submit", BusinessConceptVersionController, :send_for_approval
       post "/publish", BusinessConceptVersionController, :publish
       post "/reject", BusinessConceptVersionController, :reject

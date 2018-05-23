@@ -104,7 +104,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     end)
   end
 
-  def create_template(_) do
+  defp create_template(_) do
     headers = get_header(get_user_token("app-admin"))
     attrs = %{}
       |> Map.put("name", "some type")

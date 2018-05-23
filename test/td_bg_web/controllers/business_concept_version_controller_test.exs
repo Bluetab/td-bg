@@ -158,6 +158,53 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
+  describe "update business_concept_version" do
+    setup [:create_template]
+
+    @tag :admin_authenticated
+    test "renders business_concept_version when data is valid", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version_id = business_concept_version.id
+
+      update_attrs = %{
+        content: %{},
+        name: "The new name",
+        description: "The new description"
+      }
+
+      conn = put conn, business_concept_version_path(conn, :update, business_concept_version), business_concept_version: update_attrs
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+      assert %{"id" => ^business_concept_version_id} = json_response(conn, 200)["data"]
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, business_concept_version_path(conn, :show, business_concept_version_id)
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+
+      updated_business_concept_version = json_response(conn, 200)["data"]
+
+      update_attrs
+        |> Enum.each(&(assert updated_business_concept_version |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+    end
+
+    @tag :admin_authenticated
+    test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version_id = business_concept_version.id
+
+      update_attrs = %{
+        content: %{},
+        name: nil,
+        description: "The new description"
+      }
+
+      conn = put conn, business_concept_version_path(conn, :update, business_concept_version_id), business_concept_version: update_attrs
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+      assert json_response(conn, 422)["errors"] != %{}
+    end
+  end
+
   defp create_version(domain, name, status) do
     business_concept = insert(:business_concept, domain: domain)
     insert(:business_concept_version, business_concept: business_concept, name: name, status: status)

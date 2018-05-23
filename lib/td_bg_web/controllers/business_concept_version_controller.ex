@@ -533,4 +533,69 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     get_taxonomy_levels_from_business_concept(domain.parent_id, acc)
   end
 
+  swagger_path :update do
+    put "/business_concept_versions/{id}"
+    description "Updates Business Concept Version"
+    produces "application/json"
+    parameters do
+      business_concept_version :body, Schema.ref(:BusinessConceptVersionUpdate), "Business Concept Version update attrs"
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
+    response 400, "Client Error"
+  end
+
+  def update(conn, %{"id" => id, "business_concept_version" => business_concept_version_params}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    concept_type = business_concept_version.business_concept.type
+    concept_name = Map.get(business_concept_version_params, "name")
+    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
+
+    user = conn.assigns.current_user
+
+    business_concept_attrs = %{}
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+
+    update_params = business_concept_version_params
+    |> Map.put("business_concept", business_concept_attrs)
+    |> Map.put("content_schema", content_schema)
+    |> Map.update("content", %{},  &(&1))
+    |> Map.update("related_to", [],  &(&1))
+    |> Map.put("last_change_by", user.id)
+    |> Map.put("last_change_at", DateTime.utc_now())
+    related_to = Map.get(update_params, "related_to")
+
+    with true <- can?(user, update(business_concept_version)),
+         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, id),
+         {:valid_related_to} <- BusinessConcepts.check_valid_related_to(concept_type, related_to),
+         {:ok, %BusinessConceptVersion{} = concept_version} <-
+      BusinessConcepts.update_business_concept_version(business_concept_version,
+                                                              update_params) do
+      @search_service.put_search(business_concept_version)
+      render(conn, "show.json", business_concept_version: concept_version)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      {:name_not_available} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{"errors": %{name: ["bc_version unique"]}})
+      {:not_valid_related_to} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{"errors": %{related_to: ["bc_version invalid"]}})
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
 end
