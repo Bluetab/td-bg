@@ -568,7 +568,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     related_to = Map.get(update_params, "related_to")
 
     with true <- can?(user, update(business_concept_version)),
-         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, id),
+         {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name, business_concept_version.business_concept.id),
          {:valid_related_to} <- BusinessConcepts.check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = concept_version} <-
       BusinessConcepts.update_business_concept_version(business_concept_version,
