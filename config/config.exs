@@ -31,10 +31,6 @@ config :td_bg, TdBg.Auth.Guardian,
   ttl: { 1, :hours },
   secret_key: "SuperSecretTruedat"
 
-config :canary, repo: TdBg.Repo,
-  unauthorized_handler: {TdBg.Auth.Canary, :handle_unauthorized},
-  not_found_handler: {TdBg.Auth.Canary, :handle_not_found}
-
 config :td_bg, :auth_service,
   protocol: "http",
   users_path: "/api/users/",

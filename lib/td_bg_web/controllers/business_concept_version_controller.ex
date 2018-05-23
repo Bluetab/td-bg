@@ -14,6 +14,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
+  alias Guardian.Plug, as: GuardianPlug
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
@@ -39,7 +40,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "" -> BusinessConcepts.list_all_business_concept_versions()
         _ -> BusinessConcepts.get_business_concept_by_term(search_term)
       end
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
     business_concept_versions = business_concept_versions
       |> Enum.filter(&(can?(user, view_business_concept(&1))))
     render(conn, "index.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia("business_concept_version", conn, business_concept_versions))
@@ -65,7 +66,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     concept_name = Map.get(business_concept_params, "name")
 
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
     domain_id = Map.get(business_concept_params, "domain_id")
     domain = Taxonomies.get_domain!(domain_id)
 
@@ -138,7 +139,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
     business_concept = business_concept_version.business_concept
 
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
 
     with true <- can?(user, view_versions(business_concept_version)) do
       allowed_status = get_allowed_version_status_by_role(user, business_concept)
@@ -205,7 +206,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def delete(conn, %{"id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
     with true <- can?(user, delete(business_concept_version)),
          {:ok, %BusinessConceptVersion{}} <- BusinessConcepts.delete_business_concept_version(business_concept_version) do
       @search_service.delete_search(business_concept_version)
@@ -239,7 +240,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     draft = BusinessConcept.status.draft
     case {business_concept_version.status, business_concept_version.current} do
       {^draft, true} ->
-        user = conn.assigns.current_user
+        user = get_current_user(conn)
         send_for_approval(conn, user, business_concept_version)
       _ ->
         conn
@@ -265,7 +266,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     pending_approval = BusinessConcept.status.pending_approval
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
-        user = conn.assigns.current_user
+        user = get_current_user(conn)
         publish(conn, user, business_concept_version)
       _ ->
         conn
@@ -292,7 +293,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     pending_approval = BusinessConcept.status.pending_approval
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
-        user = conn.assigns.current_user
+        user = get_current_user(conn)
         reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
       _ ->
         conn
@@ -318,7 +319,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     rejected = BusinessConcept.status.rejected
     case {business_concept_version.status, business_concept_version.current} do
       {^rejected, true} ->
-        user = conn.assigns.current_user
+        user = get_current_user(conn)
         undo_rejection(conn, user, business_concept_version)
       _ ->
         conn
@@ -344,7 +345,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     published = BusinessConcept.status.published
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
-        user = conn.assigns.current_user
+        user = get_current_user(conn)
         do_version(conn, user, business_concept_version)
       _ ->
         conn
@@ -370,7 +371,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     published = BusinessConcept.status.published
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
-        user = conn.assigns.current_user
+        user = get_current_user(conn)
         deprecate(conn, user, business_concept_version)
       _ ->
         conn
@@ -497,7 +498,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def taxonomy_roles(conn, %{"business_concept_version_id" => id}) do
     # We should fetch the user in order to check its permissions over the
     # current version of the business concept
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
     # First of all we should retrieve the business concept for a
     business_concept_version =
       BusinessConcepts.get_business_concept_version!(id)
@@ -551,7 +552,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     concept_name = Map.get(business_concept_version_params, "name")
     %{:content => content_schema} = Templates.get_template_by_name(concept_type)
 
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
 
     business_concept_attrs = %{}
     |> Map.put("last_change_by", user.id)
@@ -598,4 +599,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  defp get_current_user(conn) do
+    GuardianPlug.current_resource(conn)
+  end
 end

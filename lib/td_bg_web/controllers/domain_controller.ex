@@ -18,8 +18,6 @@ defmodule TdBgWeb.DomainController do
 
   action_fallback TdBgWeb.FallbackController
 
-  plug :load_and_authorize_resource, model: Domain, id_name: "id", persisted: true, only: [:update, :delete]
-
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 

@@ -1,11 +1,11 @@
-defmodule TdBg.Canary.Abilities do
+defmodule TdBg.Canada.Abilities do
   @moduledoc false
   alias TdBg.Accounts.User
   alias TdBg.Taxonomies.Domain
   alias TdBg.Permissions.Role
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Canary.TaxonomyAbilities
-  alias TdBg.Canary.BusinessConceptAbilities
+  alias TdBg.Canada.TaxonomyAbilities
+  alias TdBg.Canada.BusinessConceptAbilities
   alias TdBg.Permissions.AclEntry
 
   defimpl Canada.Can, for: User do

@@ -1,4 +1,4 @@
-defmodule TdBgWeb.SearchController do
+  defmodule TdBgWeb.SearchController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 

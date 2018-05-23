@@ -13,8 +13,7 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Templates
-
-  plug :load_resource, model: BusinessConcept, id_name: "business_concept_id", persisted: true, only: [:update_status]
+  alias Guardian.Plug, as: GuardianPlug
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
@@ -89,7 +88,7 @@ defmodule TdBgWeb.BusinessConceptController do
     concept_name = Map.get(business_concept_params, "name")
     %{:content => content_schema} = Templates.get_template_by_name(concept_type)
 
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
 
     business_concept_attrs = %{}
     |> Map.put("last_change_by", user.id)
@@ -135,7 +134,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
     status = business_concept_version.status
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
 
     draft = BusinessConcept.status.draft
     rejected = BusinessConcept.status.rejected
@@ -307,7 +306,7 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def index_status(conn, status) do
-    user = conn.assigns.current_user
+    user = get_current_user(conn)
     business_concepts = build_list(user, status)
     render(conn, "index.json", business_concepts: business_concepts, hypermedia: hypermedia("business_concept", conn, business_concepts))
   end
@@ -356,4 +355,7 @@ defmodule TdBgWeb.BusinessConceptController do
     Map.put(filter, name, list_value)
   end
 
+  defp get_current_user(conn) do
+    GuardianPlug.current_resource(conn)
+  end
 end

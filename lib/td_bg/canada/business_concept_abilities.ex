@@ -1,4 +1,4 @@
-defmodule TdBg.Canary.BusinessConceptAbilities do
+defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
   alias TdBg.Accounts.User
   alias TdBg.Taxonomies.Domain

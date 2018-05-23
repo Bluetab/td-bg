@@ -23,8 +23,6 @@ defmodule TdBgWeb do
       import Plug.Conn
       import TdBgWeb.Router.Helpers
       import TdBgWeb.Gettext
-      import Canary.Plugs
-      import TdBg.Auth.Plugs
     end
   end
 

@@ -2,7 +2,7 @@ defmodule TdBgWeb.UserController do
   use TdBgWeb, :controller
   use PhoenixSwagger
   alias TdBg.Accounts.User
-  alias TdBg.Canary.BusinessConceptAbilities
+  alias TdBg.Canada.BusinessConceptAbilities
   alias TdBg.Taxonomies.Domain
   alias TdBg.Taxonomies
   alias TdBgWeb.SwaggerDefinitions
