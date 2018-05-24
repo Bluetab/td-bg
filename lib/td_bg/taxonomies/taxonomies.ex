@@ -20,24 +20,26 @@ defmodule TdBg.Taxonomies do
 
   """
   def list_domains do
-    query = from d in Domain
+    query = from(d in Domain)
+
     query
-    |> Repo.all
+    |> Repo.all()
     |> Repo.preload(:templates)
+    |> Repo.preload(parent: :templates)
   end
 
   @doc """
   Returns the list of root domains (no parent)
   """
   def list_root_domains do
-    Repo.all from r in Domain, where: is_nil(r.parent_id)
+    Repo.all(from(r in Domain, where: is_nil(r.parent_id)))
   end
 
   @doc """
   Returns children of domain id passed as argument
   """
   def count_domain_children(id) do
-    count = Repo.one from r in Domain, select: count(r.id), where: r.parent_id == ^id
+    count = Repo.one(from(r in Domain, select: count(r.id), where: r.parent_id == ^id))
     {:count, :domain, count}
   end
 
@@ -56,16 +58,20 @@ defmodule TdBg.Taxonomies do
 
   """
   def get_domain!(id) do
-    query = from r in Domain, where: r.id == ^id
-    query |> Repo.one! |> Repo.preload(:templates)
+    query = from(r in Domain, where: r.id == ^id)
+
+    query
+    |> Repo.one!()
+    |> Repo.preload(:templates)
+    |> Repo.preload(parent: :templates)
   end
 
   def get_domain(id) do
-    Repo.one from r in Domain, where: r.id == ^id
+    Repo.one(from(r in Domain, where: r.id == ^id))
   end
 
   def get_domain_by_name(name) do
-    Repo.one from r in Domain, where: r.name == ^name
+    Repo.one(from(r in Domain, where: r.name == ^name))
   end
 
   @doc """
@@ -81,13 +87,17 @@ defmodule TdBg.Taxonomies do
 
   """
   def create_domain(attrs \\ %{}) do
-    result = %Domain{}
+    result =
+      %Domain{}
       |> Domain.changeset(attrs)
       |> Repo.insert()
+
     case result do
       {:ok, domain} ->
         {:ok, get_domain!(domain.id)}
-      _ -> result
+
+      _ ->
+        result
     end
   end
 
@@ -122,14 +132,20 @@ defmodule TdBg.Taxonomies do
 
   """
   def delete_domain(%Domain{} = domain) do
-    Multi.new
-    |> Multi.delete_all(:acl_entry, from(acl in AclEntry, where: acl.resource_type == "domain" and acl.resource_id == ^domain.id))
+    Multi.new()
+    |> Multi.delete_all(
+      :acl_entry,
+      from(
+        acl in AclEntry,
+        where: acl.resource_type == "domain" and acl.resource_id == ^domain.id
+      )
+    )
     |> Multi.delete(:domain, Domain.delete_changeset(domain))
-    |> Repo.transaction
+    |> Repo.transaction()
     |> case do
       {:ok, %{acl_entry: _acl_entry, domain: domain}} ->
         {:ok, domain}
-     end
+    end
   end
 
   @doc """
@@ -151,18 +167,21 @@ defmodule TdBg.Taxonomies do
   def get_parent_id(nil) do
     {:error, nil}
   end
-  def get_parent_id(%{"parent_id": nil}) do
+
+  def get_parent_id(%{parent_id: nil}) do
     {:ok, nil}
   end
-  def get_parent_id(%{"parent_id": parent_id}) do
+
+  def get_parent_id(%{parent_id: parent_id}) do
     get_parent_id(get_domain(parent_id))
   end
+
   def get_parent_id(parent_id) do
     {:ok, parent_id}
   end
 
   def count_domain_business_concept_children(id) do
-    count = Repo.one from r in BusinessConcept, select: count(r.id), where: r.domain_id == ^id
+    count = Repo.one(from(r in BusinessConcept, select: count(r.id), where: r.domain_id == ^id))
     {:count, :business_concept, count}
   end
 
@@ -172,7 +191,7 @@ defmodule TdBg.Taxonomies do
   def tree do
     d_list = list_root_domains() |> Enum.sort(&(&1.name < &2.name))
     d_all = list_domains() |> Enum.sort(&(&1.name < &2.name))
-    Enum.map(d_list, fn(d) -> build_node(d, d_all) end)
+    Enum.map(d_list, fn d -> build_node(d, d_all) end)
   end
 
   defp build_node(%Domain{} = d, d_all) do
@@ -180,12 +199,12 @@ defmodule TdBg.Taxonomies do
   end
 
   defp list_children(%Domain{} = node, d_all) do
-    d_children = Enum.filter(d_all, fn(d) -> node.id == d.parent_id end)
+    d_children = Enum.filter(d_all, fn d -> node.id == d.parent_id end)
+
     if d_children do
-      Enum.map(d_children, fn(d) -> build_node(d, d_all) end)
+      Enum.map(d_children, fn d -> build_node(d, d_all) end)
     else
       []
     end
   end
-
 end

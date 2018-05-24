@@ -10,6 +10,7 @@ defmodule TdBgWeb.DomainView do
   def render("index.json", %{domains: domains, hypermedia: hypermedia}) do
     render_many_hypermedia(domains, hypermedia, DomainView, "domain.json")
   end
+
   def render("index.json", %{domains: domains}) do
     %{data: render_many(domains, DomainView, "domain.json")}
   end
@@ -21,13 +22,23 @@ defmodule TdBgWeb.DomainView do
   def render("show.json", %{domain: domain, hypermedia: hypermedia}) do
     render_one_hypermedia(domain, hypermedia, DomainView, "domain.json")
   end
+
   def render("show.json", %{domain: domain}) do
     %{data: render_one(domain, DomainView, "domain.json")}
   end
 
   def render("domain.json", %{domain: domain}) do
-    templates = domain.templates |> Enum.map(&(Map.take(&1, [:id, :name])))
-    %{id: domain.id,
+    parent_templates =
+      if domain.parent do
+        domain.parent.templates
+      else
+        []
+      end
+
+    templates = (parent_templates ++ domain.templates) |> Enum.map(&Map.take(&1, [:id, :name]))
+
+    %{
+      id: domain.id,
       parent_id: domain.parent_id,
       name: domain.name,
       type: domain.type,
@@ -37,13 +48,13 @@ defmodule TdBgWeb.DomainView do
   end
 
   def render("domain_tiny.json", %{domain: domain}) do
-    %{id: domain.id,
-      name: domain.name}
+    %{id: domain.id, name: domain.name}
   end
 
   def render("index_acl_entries.json", %{acl_entries: acl_entries, hypermedia: hypermedia}) do
     render_many_hypermedia(acl_entries, hypermedia, DomainView, "acl_entry.json")
   end
+
   def render("index_acl_entries.json", %{acl_entries: acl_entries}) do
     %{data: render_many(acl_entries, DomainView, "acl_entry.json")}
   end
@@ -66,8 +77,9 @@ defmodule TdBgWeb.DomainView do
   end
 
   def render("acl_entry_show.json", %{acl_entry: acl_entry}) do
-    %{data:
-      %{id: acl_entry.id,
+    %{
+      data: %{
+        id: acl_entry.id,
         principal_type: acl_entry.principal_type,
         principal_id: acl_entry.principal_id,
         resource_type: acl_entry.resource_type,
@@ -79,8 +91,8 @@ defmodule TdBgWeb.DomainView do
 
   def render_principal(%Group{} = group) do
     render_one(group, GroupView, "group.json")
-
   end
+
   def render_principal(%User{} = user) do
     render_one(user, UserView, "user.json")
   end
