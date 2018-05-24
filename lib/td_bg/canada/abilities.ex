@@ -9,8 +9,7 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.Permissions.AclEntry
 
   defimpl Canada.Can, for: User do
-
-    #def can?(%User{}, _action, nil), do: false
+    # def can?(%User{}, _action, nil), do: false
 
     # administrator is superpowerful for Domain, Role and AclEntry
     def can?(%User{is_admin: true}, _action, Domain) do
@@ -53,7 +52,11 @@ defmodule TdBg.Canada.Abilities do
       TaxonomyAbilities.can?(user, :delete, domain)
     end
 
-    def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "domain"} = acl_entry) do
+    def can?(
+          %User{} = user,
+          :create,
+          %AclEntry{principal_type: "user", resource_type: "domain"} = acl_entry
+        ) do
       TaxonomyAbilities.can?(user, :create, acl_entry)
     end
 
@@ -61,11 +64,19 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :create_business_concept, domain)
     end
 
+    def can?(%User{} = user, :create_business_concept, %{}) do
+      BusinessConceptAbilities.can?(user, :create_business_concept)
+    end
+
     def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
       BusinessConceptAbilities.can?(user, :update, business_concept_version)
     end
 
-    def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept_version) do
+    def can?(
+          %User{} = user,
+          :send_for_approval,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
       BusinessConceptAbilities.can?(user, :send_for_approval, business_concept_version)
     end
 
@@ -73,7 +84,11 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :reject, business_concept_version)
     end
 
-    def can?(%User{} = user, :undo_rejection, %BusinessConceptVersion{} = business_concept_version) do
+    def can?(
+          %User{} = user,
+          :undo_rejection,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
       BusinessConceptAbilities.can?(user, :undo_rejection, business_concept_version)
     end
 
@@ -97,7 +112,11 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :view_versions, business_concept_version)
     end
 
-    def can?(%User{} = user, :view_business_concept, %BusinessConceptVersion{} = business_concept_version) do
+    def can?(
+          %User{} = user,
+          :view_business_concept,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
       BusinessConceptAbilities.can?(user, :view_business_concept, business_concept_version)
     end
 
