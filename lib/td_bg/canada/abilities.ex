@@ -64,7 +64,7 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :create_business_concept, domain)
     end
 
-    def can?(%User{} = user, :create_business_concept, %{}) do
+    def can?(%User{} = user, :create, BusinessConceptVersion) do
       BusinessConceptAbilities.can?(user, :create_business_concept)
     end
 

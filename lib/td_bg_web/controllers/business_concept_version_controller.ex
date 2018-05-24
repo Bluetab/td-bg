@@ -43,7 +43,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = get_current_user(conn)
     business_concept_versions = business_concept_versions
       |> Enum.filter(&(can?(user, view_business_concept(&1))))
-    render(conn, "index.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia("business_concept_version", conn, business_concept_versions))
+    render(conn, "index.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia_typed("business_concept_version", conn, business_concept_versions, BusinessConceptVersion))
   end
 
   swagger_path :create do

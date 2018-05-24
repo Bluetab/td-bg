@@ -9,8 +9,20 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
   alias Guardian.Plug, as: Guardian
   import Canada.Can
 
+  def hypermedia_typed(helper, conn, resource, resource_type, nested \\ [])
+  def hypermedia_typed(helper, conn, resource, resource_type, nested) when is_list(resource) do
+    %HypermediaCollection{
+      collection_hypermedia:
+        hypermedia(helper, conn, %{}, resource_type),
+      collection:
+        Enum.into(
+          Enum.map(
+            resource, &({&1, hypermedia(helper, conn, &1, nested)})), %{})
+     }
+  end
+
   def hypermedia(helper, conn, resource, nested \\ [])
-  def hypermedia(helper, conn, resource, nested)  when is_list(resource) do
+  def hypermedia(helper, conn, resource, nested) when is_list(resource) do
     %HypermediaCollection{
       collection_hypermedia:
         hypermedia(helper, conn, %{}),
@@ -27,7 +39,22 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
   def hypermedia(helper, conn, resource, []) do
     hypermedia_impl(helper, conn, resource)
   end
+  def hypermedia(helper, conn, resource, resource_type) do
+    hypermedia_impl(helper, conn, resource, resource_type)
+  end
 
+  defp hypermedia_impl(helper, conn, %{}, resource_type) do
+    current_user = Guardian.current_resource(conn)
+
+    Router.__routes__
+    |> Enum.filter(&(!is_nil &1.helper))
+    |> Enum.filter(&(String.starts_with?(&1.helper, helper)))
+    |> Enum.filter(&(can?(current_user, &1.opts, resource_type)))
+    |> Enum.map(&(interpolate(&1, %{})))
+    |> Enum.filter(&(&1.path != nil))
+  end
+
+  defp hypermedia_impl(helper, conn, resource)
   defp hypermedia_impl(helper, conn, resource) do
       current_user = Guardian.current_resource(conn)
 
