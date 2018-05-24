@@ -28,14 +28,7 @@ defmodule TdBgWeb.DomainView do
   end
 
   def render("domain.json", %{domain: domain}) do
-    parent_templates =
-      if domain.parent do
-        domain.parent.templates
-      else
-        []
-      end
-
-    templates = (parent_templates ++ domain.templates) |> Enum.map(&Map.take(&1, [:id, :name]))
+    templates = get_domain_and_parent_templates(domain)
 
     %{
       id: domain.id,
@@ -48,7 +41,9 @@ defmodule TdBgWeb.DomainView do
   end
 
   def render("domain_tiny.json", %{domain: domain}) do
-    %{id: domain.id, name: domain.name}
+    templates = get_domain_and_parent_templates(domain)
+
+    %{id: domain.id, name: domain.name, _embedded: %{templates: templates}}
   end
 
   def render("index_acl_entries.json", %{acl_entries: acl_entries, hypermedia: hypermedia}) do
@@ -95,5 +90,16 @@ defmodule TdBgWeb.DomainView do
 
   def render_principal(%User{} = user) do
     render_one(user, UserView, "user.json")
+  end
+
+  defp get_domain_and_parent_templates(domain) do
+    parent_templates =
+      if domain.parent do
+        domain.parent.templates
+      else
+        []
+      end
+
+    (parent_templates ++ domain.templates) |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 end
