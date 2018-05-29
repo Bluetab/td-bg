@@ -56,19 +56,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       }
   end
 
-  def render("data_fields.json", %{data_fields: data_fields}) do
-    %{data: render_many(data_fields, BusinessConceptVersionView, "data_field.json")}
-  end
-
-  def render("data_field.json", %{business_concept_version: data_field}) do
-    %{
-      system: data_field.system,
-      group: data_field.group,
-      name: data_field.name,
-      field: data_field.field
-    }
-  end
-
   defp add_reject_reason(concept, reject_reason, :rejected) do
     Map.put(concept, :reject_reason, reject_reason)
   end

@@ -18,6 +18,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Taxonomies
   alias TdBg.Templates
   alias Guardian.Plug, as: GuardianPlug
+  alias TdBgWeb.DataFieldView
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
@@ -622,7 +623,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       current_data_fields = BusinessConceptDataFields.list_business_concept_data_fields(normalized_bc)
       denormalized_data_fields = Enum.map(current_data_fields,
         &BusinessConceptDataFieldSupport.denormalize_data_field(&1.data_field))
-      render(conn, "data_fields.json", data_fields: denormalized_data_fields)
+      render(conn, DataFieldView, "data_fields.json", data_fields: denormalized_data_fields)
     else
       false ->
         conn
@@ -661,7 +662,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
             normalized_bc, normalized_dfs) do
       denormalized_data_fields = Enum.map(current_data_fields,
         &BusinessConceptDataFieldSupport.denormalize_data_field(&1))
-      render(conn, "data_fields.json", data_fields: denormalized_data_fields)
+      render(conn, DataFieldView, "data_fields.json", data_fields: denormalized_data_fields)
     else
       false ->
         conn
