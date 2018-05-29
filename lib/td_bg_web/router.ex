@@ -68,6 +68,8 @@ defmodule TdBgWeb.Router do
       post "/version", BusinessConceptVersionController, :version
       post "/redraft", BusinessConceptVersionController, :undo_rejection
       get "/taxonomy_roles", BusinessConceptVersionController, :taxonomy_roles
+      get  "/data_fields", BusinessConceptVersionController, :get_data_fields
+      post "/data_fields", BusinessConceptVersionController, :set_data_fields
     end
 
     get "/business_concepts/index/:status", BusinessConceptController, :index_status

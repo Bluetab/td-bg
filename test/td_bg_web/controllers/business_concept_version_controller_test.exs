@@ -205,6 +205,74 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
+  describe "data_fields" do
+    alias TdBgWeb.BusinessConceptDataFieldSupport
+
+    @tag :admin_authenticated
+    test "list data fields", %{conn: conn} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version_id = business_concept_version.id
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version_id)
+
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag :admin_authenticated
+    test "list data fields with result", %{conn: conn} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_id = business_concept_version.business_concept_id
+
+      data_field = %{system: "system",
+                     group: "group",
+                     name: "name",
+                     field: "field"}
+      insert(:business_concept_data_field,
+        business_concept: inspect(business_concept_id),
+        data_field: BusinessConceptDataFieldSupport.normalize_data_field(data_field))
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version.id)
+      json_response =  json_response(conn, 200)["data"]
+      assert length(json_response) == 1
+      json_response = Enum.at(json_response, 0)
+      assert json_response["system"] == data_field.system
+      assert json_response["group"]  == data_field.group
+      assert json_response["name"]   == data_field.name
+      assert json_response["field"]  == data_field.field
+    end
+
+    @tag :admin_authenticated
+    test "add data fields", %{conn: conn} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+
+      data_field1 = %{system: "system1",
+                      group: "group1",
+                      name: "name1",
+                      field: "field1"}
+
+      data_field2 = %{system: "system2",
+                      group: "group2",
+                      name: "name2",
+                      field: "field2"}
+
+      data_fields = [data_field1, data_field2]
+
+      conn = post conn, business_concept_version_business_concept_version_path(conn, :set_data_fields, business_concept_version.id), data_fields: data_fields
+
+      conn = recycle_and_put_headers(conn)
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version.id)
+      json_response =  json_response(conn, 200)["data"]
+      assert length(json_response) == 2
+      assert Enum.at(json_response, 0)["system"] == data_field1.system
+      assert Enum.at(json_response, 1)["system"] == data_field2.system
+    end
+
+  end
+
   defp create_version(domain, name, status) do
     business_concept = insert(:business_concept, domain: domain)
     insert(:business_concept_version, business_concept: business_concept, name: name, status: status)

@@ -9,8 +9,6 @@ defmodule TdBg.BusinessConceptDataFields do
   alias Ecto.Changeset
   alias TdBg.Repo
   alias TdBg.BusinessConceptDataFields.BusinessConceptDataField
-# TODO: remove comments
-#  alias TdBg.Utils.CollectionUtils
 
   def list_business_concept_data_fields(business_concept) do
     Repo.all(from(r in BusinessConceptDataField,
@@ -56,12 +54,7 @@ defmodule TdBg.BusinessConceptDataFields do
   def load_business_concept_data_fields(business_concept, data_fields) do
     old_data_fields = list_business_concept_data_fields(business_concept)
 
-    # TODO: remove comments
-    new_data_fields = data_fields
-    # |> Enum.map(&CollectionUtils.atomize_keys(&1))
-    # |> Enum.map(&normalize_data_field(&1))
-
-    to_create = new_data_fields
+    to_create = data_fields
     |> Enum.filter(fn(n) ->
         Enum.find(old_data_fields, fn(o) ->
           n == o.data_field
@@ -70,7 +63,7 @@ defmodule TdBg.BusinessConceptDataFields do
     |> Enum.map(&(%{business_concept: business_concept, data_field: &1}))
 
     to_delete = Enum.filter(old_data_fields, fn(o) ->
-      Enum.find(new_data_fields, fn(n) ->
+      Enum.find(data_fields, fn(n) ->
         n == o.data_field
       end) == nil
     end)
@@ -83,15 +76,6 @@ defmodule TdBg.BusinessConceptDataFields do
     current_data_fields = list_business_concept_data_fields(business_concept)
     {result, Enum.map(current_data_fields, &Map.get(&1, :data_field))}
   end
-
-  # TODO: remove comments
-  # defp normalize_data_field(data_field) do
-  #   [data_field.structure_system,
-  #    data_field.structure_group,
-  #    data_field.structure_name,
-  #    data_field.data_field_name]
-  #   |> Enum.join("::")
-  # end
 
   defp create_business_concept_data_fields(multi, _l, []), do: multi
   defp create_business_concept_data_fields(multi, l, [head|tail]) do

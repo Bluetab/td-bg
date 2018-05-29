@@ -13,6 +13,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
+  alias TdBgWeb.BusinessConceptDataFieldSupport
   alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
@@ -595,6 +596,83 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
       _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  # swagger_path :get_data_fields do
+  #   put "/business_concept_versions/{id}/data_fields"
+  #   description "Get business concept version data fields"
+  #   produces "application/json"
+  #   parameters do
+  #     id :path, :integer, "Business Concept Version ID", required: true
+  #   end
+  #   response 200, "OK", Schema.ref(:BusinessConceptDataFieldsResponse)
+  #   response 400, "Client Error"
+  # end
+
+  def get_data_fields(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = get_current_user(conn)
+
+    with true <- can?(user, get_data_fields(business_concept_version)) do
+      normalized_bc = inspect(business_concept_version.business_concept_id)
+      current_data_fields = BusinessConceptDataFields.list_business_concept_data_fields(normalized_bc)
+      denormalized_data_fields = Enum.map(current_data_fields,
+        &BusinessConceptDataFieldSupport.denormalize_data_field(&1.data_field))
+      render(conn, "data_fields.json", data_fields: denormalized_data_fields)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      error ->
+        Logger.error("While getting data fields... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  # swagger_path :set_data_fields do
+  #   put "/business_concept_versions/{id}/data_fields"
+  #   description "Updates Business Concept Version"
+  #   produces "application/json"
+  #   parameters do
+  #     business_concept_version :body, Schema.ref(:DataFieldsCreateUpdate), "Business Concept Version update attrs"
+  #     id :path, :integer, "Business Concept Version ID", required: true
+  #   end
+  #   response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
+  #   response 400, "Client Error"
+  # end
+
+  def set_data_fields(conn, %{"business_concept_version_id" => id, "data_fields" => data_fields}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = get_current_user(conn)
+
+    normalized_bc = inspect(business_concept_version.business_concept_id)
+    normalized_dfs = Enum.map(data_fields,
+      &BusinessConceptDataFieldSupport.normalize_data_field(&1))
+    with true <- can?(user, set_data_fields(business_concept_version)),
+         {:ok_loading_data_fields, current_data_fields} <-
+           BusinessConceptDataFields.load_business_concept_data_fields(
+            normalized_bc, normalized_dfs) do
+      denormalized_data_fields = Enum.map(current_data_fields,
+        &BusinessConceptDataFieldSupport.denormalize_data_field(&1))
+      render(conn, "data_fields.json", data_fields: denormalized_data_fields)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      {:error_loading_data_fields, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{"errors": %{data_fields: ["invalid"]}})
+      error ->
+        Logger.error("While setting data fields... #{inspect(error)}")
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
