@@ -70,7 +70,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "A Template's id and name"
         properties do
           id :integer, "Template Id", required: true
-          name :string, "Template Name", required: true 
+          name :string, "Template Name", required: true
         end
       end,
       DomainCreate: swagger_schema do
@@ -411,7 +411,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description :string, "Business Concept description", required: true
           last_change_by :integer, "Business Concept last updated by", required: true
           last_change_at :string, "Business Concept last updated date", required: true
-          domain (Schema.ref(:DomainRef))
+          domain (Schema.ref(:DomainRef)) 
           status :string, "Business Concept status", required: true
           current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept version", required: true

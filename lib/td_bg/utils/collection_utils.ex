@@ -19,4 +19,12 @@ defmodule TdBg.Utils.CollectionUtils do
   defp stringify_key(key) when is_atom(key), do: Atom.to_string(key)
   defp stringify_key(key), do: key
 
+  def atomize_keys(%{} = map) do
+    map
+    |> Enum.map(fn {k, v} -> {atomize_key(k), v} end)
+    |> Enum.into(%{})
+  end
+  defp atomize_key(key) when is_binary(key), do: String.to_atom(key)
+  defp atomize_key(key), do: key
+
 end
