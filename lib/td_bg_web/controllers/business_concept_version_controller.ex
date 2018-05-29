@@ -88,17 +88,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Map.put("status", BusinessConcept.status.draft)
     |> Map.put("version", 1)
 
-    data_fields = Map.get(business_concept_params, "data_fields", [])
-
     related_to = Map.get(creation_attrs, "related_to")
 
     with true <- can?(user, create_business_concept(domain)),
          {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = concept} <-
-          BusinessConcepts.create_business_concept(creation_attrs),
-         {:ok_loading_data_fields, _} <-
-           BusinessConceptDataFields.load_business_concept_data_fields(concept.id, data_fields) do
+          BusinessConcepts.create_business_concept(creation_attrs) do
       conn = conn
       |> put_status(:created)
       |> put_resp_header("location", business_concept_path(conn, :show, concept.business_concept))

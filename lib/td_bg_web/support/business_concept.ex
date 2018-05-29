@@ -17,10 +17,6 @@ defmodule TdBgWeb.BusinessConceptSupport do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{"errors": %{related_to: ["invalid"]}})
-      {:error_loadind_data_fields} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{data_fields: ["invalid"]}})
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
