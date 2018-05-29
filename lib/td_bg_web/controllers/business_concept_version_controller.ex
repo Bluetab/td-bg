@@ -6,6 +6,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   import Canada, only: [can?: 2]
 
+  alias TdBg.Audit
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -21,6 +22,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.DataFieldView
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+
+  @events %{set_business_concept_data_fields: "set_business_concept_data_fields"}
 
   action_fallback TdBgWeb.FallbackController
 
@@ -651,15 +654,20 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def set_data_fields(conn, %{"business_concept_version_id" => id, "data_fields" => data_fields}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_id = business_concept_version.business_concept_id
     user = get_current_user(conn)
 
-    normalized_bc = inspect(business_concept_version.business_concept_id)
+    normalized_bc = inspect(business_concept_id)
     normalized_dfs = Enum.map(data_fields,
       &BusinessConceptDataFieldSupport.normalize_data_field(&1))
     with true <- can?(user, set_data_fields(business_concept_version)),
          {:ok_loading_data_fields, current_data_fields} <-
            BusinessConceptDataFields.load_business_concept_data_fields(
             normalized_bc, normalized_dfs) do
+
+      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => data_fields}}
+      Audit.create_event(conn, audit, @events.set_business_concept_data_fields)
+
       denormalized_data_fields = Enum.map(current_data_fields,
         &BusinessConceptDataFieldSupport.denormalize_data_field(&1))
       render(conn, DataFieldView, "data_fields.json", data_fields: denormalized_data_fields)

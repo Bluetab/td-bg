@@ -5,12 +5,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   import TdBgWeb.Authentication, only: :functions
 
   alias TdBgWeb.ApiServices.MockTdAuthService
+  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions
   alias Poison, as: JSON
 
   setup_all do
     start_supervised MockTdAuthService
+    start_supervised MockTdAuditService    
     :ok
   end
 
