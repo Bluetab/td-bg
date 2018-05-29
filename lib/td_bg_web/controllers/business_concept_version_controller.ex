@@ -603,16 +603,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  # swagger_path :get_data_fields do
-  #   put "/business_concept_versions/{id}/data_fields"
-  #   description "Get business concept version data fields"
-  #   produces "application/json"
-  #   parameters do
-  #     id :path, :integer, "Business Concept Version ID", required: true
-  #   end
-  #   response 200, "OK", Schema.ref(:BusinessConceptDataFieldsResponse)
-  #   response 400, "Client Error"
-  # end
+  swagger_path :get_data_fields do
+    get "/business_concept_versions/{id}/data_fields"
+    description "Get business concept version data fields"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:DataFieldsResponse)
+    response 400, "Client Error"
+  end
 
   def get_data_fields(conn, %{"business_concept_version_id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -637,17 +637,17 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  # swagger_path :set_data_fields do
-  #   put "/business_concept_versions/{id}/data_fields"
-  #   description "Updates Business Concept Version"
-  #   produces "application/json"
-  #   parameters do
-  #     business_concept_version :body, Schema.ref(:DataFieldsCreateUpdate), "Business Concept Version update attrs"
-  #     id :path, :integer, "Business Concept Version ID", required: true
-  #   end
-  #   response 200, "OK", Schema.ref(:BusinessConceptVersionResponse)
-  #   response 400, "Client Error"
-  # end
+  swagger_path :set_data_fields do
+    post "/business_concept_versions/{id}/data_fields"
+    description "Updates Business Concept Version"
+    produces "application/json"
+    parameters do
+      business_concept_version :body, Schema.ref(:DataFieldsSet), "Data fields array"
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:DataFieldsResponse)
+    response 400, "Client Error"
+  end
 
   def set_data_fields(conn, %{"business_concept_version_id" => id, "data_fields" => data_fields}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)

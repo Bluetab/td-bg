@@ -411,7 +411,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description :string, "Business Concept description", required: true
           last_change_by :integer, "Business Concept last updated by", required: true
           last_change_at :string, "Business Concept last updated date", required: true
-          domain (Schema.ref(:DomainRef)) 
+          domain (Schema.ref(:DomainRef))
           status :string, "Business Concept status", required: true
           current :boolean, "Is this the current version?", required: true
           version :integer, "Business Concept version", required: true
@@ -573,6 +573,32 @@ defmodule TdBgWeb.SwaggerDefinitions do
               domain_id :integer, "Business Concept Domain ID", required: true
             end
           end)
+        end
+      end,
+      DataField: swagger_schema do
+        title "Data field"
+        description "Data field representation"
+        properties do
+          system :string, "Data field system", required: true
+          group  :string, "Data field group",  required: true
+          name   :string, "Data field name",   required: true
+          field  :string, "Data field, field name", required: true
+        end
+      end,
+      DataFields: swagger_schema do
+        title "Data fields"
+        description "A collection of data fields"
+        type :array
+        items Schema.ref(:DataField)
+      end,
+      DataFieldsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataFields)
+        end
+      end,
+      DataFieldsSet: swagger_schema do
+        properties do
+          data_fields :array, "Data fields", items: Schema.ref(:DataField)
         end
       end
     }

@@ -220,7 +220,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag :admin_authenticated
-    test "list data fields with result", %{conn: conn} do
+    test "list data fields with result", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       business_concept_id = business_concept_version.business_concept_id
@@ -234,6 +234,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         data_field: BusinessConceptDataFieldSupport.normalize_data_field(data_field))
 
       conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version.id)
+      validate_resp_schema(conn, schema, "DataFieldsResponse")
       json_response =  json_response(conn, 200)["data"]
       assert length(json_response) == 1
       json_response = Enum.at(json_response, 0)
@@ -244,7 +245,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag :admin_authenticated
-    test "add data fields", %{conn: conn} do
+    test "add data fields", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
 
@@ -261,10 +262,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       data_fields = [data_field1, data_field2]
 
       conn = post conn, business_concept_version_business_concept_version_path(conn, :set_data_fields, business_concept_version.id), data_fields: data_fields
+      validate_resp_schema(conn, schema, "DataFieldsResponse")
 
       conn = recycle_and_put_headers(conn)
 
       conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version.id)
+      validate_resp_schema(conn, schema, "DataFieldsResponse")
       json_response =  json_response(conn, 200)["data"]
       assert length(json_response) == 2
       assert Enum.at(json_response, 0)["system"] == data_field1.system
