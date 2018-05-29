@@ -52,5 +52,43 @@ defmodule TdBg.BusinessConceptDataFieldsTests do
       end
     end
 
+    test "load_business_concept_data_fields!/2 no data fields" do
+      assert {:ok_loading_data_fields, []} = BusinessConceptDataFields.load_business_concept_data_fields("123", [])
+    end
+
+    test "load_business_concept_data_fields!/2 add remove data fields" do
+      business_concept = inspect(123)
+      attrs_first  = %{"business_concept" => business_concept,
+                       "data_field"       => "data_field_first"}
+      attrs_second = %{"business_concept" => business_concept,
+                       "data_field"       => "data_field_second"}
+      attrs_third  = %{"business_concept" => business_concept,
+                       "data_field"       => "data_field_third"}
+
+      insert(:business_concept_data_field,
+        business_concept: attrs_first["business_concept"],
+        data_field: attrs_first["data_field"])
+
+      insert(:business_concept_data_field,
+        business_concept: attrs_second["business_concept"],
+        data_field: attrs_second["data_field"])
+
+      BusinessConceptDataFields.load_business_concept_data_fields(
+        business_concept, [attrs_second["data_field"],
+                           attrs_third["data_field"]])
+
+      assert_raise NoResultsError, fn ->
+        BusinessConceptDataFields.get_business_concept_data_field!(
+          attrs_first["business_concept"], attrs_first["data_field"])
+      end
+
+      BusinessConceptDataFields.get_business_concept_data_field!(
+        attrs_second["business_concept"], attrs_second["data_field"])
+
+      BusinessConceptDataFields.get_business_concept_data_field!(
+        attrs_third["business_concept"], attrs_third["data_field"])
+
+    end
+
   end
 end

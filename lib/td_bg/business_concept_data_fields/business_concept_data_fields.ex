@@ -9,7 +9,8 @@ defmodule TdBg.BusinessConceptDataFields do
   alias Ecto.Changeset
   alias TdBg.Repo
   alias TdBg.BusinessConceptDataFields.BusinessConceptDataField
-  alias TdBg.Utils.CollectionUtils
+# TODO: remove comments
+#  alias TdBg.Utils.CollectionUtils
 
   def list_business_concept_data_fields(business_concept) do
     Repo.all(from(r in BusinessConceptDataField,
@@ -52,14 +53,13 @@ defmodule TdBg.BusinessConceptDataFields do
     |> Repo.transaction()
   end
 
-  # TODO: test this
-  def load_business_concept_data_fields(business_concept_id, data_fields) do
-    business_concept = inspect(business_concept_id)
+  def load_business_concept_data_fields(business_concept, data_fields) do
     old_data_fields = list_business_concept_data_fields(business_concept)
 
+    # TODO: remove comments
     new_data_fields = data_fields
-    |> Enum.map(&CollectionUtils.atomize_keys(&1))
-    |> Enum.map(&normalize_data_field(&1))
+    # |> Enum.map(&CollectionUtils.atomize_keys(&1))
+    # |> Enum.map(&normalize_data_field(&1))
 
     to_create = new_data_fields
     |> Enum.filter(fn(n) ->
@@ -72,7 +72,7 @@ defmodule TdBg.BusinessConceptDataFields do
     to_delete = Enum.filter(old_data_fields, fn(o) ->
       Enum.find(new_data_fields, fn(n) ->
         n == o.data_field
-      end) != nil
+      end) == nil
     end)
 
     result = case create_delete_business_concept_data_fields(to_create, to_delete) do
@@ -84,13 +84,14 @@ defmodule TdBg.BusinessConceptDataFields do
     {result, Enum.map(current_data_fields, &Map.get(&1, :data_field))}
   end
 
-  defp normalize_data_field(data_field) do
-    [data_field.structure_system,
-     data_field.structure_group,
-     data_field.structure_name,
-     data_field.data_field_name]
-    |> Enum.join("::")
-  end
+  # TODO: remove comments
+  # defp normalize_data_field(data_field) do
+  #   [data_field.structure_system,
+  #    data_field.structure_group,
+  #    data_field.structure_name,
+  #    data_field.data_field_name]
+  #   |> Enum.join("::")
+  # end
 
   defp create_business_concept_data_fields(multi, _l, []), do: multi
   defp create_business_concept_data_fields(multi, l, [head|tail]) do
