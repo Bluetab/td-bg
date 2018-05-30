@@ -18,7 +18,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuditService do
   end
 
   defp get_config do
-    Application.get_env(:td_dd, :audit_service)
+    Application.get_env(:td_bg, :audit_service)
   end
 
   defp get_audit_endpoint do

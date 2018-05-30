@@ -652,7 +652,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response 400, "Client Error"
   end
 
-  def set_data_fields(conn, %{"business_concept_version_id" => id, "data_fields" => data_fields}) do
+  def set_data_fields(conn, %{"business_concept_version_id" => id, "data_fields" => data_fields} = params) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept_id = business_concept_version.business_concept_id
     user = get_current_user(conn)
@@ -665,7 +665,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            BusinessConceptDataFields.load_business_concept_data_fields(
             normalized_bc, normalized_dfs) do
 
-      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => data_fields}}
+      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => params}}
       Audit.create_event(conn, audit, @events.set_business_concept_data_fields)
 
       denormalized_data_fields = Enum.map(current_data_fields,
