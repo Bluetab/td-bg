@@ -70,7 +70,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "A Template's id and name"
         properties do
           id :integer, "Template Id", required: true
-          name :string, "Template Name", required: true 
+          name :string, "Template Name", required: true
         end
       end,
       DomainCreate: swagger_schema do
@@ -564,7 +564,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end,
       BusinessConceptVersionCreate: swagger_schema do
         properties do
-          business_concept (Schema.new do
+          business_concept_version (Schema.new do
             properties do
               type :string, "Business Concept type (empty,...)", required: true
               content :object, "Business Concept content", required: true
