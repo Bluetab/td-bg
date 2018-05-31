@@ -37,6 +37,11 @@ config :td_bg, :auth_service,
   sessions_path: "/api/sessions/",
   groups_path: "/api/groups"
 
+config :td_bg, :dd_service,
+  protocol: "http",
+  data_structures_path: "/api/data_structures",
+  groups_path: "/api/groups"
+
 config :td_bg, :phoenix_swagger,
        swagger_files: %{
          "priv/static/swagger.json" => [router: TdBgWeb.Router]

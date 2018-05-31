@@ -54,6 +54,3 @@ business_concept_version = Repo.insert!(%BusinessConceptVersion{
   version: 1,
   business_concept_id: business_concept.id
   })
-
-
-IO.inspect(business_concept_version)

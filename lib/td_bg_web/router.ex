@@ -70,6 +70,7 @@ defmodule TdBgWeb.Router do
       get "/taxonomy_roles", BusinessConceptVersionController, :taxonomy_roles
       get  "/data_fields", BusinessConceptVersionController, :get_data_fields
       post "/data_fields", BusinessConceptVersionController, :set_data_fields
+      get  "/data_structures", BusinessConceptVersionController, :get_data_structures
     end
 
     get "/business_concepts/index/:status", BusinessConceptController, :index_status

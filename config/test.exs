@@ -35,6 +35,11 @@ config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.MockTdAuthService
   auth_port: "4001",
   domain: ""
 
+config :td_bg, :dd_service, api_service: TdBgWeb.ApiServices.MockTdDdService,
+  auth_host: "localhost",
+  auth_port: "4005",
+  domain: ""
+
 config :td_bg, :elasticsearch,
   search_service: TdBg.Search.MockSearch,
   es_host: "localhost",

@@ -7,6 +7,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   import Canada, only: [can?: 2]
 
   alias TdBg.Audit
+  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -20,8 +21,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Templates
   alias Guardian.Plug, as: GuardianPlug
   alias TdBgWeb.DataFieldView
+  alias TdBgWeb.DataStructureView
+  alias TdBg.Repo
+  alias TdBg.Utils.CollectionUtils
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+  @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
   @events %{set_business_concept_data_fields: "set_business_concept_data_fields"}
 
@@ -686,6 +691,74 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  swagger_path :get_data_structures do
+    get "/business_concept_versions/{id}/data_structures"
+    description "Get business concept version associated data structures"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:DataStructuresResponse)
+    response 400, "Client Error"
+  end
+
+  def get_data_structures(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = get_current_user(conn)
+    with true <- can?(user, get_data_structures(business_concept_version)) do
+      ous = get_parent_domain_keys([], user,  business_concept_version)
+      data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, ",")})
+      cooked_data_structures = cooked_data_structures(data_structures)
+      render(conn, DataStructureView, "data_structures.json", data_structures: cooked_data_structures)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      error ->
+        Logger.error("While getting data structures... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  defp cooked_data_structures(data_structures) do
+    data_structures
+    |> Enum.map(&CollectionUtils.atomize_keys(&1))
+    |> Enum.map(&Map.take(&1, [:id, :system, :group, :name, :description]))
+  end
+
+  defp get_parent_domain_keys(domain_names, user, %Domain{} = domain) do
+    case domain.parent_id do
+      nil -> domain_names
+      _ ->
+        parent = domain
+        |> Repo.preload(:parent)
+        |> Map.get(:parent)
+
+        new_domain_names = case can?(user, show(parent)) do
+          true -> [parent.name|domain_names]
+          false -> domain_names
+        end
+
+        get_parent_domain_keys(new_domain_names, user, parent)
+    end
+  end
+  defp get_parent_domain_keys(domain_names, user, %BusinessConceptVersion{} = business_concept_version) do
+    domain = business_concept_version
+    |> Repo.preload(business_concept: [:domain])
+    |> Map.get(:business_concept)
+    |> Map.get(:domain)
+
+    new_domain_names = case can?(user, show(domain)) do
+      true -> [domain.name|domain_names]
+      false -> [domain_names]
+    end
+
+    get_parent_domain_keys(new_domain_names, user, domain)
   end
 
   defp get_current_user(conn) do
