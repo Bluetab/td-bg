@@ -6,8 +6,8 @@ defmodule TdBgWeb.BusinessConceptDataFieldSupport do
     data_field = CollectionUtils.atomize_keys(data_field)
     [data_field.system,
      data_field.group,
-     data_field.name,
-     data_field.field]
+     data_field.structure,
+     data_field.name]
     |> Enum.join("::")
   end
 
@@ -15,8 +15,8 @@ defmodule TdBgWeb.BusinessConceptDataFieldSupport do
     splited_data_field = String.split(data_field, "::")
     %{system: Enum.at(splited_data_field, 0),
       group: Enum.at(splited_data_field, 1),
-      name: Enum.at(splited_data_field, 2),
-      field: Enum.at(splited_data_field, 3)}
+      structure: Enum.at(splited_data_field, 2),
+      name: Enum.at(splited_data_field, 3)}
   end
 
 end

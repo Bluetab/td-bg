@@ -581,8 +581,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           system :string, "Data field system", required: true
           group  :string, "Data field group",  required: true
-          name   :string, "Data field name",   required: true
-          field  :string, "Data field, field name", required: true
+          structure :string, "Data field name",   required: true
+          name :string, "Data field, field name", required: true
         end
       end,
       DataFields: swagger_schema do

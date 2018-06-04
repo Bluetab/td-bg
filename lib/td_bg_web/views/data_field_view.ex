@@ -12,8 +12,8 @@ defmodule TdBgWeb.DataFieldView do
     %{
       system: data_field.system,
       group: data_field.group,
-      name: data_field.name,
-      field: data_field.field
+      structure: data_field.structure,
+      name: data_field.name
     }
   end
 end

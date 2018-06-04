@@ -231,8 +231,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       data_field = %{system: "system",
                      group: "group",
-                     name: "name",
-                     field: "field"}
+                     structure: "structure",
+                     name: "name"}
       insert(:business_concept_data_field,
         business_concept: inspect(business_concept_id),
         data_field: BusinessConceptDataFieldSupport.normalize_data_field(data_field))
@@ -244,8 +244,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       json_response = Enum.at(json_response, 0)
       assert json_response["system"] == data_field.system
       assert json_response["group"]  == data_field.group
-      assert json_response["name"]   == data_field.name
-      assert json_response["field"]  == data_field.field
+      assert json_response["structure"]   == data_field.structure
+      assert json_response["name"]  == data_field.name
     end
 
     @tag :admin_authenticated
@@ -255,13 +255,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       data_field1 = %{system: "system1",
                       group: "group1",
-                      name: "name1",
-                      field: "field1"}
+                      structure: "structure1",
+                      name: "name1"}
 
       data_field2 = %{system: "system2",
                       group: "group2",
-                      name: "name2",
-                      field: "field2"}
+                      structure: "structure2",
+                      name: "name2"}
 
       data_fields = [data_field1, data_field2]
 
