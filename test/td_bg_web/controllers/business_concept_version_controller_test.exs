@@ -288,6 +288,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       data_structure_1 = %{
         "id" => 1,
+        "ou" => "ou 1",
         "system" => "system 1",
         "group" => "group 1",
         "name" => "name 1",
@@ -296,6 +297,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       data_structure_2 = %{
         "id" => 12,
+        "ou" => "ou 1",
         "system" => "system 2",
         "group" => "group 2",
         "name" => "name 2",

@@ -606,10 +606,10 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "A Data Structure"
         properties do
           id     :integer, "Data Structure id", required: true
+          ou     :string, "Data Structure orgainzation", required: true
           system :string, "Data Structure system", required: true
           group  :string, "Data Structure group", required: true
           name   :string, "Data Structure name", required: true
-          description [:string, :null], "Data Structure description"
         end
       end,
       DataStructures: swagger_schema do

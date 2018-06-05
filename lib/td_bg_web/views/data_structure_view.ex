@@ -10,10 +10,10 @@ defmodule TdBgWeb.DataStructureView do
 
   def render("data_structure.json", %{data_structure: data_structure}) do
     %{id: data_structure.id,
+      ou: data_structure.ou,
       system: data_structure.system,
       group: data_structure.group,
-      name: data_structure.name,
-      description: data_structure.description}
+      name: data_structure.name}
   end
 
 end

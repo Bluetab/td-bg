@@ -728,7 +728,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp cooked_data_structures(data_structures) do
     data_structures
     |> Enum.map(&CollectionUtils.atomize_keys(&1))
-    |> Enum.map(&Map.take(&1, [:id, :system, :group, :name, :description]))
+    |> Enum.map(&Map.take(&1, [:id, :ou, :system, :group, :name]))
   end
 
   defp get_parent_domain_keys(domain_names, user, %Domain{} = domain) do
