@@ -22,6 +22,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias Guardian.Plug, as: GuardianPlug
   alias TdBgWeb.FieldView
   alias TdBgWeb.DataStructureView
+  alias TdBgWeb.DataFieldView
   alias TdBg.Repo
   alias TdBg.Utils.CollectionUtils
 
@@ -618,7 +619,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     parameters do
       id :path, :integer, "Business Concept Version ID", required: true
     end
-    response 200, "OK", Schema.ref(:DataFieldsResponse)
+    response 200, "OK", Schema.ref(:FieldsResponse)
     response 400, "Client Error"
   end
 
@@ -650,10 +651,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     description "Updates Business Concept Version"
     produces "application/json"
     parameters do
-      business_concept_version :body, Schema.ref(:DataFieldsSet), "Data fields array"
+      business_concept_version :body, Schema.ref(:FieldsSet), "Data fields array"
       id :path, :integer, "Business Concept Version ID", required: true
     end
-    response 200, "OK", Schema.ref(:DataFieldsResponse)
+    response 200, "OK", Schema.ref(:FieldsResponse)
     response 400, "Client Error"
   end
 
@@ -725,10 +726,53 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  swagger_path :get_data_fields do
+    get "/business_concept_versions/{business_concept_id}/data_structures/{data_structure_id}/data_fields"
+    description "Get business concept version associated data structure data fields"
+    produces "application/json"
+    parameters do
+      business_concept_id :path, :integer, "Business Concept Version ID", required: true
+      data_structure_id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:FieldsResponse)
+    response 400, "Client Error"
+  end
+
+  def get_data_fields(conn, %{"business_concept_version_id" => id, "data_structure_id" => data_structure_id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = get_current_user(conn)
+    with true <- can?(user, get_data_fields(business_concept_version)) do
+      ous = get_parent_domain_keys([], user,  business_concept_version)
+      data_structure = @td_dd_api.get_data_fields(%{data_structure_id: data_structure_id})
+      data_fields = case Enum.member?(ous, data_structure["ou"]) do
+        true -> Map.get(data_structure, "data_fields")
+        _ -> []
+      end
+      cooked_data_fields = cooked_data_fields(data_fields)
+      render(conn, DataFieldView, "data_fields.json", data_fields: cooked_data_fields)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      error ->
+        Logger.error("While getting data structures... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
   defp cooked_data_structures(data_structures) do
     data_structures
     |> Enum.map(&CollectionUtils.atomize_keys(&1))
     |> Enum.map(&Map.take(&1, [:id, :ou, :system, :group, :name]))
+  end
+
+  defp cooked_data_fields(data_fields) do
+    data_fields
+    |> Enum.map(&CollectionUtils.atomize_keys(&1))
+    |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 
   defp get_parent_domain_keys(domain_names, user, %Domain{} = domain) do

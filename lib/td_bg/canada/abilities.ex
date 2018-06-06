@@ -84,6 +84,10 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :get_data_structures, business_concept_version)
     end
 
+    def can?(%User{} = user, :get_data_fields, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :get_data_fields, business_concept_version)
+    end
+
     def can?(
           %User{} = user,
           :send_for_approval,

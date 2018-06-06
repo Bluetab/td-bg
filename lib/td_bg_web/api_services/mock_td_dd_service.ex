@@ -15,4 +15,12 @@ defmodule TdBgWeb.ApiServices.MockTdDdService do
     Agent.get(MockTdDdService, &(&1))
   end
 
+  def set_data_fields(_new_data_field) do
+    # Implement this
+  end
+
+  def get_data_fields(%{} = _params) do
+    # Implement this
+  end
+
 end

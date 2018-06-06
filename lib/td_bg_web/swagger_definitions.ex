@@ -627,6 +627,30 @@ defmodule TdBgWeb.SwaggerDefinitions do
         properties do
           data Schema.ref(:DataStructures)
         end
+      end,
+      DataField: swagger_schema do
+        title "Data Field"
+        description "A Data Field"
+        properties do
+          id     :integer, "Data Field id", required: true
+          name   :string,  "Data Field name", required: true
+        end
+      end,
+      DataFields: swagger_schema do
+        title "Data Fields"
+        description "A collection of data fields"
+        type :array
+        items Schema.ref(:DataField)
+      end,
+      DataFieldResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataField)
+        end
+      end,
+      DataFieldsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataFields)
+        end
       end
     }
   end
