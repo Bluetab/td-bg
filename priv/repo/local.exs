@@ -21,26 +21,41 @@ template = Repo.insert!(%Template{
   content: []
   })
 
-domain = Repo.insert!(%Domain{
-    description: "Dominio",
+domain1 = Repo.insert!(%Domain{
+    description: "Dominio 1",
     type: "Especial",
-    name: "Nombre del dominio"
+    name: "Dominio1"
 })
 
-domain
+domain2 = Repo.insert!(%Domain{
+    description: "Dominio 2",
+    type: "Especial",
+    name: "Dominio2",
+    parent_id: domain1.id
+})
+
+domain3 = Repo.insert!(%Domain{
+    description: "Dominio 3",
+    type: "Especial",
+    name: "Dominio2",
+    parent_id: domain2.id
+})
+
+
+domain3
 |> Repo.preload(:templates)
 |> Changeset.change
 |> Changeset.put_assoc(:templates, [template])
 |> Repo.update!
 
 business_concept = Repo.insert!(%BusinessConcept{
-  domain_id: domain.id,
+  domain_id: domain3.id,
   type: "empty",
   last_change_by: 1234,
   last_change_at: DateTime.utc_now()
   })
 
-business_concept_version = Repo.insert!(%BusinessConceptVersion{
+Repo.insert!(%BusinessConceptVersion{
   content: %{},
   related_to: [],
   description: "Descripción",
