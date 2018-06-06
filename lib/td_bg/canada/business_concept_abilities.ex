@@ -45,7 +45,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     |> authorized?
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :get_data_fields, %BusinessConceptVersion{
+  def can?(%User{id: user_id, is_admin: is_admin}, :get_fields, %BusinessConceptVersion{
         current: is_current,
         status: status,
         business_concept: %BusinessConcept{domain_id: domain_id}
@@ -62,7 +62,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     |> authorized?
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :set_data_fields, %BusinessConceptVersion{
+  def can?(%User{id: user_id, is_admin: is_admin}, :set_fields, %BusinessConceptVersion{
         current: is_current,
         status: status,
         business_concept: %BusinessConcept{domain_id: domain_id}

@@ -11,16 +11,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.BusinessConceptDataFields
+  alias TdBg.ConceptFields
   alias TdBgWeb.ErrorView
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
-  alias TdBgWeb.BusinessConceptDataFieldSupport
+  alias TdBgWeb.ConceptFieldSupport
   alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
   alias Guardian.Plug, as: GuardianPlug
-  alias TdBgWeb.DataFieldView
+  alias TdBgWeb.FieldView
   alias TdBgWeb.DataStructureView
   alias TdBg.Repo
   alias TdBg.Utils.CollectionUtils
@@ -28,7 +28,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
-  @events %{set_business_concept_data_fields: "set_business_concept_data_fields"}
+  @events %{set_business_concept_fields: "set_business_concept_fields"}
 
   action_fallback TdBgWeb.FallbackController
 
@@ -611,8 +611,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :get_data_fields do
-    get "/business_concept_versions/{id}/data_fields"
+  swagger_path :get_fields do
+    get "/business_concept_versions/{id}/fields"
     description "Get business concept version data fields"
     produces "application/json"
     parameters do
@@ -622,16 +622,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response 400, "Client Error"
   end
 
-  def get_data_fields(conn, %{"business_concept_version_id" => id}) do
+  def get_fields(conn, %{"business_concept_version_id" => id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     user = get_current_user(conn)
 
-    with true <- can?(user, get_data_fields(business_concept_version)) do
+    with true <- can?(user, get_fields(business_concept_version)) do
       normalized_bc = inspect(business_concept_version.business_concept_id)
-      current_data_fields = BusinessConceptDataFields.list_business_concept_data_fields(normalized_bc)
-      denormalized_data_fields = Enum.map(current_data_fields,
-        &BusinessConceptDataFieldSupport.denormalize_data_field(&1.data_field))
-      render(conn, DataFieldView, "data_fields.json", data_fields: denormalized_data_fields)
+      current_fields = ConceptFields.list_concept_fields(normalized_bc)
+      denormalized_fields = Enum.map(current_fields,
+        &ConceptFieldSupport.denormalize_field(&1.field))
+      render(conn, FieldView, "fields.json", fields: denormalized_fields)
     else
       false ->
         conn
@@ -645,8 +645,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :set_data_fields do
-    post "/business_concept_versions/{id}/data_fields"
+  swagger_path :set_fields do
+    post "/business_concept_versions/{id}/fields"
     description "Updates Business Concept Version"
     produces "application/json"
     parameters do
@@ -657,34 +657,34 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response 400, "Client Error"
   end
 
-  def set_data_fields(conn, %{"business_concept_version_id" => id, "data_fields" => data_fields} = params) do
+  def set_fields(conn, %{"business_concept_version_id" => id, "fields" => fields} = params) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept_id = business_concept_version.business_concept_id
     user = get_current_user(conn)
 
     normalized_bc = inspect(business_concept_id)
-    normalized_dfs = Enum.map(data_fields,
-      &BusinessConceptDataFieldSupport.normalize_data_field(&1))
-    with true <- can?(user, set_data_fields(business_concept_version)),
-         {:ok_loading_data_fields, current_data_fields} <-
-           BusinessConceptDataFields.load_business_concept_data_fields(
+    normalized_dfs = Enum.map(fields,
+      &ConceptFieldSupport.normalize_field(&1))
+    with true <- can?(user, set_fields(business_concept_version)),
+         {:ok_loading_fields, current_fields} <-
+           ConceptFields.load_concept_fields(
             normalized_bc, normalized_dfs) do
 
       audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => params}}
-      Audit.create_event(conn, audit, @events.set_business_concept_data_fields)
+      Audit.create_event(conn, audit, @events.set_business_concept_fields)
 
-      denormalized_data_fields = Enum.map(current_data_fields,
-        &BusinessConceptDataFieldSupport.denormalize_data_field(&1))
-      render(conn, DataFieldView, "data_fields.json", data_fields: denormalized_data_fields)
+      denormalized_fields = Enum.map(current_fields,
+        &ConceptFieldSupport.denormalize_field(&1))
+      render(conn, FieldView, "fields.json", fields: denormalized_fields)
     else
       false ->
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
-      {:error_loading_data_fields, _} ->
+      {:error_loading_fields, _} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{data_fields: ["invalid"]}})
+        |> json(%{"errors": %{fields: ["invalid"]}})
       error ->
         Logger.error("While setting data fields... #{inspect(error)}")
         conn

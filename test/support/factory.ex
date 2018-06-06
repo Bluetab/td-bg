@@ -4,7 +4,7 @@ defmodule TdBg.Factory do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptAlias
-  alias TdBg.BusinessConceptDataFields.BusinessConceptDataField
+  alias TdBg.ConceptFields.ConceptField
 
   def user_factory do
     %TdBg.Accounts.User {
@@ -83,10 +83,10 @@ defmodule TdBg.Factory do
     }
   end
 
-  def business_concept_data_field_factory do
-    %BusinessConceptDataField {
-      business_concept: "a business_concept",
-      data_field: "a data field"
+  def concept_field_factory do
+    %ConceptField {
+      concept: "a business_concept",
+      field: "a data field"
     }
   end
 end

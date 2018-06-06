@@ -209,8 +209,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
-  describe "data_fields" do
-    alias TdBgWeb.BusinessConceptDataFieldSupport
+  describe "fields" do
+    alias TdBgWeb.ConceptFieldSupport
 
     @tag :admin_authenticated
     test "list data fields", %{conn: conn} do
@@ -218,7 +218,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       business_concept_version_id = business_concept_version.id
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version_id)
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version_id)
 
       assert json_response(conn, 200)["data"] == []
     end
@@ -229,23 +229,23 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
       business_concept_id = business_concept_version.business_concept_id
 
-      data_field = %{system: "system",
+      field = %{system: "system",
                      group: "group",
                      structure: "structure",
                      name: "name"}
-      insert(:business_concept_data_field,
-        business_concept: inspect(business_concept_id),
-        data_field: BusinessConceptDataFieldSupport.normalize_data_field(data_field))
+      insert(:concept_field,
+        concept: inspect(business_concept_id),
+        field: ConceptFieldSupport.normalize_field(field))
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version.id)
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
       validate_resp_schema(conn, schema, "DataFieldsResponse")
       json_response =  json_response(conn, 200)["data"]
       assert length(json_response) == 1
       json_response = Enum.at(json_response, 0)
-      assert json_response["system"] == data_field.system
-      assert json_response["group"]  == data_field.group
-      assert json_response["structure"]   == data_field.structure
-      assert json_response["name"]  == data_field.name
+      assert json_response["system"] == field.system
+      assert json_response["group"]  == field.group
+      assert json_response["structure"]   == field.structure
+      assert json_response["name"]  == field.name
     end
 
     @tag :admin_authenticated
@@ -253,29 +253,29 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
 
-      data_field1 = %{system: "system1",
+      field1 = %{system: "system1",
                       group: "group1",
                       structure: "structure1",
                       name: "name1"}
 
-      data_field2 = %{system: "system2",
+      field2 = %{system: "system2",
                       group: "group2",
                       structure: "structure2",
                       name: "name2"}
 
-      data_fields = [data_field1, data_field2]
+      fields = [field1, field2]
 
-      conn = post conn, business_concept_version_business_concept_version_path(conn, :set_data_fields, business_concept_version.id), data_fields: data_fields
+      conn = post conn, business_concept_version_business_concept_version_path(conn, :set_fields, business_concept_version.id), fields: fields
       validate_resp_schema(conn, schema, "DataFieldsResponse")
 
       conn = recycle_and_put_headers(conn)
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version.id)
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
       validate_resp_schema(conn, schema, "DataFieldsResponse")
       json_response =  json_response(conn, 200)["data"]
       assert length(json_response) == 2
-      assert Enum.at(json_response, 0)["system"] == data_field1.system
-      assert Enum.at(json_response, 1)["system"] == data_field2.system
+      assert Enum.at(json_response, 0)["system"] == field1.system
+      assert Enum.at(json_response, 1)["system"] == field2.system
     end
   end
 
