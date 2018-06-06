@@ -35,8 +35,18 @@ config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService
   auth_port: "4001",
   auth_domain: ""
 
+config :td_bg, :dd_service, api_service: TdBgWeb.ApiServices.HttpTdDdService,
+  auth_host: "localhost",
+  auth_port: "4005",
+  auth_domain: ""
+
 config :td_bg, :elasticsearch,
   search_service: TdBg.Search,
   es_host: "localhost",
   es_port: 9200,
   type_name: "doc"
+
+config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.HttpTdAuditService,
+  audit_host: "localhost",
+  audit_port: "4007",
+  audit_domain: ""

@@ -1,4 +1,5 @@
 defmodule TdBgWeb.BusinessConceptSupport do
+  require Logger
   use TdBgWeb, :controller
   alias TdBgWeb.ErrorView
   @moduledoc false
@@ -20,11 +21,11 @@ defmodule TdBgWeb.BusinessConceptSupport do
         conn
         |> put_status(:unprocessable_entity)
         |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
-      _error ->
+      error ->
+        Logger.error("Business concept... #{inspect(error)}")
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
   end
-
 end

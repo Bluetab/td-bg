@@ -72,6 +72,22 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :update, business_concept_version)
     end
 
+    def can?(%User{} = user, :get_fields, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :get_fields, business_concept_version)
+    end
+
+    def can?(%User{} = user, :set_fields, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :set_fields, business_concept_version)
+    end
+
+    def can?(%User{} = user, :get_data_structures, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :get_data_structures, business_concept_version)
+    end
+
+    def can?(%User{} = user, :get_data_fields, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :get_data_fields, business_concept_version)
+    end
+
     def can?(
           %User{} = user,
           :send_for_approval,
@@ -128,7 +144,6 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :manage_alias, business_concept_version)
     end
 
-    # TODO: Controlar hypermedia collections?
     def can?(%User{is_admin: true}, _action, %{}) do
       true
     end

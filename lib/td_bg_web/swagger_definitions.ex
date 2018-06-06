@@ -574,6 +574,83 @@ defmodule TdBgWeb.SwaggerDefinitions do
             end
           end)
         end
+      end,
+      Field: swagger_schema do
+        title "Field"
+        description "Field representation"
+        properties do
+          system :string, "Field system", required: true
+          group  :string, "Field group",  required: true
+          structure :string, "Field name",   required: true
+          name :string, "Field, field name", required: true
+        end
+      end,
+      Fields: swagger_schema do
+        title "Fields"
+        description "A collection of fields"
+        type :array
+        items Schema.ref(:Field)
+      end,
+      FieldsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:Fields)
+        end
+      end,
+      FieldsSet: swagger_schema do
+        properties do
+          fields :array, "Fields", items: Schema.ref(:Field)
+        end
+      end,
+      DataStructure: swagger_schema do
+        title "Data Structure"
+        description "A Data Structure"
+        properties do
+          id     :integer, "Data Structure id", required: true
+          ou     :string, "Data Structure orgainzation", required: true
+          system :string, "Data Structure system", required: true
+          group  :string, "Data Structure group", required: true
+          name   :string, "Data Structure name", required: true
+        end
+      end,
+      DataStructures: swagger_schema do
+        title "Data Structures"
+        description "A collection of data structures"
+        type :array
+        items Schema.ref(:DataStructure)
+      end,
+      DataStructureResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataStructure)
+        end
+      end,
+      DataStructuresResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataStructures)
+        end
+      end,
+      DataField: swagger_schema do
+        title "Data Field"
+        description "A Data Field"
+        properties do
+          id     :integer, "Data Field id", required: true
+          name   :string,  "Data Field name", required: true
+        end
+      end,
+      DataFields: swagger_schema do
+        title "Data Fields"
+        description "A collection of data fields"
+        type :array
+        items Schema.ref(:DataField)
+      end,
+      DataFieldResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataField)
+        end
+      end,
+      DataFieldsResponse: swagger_schema do
+        properties do
+          data Schema.ref(:DataFields)
+        end
       end
     }
   end

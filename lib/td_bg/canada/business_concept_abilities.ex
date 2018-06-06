@@ -45,6 +45,74 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     |> authorized?
   end
 
+  def can?(%User{id: user_id, is_admin: is_admin}, :get_fields, %BusinessConceptVersion{
+        current: is_current,
+        status: status,
+        business_concept: %BusinessConcept{domain_id: domain_id}
+      }) do
+    %{
+      user_id: user_id,
+      is_admin: is_admin,
+      permission: Permission.permissions().update_business_concept,
+      is_current: is_current,
+      current_status: status,
+      required_statuses: [BusinessConcept.status().draft],
+      domain_id: domain_id
+    }
+    |> authorized?
+  end
+
+  def can?(%User{id: user_id, is_admin: is_admin}, :set_fields, %BusinessConceptVersion{
+        current: is_current,
+        status: status,
+        business_concept: %BusinessConcept{domain_id: domain_id}
+      }) do
+    %{
+      user_id: user_id,
+      is_admin: is_admin,
+      permission: Permission.permissions().update_business_concept,
+      is_current: is_current,
+      current_status: status,
+      required_statuses: [BusinessConcept.status().draft],
+      domain_id: domain_id
+    }
+    |> authorized?
+  end
+
+  def can?(%User{id: user_id, is_admin: is_admin}, :get_data_structures, %BusinessConceptVersion{
+        current: is_current,
+        status: status,
+        business_concept: %BusinessConcept{domain_id: domain_id}
+      }) do
+    %{
+      user_id: user_id,
+      is_admin: is_admin,
+      permission: Permission.permissions().update_business_concept,
+      is_current: is_current,
+      current_status: status,
+      required_statuses: [BusinessConcept.status().draft],
+      domain_id: domain_id
+    }
+    |> authorized?
+  end
+
+  def can?(%User{id: user_id, is_admin: is_admin}, :get_data_fields, %BusinessConceptVersion{
+        current: is_current,
+        status: status,
+        business_concept: %BusinessConcept{domain_id: domain_id}
+      }) do
+    %{
+      user_id: user_id,
+      is_admin: is_admin,
+      permission: Permission.permissions().update_business_concept,
+      is_current: is_current,
+      current_status: status,
+      required_statuses: [BusinessConcept.status().draft],
+      domain_id: domain_id
+    }
+    |> authorized?
+  end
+
   def can?(%User{id: user_id, is_admin: is_admin}, :send_for_approval, %BusinessConceptVersion{
         current: is_current,
         status: status,

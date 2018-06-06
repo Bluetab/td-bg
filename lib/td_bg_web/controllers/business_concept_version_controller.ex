@@ -1,22 +1,35 @@
 defmodule TdBgWeb.BusinessConceptVersionController do
+  require Logger
   use TdBgWeb, :controller
   use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
+  alias TdBg.Audit
+  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.ConceptFields
   alias TdBgWeb.ErrorView
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
+  alias TdBgWeb.ConceptFieldSupport
   alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
   alias Guardian.Plug, as: GuardianPlug
+  alias TdBgWeb.FieldView
+  alias TdBgWeb.DataStructureView
+  alias TdBgWeb.DataFieldView
+  alias TdBg.Repo
+  alias TdBg.Utils.CollectionUtils
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+  @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
+
+  @events %{set_business_concept_fields: "set_business_concept_fields"}
 
   action_fallback TdBgWeb.FallbackController
 
@@ -597,6 +610,199 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  swagger_path :get_fields do
+    get "/business_concept_versions/{id}/fields"
+    description "Get business concept version data fields"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:FieldsResponse)
+    response 400, "Client Error"
+  end
+
+  def get_fields(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = get_current_user(conn)
+
+    with true <- can?(user, get_fields(business_concept_version)) do
+      normalized_bc = inspect(business_concept_version.business_concept_id)
+      current_fields = ConceptFields.list_concept_fields(normalized_bc)
+      denormalized_fields = Enum.map(current_fields,
+        &ConceptFieldSupport.denormalize_field(&1.field))
+      render(conn, FieldView, "fields.json", fields: denormalized_fields)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      error ->
+        Logger.error("While getting data fields... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :set_fields do
+    post "/business_concept_versions/{id}/fields"
+    description "Updates Business Concept Version"
+    produces "application/json"
+    parameters do
+      business_concept_version :body, Schema.ref(:FieldsSet), "Data fields array"
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:FieldsResponse)
+    response 400, "Client Error"
+  end
+
+  def set_fields(conn, %{"business_concept_version_id" => id, "fields" => fields} = params) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_id = business_concept_version.business_concept_id
+    user = get_current_user(conn)
+
+    normalized_bc = inspect(business_concept_id)
+    normalized_dfs = Enum.map(fields,
+      &ConceptFieldSupport.normalize_field(&1))
+    with true <- can?(user, set_fields(business_concept_version)),
+         {:ok_loading_fields, current_fields} <-
+           ConceptFields.load_concept_fields(
+            normalized_bc, normalized_dfs) do
+
+      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => params}}
+      Audit.create_event(conn, audit, @events.set_business_concept_fields)
+
+      denormalized_fields = Enum.map(current_fields,
+        &ConceptFieldSupport.denormalize_field(&1))
+      render(conn, FieldView, "fields.json", fields: denormalized_fields)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      {:error_loading_fields, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{"errors": %{fields: ["invalid"]}})
+      error ->
+        Logger.error("While setting data fields... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :get_data_structures do
+    get "/business_concept_versions/{id}/data_structures"
+    description "Get business concept version associated data structures"
+    produces "application/json"
+    parameters do
+      id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:DataStructuresResponse)
+    response 400, "Client Error"
+  end
+
+  def get_data_structures(conn, %{"business_concept_version_id" => id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = get_current_user(conn)
+    with true <- can?(user, get_data_structures(business_concept_version)) do
+      ous = get_parent_domain_keys([], user,  business_concept_version)
+      data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, ",")})
+      cooked_data_structures = cooked_data_structures(data_structures)
+      render(conn, DataStructureView, "data_structures.json", data_structures: cooked_data_structures)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      error ->
+        Logger.error("While getting data structures... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :get_data_fields do
+    get "/business_concept_versions/{business_concept_id}/data_structures/{data_structure_id}/data_fields"
+    description "Get business concept version associated data structure data fields"
+    produces "application/json"
+    parameters do
+      business_concept_id :path, :integer, "Business Concept Version ID", required: true
+      data_structure_id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:FieldsResponse)
+    response 400, "Client Error"
+  end
+
+  def get_data_fields(conn, %{"business_concept_version_id" => id, "data_structure_id" => data_structure_id}) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    user = get_current_user(conn)
+    with true <- can?(user, get_data_fields(business_concept_version)) do
+      ous = get_parent_domain_keys([], user,  business_concept_version)
+      data_structure = @td_dd_api.get_data_fields(%{data_structure_id: data_structure_id})
+      data_fields = case Enum.member?(ous, data_structure["ou"]) do
+        true -> Map.get(data_structure, "data_fields")
+        _ -> []
+      end
+      cooked_data_fields = cooked_data_fields(data_fields)
+      render(conn, DataFieldView, "data_fields.json", data_fields: cooked_data_fields)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      error ->
+        Logger.error("While getting data structures... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  defp cooked_data_structures(data_structures) do
+    data_structures
+    |> Enum.map(&CollectionUtils.atomize_keys(&1))
+    |> Enum.map(&Map.take(&1, [:id, :ou, :system, :group, :name]))
+  end
+
+  defp cooked_data_fields(data_fields) do
+    data_fields
+    |> Enum.map(&CollectionUtils.atomize_keys(&1))
+    |> Enum.map(&Map.take(&1, [:id, :name]))
+  end
+
+  defp get_parent_domain_keys(domain_names, user, %Domain{} = domain) do
+    case domain.parent_id do
+      nil -> domain_names
+      _ ->
+        parent = domain
+        |> Repo.preload(:parent)
+        |> Map.get(:parent)
+
+        new_domain_names = case can?(user, show(parent)) do
+          true -> [parent.name|domain_names]
+          false -> domain_names
+        end
+
+        get_parent_domain_keys(new_domain_names, user, parent)
+    end
+  end
+  defp get_parent_domain_keys(domain_names, user, %BusinessConceptVersion{} = business_concept_version) do
+    domain = business_concept_version
+    |> Repo.preload(business_concept: [:domain])
+    |> Map.get(:business_concept)
+    |> Map.get(:domain)
+
+    new_domain_names = case can?(user, show(domain)) do
+      true -> [domain.name|domain_names]
+      false -> [domain_names]
+    end
+
+    get_parent_domain_keys(new_domain_names, user, domain)
   end
 
   defp get_current_user(conn) do

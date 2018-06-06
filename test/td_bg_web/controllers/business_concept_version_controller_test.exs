@@ -5,12 +5,16 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   import TdBgWeb.Authentication, only: :functions
 
   alias TdBgWeb.ApiServices.MockTdAuthService
+  alias TdBgWeb.ApiServices.MockTdAuditService
+  alias TdBgWeb.ApiServices.MockTdDdService
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions
   alias Poison, as: JSON
 
   setup_all do
     start_supervised MockTdAuthService
+    start_supervised MockTdAuditService
+    start_supervised MockTdDdService
     :ok
   end
 
@@ -202,6 +206,113 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn = put conn, business_concept_version_path(conn, :update, business_concept_version_id), business_concept_version: update_attrs
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       assert json_response(conn, 422)["errors"] != %{}
+    end
+  end
+
+  describe "fields" do
+    alias TdBgWeb.ConceptFieldSupport
+
+    @tag :admin_authenticated
+    test "list data fields", %{conn: conn} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version_id = business_concept_version.id
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version_id)
+
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag :admin_authenticated
+    test "list fields with result", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_id = business_concept_version.business_concept_id
+
+      field = %{system: "system",
+                     group: "group",
+                     structure: "structure",
+                     name: "name"}
+      insert(:concept_field,
+        concept: inspect(business_concept_id),
+        field: ConceptFieldSupport.normalize_field(field))
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
+      validate_resp_schema(conn, schema, "FieldsResponse")
+      json_response =  json_response(conn, 200)["data"]
+      assert length(json_response) == 1
+      json_response = Enum.at(json_response, 0)
+      assert json_response["system"] == field.system
+      assert json_response["group"]  == field.group
+      assert json_response["structure"]   == field.structure
+      assert json_response["name"]  == field.name
+    end
+
+    @tag :admin_authenticated
+    test "add fields", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+
+      field1 = %{system: "system1",
+                      group: "group1",
+                      structure: "structure1",
+                      name: "name1"}
+
+      field2 = %{system: "system2",
+                      group: "group2",
+                      structure: "structure2",
+                      name: "name2"}
+
+      fields = [field1, field2]
+
+      conn = post conn, business_concept_version_business_concept_version_path(conn, :set_fields, business_concept_version.id), fields: fields
+      validate_resp_schema(conn, schema, "FieldsResponse")
+
+      conn = recycle_and_put_headers(conn)
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
+      validate_resp_schema(conn, schema, "FieldsResponse")
+      json_response =  json_response(conn, 200)["data"]
+      assert length(json_response) == 2
+      assert Enum.at(json_response, 0)["system"] == field1.system
+      assert Enum.at(json_response, 1)["system"] == field2.system
+    end
+  end
+
+  describe "data_structures" do
+    @tag :admin_authenticated
+    test "list data structures", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version_id = business_concept_version.id
+
+      data_structure_1 = %{
+        "id" => 1,
+        "ou" => "ou 1",
+        "system" => "system 1",
+        "group" => "group 1",
+        "name" => "name 1",
+        "description" => "description 1"
+      }
+
+      data_structure_2 = %{
+        "id" => 12,
+        "ou" => "ou 1",
+        "system" => "system 2",
+        "group" => "group 2",
+        "name" => "name 2",
+        "description" => "description 2"
+      }
+
+      MockTdDdService.set_data_structure(data_structure_1)
+      MockTdDdService.set_data_structure(data_structure_2)
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_structures, business_concept_version_id)
+      validate_resp_schema(conn, schema, "DataStructuresResponse")
+      response = json_response(conn, 200)["data"]
+
+      assert Enum.at(response, 0)["system"] == data_structure_1["system"]
+      assert Enum.at(response, 1)["system"] == data_structure_2["system"]
     end
   end
 

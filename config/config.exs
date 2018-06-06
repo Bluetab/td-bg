@@ -37,10 +37,19 @@ config :td_bg, :auth_service,
   sessions_path: "/api/sessions/",
   groups_path: "/api/groups"
 
+config :td_bg, :dd_service,
+  protocol: "http",
+  data_structures_path: "/api/data_structures",
+  groups_path: "/api/groups"
+
 config :td_bg, :phoenix_swagger,
        swagger_files: %{
          "priv/static/swagger.json" => [router: TdBgWeb.Router]
        }
+
+config :td_bg, :audit_service,
+        protocol: "http",
+        audits_path: "/api/audits/"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
