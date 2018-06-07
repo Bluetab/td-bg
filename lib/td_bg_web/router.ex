@@ -71,7 +71,7 @@ defmodule TdBgWeb.Router do
       get    "/fields/:concept_field_id", BusinessConceptVersionController, :get_field
       get    "/fields", BusinessConceptVersionController, :get_fields
       post   "/fields", BusinessConceptVersionController, :add_field
-      delete "/fields", BusinessConceptVersionController, :delete_field
+      delete "/fields/:concept_field_id", BusinessConceptVersionController, :delete_field
       get  "/data_structures", BusinessConceptVersionController, :get_data_structures
       get  "/data_structures/:data_structure_id/data_fields", BusinessConceptVersionController, :get_data_fields
     end

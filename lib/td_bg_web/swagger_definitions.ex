@@ -589,6 +589,11 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "Field representation"
         type :object
       end,
+      AddField: swagger_schema do
+        properties do
+          field (Schema.ref(:Field))
+        end
+      end,
       ConceptFields: swagger_schema do
         title "Concept Fields"
         description "A collection of concept fields"

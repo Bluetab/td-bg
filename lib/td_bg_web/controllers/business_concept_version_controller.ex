@@ -21,7 +21,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias Guardian.Plug, as: GuardianPlug
   alias TdBgWeb.ConceptFieldView
   alias TdBgWeb.DataStructureView
-  alias TdBgWeb.DataConceptFieldView
+  alias TdBgWeb.DataFieldView
   alias TdBg.Repo
   alias TdBg.Utils.CollectionUtils
 
@@ -681,7 +681,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     description "Updates Business Concept Version Field"
     produces "application/json"
     parameters do
-      field :body, Schema.ref(:Field), "Data field"
+      field :body, Schema.ref(:AddField), "Concept field"
       business_concept_version_id :path, :integer, "Business Concept Version ID", required: true
     end
     response 200, "OK", Schema.ref(:ConceptFieldResponse)
@@ -809,7 +809,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         _ -> []
       end
       cooked_data_fields = cooked_data_fields(data_fields)
-      render(conn, DataConceptFieldView, "data_fields.json", data_fields: cooked_data_fields)
+      render(conn, DataFieldView, "data_fields.json", data_fields: cooked_data_fields)
     else
       false ->
         conn
