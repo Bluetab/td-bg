@@ -23,4 +23,12 @@ defmodule TdBgWeb.ApiServices.MockTdDdService do
     # Implement this
   end
 
+  def get_data_structure(%{} = _params) do
+    # Implement this
+  end
+
+  def get_data_field(%{} = _params) do
+    # Implement this    
+  end
+
 end

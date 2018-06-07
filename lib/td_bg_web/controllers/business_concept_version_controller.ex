@@ -15,21 +15,21 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
-  alias TdBgWeb.ConceptFieldSupport
   alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
   alias Guardian.Plug, as: GuardianPlug
-  alias TdBgWeb.FieldView
+  alias TdBgWeb.ConceptFieldView
   alias TdBgWeb.DataStructureView
-  alias TdBgWeb.DataFieldView
+  alias TdBgWeb.DataConceptFieldView
   alias TdBg.Repo
   alias TdBg.Utils.CollectionUtils
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
-  @events %{set_business_concept_fields: "set_business_concept_fields"}
+  @events %{add_concept_field: "add_concept_field",
+            delete_concept_field: "delete_concept_field"}
 
   action_fallback TdBgWeb.FallbackController
 
@@ -613,13 +613,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :get_fields do
-    get "/business_concept_versions/{id}/fields"
+    get "/business_concept_versions/{business_concept_version_id}/fields"
     description "Get business concept version data fields"
     produces "application/json"
     parameters do
-      id :path, :integer, "Business Concept Version ID", required: true
+      business_concept_version_id :path, :integer, "Business Concept Version ID", required: true
     end
-    response 200, "OK", Schema.ref(:FieldsResponse)
+    response 200, "OK", Schema.ref(:ConceptFieldsResponse)
     response 400, "Client Error"
   end
 
@@ -628,66 +628,126 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = get_current_user(conn)
 
     with true <- can?(user, get_fields(business_concept_version)) do
-      normalized_bc = inspect(business_concept_version.business_concept_id)
-      current_fields = ConceptFields.list_concept_fields(normalized_bc)
-      denormalized_fields = Enum.map(current_fields,
-        &ConceptFieldSupport.denormalize_field(&1.field))
-      render(conn, FieldView, "fields.json", fields: denormalized_fields)
+      concept_fields = ConceptFields.list_concept_fields(inspect(business_concept_version.business_concept_id))
+
+      render(conn, ConceptFieldView, "concept_fields.json", concept_fields: concept_fields)
     else
       false ->
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
       error ->
-        Logger.error("While getting data fields... #{inspect(error)}")
+        Logger.error("While getting concept fields... #{inspect(error)}")
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
   end
 
-  swagger_path :set_fields do
-    post "/business_concept_versions/{id}/fields"
-    description "Updates Business Concept Version"
+  swagger_path :get_field do
+    get "/business_concept_versions/{business_concept_id}/fields/{concept_field_id}"
+    description "Get business concept version field"
     produces "application/json"
     parameters do
-      business_concept_version :body, Schema.ref(:FieldsSet), "Data fields array"
-      id :path, :integer, "Business Concept Version ID", required: true
+      business_concept_id :path, :integer, "Business Concept Version ID", required: true
+      concept_field_id :path, :integer, "Concept Field ID", required: true
     end
-    response 200, "OK", Schema.ref(:FieldsResponse)
+    response 200, "OK", Schema.ref(:ConceptFieldsResponse)
     response 400, "Client Error"
   end
 
-  def set_fields(conn, %{"business_concept_version_id" => id, "fields" => fields} = params) do
+  def get_field(conn, %{"business_concept_version_id" => id, "concept_field_id" => concept_field_id}) do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    business_concept_id = business_concept_version.business_concept_id
     user = get_current_user(conn)
 
-    normalized_bc = inspect(business_concept_id)
-    normalized_dfs = Enum.map(fields,
-      &ConceptFieldSupport.normalize_field(&1))
-    with true <- can?(user, set_fields(business_concept_version)),
-         {:ok_loading_fields, current_fields} <-
-           ConceptFields.load_concept_fields(
-            normalized_bc, normalized_dfs) do
-
-      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => params}}
-      Audit.create_event(conn, audit, @events.set_business_concept_fields)
-
-      denormalized_fields = Enum.map(current_fields,
-        &ConceptFieldSupport.denormalize_field(&1))
-      render(conn, FieldView, "fields.json", fields: denormalized_fields)
+    with true <- can?(user, get_field(business_concept_version)) do
+      concept_field = ConceptFields.get_concept_field!(concept_field_id)
+      render(conn, ConceptFieldView, "concept_field.json", concept_field: concept_field)
     else
       false ->
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
-      {:error_loading_fields, _} ->
+      error ->
+        Logger.error("While getting concept field... #{inspect(error)}")
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{fields: ["invalid"]}})
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :add_field do
+    post "/business_concept_versions/{business_concept_version_id}/fields"
+    description "Updates Business Concept Version Field"
+    produces "application/json"
+    parameters do
+      field :body, Schema.ref(:Field), "Data field"
+      business_concept_version_id :path, :integer, "Business Concept Version ID", required: true
+    end
+    response 200, "OK", Schema.ref(:ConceptFieldResponse)
+    response 400, "Client Error"
+  end
+
+  def add_field(conn, %{"business_concept_version_id" => id, "field" => field} = params) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_id = business_concept_version.business_concept_id
+    user = get_current_user(conn)
+
+    create_attrs = %{concept: inspect(business_concept_id),
+                     field: field}
+
+    with true <- can?(user, add_field(business_concept_version)),
+         {:ok, concept_field} <- ConceptFields.create_concept_field(create_attrs) do
+
+      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => params}}
+      Audit.create_event(conn, audit, @events.add_concept_field)
+
+      render(conn, ConceptFieldView, "concept_field.json", concept_field: concept_field)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
       error ->
-        Logger.error("While setting data fields... #{inspect(error)}")
+        Logger.error("While adding  concept fields... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+  end
+
+  swagger_path :delete_field do
+    delete "/business_concept_versions/{business_concept_version_id}/fields/{concept_field_id}"
+    description "Deletes Business Concept Version Field"
+    produces "application/json"
+    parameters do
+      business_concept_version_id :path, :integer, "Business Concept Version ID", required: true
+      concept_field_id :path, :integer, "Field ID", required: true
+    end
+    response 204, "No Content"
+    response 400, "Client Error"
+  end
+
+  def delete_field(conn, %{"business_concept_version_id" => id,
+                           "concept_field_id" => concept_field_id} = params) do
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    concept_field = ConceptFields.get_concept_field!(concept_field_id)
+    user = get_current_user(conn)
+
+    with true <- can?(user, delete_field(business_concept_version)) do
+      ConceptFields.delete_concept_field(concept_field)
+
+      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept_version", "payload" => params}}
+      Audit.create_event(conn, audit, @events.delete_concept_field)
+
+      send_resp(conn, :no_content, "")
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+      error ->
+        Logger.error("While deleting concept field... #{inspect(error)}")
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
@@ -734,7 +794,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       business_concept_id :path, :integer, "Business Concept Version ID", required: true
       data_structure_id :path, :integer, "Business Concept Version ID", required: true
     end
-    response 200, "OK", Schema.ref(:FieldsResponse)
+    response 200, "OK", Schema.ref(:ConceptFieldsResponse)
     response 400, "Client Error"
   end
 
@@ -749,7 +809,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         _ -> []
       end
       cooked_data_fields = cooked_data_fields(data_fields)
-      render(conn, DataFieldView, "data_fields.json", data_fields: cooked_data_fields)
+      render(conn, DataConceptFieldView, "data_fields.json", data_fields: cooked_data_fields)
     else
       false ->
         conn

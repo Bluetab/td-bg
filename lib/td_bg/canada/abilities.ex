@@ -76,8 +76,16 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :get_fields, business_concept_version)
     end
 
-    def can?(%User{} = user, :set_fields, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :set_fields, business_concept_version)
+    def can?(%User{} = user, :get_field, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :get_field, business_concept_version)
+    end
+
+    def can?(%User{} = user, :add_field, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :add_field, business_concept_version)
+    end
+
+    def can?(%User{} = user, :delete_field, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(user, :delete_field, business_concept_version)
     end
 
     def can?(%User{} = user, :get_data_structures, %BusinessConceptVersion{} = business_concept_version) do

@@ -575,30 +575,34 @@ defmodule TdBgWeb.SwaggerDefinitions do
           end)
         end
       end,
+      ConceptField: swagger_schema do
+        title "Concept Field"
+        description "Concept Field representation"
+        properties do
+          id :integer, "Concept Field Id", required: true
+          concept :string, "Business Concept", required: true
+          field :object, "Data field", required: true
+        end
+      end,
       Field: swagger_schema do
         title "Field"
         description "Field representation"
-        properties do
-          system :string, "Field system", required: true
-          group  :string, "Field group",  required: true
-          structure :string, "Field name",   required: true
-          name :string, "Field, field name", required: true
-        end
+        type :object
       end,
-      Fields: swagger_schema do
-        title "Fields"
-        description "A collection of fields"
+      ConceptFields: swagger_schema do
+        title "Concept Fields"
+        description "A collection of concept fields"
         type :array
-        items Schema.ref(:Field)
+        items Schema.ref(:ConceptField)
       end,
-      FieldsResponse: swagger_schema do
+      ConceptFieldResponse: swagger_schema do
         properties do
-          data Schema.ref(:Fields)
+          data Schema.ref(:ConceptField)
         end
       end,
-      FieldsSet: swagger_schema do
+      ConceptFieldsResponse: swagger_schema do
         properties do
-          fields :array, "Fields", items: Schema.ref(:Field)
+          data Schema.ref(:ConceptFields)
         end
       end,
       DataStructure: swagger_schema do
@@ -606,10 +610,10 @@ defmodule TdBgWeb.SwaggerDefinitions do
         description "A Data Structure"
         properties do
           id     :integer, "Data Structure id", required: true
-          ou     :string, "Data Structure orgainzation", required: true
-          system :string, "Data Structure system", required: true
-          group  :string, "Data Structure group", required: true
-          name   :string, "Data Structure name", required: true
+          ou     :string,  "Data Structure orgainzation", required: true
+          system :string,  "Data Structure system", required: true
+          group  :string,  "Data Structure group", required: true
+          name   :string,  "Data Structure name", required: true
         end
       end,
       DataStructures: swagger_schema do

@@ -8,7 +8,7 @@ defmodule TdBg.ConceptFields.ConceptField do
 
   schema "concept_fields" do
     field :concept, :string
-    field :field, :string
+    field :field, :map
 
     timestamps()
   end
