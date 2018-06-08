@@ -86,7 +86,11 @@ defmodule TdBg.Factory do
   def concept_field_factory do
     %ConceptField {
       concept: "a business_concept",
-      field: "a data field"
+      field: %{"ou" => "ou",
+               "system" => "mysystem",
+               "group" => "mygroup",
+               "structure" => "structure",
+               "field" => "field"}
     }
   end
 end
