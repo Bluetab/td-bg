@@ -54,34 +54,6 @@ defmodule TdBgWeb.ApiServices.HttpTdDdService do
     end
   end
 
-  def get_data_structure(%{data_structure_id: data_structure_id}) do
-    token = get_api_user_token()
-    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
-
-    case HTTPoison.get("#{get_data_structures_path()}/#{data_structure_id}", headers) do
-      {:ok, %HTTPoison.Response{body: resp, status_code: 200}} ->
-        data = resp |> JSON.decode! |> Map.get("data")
-        {:ok, data}
-      error ->
-        Logger.error "While getting data structure... #{error}"
-        {:error_getting_data_structure}
-    end
-  end
-
-  def get_data_field(%{data_field_id: data_field_id}) do
-    token = get_api_user_token()
-    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
-
-    case HTTPoison.get("#{get_data_fields_path()}/#{data_field_id}", headers) do
-      {:ok, %HTTPoison.Response{body: resp, status_code: 200}} ->
-        data = resp |> JSON.decode! |> Map.get("data")
-        {:ok, data}
-      error ->
-        Logger.error "While getting data fields... #{error}"
-        {:error_getting_data_field}
-    end
-  end
-
   defp get_config do
     Application.get_env(:td_bg, :dd_service)
   end
@@ -94,11 +66,6 @@ defmodule TdBgWeb.ApiServices.HttpTdDdService do
   defp get_data_structures_path do
     dd_service_config = get_config()
     "#{get_dd_endpoint()}#{dd_service_config[:data_structures_path]}"
-  end
-
-  defp get_data_fields_path do
-    dd_service_config = get_config()
-    "#{get_dd_endpoint()}#{dd_service_config[:data_fields_path]}"
   end
 
 end
