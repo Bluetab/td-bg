@@ -7,7 +7,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   import Canada, only: [can?: 2]
 
   alias TdBg.Audit
-  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -22,8 +21,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ConceptFieldView
   alias TdBgWeb.DataStructureView
   alias TdBgWeb.DataFieldView
-  alias TdBg.Repo
   alias TdBg.Utils.CollectionUtils
+  alias TdBgWeb.BusinessConceptSupport
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
@@ -769,7 +768,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     user = get_current_user(conn)
     with true <- can?(user, get_data_structures(business_concept_version)) do
-      ous = get_ous(business_concept_version, user)
+      ous = BusinessConceptSupport.get_concept_ous(business_concept_version, user)
       data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, "§")})
       cooked_data_structures = cooked_data_structures(data_structures)
       render(conn, DataStructureView, "data_structures.json", data_structures: cooked_data_structures)
@@ -802,7 +801,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     user = get_current_user(conn)
     with true <- can?(user, get_data_fields(business_concept_version)) do
-      ous = get_ous(business_concept_version, user)
+      ous = BusinessConceptSupport.get_concept_ous(business_concept_version, user)
       data_structure = @td_dd_api.get_data_fields(%{data_structure_id: data_structure_id})
       data_fields = case Enum.member?(ous, data_structure["ou"]) do
         true -> Map.get(data_structure, "data_fields")
@@ -833,27 +832,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     data_fields
     |> Enum.map(&CollectionUtils.atomize_keys(&1))
     |> Enum.map(&Map.take(&1, [:id, :name]))
-  end
-
-  defp get_ous([], _user), do: []
-  defp get_ous([head|tail], user) do
-    get_ous(head, user) ++ get_ous(tail, user)
-  end
-  defp get_ous(%Domain{} = domain, user) do
-    child_domains = Taxonomies.get_children_domains(domain)
-
-    child_ous = get_ous(child_domains, user)
-    case can?(user, show(domain)) do
-      true -> [domain.name|child_ous]
-      false -> child_ous
-    end
-  end
-  defp get_ous(%BusinessConceptVersion{} = concept, user) do
-    concept
-    |> Repo.preload(business_concept: [:domain])
-    |> Map.get(:business_concept)
-    |> Map.get(:domain)
-    |> get_ous(user)
   end
 
   defp get_current_user(conn) do
