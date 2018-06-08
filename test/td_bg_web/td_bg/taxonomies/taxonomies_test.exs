@@ -40,6 +40,17 @@ defmodule TdBg.TaxonomiesTest do
       assert Taxonomies.get_domain!(domain.id) == domain
     end
 
+    test "get_children_domains/1 returns the children domain of a domain" do
+      parent = insert(:domain)
+      children = Enum.reduce([0, 1, 2], [], &([insert(:child_domain, name: "d#{&1}", parent: parent)|&2]))
+      domains = Taxonomies.get_children_domains(parent)
+      sorted_domains = Enum.reverse(Enum.sort_by(domains, &(&1.id)))
+      assert length(sorted_domains) == 3
+      Enum.each(0..2, fn(i) ->
+        assert Enum.at(children, i).name == Enum.at(sorted_domains, i).name
+      end)
+    end
+
     test "create_domain/1 with valid data creates a domain" do
       assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
       assert domain.description == "some description"
