@@ -769,7 +769,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     user = get_current_user(conn)
     with true <- can?(user, get_data_structures(business_concept_version)) do
-      ous = get_parent_domain_keys([], user,  business_concept_version)
+      ous = get_ous(business_concept_version, user)
       data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, ",")})
       cooked_data_structures = cooked_data_structures(data_structures)
       render(conn, DataStructureView, "data_structures.json", data_structures: cooked_data_structures)
@@ -802,7 +802,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     user = get_current_user(conn)
     with true <- can?(user, get_data_fields(business_concept_version)) do
-      ous = get_parent_domain_keys([], user,  business_concept_version)
+      ous = get_ous(business_concept_version, user)
       data_structure = @td_dd_api.get_data_fields(%{data_structure_id: data_structure_id})
       data_fields = case Enum.member?(ous, data_structure["ou"]) do
         true -> Map.get(data_structure, "data_fields")
@@ -835,34 +835,25 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 
-  defp get_parent_domain_keys(domain_names, user, %Domain{} = domain) do
-    case domain.parent_id do
-      nil -> domain_names
-      _ ->
-        parent = domain
-        |> Repo.preload(:parent)
-        |> Map.get(:parent)
+  defp get_ous([], _user), do: []
+  defp get_ous([head|tail], user) do
+    get_ous(head, user) ++ get_ous(tail, user)
+  end
+  defp get_ous(%Domain{} = domain, user) do
+    child_domains = Taxonomies.get_children_domains(domain)
 
-        new_domain_names = case can?(user, show(parent)) do
-          true -> [parent.name|domain_names]
-          false -> domain_names
-        end
-
-        get_parent_domain_keys(new_domain_names, user, parent)
+    child_ous = get_ous(child_domains, user)
+    case can?(user, show(domain)) do
+      true -> [domain.name|child_ous]
+      false -> child_ous
     end
   end
-  defp get_parent_domain_keys(domain_names, user, %BusinessConceptVersion{} = business_concept_version) do
-    domain = business_concept_version
+  defp get_ous(%BusinessConceptVersion{} = concept, user) do
+    concept
     |> Repo.preload(business_concept: [:domain])
     |> Map.get(:business_concept)
     |> Map.get(:domain)
-
-    new_domain_names = case can?(user, show(domain)) do
-      true -> [domain.name|domain_names]
-      false -> [domain_names]
-    end
-
-    get_parent_domain_keys(new_domain_names, user, domain)
+    |> get_ous(user)
   end
 
   defp get_current_user(conn) do

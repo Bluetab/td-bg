@@ -34,22 +34,22 @@ domain2 = Repo.insert!(%Domain{
     parent_id: domain1.id
 })
 
-domain3 = Repo.insert!(%Domain{
+Repo.insert!(%Domain{
     description: "Dominio 3",
     type: "Especial",
-    name: "Dominio2",
+    name: "Dominio3",
     parent_id: domain2.id
 })
 
 
-domain3
+domain2
 |> Repo.preload(:templates)
 |> Changeset.change
 |> Changeset.put_assoc(:templates, [template])
 |> Repo.update!
 
 business_concept = Repo.insert!(%BusinessConcept{
-  domain_id: domain3.id,
+  domain_id: domain2.id,
   type: "empty",
   last_change_by: 1234,
   last_change_at: DateTime.utc_now()

@@ -74,6 +74,11 @@ defmodule TdBg.Taxonomies do
     Repo.one(from(r in Domain, where: r.name == ^name))
   end
 
+  def get_children_domains(%Domain{} = domain) do
+    id = domain.id
+    Repo.all(from(r in Domain, where: r.parent_id == ^id))
+  end
+
   @doc """
   Creates a domain.
 
