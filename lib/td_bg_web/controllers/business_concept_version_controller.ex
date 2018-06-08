@@ -770,7 +770,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = get_current_user(conn)
     with true <- can?(user, get_data_structures(business_concept_version)) do
       ous = get_ous(business_concept_version, user)
-      data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, ",")})
+      data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, "§")})
       cooked_data_structures = cooked_data_structures(data_structures)
       render(conn, DataStructureView, "data_structures.json", data_structures: cooked_data_structures)
     else
