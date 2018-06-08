@@ -210,75 +210,82 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "fields" do
-    # alias TdBgWeb.ConceptFieldSupport
-    #
-  #   @tag :admin_authenticated
-  #   test "list data fields", %{conn: conn} do
-  #     user = build(:user)
-  #     business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
-  #     business_concept_version_id = business_concept_version.id
-  #
-  #     conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version_id)
-  #
-  #     assert json_response(conn, 200)["data"] == []
-  #   end
-  #
-  #   @tag :admin_authenticated
-  #   test "list fields with result", %{conn: conn, swagger_schema: schema} do
-  #     user = build(:user)
-  #     business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
-  #     business_concept_id = business_concept_version.business_concept_id
-  #
-  #     field = %{system: "system",
-  #                    group: "group",
-  #                    structure: "structure",
-  #                    name: "name"}
-  #     insert(:concept_field,
-  #       concept: inspect(business_concept_id),
-  #       field: ConceptFieldSupport.normalize_field(field))
-  #
-  #     conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
-  #     validate_resp_schema(conn, schema, "FieldsResponse")
-  #     json_response =  json_response(conn, 200)["data"]
-  #     assert length(json_response) == 1
-  #     json_response = Enum.at(json_response, 0)
-  #     assert json_response["system"] == field.system
-  #     assert json_response["group"]  == field.group
-  #     assert json_response["structure"]   == field.structure
-  #     assert json_response["name"]  == field.name
-  #   end
-  #
-  #   @tag :admin_authenticated
-  #   test "add fields", %{conn: conn, swagger_schema: schema} do
-  #     user = build(:user)
-  #     business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
-  #
-  #     field1 = %{system: "system1",
-  #                     group: "group1",
-  #                     structure: "structure1",
-  #                     name: "name1"}
-  #
-  #     field2 = %{system: "system2",
-  #                     group: "group2",
-  #                     structure: "structure2",
-  #                     name: "name2"}
-  #
-  #     fields = [field1, field2]
-  #
-  #     conn = post conn, business_concept_version_business_concept_version_path(conn, :add_field, business_concept_version.id), fields: fields
-  #     validate_resp_schema(conn, schema, "FieldsResponse")
-  #
-  #     conn = recycle_and_put_headers(conn)
-  #
-  #     conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
-  #     validate_resp_schema(conn, schema, "FieldsResponse")
-  #     json_response =  json_response(conn, 200)["data"]
-  #     assert length(json_response) == 2
-  #     assert Enum.at(json_response, 0)["system"] == field1.system
-  #     assert Enum.at(json_response, 1)["system"] == field2.system
-  #   end
-  # end
-  #
+
+    @tag :admin_authenticated
+    test "list data fields", %{conn: conn} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version_id = business_concept_version.id
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version_id)
+
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag :admin_authenticated
+    test "list fields with result", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_id = business_concept_version.business_concept_id
+
+      concept = inspect(business_concept_id)
+      field = %{}
+      insert(:concept_field, concept: concept,
+                             field: field)
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
+      validate_resp_schema(conn, schema, "ConceptFieldsResponse")
+      json_response =  json_response(conn, 200)["data"]
+      assert length(json_response) == 1
+      json_response = Enum.at(json_response, 0)
+
+      assert json_response["concept"] == concept
+      assert json_response["field"]  == field
+    end
+
+    @tag :admin_authenticated
+    test "add field", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_id = business_concept_version.business_concept.id
+
+      field = %{}
+
+      conn = post conn, business_concept_version_business_concept_version_path(conn, :add_field, business_concept_version.id), field: field
+      validate_resp_schema(conn, schema, "ConceptFieldResponse")
+      concept_field_id = json_response(conn, 200)["id"]
+
+      conn = recycle_and_put_headers(conn)
+
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_field, business_concept_version.id, concept_field_id)
+      validate_resp_schema(conn, schema, "ConceptFieldResponse")
+      json_response =  json_response(conn, 200)
+
+      assert json_response["concept"] == inspect(business_concept_id)
+      assert json_response["field"]   == field
+    end
+
+    @tag :admin_authenticated
+    test "delete field", %{conn: conn, swagger_schema: schema} do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+
+      field = %{}
+
+      conn = post conn, business_concept_version_business_concept_version_path(conn, :add_field, business_concept_version.id), field: field
+      validate_resp_schema(conn, schema, "ConceptFieldResponse")
+      concept_field_id = json_response(conn, 200)["id"]
+
+      conn = recycle_and_put_headers(conn)
+      conn = delete conn, business_concept_version_business_concept_version_path(conn, :delete_field, business_concept_version.id, concept_field_id)
+
+      conn = recycle_and_put_headers(conn)
+      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
+      assert json_response(conn, 200)["data"] == []
+    end
+
+  end
+
   # describe "data_structures" do
   #   @tag :admin_authenticated
   #   test "list data structures", %{conn: conn, swagger_schema: schema} do
@@ -314,7 +321,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   #     assert Enum.at(response, 0)["system"] == data_structure_1["system"]
   #     assert Enum.at(response, 1)["system"] == data_structure_2["system"]
   #   end
-  end
+  #end
 
   defp create_version(domain, name, status) do
     business_concept = insert(:business_concept, domain: domain)
