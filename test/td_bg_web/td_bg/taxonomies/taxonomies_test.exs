@@ -109,6 +109,28 @@ defmodule TdBg.TaxonomiesTest do
       domain = domain_fixture()
       assert %Ecto.Changeset{} = Taxonomies.change_domain(domain)
     end
+
+    test "get_domain_ancestors/2 returns the list of a domain's ancestors" do
+      d1 = domain_fixture(%{name: "d1"})
+      d2 = domain_fixture(%{parent_id: d1.id, name: "d2"})
+      d3 = domain_fixture(%{parent_id: d2.id, name: "d3"})
+      d4 = domain_fixture(%{parent_id: d3.id, name: "d4"})
+      ancestors_with_self = Taxonomies.get_domain_ancestors(d4, true)
+      ancestors_without_self = Taxonomies.get_domain_ancestors(d4, false)
+      assert ancestors_with_self |> Enum.map(&(&1.id)) == [d4, d3, d2, d1] |> Enum.map(&(&1.id))
+      assert ancestors_without_self |> Enum.map(&(&1.id)) == [d3, d2, d1] |> Enum.map(&(&1.id))
+    end
+
+    test "get_ancestors_for_domain_id/2 returns the list of a domain's ancestors" do
+      d1 = domain_fixture(%{name: "d1"})
+      d2 = domain_fixture(%{parent_id: d1.id, name: "d2"})
+      d3 = domain_fixture(%{parent_id: d2.id, name: "d3"})
+      d4 = domain_fixture(%{parent_id: d3.id, name: "d4"})
+      ancestors_with_self = Taxonomies.get_ancestors_for_domain_id(d4.id, true)
+      ancestors_without_self = Taxonomies.get_ancestors_for_domain_id(d4.id, false)
+      assert ancestors_with_self |> Enum.map(&(&1.id)) == [d4, d3, d2, d1] |> Enum.map(&(&1.id))
+      assert ancestors_without_self |> Enum.map(&(&1.id)) == [d3, d2, d1] |> Enum.map(&(&1.id))
+    end
   end
 
 end
