@@ -225,17 +225,6 @@ defmodule TdBg.Permissions do
     Repo.get_by(Role, name: role_name)
   end
 
-  def get_domain_ancestors(nil), do: []
-  def get_domain_ancestors(domain) do
-    [domain | get_ancestors_for_domain_id(domain.parent_id)]
-  end
-
-  def get_ancestors_for_domain_id(nil), do: []
-  def get_ancestors_for_domain_id(domain_id) do
-    domain = Taxonomies.get_domain(domain_id)
-    get_domain_ancestors(domain)
-  end
-
   def acl_matches?(%{principal_type: "user", principal_id: user_id}, user_id, _group_ids), do: true
   def acl_matches?(%{principal_type: "group", principal_id: group_id}, _user_id, group_ids) do
     group_ids
@@ -250,7 +239,7 @@ defmodule TdBg.Permissions do
   end
 
   def get_all_roles(%{user_id: user_id, domain_id: domain_id}) do
-    domains = get_ancestors_for_domain_id(domain_id)
+    domains = Taxonomies.get_ancestors_for_domain_id(domain_id, true)
 
     user = @td_auth_api.get_user(user_id)
     group_ids = get_group_ids(user)

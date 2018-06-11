@@ -167,6 +167,25 @@ defmodule TdBg.Taxonomies do
   end
 
   @doc """
+  Obtain the ancestors of a given domain. If the second parameter is true,
+  the domain itself will be included in the list of ancestors.
+  """
+  def get_domain_ancestors(nil, _), do: []
+  def get_domain_ancestors(domain, false) do
+    get_ancestors_for_domain_id(domain.parent_id, true)
+  end
+  def get_domain_ancestors(domain, true) do
+    [domain | get_ancestors_for_domain_id(domain.parent_id, true)]
+  end
+
+  def get_ancestors_for_domain_id(domain_id, with_self \\ true)
+  def get_ancestors_for_domain_id(nil, _), do: []
+  def get_ancestors_for_domain_id(domain_id, with_self) do
+    domain = get_domain(domain_id)
+    get_domain_ancestors(domain, with_self)
+  end
+
+  @doc """
 
   """
   def get_parent_id(nil) do
