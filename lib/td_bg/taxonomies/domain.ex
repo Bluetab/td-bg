@@ -2,6 +2,7 @@ defmodule TdBg.Taxonomies.Domain do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+  alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBg.Searchable
   alias TdBg.Templates.Template
@@ -33,7 +34,8 @@ defmodule TdBg.Taxonomies.Domain do
   end
 
   def search_fields(%Domain{} = domain) do
-    %{name: domain.name, description: domain.description, parent_id: domain.parent_id}
+    parent_ids = Taxonomies.get_parent_ids(domain, false)
+    %{name: domain.name, description: domain.description, parent_id: domain.parent_id, parent_ids: parent_ids}
   end
 
   def index_name do

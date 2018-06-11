@@ -121,6 +121,15 @@ defmodule TdBg.TaxonomiesTest do
       assert ancestors_without_self |> Enum.map(&(&1.id)) == [d3, d2, d1] |> Enum.map(&(&1.id))
     end
 
+    test "search_fields/1 includes the list of parent_ids" do
+      d1 = domain_fixture(%{name: "d1"})
+      d2 = domain_fixture(%{parent_id: d1.id, name: "d2"})
+      d3 = domain_fixture(%{parent_id: d2.id, name: "d3"})
+      d4 = domain_fixture(%{parent_id: d3.id, name: "d4"})
+      search_fields = Domain.search_fields(d4)
+      assert search_fields.parent_ids == [d3.id, d2.id, d1.id]
+    end
+
     test "get_ancestors_for_domain_id/2 returns the list of a domain's ancestors" do
       d1 = domain_fixture(%{name: "d1"})
       d2 = domain_fixture(%{parent_id: d1.id, name: "d2"})

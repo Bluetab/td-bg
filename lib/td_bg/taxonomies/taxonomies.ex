@@ -185,6 +185,15 @@ defmodule TdBg.Taxonomies do
     get_domain_ancestors(domain, with_self)
   end
 
+  def get_parent_ids(nil, _), do: []
+  def get_parent_ids(%Domain{} = domain, with_self) do
+    get_domain_ancestors(domain, with_self) |> Enum.map(&(&1.id))
+  end
+  def get_parent_ids(domain_id, with_self) do
+    domain = get_domain(domain_id)
+    get_parent_ids(domain, with_self)
+  end
+
   @doc """
 
   """

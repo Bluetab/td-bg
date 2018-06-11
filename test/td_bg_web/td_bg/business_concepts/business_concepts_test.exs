@@ -66,7 +66,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     end
 
-    test "/1 with invalid data returns error changeset" do
+    test "create_business_concept/1 with invalid data returns error changeset" do
       version_attrs = %{
         business_concept: nil,
         content: %{},
@@ -527,6 +527,15 @@ defmodule TdBg.BusinessConceptsTests do
       id = [create_version(domain, "three", published).business_concept.id | id]
       business_concept_versions = BusinessConcepts.find_business_concept_versions(%{id: id, status: [published]})
       assert  2 == length(business_concept_versions)
+    end
+
+    test "balh" do
+      d1 = insert(:domain)
+      d2 = insert(:domain, %{parent_id: d1.id})
+      d3 = insert(:domain, %{parent_id: d2.id})
+      version = create_version(d3, "Some name", "draft")
+      search_fields = BusinessConceptVersion.search_fields(version)
+      assert search_fields.domain_ids == [d3.id, d2.id, d1.id]
     end
 
     defp create_version(domain, name, status) do
