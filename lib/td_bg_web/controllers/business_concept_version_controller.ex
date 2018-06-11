@@ -404,7 +404,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
                     BusinessConcepts.publish_business_concept_version(business_concept_version) do
-       render(conn, "show.json", business_concept_version: concept, hypermedia: hypermedia("business_concept_version", conn, concept))
+      @search_service.put_search(business_concept_version)
+      render(conn, "show.json", business_concept_version: concept, hypermedia: hypermedia("business_concept_version", conn, concept))
     else
       false ->
         conn
@@ -480,6 +481,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}}
             <- BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
+      old_version = BusinessConcepts.get_business_concept_version!(business_concept_version.id)
+      @search_service.put_search(old_version)
+      @search_service.put_search(new_version)
       conn
         |> put_status(:created)
         |> render("show.json", business_concept_version: new_version, hypermedia: hypermedia("business_concept_version", conn, new_version))
