@@ -90,13 +90,29 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def search_fields(%BusinessConceptVersion{} = concept) do
-    domain_id = concept.business_concept.domain_id
+    domain = Taxonomies.get_domain!(concept.business_concept.domain_id)
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
-    aliases = Enum.map(aliases, fn(a) -> %{name: a.name} end)
-    domain_ids = Taxonomies.get_parent_ids(domain_id, true)
+    aliases = Enum.map(aliases, &(%{name: &1.name}))
+    domain_ids = Taxonomies.get_parent_ids(domain, true)
 
-    %{domain_id: concept.business_concept.domain_id, name: concept.name, status: concept.status, type: concept.business_concept.type, content: concept.content,
-      description: concept.description, last_change_at: concept.business_concept.last_change_at, bc_aliases: aliases, domain_ids: domain_ids, current: concept.current}
+    %{
+      id: concept.id,
+      business_concept_id: concept.business_concept.id,
+      name: concept.name,
+      description: concept.description,
+      status: concept.status,
+      version: concept.version,
+      domain: %{
+        id: domain.id,
+        name: domain.name
+      },
+      type: concept.business_concept.type,
+      content: concept.content,
+      last_change_at: concept.business_concept.last_change_at,
+      bc_aliases: aliases,
+      domain_ids: domain_ids,
+      current: concept.current
+    }
   end
 
   def index_name do

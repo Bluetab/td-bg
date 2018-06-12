@@ -94,7 +94,8 @@ defmodule TdBgWeb.DomainView do
   end
 
   defp get_domain_and_parent_templates(domain) do
-    Templates.get_domain_templates(domain)
+    domain
+    |> Templates.get_domain_templates
     |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 end

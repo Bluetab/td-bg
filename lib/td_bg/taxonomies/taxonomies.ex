@@ -58,8 +58,7 @@ defmodule TdBg.Taxonomies do
 
   """
   def get_domain!(id) do
-    from(r in Domain, where: r.id == ^id)
-    |> Repo.one!()
+    Repo.one!(from(r in Domain, where: r.id == ^id))
   end
 
   def get_domain(id) do
