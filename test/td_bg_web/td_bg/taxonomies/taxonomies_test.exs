@@ -32,7 +32,9 @@ defmodule TdBg.TaxonomiesTest do
 
     test "list_domains/0 returns all domains" do
       domain = domain_fixture()
-      assert Taxonomies.list_domains() == [domain]
+      [h|t] = Taxonomies.list_domains()
+      assert t == []
+      assert Map.drop(h, [:parent, :templates]) == Map.drop(domain, [:parent, :templates])
     end
 
     test "get_domain!/1 returns the domain with given id" do

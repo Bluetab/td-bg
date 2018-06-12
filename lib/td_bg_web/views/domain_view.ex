@@ -5,6 +5,7 @@ defmodule TdBgWeb.DomainView do
   alias TdBgWeb.UserView
   alias TdBg.Accounts.User
   alias TdBg.Accounts.Group
+  alias TdBg.Templates
   use TdBg.Hypermedia, :view
 
   def render("index.json", %{domains: domains, hypermedia: hypermedia}) do
@@ -93,13 +94,7 @@ defmodule TdBgWeb.DomainView do
   end
 
   defp get_domain_and_parent_templates(domain) do
-    parent_templates =
-      if domain.parent do
-        domain.parent.templates
-      else
-        []
-      end
-
-    (parent_templates ++ domain.templates) |> Enum.map(&Map.take(&1, [:id, :name]))
+    Templates.get_domain_templates(domain)
+    |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 end

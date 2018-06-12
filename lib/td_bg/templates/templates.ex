@@ -115,14 +115,13 @@ defmodule TdBg.Templates do
   def get_domain_templates(%{domain_id: domain_id}, templates) do
     domain = domain_id
       |> Taxonomies.get_domain!
-      |> Repo.preload(:parent)
+      |> Repo.preload([:templates])
     templates = templates ++ get_templates_from_domain(domain)
     get_domain_templates(%{domain_id: domain.parent_id}, templates)
   end
 
   defp get_templates_from_domain(%Domain{} = domain) do
     domain
-    |> Repo.preload(:templates)
     |> Map.get(:templates)
   end
 

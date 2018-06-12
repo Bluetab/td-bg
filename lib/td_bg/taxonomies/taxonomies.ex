@@ -58,12 +58,8 @@ defmodule TdBg.Taxonomies do
 
   """
   def get_domain!(id) do
-    query = from(r in Domain, where: r.id == ^id)
-
-    query
+    from(r in Domain, where: r.id == ^id)
     |> Repo.one!()
-    |> Repo.preload(:templates)
-    |> Repo.preload(parent: :templates)
   end
 
   def get_domain(id) do
