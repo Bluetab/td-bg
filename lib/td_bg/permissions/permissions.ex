@@ -57,6 +57,18 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
+    Returns a list of users-role with acl_entries in the domain and role passed as argument
+
+    This return acl with resource type domain and  principal types user or group
+  """
+  def list_acl_entries(%{domain: domain, role: role}) do
+    Repo.all(from acl_entry in AclEntry,
+      where: acl_entry.resource_type == "domain" and
+             acl_entry.resource_id == ^domain.id and
+             acl_entry.role_id == ^role.id)
+  end
+
+  @doc """
     Returns a list of users-role with acl_entries in the domain passed as argument
   """
   def list_acl_entries(%{domain: domain}) do

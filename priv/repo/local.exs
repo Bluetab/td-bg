@@ -11,6 +11,8 @@
 # and so on) as they will fail if something goes wrong.
 alias TdBg.Templates.Template
 alias TdBg.Taxonomies.Domain
+alias TdBg.Permissions.Role
+alias TdBg.Permissions.AclEntry
 alias TdBg.BusinessConcepts.BusinessConcept
 alias TdBg.BusinessConcepts.BusinessConceptVersion
 alias TdBg.Repo
@@ -18,8 +20,40 @@ alias Ecto.Changeset
 
 template = Repo.insert!(%Template{
   name: "empty",
-  content: []
-  })
+  content: [
+  %{
+    name: "dominio",
+    type: "list",
+    label: "Dominio Información de Gestión",
+    values: [
+      "Cliente existente/Previsión de la demanda",
+      "Cliente existente/Atención Cliente",
+      "Cliente existente/Ciclo de Ingresos",
+      "Cliente existente/Producto",
+    ],
+    required: false,
+    "form_type": "dropdown",
+    description: "Indicar si el término pertenece al dominio de Información de Gestión",
+    meta: %{ role: "rolename"}
+  }
+]
+
+})
+
+second_template = Repo.insert!(%Template{
+  name: "second",
+  content: [
+  %{type: "string",
+    required: false,
+    name: "segundo",
+    label: "Segundo label"
+  }]
+})
+
+
+rolename = Repo.insert!(%Role{
+    name: "rolename"
+})
 
 domain1 = Repo.insert!(%Domain{
     description: "Dominio 1",
@@ -34,18 +68,10 @@ domain2 = Repo.insert!(%Domain{
     parent_id: domain1.id
 })
 
-Repo.insert!(%Domain{
-    description: "Dominio 3",
-    type: "Especial",
-    name: "Dominio3",
-    parent_id: domain2.id
-})
-
-
 domain2
 |> Repo.preload(:templates)
 |> Changeset.change
-|> Changeset.put_assoc(:templates, [template])
+|> Changeset.put_assoc(:templates, [template, second_template])
 |> Repo.update!
 
 business_concept = Repo.insert!(%BusinessConcept{
@@ -69,3 +95,35 @@ Repo.insert!(%BusinessConceptVersion{
   version: 1,
   business_concept_id: business_concept.id
   })
+
+domain3 = Repo.insert!(%Domain{
+    description: "Dominio 3",
+    type: "Especial",
+    name: "Dominio3",
+    parent_id: domain2.id
+})
+
+
+Repo.insert!(%AclEntry{
+  principal_id: 3,
+  principal_type: "user",
+  resource_id: domain3.id,
+  resource_type: "domain",
+  role_id: rolename.id
+})
+
+Repo.insert!(%AclEntry{
+  principal_id: 4,
+  principal_type: "user",
+  resource_id: domain3.id,
+  resource_type: "domain",
+  role_id: rolename.id
+})
+
+Repo.insert!(%AclEntry{
+  principal_id: 5,
+  principal_type: "user",
+  resource_id: domain3.id,
+  resource_type: "domain",
+  role_id: rolename.id
+})

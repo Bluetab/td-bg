@@ -580,6 +580,8 @@ defmodule TdBg.BusinessConcepts do
 
   defp validate_max_length(changeset, %{}), do: changeset
 
+  defp validate_inclusion(changeset,
+    %{"type" => "list", "meta" => %{"role" => _rolename}}), do: changeset
   defp validate_inclusion(changeset, %{"name" => name, "type" => "list", "values" => values}) do
     Changeset.validate_inclusion(changeset, String.to_atom(name), values)
   end

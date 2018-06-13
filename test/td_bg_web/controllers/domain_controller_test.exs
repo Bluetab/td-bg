@@ -81,7 +81,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert json_response_data["description"] == "some description"
       assert json_response_data["name"] == "some name"
       assert json_response_data["parent_id"] == nil
-      assert json_response_data["_embedded"]["templates"] == []
     end
 
     @tag :admin_authenticated
