@@ -12,9 +12,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias Poison, as: JSON
 
   setup_all do
-    start_supervised MockTdAuthService
-    start_supervised MockTdAuditService
-    start_supervised MockTdDdService
+    start_supervised(MockTdAuthService)
+    start_supervised(MockTdAuditService)
+    start_supervised(MockTdDdService)
     :ok
   end
 
@@ -24,9 +24,17 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "show" do
     @tag :admin_authenticated
-    test "shows the specified business_concept_version including it's name, description, domain and content", %{conn: conn} do
-      business_concept_version = insert(:business_concept_version, content: %{"foo" => "bar"}, name: "Concept Name", description: "The awesome concept")
-      conn = get conn, business_concept_version_path(conn, :show, business_concept_version.id)
+    test "shows the specified business_concept_version including it's name, description, domain and content",
+         %{conn: conn} do
+      business_concept_version =
+        insert(
+          :business_concept_version,
+          content: %{"foo" => "bar"},
+          name: "Concept Name",
+          description: "The awesome concept"
+        )
+
+      conn = get(conn, business_concept_version_path(conn, :show, business_concept_version.id))
       data = json_response(conn, 200)["data"]
       assert data["name"] == business_concept_version.name
       assert data["description"] == business_concept_version.description
@@ -40,7 +48,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "index" do
     @tag :admin_authenticated
     test "lists all business_concept_versions", %{conn: conn} do
-      conn = get conn, business_concept_version_path(conn, :index)
+      conn = get(conn, business_concept_version_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
   end
@@ -48,13 +56,19 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "search" do
     @tag :admin_authenticated
     test "find business_concepts by id and status", %{conn: conn} do
-      published = BusinessConcept.status.published
-      draft = BusinessConcept.status.draft
+      published = BusinessConcept.status().published
+      draft = BusinessConcept.status().draft
       domain = insert(:domain)
       id = [create_version(domain, "one", draft).business_concept_id]
       id = [create_version(domain, "two", published).business_concept_id | id]
       id = [create_version(domain, "three", published).business_concept_id | id]
-      conn = get conn, business_concept_path(conn, :search), %{id: Enum.join(id, ","), status: published}
+
+      conn =
+        get(conn, business_concept_path(conn, :search), %{
+          id: Enum.join(id, ","),
+          status: published
+        })
+
       assert 2 == length(json_response(conn, 200)["data"])
     end
   end
@@ -74,22 +88,36 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         domain_id: domain.id
       }
 
-      conn = post conn, business_concept_version_path(conn, :create), business_concept_version: creation_attrs
+      conn =
+        post(
+          conn,
+          business_concept_version_path(conn, :create),
+          business_concept_version: creation_attrs
+        )
+
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       assert %{"business_concept_id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
 
-      conn = get conn, business_concept_path(conn, :show, id)
+      conn = get(conn, business_concept_path(conn, :show, id))
       validate_resp_schema(conn, schema, "BusinessConceptResponse")
       business_concept = json_response(conn, 200)["data"]
 
-      %{id: id, last_change_by: Integer.mod(:binary.decode_unsigned("app-admin"), 100_000), version: 1}
-        |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+      %{
+        id: id,
+        last_change_by: Integer.mod(:binary.decode_unsigned("app-admin"), 100_000),
+        version: 1
+      }
+      |> Enum.each(
+        &assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
+      )
 
       creation_attrs
-        |> Map.drop([:domain_id])
-        |> Enum.each(&(assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+      |> Map.drop([:domain_id])
+      |> Enum.each(
+        &assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
+      )
 
       assert business_concept["domain"]["id"] == domain.id
       assert business_concept["domain"]["name"] == domain.name
@@ -98,6 +126,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
+
       creation_attrs = %{
         content: %{},
         type: "some type",
@@ -105,7 +134,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         description: "Some description",
         domain_id: domain.id
       }
-      conn = post conn, business_concept_version_path(conn, :create), business_concept_version: creation_attrs
+
+      conn =
+        post(
+          conn,
+          business_concept_version_path(conn, :create),
+          business_concept_version: creation_attrs
+        )
+
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -114,18 +150,18 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "index_by_name" do
     @tag :admin_authenticated
     test "find business concept by name", %{conn: conn} do
-    published = BusinessConcept.status.published
-      draft = BusinessConcept.status.draft
+      published = BusinessConcept.status().published
+      draft = BusinessConcept.status().draft
       domain = insert(:domain)
       id = [create_version(domain, "one", draft).business_concept.id]
       id = [create_version(domain, "two", published).business_concept.id | id]
       [create_version(domain, "two", published).business_concept.id | id]
 
-      conn = get conn, business_concept_version_path(conn, :index), %{search_term: "two"}
+      conn = get(conn, business_concept_version_path(conn, :index), %{q: "two"})
       assert 2 == length(json_response(conn, 200)["data"])
 
       conn = recycle_and_put_headers(conn)
-      conn = get conn, business_concept_version_path(conn, :index), %{search_term: "one"}
+      conn = get(conn, business_concept_version_path(conn, :index), %{q: "one"})
       assert 1 == length(json_response(conn, 200)["data"])
     end
   end
@@ -135,8 +171,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "lists business_concept_versions", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id
-      conn = get conn, business_concept_business_concept_version_path(conn, :versions, business_concept_id)
-      [data|_] = json_response(conn, 200)["data"]
+
+      conn =
+        get(
+          conn,
+          business_concept_business_concept_version_path(conn, :versions, business_concept_id)
+        )
+
+      [data | _] = json_response(conn, 200)["data"]
       assert data["name"] == business_concept_version.name
     end
   end
@@ -144,7 +186,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "query_business_concept_taxonomy" do
     @tag :admin_authenticated
     test "list the taxonomies of a business concept", %{conn: conn} do
-      published = BusinessConcept.status.published
+      published = BusinessConcept.status().published
       user = build(:user)
       user = create_user(user.user_name, is_admin: true)
       domain = insert(:domain)
@@ -153,12 +195,22 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version = create_version(domain, "one", published)
       business_concept_version_id = business_concept_version.id
       conn = recycle_and_put_headers(conn)
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :taxonomy_roles, business_concept_version_id)
+
+      conn =
+        get(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :taxonomy_roles,
+            business_concept_version_id
+          )
+        )
+
       collection = json_response(conn, 200)["data"]
-      assert Enum.member?(Enum.map(collection, &(&1["domain_name"])), domain.name)
-      assert Enum.member?(Enum.map(collection, &(&1["domain_id"])), domain.id)
+      assert Enum.member?(Enum.map(collection, & &1["domain_name"]), domain.name)
+      assert Enum.member?(Enum.map(collection, & &1["domain_id"]), domain.id)
       roles = Enum.find(collection, &(&1["domain_name"] == domain.name))["roles"]
-      assert Enum.member?(Enum.map(roles, &(&1["principal"]["id"])), user.id)
+      assert Enum.member?(Enum.map(roles, & &1["principal"]["id"]), user.id)
     end
   end
 
@@ -166,9 +218,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     setup [:create_template]
 
     @tag :admin_authenticated
-    test "renders business_concept_version when data is valid", %{conn: conn, swagger_schema: schema} do
+    test "renders business_concept_version when data is valid", %{
+      conn: conn,
+      swagger_schema: schema
+    } do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
 
       update_attrs = %{
@@ -177,24 +232,33 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         description: "The new description"
       }
 
-      conn = put conn, business_concept_version_path(conn, :update, business_concept_version), business_concept_version: update_attrs
+      conn =
+        put(
+          conn,
+          business_concept_version_path(conn, :update, business_concept_version),
+          business_concept_version: update_attrs
+        )
+
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       assert %{"id" => ^business_concept_version_id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
-      conn = get conn, business_concept_version_path(conn, :show, business_concept_version_id)
+      conn = get(conn, business_concept_version_path(conn, :show, business_concept_version_id))
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
 
       updated_business_concept_version = json_response(conn, 200)["data"]
 
       update_attrs
-        |> Enum.each(&(assert updated_business_concept_version |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)))
+      |> Enum.each(
+        &assert updated_business_concept_version |> Map.get(Atom.to_string(elem(&1, 0))) ==
+                  elem(&1, 1)
+      )
     end
 
     @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
 
       update_attrs = %{
@@ -203,21 +267,34 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         description: "The new description"
       }
 
-      conn = put conn, business_concept_version_path(conn, :update, business_concept_version_id), business_concept_version: update_attrs
+      conn =
+        put(
+          conn,
+          business_concept_version_path(conn, :update, business_concept_version_id),
+          business_concept_version: update_attrs
+        )
+
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
   describe "fields" do
-
     @tag :admin_authenticated
     test "list data fields", %{conn: conn} do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version_id)
+      conn =
+        get(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :get_fields,
+            business_concept_version_id
+          )
+        )
 
       assert json_response(conn, 200)["data"] == []
     end
@@ -225,72 +302,129 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "list fields with result", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_id = business_concept_version.business_concept_id
 
       concept = inspect(business_concept_id)
       field = %{}
-      insert(:concept_field, concept: concept,
-                             field: field)
+      insert(:concept_field, concept: concept, field: field)
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
+      conn =
+        get(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :get_fields,
+            business_concept_version.id
+          )
+        )
+
       validate_resp_schema(conn, schema, "ConceptFieldsResponse")
-      json_response =  json_response(conn, 200)["data"]
+      json_response = json_response(conn, 200)["data"]
       assert length(json_response) == 1
       json_response = Enum.at(json_response, 0)
 
       assert json_response["concept"] == concept
-      assert json_response["field"]  == field
+      assert json_response["field"] == field
     end
 
     @tag :admin_authenticated
     test "add field", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_id = business_concept_version.business_concept.id
 
       field = %{}
 
-      conn = post conn, business_concept_version_business_concept_version_path(conn, :add_field, business_concept_version.id), field: field
+      conn =
+        post(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :add_field,
+            business_concept_version.id
+          ),
+          field: field
+        )
+
       validate_resp_schema(conn, schema, "ConceptFieldResponse")
       concept_field_id = json_response(conn, 200)["id"]
 
       conn = recycle_and_put_headers(conn)
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_field, business_concept_version.id, concept_field_id)
+      conn =
+        get(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :get_field,
+            business_concept_version.id,
+            concept_field_id
+          )
+        )
+
       validate_resp_schema(conn, schema, "ConceptFieldResponse")
-      json_response =  json_response(conn, 200)
+      json_response = json_response(conn, 200)
 
       assert json_response["concept"] == inspect(business_concept_id)
-      assert json_response["field"]   == field
+      assert json_response["field"] == field
     end
 
     @tag :admin_authenticated
     test "delete field", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
 
       field = %{}
 
-      conn = post conn, business_concept_version_business_concept_version_path(conn, :add_field, business_concept_version.id), field: field
+      conn =
+        post(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :add_field,
+            business_concept_version.id
+          ),
+          field: field
+        )
+
       validate_resp_schema(conn, schema, "ConceptFieldResponse")
       concept_field_id = json_response(conn, 200)["id"]
 
       conn = recycle_and_put_headers(conn)
-      conn = delete conn, business_concept_version_business_concept_version_path(conn, :delete_field, business_concept_version.id, concept_field_id)
+
+      conn =
+        delete(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :delete_field,
+            business_concept_version.id,
+            concept_field_id
+          )
+        )
 
       conn = recycle_and_put_headers(conn)
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_fields, business_concept_version.id)
+
+      conn =
+        get(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :get_fields,
+            business_concept_version.id
+          )
+        )
+
       assert json_response(conn, 200)["data"] == []
     end
-
   end
 
   describe "data_structures" do
     @tag :admin_authenticated
     test "list data structures", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
 
       data_structure_1 = %{
@@ -314,10 +448,19 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       MockTdDdService.set_data_structure(data_structure_1)
       MockTdDdService.set_data_structure(data_structure_2)
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_structures, business_concept_version_id)
+      conn =
+        get(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :get_data_structures,
+            business_concept_version_id
+          )
+        )
+
       validate_resp_schema(conn, schema, "DataStructuresResponse")
       response = json_response(conn, 200)["data"]
-      response = Enum.sort_by(response, &(&1["system"]))
+      response = Enum.sort_by(response, & &1["system"])
 
       assert Enum.at(response, 0)["system"] == data_structure_1["system"]
       assert Enum.at(response, 1)["system"] == data_structure_2["system"]
@@ -328,7 +471,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "list data structures", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by:  user.id)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
 
       data_field_1 = %{
@@ -348,10 +491,20 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       MockTdDdService.set_data_field(data_structure)
 
-      conn = get conn, business_concept_version_business_concept_version_path(conn, :get_data_fields, business_concept_version_id, 1234)
+      conn =
+        get(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :get_data_fields,
+            business_concept_version_id,
+            1234
+          )
+        )
+
       validate_resp_schema(conn, schema, "DataFieldsResponse")
       response = json_response(conn, 200)["data"]
-      response = Enum.sort_by(response, &(&1["system"]))
+      response = Enum.sort_by(response, & &1["system"])
 
       assert Enum.at(response, 0)["name"] == data_field_1["name"]
       assert Enum.at(response, 1)["name"] == data_field_2["name"]
@@ -360,15 +513,24 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   defp create_version(domain, name, status) do
     business_concept = insert(:business_concept, domain: domain)
-    insert(:business_concept_version, business_concept: business_concept, name: name, status: status)
+
+    insert(
+      :business_concept_version,
+      business_concept: business_concept,
+      name: name,
+      status: status
+    )
   end
 
   def create_template(_) do
     headers = get_header(get_user_token("app-admin"))
-    attrs = %{}
+
+    attrs =
+      %{}
       |> Map.put("name", "some type")
       |> Map.put("content", [])
-    body = %{template: attrs} |> JSON.encode!
+
+    body = %{template: attrs} |> JSON.encode!()
     HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
     :ok
   end

@@ -67,7 +67,14 @@ defmodule TdBg.Permissions do
     Returns a list of users-role with acl_entries in the domain passed as argument, configurable preloading
   """
   def list_acl_entries(%{domain: domain}, preload) do
-    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.resource_type == "domain" and acl_entry.resource_id == ^domain.id)
+    acl_entries =
+      Repo.all(
+        from(
+          acl_entry in AclEntry,
+          where: acl_entry.resource_type == "domain" and acl_entry.resource_id == ^domain.id
+        )
+      )
+
     acl_entries |> Repo.preload(preload)
   end
 
@@ -75,19 +82,32 @@ defmodule TdBg.Permissions do
     Returns a list of acl_entries querying by several principal_types
   """
   def list_acl_entries_by_principal_types(%{principal_types: principal_types}) do
-    Repo.all(from acl_entry in AclEntry,
-      join: role in assoc(acl_entry, :role),
-      join: permission in assoc(role, :permissions),
-      where: acl_entry.principal_type in ^principal_types,
-      preload: [role: {role, permissions: permission}])
+    Repo.all(
+      from(
+        acl_entry in AclEntry,
+        join: role in assoc(acl_entry, :role),
+        join: permission in assoc(role, :permissions),
+        where: acl_entry.principal_type in ^principal_types,
+        preload: [role: {role, permissions: permission}]
+      )
+    )
   end
 
   @doc """
 
   """
   def list_acl_entries_by_principal(%{principal_id: principal_id, principal_type: principal_type}) do
-    acl_entries = Repo.all(from acl_entry in AclEntry, where: acl_entry.principal_type == ^principal_type and acl_entry.principal_id == ^principal_id)
-    acl_entries |> Repo.preload(:role)
+    acl_entries =
+      Repo.all(
+        from(
+          acl_entry in AclEntry,
+          where:
+            acl_entry.principal_type == ^principal_type and
+              acl_entry.principal_id == ^principal_id
+        )
+      )
+
+    acl_entries |> Repo.preload(role: [:permissions])
   end
 
   def list_acl_entries_by_user(%{user_id: user_id}) do
@@ -98,18 +118,62 @@ defmodule TdBg.Permissions do
     list_acl_entries_by_principal(%{principal_id: group_id, principal_type: "group"})
   end
 
+  def list_acl_entries_by_user_with_groups(%{user_id: user_id}) do
+    user = @td_auth_api.get_user(user_id)
+    group_ids = get_group_ids(user)
+    user_acl_entries = list_acl_entries_by_user(%{user_id: user_id})
+
+    group_acl_entries =
+      group_ids
+      |> Enum.flat_map(&list_acl_entries_by_group(%{group_id: &1}))
+
+    user_acl_entries ++ group_acl_entries
+  end
+
+  def get_resource_type_permissions(%{user_id: user_id}, resource_type) do
+    %{user_id: user_id}
+    |> list_acl_entries_by_user_with_groups
+    |> Enum.filter(&(&1.resource_type == resource_type))
+    |> Enum.map(&%{resource_id: &1.resource_id, permissions: &1.role.permissions})
+  end
+
+  def get_domain_permissions(%{user_id: user_id}) do
+    get_resource_type_permissions(%{user_id: user_id}, "domain")
+  end
+
   @doc """
 
   """
-  def get_acl_entry_by_principal_and_resource(%{principal_type: principal_type, principal_id: principal_id, resource_type: resource_type, resource_id: resource_id}) do
-    Repo.get_by(AclEntry, principal_type: principal_type, principal_id: principal_id, resource_type: resource_type, resource_id: resource_id)
+  def get_acl_entry_by_principal_and_resource(%{
+        principal_type: principal_type,
+        principal_id: principal_id,
+        resource_type: resource_type,
+        resource_id: resource_id
+      }) do
+    Repo.get_by(
+      AclEntry,
+      principal_type: principal_type,
+      principal_id: principal_id,
+      resource_type: resource_type,
+      resource_id: resource_id
+    )
   end
 
   @doc """
     Returns acl entry for an user and domain
   """
-  def get_acl_entry_by_principal_and_resource(%{principal_type: principal_type, principal_id: principal_id, domain: domain}) do
-    Repo.get_by(AclEntry, principal_type: principal_type, principal_id: principal_id, resource_type: "domain", resource_id: domain.id)
+  def get_acl_entry_by_principal_and_resource(%{
+        principal_type: principal_type,
+        principal_id: principal_id,
+        domain: domain
+      }) do
+    Repo.get_by(
+      AclEntry,
+      principal_type: principal_type,
+      principal_id: principal_id,
+      resource_type: "domain",
+      resource_id: domain.id
+    )
   end
 
   @doc """
@@ -195,29 +259,44 @@ defmodule TdBg.Permissions do
 
   def get_list_acl_from_domain(domain) do
     acl_entries = list_acl_entries(%{domain: domain})
-    acl_entries_map_ids = acl_entries |> Enum.group_by(&(&1.principal_type), &(&1.principal_id))
-    users = case acl_entries_map_ids["user"] do
-      nil -> []
-      user_ids -> @td_auth_api.search_users(%{"ids" => user_ids})
-    end
-    groups = case acl_entries_map_ids["group"] do
-      nil -> []
-      group_ids -> @td_auth_api.search_groups(%{"ids" => group_ids})
-    end
-    Enum.reduce(acl_entries, [],
-      fn(u, acc) ->
-        principal =
-          case u.principal_type do
-            "user" -> Enum.find(users, fn(r_u) -> r_u.id == u.principal_id end)
-            "group" -> Enum.find(groups, fn(r_u) -> r_u.id == u.principal_id end)
-          end
-        if principal do
-          acc ++ [%{principal: principal, principal_type: u.principal_type, role_id: u.role.id, role_name: u.role.name, acl_entry_id: u.id}]
-        else
-          acc
+    acl_entries_map_ids = acl_entries |> Enum.group_by(& &1.principal_type, & &1.principal_id)
+
+    users =
+      case acl_entries_map_ids["user"] do
+        nil -> []
+        user_ids -> @td_auth_api.search_users(%{"ids" => user_ids})
+      end
+
+    groups =
+      case acl_entries_map_ids["group"] do
+        nil -> []
+        group_ids -> @td_auth_api.search_groups(%{"ids" => group_ids})
+      end
+
+    Enum.reduce(acl_entries, [], fn u, acc ->
+      principal =
+        case u.principal_type do
+          "user" -> Enum.find(users, fn r_u -> r_u.id == u.principal_id end)
+          "group" -> Enum.find(groups, fn r_u -> r_u.id == u.principal_id end)
         end
+
+      if principal do
+        acc ++
+          [
+            %{
+              principal: principal,
+              principal_type: u.principal_type,
+              role_id: u.role.id,
+              role_name: u.role.name,
+              acl_entry_id: u.id
+            }
+          ]
+      else
+        acc
+      end
     end)
   end
+
   @doc """
     Returns Role with name role_name
   """
@@ -225,17 +304,22 @@ defmodule TdBg.Permissions do
     Repo.get_by(Role, name: role_name)
   end
 
-  def acl_matches?(%{principal_type: "user", principal_id: user_id}, user_id, _group_ids), do: true
+  def acl_matches?(%{principal_type: "user", principal_id: user_id}, user_id, _group_ids),
+    do: true
+
   def acl_matches?(%{principal_type: "group", principal_id: group_id}, _user_id, group_ids) do
     group_ids
     |> Enum.any?(&(&1 == group_id))
   end
+
   def acl_matches?(_, _, _), do: false
 
   def get_group_ids(user) do
     @td_auth_api.index_groups()
-      |> Enum.filter(fn(group) -> Enum.any?(user.groups, fn(group_name) -> group_name == group.name end) end)
-      |> Enum.map(&(&1.id))
+    |> Enum.filter(fn group ->
+      Enum.any?(user.groups, fn group_name -> group_name == group.name end)
+    end)
+    |> Enum.map(& &1.id)
   end
 
   def get_all_roles(%{user_id: user_id, domain_id: domain_id}) do
@@ -244,49 +328,68 @@ defmodule TdBg.Permissions do
     user = @td_auth_api.get_user(user_id)
     group_ids = get_group_ids(user)
 
-    roles = domains
-      |> Enum.flat_map(fn(domain) -> list_acl_entries(%{domain: domain}, role: [:permissions]) end)
-      |> Enum.filter(&(acl_matches?(&1, user.id, group_ids)))
-      |> Enum.map(&(&1.role))
-      |> Enum.uniq_by(&(&1.id))
+    roles =
+      domains
+      |> Enum.flat_map(fn domain -> list_acl_entries(%{domain: domain}, role: [:permissions]) end)
+      |> Enum.filter(&acl_matches?(&1, user.id, group_ids))
+      |> Enum.map(& &1.role)
+      |> Enum.uniq_by(& &1.id)
 
     roles
   end
 
   def get_all_permissions(%{user_id: user_id, domain_id: domain_id}) do
     roles = get_all_roles(%{user_id: user_id, domain_id: domain_id})
+
     roles
-      |> Enum.flat_map(&(&1.permissions))
-      |> Enum.uniq_by(&(&1.id))
-      |> Enum.map(&(&1.name))
+    |> Enum.flat_map(& &1.permissions)
+    |> Enum.uniq_by(& &1.id)
+    |> Enum.map(& &1.name)
   end
 
   def has_any_group_permission(user_id, permissions, Domain) do
     user = @td_auth_api.get_user(user_id)
     group_ids = get_group_ids(user)
-    query = from a in AclEntry,
-          join: r in assoc(a, :role),
-          join: p in assoc(r, :permissions),
-          where: p.name in ^permissions
-                 and a.principal_id in ^group_ids
-                 and a.principal_type == "group",
-          limit: 1,
-          select: a
-    group_acl = query |> Repo.one
-    if group_acl do true else false end
+
+    query =
+      from(
+        a in AclEntry,
+        join: r in assoc(a, :role),
+        join: p in assoc(r, :permissions),
+        where:
+          p.name in ^permissions and a.principal_id in ^group_ids and a.principal_type == "group",
+        limit: 1,
+        select: a
+      )
+
+    group_acl = query |> Repo.one()
+
+    if group_acl do
+      true
+    else
+      false
+    end
   end
 
   def has_any_permission(user_id, permissions, Domain) do
-    query = from a in AclEntry,
-          join: r in assoc(a, :role),
-          join: p in assoc(r, :permissions),
-          where: p.name in ^permissions
-                 and a.principal_id == ^user_id
-                 and a.principal_type == "user",
-          limit: 1,
-          select: a
-    user_acl = query |> Repo.one
-    if user_acl do true else has_any_group_permission(user_id, permissions, Domain) end
+    query =
+      from(
+        a in AclEntry,
+        join: r in assoc(a, :role),
+        join: p in assoc(r, :permissions),
+        where:
+          p.name in ^permissions and a.principal_id == ^user_id and a.principal_type == "user",
+        limit: 1,
+        select: a
+      )
+
+    user_acl = query |> Repo.one()
+
+    if user_acl do
+      true
+    else
+      has_any_group_permission(user_id, permissions, Domain)
+    end
   end
 
   @doc """
@@ -295,51 +398,83 @@ defmodule TdBg.Permissions do
   def get_role_in_resource(%{user_id: user_id, domain_id: domain_id}) do
     domain = Taxonomies.get_domain(domain_id)
     domain = domain |> Repo.preload(:parent)
-    role_name = get_resource_role(%{principal_type: "user", principal_id: user_id, domain: domain}, 0)
+
+    role_name =
+      get_resource_role(%{principal_type: "user", principal_id: user_id, domain: domain}, 0)
+
     case role_name do
       nil ->
         user = @td_auth_api.get_user(user_id)
         group = List.first(user.groups)
+
         case group do
           [] -> %{level: 0, role: nil}
           nil -> %{level: 0, role: nil}
           group -> get_role_in_resource(%{group_id: group.id, domain: domain})
         end
-      role -> role
+
+      role ->
+        role
     end
   end
+
   def get_role_in_resource(%{group_id: group_id, domain: domain}) do
-    role_name_groups = get_resource_role(%{principal_type: "group", principal_id: group_id, domain: domain}, 0)
+    role_name_groups =
+      get_resource_role(%{principal_type: "group", principal_id: group_id, domain: domain}, 0)
+
     case role_name_groups do
-      nil -> %{level: 0 , role: nil}
+      nil -> %{level: 0, role: nil}
       role -> role
     end
   end
 
-  defp get_resource_role(%{principal_type: _principal_type, principal_id: _principal_id, domain: %Domain{parent_id: nil}} = attrs, level) do
+  defp get_resource_role(
+         %{
+           principal_type: _principal_type,
+           principal_id: _principal_id,
+           domain: %Domain{parent_id: nil}
+         } = attrs,
+         level
+       ) do
     case get_role_by_principal_and_resource(attrs) do
-      nil -> nil
+      nil ->
+        nil
+
       %Role{} = role ->
         %{level: level, role: role}
     end
   end
-  defp get_resource_role(%{principal_type: principal_type, principal_id: principal_id, domain: %Domain{} = domain} = attrs, level) do
+
+  defp get_resource_role(
+         %{principal_type: principal_type, principal_id: principal_id, domain: %Domain{} = domain} =
+           attrs,
+         level
+       ) do
     case get_role_by_principal_and_resource(attrs) do
       %Role{} = role ->
         %{level: level, role: role}
+
       nil ->
         parent_domain = Taxonomies.get_domain(domain.parent_id)
         parent_domain = parent_domain |> Repo.preload(:parent)
-        get_resource_role(%{principal_type: principal_type, principal_id: principal_id, domain: parent_domain}, level + 1)
+
+        get_resource_role(
+          %{principal_type: principal_type, principal_id: principal_id, domain: parent_domain},
+          level + 1
+        )
     end
   end
 
-  defp get_role_by_principal_and_resource(%{principal_type: _principal_type, principal_id: _principal_id, domain: %Domain{}} = attrs) do
+  defp get_role_by_principal_and_resource(
+         %{principal_type: _principal_type, principal_id: _principal_id, domain: %Domain{}} =
+           attrs
+       ) do
     acl_entry =
       case get_acl_entry_by_principal_and_resource(attrs) do
-        nil ->  nil
+        nil -> nil
         acl_entry -> acl_entry |> Repo.preload(:role)
       end
+
     case acl_entry do
       nil -> nil
       acl_entry -> acl_entry.role
@@ -469,9 +604,9 @@ defmodule TdBg.Permissions do
   def add_permissions_to_role(%Role{} = role, permissions) do
     role
     |> Repo.preload(:permissions)
-    |> Changeset.change
+    |> Changeset.change()
     |> Changeset.put_assoc(:permissions, permissions)
-    |> Repo.update!
+    |> Repo.update!()
   end
 
   @doc """
@@ -485,13 +620,17 @@ defmodule TdBg.Permissions do
   """
   def get_permissions_in_resource(%{user_id: user_id, domain_id: domain_id}) do
     acl_input = %{user_id: user_id, domain_id: domain_id}
+
     acl_input
     |> get_all_permissions()
   end
 
   def get_permissions_in_resource_cache(%{user_id: user_id, domain_id: domain_id}) do
     cache_key = %{user_id: user_id, domain_id: domain_id}
-    ConCache.get_or_store(:permissions_cache, cache_key, fn() -> get_permissions_in_resource(cache_key) end)
+
+    ConCache.get_or_store(:permissions_cache, cache_key, fn ->
+      get_permissions_in_resource(cache_key)
+    end)
   end
 
   @doc """
@@ -516,53 +655,96 @@ defmodule TdBg.Permissions do
     tree = Taxonomies.tree()
     acls = list_acl_entries_by_user(%{user_id: user_id})
     domains = Taxonomies.list_domains()
-    roles = Enum.reduce(tree, [], fn(node, acc) ->
-      branch_roles = assemble_node_role(node, user_id, acls, [], domains)
-      Enum.uniq(List.flatten(acc ++ branch_roles))
-    end)
+
+    roles =
+      Enum.reduce(tree, [], fn node, acc ->
+        branch_roles = assemble_node_role(node, user_id, acls, [], domains)
+        Enum.uniq(List.flatten(acc ++ branch_roles))
+      end)
+
     roles
   end
 
-  defp build_domain_map(%{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}) do
-    %{"id": id, "role": role, "acl_entry_id": acl_entry_id, "inherited": inherited}
+  defp build_domain_map(%{id: id, role: role, acl_entry_id: acl_entry_id, inherited: inherited}) do
+    %{id: id, role: role, acl_entry_id: acl_entry_id, inherited: inherited}
   end
 
   defp assemble_node_role(%Domain{parent_id: nil} = domain, user_id, all_acls, roles, domains) do
-    %{level: _, role: custom_role} = get_role_in_resource(%{user_id: user_id, domain_id: domain.id})
-    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain" && acl.resource_id == domain.id end)
-    custom_role_name = if custom_role do
-      custom_role.name
-    else
-      nil
-    end
-    custom_acl_id = if custom_acl do
-      custom_acl.id
-    else
-      nil
-    end
-    roles = roles ++ [build_domain_map(%{id: domain.id, role: custom_role_name, acl_entry_id: custom_acl_id, inherited: custom_acl == nil})]
-    Enum.reduce(domain.children, roles, fn(child_domain, acc) ->
-      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_domain, user_id, all_acls, roles, domains)]))
+    %{level: _, role: custom_role} =
+      get_role_in_resource(%{user_id: user_id, domain_id: domain.id})
+
+    custom_acl =
+      Enum.find(all_acls, fn acl ->
+        acl.resource_type == "domain" && acl.resource_id == domain.id
+      end)
+
+    custom_role_name =
+      if custom_role do
+        custom_role.name
+      else
+        nil
+      end
+
+    custom_acl_id =
+      if custom_acl do
+        custom_acl.id
+      else
+        nil
+      end
+
+    roles =
+      roles ++
+        [
+          build_domain_map(%{
+            id: domain.id,
+            role: custom_role_name,
+            acl_entry_id: custom_acl_id,
+            inherited: custom_acl == nil
+          })
+        ]
+
+    Enum.reduce(domain.children, roles, fn child_domain, acc ->
+      Enum.uniq(
+        List.flatten(acc ++ [assemble_node_role(child_domain, user_id, all_acls, roles, domains)])
+      )
     end)
   end
+
   defp assemble_node_role(%Domain{} = domain, user_id, all_acls, roles, domains) do
-    custom_acl = Enum.find(all_acls, fn(acl) -> acl.resource_type == "domain" && acl.resource_id == domain.id end)
-    roles = if custom_acl do
-      roles ++ [build_domain_map(%{id: domain.id, role: custom_acl.role.name, acl_entry_id: custom_acl.id, inherited: false})]
-    else
-      roles ++ [get_closest_role(domain, roles, domains)]
-    end
-    Enum.reduce(domain.children, roles, fn(child_domain, acc) ->
-      Enum.uniq(List.flatten(acc ++ [assemble_node_role(child_domain, user_id, all_acls, roles, domains)]))
+    custom_acl =
+      Enum.find(all_acls, fn acl ->
+        acl.resource_type == "domain" && acl.resource_id == domain.id
+      end)
+
+    roles =
+      if custom_acl do
+        roles ++
+          [
+            build_domain_map(%{
+              id: domain.id,
+              role: custom_acl.role.name,
+              acl_entry_id: custom_acl.id,
+              inherited: false
+            })
+          ]
+      else
+        roles ++ [get_closest_role(domain, roles, domains)]
+      end
+
+    Enum.reduce(domain.children, roles, fn child_domain, acc ->
+      Enum.uniq(
+        List.flatten(acc ++ [assemble_node_role(child_domain, user_id, all_acls, roles, domains)])
+      )
     end)
   end
 
   defp get_closest_role(%Domain{} = domain, roles, domains) do
-    role = Enum.find(roles, fn(role) -> role.id == domain.parent_id end)
+    role = Enum.find(roles, fn role -> role.id == domain.parent_id end)
+
     if role do
       build_domain_map(%{id: domain.id, role: role.role, acl_entry_id: nil, inherited: true})
     else
-      parent_domain = Enum.find(domains, fn(d) -> d.id == domain.parent_id end)
+      parent_domain = Enum.find(domains, fn d -> d.id == domain.parent_id end)
       get_closest_role(parent_domain, roles, domains)
     end
   end

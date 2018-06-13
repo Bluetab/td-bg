@@ -22,7 +22,7 @@ Scenario: Create a simple business concept
     | Current           | true                                                                     |
     | Version           | 1                                                                        |
 
-Scenario: Create a business concept with dinamic data
+Scenario: Create a business concept with dynamic data
   Given an existing Domain called "My Child Domain" child of Domain "My Parent Group"
   And an existing Domain called "My Domain" child of Domain "My Child Domain"
   And an existing Business Concept type called "Business Term" with following definition:
