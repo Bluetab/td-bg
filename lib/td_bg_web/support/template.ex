@@ -60,7 +60,7 @@ defmodule TdBgWeb.TemplateSupport do
     field = Map.put(field, "values", usernames)
     case Enum.find(users, &(&1.id == user.id)) do
       nil -> field
-      u -> Map.put(field, "default", u.user_name)
+      u -> Map.put(field, "default", u.full_name)
     end
   end
   defp process_role_meta(field, _user, _role, _domain), do: field
