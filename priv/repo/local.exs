@@ -11,12 +11,37 @@
 # and so on) as they will fail if something goes wrong.
 alias TdBg.Templates.Template
 alias TdBg.Taxonomies.Domain
+alias TdBg.Permissions.Permission
 alias TdBg.Permissions.Role
 alias TdBg.Permissions.AclEntry
 alias TdBg.BusinessConcepts.BusinessConcept
 alias TdBg.BusinessConcepts.BusinessConceptVersion
 alias TdBg.Repo
 alias Ecto.Changeset
+
+Repo.insert!(%Permission{name: Permission.permissions.create_acl_entry})
+Repo.insert!(%Permission{name: Permission.permissions.update_acl_entry})
+Repo.insert!(%Permission{name: Permission.permissions.delete_acl_entry})
+
+Repo.insert!(%Permission{name: Permission.permissions.create_domain})
+Repo.insert!(%Permission{name: Permission.permissions.update_domain})
+Repo.insert!(%Permission{name: Permission.permissions.delete_domain})
+Repo.insert!(%Permission{name: Permission.permissions.view_domain})
+
+Repo.insert!(%Permission{name: Permission.permissions.create_business_concept})
+Repo.insert!(%Permission{name: Permission.permissions.update_business_concept})
+Repo.insert!(%Permission{name: Permission.permissions.send_business_concept_for_approval})
+Repo.insert!(%Permission{name: Permission.permissions.delete_business_concept})
+Repo.insert!(%Permission{name: Permission.permissions.publish_business_concept})
+Repo.insert!(%Permission{name: Permission.permissions.reject_business_concept})
+Repo.insert!(%Permission{name: Permission.permissions.deprecate_business_concept})
+Repo.insert!(%Permission{name: Permission.permissions.manage_business_concept_alias})
+Repo.insert!(%Permission{name: Permission.permissions.view_draft_business_concepts})
+Repo.insert!(%Permission{name: Permission.permissions.view_approval_pending_business_concepts})
+Repo.insert!(%Permission{name: Permission.permissions.view_published_business_concepts})
+Repo.insert!(%Permission{name: Permission.permissions.view_versioned_business_concepts})
+Repo.insert!(%Permission{name: Permission.permissions.view_rejected_business_concepts})
+Repo.insert!(%Permission{name: Permission.permissions.view_deprecated_business_concepts})
 
 template = Repo.insert!(%Template{
   name: "empty",
@@ -40,17 +65,6 @@ template = Repo.insert!(%Template{
 
 })
 
-second_template = Repo.insert!(%Template{
-  name: "second",
-  content: [
-  %{type: "string",
-    required: false,
-    name: "segundo",
-    label: "Segundo label"
-  }]
-})
-
-
 rolename = Repo.insert!(%Role{
     name: "rolename"
 })
@@ -71,7 +85,7 @@ domain2 = Repo.insert!(%Domain{
 domain2
 |> Repo.preload(:templates)
 |> Changeset.change
-|> Changeset.put_assoc(:templates, [template, second_template])
+|> Changeset.put_assoc(:templates, [template])
 |> Repo.update!
 
 business_concept = Repo.insert!(%BusinessConcept{
@@ -121,9 +135,9 @@ Repo.insert!(%AclEntry{
 })
 
 Repo.insert!(%AclEntry{
-  principal_id: 5,
-  principal_type: "user",
-  resource_id: domain3.id,
+  principal_id: 1,
+  principal_type: "group",
+  resource_id: domain1.id,
   resource_type: "domain",
   role_id: rolename.id
 })

@@ -9,8 +9,6 @@ defmodule TdBgWeb.TemplateSupport do
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
-  @meta "meta"
-
   def preprocess_templates(templates, ctx \\ []) do
     process_template_meta([], templates, ctx)
   end
@@ -42,7 +40,7 @@ defmodule TdBgWeb.TemplateSupport do
         process_role_meta(field, user, role, domain)
       _ -> field
     end
-    field_without_meta = Map.delete(field, @meta)
+    field_without_meta = Map.delete(field, "meta")
     [field_without_meta|acc]
   end
   defp process_meta(acc, %{} = field, _ctx) do
@@ -57,10 +55,8 @@ defmodule TdBgWeb.TemplateSupport do
     user_and_groups = Enum.group_by(acl_entries, &(&1.principal_type), &(&1.principal_id))
     group_ids = Map.get(user_and_groups, "group", [])
     user_ids  = Map.get(user_and_groups, "user", [])
-    users = @td_auth_api.get_groups_users(group_ids, [user.id|user_ids])
-    #usernames = Enum.map(users, &Map.get(&1, :full_name))
-    usernames = Enum.map(users, &Map.get(&1, :user_name))
-
+    users = @td_auth_api.get_groups_users(group_ids, user_ids)
+    usernames = Enum.map(users, &Map.get(&1, :full_name))
     field = Map.put(field, "values", usernames)
     case Enum.find(users, &(&1.id == user.id)) do
       nil -> field
