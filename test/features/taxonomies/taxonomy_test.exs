@@ -138,7 +138,7 @@ defmodule TdBg.TaxonomyTest do
     token = get_user_token(user_name)
     domain_group_info = get_domain_by_name(token, domain_group_name)
     {:ok, status_code} = domain_group_delete(token, domain_group_info["id"])
-    {:ok, Map.merge(state, %{status_code: status_code})}
+    {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Domain "(?<domain_name_child>[^"]+)" is a child of Domain "(?<domain_name_parent>[^"]+)"$/,
@@ -175,8 +175,8 @@ defmodule TdBg.TaxonomyTest do
 
     token = get_user_token(user_name)
     domain_info = get_domain_by_name(token, domain_name)
-    {:ok, status_code} = domain_delete(token, domain_info["id"])
-    {:ok, Map.merge(state, %{status_code: status_code})}
+    {:ok, status_code, json_resp} = domain_delete(token, domain_info["id"])
+    {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
   end
 
   defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Domain "(?<domain_name>[^"]+)" does not exist as child of Domain "(?<domain_group_name>[^"]+)"$/,
@@ -197,6 +197,12 @@ defmodule TdBg.TaxonomyTest do
       domain_info_child = get_domain_by_name(state[:token_admin], domain_name_child)
       assert domain_info_child["parent_id"] == domain_info_parent["id"]
     end
+  end
+
+  defand ~r/^a error message with key "(?<key_error>[^"]+)" and alias "(?<alias_error>[^"]+)" is retrieved$/,
+    %{key_error: key_error, alias_error: alias_error}, state do
+    alias_response = state[:json_resp]["errors"][key_error]
+    assert Enum.member?(alias_response, alias_error)
   end
 
 end
