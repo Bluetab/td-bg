@@ -72,4 +72,9 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     user.groups
   end
 
+  def get_groups_users(group_ids, extra_user_ids \\ [])
+  def get_groups_users(_group_ids, _extra_user_ids) do
+    # Implement this
+  end
+
 end

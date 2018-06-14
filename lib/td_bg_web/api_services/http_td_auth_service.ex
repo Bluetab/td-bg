@@ -170,4 +170,17 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     groups
   end
 
+  def get_groups_users(group_ids, extra_user_ids \\ [])
+  def get_groups_users(group_ids, extra_user_ids) do
+    token = get_api_user_token()
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    req = %{"data" => %{"group_ids" => group_ids, "extra_user_ids" => extra_user_ids}}
+    body = req |> JSON.encode!
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_groups_path()}/users", body, headers, [])
+    json = resp |> JSON.decode!
+    json = json["data"]
+    users = Enum.map(json, fn(user) -> %User{} |> Map.merge(CollectionUtils.to_struct(User, user)) end)
+    users
+  end
+
 end
