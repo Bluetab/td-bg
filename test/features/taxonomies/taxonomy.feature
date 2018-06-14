@@ -131,7 +131,7 @@ Feature: Taxonomy administration
     When user "<user>" tries to delete a Domain with the name "My Parent Domain"
     Then the system returns a result with code "<result>"
     And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
-    And a error message with key "domain" and alias "existing_child_domain" is retrieved
+    And a error message with key "ETD001" and alias "domain.error.existing.domain" is retrieved
 
     Examples:
       | user      | result                    |
@@ -152,7 +152,7 @@ Feature: Taxonomy administration
     When user "<user>" tries to delete a Domain with the name "My Child Domain"
     Then the system returns a result with code "<result>"
     And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
-    And a error message with key "business_concept" and alias "existing_child_business_concept" is retrieved
+    And a error message with key "ETD002" and alias "domain.error.existing.business.concept" is retrieved
 
     Examples:
       | user      | result                    |
