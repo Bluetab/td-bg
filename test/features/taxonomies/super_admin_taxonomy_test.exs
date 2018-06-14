@@ -118,7 +118,7 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     state do
     token = get_user_token(user_name)
     domain = get_domain_by_name(token, domain_name)
-    {_, status_code} = domain_delete(token, domain["id"])
+    {_, status_code, _} = domain_delete(token, domain["id"])
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -145,7 +145,7 @@ defmodule TdBg.SuperAdminTaxonomyTest do
       token = get_user_token(user_name)
       domain = get_domain_by_name(token, parent_name)
       domain = get_domain_by_name_and_parent(token, child_name, domain["id"])
-      {_, status_code} = domain_delete(token, domain["id"])
+      {_, status_code, _} = domain_delete(token, domain["id"])
       {:ok, Map.merge(state, %{status_code: status_code})}
   end
 

@@ -14,12 +14,18 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     Agent.update(MockTdAuthService, &Map.put(&1, :users, user_list))
   end
 
-  def create_user(%{"user" => %{"user_name" => user_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}}) do
+  def create_user(%{"user" => %{"user_name" => user_name, "full_name" => full_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}}) do
     groups =
       groups
       |> Enum.map(&(create_group(%{"group" => &1})))
       |> Enum.map(&(&1.name))
-    new_user = %User{id: User.gen_id_from_user_name(user_name), user_name: user_name, password: password, is_admin: is_admin, email: email, groups: groups}
+    new_user = %User{id: User.gen_id_from_user_name(user_name),
+                     user_name: user_name,
+                     full_name: full_name,
+                     password: password,
+                     is_admin: is_admin,
+                     email: email,
+                     groups: groups}
     users = index()
     Agent.update(MockTdAuthService, &Map.put(&1, :users, users ++ [new_user]))
     new_user
@@ -70,6 +76,25 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
   def search_groups_by_user_id(id) do
     user = get_user(id)
     user.groups
+  end
+
+  def get_groups_users(group_ids, extra_user_ids \\ [])
+  def get_groups_users(group_ids, extra_user_ids) do
+    accumulate_if_user_in_groups = fn(user, acc, group_ids) ->
+      case Enum.find(user.groups, &Enum.member?(group_ids, Group.gen_id_from_name(&1))) do
+        nil -> acc
+        _  -> [user|acc]
+      end
+    end
+
+    users = index()
+
+    Enum.reduce(users, [], fn(user, acc) ->
+      case Enum.member?(extra_user_ids, user.id) do
+        true -> [user | acc]
+        false -> accumulate_if_user_in_groups.(user, acc, group_ids)
+      end
+    end)
   end
 
 end

@@ -5,6 +5,7 @@ defmodule TdBgWeb.DomainController do
 
   import Canada, only: [can?: 2]
 
+  alias TdBgWeb.TaxonomySupport
   alias TdBgWeb.ErrorView
   alias TdBgWeb.UserView
   alias TdBg.Taxonomies
@@ -263,20 +264,8 @@ defmodule TdBgWeb.DomainController do
       @search_service.delete_search(domain)
       send_resp(conn, :no_content, "")
     else
-      {:count, :domain, n} when is_integer(n) ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
-
-      {:count, :business_concept, n} when is_integer(n) ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+      error ->
+        TaxonomySupport.handle_taxonomy_errors_on_delete(conn, error)
     end
   end
 

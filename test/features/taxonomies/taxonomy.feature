@@ -121,3 +121,39 @@ Feature: Taxonomy administration
       | creator   | Unauthorized |
       | publisher | Unauthorized |
       | admin     | Deleted      |
+
+  Scenario Outline: Deleting a Domain with some Domain Child
+    Given an existing Domain called "My Parent Domain"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+    And following users exist with the indicated role in Domain "My Parent Domain"
+      | user      | role    |
+      | admin     | admin   |
+    When user "<user>" tries to delete a Domain with the name "My Parent Domain"
+    Then the system returns a result with code "<result>"
+    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
+    And a error message with key "ETD001" and alias "domain.error.existing.domain" is retrieved
+
+    Examples:
+      | user      | result                    |
+      | admin     | Unprocessable Entity      |
+    
+  Scenario Outline: Deleting a Domain with some Business Concept
+    Given an existing Domain called "My Parent Domain"
+    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
+    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept in the Domain "My Child Domain" with following data:
+      | Field             | Value                                                                   |
+      | Type              | Business Term                                                           |
+      | Name              | My Business Term                                                        |
+      | Description       | This is the first description of my business term which is very simple  |
+    And following users exist with the indicated role in Domain "My Parent Domain"
+      | user      | role    |
+      | admin     | admin   |
+    When user "<user>" tries to delete a Domain with the name "My Child Domain"
+    Then the system returns a result with code "<result>"
+    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
+    And a error message with key "ETD002" and alias "domain.error.existing.business.concept" is retrieved
+
+    Examples:
+      | user      | result                    |
+      | admin     | Unprocessable Entity      |

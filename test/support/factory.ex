@@ -14,10 +14,18 @@ defmodule TdBg.Factory do
     }
   end
 
+  def template_factory do
+    %TdBg.Templates.Template {
+      name: "empty",
+      content: []
+    }
+  end
+
   def domain_factory do
     %TdBg.Taxonomies.Domain {
       name: "My domain",
       description: "My domain description",
+      templates: []
     }
   end
 
@@ -70,6 +78,16 @@ defmodule TdBg.Factory do
     %TdBg.Permissions.Role {
       name: "custom_role",
       permissions: []
+    }
+  end
+
+  def acl_entry_factory do
+    %TdBg.Permissions.AclEntry {
+      principal_id: nil,
+      principal_type: nil,
+      resource_id: nil,
+      resource_type: nil,
+      role: nil
     }
   end
 

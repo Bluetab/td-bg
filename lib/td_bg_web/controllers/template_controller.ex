@@ -7,6 +7,10 @@ defmodule TdBgWeb.TemplateController do
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
+  alias TdBgWeb.TemplateSupport
+  alias Guardian.Plug, as: GuardianPlug
+
+  @preprocess "preprocess"
 
   action_fallback TdBgWeb.FallbackController
 
@@ -154,12 +158,19 @@ defmodule TdBgWeb.TemplateController do
     description "List Domain Templates"
     parameters do
       domain_id :path, :integer, "Domain ID", required: true
+      preprocess :query, :boolean, "Apply template preproccessing", required: false
     end
     response 200, "OK", Schema.ref(:TemplatesResponse)
   end
-  def get_domain_templates(conn, %{"domain_id" => domain_id}) do
+  def get_domain_templates(conn, %{"domain_id" => domain_id} = params) do
+    user = get_current_user(conn)
     domain = Taxonomies.get_domain!(domain_id)
     templates = Templates.get_domain_templates(domain)
+    templates = case Map.get(params, @preprocess, false) do
+      "true" ->
+        TemplateSupport.preprocess_templates(templates, domain: domain, user: user)
+      _ -> templates
+    end
     render(conn, "index.json", templates: templates)
   end
 
@@ -178,4 +189,9 @@ defmodule TdBgWeb.TemplateController do
     Templates.add_templates_to_domain(domain, templates)
     render(conn, "index.json", templates: templates)
   end
+
+  defp get_current_user(conn) do
+    GuardianPlug.current_resource(conn)
+  end
+
 end

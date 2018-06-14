@@ -38,9 +38,12 @@ defmodule TdBgWeb.Taxonomy do
 
   def domain_delete(token, id) do
     headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code} =
+    %HTTPoison.Response{status_code: status_code, body: resp} =
         HTTPoison.delete!(domain_url(@endpoint, :delete , id), headers, [])
-    {:ok, status_code}
+    case resp do
+      "" -> {:ok, status_code, ""}
+      resp -> {:ok, status_code, resp |> JSON.decode!}
+    end
   end
 
   def get_domain_by_name(token, domain_name) do
