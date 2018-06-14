@@ -8,6 +8,7 @@ defmodule TdBgWeb.TemplateControllerTest do
   alias TdBg.Templates
   alias TdBg.Templates.Template
   alias Poison, as: JSON
+  alias TdBg.Accounts.User
 
   @create_attrs %{content: [], name: "some name"}
   @generic_attrs %{content: [%{"type": "type1", "required": true, "name": "name1", "max_size": 100}], name: "generic_true"}
@@ -188,6 +189,62 @@ defmodule TdBgWeb.TemplateControllerTest do
 
       assert templates == stored_templates
     end
+  end
+
+  @tag authenticated_user: "user_name"
+  test "get domain templates. Check role meta", %{conn: conn, swagger_schema: schema} do
+
+    role_name = "role_name"
+
+    template = insert(:template, content: [%{
+        name: "dominio",
+        type: "list",
+        label: "label",
+        values: [],
+        required: false,
+        "form_type": "dropdown",
+        description: "description",
+        meta: %{role: role_name}
+      }
+    ])
+
+    role = insert(:role, name: role_name)
+
+    parent_domain = insert(:domain, templates: [template])
+    child_domain  = insert(:child_domain, parent: parent_domain)
+
+    group_name  = "group_name"
+    group = MockTdAuthService.create_group(%{"group" => %{"name" => group_name}})
+    group_user_name = "group_user_name"
+    MockTdAuthService.create_user(%{"user" => %{"user_name" => group_user_name, "full_name" => "#{group_user_name}", "is_admin" => false, "password" => "password", "email" => "nobody@bluetab.net", "groups" => [%{"name" => group_name}]}})
+
+     user_name = "user_name"
+     # This is more desirable but we have to improve auth mock service
+     # user = MockTdAuthService.create_user(%{"user" => %{"user_name" => user_name,
+     # { }"full_name" => "#{user_name}", "is_admin" => false, "password" => "password",
+     # {}"email" => "nobody@bluetab.net", "groups" => []}})
+
+    insert(:acl_entry, principal_id: group.id, principal_type: "group", resource_id: parent_domain.id, resource_type: "domain", role_id: role.id)
+    insert(:acl_entry, principal_id: User.gen_id_from_user_name(user_name), principal_type: "user", resource_id: child_domain.id, resource_type: "domain", role_id: role.id)
+
+    conn = get conn, template_path(conn, :get_domain_templates, child_domain.id, preprocess: true)
+    validate_resp_schema(conn, schema, "TemplatesResponse")
+    stored_templates = json_response(conn, 200)["data"]
+    values = stored_templates
+    |> Enum.at(0)
+    |> Map.get("content")
+    |> Enum.at(0)
+    |> Map.get("values")
+
+    default = stored_templates
+    |> Enum.at(0)
+    |> Map.get("content")
+    |> Enum.at(0)
+    |> Map.get("default")
+
+    assert values == [group_user_name, user_name]
+    assert default == user_name
+
   end
 
   defp create_template(_) do

@@ -39,7 +39,7 @@ defmodule TdBgWeb.Authentication do
     password = Keyword.get(opts, :password, "secret")
     email = Keyword.get(opts, :email, "some@email.com")
     groups = Keyword.get(opts, :groups, [])
-    user = @td_auth_api.create_user(%{"user" => %{"user_name" => user_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}})
+    user = @td_auth_api.create_user(%{"user" => %{"user_name" => user_name, "full_name" => user_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}})
     user
   end
 
@@ -50,7 +50,7 @@ defmodule TdBgWeb.Authentication do
         password = Keyword.get(opts, :password, "secret")
         email = Keyword.get(opts, :email, "some@email.com")
         groups = Keyword.get(opts, :groups, [])
-        @td_auth_api.create_user(%{"user" => %{"user_name" => user_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}})
+        @td_auth_api.create_user(%{"user" => %{"user_name" => user_name, "full_name" => user_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}})
       user -> user
     end
     user

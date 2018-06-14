@@ -50,12 +50,7 @@ template = Repo.insert!(%Template{
     name: "dominio",
     type: "list",
     label: "Dominio Información de Gestión",
-    values: [
-      "Cliente existente/Previsión de la demanda",
-      "Cliente existente/Atención Cliente",
-      "Cliente existente/Ciclo de Ingresos",
-      "Cliente existente/Producto",
-    ],
+    values: [],
     required: false,
     "form_type": "dropdown",
     description: "Indicar si el término pertenece al dominio de Información de Gestión",
