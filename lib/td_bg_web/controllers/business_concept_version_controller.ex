@@ -25,7 +25,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.BusinessConceptSupport
 
-  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
   @events %{add_concept_field: "add_concept_field", delete_concept_field: "delete_concept_field"}
@@ -130,7 +129,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         )
         |> render("show.json", business_concept_version: concept)
 
-      @search_service.put_search(concept)
       conn
     else
       error ->
@@ -272,7 +270,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, delete(business_concept_version)),
          {:ok, %BusinessConceptVersion{}} <-
            BusinessConcepts.delete_business_concept_version(business_concept_version) do
-      @search_service.delete_search(business_concept_version)
       send_resp(conn, :no_content, "")
     else
       false ->
@@ -490,8 +487,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            BusinessConcepts.publish_business_concept_version(business_concept_version) do
-      @search_service.put_search(business_concept_version)
-
       render(
         conn,
         "show.json",
@@ -517,8 +512,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, reject(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
-      @search_service.put_search(business_concept_version)
-
       render(
         conn,
         "show.json",
@@ -556,8 +549,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
              business_concept_version,
              attrs
            ) do
-      @search_service.put_search(business_concept_version)
-
       render(
         conn,
         "show.json",
@@ -601,10 +592,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
            BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
-      old_version = BusinessConcepts.get_business_concept_version!(business_concept_version.id)
-      @search_service.put_search(old_version)
-      @search_service.put_search(new_version)
-
       conn
       |> put_status(:created)
       |> render(
@@ -745,8 +732,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
              business_concept_version,
              update_params
            ) do
-      @search_service.put_search(business_concept_version)
-
       render(
         conn,
         "show.json",

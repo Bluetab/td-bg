@@ -11,6 +11,8 @@ defmodule TdBg.BusinessConcepts do
   alias Ecto.Changeset
   alias Ecto.Multi
 
+  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+
   @changeset :changeset
   @content :content
   @content_schema :content_schema
@@ -139,7 +141,9 @@ defmodule TdBg.BusinessConcepts do
 
     case result do
       {:ok, business_concept_version} ->
-        {:ok, get_business_concept_version!(business_concept_version.id)}
+        new_version = get_business_concept_version!(business_concept_version.id)
+        index_business_concept_versions(new_version.business_concept_id)
+        {:ok, new_version}
 
       _ ->
         result
@@ -159,13 +163,23 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def version_business_concept(%BusinessConceptVersion{} = business_concept_version, attrs \\ %{}) do
-    attrs
-    |> attrs_keys_to_atoms
-    |> raise_error_if_no_content_schema
-    |> set_content_defaults
-    |> validate_new_concept
-    |> validate_concept_content
-    |> version_concept(business_concept_version)
+    result =
+      attrs
+      |> attrs_keys_to_atoms
+      |> raise_error_if_no_content_schema
+      |> set_content_defaults
+      |> validate_new_concept
+      |> validate_concept_content
+      |> version_concept(business_concept_version)
+
+    case result do
+      {:ok, %{current: new_version}} ->
+        index_business_concept_versions(new_version.business_concept_id)
+        result
+
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -193,8 +207,10 @@ defmodule TdBg.BusinessConcepts do
       |> update_concept
 
     case result do
-      {:ok, business_concept_version} ->
-        {:ok, get_business_concept_version!(business_concept_version.id)}
+      {:ok, _} ->
+        updated_version = get_business_concept_version!(business_concept_version.id)
+        index_business_concept_versions(updated_version.business_concept_id)
+        {:ok, updated_version}
 
       _ ->
         result
@@ -205,9 +221,19 @@ defmodule TdBg.BusinessConcepts do
         %BusinessConceptVersion{} = business_concept_version,
         attrs
       ) do
-    business_concept_version
-    |> BusinessConceptVersion.update_status_changeset(attrs)
-    |> Repo.update()
+    result =
+      business_concept_version
+      |> BusinessConceptVersion.update_status_changeset(attrs)
+      |> Repo.update()
+
+    case result do
+      {:ok, updated_version} ->
+        index_business_concept_versions(updated_version.business_concept_id)
+        result
+
+      _ ->
+        result
+    end
   end
 
   def publish_business_concept_version(business_concept_version) do
@@ -222,19 +248,45 @@ defmodule TdBg.BusinessConcepts do
         where: c.business_concept_id == ^business_concept_id and c.status == ^status_published
       )
 
-    Multi.new()
-    |> Multi.update_all(:versioned, query, set: [status: BusinessConcept.status().versioned])
-    |> Multi.update(
-      :published,
-      BusinessConceptVersion.update_status_changeset(business_concept_version, attrs)
-    )
-    |> Repo.transaction()
+    result =
+      Multi.new()
+      |> Multi.update_all(:versioned, query, set: [status: BusinessConcept.status().versioned])
+      |> Multi.update(
+        :published,
+        BusinessConceptVersion.update_status_changeset(business_concept_version, attrs)
+      )
+      |> Repo.transaction()
+
+    case result do
+      {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
+        index_business_concept_versions(business_concept_id)
+        result
+
+      _ ->
+        result
+    end
+  end
+
+  defp index_business_concept_versions(business_concept_id) do
+    business_concept_id
+    |> list_business_concept_versions(nil)
+    |> Enum.each(&@search_service.put_search/1)
   end
 
   def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
-    business_concept_version
-    |> BusinessConceptVersion.reject_changeset(attrs)
-    |> Repo.update()
+    result =
+      business_concept_version
+      |> BusinessConceptVersion.reject_changeset(attrs)
+      |> Repo.update()
+
+    case result do
+      {:ok, updated_version} ->
+        index_business_concept_versions(updated_version.business_concept_id)
+        result
+
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -393,6 +445,7 @@ defmodule TdBg.BusinessConcepts do
            business_concept: %BusinessConcept{},
            business_concept_version: %BusinessConceptVersion{} = version
          }} ->
+          @search_service.delete_search(business_concept_version)
           {:ok, version}
       end
     else
@@ -406,9 +459,11 @@ defmodule TdBg.BusinessConcepts do
       |> case do
         {:ok,
          %{
-           business_concept_version: %BusinessConceptVersion{},
+           business_concept_version: %BusinessConceptVersion{} = deleted_version,
            current: %BusinessConceptVersion{} = current_version
          }} ->
+          @search_service.delete_search(deleted_version)
+          index_business_concept_versions(current_version.business_concept_id)
           {:ok, current_version}
       end
     end
