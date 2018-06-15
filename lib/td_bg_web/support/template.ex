@@ -41,10 +41,10 @@ defmodule TdBgWeb.TemplateSupport do
       _ -> field
     end
     field_without_meta = Map.delete(field, "meta")
-    [field_without_meta|acc]
+    acc ++ [field_without_meta]
   end
   defp process_meta(acc, %{} = field, _ctx) do
-    [field|acc]
+    acc + [field]
   end
 
   defp process_role_meta(%{} = field, %User{} = user,  %Role{} = role,  %Domain{} = domain)
