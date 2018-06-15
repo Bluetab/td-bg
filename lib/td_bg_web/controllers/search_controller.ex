@@ -3,6 +3,7 @@
   use PhoenixSwagger
 
   alias TdBg.Search
+  alias TdBg.Search.Indexer
   alias TdBg.ESClientApi
 
   #  alias TdBgWeb.SwaggerDefinitions
@@ -44,8 +45,7 @@
     response 500, "Client Error"
   end
   def reindex_all(conn, _params) do
-    {:ok, _response} = Search.put_bulk_search(:domain)
-    {:ok, _response} = Search.put_bulk_search(:business_concept)
+    {:ok, _response} = Indexer.reindex(:business_concept)
     send_resp(conn, :ok, "")
   end
 

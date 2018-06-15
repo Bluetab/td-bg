@@ -20,7 +20,6 @@ defmodule TdBgWeb.DomainController do
   action_fallback(TdBgWeb.FallbackController)
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
-  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   def swagger_definitions do
     SwaggerDefinitions.domain_swagger_definitions()
@@ -146,7 +145,6 @@ defmodule TdBgWeb.DomainController do
           |> put_resp_header("location", domain_path(conn, :show, domain))
           |> render("show.json", domain: domain)
 
-        @search_service.put_search(domain)
         conn
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -226,7 +224,6 @@ defmodule TdBgWeb.DomainController do
 
   defp do_update(conn, domain, domain_params) do
     with {:ok, %Domain{} = updated_domain} <- Taxonomies.update_domain(domain, domain_params) do
-      @search_service.put_search(updated_domain)
       render(conn, "show.json", domain: updated_domain)
     end
   end
@@ -261,7 +258,6 @@ defmodule TdBgWeb.DomainController do
     with {:count, :domain, 0} <- Taxonomies.count_domain_children(id),
          {:count, :business_concept, 0} <- Taxonomies.count_domain_business_concept_children(id),
          {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
-      @search_service.delete_search(domain)
       send_resp(conn, :no_content, "")
     else
       error ->
