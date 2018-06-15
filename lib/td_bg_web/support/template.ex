@@ -44,7 +44,7 @@ defmodule TdBgWeb.TemplateSupport do
     acc ++ [field_without_meta]
   end
   defp process_meta(acc, %{} = field, _ctx) do
-    acc + [field]
+    acc ++ [field]
   end
 
   defp process_role_meta(%{} = field, %User{} = user,  %Role{} = role,  %Domain{} = domain)
