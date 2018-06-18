@@ -7,34 +7,50 @@ defmodule TdBg.BusinessConcept.Search do
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
-  def search_business_concept_versions(params, user, page \\ 0, size \\ 50) do
-    query = create_query(params, user)
+  def search_business_concept_versions(params, user, page \\ 0, size \\ 50)
+
+  # Admin user search, no filters applied
+  def search_business_concept_versions(params, %{is_admin: true}, page, size) do
+    query = create_query(params)
     search = %{from: page * size, size: size, query: query}
 
     @search_service.search("business_concept", search)
     |> Enum.map(&Map.get(&1, "_source"))
   end
 
-  defp create_query(%{"q" => q}, %{is_admin: true}) do
+  # Non-admin user search, filters applied
+  def search_business_concept_versions(params, %{id: user_id}, page, size) do
+    permissions = %{user_id: user_id} |> Permissions.get_domain_permissions()
+    filter_business_concept_versions(params, permissions, page, size)
+  end
+
+  defp filter_business_concept_versions(_params, [], _page, _size), do: []
+
+  defp filter_business_concept_versions(params, [_h|_t] = permissions, page, size) do
+    filter = permissions |> create_filter_clause
+    query = create_query(params, filter)
+    search = %{from: page * size, size: size, query: query}
+
+    @search_service.search("business_concept", search)
+    |> Enum.map(&Map.get(&1, "_source"))
+  end
+
+  defp create_query(%{"q" => q}) do
     %{simple_query_string: %{query: q}}
     |> bool_query
   end
 
-  defp create_query(%{"q" => q}, user) do
-    filter = user |> create_filter_clause
-
-    %{simple_query_string: %{query: q}}
-    |> bool_query(filter)
-  end
-
-  defp create_query(_params, %{is_admin: true}) do
+  defp create_query(_params) do
     %{match_all: %{}}
     |> bool_query
   end
 
-  defp create_query(_params, user) do
-    filter = create_filter_clause(user)
+  defp create_query(%{"q" => q}, filter) do
+    %{simple_query_string: %{query: q}}
+    |> bool_query(filter)
+  end
 
+  defp create_query(_params, filter) do
     %{match_all: %{}}
     |> bool_query(filter)
   end
@@ -47,10 +63,8 @@ defmodule TdBg.BusinessConcept.Search do
     %{bool: %{must: query}}
   end
 
-  defp create_filter_clause(%{id: id}) do
-    should_clause =
-      %{user_id: id}
-      |> Permissions.get_domain_permissions()
+  defp create_filter_clause(permissions) do
+    should_clause = permissions
       |> Enum.map(&entry_to_filter_clause(&1))
 
     %{bool: %{should: should_clause}}
