@@ -706,6 +706,25 @@ defmodule TdBgWeb.SwaggerDefinitions do
       end
     }
   end
+
+  def filter_swagger_definitions do
+    %{
+      FilterResponse: swagger_schema do
+        title "Filters"
+        description "An object whose keys are filter names and values are arrays of filterable values"
+        properties do
+          data :object, "Filter values", required: true
+        end
+        example %{
+          data: %{
+            domain: ["Domain 1", "Domain 2"],
+            language: ["Spanish", "English", "French"]
+          }
+        }
+        end
+    }
+  end
+
   def template_swagger_definitions do
     %{
       Template: swagger_schema do

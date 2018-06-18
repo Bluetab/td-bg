@@ -76,6 +76,8 @@ defmodule TdBgWeb.Router do
       get  "/data_structures/:data_structure_id/data_fields", BusinessConceptVersionController, :get_data_fields
     end
 
+    get "/business_concept_filters", BusinessConceptFilterController, :index
+
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
     get "/business_concepts/search", BusinessConceptController, :search
     get "/business_concepts/domains/:domain_id", BusinessConceptController, :index_children_business_concept
