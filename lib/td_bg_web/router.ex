@@ -78,6 +78,7 @@ defmodule TdBgWeb.Router do
 
     get "/business_concept_filters", BusinessConceptFilterController, :index
 
+    resources "/business_concepts/comments", CommentController, except: [:new, :edit]
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
     get "/business_concepts/search", BusinessConceptController, :search
     get "/business_concepts/domains/:domain_id", BusinessConceptController, :index_children_business_concept
@@ -96,7 +97,6 @@ defmodule TdBgWeb.Router do
     get "/search/reindex_all", SearchController, :reindex_all
     delete "/search", SearchController, :delete
 
-    resources "/comments", CommentController, except: [:new, :edit]
     resources "/templates", TemplateController, except: [:new, :edit]
     get "/templates/load/:id", TemplateController, :load_and_show
     get "/domains/:domain_id/templates", TemplateController, :get_domain_templates
