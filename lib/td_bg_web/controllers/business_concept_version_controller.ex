@@ -67,7 +67,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def csv(conn, params) do
     user = get_current_user(conn)
-    concepts = Search.search_business_concept_versions(params, user, 0, 65_536)
+    concepts = Search.search_business_concept_versions(params, user, 0, 10_000)
     conn
       |> put_resp_content_type("text/csv;charset=utf-8")
       |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
