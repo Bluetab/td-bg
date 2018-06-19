@@ -59,6 +59,7 @@ defmodule TdBgWeb.Router do
 
     get "/taxonomy/roles", TaxonomyController, :roles
 
+    post "/business_concept_versions/csv", BusinessConceptVersionController, :csv
     put "/business_concept_versions/:id", BusinessConceptVersionController, :update
     resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :update] do
       post "/submit", BusinessConceptVersionController, :send_for_approval
@@ -79,6 +80,7 @@ defmodule TdBgWeb.Router do
 
     get "/business_concept_filters", BusinessConceptFilterController, :index
 
+    resources "/business_concepts/comments", CommentController, except: [:new, :edit]
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
     get "/business_concepts/search", BusinessConceptController, :search
     get "/business_concepts/domains/:domain_id", BusinessConceptController, :index_children_business_concept
