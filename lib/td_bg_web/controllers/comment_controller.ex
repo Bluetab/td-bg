@@ -51,7 +51,7 @@ defmodule TdBgWeb.CommentController do
       |> Map.put("user", %{"user_id" => current_user.id, "full_name" => current_user.full_name, "user_name" => current_user.user_name})
       |> is_timestamp_informed?
     with {:ok, %Comment{} = comment} <- Comments.create_comment(creation_attrs) do
-      audit = %{"audit" => %{"resource_id" => comment.resource_id, "resource_type" => comment.resource_type, "payload" => comment_params}}
+      audit = %{"audit" => %{"resource_id" => comment.id, "resource_type" => "comment", "payload" => comment_params}}
       Audit.create_event(conn, audit, @events.create_comment)
       conn
       |> put_status(:created)
@@ -95,7 +95,7 @@ defmodule TdBgWeb.CommentController do
     comment = Comments.get_comment!(id)
 
     with {:ok, %Comment{} = comment} <- Comments.update_comment(comment, comment_params) do
-      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept", "payload" => comment_params}}
+      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "comment", "payload" => comment_params}}
       Audit.create_event(conn, audit, @events.update_comment)
       render(conn, "show.json", comment: comment)
     end
@@ -114,7 +114,7 @@ defmodule TdBgWeb.CommentController do
   def delete(conn, %{"id" => id}) do
     comment = Comments.get_comment!(id)
     with {:ok, %Comment{}} <- Comments.delete_comment(comment) do
-      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "business_concept", "payload" => %{}}}
+      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "comment", "payload" => %{}}}
       Audit.create_event(conn, audit, @events.delete_comment)
       send_resp(conn, :no_content, "")
     end
