@@ -37,7 +37,7 @@ defmodule TdBg.BusinessConcept.Download do
     end
 
     list_to_encode
-    |> CSV.encode
+    |> CSV.encode(separator: ?;)
     |> Enum.to_list
   end
 
