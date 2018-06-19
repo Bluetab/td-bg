@@ -4,15 +4,36 @@ defmodule TdBg.BusinessConcept.Search do
   """
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions
+  alias TdBg.Search.Aggregations
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+
+  def get_filter_values(%{is_admin: true}) do
+    query = %{} |> create_query
+    search = %{query: query, aggs: Aggregations.aggregation_terms}
+    @search_service.get_filters(search)
+  end
+
+  def get_filter_values(%{id: user_id}) do
+    permissions = %{user_id: user_id} |> Permissions.get_domain_permissions()
+    get_filter_values(permissions)
+  end
+
+  def get_filter_values([]), do: %{}
+
+  def get_filter_values(permissions) do
+    filter = permissions |> create_filter_clause
+    query = %{} |> create_query(filter)
+    search = %{query: query, aggs: Aggregations.aggregation_terms}
+    @search_service.get_filters(search)
+  end
 
   def search_business_concept_versions(params, user, page \\ 0, size \\ 50)
 
   # Admin user search, no filters applied
   def search_business_concept_versions(params, %{is_admin: true}, page, size) do
     query = create_query(params)
-    search = %{from: page * size, size: size, query: query}
+    search = %{from: page * size, size: size, query: query, aggs: Aggregations.aggregation_terms}
 
     @search_service.search("business_concept", search)
     |> Enum.map(&Map.get(&1, "_source"))

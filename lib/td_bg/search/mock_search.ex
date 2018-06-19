@@ -43,4 +43,11 @@ defmodule TdBg.Search.MockSearch do
   end
 
   defp matches(_item, _query), do: false
+
+  def get_filters(_query) do
+    %{
+      "domain" => ["Domain 1", "Domain 2"],
+      "dynamic_field" => ["Value 1", "Value 2"]
+    }
+  end
 end
