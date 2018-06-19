@@ -52,7 +52,8 @@ defmodule TdBg.Mixfile do
       {:corsica, "~> 1.0"},
       {:phoenix_swagger, "~> 0.7.0"},
       {:ex_json_schema, "~> 0.5"},
-      {:json_diff, "~> 0.1.0"}
+      {:json_diff, "~> 0.1.0"},
+      {:csv, "~> 2.0.0"}
     ]
   end
 

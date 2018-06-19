@@ -8,6 +8,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   alias TdBg.Audit
   alias TdBg.BusinessConcept.Search
+  alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -62,6 +63,15 @@ defmodule TdBgWeb.BusinessConceptVersionController do
           BusinessConceptVersion
         )
     )
+  end
+
+  def csv(conn, params) do
+    user = get_current_user(conn)
+    concepts = Search.search_business_concept_versions(params, user, 0, 10_000)
+    conn
+      |> put_resp_content_type("text/csv;charset=utf-8")
+      |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
+      |> send_resp(200, Download.to_csv(concepts))
   end
 
   swagger_path :create do

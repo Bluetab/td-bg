@@ -59,6 +59,7 @@ defmodule TdBgWeb.Router do
 
     get "/taxonomy/roles", TaxonomyController, :roles
 
+    post "/business_concept_versions/csv", BusinessConceptVersionController, :csv
     put "/business_concept_versions/:id", BusinessConceptVersionController, :update
     resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :update] do
       post "/submit", BusinessConceptVersionController, :send_for_approval
