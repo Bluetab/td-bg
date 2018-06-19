@@ -575,6 +575,20 @@ defmodule TdBgWeb.SwaggerDefinitions do
           end)
         end
       end,
+      BusinessConceptVersionFilterRequest: swagger_schema do
+        properties do
+          query :string, "Query string", required: false
+          filters :object, "Filters", required: false
+        end
+        example %{
+          query: "searchterm",
+          filters: %{
+            domain: ["Domain1", "Domain2"],
+            status: ["draft"],
+            data_owner: ["user1"]
+          }
+        }
+      end,
       ConceptField: swagger_schema do
         title "Concept Field"
         description "Concept Field representation"

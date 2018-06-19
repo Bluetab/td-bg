@@ -157,11 +157,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       id = [create_version(domain, "two", published).business_concept.id | id]
       [create_version(domain, "two", published).business_concept.id | id]
 
-      conn = get(conn, business_concept_version_path(conn, :index), %{q: "two"})
+      conn = get(conn, business_concept_version_path(conn, :index), %{query: "two"})
       assert 2 == length(json_response(conn, 200)["data"])
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, business_concept_version_path(conn, :index), %{q: "one"})
+      conn = get(conn, business_concept_version_path(conn, :index), %{query: "one"})
       assert 1 == length(json_response(conn, 200)["data"])
     end
   end

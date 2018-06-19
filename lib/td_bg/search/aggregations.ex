@@ -10,7 +10,11 @@ defmodule TdBg.Search.Aggregations do
     end
   
     def aggregation_terms do
-      static_keywords = [{"domain", %{terms: %{field: "domain.name.raw"}}}]
+      static_keywords = [
+        {"domain", %{terms: %{field: "domain.name.raw"}}},
+        {"status", %{terms: %{field: "status"}}},
+        {"type", %{terms: %{field: "type"}}}
+      ]
       dynamic_keywords = Templates.list_templates()
         |> Enum.flat_map(&template_terms/1)
       (static_keywords ++ dynamic_keywords)
