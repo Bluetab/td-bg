@@ -94,6 +94,7 @@ defmodule TdBgWeb.Router do
     get "/search/reindex_all", SearchController, :reindex_all
     delete "/search", SearchController, :delete
 
+    resources "/comments", CommentController, except: [:new, :edit]
     resources "/templates", TemplateController, except: [:new, :edit]
     get "/templates/load/:id", TemplateController, :load_and_show
     get "/domains/:domain_id/templates", TemplateController, :get_domain_templates
