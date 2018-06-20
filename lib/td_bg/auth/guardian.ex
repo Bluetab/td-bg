@@ -18,7 +18,14 @@ defmodule TdBg.Auth.Guardian do
     # found in the `"sub"` key. In `above subject_for_token/2` we returned
     # the resource id so here we'll rely on that to look it up.
     sub = Poison.decode!(claims["sub"])
-    resource = %User{id: sub["id"], is_admin: sub["is_admin"], user_name: sub["user_name"]}
-    {:ok,  resource}
+
+    resource = %User{
+      id: sub["id"],
+      is_admin: sub["is_admin"],
+      user_name: sub["user_name"],
+      gids: claims["gids"]
+    }
+
+    {:ok, resource}
   end
 end

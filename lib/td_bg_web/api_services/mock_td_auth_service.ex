@@ -15,17 +15,19 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
   end
 
   def create_user(%{"user" => %{"user_name" => user_name, "full_name" => full_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}}) do
-    groups =
+    created_groups =
       groups
       |> Enum.map(&(create_group(%{"group" => &1})))
-      |> Enum.map(&(&1.name))
-    new_user = %User{id: User.gen_id_from_user_name(user_name),
-                     user_name: user_name,
-                     full_name: full_name,
-                     password: password,
-                     is_admin: is_admin,
-                     email: email,
-                     groups: groups}
+    new_user = %User{
+      id: User.gen_id_from_user_name(user_name),
+      user_name: user_name,
+      full_name: full_name,
+      password: password,
+      is_admin: is_admin,
+      email: email,
+      gids: created_groups |> Enum.map(&(&1.id)),
+      groups: created_groups |> Enum.map(&(&1.name))
+    }
     users = index()
     Agent.update(MockTdAuthService, &Map.put(&1, :users, users ++ [new_user]))
     new_user
