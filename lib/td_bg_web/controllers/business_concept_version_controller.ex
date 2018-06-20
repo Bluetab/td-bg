@@ -67,6 +67,37 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     )
   end
 
+  swagger_path :search do
+    post("/business_concept_versions/search")
+    description("Business Concept Versions")
+
+    parameters do
+      search(
+        :body, Schema.ref(:BusinessConceptVersionFilterRequest), "Search query and filter parameters"
+      )
+    end
+
+    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
+  end
+
+  def search(conn, params) do
+    user = get_current_user(conn)
+    business_concept_versions = Search.search_business_concept_versions(params, user)
+
+    render(
+      conn,
+      "list.json",
+      business_concept_versions: business_concept_versions,
+      hypermedia:
+        hypermedia_typed(
+          "business_concept_version",
+          conn,
+          business_concept_versions,
+          BusinessConceptVersion
+        )
+    )
+  end
+
   def csv(conn, params) do
     user = get_current_user(conn)
     concepts = Search.search_business_concept_versions(params, user, 0, 10_000)
