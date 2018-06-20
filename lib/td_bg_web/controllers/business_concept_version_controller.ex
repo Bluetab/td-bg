@@ -38,10 +38,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   swagger_path :index do
     get("/business_concept_versions")
-    description("List Business Concept Versions")
+    description("Business Concept Versions")
 
     parameters do
-      query(:path, :string, "Search query string", required: false)
+      search(
+        :body, Schema.ref(:BusinessConceptVersionFilterRequest), "Search query and filter parameters"
+      )
     end
 
     response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
@@ -51,36 +53,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = get_current_user(conn)
     business_concept_versions = Search.search_business_concept_versions(params, user)
 
-    render(
-      conn,
-      "list.json",
-      business_concept_versions: business_concept_versions,
-      hypermedia:
-        hypermedia_typed(
-          "business_concept_version",
-          conn,
-          business_concept_versions,
-          BusinessConceptVersion
-        )
-    )
-  end
-
-  swagger_path :search do
-    post("/business_concept_versions/search")
-    description("Search Business Concept Versions")
-
-    parameters do
-      search(
-        :body, Schema.ref(:BusinessConceptVersionFilterRequest), "Business Concept search attrs"
-      )
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
-  end
-
-  def search(conn, params) do
-    user = get_current_user(conn)
-    business_concept_versions = Search.search_business_concept_versions(params, user)
     render(
       conn,
       "list.json",
