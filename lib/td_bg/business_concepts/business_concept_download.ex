@@ -27,7 +27,7 @@ defmodule TdBg.BusinessConcept.Download do
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
     content_names_to_types  = Enum.reduce(content, %{}, &Map.put(&2, Map.get(&1, "name"), Map.get(&1, "type")))
 
-    headers = ["type", "name", "domain", "status"] ++ content_labels
+    headers = ["type", "name", "domain", "status", "description"] ++ content_labels
     concepts_list = concepts_to_list(content_names, content_names_to_types, concepts)
     list_to_encode = case add_separation do
       true ->
@@ -47,7 +47,8 @@ defmodule TdBg.BusinessConcept.Download do
       values = [concept["type"],
                 concept["name"],
                 concept["domain"]["name"],
-                concept["status"]]
+                concept["status"],
+                concept["description"]]
 
       acc ++ [Enum.reduce(content_fields, values,
               &(&2 ++ [Map.get(content, &1, "")]))]
