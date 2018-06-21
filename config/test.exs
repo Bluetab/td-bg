@@ -46,7 +46,7 @@ config :td_bg, :elasticsearch,
   es_port: 9200,
   type_name: "doc"
 
-  config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.MockTdAuditService,
-    audit_host: "localhost",
-    audit_port: "4007",
-    audit_domain: ""
+config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.MockTdAuditService,
+  audit_host: "localhost",
+  audit_port: "4007",
+  audit_domain: ""
