@@ -5,7 +5,6 @@ defmodule TdBgWeb.BusinessConceptFilterController do
 
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.BusinessConcept.Search
-  alias Guardian.Plug, as: GuardianPlug
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -20,12 +19,9 @@ defmodule TdBgWeb.BusinessConceptFilterController do
   end
 
   def index(conn, _params) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     filters = Search.get_filter_values(user)
     render(conn, "show.json", filters: filters)
   end
 
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
-  end
 end

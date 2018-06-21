@@ -8,7 +8,6 @@ defmodule TdBgWeb.TemplateController do
   alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
   alias TdBgWeb.TemplateSupport
-  alias Guardian.Plug, as: GuardianPlug
 
   @preprocess "preprocess"
 
@@ -163,7 +162,7 @@ defmodule TdBgWeb.TemplateController do
     response 200, "OK", Schema.ref(:TemplatesResponse)
   end
   def get_domain_templates(conn, %{"domain_id" => domain_id} = params) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     domain = Taxonomies.get_domain!(domain_id)
     templates = Templates.get_domain_templates(domain)
     templates = case Map.get(params, @preprocess, false) do
@@ -188,10 +187,6 @@ defmodule TdBgWeb.TemplateController do
     templates = Enum.map(templ, &Templates.get_template_by_name(Map.get(&1, "name")))
     Templates.add_templates_to_domain(domain, templates)
     render(conn, "index.json", templates: templates)
-  end
-
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
   end
 
 end

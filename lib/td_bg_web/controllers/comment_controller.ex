@@ -7,7 +7,6 @@ defmodule TdBgWeb.CommentController do
   alias TdBg.Comments.Comment
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Audit
-  alias Guardian.Plug, as: GuardianPlug
 
   action_fallback TdBgWeb.FallbackController
 
@@ -46,7 +45,7 @@ defmodule TdBgWeb.CommentController do
     response 400, "Client Error"
   end
   def create(conn, %{"comment" => comment_params}) do
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     creation_attrs = comment_params
       |> Map.put("user", %{"user_id" => current_user.id, "full_name" => current_user.full_name, "user_name" => current_user.user_name})
       |> is_timestamp_informed?

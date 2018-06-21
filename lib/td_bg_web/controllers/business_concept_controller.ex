@@ -13,7 +13,6 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Templates
-  alias Guardian.Plug, as: GuardianPlug
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
@@ -82,13 +81,13 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def update(conn, %{"id" => id, "business_concept" => business_concept_params}) do
+    user = conn.assigns[:current_user]
+
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
 
     concept_type = business_concept_version.business_concept.type
     concept_name = Map.get(business_concept_params, "name")
     %{:content => content_schema} = Templates.get_template_by_name(concept_type)
-
-    user = get_current_user(conn)
 
     business_concept_attrs = %{}
     |> Map.put("last_change_by", user.id)
@@ -131,10 +130,10 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def update_status(conn, %{"business_concept_id" => id, "business_concept" => %{"status" => new_status} = business_concept_params}) do
+    user = conn.assigns[:current_user]
 
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(id)
     status = business_concept_version.status
-    user = get_current_user(conn)
 
     draft = BusinessConcept.status.draft
     rejected = BusinessConcept.status.rejected
@@ -306,7 +305,7 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   def index_status(conn, status) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     business_concepts = build_list(user, status)
     render(conn, "index.json", business_concepts: business_concepts, hypermedia: hypermedia("business_concept", conn, business_concepts))
   end
@@ -353,9 +352,5 @@ defmodule TdBgWeb.BusinessConceptController do
     |> String.split(",")
     |> Enum.map(&String.trim(&1))
     Map.put(filter, name, list_value)
-  end
-
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
   end
 end

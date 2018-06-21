@@ -19,7 +19,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
-  alias Guardian.Plug, as: GuardianPlug
   alias TdBgWeb.ConceptFieldView
   alias TdBgWeb.DataStructureView
   alias TdBgWeb.DataFieldView
@@ -50,7 +49,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def index(conn, params) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     business_concept_versions = Search.search_business_concept_versions(params, user)
 
     render(
@@ -81,7 +80,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def search(conn, params) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     business_concept_versions = Search.search_business_concept_versions(params, user)
 
     render(
@@ -99,7 +98,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def csv(conn, params) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     concepts = Search.search_business_concept_versions(params, user, 0, 10_000)
     conn
       |> put_resp_content_type("text/csv", "utf-8")
@@ -125,6 +124,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def create(conn, %{"business_concept_version" => business_concept_params}) do
+    user = conn.assigns[:current_user]
+
     # validate fields that if not present are throwing internal server errors in bc creation
     validate_required_bc_fields(business_concept_params)
 
@@ -133,7 +134,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     concept_name = Map.get(business_concept_params, "name")
 
-    user = get_current_user(conn)
     domain_id = Map.get(business_concept_params, "domain_id")
     domain = Taxonomies.get_domain!(domain_id)
 
@@ -214,12 +214,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def versions(conn, %{"business_concept_id" => business_concept_id}) do
+    user = conn.assigns[:current_user]
+
     business_concept_version =
       BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
 
     business_concept = business_concept_version.business_concept
-
-    user = get_current_user(conn)
 
     with true <- can?(user, view_versions(business_concept_version)) do
       allowed_status = get_allowed_version_status_by_role(user, business_concept)
@@ -307,8 +307,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def delete(conn, %{"id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    user = get_current_user(conn)
 
     with true <- can?(user, delete(business_concept_version)),
          {:ok, %BusinessConceptVersion{}} <-
@@ -342,12 +342,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def send_for_approval(conn, %{"business_concept_version_id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     draft = BusinessConcept.status().draft
 
     case {business_concept_version.status, business_concept_version.current} do
       {^draft, true} ->
-        user = get_current_user(conn)
         send_for_approval(conn, user, business_concept_version)
 
       _ ->
@@ -372,12 +372,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def publish(conn, %{"business_concept_version_id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     pending_approval = BusinessConcept.status().pending_approval
 
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
-        user = get_current_user(conn)
         publish(conn, user, business_concept_version)
 
       _ ->
@@ -403,12 +403,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def reject(conn, %{"business_concept_version_id" => id} = params) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     pending_approval = BusinessConcept.status().pending_approval
 
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
-        user = get_current_user(conn)
         reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
 
       _ ->
@@ -433,12 +433,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def undo_rejection(conn, %{"business_concept_version_id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     rejected = BusinessConcept.status().rejected
 
     case {business_concept_version.status, business_concept_version.current} do
       {^rejected, true} ->
-        user = get_current_user(conn)
         undo_rejection(conn, user, business_concept_version)
 
       _ ->
@@ -463,12 +463,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def version(conn, %{"business_concept_version_id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     published = BusinessConcept.status().published
 
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
-        user = get_current_user(conn)
         do_version(conn, user, business_concept_version)
 
       _ ->
@@ -493,12 +493,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def deprecate(conn, %{"business_concept_version_id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     published = BusinessConcept.status().published
 
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
-        user = get_current_user(conn)
         deprecate(conn, user, business_concept_version)
 
       _ ->
@@ -675,12 +675,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def update(conn, %{"id" => id, "business_concept_version" => business_concept_version_params}) do
+    user = conn.assigns[:current_user]
+
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     concept_type = business_concept_version.business_concept.type
     concept_name = Map.get(business_concept_version_params, "name")
     %{:content => content_schema} = Templates.get_template_by_name(concept_type)
-
-    user = get_current_user(conn)
 
     business_concept_attrs =
       %{}
@@ -759,8 +759,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def get_fields(conn, %{"business_concept_version_id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    user = get_current_user(conn)
 
     with true <- can?(user, get_fields(business_concept_version)) do
       concept_fields =
@@ -800,8 +800,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "business_concept_version_id" => id,
         "concept_field_id" => concept_field_id
       }) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    user = get_current_user(conn)
 
     with true <- can?(user, get_field(business_concept_version)) do
       concept_field = ConceptFields.get_concept_field!(concept_field_id)
@@ -836,9 +836,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def add_field(conn, %{"business_concept_version_id" => id, "field" => field} = params) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept_id = business_concept_version.business_concept_id
-    user = get_current_user(conn)
 
     create_attrs = %{concept: inspect(business_concept_id), field: field}
 
@@ -888,9 +888,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         conn,
         %{"business_concept_version_id" => id, "concept_field_id" => concept_field_id} = params
       ) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     concept_field = ConceptFields.get_concept_field!(concept_field_id)
-    user = get_current_user(conn)
 
     with true <- can?(user, delete_field(business_concept_version)) do
       ConceptFields.delete_concept_field(concept_field)
@@ -935,8 +935,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def get_data_structures(conn, %{"business_concept_version_id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    user = get_current_user(conn)
 
     with true <- can?(user, get_data_structures(business_concept_version)) do
       ous = BusinessConceptSupport.get_concept_ous(business_concept_version, user)
@@ -985,8 +985,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "business_concept_version_id" => id,
         "data_structure_id" => data_structure_id
       }) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    user = get_current_user(conn)
 
     with true <- can?(user, get_data_fields(business_concept_version)) do
       ous = BusinessConceptSupport.get_concept_ous(business_concept_version, user)
@@ -1027,7 +1027,4 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
-  end
 end

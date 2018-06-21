@@ -13,7 +13,6 @@ defmodule TdBgWeb.DomainController do
   alias TdBg.Taxonomies.Domain
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
-  alias Guardian.Plug, as: GuardianPlug
   alias TdBg.Permissions.AclEntry
   alias Canada.Can
 
@@ -60,7 +59,7 @@ defmodule TdBgWeb.DomainController do
   end
 
   def index(conn, params) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     domains = Taxonomies.list_domains()
 
     case params |> get_actions do
@@ -110,7 +109,7 @@ defmodule TdBgWeb.DomainController do
   end
 
   def create(conn, %{"domain" => domain_params}) do
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     domain = %Domain{} |> Map.merge(CollectionUtils.to_struct(Domain, domain_params))
 
     domain_parent =
@@ -178,7 +177,7 @@ defmodule TdBgWeb.DomainController do
   end
 
   def show(conn, %{"id" => id}) do
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     domain = Taxonomies.get_domain!(id)
 
     if can?(current_user, show(domain)) do
@@ -210,7 +209,7 @@ defmodule TdBgWeb.DomainController do
   end
 
   def update(conn, %{"id" => id, "domain" => domain_params}) do
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     domain = Taxonomies.get_domain!(id)
 
     if can?(current_user, update(domain)) do
@@ -242,7 +241,7 @@ defmodule TdBgWeb.DomainController do
   end
 
   def delete(conn, %{"id" => id}) do
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     domain = Taxonomies.get_domain!(id)
 
     if can?(current_user, delete(domain)) do
@@ -337,11 +336,11 @@ defmodule TdBgWeb.DomainController do
   end
 
   def create_acl_entry(conn, %{"domain_id" => id, "acl_entry" => acl_entry_params}) do
+    current_user = conn.assigns[:current_user]
     acl_entry_params =
       Map.merge(%{"resource_id" => id, "resource_type" => "domain"}, acl_entry_params)
 
     acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
-    current_user = GuardianPlug.current_resource(conn)
 
     if current_user |> can?(create(acl_entry)) do
       with {:ok, %AclEntry{} = acl_entry} <- Permissions.create_acl_entry(acl_entry_params) do
@@ -361,7 +360,4 @@ defmodule TdBgWeb.DomainController do
     end
   end
 
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
-  end
 end
