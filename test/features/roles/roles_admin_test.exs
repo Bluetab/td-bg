@@ -155,58 +155,6 @@ defmodule TdBg.RolesAdminTest do
     end)
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" lists taxonomy roles of user "(?<target_user_name>[^"]+)"$/,
-          %{user_name: user_name, target_user_name: target_user_name},
-          state do
-    token = get_user_token(user_name)
-    principal_id = find_or_create_user(target_user_name).id
-
-    {:ok, 200, %{"data" => taxonomy_roles}} =
-      get_taxonomy_roles(token, %{principal_id: principal_id})
-
-    {:ok, Map.merge(state, %{taxonomy_roles: taxonomy_roles, token: token})}
-  end
-
-  defthen ~r/^the system returns a taxonomy roles list with following data:$/,
-          %{table: expected_list},
-          state do
-    actual_list = state[:taxonomy_roles]
-
-    expected_list =
-      Enum.map(expected_list, fn role_entry ->
-        node_id =
-          case {role_entry.parent_name} do
-            {""} ->
-              get_domain_by_name(state[:token], role_entry.name)["id"]
-
-            {parent_name} ->
-              parent = get_domain_by_name(state[:token], parent_name)
-              get_domain_by_name_and_parent(state[:token], role_entry.name, parent["id"])["id"]
-          end
-
-        %{id: node_id, inherited: role_entry.inherited == "true", role: role_entry.role}
-      end)
-
-    expected_list =
-      Enum.map(expected_list, &%{"id" => &1.id, "role" => &1.role, "inherited" => &1.inherited})
-
-    roles_d =
-      case expected_list do
-        nil ->
-          %{}
-
-        d ->
-          d
-          |> Enum.reduce(%{}, fn x, acc ->
-            Map.put(acc, to_string(x["id"]), %{"role" => x["role"], "inherited" => x["inherited"]})
-          end)
-      end
-
-    actual_list = %{"domains" => remove_acl_entry_id(actual_list["domains"])}
-    expected_list = %{"domains" => roles_d}
-    assert JSONDiff.diff(actual_list, expected_list) == []
-  end
-
   defp remove_acl_entry_id(role_entries) do
     Enum.reduce(Map.keys(role_entries), %{}, fn resource_id, acc ->
       reduced_map = Map.delete(role_entries[resource_id], "acl_entry_id")
@@ -220,19 +168,6 @@ defmodule TdBg.RolesAdminTest do
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(domain_domain_url(TdBgWeb.Endpoint, :acl_entries, attrs.id), headers, [])
-
-    {:ok, status_code, resp |> JSON.decode!()}
-  end
-
-  defp get_taxonomy_roles(token, attrs) do
-    headers = get_header(token)
-
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(
-        taxonomy_url(TdBgWeb.Endpoint, :roles, principal_id: attrs.principal_id),
-        headers,
-        []
-      )
 
     {:ok, status_code, resp |> JSON.decode!()}
   end

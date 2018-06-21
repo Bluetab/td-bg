@@ -153,32 +153,3 @@ Feature: Roles Admin
         | Peter.sellers  |
         | publisher      |
         | tomclancy      |
-
-    Scenario: List taxonomy Domains roles
-      Given an existing Domain called "Domain 1"
-      And an existing Domain called "Domain 1.1" child of Domain "Domain 1"
-      And an existing Domain called "Domain 1.1.1" child of Domain "Domain 1.1"
-      And an existing Domain called "Domain 1.1.2" child of Domain "Domain 1.1"
-      And an existing Domain called "Domain 2"
-      And an existing Domain called "Domain 2.1" child of Domain "Domain 2"
-      And following users exist in the application:
-        | user           |
-        | pietro.alpin   |
-      And following users exist with the indicated role in Domain "Domain 1"
-        | user           | role    |
-        | pietro.alpin   | publish |
-      And following users exist with the indicated role in Domain "Domain 1.1.2"
-        | user           | role    |
-        | pietro.alpin   | watch   |
-      And following users exist with the indicated role in Domain "Domain 2"
-        | user           | role    |
-        | pietro.alpin   | create  |
-      When user "app-admin" lists taxonomy roles of user "pietro.alpin"
-      Then the system returns a taxonomy roles list with following data:
-        | name         | parent_name | role    | inherited
-        | Domain 1     |             | publish | false
-        | Domain 1.1   | Domain 1    | publish | true
-        | Domain 1.1.1 | Domain 1.1  | publish | true
-        | Domain 1.1.2 | Domain 1.1  | watch   | false
-        | Domain 2     |             | create  | false
-        | Domain 2.1   | Domain 2    | create  | true
