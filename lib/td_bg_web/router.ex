@@ -68,7 +68,6 @@ defmodule TdBgWeb.Router do
       post "/deprecate", BusinessConceptVersionController, :deprecate
       post "/version", BusinessConceptVersionController, :version
       post "/redraft", BusinessConceptVersionController, :undo_rejection
-      get "/taxonomy_roles", BusinessConceptVersionController, :taxonomy_roles
       get    "/fields/:concept_field_id", BusinessConceptVersionController, :get_field
       get    "/fields", BusinessConceptVersionController, :get_fields
       post   "/fields", BusinessConceptVersionController, :add_field

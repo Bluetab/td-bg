@@ -2,7 +2,6 @@ defmodule TdBg.Comments.Comment do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TdDd.Comments.Comment
 
   schema "comments" do
     field :content, :string
