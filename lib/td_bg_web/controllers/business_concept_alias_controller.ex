@@ -8,7 +8,6 @@ defmodule TdBgWeb.BusinessConceptAliasController do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptAlias
   alias TdBgWeb.SwaggerDefinitions
-  alias Guardian.Plug, as: GuardianPlug
   alias TdBgWeb.ErrorView
 
   action_fallback TdBgWeb.FallbackController
@@ -53,7 +52,7 @@ defmodule TdBgWeb.BusinessConceptAliasController do
     creation_attrs = business_concept_alias_params
     |> Map.put("business_concept_id", business_concept_id)
 
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     with true <- can?(user, create_alias(business_concept_version)),
          {:name_available} <- BusinessConcepts.check_business_concept_name_availability(concept_type, alias_name),
          {:ok, %BusinessConceptAlias{} = business_concept_alias} <- BusinessConcepts.create_business_concept_alias(creation_attrs) do
@@ -95,7 +94,7 @@ defmodule TdBgWeb.BusinessConceptAliasController do
     business_concept_id = business_concept_alias.business_concept_id
     business_concept_version = BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
 
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     with true <- can?(user, delete_alias(business_concept_version)),
          {:ok, %BusinessConceptAlias{}} <- BusinessConcepts.delete_business_concept_alias(business_concept_alias) do
       @search_service.put_search(business_concept_version)
@@ -110,10 +109,6 @@ defmodule TdBgWeb.BusinessConceptAliasController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
-  end
-
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
   end
 
 end

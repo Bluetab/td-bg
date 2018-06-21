@@ -5,7 +5,6 @@ defmodule TdBgWeb.AclEntryController do
   alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
   alias TdBgWeb.ErrorView
-  alias Guardian.Plug, as: GuardianPlug
   alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Utils.CollectionUtils
   import Canada
@@ -40,7 +39,7 @@ defmodule TdBgWeb.AclEntryController do
 
   def create(conn, %{"acl_entry" => acl_entry_params}) do
     acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
 
     if current_user |> can?(create(acl_entry)) do
       with {:ok, %AclEntry{} = acl_entry} <- Permissions.create_acl_entry(acl_entry_params) do
@@ -114,7 +113,7 @@ defmodule TdBgWeb.AclEntryController do
   end
 
   def update(conn, %{"id" => id, "acl_entry" => acl_entry_params}) do
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     acl_entry = Permissions.get_acl_entry!(id)
 
     if current_user |> can?(update(acl_entry)) do
@@ -145,7 +144,7 @@ defmodule TdBgWeb.AclEntryController do
   end
 
   def delete(conn, %{"id" => id}) do
-    current_user = GuardianPlug.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     acl_entry = Permissions.get_acl_entry!(id)
 
     if current_user |> can?(delete(acl_entry)) do

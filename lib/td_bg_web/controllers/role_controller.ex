@@ -8,7 +8,6 @@ defmodule TdBgWeb.RoleController do
   alias TdBg.Permissions
   alias TdBg.Permissions.Role
   alias TdBgWeb.SwaggerDefinitions
-  alias Guardian.Plug, as: GuardianPlug
 
   action_fallback TdBgWeb.FallbackController
 
@@ -39,7 +38,7 @@ defmodule TdBgWeb.RoleController do
   end
 
   def create(conn, %{"role" => role_params}) do
-    current_user = get_current_user(conn)
+    current_user = conn.assigns[:current_user]
     case can?(current_user, create(Role)) do
       true ->
         with {:ok, %Role{} = role} <- Permissions.create_role(role_params) do
@@ -89,7 +88,7 @@ defmodule TdBgWeb.RoleController do
   end
 
   def update(conn, %{"id" => id, "role" => role_params}) do
-    current_user = get_current_user(conn)
+    current_user = conn.assigns[:current_user]
     role = Permissions.get_role!(id)
     case can?(current_user, update(role)) do
       true ->
@@ -120,7 +119,7 @@ defmodule TdBgWeb.RoleController do
   end
 
   def delete(conn, %{"id" => id}) do
-    current_user = get_current_user(conn)
+    current_user = conn.assigns[:current_user]
     role = Permissions.get_role!(id)
     case can?(current_user, delete(role)) do
       true ->
@@ -154,10 +153,6 @@ defmodule TdBgWeb.RoleController do
     #role = Permissions.get_role_in_resource(%{user_id: user_id, domain_id: domain_id})
     roles = Permissions.get_all_roles(%{user_id: user_id, domain_id: domain_id})
     render(conn, "index.json", roles: roles)
-  end
-
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
   end
 
 end
