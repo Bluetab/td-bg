@@ -11,11 +11,10 @@ defmodule TdBgWeb.Router do
 
   pipeline :api_secure do
     plug TdBg.Auth.Pipeline.Secure
-    plug TdBg.Auth.CurrentUser
   end
 
   pipeline :api_authorized do
-    plug TdBg.Permissions.Plug.CurrentUser
+    plug TdBg.Auth.CurrentUser
     plug Guardian.Plug.LoadResource
   end
 

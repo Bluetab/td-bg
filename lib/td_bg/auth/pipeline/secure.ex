@@ -10,4 +10,8 @@ defmodule TdBg.Auth.Pipeline.Secure do
   #plug Guardian.Plug.VerifyHeader, claims: %{"typ" => "access"}
   # Load the user if either of the verifications worked
   plug Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"}
+
+  # Assign :current_user to connection
+  plug TdBg.Auth.CurrentUser
+
 end
