@@ -7,12 +7,20 @@ defmodule TdBg.Auth.CurrentUser do
   use Plug.Builder
   alias Guardian.Plug, as: GuardianPlug
 
-  plug(:current_user, key: :current_user)
+  plug :current_user
+  plug :preload_permission_cache
 
   def init(opts), do: opts
 
-  def current_user(conn, opts) do
+  def current_user(conn, _opts) do
     current_user = GuardianPlug.current_resource(conn)
-    conn |> assign(opts[:key], current_user)
+    
+    conn |> assign(:current_user, current_user)
+  end
+
+  def preload_permission_cache(conn, _opts) do
+    %{id: id, jti: jti, gids: gids} = conn.assigns[:current_user]
+    #%{id: id, jti: jti, gids: gids} |> IO.inspect
+    conn
   end
 end
