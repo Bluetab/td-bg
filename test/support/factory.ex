@@ -2,8 +2,8 @@ defmodule TdBg.Factory do
   @moduledoc false
   use ExMachina.Ecto, repo: TdBg.Repo
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptAlias
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ConceptFields.ConceptField
 
   def user_factory do

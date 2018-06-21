@@ -7,7 +7,7 @@ defmodule TdBg.PermissionsTest do
   import TdBgWeb.Authentication, only: :functions
 
   setup_all do
-    start_supervised MockTdAuthService
+    start_supervised(MockTdAuthService)
     :ok
   end
 
@@ -15,8 +15,11 @@ defmodule TdBg.PermissionsTest do
     alias TdBg.Permissions.Permission
 
     test "list_permissions/0 returns all permissions" do
-      current_permissions = Permission.permissions |> Map.values |> Enum.sort
-      stored_permissions  = Permissions.list_permissions() |> Enum.map(&Map.get(&1, :name)) |> Enum.sort
+      current_permissions = Permission.permissions() |> Map.values() |> Enum.sort()
+
+      stored_permissions =
+        Permissions.list_permissions() |> Enum.map(&Map.get(&1, :name)) |> Enum.sort()
+
       assert current_permissions == stored_permissions
     end
 
@@ -29,39 +32,63 @@ defmodule TdBg.PermissionsTest do
   describe "acl_entries" do
     alias TdBg.Permissions.AclEntry
 
-    @update_attrs %{principal_id: 43, principal_type: "user", resource_id: 43, resource_type: "domain"}
+    @update_attrs %{
+      principal_id: 43,
+      principal_type: "user",
+      resource_id: 43,
+      resource_type: "domain"
+    }
     @invalid_attrs %{principal_id: nil, principal_type: nil, resource_id: nil, resource_type: nil}
 
     def acl_entry_fixture do
       user = build(:user)
       domain = insert(:domain)
       role = Permissions.get_role_by_name("watch")
-      acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
+
+      acl_entry_attrs =
+        insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
+
       acl_entry_attrs
     end
 
     defp get_comparable_acl_entry_fields(acl_entry) do
-      Map.take(acl_entry, ["principal_id", "principal_type", "resource_id", "resource_type", "role_id"])
+      Map.take(acl_entry, [
+        "principal_id",
+        "principal_type",
+        "resource_id",
+        "resource_type",
+        "role_id"
+      ])
     end
 
     test "list_acl_entries/0 returns all acl_entries" do
       acl_entry = acl_entry_fixture()
       acl_entry = get_comparable_acl_entry_fields(acl_entry)
-      acl_entries = Enum.map(Permissions.list_acl_entries(), &(get_comparable_acl_entry_fields(&1)))
+      acl_entries = Enum.map(Permissions.list_acl_entries(), &get_comparable_acl_entry_fields(&1))
       assert acl_entries == [acl_entry]
     end
 
     test "get_acl_entry!/1 returns the acl_entry with given id" do
       acl_entry = acl_entry_fixture()
       get_acl_entry = Permissions.get_acl_entry!(acl_entry.id)
-      assert get_comparable_acl_entry_fields(get_acl_entry)  == get_comparable_acl_entry_fields(acl_entry)
+
+      assert get_comparable_acl_entry_fields(get_acl_entry) ==
+               get_comparable_acl_entry_fields(acl_entry)
     end
 
     test "create_acl_entry/1 with valid data creates a acl_entry" do
       user = build(:user)
       domain = insert(:domain)
       role = Permissions.get_role_by_name("watch")
-      valid_attrs = %{principal_id: user.id, principal_type: "user", resource_id: domain.id, resource_type: "domain", role_id: role.id}
+
+      valid_attrs = %{
+        principal_id: user.id,
+        principal_type: "user",
+        resource_id: domain.id,
+        resource_type: "domain",
+        role_id: role.id
+      }
+
       {:ok, acl_entry = %AclEntry{}} = Permissions.create_acl_entry(valid_attrs)
       assert acl_entry.principal_id == user.id
       assert acl_entry.principal_type == "user"
@@ -124,7 +151,8 @@ defmodule TdBg.PermissionsTest do
     end
 
     test "list_roles/0 returns all roles" do
-      assert length(Permissions.list_roles()) == 4 # admin, watch, create, publish
+      # admin, watch, create, publish
+      assert length(Permissions.list_roles()) == 4
     end
 
     test "get_role!/1 returns the role with given id" do
@@ -167,8 +195,8 @@ defmodule TdBg.PermissionsTest do
   end
 
   describe "role permissions" do
-    alias TdBg.Permissions.Role
     alias TdBg.Permissions.Permission
+    alias TdBg.Permissions.Role
 
     @role_attrs %{name: "rolename"}
 
@@ -180,7 +208,7 @@ defmodule TdBg.PermissionsTest do
     test "add_permissions_to_role/2 adds permissions to a role" do
       Permissions.create_role(@role_attrs)
 
-      permissions = Permissions.list_permissions
+      permissions = Permissions.list_permissions()
       permissions = Enum.sort(permissions, &(&1.name < &2.name))
 
       role = Permissions.get_role_by_name(@role_attrs.name)
@@ -196,7 +224,7 @@ defmodule TdBg.PermissionsTest do
     test "add_permissions_to_role/2 delete all permissions" do
       Permissions.create_role(@role_attrs)
 
-      permissions = Permissions.list_permissions
+      permissions = Permissions.list_permissions()
       permissions = Enum.sort(permissions, &(&1.name < &2.name))
 
       role = Permissions.get_role_by_name(@role_attrs.name)
@@ -224,7 +252,9 @@ defmodule TdBg.PermissionsTest do
       permission = insert(:permission)
       role = insert(:role, permissions: [permission])
       insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
-      assert Permissions.get_permissions_in_resource(%{user_id: user.id, domain_id: domain.id}) == [permission.name]
+
+      assert Permissions.get_permissions_in_resource(%{user_id: user.id, domain_id: domain.id}) ==
+               [permission.name]
     end
 
     test "authorize?/1 check permission" do
@@ -234,8 +264,18 @@ defmodule TdBg.PermissionsTest do
       permission = insert(:permission)
       role = insert(:role, permissions: [permission])
       insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
-      assert Permissions.authorized?(%{user_id: user.id, domain_id: domain.id, permission: permission.name})
-      assert !Permissions.authorized?(%{user_id: user.id, domain_id: domain.id, permission: "notienepermiso"})
+
+      assert Permissions.authorized?(%{
+               user_id: user.id,
+               domain_id: domain.id,
+               permission: permission.name
+             })
+
+      assert !Permissions.authorized?(%{
+               user_id: user.id,
+               domain_id: domain.id,
+               permission: "notienepermiso"
+             })
     end
   end
 end

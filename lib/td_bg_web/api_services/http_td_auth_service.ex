@@ -2,9 +2,9 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   @moduledoc false
 
   alias Poison, as: JSON
-  alias TdBg.Utils.CollectionUtils
-  alias TdBg.Accounts.User
   alias TdBg.Accounts.Group
+  alias TdBg.Accounts.User
+  alias TdBg.Utils.CollectionUtils
 
   defp get_config do
     Application.get_env(:td_bg, :auth_service)

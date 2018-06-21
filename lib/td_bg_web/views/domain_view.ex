@@ -1,10 +1,10 @@
 defmodule TdBgWeb.DomainView do
   use TdBgWeb, :view
+  alias TdBg.Accounts.Group
+  alias TdBg.Accounts.User
   alias TdBgWeb.DomainView
   alias TdBgWeb.GroupView
   alias TdBgWeb.UserView
-  alias TdBg.Accounts.User
-  alias TdBg.Accounts.Group
   use TdBg.Hypermedia, :view
 
   def render("index.json", %{domains: domains, hypermedia: hypermedia}) do

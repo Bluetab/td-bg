@@ -1,5 +1,5 @@
 defmodule TdBgWeb.Hypermedia.HypermediaCollection do
-  @moduledoc """
-  """
+  @moduledoc false
+
   defstruct [:collection_hypermedia, :collection]
 end

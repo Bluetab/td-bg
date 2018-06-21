@@ -4,10 +4,9 @@ defmodule TdBgWeb.PermissionController do
 
   import Canada, only: [can?: 2]
 
-  alias TdBgWeb.ErrorView
   alias TdBg.Permissions
+  alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
-  alias Guardian.Plug, as: GuardianPlug
 
   action_fallback TdBgWeb.FallbackController
 
@@ -68,7 +67,7 @@ defmodule TdBgWeb.PermissionController do
   end
 
   def add_permissions_to_role(conn, %{"role_id" => role_id, "permissions" => perms}) do
-    current_user = get_current_user(conn)
+    current_user = conn.assigns[:current_user]
     role = Permissions.get_role!(role_id)
     case can?(current_user, add_permissions_to_role(role)) do
       true ->
@@ -80,10 +79,6 @@ defmodule TdBgWeb.PermissionController do
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
     end
-  end
-
-  defp get_current_user(conn) do
-    GuardianPlug.current_resource(conn)
   end
 
 end

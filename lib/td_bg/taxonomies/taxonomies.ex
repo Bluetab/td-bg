@@ -4,11 +4,11 @@ defmodule TdBg.Taxonomies do
   """
 
   import Ecto.Query, warn: false
-  alias TdBg.Repo
-  alias TdBg.Taxonomies.Domain
+  alias Ecto.Multi
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.AclEntry
-  alias Ecto.Multi
+  alias TdBg.Repo
+  alias TdBg.Taxonomies.Domain
 
   @doc """
   Returns the list of domains.

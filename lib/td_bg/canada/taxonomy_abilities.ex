@@ -1,10 +1,10 @@
 defmodule TdBg.Canada.TaxonomyAbilities do
   @moduledoc false
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies.Domain
   alias TdBg.Permissions
-  alias TdBg.Permissions.Permission
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.Permission
+  alias TdBg.Taxonomies.Domain
 
   def can?(%User{id: user_id}, :list, Domain) do
     permissions = [

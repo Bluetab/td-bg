@@ -1,8 +1,8 @@
 defmodule TdBg.ConceptFieldsTests do
   use TdBg.DataCase
 
-  alias TdBg.ConceptFields
   alias Ecto.NoResultsError
+  alias TdBg.ConceptFields
 
   describe "concept_fields" do
 

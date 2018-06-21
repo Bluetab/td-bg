@@ -1,6 +1,6 @@
 defmodule TdBgWeb.Hypermedia.HypermediaViewHelper do
-  @moduledoc """
-  """
+  @moduledoc false
+
   import Phoenix.View
   alias TdBgWeb.Hypermedia.Link
 

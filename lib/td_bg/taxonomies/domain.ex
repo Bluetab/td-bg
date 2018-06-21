@@ -2,9 +2,9 @@ defmodule TdBg.Taxonomies.Domain do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+  alias TdBg.Searchable
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBg.Searchable
   alias TdBg.Templates.Template
 
   @behaviour Searchable

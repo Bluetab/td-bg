@@ -4,9 +4,9 @@ defmodule TdBgWeb.RoleControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Permissions
   alias TdBg.Permissions.Role
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{name: "some name"}
   @update_attrs %{name: "some updated name"}

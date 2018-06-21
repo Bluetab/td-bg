@@ -3,11 +3,10 @@ defmodule TdBgWeb.UserController do
   use PhoenixSwagger
   alias TdBg.Accounts.User
   alias TdBg.Canada.BusinessConceptAbilities
-  alias TdBg.Taxonomies.Domain
   alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
   alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.UserView
-  alias Guardian.Plug, as: GuardianPlug
 
   action_fallback TdBgWeb.FallbackController
 
@@ -33,7 +32,7 @@ defmodule TdBgWeb.UserController do
   end
 
   def user_domains(conn, _params) do
-    user = get_current_user(conn)
+    user = conn.assigns[:current_user]
     d_all = Taxonomies.list_domains()
     list_filtered_domains = Enum.filter(d_all,
       fn(domain) ->
@@ -43,9 +42,5 @@ defmodule TdBgWeb.UserController do
     render(conn, UserView, "user_domains.json",
       %{user_domains: list_filtered_domains})
   end
-
- defp get_current_user(conn) do
-   GuardianPlug.current_resource(conn)
- end
 
 end

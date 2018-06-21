@@ -4,9 +4,9 @@ defmodule TdBg.ConceptFields do
   """
 
   import Ecto.Query, warn: false
-  alias ValidationError
-  alias TdBg.Repo
   alias TdBg.ConceptFields.ConceptField
+  alias TdBg.Repo
+  alias ValidationError
 
   def list_concept_fields(concept) do
     Repo.all(from(r in ConceptField,

@@ -1,8 +1,8 @@
 defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
-  alias TdBg.Taxonomies
   alias TdBg.Permissions
+  alias TdBg.Taxonomies
 
   describe "domains" do
     alias TdBg.Taxonomies.Domain

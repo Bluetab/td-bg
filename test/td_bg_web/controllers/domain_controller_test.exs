@@ -4,10 +4,10 @@ defmodule TdBgWeb.DomainControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
+  alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBg.Permissions
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{description: "some description", name: "some name"}
   @update_attrs %{description: "some updated description", name: "some updated name"}

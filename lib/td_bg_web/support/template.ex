@@ -2,10 +2,10 @@ defmodule TdBgWeb.TemplateSupport do
   @moduledoc false
 
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies.Domain
   alias TdBg.Permissions
   alias TdBg.Permissions.Role
   alias TdBg.Repo
+  alias TdBg.Taxonomies.Domain
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 

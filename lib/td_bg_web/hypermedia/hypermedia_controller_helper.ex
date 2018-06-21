@@ -1,12 +1,10 @@
 defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
-  @moduledoc """
-  """
+  @moduledoc false
 
   alias Gettext.Interpolation
-  alias TdBgWeb.Router
-  alias TdBgWeb.Hypermedia.Link
   alias TdBgWeb.Hypermedia.HypermediaCollection
-  alias Guardian.Plug, as: Guardian
+  alias TdBgWeb.Hypermedia.Link
+  alias TdBgWeb.Router
   import Canada.Can
 
   def hypermedia_typed(helper, conn, resource, resource_type, nested \\ [])
@@ -44,7 +42,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
   end
 
   defp hypermedia_impl(helper, conn, %{}, resource_type) do
-    current_user = Guardian.current_resource(conn)
+    current_user = conn.assigns[:current_user]
 
     Router.__routes__
     |> Enum.filter(&(!is_nil &1.helper))
@@ -56,7 +54,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
 
   defp hypermedia_impl(helper, conn, resource)
   defp hypermedia_impl(helper, conn, resource) do
-      current_user = Guardian.current_resource(conn)
+    current_user = conn.assigns[:current_user]
 
       Router.__routes__
       |> Enum.filter(&(!is_nil &1.helper))
@@ -87,7 +85,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
     hypermedia_nested(helper, conn, struct_to_map(resource))
   end
   defp hypermedia_nested(helper, conn, resource) do
-    current_user = Guardian.current_resource(conn)
+    current_user = conn.assigns[:current_user]
     Router.__routes__
     |> Enum.filter(&(&1.helper == helper and &1.opts == :index))
     |> Enum.filter(&(can?(current_user, &1.opts, resource)))
