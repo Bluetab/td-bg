@@ -2,11 +2,11 @@ defmodule TdBgWeb.BusinessConceptSupport do
   @moduledoc false
   require Logger
   use TdBgWeb, :controller
-  alias TdBgWeb.ErrorView
-  alias TdBg.Taxonomies
-  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
+  alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
+  alias TdBgWeb.ErrorView
 
   import Canada, only: [can?: 2]
 

@@ -9,9 +9,9 @@ defmodule TdBg.BusinessConceptModificationTest do
   import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps TdBg.BusinessConceptSteps
   import_steps TdBg.DomainSteps

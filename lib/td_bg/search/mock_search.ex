@@ -1,9 +1,9 @@
 defmodule TdBg.Search.MockSearch do
   @moduledoc false
 
+  alias Poison
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias Poison
 
   def put_search(_something) do
   end

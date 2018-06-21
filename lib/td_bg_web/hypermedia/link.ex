@@ -1,5 +1,5 @@
 defmodule TdBgWeb.Hypermedia.Link do
-  @moduledoc """
-  """
+  @moduledoc false
+
   defstruct [:action, :path, :method, :schema]
 end

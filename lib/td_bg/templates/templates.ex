@@ -6,10 +6,10 @@ defmodule TdBg.Templates do
   import Ecto.Query, warn: false
   alias TdBg.Repo
 
-  alias TdBg.Templates.Template
-  alias TdBg.Taxonomies.Domain
-  alias TdBg.Taxonomies
   alias Ecto.Changeset
+  alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
+  alias TdBg.Templates.Template
 
   @doc """
   Returns the list of templates.

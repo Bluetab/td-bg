@@ -3,8 +3,8 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
 
   use Agent
 
-  alias TdBg.Accounts.User
   alias TdBg.Accounts.Group
+  alias TdBg.Accounts.User
 
   def start_link(_) do
     Agent.start_link(fn -> %{} end, name: MockTdAuthService)

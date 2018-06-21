@@ -5,24 +5,24 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Taxonomies
   alias TdBg.Searchable
+  alias TdBg.Taxonomies
 
   @behaviour Searchable
 
   schema "business_concept_versions" do
-    field :content, :map
-    field :related_to, {:array, :integer}
-    field :description, :string
-    field :last_change_at, :utc_datetime
-    field :mod_comments, :string
-    field :last_change_by, :integer
-    field :name, :string
-    field :reject_reason, :string
-    field :status, :string
-    field :current, :boolean, default: true
-    field :version, :integer
-    belongs_to :business_concept, BusinessConcept, on_replace: :update
+    field(:content, :map)
+    field(:related_to, {:array, :integer})
+    field(:description, :string)
+    field(:last_change_at, :utc_datetime)
+    field(:mod_comments, :string)
+    field(:last_change_by, :integer)
+    field(:name, :string)
+    field(:reject_reason, :string)
+    field(:status, :string)
+    field(:current, :boolean, default: true)
+    field(:version, :integer)
+    belongs_to(:business_concept, BusinessConcept, on_replace: :update)
 
     timestamps()
   end
@@ -30,20 +30,45 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   @doc false
   def create_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [:content, :related_to, :name, :description, :last_change_by, :last_change_at, :version, :mod_comments])
+    |> cast(attrs, [
+      :content,
+      :related_to,
+      :name,
+      :description,
+      :last_change_by,
+      :last_change_at,
+      :version,
+      :mod_comments
+    ])
     |> put_assoc(:business_concept, attrs.business_concept)
-    |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at, :version, :business_concept])
-    |> put_change(:status, BusinessConcept.status.draft)
+    |> validate_required([
+      :content,
+      :related_to,
+      :name,
+      :last_change_by,
+      :last_change_at,
+      :version,
+      :business_concept
+    ])
+    |> put_change(:status, BusinessConcept.status().draft)
     |> validate_length(:name, max: 255)
-    |> validate_length(:description,  max: 500)
+    |> validate_length(:description, max: 500)
     |> validate_length(:mod_comments, max: 500)
   end
 
   def update_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [:content, :related_to, :name, :description, :last_change_by, :last_change_at, :mod_comments])
+    |> cast(attrs, [
+      :content,
+      :related_to,
+      :name,
+      :description,
+      :last_change_by,
+      :last_change_at,
+      :mod_comments
+    ])
     |> cast_assoc(:business_concept)
-    |> put_change(:status, BusinessConcept.status.draft)
+    |> put_change(:status, BusinessConcept.status().draft)
     |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at])
     |> validate_length(:name, max: 255)
     |> validate_length(:description, max: 500)
@@ -55,7 +80,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(attrs, [:status])
     |> validate_required([:status])
-    |> validate_inclusion(:status, Map.values(BusinessConcept.status))
+    |> validate_inclusion(:status, Map.values(BusinessConcept.status()))
   end
 
   @doc false
@@ -79,20 +104,40 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(attrs, [:reject_reason])
     |> validate_length(:reject_reason, max: 500)
-    |> put_change(:status, BusinessConcept.status.rejected)
+    |> put_change(:status, BusinessConcept.status().rejected)
   end
 
   @doc false
   def changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [:name, :description, :content, :last_change_by, :last_change_at, :status, :version, :reject_reason, :mod_comments])
-    |> validate_required([:name, :description, :content, :last_change_by, :last_change_at, :status, :version, :reject_reason, :mod_comments])
+    |> cast(attrs, [
+      :name,
+      :description,
+      :content,
+      :last_change_by,
+      :last_change_at,
+      :status,
+      :version,
+      :reject_reason,
+      :mod_comments
+    ])
+    |> validate_required([
+      :name,
+      :description,
+      :content,
+      :last_change_by,
+      :last_change_at,
+      :status,
+      :version,
+      :reject_reason,
+      :mod_comments
+    ])
   end
 
   def search_fields(%BusinessConceptVersion{} = concept) do
     domain = Taxonomies.get_domain!(concept.business_concept.domain_id)
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
-    aliases = Enum.map(aliases, &(%{name: &1.name}))
+    aliases = Enum.map(aliases, &%{name: &1.name})
     domain_ids = Taxonomies.get_parent_ids(domain, true)
 
     %{
@@ -118,5 +163,4 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def index_name do
     "business_concept"
   end
-
 end

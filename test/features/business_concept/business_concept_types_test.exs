@@ -8,25 +8,24 @@ defmodule TdBg.BusinessConceptTypesTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBg.BusinessConceptSteps
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
-  import_feature TdBg.BusinessConceptSteps
-  import_steps TdBg.ResultSteps
+  import_feature(TdBg.BusinessConceptSteps)
+  import_steps(TdBg.ResultSteps)
 
   import TdBg.BusinessConceptSteps
   import TdBg.ResultSteps
-  
+
   setup_all do
-    start_supervised MockTdAuthService
+    start_supervised(MockTdAuthService)
     :ok
   end
 
   setup do
-    on_exit fn ->
+    on_exit(fn ->
       rm_business_concept_schema()
-    end
+    end)
   end
-
 end

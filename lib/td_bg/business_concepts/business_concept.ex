@@ -2,11 +2,11 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TdBg.Taxonomies.Domain
-  alias TdBg.Permissions.Permission
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptAlias
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Permissions.Permission
+  alias TdBg.Taxonomies.Domain
 
   @status %{draft: "draft",
             pending_approval: "pending_approval",

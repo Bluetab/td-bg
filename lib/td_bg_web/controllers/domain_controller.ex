@@ -5,16 +5,16 @@ defmodule TdBgWeb.DomainController do
 
   import Canada, only: [can?: 2]
 
-  alias TdBgWeb.TaxonomySupport
-  alias TdBgWeb.ErrorView
-  alias TdBgWeb.UserView
-  alias TdBg.Taxonomies
-  alias TdBg.Permissions
-  alias TdBg.Taxonomies.Domain
-  alias TdBgWeb.SwaggerDefinitions
-  alias TdBg.Utils.CollectionUtils
-  alias TdBg.Permissions.AclEntry
   alias Canada.Can
+  alias TdBg.Permissions
+  alias TdBg.Permissions.AclEntry
+  alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
+  alias TdBg.Utils.CollectionUtils
+  alias TdBgWeb.ErrorView
+  alias TdBgWeb.SwaggerDefinitions
+  alias TdBgWeb.TaxonomySupport
+  alias TdBgWeb.UserView
 
   action_fallback(TdBgWeb.FallbackController)
 

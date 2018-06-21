@@ -1,11 +1,10 @@
 defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
-  @moduledoc """
-  """
+  @moduledoc false
 
   alias Gettext.Interpolation
-  alias TdBgWeb.Router
-  alias TdBgWeb.Hypermedia.Link
   alias TdBgWeb.Hypermedia.HypermediaCollection
+  alias TdBgWeb.Hypermedia.Link
+  alias TdBgWeb.Router
   import Canada.Can
 
   def hypermedia_typed(helper, conn, resource, resource_type, nested \\ [])

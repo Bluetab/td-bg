@@ -7,23 +7,23 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   import Canada, only: [can?: 2]
 
   alias TdBg.Audit
-  alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcept.Download
+  alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ConceptFields
-  alias TdBgWeb.ErrorView
-  alias TdBgWeb.BusinessConceptSupport
-  alias TdBgWeb.SwaggerDefinitions
   alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
-  alias TdBgWeb.ConceptFieldView
-  alias TdBgWeb.DataStructureView
-  alias TdBgWeb.DataFieldView
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.BusinessConceptSupport
+  alias TdBgWeb.BusinessConceptSupport
+  alias TdBgWeb.ConceptFieldView
+  alias TdBgWeb.DataFieldView
+  alias TdBgWeb.DataStructureView
+  alias TdBgWeb.ErrorView
+  alias TdBgWeb.SwaggerDefinitions
 
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
@@ -178,10 +178,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         BusinessConceptSupport.handle_bc_errors(conn, error)
     end
   rescue
-    validationError in ValidationError ->
+    validation_error in ValidationError ->
       conn
       |> put_status(:unprocessable_entity)
-      |> json(%{errors: %{"#{validationError.field}": [validationError.error]}})
+      |> json(%{errors: %{"#{validation_error.field}": [validation_error.error]}})
   end
 
   defp validate_required_bc_fields(attrs) do

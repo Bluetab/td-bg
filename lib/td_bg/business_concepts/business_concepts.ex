@@ -4,12 +4,12 @@ defmodule TdBg.BusinessConcepts do
   """
 
   import Ecto.Query, warn: false
-  alias TdBg.Repo
-  alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias ValidationError
   alias Ecto.Changeset
   alias Ecto.Multi
+  alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Repo
+  alias ValidationError
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 

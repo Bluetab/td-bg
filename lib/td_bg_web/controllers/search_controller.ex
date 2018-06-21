@@ -2,9 +2,9 @@
   use TdBgWeb, :controller
   use PhoenixSwagger
 
+  alias TdBg.ESClientApi
   alias TdBg.Search
   alias TdBg.Search.Indexer
-  alias TdBg.ESClientApi
 
   #  alias TdBgWeb.SwaggerDefinitions
 

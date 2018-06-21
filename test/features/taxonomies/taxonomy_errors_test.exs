@@ -6,8 +6,8 @@ defmodule TdBg.TaxonomyErrorsTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.BusinessConcept
   alias Poison, as: JSON
-  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps TdBg.BusinessConceptSteps
   import_steps TdBg.DomainSteps

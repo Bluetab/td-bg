@@ -9,8 +9,8 @@ defmodule TdBg.CommentsTest do
   import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdAuditService
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils

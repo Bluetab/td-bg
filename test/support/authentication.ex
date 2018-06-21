@@ -4,8 +4,8 @@ defmodule TdBgWeb.Authentication do
   add auth headers to requests
   """
   alias Phoenix.ConnTest
-  alias TdBg.Auth.Guardian
   alias TdBg.Accounts.User
+  alias TdBg.Auth.Guardian
   import Plug.Conn
   @headers {"Content-type", "application/json"}
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
@@ -18,10 +18,11 @@ defmodule TdBgWeb.Authentication do
 
   def recycle_and_put_headers(conn) do
     authorization_header = List.first(get_req_header(conn, "authorization"))
+
     conn
     |> ConnTest.recycle()
     |> put_req_header("authorization", authorization_header)
-    end
+  end
 
   def create_user_auth_conn(user) do
     {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
@@ -39,20 +40,46 @@ defmodule TdBgWeb.Authentication do
     password = Keyword.get(opts, :password, "secret")
     email = Keyword.get(opts, :email, "some@email.com")
     groups = Keyword.get(opts, :groups, [])
-    user = @td_auth_api.create_user(%{"user" => %{"user_name" => user_name, "full_name" => user_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}})
+
+    user =
+      @td_auth_api.create_user(%{
+        "user" => %{
+          "user_name" => user_name,
+          "full_name" => user_name,
+          "is_admin" => is_admin,
+          "password" => password,
+          "email" => email,
+          "groups" => groups
+        }
+      })
+
     user
   end
 
   def find_or_create_user(user_name, opts \\ []) do
-    user = case get_user_by_name(user_name) do
-      nil ->
-        is_admin = Keyword.get(opts, :is_admin, false)
-        password = Keyword.get(opts, :password, "secret")
-        email = Keyword.get(opts, :email, "some@email.com")
-        groups = Keyword.get(opts, :groups, [])
-        @td_auth_api.create_user(%{"user" => %{"user_name" => user_name, "full_name" => user_name, "is_admin" => is_admin, "password" => password, "email" => email, "groups" => groups}})
-      user -> user
-    end
+    user =
+      case get_user_by_name(user_name) do
+        nil ->
+          is_admin = Keyword.get(opts, :is_admin, false)
+          password = Keyword.get(opts, :password, "secret")
+          email = Keyword.get(opts, :email, "some@email.com")
+          groups = Keyword.get(opts, :groups, [])
+
+          @td_auth_api.create_user(%{
+            "user" => %{
+              "user_name" => user_name,
+              "full_name" => user_name,
+              "is_admin" => is_admin,
+              "password" => password,
+              "email" => email,
+              "groups" => groups
+            }
+          })
+
+        user ->
+          user
+      end
+
     user
   end
 
@@ -65,10 +92,10 @@ defmodule TdBgWeb.Authentication do
   end
 
   def build_user_token(%User{} = user) do
-      case Guardian.encode_and_sign(user) do
-        {:ok, jwt, _full_claims} -> jwt
-        _ -> raise "Problems encoding and signing a user"
-      end
+    case Guardian.encode_and_sign(user) do
+      {:ok, jwt, _full_claims} -> jwt
+      _ -> raise "Problems encoding and signing a user"
+    end
   end
 
   def build_user_token(user_name, opts \\ []) when is_binary(user_name) do

@@ -3,8 +3,8 @@ defmodule TdBgWeb.BusinessConceptFilterController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 
-  alias TdBgWeb.SwaggerDefinitions
   alias TdBg.BusinessConcept.Search
+  alias TdBgWeb.SwaggerDefinitions
 
   action_fallback(TdBgWeb.FallbackController)
 

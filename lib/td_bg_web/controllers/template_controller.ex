@@ -2,45 +2,49 @@ defmodule TdBgWeb.TemplateController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 
+  alias TdBg.Taxonomies
   alias TdBg.Templates
   alias TdBg.Templates.Template
-  alias TdBgWeb.SwaggerDefinitions
-  alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
+  alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.TemplateSupport
 
   @preprocess "preprocess"
 
-  action_fallback TdBgWeb.FallbackController
+  action_fallback(TdBgWeb.FallbackController)
 
   def swagger_definitions do
     SwaggerDefinitions.template_swagger_definitions()
   end
 
   swagger_path :index do
-    get "/templates"
-    description "List Templates"
-    response 200, "OK", Schema.ref(:TemplatesResponse)
+    get("/templates")
+    description("List Templates")
+    response(200, "OK", Schema.ref(:TemplatesResponse))
   end
+
   def index(conn, _params) do
     templates = Templates.list_templates()
     render(conn, "index.json", templates: templates)
   end
 
   swagger_path :create do
-    post "/templates"
-    description "Creates a Template"
-    produces "application/json"
+    post("/templates")
+    description("Creates a Template")
+    produces("application/json")
+
     parameters do
-      template :body, Schema.ref(:TemplateCreateUpdate), "Template create attrs"
+      template(:body, Schema.ref(:TemplateCreateUpdate), "Template create attrs")
     end
-    response 201, "Created", Schema.ref(:TemplateResponse)
-    response 400, "Client Error"
+
+    response(201, "Created", Schema.ref(:TemplateResponse))
+    response(400, "Client Error")
   end
+
   def create(conn, %{"template" => template}) do
-    with  false <- (is_nil(template["name"])),
-          true <- (is_nil(Templates.get_template_by_name(template["name"]))),
-          {:ok, %Template{} = template} <- Templates.create_template(template) do
+    with false <- is_nil(template["name"]),
+         true <- is_nil(Templates.get_template_by_name(template["name"])),
+         {:ok, %Template{} = template} <- Templates.create_template(template) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", template_path(conn, :show, template))
@@ -49,7 +53,8 @@ defmodule TdBgWeb.TemplateController do
       false ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{name: ["unique"]}})
+        |> json(%{errors: %{name: ["unique"]}})
+
       _error ->
         conn
         |> put_status(:unprocessable_entity)
@@ -58,69 +63,93 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :show do
-    get "/templates/{id}"
-    description "Show Template"
-    produces "application/json"
+    get("/templates/{id}")
+    description("Show Template")
+    produces("application/json")
+
     parameters do
-      id :path, :integer, "Template ID", required: true
+      id(:path, :integer, "Template ID", required: true)
     end
-    response 200, "OK", Schema.ref(:TemplateResponse)
-    response 400, "Client Error"
+
+    response(200, "OK", Schema.ref(:TemplateResponse))
+    response(400, "Client Error")
   end
+
   def show(conn, %{"id" => id}) do
     template = Templates.get_template!(id)
     render(conn, "show.json", template: template)
   end
 
   swagger_path :load_and_show do
-    get "/templates/load/{id}"
-    description "Load and show Template"
-    produces "application/json"
+    get("/templates/load/{id}")
+    description("Load and show Template")
+    produces("application/json")
+
     parameters do
-      id :path, :integer, "Template ID", required: true
+      id(:path, :integer, "Template ID", required: true)
     end
-    response 200, "OK", Schema.ref(:TemplateResponse)
-    response 400, "Client Error"
+
+    response(200, "OK", Schema.ref(:TemplateResponse))
+    response(400, "Client Error")
   end
+
   def load_and_show(conn, %{"id" => id}) do
     {:ok, template} = load_template(Templates.get_template!(id))
     render(conn, "show.json", template: template)
   end
 
   defp load_template(template) do
-    includes = List.first(Enum.filter(Map.get(template, :content), fn(field) -> field["includes"] end))["includes"]
+    includes =
+      List.first(Enum.filter(Map.get(template, :content), fn field -> field["includes"] end))[
+        "includes"
+      ]
+
     case includes do
       nil -> {:ok, template}
       _ -> load_template(template, includes)
     end
   end
+
   defp load_template(template, includes) do
-    includes = Enum.reduce(includes, [], fn(name, acc) ->
-      case Templates.get_template_by_name(name) do
-        nil -> acc
-        _ -> [name] ++ acc
-      end
-    end)
-    my_fields = Enum.reject(Map.get(template, :content), fn(field) -> field["includes"] end)
+    includes =
+      Enum.reduce(includes, [], fn name, acc ->
+        case Templates.get_template_by_name(name) do
+          nil -> acc
+          _ -> [name] ++ acc
+        end
+      end)
+
+    my_fields = Enum.reject(Map.get(template, :content), fn field -> field["includes"] end)
+
     case length(includes) do
-      0 -> {:ok, Map.put(template, :content, my_fields)}
+      0 ->
+        {:ok, Map.put(template, :content, my_fields)}
+
       _ ->
-        final_fields = my_fields ++ Enum.reduce(includes, [], fn(templ, acc) -> Map.get(Templates.get_template_by_name(templ), :content) ++ acc  end)
+        final_fields =
+          my_fields ++
+            Enum.reduce(includes, [], fn templ, acc ->
+              Map.get(Templates.get_template_by_name(templ), :content) ++ acc
+            end)
+
         {:ok, Map.put(template, :content, final_fields)}
     end
   end
 
   swagger_path :update do
-    put "/templates/{id}"
-    description "Updates Template"
-    produces "application/json"
+    put("/templates/{id}")
+    description("Updates Template")
+    produces("application/json")
+
     parameters do
-      template :body, Schema.ref(:TemplateCreateUpdate), "Template update attrs"
-      id :path, :integer, "Template ID", required: true
+      template(:body, Schema.ref(:TemplateCreateUpdate), "Template update attrs")
+      id(:path, :integer, "Template ID", required: true)
     end
-    response 200, "OK", Schema.ref(:TemplateResponse)
-    response 400, "Client Error"
+
+    response(200, "OK", Schema.ref(:TemplateResponse))
+    response(400, "Client Error")
   end
+
   def update(conn, %{"id" => id, "template" => template_params}) do
     template = Templates.get_template!(id)
 
@@ -130,17 +159,21 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :delete do
-    delete "/templates/{id}"
-    description "Delete Template"
-    produces "application/json"
+    delete("/templates/{id}")
+    description("Delete Template")
+    produces("application/json")
+
     parameters do
-      id :path, :integer, "Template ID", required: true
+      id(:path, :integer, "Template ID", required: true)
     end
-    response 204, "OK"
-    response 400, "Client Error"
+
+    response(204, "OK")
+    response(400, "Client Error")
   end
+
   def delete(conn, %{"id" => id}) do
     template = Templates.get_template!(id)
+
     with {:count, :domain, 0} <- Templates.count_related_domains(String.to_integer(id)),
          {:ok, %Template{}} <- Templates.delete_template(template) do
       send_resp(conn, :no_content, "")
@@ -153,40 +186,50 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :get_domain_templates do
-    get "/domains/{domain_id}/templates"
-    description "List Domain Templates"
+    get("/domains/{domain_id}/templates")
+    description("List Domain Templates")
+
     parameters do
-      domain_id :path, :integer, "Domain ID", required: true
-      preprocess :query, :boolean, "Apply template preproccessing", required: false
+      domain_id(:path, :integer, "Domain ID", required: true)
+      preprocess(:query, :boolean, "Apply template preproccessing", required: false)
     end
-    response 200, "OK", Schema.ref(:TemplatesResponse)
+
+    response(200, "OK", Schema.ref(:TemplatesResponse))
   end
+
   def get_domain_templates(conn, %{"domain_id" => domain_id} = params) do
     user = conn.assigns[:current_user]
     domain = Taxonomies.get_domain!(domain_id)
     templates = Templates.get_domain_templates(domain)
-    templates = case Map.get(params, @preprocess, false) do
-      "true" ->
-        TemplateSupport.preprocess_templates(templates, domain: domain, user: user)
-      _ -> templates
-    end
+
+    templates =
+      case Map.get(params, @preprocess, false) do
+        "true" ->
+          TemplateSupport.preprocess_templates(templates, domain: domain, user: user)
+
+        _ ->
+          templates
+      end
+
     render(conn, "index.json", templates: templates)
   end
 
   swagger_path :add_templates_to_domain do
-    post "/domains/{domain_id}/templates"
-    description "Add Templates to Domain"
+    post("/domains/{domain_id}/templates")
+    description("Add Templates to Domain")
+
     parameters do
-      domain_id :path, :integer, "Domain ID", required: true
-      templates :body, Schema.ref(:AddTemplatesToDomain), "Add Templates to Domain attrs"
+      domain_id(:path, :integer, "Domain ID", required: true)
+      templates(:body, Schema.ref(:AddTemplatesToDomain), "Add Templates to Domain attrs")
     end
-    response 200, "OK", Schema.ref(:TemplatesResponse)
+
+    response(200, "OK", Schema.ref(:TemplatesResponse))
   end
+
   def add_templates_to_domain(conn, %{"domain_id" => domain_id, "templates" => templ}) do
     domain = Taxonomies.get_domain!(domain_id)
     templates = Enum.map(templ, &Templates.get_template_by_name(Map.get(&1, "name")))
     Templates.add_templates_to_domain(domain, templates)
     render(conn, "index.json", templates: templates)
   end
-
 end

@@ -1,11 +1,11 @@
 defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies.Domain
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Permissions
   alias TdBg.Permissions.Permission
+  alias TdBg.Taxonomies.Domain
 
   def can?(%User{id: user_id, is_admin: is_admin}, :create_business_concept) do
     is_admin or

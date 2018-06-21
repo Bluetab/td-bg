@@ -1,6 +1,5 @@
 defmodule TdBg.Hypermedia do
-@moduledoc """
-"""
+  @moduledoc false
   def controller do
     quote do
       import TdBgWeb.Hypermedia.HypermediaControllerHelper

@@ -4,8 +4,8 @@ defmodule TdBgWeb.UserControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBg.Permissions
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised MockTdAuthService

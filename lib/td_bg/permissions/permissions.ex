@@ -4,14 +4,15 @@ defmodule TdBg.Permissions do
   """
 
   import Ecto.Query, warn: false
-  alias Ecto.Changeset
-  alias TdBg.Repo
 
-  alias TdBg.Permissions.Permission
+  alias Ecto.Changeset
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.Permission
   alias TdBg.Permissions.Role
-  alias TdBg.Taxonomies.Domain
+  alias TdBg.Repo
   alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
+
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   @doc """

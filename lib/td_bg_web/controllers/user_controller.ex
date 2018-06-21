@@ -3,8 +3,8 @@ defmodule TdBgWeb.UserController do
   use PhoenixSwagger
   alias TdBg.Accounts.User
   alias TdBg.Canada.BusinessConceptAbilities
-  alias TdBg.Taxonomies.Domain
   alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
   alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.UserView
 

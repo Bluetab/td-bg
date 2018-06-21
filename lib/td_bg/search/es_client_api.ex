@@ -10,32 +10,35 @@ defmodule TdBg.ESClientApi do
   """
   def create_indexes do
     json = File.read!(Path.join(:code.priv_dir(:td_bg), "static/indexes.json"))
-    json_decode = json |> Poison.decode!
-    Enum.map(json_decode, fn(x) ->
-     index_name = x |> Map.keys |> List.first
-     mapping = x[index_name] |> Poison.encode!
-     %HTTPoison.Response{body: _response, status_code: status} =
-       put!(index_name, mapping)
-      Logger.info "Create index #{index_name} status #{status}"
-    end)
+    json_decode = json |> Poison.decode!()
 
+    Enum.map(json_decode, fn x ->
+      index_name = x |> Map.keys() |> List.first()
+      mapping = x[index_name] |> Poison.encode!()
+      %HTTPoison.Response{body: _response, status_code: status} = put!(index_name, mapping)
+      Logger.info("Create index #{index_name} status #{status}")
+    end)
   end
 
   def bulk_index_content(items) do
-    json_bulk_data = items
-                     |> Enum.map(fn(item) -> [build_bulk_metadata(item.__struct__.index_name, item), build_bulk_doc(item)] end)
-                     |> List.flatten
-                     |> Enum.join("\n")
+    json_bulk_data =
+      items
+      |> Enum.map(fn item ->
+        [build_bulk_metadata(item.__struct__.index_name, item), build_bulk_doc(item)]
+      end)
+      |> List.flatten()
+      |> Enum.join("\n")
+
     post("_bulk", json_bulk_data <> "\n")
   end
 
   defp build_bulk_doc(item) do
     search_fields = item.__struct__.search_fields(item)
-    "#{search_fields |> Poison.encode!}"
+    "#{search_fields |> Poison.encode!()}"
   end
 
   defp build_bulk_metadata(index_name, item) do
-    "{\"index\": {\"_id\": #{item.id}, \"_type\": \"#{get_type_name()}\", \"_index\": \"#{index_name}\"}}"
+    ~s({"index": {"_id": #{item.id}, "_type": "#{get_type_name()}", "_index": "#{index_name}"}})
   end
 
   def index_content(index_name, id, body) do
@@ -47,7 +50,7 @@ defmodule TdBg.ESClientApi do
   end
 
   def search_es(index_name, query) do
-    post("#{index_name}/" <> "_search/", query |> JSON.encode!)
+    post("#{index_name}/" <> "_search/", query |> JSON.encode!())
   end
 
   defp get_type_name do
@@ -64,14 +67,13 @@ defmodule TdBg.ESClientApi do
   """
   def delete_indexes(options \\ []) do
     json = File.read!(Path.join(:code.priv_dir(:td_bg), "static/indexes.json"))
-    json_decode = json |> Poison.decode!
-    Enum.map(json_decode, fn(x) ->
-      index_name = x |> Map.keys |> List.first
-      %HTTPoison.Response{body: _response, status_code: status} =
-        delete!(index_name, options)
-      Logger.info "Delete index #{index_name} status #{status}"
-    end)
+    json_decode = json |> Poison.decode!()
 
+    Enum.map(json_decode, fn x ->
+      index_name = x |> Map.keys() |> List.first()
+      %HTTPoison.Response{body: _response, status_code: status} = delete!(index_name, options)
+      Logger.info("Delete index #{index_name} status #{status}")
+    end)
   end
 
   @doc """
@@ -87,7 +89,7 @@ defmodule TdBg.ESClientApi do
   """
   def process_response_body(body) do
     body
-    |> Poison.decode!
+    |> Poison.decode!()
   end
 
   @doc """
@@ -97,5 +99,4 @@ defmodule TdBg.ESClientApi do
     headers = [{"Content-Type", "application/json"}]
     headers
   end
-
 end

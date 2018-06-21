@@ -1,11 +1,11 @@
 defmodule TdBg.Search do
 
   require Logger
-  alias TdBg.Taxonomies.Domain
+  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ESClientApi
-  alias TdBg.BusinessConcepts
   alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
 
   @moduledoc """
     Search Engine calls

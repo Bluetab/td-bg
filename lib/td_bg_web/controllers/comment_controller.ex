@@ -3,10 +3,10 @@ defmodule TdBgWeb.CommentController do
   use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
+  alias TdBg.Audit
   alias TdBg.Comments
   alias TdBg.Comments.Comment
   alias TdBgWeb.SwaggerDefinitions
-  alias TdBg.Audit
 
   action_fallback TdBgWeb.FallbackController
 

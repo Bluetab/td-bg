@@ -1,12 +1,12 @@
 defmodule TdBg.Canada.Abilities do
   @moduledoc false
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies.Domain
-  alias TdBg.Permissions.Role
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Canada.TaxonomyAbilities
   alias TdBg.Canada.BusinessConceptAbilities
+  alias TdBg.Canada.TaxonomyAbilities
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.Role
+  alias TdBg.Taxonomies.Domain
 
   defimpl Canada.Can, for: User do
     # def can?(%User{}, _action, nil), do: false
