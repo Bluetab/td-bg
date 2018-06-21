@@ -18,7 +18,9 @@ defmodule TdBg.Comments do
 
   """
   def list_comments do
-    Repo.all(Comment)
+    Repo.all(from p in Comment,
+      order_by: [desc: :created_at]
+    )
   end
 
   def filter(params, fields) do
