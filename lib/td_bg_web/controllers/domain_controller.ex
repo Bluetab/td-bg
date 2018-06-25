@@ -6,7 +6,6 @@ defmodule TdBgWeb.DomainController do
   import Canada, only: [can?: 2]
 
   alias Canada.Can
-  alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
@@ -279,7 +278,7 @@ defmodule TdBgWeb.DomainController do
 
   def available_users(conn, %{"domain_id" => id}) do
     domain = Taxonomies.get_domain!(id)
-    acl_entries = Permissions.list_acl_entries(%{domain: domain})
+    acl_entries = AclEntry.list_acl_entries(%{domain: domain})
 
     role_user_id =
       Enum.map(acl_entries, fn acl_entry ->
@@ -311,7 +310,7 @@ defmodule TdBgWeb.DomainController do
 
   def acl_entries(conn, %{"domain_id" => id}) do
     domain = Taxonomies.get_domain!(id)
-    acl_entries = Permissions.get_list_acl_from_domain(domain)
+    acl_entries = AclEntry.get_list_acl_from_domain(domain)
 
     render(
       conn,
@@ -343,7 +342,7 @@ defmodule TdBgWeb.DomainController do
     acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
 
     if current_user |> can?(create(acl_entry)) do
-      with {:ok, %AclEntry{} = acl_entry} <- Permissions.create_acl_entry(acl_entry_params) do
+      with {:ok, %AclEntry{} = acl_entry} <- AclEntry.create_acl_entry(acl_entry_params) do
         conn
         |> put_status(:created)
         |> render("acl_entry_show.json", acl_entry: acl_entry)

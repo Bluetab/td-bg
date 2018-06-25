@@ -2,6 +2,7 @@ defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
   alias TdBg.Permissions
+  alias TdBg.Permissions.AclEntry
   alias TdBg.Taxonomies
 
   describe "domains" do
@@ -103,7 +104,7 @@ defmodule TdBg.TaxonomiesTest do
       domain = domain_fixture()
       acl_entry = acl_entry_fixture(domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      assert_raise Ecto.NoResultsError, fn -> Permissions.get_acl_entry!(acl_entry.id) == nil end
+      assert_raise Ecto.NoResultsError, fn -> AclEntry.get_acl_entry!(acl_entry.id) == nil end
       assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain!(domain.id) end
     end
 

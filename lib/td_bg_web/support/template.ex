@@ -3,6 +3,7 @@ defmodule TdBgWeb.TemplateSupport do
 
   alias TdBg.Accounts.User
   alias TdBg.Permissions
+  alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
@@ -66,7 +67,7 @@ defmodule TdBgWeb.TemplateSupport do
   defp process_role_meta(field, _user, _role, _domain), do: field
 
   defp get_acl_entries(role, domain) do
-    acl_entries = Permissions.list_acl_entries(%{domain: domain, role: role})
+    acl_entries = AclEntry.list_acl_entries(%{domain: domain, role: role})
     case domain.parent_id do
       nil -> acl_entries
       _ ->

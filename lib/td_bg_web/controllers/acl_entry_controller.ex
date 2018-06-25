@@ -22,7 +22,7 @@ defmodule TdBgWeb.AclEntryController do
   end
 
   def index(conn, _params) do
-    acl_entries = Permissions.list_acl_entries()
+    acl_entries = AclEntry.list_acl_entries()
     render(conn, "index.json", acl_entries: acl_entries)
   end
 
@@ -44,7 +44,7 @@ defmodule TdBgWeb.AclEntryController do
     current_user = conn.assigns[:current_user]
 
     if current_user |> can?(create(acl_entry)) do
-      with {:ok, %AclEntry{} = acl_entry} <- Permissions.create_acl_entry(acl_entry_params) do
+      with {:ok, %AclEntry{} = acl_entry} <- AclEntry.create_acl_entry(acl_entry_params) do
         conn
         |> put_status(:created)
         |> put_resp_header("location", acl_entry_path(conn, :show, acl_entry))
@@ -110,7 +110,7 @@ defmodule TdBgWeb.AclEntryController do
   end
 
   def show(conn, %{"id" => id}) do
-    acl_entry = Permissions.get_acl_entry!(id)
+    acl_entry = AclEntry.get_acl_entry!(id)
     render(conn, "show.json", acl_entry: acl_entry)
   end
 
@@ -130,11 +130,11 @@ defmodule TdBgWeb.AclEntryController do
 
   def update(conn, %{"id" => id, "acl_entry" => acl_entry_params}) do
     current_user = conn.assigns[:current_user]
-    acl_entry = Permissions.get_acl_entry!(id)
+    acl_entry = AclEntry.get_acl_entry!(id)
 
     if current_user |> can?(update(acl_entry)) do
       with {:ok, %AclEntry{} = acl_entry} <-
-             Permissions.update_acl_entry(acl_entry, acl_entry_params) do
+             AclEntry.update_acl_entry(acl_entry, acl_entry_params) do
         render(conn, "show.json", acl_entry: acl_entry)
       else
         _error ->
@@ -164,10 +164,10 @@ defmodule TdBgWeb.AclEntryController do
 
   def delete(conn, %{"id" => id}) do
     current_user = conn.assigns[:current_user]
-    acl_entry = Permissions.get_acl_entry!(id)
+    acl_entry = AclEntry.get_acl_entry!(id)
 
     if current_user |> can?(delete(acl_entry)) do
-      with {:ok, %AclEntry{}} <- Permissions.delete_acl_entry(acl_entry) do
+      with {:ok, %AclEntry{}} <- AclEntry.delete_acl_entry(acl_entry) do
         send_resp(conn, :no_content, "")
       else
         _error ->
