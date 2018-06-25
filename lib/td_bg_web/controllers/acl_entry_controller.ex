@@ -87,7 +87,7 @@ defmodule TdBgWeb.AclEntryController do
       resource_id: acl_entry.resource_id
     }
 
-    acl_entry = Permissions.get_acl_entry_by_principal_and_resource(acl_query_params)
+    acl_entry = AclEntry.get_acl_entry_by_principal_and_resource(acl_query_params)
 
     if acl_entry do
       update(conn, %{"id" => acl_entry.id, "acl_entry" => acl_entry_params})

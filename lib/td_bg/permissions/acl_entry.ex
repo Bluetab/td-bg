@@ -13,11 +13,11 @@ defmodule TdBg.Permissions.AclEntry do
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   schema "acl_entries" do
-    field :principal_id, :integer
-    field :principal_type, :string
-    field :resource_id, :integer
-    field :resource_type, :string
-    belongs_to :role, Role
+    field(:principal_id, :integer)
+    field(:principal_type, :string)
+    field(:resource_id, :integer)
+    field(:resource_type, :string)
+    belongs_to(:role, Role)
 
     timestamps()
   end
@@ -51,10 +51,14 @@ defmodule TdBg.Permissions.AclEntry do
     This return acl with resource type domain and  principal types user or group
   """
   def list_acl_entries(%{domain: domain, role: role}) do
-    Repo.all(from acl_entry in AclEntry,
-      where: acl_entry.resource_type == "domain" and
-             acl_entry.resource_id == ^domain.id and
-             acl_entry.role_id == ^role.id)
+    Repo.all(
+      from(
+        acl_entry in AclEntry,
+        where:
+          acl_entry.resource_type == "domain" and acl_entry.resource_id == ^domain.id and
+            acl_entry.role_id == ^role.id
+      )
+    )
   end
 
   @doc """
@@ -212,6 +216,41 @@ defmodule TdBg.Permissions.AclEntry do
     AclEntry.changeset(acl_entry, %{})
   end
 
+  @doc """
+
+  """
+  def get_acl_entry_by_principal_and_resource(%{
+        principal_type: principal_type,
+        principal_id: principal_id,
+        resource_type: resource_type,
+        resource_id: resource_id
+      }) do
+    Repo.get_by(
+      AclEntry,
+      principal_type: principal_type,
+      principal_id: principal_id,
+      resource_type: resource_type,
+      resource_id: resource_id
+    )
+  end
+
+  @doc """
+  Returns acl entry for an user and domain
+  """
+  def get_acl_entry_by_principal_and_resource(%{
+        principal_type: principal_type,
+        principal_id: principal_id,
+        domain: domain
+      }) do
+    Repo.get_by(
+      AclEntry,
+      principal_type: principal_type,
+      principal_id: principal_id,
+      resource_type: "domain",
+      resource_id: domain.id
+    )
+  end
+
   def get_list_acl_from_domain(domain) do
     acl_entries = list_acl_entries(%{domain: domain})
     acl_entries_map_ids = acl_entries |> Enum.group_by(& &1.principal_type, & &1.principal_id)
@@ -252,7 +291,8 @@ defmodule TdBg.Permissions.AclEntry do
     end)
   end
 
-  def acl_matches?(%{principal_type: "user", principal_id: user_id}, user_id, _group_ids), do: true
+  def acl_matches?(%{principal_type: "user", principal_id: user_id}, user_id, _group_ids),
+    do: true
 
   def acl_matches?(%{principal_type: "group", principal_id: group_id}, _user_id, group_ids) do
     group_ids
@@ -260,5 +300,4 @@ defmodule TdBg.Permissions.AclEntry do
   end
 
   def acl_matches?(_, _, _), do: false
-
 end

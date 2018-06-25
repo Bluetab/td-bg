@@ -57,41 +57,6 @@ defmodule TdBg.Permissions do
   end
 
   @doc """
-
-  """
-  def get_acl_entry_by_principal_and_resource(%{
-        principal_type: principal_type,
-        principal_id: principal_id,
-        resource_type: resource_type,
-        resource_id: resource_id
-      }) do
-    Repo.get_by(
-      AclEntry,
-      principal_type: principal_type,
-      principal_id: principal_id,
-      resource_type: resource_type,
-      resource_id: resource_id
-    )
-  end
-
-  @doc """
-    Returns acl entry for an user and domain
-  """
-  def get_acl_entry_by_principal_and_resource(%{
-        principal_type: principal_type,
-        principal_id: principal_id,
-        domain: domain
-      }) do
-    Repo.get_by(
-      AclEntry,
-      principal_type: principal_type,
-      principal_id: principal_id,
-      resource_type: "domain",
-      resource_id: domain.id
-    )
-  end
-
-  @doc """
     Returns Role with name role_name
   """
   def get_role_by_name(role_name) do
