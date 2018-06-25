@@ -4,7 +4,6 @@ defmodule TdBgWeb.RoleControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBg.Permissions
   alias TdBg.Permissions.Role
   alias TdBgWeb.ApiServices.MockTdAuthService
 
@@ -13,7 +12,7 @@ defmodule TdBgWeb.RoleControllerTest do
   @invalid_attrs %{name: nil}
 
   def fixture(:role) do
-    {:ok, role} = Permissions.create_role(@create_attrs)
+    {:ok, role} = Role.create_role(@create_attrs)
     role
   end
 

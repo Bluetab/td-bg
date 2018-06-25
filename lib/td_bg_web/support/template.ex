@@ -2,7 +2,6 @@ defmodule TdBgWeb.TemplateSupport do
   @moduledoc false
 
   alias TdBg.Accounts.User
-  alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBg.Repo
@@ -36,7 +35,7 @@ defmodule TdBgWeb.TemplateSupport do
     field = case {type, meta} do
       {"list", %{"role" => rolename}} ->
         user = Keyword.get(ctx, :user, nil)
-        role = Permissions.get_role_by_name(rolename)
+        role = Role.get_role_by_name(rolename)
         domain = Keyword.get(ctx, :domain, nil)
         process_role_meta(field, user, role, domain)
       _ -> field

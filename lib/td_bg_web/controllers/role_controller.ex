@@ -5,6 +5,7 @@ defmodule TdBgWeb.RoleController do
   import Canada, only: [can?: 2]
 
   alias TdBg.Permissions
+  alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
@@ -22,7 +23,7 @@ defmodule TdBgWeb.RoleController do
   end
 
   def index(conn, _params) do
-    roles = Permissions.list_roles()
+    roles = Role.list_roles()
     render(conn, "index.json", roles: roles)
   end
 
@@ -41,7 +42,7 @@ defmodule TdBgWeb.RoleController do
     current_user = conn.assigns[:current_user]
     case can?(current_user, create(Role)) do
       true ->
-        with {:ok, %Role{} = role} <- Permissions.create_role(role_params) do
+        with {:ok, %Role{} = role} <- Role.create_role(role_params) do
           conn
           |> put_status(:created)
           |> put_resp_header("location", role_path(conn, :show, role))
@@ -71,7 +72,7 @@ defmodule TdBgWeb.RoleController do
   end
 
   def show(conn, %{"id" => id}) do
-    role = Permissions.get_role!(id)
+    role = Role.get_role!(id)
     render(conn, "show.json", role: role)
   end
 
@@ -89,10 +90,10 @@ defmodule TdBgWeb.RoleController do
 
   def update(conn, %{"id" => id, "role" => role_params}) do
     current_user = conn.assigns[:current_user]
-    role = Permissions.get_role!(id)
+    role = Role.get_role!(id)
     case can?(current_user, update(role)) do
       true ->
-        with {:ok, %Role{} = role} <- Permissions.update_role(role, role_params) do
+        with {:ok, %Role{} = role} <- Role.update_role(role, role_params) do
           render(conn, "show.json", role: role)
         else
           _error ->
@@ -120,10 +121,10 @@ defmodule TdBgWeb.RoleController do
 
   def delete(conn, %{"id" => id}) do
     current_user = conn.assigns[:current_user]
-    role = Permissions.get_role!(id)
+    role = Role.get_role!(id)
     case can?(current_user, delete(role)) do
       true ->
-        with {:ok, %Role{}} <- Permissions.delete_role(role) do
+        with {:ok, %Role{}} <- Role.delete_role(role) do
           send_resp(conn, :no_content, "")
         else
           _error ->
@@ -150,7 +151,7 @@ defmodule TdBgWeb.RoleController do
   end
 
   def user_domain_role(conn, %{"user_id" => user_id, "domain_id" => domain_id}) do
-    roles = Permissions.get_all_roles(%{user_id: user_id, domain_id: domain_id})
+    roles = AclEntry.get_all_roles(%{user_id: user_id, domain_id: domain_id})
     render(conn, "index.json", roles: roles)
   end
 

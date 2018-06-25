@@ -5,6 +5,7 @@ defmodule TdBgWeb.PermissionController do
   import Canada, only: [can?: 2]
 
   alias TdBg.Permissions
+  alias TdBg.Permissions.Role
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
 
@@ -51,8 +52,8 @@ defmodule TdBgWeb.PermissionController do
   end
 
   def get_role_permissions(conn, %{"role_id" => role_id}) do
-    role = Permissions.get_role!(role_id)
-    permissions = Permissions.get_role_permissions(role)
+    role = Role.get_role!(role_id)
+    permissions = Role.get_role_permissions(role)
     render(conn, "index.json", permissions: permissions)
   end
 
@@ -68,11 +69,11 @@ defmodule TdBgWeb.PermissionController do
 
   def add_permissions_to_role(conn, %{"role_id" => role_id, "permissions" => perms}) do
     current_user = conn.assigns[:current_user]
-    role = Permissions.get_role!(role_id)
+    role = Role.get_role!(role_id)
     case can?(current_user, add_permissions_to_role(role)) do
       true ->
         permissions = Enum.map(perms, &Permissions.get_permission!(Map.get(&1, "id")))
-        Permissions.add_permissions_to_role(role, permissions)
+        Role.add_permissions_to_role(role, permissions)
         render(conn, "index.json", permissions: permissions)
       false ->
         conn

@@ -9,6 +9,7 @@ defmodule TdBg.Permissions.AclEntry do
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBg.Repo
+  alias TdBg.Taxonomies
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
@@ -289,6 +290,24 @@ defmodule TdBg.Permissions.AclEntry do
         acc
       end
     end)
+  end
+
+  def get_all_roles(%{user_id: user_id, domain_id: domain_id}) do
+    domains = Taxonomies.get_ancestors_for_domain_id(domain_id, true)
+
+    user = @td_auth_api.get_user(user_id)
+    group_ids = User.get_group_ids(user)
+
+    roles =
+      domains
+      |> Enum.flat_map(fn domain ->
+        AclEntry.list_acl_entries(%{domain: domain}, role: [:permissions])
+      end)
+      |> Enum.filter(&AclEntry.acl_matches?(&1, user.id, group_ids))
+      |> Enum.map(& &1.role)
+      |> Enum.uniq_by(& &1.id)
+
+    roles
   end
 
   def acl_matches?(%{principal_type: "user", principal_id: user_id}, user_id, _group_ids),

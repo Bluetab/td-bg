@@ -4,7 +4,7 @@ defmodule TdBgWeb.DomainControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBg.Permissions
+  alias TdBg.Permissions.Role
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -43,7 +43,7 @@ defmodule TdBgWeb.DomainControllerTest do
       %{conn: conn, swagger_schema: schema} do
         user = create_user(@user_name)
         domain = insert(:domain)
-        role = Permissions.get_role_by_name("watch")
+        role = Role.get_role_by_name("watch")
         insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
         parameters = %{actions: "show"}
         conn = get conn, domain_path(conn, :index, parameters)
@@ -134,7 +134,7 @@ defmodule TdBgWeb.DomainControllerTest do
     test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
+      role = Role.get_role_by_name("watch")
       acl_entry_attrs = %{
         principal_id: user.id,
         principal_type: "user",
@@ -161,7 +161,7 @@ defmodule TdBgWeb.DomainControllerTest do
     test "renders error for duplicated acl_entry from domain route", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
+      role = Role.get_role_by_name("watch")
       acl_entry_attrs = %{
         principal_id: user.id,
         principal_type: "user",

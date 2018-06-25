@@ -2,8 +2,8 @@ defmodule TdBgWeb.AclEntryControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.Role
   alias TdBgWeb.ApiServices.MockTdAuthService
   import TdBgWeb.Authentication, only: :functions
 
@@ -32,7 +32,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
+      role = Role.get_role_by_name("watch")
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
@@ -56,7 +56,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders error for duplicated acl_entry", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
+      role = Role.get_role_by_name("watch")
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
@@ -105,7 +105,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
     test "renders acl_entry when updating an existing acl", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
+      role = Role.get_role_by_name("watch")
       acl_entry_attrs = build(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id)
       acl_entry_attrs = acl_entry_attrs |> Map.from_struct
       acl_entry_attrs = Map.put(acl_entry_attrs, "role_name", role.name)
@@ -182,7 +182,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
   defp create_acl_entry(_) do
     user = build(:user)
     domain = insert(:domain)
-    role = Permissions.get_role_by_name("watch")
+    role = Role.get_role_by_name("watch")
     acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
     {:ok, acl_entry: acl_entry_attrs}
   end

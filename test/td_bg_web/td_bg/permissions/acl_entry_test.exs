@@ -1,8 +1,8 @@
 defmodule TdBg.Permissions.AclEntryTest do
   use TdBg.DataCase
 
-  alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.Role
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
@@ -24,7 +24,7 @@ defmodule TdBg.Permissions.AclEntryTest do
     def acl_entry_fixture do
       user = build(:user)
       domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
+      role = Role.get_role_by_name("watch")
 
       acl_entry_attrs =
         insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
@@ -60,7 +60,7 @@ defmodule TdBg.Permissions.AclEntryTest do
     test "create_acl_entry/1 with valid data creates a acl_entry" do
       user = build(:user)
       domain = insert(:domain)
-      role = Permissions.get_role_by_name("watch")
+      role = Role.get_role_by_name("watch")
 
       valid_attrs = %{
         principal_id: user.id,

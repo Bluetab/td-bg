@@ -4,6 +4,7 @@ defmodule TdBgWeb.AclEntryController do
 
   alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.Role
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
@@ -76,7 +77,7 @@ defmodule TdBgWeb.AclEntryController do
   end
 
   def create_or_update(conn, %{"acl_entry" => acl_entry_params}) do
-    role = Permissions.get_role_by_name(acl_entry_params["role_name"])
+    role = Role.get_role_by_name(acl_entry_params["role_name"])
     acl_entry_params = Map.put(acl_entry_params, "role_id", role.id)
     acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
 

@@ -4,7 +4,7 @@ defmodule TdBgWeb.UserControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBg.Permissions
+  alias TdBg.Permissions.Role
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
@@ -23,7 +23,7 @@ defmodule TdBgWeb.UserControllerTest do
       %{conn: conn, swagger_schema: schema} do
         user = create_user(@user_name)
         domain = insert(:domain)
-        role = Permissions.get_role_by_name("create")
+        role = Role.get_role_by_name("create")
         insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
         conn = get conn, user_path(conn, :user_domains)
         validate_resp_schema(conn, schema, "UserDomainResponse")
