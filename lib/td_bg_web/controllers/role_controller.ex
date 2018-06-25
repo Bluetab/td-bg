@@ -4,7 +4,6 @@ defmodule TdBgWeb.RoleController do
 
   import Canada, only: [can?: 2]
 
-  alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBgWeb.ErrorView

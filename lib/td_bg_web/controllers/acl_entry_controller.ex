@@ -2,7 +2,6 @@ defmodule TdBgWeb.AclEntryController do
   use TdBgWeb, :controller
   use PhoenixSwagger
 
-  alias TdBg.Permissions
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBg.Utils.CollectionUtils

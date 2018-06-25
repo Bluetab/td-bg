@@ -8,7 +8,6 @@ defmodule TdBg.Permissions do
   alias TdBg.Accounts.User
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Permission
-  alias TdBg.Permissions.Role
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
 
