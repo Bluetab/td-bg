@@ -89,7 +89,9 @@ admin_permissions = [create_acl_entry,
                    ]
 
 watch_permissions = [view_domain,
+                     view_draft_business_concepts,
                      view_published_business_concepts,
+                     view_rejected_business_concepts,
                      view_versioned_business_concepts,
                      view_deprecated_business_concepts
                     ]
@@ -99,6 +101,8 @@ create_permissions = [view_domain,
                       update_business_concept,
                       send_business_concept_for_approval,
                       delete_business_concept,
+                      view_draft_business_concepts,
+                      view_approval_pending_business_concepts,
                       view_published_business_concepts,
                       view_versioned_business_concepts,
                       view_deprecated_business_concepts

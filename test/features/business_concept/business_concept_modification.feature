@@ -237,7 +237,7 @@
         | Modification Comments | Modification on the Business Term description                      |
         | Last Modification     | Some timestamp                                                     |
         | Last User             | app-admin                                                          |
-        | Current               | true                                                              |
+        | Current               | true                                                               |
         | Version               | 2                                                                  |
         | Status                | draft                                                              |
 

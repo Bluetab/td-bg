@@ -283,16 +283,27 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def show(conn, %{"id" => id}) do
-    # user = conn.assigns[:current_user]
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    # TODO ensure can?(user, view_business_concept(business_concept_version))
-    render(
-      conn,
-      "show.json",
-      business_concept_version: business_concept_version,
-      hypermedia: hypermedia("business_concept_version", conn, business_concept_version)
-    )
+    with true <- can?(user, view_business_concept(business_concept_version)) do
+      render(
+        conn,
+        "show.json",
+        business_concept_version: business_concept_version,
+        hypermedia: hypermedia("business_concept_version", conn, business_concept_version)
+      )
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
 end
 
   swagger_path :delete do

@@ -23,6 +23,7 @@ Scenario Outline: History of changes in Business Glossary
     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        | false   |
   Then if <user> is "creator" the system returns following data:
     | name             | type          | description                                        | Last Modification | Last User   | version | status           | current |
+    | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 4       | pending_approval | true    |
     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        | true    |
     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        | false   |
     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        | false   |
