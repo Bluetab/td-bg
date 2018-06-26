@@ -6,6 +6,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Templates
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
@@ -182,6 +183,53 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
+  describe "create new versions" do
+
+    @tag :admin_authenticated
+    test "create new version with modified template", %{
+      conn: conn
+    } do
+
+      template_content = [%{"name" => "fieldname", "type" => "string", "required" =>  false}]
+      template = insert(:template, name: "onefield", content: template_content)
+      user = build(:user)
+      business_concept =
+        insert(:business_concept,
+                type: template.name,
+                last_change_by: user.id)
+      business_concept_version =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          last_change_by: user.id,
+          status: BusinessConcept.status.published
+        )
+
+      update_attrs = Map.from_struct(template)
+      update_attrs = Map.drop(update_attrs, [:__meta__, :id, :inserted_at, :udpated_at])
+      updated_content = update_attrs
+      |> Map.get(:content)
+      |> Enum.reduce([], fn(field, acc) ->
+            [Map.put(field, "required", true)|acc]
+         end)
+
+      update_attrs = Map.put(update_attrs, :content, updated_content)
+      Templates.update_template(template, update_attrs)
+
+      conn =
+        post(
+          conn,
+          business_concept_version_business_concept_version_path(
+            conn,
+            :version,
+            business_concept_version.id
+          )
+        )
+
+        assert json_response(conn, 201)["data"]
+    end
+  end
+
   describe "update business_concept_version" do
     setup [:create_template]
 
@@ -221,29 +269,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         &assert updated_business_concept_version |> Map.get(Atom.to_string(elem(&1, 0))) ==
                   elem(&1, 1)
       )
-    end
-
-    @tag :admin_authenticated
-    test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
-      business_concept_version_id = business_concept_version.id
-
-      update_attrs = %{
-        content: %{},
-        name: nil,
-        description: "The new description"
-      }
-
-      conn =
-        put(
-          conn,
-          business_concept_version_path(conn, :update, business_concept_version_id),
-          business_concept_version: update_attrs
-        )
-
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert json_response(conn, 422)["errors"] != %{}
     end
   end
 

@@ -1,6 +1,7 @@
 defmodule TdBg.BusinessConceptsTests do
   use TdBg.DataCase
 
+  alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts
   alias TdBg.Repo
 
@@ -576,21 +577,8 @@ defmodule TdBg.BusinessConceptsTests do
           status: BusinessConcept.status().published
         )
 
-      draft_attrs = %{
-        business_concept: business_concept_version.business_concept,
-        content_schema: [],
-        content: %{},
-        related_to: [],
-        name: "new draft name",
-        description: "new draft name",
-        last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
-        status: BusinessConcept.status().draft,
-        version: 2
-      }
-
       assert {:ok, %{current: new_version}} =
-               BusinessConcepts.version_business_concept(business_concept_version, draft_attrs)
+               BusinessConcepts.version_business_concept(%User{id: 1234}, business_concept_version)
 
       assert %BusinessConceptVersion{} = new_version
 
