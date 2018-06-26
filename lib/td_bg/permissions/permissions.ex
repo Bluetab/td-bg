@@ -9,6 +9,7 @@ defmodule TdBg.Permissions do
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Permission
   alias TdBg.Repo
+  alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
@@ -86,25 +87,13 @@ defmodule TdBg.Permissions do
     end
   end
 
-  def has_any_permission(user_id, permissions, Domain) do
-    query =
-      from(
-        a in AclEntry,
-        join: r in assoc(a, :role),
-        join: p in assoc(r, :permissions),
-        where:
-          p.name in ^permissions and a.principal_id == ^user_id and a.principal_type == "user",
-        limit: 1,
-        select: a
-      )
-
-    user_acl = query |> Repo.one()
-
-    if user_acl do
-      true
-    else
-      has_any_group_permission(user_id, permissions, Domain)
-    end
+  def has_any_permission(%User{} = user, permissions, Domain) do
+    session_permissions = get_or_store_session_permissions(user)
+    session_permissions
+      |> Enum.filter(&(&1.resource_type == "domain"))
+      |> Enum.flat_map(&(&1.permissions))
+      |> Enum.uniq
+      |> Enum.any?(&(Enum.member?(permissions, &1)))
   end
 
   @doc """
@@ -131,6 +120,19 @@ defmodule TdBg.Permissions do
     end)
   end
 
+  def get_or_store_session_permissions(%User{id: id, jti: jti, gids: gids}) do
+    ConCache.get_or_store(:session_permissions, jti, fn ->
+      %{user_id: id, gids: gids}
+        |> AclEntry.list_acl_entries_by_user_with_groups
+        |> Enum.map(&(acl_entry_to_permissions/1))
+    end)
+  end
+
+  defp acl_entry_to_permissions(%{resource_type: resource_type, resource_id: resource_id, role: %{permissions: permissions}}) do
+    permission_names = permissions |> Enum.map(&(&1.name))
+    %{resource_type: resource_type, resource_id: resource_id, permissions: permission_names}
+  end
+
   @doc """
   Check if user has a permission in a domain.
 
@@ -145,4 +147,19 @@ defmodule TdBg.Permissions do
     |> get_permissions_in_resource_cache
     |> Enum.member?(permission)
   end
+
+  def authorized?(%User{} = user, permission, domain_id) do
+    domain_ids = Taxonomies.get_parent_ids(domain_id, true)
+    authorized = user
+    |> get_or_store_session_permissions
+    |> Enum.filter(&(contains?(domain_ids, &1)))
+    |> Enum.any?(&(Enum.member?(&1.permissions, permission)))
+    authorized
+  end
+
+  defp contains?(domain_ids, %{resource_type: "domain", resource_id: domain_id}) do
+    Enum.member?(domain_ids, domain_id)
+  end
+  defp contains?(_, __), do: false
+
 end

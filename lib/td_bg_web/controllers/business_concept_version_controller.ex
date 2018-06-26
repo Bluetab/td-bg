@@ -57,7 +57,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       "list.json",
       business_concept_versions: business_concept_versions,
       hypermedia:
-        hypermedia_typed(
+        collection_hypermedia(
           "business_concept_version",
           conn,
           business_concept_versions,
@@ -88,7 +88,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       "list.json",
       business_concept_versions: business_concept_versions,
       hypermedia:
-        hypermedia_typed(
+        collection_hypermedia(
           "business_concept_version",
           conn,
           business_concept_versions,
@@ -283,15 +283,17 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def show(conn, %{"id" => id}) do
+    # user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
+    # TODO ensure can?(user, view_business_concept(business_concept_version))
     render(
       conn,
       "show.json",
       business_concept_version: business_concept_version,
       hypermedia: hypermedia("business_concept_version", conn, business_concept_version)
     )
-  end
+end
 
   swagger_path :delete do
     delete("/business_concept_versions/{id}")

@@ -181,14 +181,18 @@ defmodule TdBg.Taxonomies do
   end
 
   def get_parent_ids(nil, _), do: []
-  def get_parent_ids(%Domain{} = domain, with_self) do
-    domain
-    |> get_domain_ancestors(with_self)
-    |> Enum.map(&(&1.id))
-  end
   def get_parent_ids(domain_id, with_self) do
-    domain = get_domain(domain_id)
-    get_parent_ids(domain, with_self)
+    ConCache.get_or_store(:domains_cache, {domain_id, with_self}, fn ->
+      domain_id
+        |> get_ancestors_for_domain_id(with_self)
+        |> Enum.map(&(&1.id))
+      end)
+  end
+
+  def preload_domain_cache do
+    list_domains()
+    |> Enum.map(&(&1.id))
+    |> Enum.map(&({&1, get_parent_ids(&1, true)}))
   end
 
   @doc """

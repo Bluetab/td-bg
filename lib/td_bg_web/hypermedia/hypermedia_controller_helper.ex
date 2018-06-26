@@ -7,15 +7,14 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
   alias TdBgWeb.Router
   import Canada.Can
 
-  def hypermedia_typed(helper, conn, resource, resource_type, nested \\ [])
-  def hypermedia_typed(helper, conn, resource, resource_type, nested) when is_list(resource) do
+  def collection_hypermedia(helper, conn, resource, resource_type) do
     %HypermediaCollection{
       collection_hypermedia:
         hypermedia(helper, conn, %{}, resource_type),
       collection:
         Enum.into(
           Enum.map(
-            resource, &({&1, hypermedia(helper, conn, &1, nested)})), %{})
+            resource, &({&1, []})), %{})
      }
   end
 

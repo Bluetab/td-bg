@@ -6,7 +6,7 @@ defmodule TdBg.Canada.TaxonomyAbilities do
   alias TdBg.Permissions.Permission
   alias TdBg.Taxonomies.Domain
 
-  def can?(%User{id: user_id}, :list, Domain) do
+  def can?(%User{} = user, :list, Domain) do
     permissions = [
       Permission.permissions.create_domain,
       Permission.permissions.update_domain,
@@ -16,7 +16,7 @@ defmodule TdBg.Canada.TaxonomyAbilities do
       Permission.permissions.delete_acl_entry
     ]
 
-    Permissions.has_any_permission(user_id, permissions, Domain)
+    Permissions.has_any_permission(user, permissions, Domain)
   end
 
   def can?(%User{id: user_id}, :create, %Domain{id: domain_id}) do
