@@ -153,23 +153,28 @@ defmodule TdBg.BusinessConcepts do
   @doc """
   Creates a new business_concept version.
 
-  ## Examples
-
-      iex> version_business_concept(%{field: value})
-      {:ok, %BusinessConceptVersion{}}
-
-      iex> version_business_concept(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
-  def version_business_concept(%BusinessConceptVersion{} = business_concept_version, attrs \\ %{}) do
+  def version_business_concept(user, %BusinessConceptVersion{} = business_concept_version) do
+    business_concept = business_concept_version.business_concept
+    business_concept =
+      business_concept
+      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_at", DateTime.utc_now())
+
+    draft_attrs = Map.from_struct(business_concept_version)
+
+    draft_attrs =
+      draft_attrs
+      |> Map.put("business_concept", business_concept)
+      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("status", BusinessConcept.status().draft)
+      |> Map.put("version", business_concept_version.version + 1)
+
     result =
-      attrs
+      draft_attrs
       |> attrs_keys_to_atoms
-      |> raise_error_if_no_content_schema
-      |> set_content_defaults
       |> validate_new_concept
-      |> validate_concept_content
       |> version_concept(business_concept_version)
 
     case result do

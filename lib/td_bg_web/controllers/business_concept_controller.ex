@@ -323,29 +323,9 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   defp do_version(conn, user, business_concept_version, _business_concept_params) do
-    business_concept = business_concept_version.business_concept
-    concept_type = business_concept.type
-    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
-
-    business_concept =
-      business_concept
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-
-    draft_attrs = Map.from_struct(business_concept_version)
-
-    draft_attrs =
-      draft_attrs
-      |> Map.put("business_concept", business_concept)
-      |> Map.put("content_schema", content_schema)
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-      |> Map.put("status", BusinessConcept.status().draft)
-      |> Map.put("version", business_concept_version.version + 1)
-
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
-           BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
+           BusinessConcepts.version_business_concept(user, business_concept_version) do
       conn
       |> put_status(:created)
       |> render("show.json", business_concept: new_version)
