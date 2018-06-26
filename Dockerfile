@@ -16,6 +16,8 @@ ARG MIX_ENV
 ARG APP_VERSION
 ARG APP_NAME
 
+RUN sed -i -e 's/prod.secret.exs/prod.aws.secret.exs/g' config/prod.exs
+
 RUN mix local.hex --force
 RUN mix local.rebar --force
 
@@ -44,4 +46,3 @@ COPY --from=build /build/_build/${MIX_ENV}/rel/${APP_NAME}/releases/${APP_VERSIO
 RUN tar -xzvf ${APP_NAME}.tar.gz
 
 ENTRYPOINT ["/bin/bash", "-c", "bin/${APP_NAME} foreground"]
-
