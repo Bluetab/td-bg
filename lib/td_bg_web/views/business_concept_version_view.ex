@@ -4,7 +4,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   alias TdBg.Accounts.User
   alias TdBgWeb.BusinessConceptVersionView
-  alias TdBgWeb.DomainView
 
   def render("index.json", %{
         business_concept_versions: business_concept_versions,
@@ -105,28 +104,24 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_aliases(business_concept_version.business_concept)
   end
 
-  def render(
-        "index_business_concept_taxonomy.json",
-        %{business_concept_taxonomy: business_concept_taxonomy}
-      ) do
-    %{
-      data:
-        render_many(
-          business_concept_taxonomy,
-          BusinessConceptVersionView,
-          "business_concept_taxonomy_entry.json"
-        )
-    }
+  def render("versions.json", %{business_concept_versions: business_concept_versions, hypermedia: hypermedia}) do
+    render_many_hypermedia(business_concept_versions, hypermedia, BusinessConceptVersionView, "version.json")
   end
 
-  def render(
-        "business_concept_taxonomy_entry.json",
-        %{business_concept_version: business_concept_version}
-      ) do
+  def render("version.json", %{business_concept_version: business_concept_version}) do
     %{
-      domain_id: business_concept_version.domain_id,
-      domain_name: business_concept_version.domain_name,
-      roles: render_many(business_concept_version.roles, DomainView, "acl_entry.json")
+      id: business_concept_version["id"],
+      business_concept_id: business_concept_version["business_concept_id"],
+      type: business_concept_version["type"],
+      content: business_concept_version["content"],
+      name: business_concept_version["name"],
+      description: business_concept_version["description"],
+      last_change_by: business_concept_version["last_change_by"]["user_name"],
+      last_change_at: business_concept_version["last_change_at"],
+      domain: business_concept_version["domain"],
+      status: business_concept_version["status"],
+      current: business_concept_version["current"],
+      version: business_concept_version["version"]
     }
   end
 

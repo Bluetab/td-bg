@@ -622,15 +622,6 @@ defmodule TdBg.BusinessConceptsTests do
       assert 2 == length(business_concept_versions)
     end
 
-    test "balh" do
-      d1 = insert(:domain)
-      d2 = insert(:domain, %{parent_id: d1.id})
-      d3 = insert(:domain, %{parent_id: d2.id})
-      version = create_version(d3, "Some name", "draft")
-      search_fields = BusinessConceptVersion.search_fields(version)
-      assert search_fields.domain_ids == [d3.id, d2.id, d1.id]
-    end
-
     defp create_version(domain, name, status) do
       business_concept = insert(:business_concept, domain: domain)
 

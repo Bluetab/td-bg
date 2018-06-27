@@ -54,6 +54,15 @@ defmodule TdBg.Permissions do
     get_resource_type_permissions(%{user_id: user_id}, "domain")
   end
 
+  def get_domain_permissions(%User{} = user, domain_id) do
+    domain_ids = Taxonomies.get_parent_ids(domain_id, true)
+    user
+    |> get_or_store_session_permissions
+    |> Enum.filter(&(contains?(domain_ids, &1)))
+    |> Enum.flat_map(&(&1.permissions))
+    |> Enum.uniq
+  end
+
   def get_all_permissions(%{user_id: user_id, domain_id: domain_id}) do
     roles = AclEntry.get_all_roles(%{user_id: user_id, domain_id: domain_id})
 
@@ -112,14 +121,6 @@ defmodule TdBg.Permissions do
     |> get_all_permissions()
   end
 
-  def get_permissions_in_resource_cache(%{user_id: user_id, domain_id: domain_id}) do
-    cache_key = %{user_id: user_id, domain_id: domain_id}
-
-    ConCache.get_or_store(:permissions_cache, cache_key, fn ->
-      get_permissions_in_resource(cache_key)
-    end)
-  end
-
   def get_or_store_session_permissions(%User{id: id, jti: jti, gids: gids}) do
     ConCache.get_or_store(:session_permissions, jti, fn ->
       %{user_id: id, gids: gids}
@@ -138,16 +139,10 @@ defmodule TdBg.Permissions do
 
   ## Examples
 
-      iex> authorized?()
-      true
+      iex> authorized?(%User{}, "create", 12)
+      false
 
   """
-  def authorized?(%{user_id: user_id, permission: permission, domain_id: domain_id}) do
-    %{user_id: user_id, domain_id: domain_id}
-    |> get_permissions_in_resource_cache
-    |> Enum.member?(permission)
-  end
-
   def authorized?(%User{} = user, permission, domain_id) do
     domain_ids = Taxonomies.get_parent_ids(domain_id, true)
     authorized = user

@@ -18,6 +18,7 @@ Scenario Outline: History of changes in Business Glossary
   When <user> tries to query history for a business concept with name "My Business Term" of type "Business Term"
   Then if <user> is "watcher" the system returns following data:
     | name             | type          | description                                        | Last Modification | Last User   | version | status           | current |
+    | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 4       | pending_approval | true    |
     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 3       | published        | true    |
     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 2       | versioned        | false   |
     | My Business Term | Business Term | This is the first description of my business term  | Some timestamp    | app-admin   | 1       | versioned        | false   |

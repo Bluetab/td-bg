@@ -2,6 +2,7 @@ defmodule TdBg.BusinessConcept.Search do
   @moduledoc """
     Helper module to construct business concept search queries.
   """
+  alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions
   alias TdBg.Search.Aggregations
@@ -57,6 +58,20 @@ defmodule TdBg.BusinessConcept.Search do
     filter_business_concept_versions(params, permissions, page, size)
   end
 
+  def list_business_concept_versions(business_concept_id, %User{is_admin: true}) do
+    query = %{business_concept_id: business_concept_id}
+    |> create_query
+    search = %{query: query}
+    @search_service.search("business_concept", search)
+    |> Enum.map(&Map.get(&1, "_source"))
+  end
+
+  def list_business_concept_versions(business_concept_id, %User{id: user_id}) do
+    permissions = %{user_id: user_id} |> Permissions.get_domain_permissions()
+    params = %{business_concept_id: business_concept_id}
+    filter_business_concept_versions(params, permissions, 0, 100)
+  end
+
   def create_filters(%{"filters" => filters}) do
     filters
     |> Map.to_list()
@@ -90,6 +105,9 @@ defmodule TdBg.BusinessConcept.Search do
     |> Enum.map(&Map.get(&1, "_source"))
   end
 
+  defp create_query(%{business_concept_id: id}) do
+    %{term: %{business_concept_id: id}}
+  end
   defp create_query(%{"query" => query}) do
     %{simple_query_string: %{query: query}}
     |> bool_query

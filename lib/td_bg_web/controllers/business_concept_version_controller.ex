@@ -13,7 +13,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ConceptFields
-  alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
   alias TdBg.Utils.CollectionUtils
@@ -26,7 +25,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.SwaggerDefinitions
 
   @td_dd_api   Application.get_env(:td_bg, :dd_service)[:api_service]
-  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   @events %{add_concept_field: "add_concept_field", delete_concept_field: "delete_concept_field"}
 
@@ -214,32 +212,22 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
   end
 
-  def versions(conn, %{"business_concept_id" => business_concept_id}) do
+  # TODO: Change parameter name (or change API caller to use business concept id instead of version id)
+  def versions(conn, %{"business_concept_id" => business_concept_version_id}) do
     user = conn.assigns[:current_user]
 
     business_concept_version =
-      BusinessConcepts.get_business_concept_version!(business_concept_id)
-
-    business_concept = business_concept_version.business_concept
+      BusinessConcepts.get_business_concept_version!(business_concept_version_id)
 
     with true <- can?(user, view_versions(business_concept_version)) do
-      allowed_status = get_allowed_version_status_by_role(user, business_concept)
-
       business_concept_versions =
-        BusinessConcepts.list_business_concept_versions(business_concept.id, allowed_status)
-
-      user_ids = business_concept_versions
-      |> Enum.reduce([], &([Map.get(&1, :last_change_by)|&2]))
-      |> Enum.uniq
-
-      users = @td_auth_api.search_users(%{"ids" => user_ids})
+        Search.list_business_concept_versions(business_concept_version.business_concept_id, user)
 
       render(
         conn,
-        "index.json",
+        "versions.json",
         business_concept_versions: business_concept_versions,
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_versions),
-        users: users
+        hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
       )
     else
       false ->
@@ -251,29 +239,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
-    end
-  end
-
-  defp get_allowed_version_status_by_role(user, business_concept) do
-    case user.is_admin do
-      true ->
-        BusinessConcept.status_values()
-
-      false ->
-        permissions_to_status = BusinessConcept.permissions_to_status()
-
-        %{user_id: user.id, domain_id: business_concept.domain_id}
-        |> Permissions.get_permissions_in_resource()
-        |> Enum.reduce([], fn permission, acc ->
-          acc ++ get_from_permissions(permissions_to_status, permission)
-        end)
-    end
-  end
-
-  defp get_from_permissions(permissions_to_status, permission) do
-    case Map.get(permissions_to_status, permission) do
-      nil -> []
-      status -> [status]
     end
   end
 
