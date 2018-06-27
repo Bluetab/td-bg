@@ -217,7 +217,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
 
     business_concept_version =
-      BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+      BusinessConcepts.get_business_concept_version!(business_concept_id)
 
     business_concept = business_concept_version.business_concept
 

@@ -170,12 +170,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "lists business_concept_versions", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
-      business_concept_id = business_concept_version.business_concept.id
 
       conn =
         get(
           conn,
-          business_concept_business_concept_version_path(conn, :versions, business_concept_id)
+          business_concept_business_concept_version_path(conn, :versions, business_concept_version.id)
         )
 
       [data | _] = json_response(conn, 200)["data"]
