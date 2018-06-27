@@ -25,7 +25,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
 
-  @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
+  @td_dd_api   Application.get_env(:td_bg, :dd_service)[:api_service]
+  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   @events %{add_concept_field: "add_concept_field", delete_concept_field: "delete_concept_field"}
 
@@ -227,11 +228,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       business_concept_versions =
         BusinessConcepts.list_business_concept_versions(business_concept.id, allowed_status)
 
+      user_ids = business_concept_versions
+      |> Enum.reduce([], &([Map.get(&1, :last_change_by)|&2]))
+      |> Enum.uniq
+
+      users = @td_auth_api.search_users(%{"ids" => user_ids})
+
       render(
         conn,
         "index.json",
         business_concept_versions: business_concept_versions,
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
+        hypermedia: hypermedia("business_concept_version", conn, business_concept_versions),
+        users: users
       )
     else
       false ->
