@@ -2,9 +2,6 @@ defmodule TdBg.UsersSteps do
   @moduledoc false
   use Cabbage.Feature
   use ExUnit.CaseTemplate
-  import TdBgWeb.Router.Helpers
-  import TdBgWeb.Authentication, only: :functions
-  alias Poison, as: JSON
 
   defgiven ~r/^following users exist with the indicated role in Domain "(?<domain_name>[^"]+)"$/,
     %{domain_name: domain_name, table: table}, state do
@@ -17,8 +14,6 @@ defmodule TdBg.UsersSteps do
         %{"id" => role_id} = get_role_by_name(state[:token_admin], role_name)
         acl_entry_params = %{principal_type: "user", principal_id: principal_id, resource_type: "domain", resource_id: domain["id"], role_id: role_id}
         {:ok, _, _json_resp} = acl_entry_create(state[:token_admin], acl_entry_params)
-        {:ok, _, json_resp} = user_domain_role(state[:token_admin], %{user_id: principal_id, domain_id: domain["id"]})
-        assert Enum.member?(Enum.map(json_resp["data"], &(&1["name"])), role_name)
       end)
   end
 
@@ -31,13 +26,6 @@ defmodule TdBg.UsersSteps do
     token = get_user_token(user_name)
     {_, status_code, json_resp} = acl_entry_create(token , acl_entry_params)
     {:ok, Map.merge(state, %{status_code: status_code,  resp: json_resp})}
-  end
-
-  def user_domain_role(token, attrs) do
-    headers = get_header(token)
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(user_domain_role_url(TdBgWeb.Endpoint, :user_domain_role, attrs.user_id, attrs.domain_id), headers, [])
-    {:ok, status_code, resp |> JSON.decode!}
   end
 
 end

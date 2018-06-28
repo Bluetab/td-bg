@@ -4,7 +4,6 @@ defmodule TdBgWeb.RoleController do
 
   import Canada, only: [can?: 2]
 
-  alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
@@ -136,22 +135,6 @@ defmodule TdBgWeb.RoleController do
         |> put_status(:forbidden)
         |> render(ErrorView, :"403.json")
     end
-  end
-
-  swagger_path :user_domain_role do
-    get "/users/{user_id}/domains/{domain_id}/roles"
-    produces "application/json"
-    parameters do
-      user_id :path, :integer, "user id", required: true
-      domain_id :path, :integer, "domain id", required: true
-    end
-    response 200, "OK", Schema.ref(:RolesResponse)
-    response 400, "Client Error"
-  end
-
-  def user_domain_role(conn, %{"user_id" => user_id, "domain_id" => domain_id}) do
-    roles = AclEntry.get_all_roles(%{user_id: user_id, domain_id: domain_id})
-    render(conn, "index.json", roles: roles)
   end
 
 end
