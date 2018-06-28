@@ -124,16 +124,17 @@ defmodule TdBg.Permissions.AclEntry do
     list_acl_entries_by_principal(%{principal_id: group_id, principal_type: "group"})
   end
 
+  def list_acl_entries_by_user_with_groups(%{user_id: user_id, gids: gids}) when is_list(gids) do
+    user_acl_entries = list_acl_entries_by_user(%{user_id: user_id})
+    group_acl_entries =
+      gids
+      |> Enum.flat_map(&list_acl_entries_by_group(%{group_id: &1}))
+    user_acl_entries ++ group_acl_entries
+  end
   def list_acl_entries_by_user_with_groups(%{user_id: user_id}) do
     user = @td_auth_api.get_user(user_id)
     group_ids = User.get_group_ids(user)
-    user_acl_entries = list_acl_entries_by_user(%{user_id: user_id})
-
-    group_acl_entries =
-      group_ids
-      |> Enum.flat_map(&list_acl_entries_by_group(%{group_id: &1}))
-
-    user_acl_entries ++ group_acl_entries
+    list_acl_entries_by_user_with_groups(%{user_id: user_id, gids: group_ids})
   end
 
   @doc """

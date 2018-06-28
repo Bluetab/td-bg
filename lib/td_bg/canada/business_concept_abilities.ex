@@ -7,346 +7,122 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   alias TdBg.Permissions.Permission
   alias TdBg.Taxonomies.Domain
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :create_business_concept) do
+  def can?(%User{is_admin: is_admin} = user, :create_business_concept) do
     is_admin or
       Permissions.has_any_permission(
-        user_id,
+        user,
         [Permission.permissions().create_business_concept],
         Domain
       )
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :create_business_concept, %Domain{
+  def can?(%User{} = user, :create_business_concept, %Domain{
         id: domain_id
       }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().create_business_concept,
-      domain_id: domain_id
-    }
-    |> Permissions.authorized?()
+    Permissions.authorized?(user, Permission.permissions().create_business_concept, domain_id)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :update, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :get_fields, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :get_fields, %BusinessConceptVersion{} = business_concept_version) do
+    can?(user, :view_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :get_field, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :get_field, %BusinessConceptVersion{} = business_concept_version) do
+    can?(user, :view_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :add_field, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :add_field, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :delete_field, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :delete_field, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :get_data_structures, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :get_data_structures, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :get_data_fields, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :get_data_fields, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :send_for_approval, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().send_business_concept_for_approval,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :send_for_approval, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :reject, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().reject_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().pending_approval],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_rejectable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().reject_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :undo_rejection, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().rejected],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :undo_rejection, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_undo_rejectable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :publish, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().publish_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().pending_approval],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_publishable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().publish_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :version, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().update_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().published],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :version, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_versionable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().update_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :deprecate, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().deprecate_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().published],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :deprecate, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_deprecatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().deprecate_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :delete, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().delete_business_concept,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft, BusinessConcept.status().rejected],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_deletable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().delete_business_concept, business_concept_version)
   end
 
-  def can?(%User{id: user_id, is_admin: is_admin}, :view_versions, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().view_versioned_business_concepts,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [
-        BusinessConcept.status().draft,
-        BusinessConcept.status().pending_approval,
-        BusinessConcept.status().rejected,
-        BusinessConcept.status().published,
-        BusinessConcept.status().versioned,
-        BusinessConcept.status().deprecated
-      ],
-      domain_id: domain_id
-    }
-    |> authorized?
+  def can?(%User{} = user, :view_versions, %BusinessConceptVersion{} = business_concept_version) do
+    valid_statuses = [
+      BusinessConcept.status().draft,
+      BusinessConcept.status().pending_approval,
+      BusinessConcept.status().rejected,
+      BusinessConcept.status().published,
+      BusinessConcept.status().versioned,
+      BusinessConcept.status().deprecated
+    ]
+    # TODO: Should be only BusinessConcept.status().versioned??
+    BusinessConceptVersion.has_any_status?(business_concept_version, valid_statuses) &&
+    authorized?(user, Permission.permissions().view_versioned_business_concepts, business_concept_version)
   end
 
-  def can?(user, :view_business_concept, %BusinessConceptVersion{
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    can?(user, :view_business_concept, {status, domain_id})
+  def can?(%User{is_admin: true}, :view_business_concept, %BusinessConceptVersion{}), do: true
+
+  def can?(%User{} = user, :view_business_concept, %BusinessConceptVersion{status: status} = business_concept_version) do
+    permission = Map.get(BusinessConcept.status_to_permissions(), status)
+    authorized?(user, permission, business_concept_version)
   end
 
-  def can?(%User{is_admin: true}, :view_business_concept, _any_domain_and_status) do
-    true
+  def can?(%User{} = user, :manage_alias, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    authorized?(user, Permission.permissions().manage_business_concept_alias, business_concept_version)
   end
 
-  def can?(%User{id: user_id}, :view_business_concept, {status, domain_id}) do
-    %{
-      user_id: user_id,
-      permission: Map.get(BusinessConcept.status_to_permissions(), status),
-      domain_id: domain_id
-    }
-    |> Permissions.authorized?()
+  def can?(%User{}, _action, _business_concept_version), do: false
+
+  defp authorized?(%User{is_admin: true}, _permission, _), do: true
+  defp authorized?(%User{} = user, permission, %BusinessConceptVersion{business_concept: business_concept}) do
+    authorized?(user, permission, business_concept)
   end
-
-  def can?(%User{id: user_id, is_admin: is_admin}, :manage_alias, %BusinessConceptVersion{
-        current: is_current,
-        status: status,
-        business_concept: %BusinessConcept{domain_id: domain_id}
-      }) do
-    %{
-      user_id: user_id,
-      is_admin: is_admin,
-      permission: Permission.permissions().manage_business_concept_alias,
-      is_current: is_current,
-      current_status: status,
-      required_statuses: [BusinessConcept.status().draft, BusinessConcept.status().published],
-      domain_id: domain_id
-    }
-    |> authorized?
-  end
-
-  def can?(%User{}, _permission, _domain), do: false
-
-  defp authorized?(%{
-         is_admin: true,
-         is_current: is_current,
-         current_status: current_status,
-         required_statuses: required_statuses
-       }) do
-    is_current && Enum.member?(required_statuses, current_status)
-  end
-
-  defp authorized?(%{
-         user_id: user_id,
-         permission: permission,
-         is_current: is_current,
-         current_status: current_status,
-         required_statuses: required_statuses,
-         domain_id: domain_id
-       }) do
-    is_current && Enum.member?(required_statuses, current_status) &&
-      Permissions.authorized?(%{user_id: user_id, permission: permission, domain_id: domain_id})
+  defp authorized?(%User{} = user, permission, %BusinessConcept{domain_id: domain_id}) do
+    Permissions.authorized?(user, permission, domain_id)
   end
 end

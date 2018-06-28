@@ -10,6 +10,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   @behaviour Searchable
 
+  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
+
   schema "business_concept_versions" do
     field(:content, :map)
     field(:related_to, {:array, :integer})
@@ -134,11 +136,16 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     ])
   end
 
-  def search_fields(%BusinessConceptVersion{} = concept) do
+  def search_fields(%BusinessConceptVersion{last_change_by: last_change_by_id} = concept) do
     domain = Taxonomies.get_domain!(concept.business_concept.domain_id)
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
-    domain_ids = Taxonomies.get_parent_ids(domain, true)
+    domain_ids = Taxonomies.get_parent_ids(domain.id, true)
+    # TODO: Cache user list for indexing instead of querying for every document
+    last_change_by = case @td_auth_api.get_user(last_change_by_id) do
+      nil -> %{}
+      user -> user |> Map.take(["id", "user_name", "full_name"])
+    end
 
     %{
       id: concept.id,
@@ -151,6 +158,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         id: domain.id,
         name: domain.name
       },
+      last_change_by: last_change_by,
       type: concept.business_concept.type,
       content: concept.content,
       last_change_at: concept.business_concept.last_change_at,
@@ -165,4 +173,30 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def index_name do
     "business_concept"
   end
+
+  def has_any_status?(%BusinessConceptVersion{status: status}, statuses), do: has_any_status?(status, statuses)
+  def has_any_status?(_status, []), do: false
+  def has_any_status?(status, [h|t]) do
+    status == h || has_any_status?(status, t)
+  end
+
+  def is_updatable?(%BusinessConceptVersion{current: current, status: status}) do
+    current && status == BusinessConcept.status().draft
+  end
+  def is_publishable?(%BusinessConceptVersion{current: current, status: status}) do
+    current && status == BusinessConcept.status().pending_approval
+  end
+  def is_rejectable?(%BusinessConceptVersion{} = business_concept_version), do: is_publishable?(business_concept_version)
+  def is_versionable?(%BusinessConceptVersion{current: current, status: status}) do
+    current && status == BusinessConcept.status().published
+  end
+  def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version), do: is_versionable?(business_concept_version)
+  def is_undo_rejectable?(%BusinessConceptVersion{current: current, status: status}) do
+    current && status == BusinessConcept.status().rejected
+  end
+  def is_deletable?(%BusinessConceptVersion{current: current, status: status}) do
+    valid_statuses = [BusinessConcept.status().draft, BusinessConcept.status().rejected]
+    current && Enum.member?(valid_statuses, status)
+  end
+
 end

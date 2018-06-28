@@ -25,7 +25,7 @@ defmodule TdBgWeb.Authentication do
   end
 
   def create_user_auth_conn(user) do
-    {:ok, jwt, full_claims} = Guardian.encode_and_sign(user)
+    {:ok, jwt, full_claims} = Guardian.encode_and_sign(user, %{gids: []})
     conn = ConnTest.build_conn()
     conn = put_auth_headers(conn, jwt)
     {:ok, %{conn: conn, jwt: jwt, claims: full_claims}}
@@ -92,7 +92,7 @@ defmodule TdBgWeb.Authentication do
   end
 
   def build_user_token(%User{} = user) do
-    case Guardian.encode_and_sign(user) do
+    case Guardian.encode_and_sign(user, %{gids: []}) do
       {:ok, jwt, _full_claims} -> jwt
       _ -> raise "Problems encoding and signing a user"
     end

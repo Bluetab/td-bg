@@ -498,11 +498,11 @@ defmodule TdBg.BusinessConceptSteps do
     business_concept_version =
       business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
 
-    business_concept_id = business_concept_version["business_concept_id"]
+    business_concept_version_id = business_concept_version["id"]
     token = get_user_token(user_name)
 
     {_, status_code, %{"data" => business_concept_versions}} =
-      business_concept_versions(token, business_concept_id)
+      business_concept_version_versions(token, business_concept_version_id)
 
     assert rc_ok() == to_response_code(status_code)
     {:ok, Map.merge(state, %{business_concept_versions: business_concept_versions})}

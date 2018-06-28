@@ -1,4 +1,5 @@
 defmodule TdBgWeb.UserController do
+  # TODO: Remove this controller (refactor tests)
   use TdBgWeb, :controller
   use PhoenixSwagger
   alias TdBg.Accounts.User

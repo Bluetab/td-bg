@@ -87,6 +87,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     users
   end
 
+  def search_users(%{"ids" => []}), do: []
   def search_users(%{"ids" => _ids} = ids) do
     token = get_api_user_token()
 

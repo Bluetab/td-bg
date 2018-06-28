@@ -19,6 +19,15 @@ defmodule TdBg.Search.MockSearch do
     |> Poison.decode!()
   end
 
+  def search("business_concept", %{query: %{term: %{business_concept_id: business_concept_id}}}) do
+    BusinessConcepts.list_all_business_concept_versions()
+    |> Enum.filter(&(&1.business_concept_id == business_concept_id))
+    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(&%{_source: &1})
+    |> Poison.encode!()
+    |> Poison.decode!()
+  end
+
   def search("business_concept", %{
         query: %{bool: %{must: %{simple_query_string: %{query: query}}}}
       }) do

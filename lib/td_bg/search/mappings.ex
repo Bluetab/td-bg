@@ -23,6 +23,13 @@ defmodule TdBg.Search.Mappings do
           name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
         }
       },
+      last_change_by: %{
+        properties: %{
+          id: %{type: "long"},
+          user_name: %{type: "text", fields: %{raw: %{type: "keyword"}}},
+          full_name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+        }
+      },
       domain_ids: %{type: "long"},
       link_count: %{type: "long"},
       q_rule_count: %{type: "long"},

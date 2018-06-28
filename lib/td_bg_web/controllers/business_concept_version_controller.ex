@@ -13,7 +13,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ConceptFields
-  alias TdBg.Permissions
   alias TdBg.Taxonomies
   alias TdBg.Templates
   alias TdBg.Utils.CollectionUtils
@@ -25,7 +24,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
 
-  @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
+  @td_dd_api   Application.get_env(:td_bg, :dd_service)[:api_service]
 
   @events %{add_concept_field: "add_concept_field", delete_concept_field: "delete_concept_field"}
 
@@ -57,7 +56,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       "list.json",
       business_concept_versions: business_concept_versions,
       hypermedia:
-        hypermedia_typed(
+        collection_hypermedia(
           "business_concept_version",
           conn,
           business_concept_versions,
@@ -88,7 +87,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       "list.json",
       business_concept_versions: business_concept_versions,
       hypermedia:
-        hypermedia_typed(
+        collection_hypermedia(
           "business_concept_version",
           conn,
           business_concept_versions,
@@ -203,33 +202,29 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :versions do
-    get("/business_concepts/{business_concept_id}/versions")
+    get("/business_concepts/{business_concept_version_id}/versions")
     description("List Business Concept Versions")
 
     parameters do
-      business_concept_id(:path, :integer, "Business Concept ID", required: true)
+      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
     end
 
     response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
   end
 
-  def versions(conn, %{"business_concept_id" => business_concept_id}) do
+  def versions(conn, %{"business_concept_version_id" => business_concept_version_id}) do
     user = conn.assigns[:current_user]
 
     business_concept_version =
-      BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
-
-    business_concept = business_concept_version.business_concept
+      BusinessConcepts.get_business_concept_version!(business_concept_version_id)
 
     with true <- can?(user, view_versions(business_concept_version)) do
-      allowed_status = get_allowed_version_status_by_role(user, business_concept)
-
       business_concept_versions =
-        BusinessConcepts.list_business_concept_versions(business_concept.id, allowed_status)
+        Search.list_business_concept_versions(business_concept_version.business_concept_id, user)
 
       render(
         conn,
-        "index.json",
+        "versions.json",
         business_concept_versions: business_concept_versions,
         hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
       )
@@ -243,29 +238,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
-    end
-  end
-
-  defp get_allowed_version_status_by_role(user, business_concept) do
-    case user.is_admin do
-      true ->
-        BusinessConcept.status_values()
-
-      false ->
-        permissions_to_status = BusinessConcept.permissions_to_status()
-
-        %{user_id: user.id, domain_id: business_concept.domain_id}
-        |> Permissions.get_permissions_in_resource()
-        |> Enum.reduce([], fn permission, acc ->
-          acc ++ get_from_permissions(permissions_to_status, permission)
-        end)
-    end
-  end
-
-  defp get_from_permissions(permissions_to_status, permission) do
-    case Map.get(permissions_to_status, permission) do
-      nil -> []
-      status -> [status]
     end
   end
 
@@ -283,15 +255,28 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def show(conn, %{"id" => id}) do
+    user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    render(
-      conn,
-      "show.json",
-      business_concept_version: business_concept_version,
-      hypermedia: hypermedia("business_concept_version", conn, business_concept_version)
-    )
-  end
+    with true <- can?(user, view_business_concept(business_concept_version)) do
+      render(
+        conn,
+        "show.json",
+        business_concept_version: business_concept_version,
+        hypermedia: hypermedia("business_concept_version", conn, business_concept_version)
+      )
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, :"403.json")
+
+      _error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
+    end
+end
 
   swagger_path :delete do
     delete("/business_concept_versions/{id}")
@@ -612,29 +597,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp do_version(conn, user, business_concept_version) do
-    business_concept = business_concept_version.business_concept
-    concept_type = business_concept.type
-    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
-
-    business_concept =
-      business_concept
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-
-    draft_attrs = Map.from_struct(business_concept_version)
-
-    draft_attrs =
-      draft_attrs
-      |> Map.put("business_concept", business_concept)
-      |> Map.put("content_schema", content_schema)
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-      |> Map.put("status", BusinessConcept.status().draft)
-      |> Map.put("version", business_concept_version.version + 1)
-
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
-           BusinessConcepts.version_business_concept(business_concept_version, draft_attrs) do
+           BusinessConcepts.version_business_concept(user, business_concept_version) do
       conn
       |> put_status(:created)
       |> render(
