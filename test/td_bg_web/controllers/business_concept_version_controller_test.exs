@@ -174,7 +174,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         get(
           conn,
-          business_concept_business_concept_version_path(conn, :versions, business_concept_version.id)
+          business_concept_version_business_concept_version_path(conn, :versions, business_concept_version.id)
         )
 
       [data | _] = json_response(conn, 200)["data"]

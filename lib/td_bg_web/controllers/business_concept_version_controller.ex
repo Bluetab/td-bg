@@ -202,18 +202,17 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :versions do
-    get("/business_concepts/{business_concept_id}/versions")
+    get("/business_concepts/{business_concept_version_id}/versions")
     description("List Business Concept Versions")
 
     parameters do
-      business_concept_id(:path, :integer, "Business Concept ID", required: true)
+      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
     end
 
     response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
   end
 
-  # TODO: Change parameter name (or change API caller to use business concept id instead of version id)
-  def versions(conn, %{"business_concept_id" => business_concept_version_id}) do
+  def versions(conn, %{"business_concept_version_id" => business_concept_version_id}) do
     user = conn.assigns[:current_user]
 
     business_concept_version =

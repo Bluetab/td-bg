@@ -2,19 +2,17 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
   use TdBg.Hypermedia, :view
 
-  alias TdBg.Accounts.User
   alias TdBgWeb.BusinessConceptVersionView
 
   def render("index.json", %{
         business_concept_versions: business_concept_versions,
         hypermedia: hypermedia
-      } = assigns) do
+      }) do
     render_many_hypermedia(
       business_concept_versions,
       hypermedia,
       BusinessConceptVersionView,
-      "business_concept_version.json",
-      get_new_assigns(assigns)
+      "business_concept_version.json"
     )
   end
 
@@ -76,8 +74,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   def render("business_concept_version.json", %{
         business_concept_version: business_concept_version
-      } = assigns) do
-    users = Map.get(assigns, :users, [])
+      }) do
     %{
       id: business_concept_version.id,
       business_concept_id: business_concept_version.business_concept.id,
@@ -86,7 +83,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       related_to: business_concept_version.related_to,
       name: business_concept_version.name,
       description: business_concept_version.description,
-      last_change_by: get_last_change_by_user_name(business_concept_version.last_change_by, users),
+      last_change_by: business_concept_version.last_change_by,
       last_change_at: business_concept_version.last_change_at,
       domain: Map.take(business_concept_version.business_concept.domain, [:id, :name]),
       status: business_concept_version.status,
@@ -123,16 +120,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       current: business_concept_version["current"],
       version: business_concept_version["version"]
     }
-  end
-
-  defp get_new_assigns(assigns) do
-    assigns |> Map.take([:users])
-  end
-
-  defp get_last_change_by_user_name(last_change_by_id, users) do
-    default_username = Integer.to_string(last_change_by_id)
-    default_user = %User{user_name: default_username}
-    Enum.find(users, default_user, &(&1.id == last_change_by_id)).user_name
   end
 
   defp add_reject_reason(concept, reject_reason, :rejected) do

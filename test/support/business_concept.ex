@@ -259,12 +259,12 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code}
   end
 
-  def business_concept_versions(token, business_concept_id) do
+  def business_concept_version_versions(token, business_concept_version_id) do
     headers = get_header(token)
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(
-        business_concept_business_concept_version_url(@endpoint, :versions, business_concept_id),
+        business_concept_version_business_concept_version_url(@endpoint, :versions, business_concept_version_id),
         headers,
         []
       )

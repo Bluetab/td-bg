@@ -71,6 +71,7 @@ defmodule TdBgWeb.Router do
       delete "/fields/:concept_field_id", BusinessConceptVersionController, :delete_field
       get  "/data_structures", BusinessConceptVersionController, :get_data_structures
       get  "/data_structures/:data_structure_id/data_fields", BusinessConceptVersionController, :get_data_fields
+      get "/versions", BusinessConceptVersionController, :versions
     end
     post "/business_concept_versions/search", BusinessConceptVersionController, :search
 
@@ -84,7 +85,6 @@ defmodule TdBgWeb.Router do
       get  "/aliases", BusinessConceptAliasController, :index
       post "/aliases", BusinessConceptAliasController, :create
       patch "/status", BusinessConceptController, :update_status
-      get "/versions", BusinessConceptVersionController, :versions
     end
 
     resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]

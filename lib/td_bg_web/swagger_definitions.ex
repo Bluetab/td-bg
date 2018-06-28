@@ -669,7 +669,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
 
             name(:string, "Business Concept Version name", required: true)
             description(:string, "Business Concept Version description", required: true)
-            last_change_by(:string, "Business Concept Version last change by", required: true)
+            last_change_by(:integer, "Business Concept Version last change by", required: true)
             last_change_at(:string, "Business Concept Verion last change at", required: true)
             domain(Schema.ref(:DomainRef))
             status(:string, "Business Concept Version status", required: true)
