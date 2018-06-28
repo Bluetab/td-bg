@@ -9,14 +9,14 @@ defmodule TdBg.BusinessConcept.Search do
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
-  def get_filter_values(%{is_admin: true}) do
+  def get_filter_values(%User{is_admin: true}) do
     query = %{} |> create_query
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     @search_service.get_filters(search)
   end
 
-  def get_filter_values(%{id: user_id}) do
-    permissions = %{user_id: user_id} |> Permissions.get_domain_permissions()
+  def get_filter_values(%User{} = user) do
+    permissions = user |> Permissions.get_domain_permissions()
     get_filter_values(permissions)
   end
 
@@ -32,7 +32,7 @@ defmodule TdBg.BusinessConcept.Search do
   def search_business_concept_versions(params, user, page \\ 0, size \\ 50)
 
   # Admin user search, no filters applied
-  def search_business_concept_versions(params, %{is_admin: true}, page, size) do
+  def search_business_concept_versions(params, %User{is_admin: true}, page, size) do
     filter_clause = create_filters(params)
 
     query =
@@ -53,8 +53,8 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   # Non-admin user search, filters applied
-  def search_business_concept_versions(params, %{id: user_id}, page, size) do
-    permissions = %{user_id: user_id} |> Permissions.get_domain_permissions()
+  def search_business_concept_versions(params, %User{} = user, page, size) do
+    permissions = user |> Permissions.get_domain_permissions()
     filter_business_concept_versions(params, permissions, page, size)
   end
 
@@ -66,8 +66,8 @@ defmodule TdBg.BusinessConcept.Search do
     |> Enum.map(&Map.get(&1, "_source"))
   end
 
-  def list_business_concept_versions(business_concept_id, %User{id: user_id}) do
-    permissions = %{user_id: user_id} |> Permissions.get_domain_permissions()
+  def list_business_concept_versions(business_concept_id, %User{} = user) do
+    permissions = user |> Permissions.get_domain_permissions()
     params = %{business_concept_id: business_concept_id}
     filter_business_concept_versions(params, permissions, 0, 100)
   end
@@ -152,7 +152,7 @@ defmodule TdBg.BusinessConcept.Search do
 
     status_clause =
       permissions
-      |> Enum.map(&Map.get(BusinessConcept.permissions_to_status(), &1.name))
+      |> Enum.map(&Map.get(BusinessConcept.permissions_to_status(), &1))
       |> Enum.filter(&(!is_nil(&1)))
 
     %{
