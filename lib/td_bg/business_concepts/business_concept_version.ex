@@ -144,7 +144,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     # TODO: Cache user list for indexing instead of querying for every document
     last_change_by = case @td_auth_api.get_user(last_change_by_id) do
       nil -> %{}
-      user -> user |> Map.take(["id", "user_name", "full_name"])
+      user -> user |> Map.take([:id, :user_name, :full_name])
     end
 
     %{
