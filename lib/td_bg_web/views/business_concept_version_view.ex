@@ -113,7 +113,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       content: business_concept_version["content"],
       name: business_concept_version["name"],
       description: business_concept_version["description"],
-      last_change_by: business_concept_version["last_change_by"]["user_name"],
+      last_change_by: Map.get(business_concept_version["last_change_by"], "full_name", ""),
       last_change_at: business_concept_version["last_change_at"],
       domain: business_concept_version["domain"],
       status: business_concept_version["status"],
