@@ -30,6 +30,14 @@ defmodule TdBg.Search.MockSearch do
     |> Poison.decode!()
   end
 
+  def search("business_concept", %{
+    query: _query,
+    sort: _sort,
+    size: _size
+  }) do
+    %{:link_count => 0, :q_rule_count => 0}
+  end
+
   defp matches(string, query) when is_bitstring(string) do
     String.starts_with?(string, query)
   end

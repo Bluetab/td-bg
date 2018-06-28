@@ -142,7 +142,9 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, business_concept_version} ->
         new_version = get_business_concept_version!(business_concept_version.id)
-        index_business_concept_versions(new_version.business_concept_id)
+        business_concept_id = new_version.business_concept_id
+        params = retrieve_last_bc_version_params(business_concept_id)
+        index_business_concept_versions(business_concept_id, params)
         {:ok, new_version}
 
       _ ->
@@ -174,7 +176,9 @@ defmodule TdBg.BusinessConcepts do
 
     case result do
       {:ok, %{current: new_version}} ->
-        index_business_concept_versions(new_version.business_concept_id)
+        business_concept_id = new_version.business_concept_id
+        params = retrieve_last_bc_version_params(business_concept_id)
+        index_business_concept_versions(business_concept_id, params)
         result
 
       _ ->
@@ -209,7 +213,9 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
-        index_business_concept_versions(updated_version.business_concept_id)
+        business_concept_id = updated_version.business_concept_id
+        params = retrieve_last_bc_version_params(business_concept_id)
+        index_business_concept_versions(business_concept_id, params)
         {:ok, updated_version}
 
       _ ->
@@ -228,7 +234,9 @@ defmodule TdBg.BusinessConcepts do
 
     case result do
       {:ok, updated_version} ->
-        index_business_concept_versions(updated_version.business_concept_id)
+        business_concept_id = updated_version.business_concept_id
+        params = retrieve_last_bc_version_params(business_concept_id)
+        index_business_concept_versions(business_concept_id, params)
         result
 
       _ ->
@@ -259,7 +267,8 @@ defmodule TdBg.BusinessConcepts do
 
     case result do
       {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
-        index_business_concept_versions(business_concept_id)
+        params = retrieve_last_bc_version_params(business_concept_id)
+        index_business_concept_versions(business_concept_id, params)
         result
 
       _ ->
@@ -267,10 +276,44 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp index_business_concept_versions(business_concept_id) do
+  defp index_business_concept_versions(business_concept_id, params) do
     business_concept_id
     |> list_business_concept_versions(nil)
-    |> Enum.each(&@search_service.put_search/1)
+    |> Enum.each(fn(bv) ->
+      bv =
+        case params do
+          params when params == %{} -> bv
+          params -> Map.merge(bv, params)
+        end
+      @search_service.put_search(bv)
+    end
+    )
+  end
+
+  defp retrieve_last_bc_version_params(business_concept_id) do
+    default_map = %{"link_count" => 0, "q_rule_count" => 0}
+    query = %{
+      query: %{term: %{"business_concept_id" => business_concept_id}},
+      sort: [%{"version" => %{"order" => "desc"}}],
+      size: "1"
+    }
+
+    @search_service.search("business_concept", query)
+      |> parse_params_result(default_map)
+  end
+
+  defp parse_params_result([], default_map), do: parse_map_to_atom(default_map)
+  defp parse_params_result(result, default_map) do
+    result
+      |> Map.take(Map.keys(default_map))
+      |> Map.merge(default_map, fn _k, v1, v2 ->
+        v1 || v2
+      end)
+      |> parse_map_to_atom
+  end
+
+  defp parse_map_to_atom(map) do
+    Map.new(map, fn {k, v} -> {String.to_atom(k), v} end)
   end
 
   def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
@@ -281,7 +324,9 @@ defmodule TdBg.BusinessConcepts do
 
     case result do
       {:ok, updated_version} ->
-        index_business_concept_versions(updated_version.business_concept_id)
+        business_concept_id = updated_version.business_concept_id
+        params = retrieve_last_bc_version_params(business_concept_id)
+        index_business_concept_versions(business_concept_id, params)
         result
 
       _ ->
@@ -463,7 +508,6 @@ defmodule TdBg.BusinessConcepts do
            current: %BusinessConceptVersion{} = current_version
          }} ->
           @search_service.delete_search(deleted_version)
-          index_business_concept_versions(current_version.business_concept_id)
           {:ok, current_version}
       end
     end

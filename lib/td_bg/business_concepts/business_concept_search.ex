@@ -40,7 +40,7 @@ defmodule TdBg.BusinessConcept.Search do
         _ -> create_query(params, filter_clause)
       end
 
-    search = %{
+     search = %{
       from: page * size,
       size: size,
       query: query,

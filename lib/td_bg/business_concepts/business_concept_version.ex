@@ -156,7 +156,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       last_change_at: concept.business_concept.last_change_at,
       bc_aliases: aliases,
       domain_ids: domain_ids,
-      current: concept.current
+      current: concept.current,
+      link_count: concept.link_count,
+      q_rule_count: concept.q_rule_count
     }
   end
 
