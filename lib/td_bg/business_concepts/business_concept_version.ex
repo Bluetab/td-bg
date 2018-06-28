@@ -11,6 +11,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   @behaviour Searchable
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
+  @default_bc_version_params %{:link_count => 0, :q_rule_count => 0}
 
   schema "business_concept_versions" do
     field(:content, :map)
@@ -146,6 +147,11 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       nil -> %{}
       user -> user |> Map.take(["id", "user_name", "full_name"])
     end
+    #By default we will set to 0 the bc params but the values in this map
+    #shoul never be empty!!
+    concept = Map.merge(concept, @default_bc_version_params, fn _k, v1, v2 ->
+        v1 || v2
+    end)
 
     %{
       id: concept.id,
