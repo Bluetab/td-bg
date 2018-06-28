@@ -65,7 +65,7 @@ config :td_bg, :dd_service, api_service: TdBgWeb.ApiServices.HttpTdDdService,
   domain: ""
 
 config :td_bg, :elasticsearch,
-  search_service: TdBg.Search,
+  search_service: TdBg.Search.MockSearch,
   es_host: "localhost",
   es_port: 9200,
   type_name: "doc"
