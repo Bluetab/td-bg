@@ -7,7 +7,7 @@ defmodule TdBg.Search.Aggregations do
 
   def aggregation_terms do
     static_keywords = [
-      {"domain", %{terms: %{field: "domain.name.raw"}}},
+      {"domain", %{terms: %{field: "domain.name.raw", size: 50}}},
       {"status", %{terms: %{field: "status"}}},
       {"type", %{terms: %{field: "type"}}}
     ]
