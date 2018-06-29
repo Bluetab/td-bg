@@ -284,15 +284,14 @@ defmodule TdBg.BusinessConcepts do
   defp index_business_concept_versions(business_concept_id, params) do
     business_concept_id
     |> list_business_concept_versions(nil)
-    |> Enum.each(fn(bv) ->
-      bv =
+    |> Enum.map(fn(bv) ->
         case params do
           params when params == %{} -> bv
           params -> Map.merge(bv, params)
         end
-      @search_service.put_search(bv)
-    end
+      end
     )
+    |> Enum.each(&@search_service.put_search/1)
   end
 
   defp retrieve_last_bc_version_params(business_concept_id) do
@@ -308,7 +307,8 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp parse_params_result([], default_map), do: parse_map_to_atom(default_map)
-  defp parse_params_result(result, default_map) do
+  #I only expect one element
+  defp parse_params_result([result], default_map) do
     result
       |> Map.take(Map.keys(default_map))
       |> Map.merge(default_map, fn _k, v1, v2 ->

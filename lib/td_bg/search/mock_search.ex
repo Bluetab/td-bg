@@ -44,7 +44,7 @@ defmodule TdBg.Search.MockSearch do
     sort: _sort,
     size: _size
   }) do
-    %{:link_count => 0, :q_rule_count => 0}
+    [%{:link_count => 0, :q_rule_count => 0}]
   end
 
   defp matches(string, query) when is_bitstring(string) do
