@@ -27,18 +27,6 @@ defmodule TdBg.PermissionsTest do
       assert Permissions.get_permission!(permission.id) == permission
     end
 
-    test "get_permissions_in_resource?/1 get permissions in resource" do
-      user = build(:user)
-      user = create_user(user.user_name)
-      domain = insert(:domain)
-      permission = insert(:permission)
-      role = insert(:role, permissions: [permission])
-      insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
-
-      assert Permissions.get_permissions_in_resource(%{user_id: user.id, domain_id: domain.id}) ==
-               [permission.name]
-    end
-
     test "authorize?/1 check permission" do
       user = build(:user)
       user = create_user(user.user_name)

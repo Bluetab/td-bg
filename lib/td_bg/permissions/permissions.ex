@@ -12,8 +12,6 @@ defmodule TdBg.Permissions do
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
 
-  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
-
   @doc """
   Returns the list of permissions.
 
@@ -43,57 +41,10 @@ defmodule TdBg.Permissions do
   """
   def get_permission!(id), do: Repo.get!(Permission, id)
 
-  def get_resource_type_permissions(%{user_id: user_id}, resource_type) do
-    %{user_id: user_id}
-    |> AclEntry.list_acl_entries_by_user_with_groups()
-    |> Enum.filter(&(&1.resource_type == resource_type))
-    |> Enum.map(&%{resource_id: &1.resource_id, permissions: &1.role.permissions})
-  end
-
-  def get_domain_permissions(%{user_id: user_id}) do
-    get_resource_type_permissions(%{user_id: user_id}, "domain")
-  end
-
-  def get_domain_permissions(%User{} = user, domain_id) do
-    domain_ids = Taxonomies.get_parent_ids(domain_id, true)
+  def get_domain_permissions(%User{} = user) do
     user
-    |> get_or_store_session_permissions
-    |> Enum.filter(&(contains?(domain_ids, &1)))
-    |> Enum.flat_map(&(&1.permissions))
-    |> Enum.uniq
-  end
-
-  def get_all_permissions(%{user_id: user_id, domain_id: domain_id}) do
-    roles = AclEntry.get_all_roles(%{user_id: user_id, domain_id: domain_id})
-
-    roles
-    |> Enum.flat_map(& &1.permissions)
-    |> Enum.uniq_by(& &1.id)
-    |> Enum.map(& &1.name)
-  end
-
-  def has_any_group_permission(user_id, permissions, Domain) do
-    user = @td_auth_api.get_user(user_id)
-    group_ids = User.get_group_ids(user)
-
-    query =
-      from(
-        a in AclEntry,
-        join: r in assoc(a, :role),
-        join: p in assoc(r, :permissions),
-        where:
-          p.name in ^permissions and a.principal_id in ^group_ids and a.principal_type == "group",
-        limit: 1,
-        select: a
-      )
-
-    group_acl = query |> Repo.one()
-
-    if group_acl do
-      true
-    else
-      false
-    end
+      |> get_or_store_session_permissions
+      |> Enum.filter(&(&1.resource_type == "domain"))
   end
 
   def has_any_permission(%User{} = user, permissions, Domain) do
@@ -103,22 +54,6 @@ defmodule TdBg.Permissions do
       |> Enum.flat_map(&(&1.permissions))
       |> Enum.uniq
       |> Enum.any?(&(Enum.member?(permissions, &1)))
-  end
-
-  @doc """
-  Return array of user permissions in a resource
-
-  ## Examples
-
-      iex> get_permissions_in_resource?()
-      true
-
-  """
-  def get_permissions_in_resource(%{user_id: user_id, domain_id: domain_id}) do
-    acl_input = %{user_id: user_id, domain_id: domain_id}
-
-    acl_input
-    |> get_all_permissions()
   end
 
   def get_or_store_session_permissions(%User{id: id, jti: jti, gids: gids}) do

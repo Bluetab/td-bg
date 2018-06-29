@@ -85,21 +85,6 @@ defmodule TdBg.Permissions.AclEntry do
   end
 
   @doc """
-    Returns a list of acl_entries querying by several principal_types
-  """
-  def list_acl_entries_by_principal_types(%{principal_types: principal_types}) do
-    Repo.all(
-      from(
-        acl_entry in AclEntry,
-        join: role in assoc(acl_entry, :role),
-        join: permission in assoc(role, :permissions),
-        where: acl_entry.principal_type in ^principal_types,
-        preload: [role: {role, permissions: permission}]
-      )
-    )
-  end
-
-  @doc """
 
   """
   def list_acl_entries_by_principal(%{principal_id: principal_id, principal_type: principal_type}) do
@@ -124,17 +109,12 @@ defmodule TdBg.Permissions.AclEntry do
     list_acl_entries_by_principal(%{principal_id: group_id, principal_type: "group"})
   end
 
-  def list_acl_entries_by_user_with_groups(%{user_id: user_id, gids: gids}) when is_list(gids) do
+  def list_acl_entries_by_user_with_groups(%{user_id: user_id, gids: gids}) do
     user_acl_entries = list_acl_entries_by_user(%{user_id: user_id})
     group_acl_entries =
       gids
       |> Enum.flat_map(&list_acl_entries_by_group(%{group_id: &1}))
     user_acl_entries ++ group_acl_entries
-  end
-  def list_acl_entries_by_user_with_groups(%{user_id: user_id}) do
-    user = @td_auth_api.get_user(user_id)
-    group_ids = User.get_group_ids(user)
-    list_acl_entries_by_user_with_groups(%{user_id: user_id, gids: group_ids})
   end
 
   @doc """

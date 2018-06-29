@@ -17,7 +17,6 @@ defmodule TdBg.TaxonomyTest do
 
   import TdBg.ResultSteps
   import TdBg.BusinessConceptSteps
-  import TdBg.UsersSteps
 
   setup_all do
     start_supervised(MockTdAuthService)

@@ -20,7 +20,6 @@ defmodule TdBg.BusinessConceptCreationTest do
 
   import TdBg.BusinessConceptSteps
   import TdBg.ResultSteps
-  import TdBg.UsersSteps
 
   setup_all do
     start_supervised MockTdAuthService
