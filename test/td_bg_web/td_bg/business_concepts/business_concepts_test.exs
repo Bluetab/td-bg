@@ -4,6 +4,12 @@ defmodule TdBg.BusinessConceptsTests do
   alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts
   alias TdBg.Repo
+  alias TdBgWeb.ApiServices.MockTdAuthService
+
+  setup_all do
+    start_supervised(MockTdAuthService)
+    :ok
+  end
 
   describe "business_concepts" do
     alias TdBg.BusinessConcepts.BusinessConcept

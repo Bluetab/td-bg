@@ -308,7 +308,7 @@ defmodule TdBg.BusinessConcepts do
 
   defp parse_params_result([], default_map), do: parse_map_to_atom(default_map)
   #I only expect one element
-  defp parse_params_result([result], default_map) do
+  defp parse_params_result([result|_tail], default_map) do
     result
       |> Map.take(Map.keys(default_map))
       |> Map.merge(default_map, fn _k, v1, v2 ->
