@@ -26,7 +26,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   @td_dd_api   Application.get_env(:td_bg, :dd_service)[:api_service]
 
-  @events %{add_concept_field: "add_concept_field", delete_concept_field: "delete_concept_field"}
+  @events %{create_concept_draft: "create_concept_draft",
+            update_concept_draft: "update_concept_draft",
+            delete_concept_draft: "delete_concept_draft",
+            new_concept_draft: "new_concept_draft",
+            concept_sent_for_approval: "concept_sent_for_approval",
+            concept_rejected: "concept_rejected",
+            concept_rejection_canceled: "concept_rejection_canceled",
+            concept_published: "concept_published",
+            concept_deprecated: "concept_deprecated",
+            add_concept_field: "add_concept_field",
+            delete_concept_field: "delete_concept_field"
+          }
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -160,16 +171,28 @@ defmodule TdBgWeb.BusinessConceptVersionController do
          {:name_available} <-
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
-         {:ok, %BusinessConceptVersion{} = concept} <-
+         {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.create_business_concept(creation_attrs) do
+
+       business_concept_id = version.business_concept.id
+       audit = %{
+         "audit" => %{
+           "resource_id" => business_concept_id,
+           "resource_type" => "concept",
+           "payload" => business_concept_params
+         }
+       }
+
+      Audit.create_event(conn, audit, @events.create_concept_draft)
+
       conn =
         conn
         |> put_status(:created)
         |> put_resp_header(
           "location",
-          business_concept_path(conn, :show, concept.business_concept)
+          business_concept_path(conn, :show, version.business_concept)
         )
-        |> render("show.json", business_concept_version: concept)
+        |> render("show.json", business_concept_version: version)
 
       conn
     else
@@ -294,11 +317,24 @@ end
   def delete(conn, %{"id" => id}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_id = business_concept_version.business_concept.id
 
     with true <- can?(user, delete(business_concept_version)),
          {:ok, %BusinessConceptVersion{}} <-
            BusinessConcepts.delete_business_concept_version(business_concept_version) do
+
+       audit = %{
+          "audit" => %{
+            "resource_id" => business_concept_id,
+            "resource_type" => "concept",
+            "payload" => %{}
+          }
+        }
+
+       Audit.create_event(conn, audit, @events.delete_concept_draft)
+
       send_resp(conn, :no_content, "")
+
     else
       false ->
         conn
@@ -498,6 +534,7 @@ end
       conn,
       business_concept_version,
       BusinessConcept.status().pending_approval,
+      @events.concept_sent_for_approval,
       can?(user, send_for_approval(business_concept_version))
     )
   end
@@ -507,14 +544,27 @@ end
       conn,
       business_concept_version,
       BusinessConcept.status().draft,
+      @events.concept_rejection_canceled,
       can?(user, undo_rejection(business_concept_version))
     )
   end
 
   defp publish(conn, user, business_concept_version) do
+    business_concept_id = business_concept_version.business_concept.id
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            BusinessConcepts.publish_business_concept_version(business_concept_version) do
+
+       audit = %{
+          "audit" => %{
+            "resource_id" => business_concept_id,
+            "resource_type" => "concept",
+            "payload" => %{}
+          }
+        }
+
+      Audit.create_event(conn, audit, @events.concept_published)
+
       render(
         conn,
         "show.json",
@@ -538,13 +588,25 @@ end
     attrs = %{reject_reason: reason}
 
     with true <- can?(user, reject(business_concept_version)),
-         {:ok, %BusinessConceptVersion{} = concept} <-
+         {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
+
+      business_concept_id = version.business_concept.id
+      audit = %{
+         "audit" => %{
+           "resource_id" => business_concept_id,
+           "resource_type" => "concept",
+           "payload" => %{}
+         }
+       }
+
+      Audit.create_event(conn, audit, @events.concept_rejected)
+
       render(
         conn,
         "show.json",
-        business_concept_version: concept,
-        hypermedia: hypermedia("business_concept_version", conn, concept)
+        business_concept_version: version,
+        hypermedia: hypermedia("business_concept_version", conn, version)
       )
     else
       false ->
@@ -564,19 +626,31 @@ end
       conn,
       business_concept_version,
       BusinessConcept.status().deprecated,
+      @events.concept_deprecated,
       can?(user, deprecate(business_concept_version))
     )
   end
 
-  defp update_status(conn, business_concept_version, status, authorized) do
+  defp update_status(conn, business_concept_version, status, event, authorized) do
     attrs = %{status: status}
-
+    business_concept_id = business_concept_version.business_concept.id
     with true <- authorized,
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.update_business_concept_version_status(
              business_concept_version,
              attrs
            ) do
+
+       audit = %{
+          "audit" => %{
+            "resource_id" => business_concept_id,
+            "resource_type" => "concept",
+            "payload" => %{}
+          }
+        }
+
+       Audit.create_event(conn, audit, event)
+
       render(
         conn,
         "show.json",
@@ -597,9 +671,21 @@ end
   end
 
   defp do_version(conn, user, business_concept_version) do
+    business_concept_id = business_concept_version.business_concept.id
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
            BusinessConcepts.version_business_concept(user, business_concept_version) do
+
+       audit = %{
+          "audit" => %{
+            "resource_id" => business_concept_id,
+            "resource_type" => "concept",
+            "payload" => %{}
+          }
+        }
+
+       Audit.create_event(conn, audit, @events.new_concept_draft)
+
       conn
       |> put_status(:created)
       |> render(
@@ -643,6 +729,7 @@ end
     user = conn.assigns[:current_user]
 
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_id = business_concept_version.business_concept.id
     concept_type = business_concept_version.business_concept.type
     concept_name = Map.get(business_concept_version_params, "name")
     %{:content => content_schema} = Templates.get_template_by_name(concept_type)
@@ -676,6 +763,17 @@ end
              business_concept_version,
              update_params
            ) do
+
+      audit = %{
+         "audit" => %{
+           "resource_id" => business_concept_id,
+           "resource_type" => "concept",
+           "payload" => business_concept_version_params
+         }
+       }
+
+      Audit.create_event(conn, audit, @events.update_concept_draft)
+
       render(
         conn,
         "show.json",
@@ -809,10 +907,11 @@ end
 
     with true <- can?(user, add_field(business_concept_version)),
          {:ok, concept_field} <- ConceptFields.create_concept_field(create_attrs) do
+
       audit = %{
         "audit" => %{
-          "resource_id" => id,
-          "resource_type" => "business_concept_version",
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
           "payload" => params
         }
       }
@@ -855,6 +954,7 @@ end
       ) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_id = business_concept_version.business_concept.id
     concept_field = ConceptFields.get_concept_field!(concept_field_id)
 
     with true <- can?(user, delete_field(business_concept_version)) do
@@ -862,8 +962,8 @@ end
 
       audit = %{
         "audit" => %{
-          "resource_id" => id,
-          "resource_type" => "business_concept_version",
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
           "payload" => params
         }
       }

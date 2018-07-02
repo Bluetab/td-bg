@@ -7,6 +7,7 @@ defmodule TdBgWeb.DomainControllerTest do
   alias TdBg.Permissions.Role
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
+  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{description: "some description", name: "some name"}
@@ -22,6 +23,7 @@ defmodule TdBgWeb.DomainControllerTest do
 
   setup_all do
     start_supervised MockTdAuthService
+    start_supervised MockTdAuditService
     :ok
   end
 

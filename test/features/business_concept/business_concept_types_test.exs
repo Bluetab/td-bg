@@ -10,7 +10,8 @@ defmodule TdBg.BusinessConceptTypesTest do
 
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils
-  alias TdBgWeb.ApiServices.MockTdAuthService
+  alias TdBgWeb.ApiServices.MockTdAuditService
+alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_feature(TdBg.BusinessConceptSteps)
   import_steps(TdBg.ResultSteps)
@@ -20,6 +21,7 @@ defmodule TdBg.BusinessConceptTypesTest do
 
   setup_all do
     start_supervised(MockTdAuthService)
+    start_supervised(MockTdAuditService)
     :ok
   end
 

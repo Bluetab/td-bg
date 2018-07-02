@@ -5,6 +5,7 @@ defmodule TdBg.SuperAdminTaxonomyTest do
   import TdBgWeb.BusinessConcept, only: :functions
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.ResponseCode, only: :functions
+  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
@@ -15,7 +16,8 @@ defmodule TdBg.SuperAdminTaxonomyTest do
   import TdBg.BusinessConceptSteps
 
   setup_all do
-    start_supervised(MockTdAuthService)
+    start_supervised MockTdAuthService
+    start_supervised MockTdAuditService
     :ok
   end
 

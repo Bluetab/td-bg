@@ -4,6 +4,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
 
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
+  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   import TdBgWeb.Authentication, only: :functions
 
@@ -12,6 +13,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
 
   setup_all do
     start_supervised MockTdAuthService
+    start_supervised MockTdAuditService
     :ok
   end
 

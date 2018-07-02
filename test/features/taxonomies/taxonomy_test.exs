@@ -8,6 +8,7 @@ defmodule TdBg.TaxonomyTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.AclEntry, only: :functions
 
+  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
@@ -19,7 +20,8 @@ defmodule TdBg.TaxonomyTest do
   import TdBg.BusinessConceptSteps
 
   setup_all do
-    start_supervised(MockTdAuthService)
+    start_supervised MockTdAuthService
+    start_supervised MockTdAuditService
     :ok
   end
 

@@ -4,12 +4,14 @@ defmodule TdBgWeb.PermissionControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
+  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   # alias TdBg.Permissions
   alias TdBg.Permissions.Permission
 
   setup_all do
     start_supervised MockTdAuthService
+    start_supervised MockTdAuditService
     :ok
   end
 
