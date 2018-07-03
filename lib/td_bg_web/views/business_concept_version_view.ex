@@ -67,7 +67,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   end
 
   def render("list_item.json", %{business_concept_version: business_concept_version}) do
-    view_fields = ["id", "name", "description", "domain", "status"]
+    view_fields = ["id", "name", "description", "domain", "status", "q_rule_count", "link_count"]
     test_fields = ["business_concept_id", "current", "type", "version"]
     Map.take(business_concept_version, view_fields ++ test_fields)
   end
