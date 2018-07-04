@@ -8,6 +8,7 @@ defmodule TdBg.TaxonomyTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.AclEntry, only: :functions
 
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
@@ -22,6 +23,7 @@ defmodule TdBg.TaxonomyTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 
@@ -97,7 +99,10 @@ defmodule TdBg.TaxonomyTest do
           %{token_admin: token_admin} = state do
     parent = get_domain_by_name(token_admin, domain_group_name)
     assert parent["name"] == domain_group_name
-    token = build_user_token(user_name)
+    token = case Map.get(state, :token) do
+      nil -> build_user_token(user_name)
+      t -> t
+    end
 
     {_, status_code, _json_resp} =
       domain_create(token, %{
@@ -119,7 +124,10 @@ defmodule TdBg.TaxonomyTest do
          },
          state do
     if actual_result == expected_result do
-      token = build_user_token(user_name)
+      token = case Map.get(state, :token) do
+        nil -> build_user_token(user_name)
+        t -> t
+      end
       domain_group_info = get_domain_by_name(token, domain_group_name)
       assert domain_group_name == domain_group_info["name"]
       {:ok, status_code, json_resp} = domain_show(token, domain_group_info["id"])
@@ -141,7 +149,10 @@ defmodule TdBg.TaxonomyTest do
          },
          state do
     if actual_result != expected_result do
-      token = build_user_token(user_name)
+      token = case Map.get(state, :token) do
+        nil -> build_user_token(user_name)
+        t -> t
+      end
       domain_group_info = get_domain_by_name(token, domain_group_name)
       assert domain_group_name == domain_group_info["name"]
       {:ok, status_code, json_resp} = domain_show(token, domain_group_info["id"])
@@ -184,7 +195,7 @@ defmodule TdBg.TaxonomyTest do
         description: description
       })
 
-    {:ok, Map.merge(state, %{status_code: status_code})}
+    {:ok, Map.merge(state, %{status_code: status_code, token: token})}
   end
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to modify a Domain with the name "(?<domain_name>[^"]+)" introducing following data:$/,
@@ -196,7 +207,7 @@ defmodule TdBg.TaxonomyTest do
     {:ok, status_code, _json_resp} =
       domain_update(token, domain_info["id"], %{name: domain_name, description: description})
 
-    {:ok, Map.merge(state, %{status_code: status_code})}
+    {:ok, Map.merge(state, %{status_code: status_code, token: token})}
   end
 
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to delete a Domain with the name "(?<domain_group_name>[^"]+)"$/,

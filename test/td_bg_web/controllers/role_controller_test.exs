@@ -4,6 +4,7 @@ defmodule TdBgWeb.RoleControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Permissions.Role
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -18,6 +19,7 @@ defmodule TdBgWeb.RoleControllerTest do
   end
 
   setup_all do
+    start_supervised MockPermissionResolver
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
     :ok

@@ -6,6 +6,7 @@ defmodule TdBgWeb.Authentication do
   alias Phoenix.ConnTest
   alias TdBg.Accounts.User
   alias TdBg.Auth.Guardian
+  alias TdBg.Permissions.MockPermissionResolver
   import Plug.Conn
   @headers {"Content-type", "application/json"}
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
@@ -26,6 +27,7 @@ defmodule TdBgWeb.Authentication do
 
   def create_user_auth_conn(user) do
     {:ok, jwt, full_claims} = Guardian.encode_and_sign(user, %{gids: []})
+    register_token(jwt)
     conn = ConnTest.build_conn()
     conn = put_auth_headers(conn, jwt)
     {:ok, %{conn: conn, jwt: jwt, claims: full_claims}}
@@ -93,7 +95,7 @@ defmodule TdBgWeb.Authentication do
 
   def build_user_token(%User{} = user) do
     case Guardian.encode_and_sign(user, %{gids: []}) do
-      {:ok, jwt, _full_claims} -> jwt
+      {:ok, jwt, _full_claims} -> jwt |> register_token
       _ -> raise "Problems encoding and signing a user"
     end
   end
@@ -105,5 +107,14 @@ defmodule TdBgWeb.Authentication do
 
   def get_user_token(user_name) do
     build_user_token(user_name, is_admin: user_name == "app-admin")
+      |> register_token
+  end
+
+  defp register_token(token) do
+    case Guardian.decode_and_verify(token) do
+      {:ok, resource} -> MockPermissionResolver.register_token(resource)
+      _ -> raise "Problems decoding and verifying token"
+    end
+    token
   end
 end

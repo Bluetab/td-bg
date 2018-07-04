@@ -6,6 +6,7 @@ defmodule TdBgWeb.TemplateControllerTest do
 
   alias Poison, as: JSON
   alias TdBg.Accounts.User
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Templates
   alias TdBg.Templates.Template
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -37,6 +38,7 @@ defmodule TdBgWeb.TemplateControllerTest do
   end
 
   setup_all do
+    start_supervised(MockPermissionResolver)
     start_supervised(MockTdAuthService)
     :ok
   end

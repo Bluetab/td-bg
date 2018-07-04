@@ -99,4 +99,14 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     end)
   end
 
+  def index_roles do
+    Agent.get(MockTdAuthService, &Map.get(&1, :roles)) || []
+  end
+
+  def get_role_by_name(name) do
+    index_roles()
+    |> Enum.filter(&(&1.name == name))
+    |> List.first
+  end
+
 end

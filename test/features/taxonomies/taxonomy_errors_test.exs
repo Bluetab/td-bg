@@ -7,6 +7,7 @@ defmodule TdBg.TaxonomyErrorsTest do
   import TdBgWeb.BusinessConcept
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
@@ -20,6 +21,7 @@ defmodule TdBg.TaxonomyErrorsTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 

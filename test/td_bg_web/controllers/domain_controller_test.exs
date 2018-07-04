@@ -5,6 +5,7 @@ defmodule TdBgWeb.DomainControllerTest do
   import TdBgWeb.Authentication, only: :functions
 
   alias TdBg.Permissions.Role
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBgWeb.ApiServices.MockTdAuditService
@@ -24,6 +25,7 @@ defmodule TdBgWeb.DomainControllerTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 
@@ -46,7 +48,14 @@ defmodule TdBgWeb.DomainControllerTest do
         user = create_user(@user_name)
         domain = insert(:domain)
         role = Role.get_role_by_name("watch")
-        insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role_id: role.id)
+        MockPermissionResolver.create_acl_entry(%{
+          principal_id: user.id,
+          principal_type: "user",
+          resource_id: domain.id,
+          resource_type: "domain",
+          role_id: role.id,
+          role_name: role.name
+        })
         parameters = %{actions: "show"}
         conn = get conn, domain_path(conn, :index, parameters)
         response_data = json_response(conn, 200)["data"]

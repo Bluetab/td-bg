@@ -50,3 +50,7 @@ config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.MockTdAuditServi
   audit_host: "localhost",
   audit_port: "4007",
   audit_domain: ""
+
+config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
+
+config :td_perms, redis_uri: "redis://localhost"

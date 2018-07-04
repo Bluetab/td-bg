@@ -13,6 +13,7 @@ defmodule TdBg.CommentsTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Utils.CollectionUtils
   alias Poison, as: JSON
 
@@ -27,6 +28,7 @@ defmodule TdBg.CommentsTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 

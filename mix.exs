@@ -5,7 +5,7 @@ defmodule TdBg.Mixfile do
   def project do
     [
       app: :td_bg,
-      version: "1.3.0",
+      version: "1.3.1",
       elixir: "~> 1.4",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -53,7 +53,8 @@ defmodule TdBg.Mixfile do
       {:phoenix_swagger, "~> 0.7.0"},
       {:ex_json_schema, "~> 0.5"},
       {:json_diff, "~> 0.1.0"},
-      {:csv, "~> 2.0.0"}
+      {:csv, "~> 2.0.0"},
+      {:td_perms, git: "https://github.com/Bluetab/td-perms.git"}
     ]
   end
 

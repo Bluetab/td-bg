@@ -12,6 +12,8 @@ defmodule TdBg.Permissions do
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
 
+  @permission_resolver Application.get_env(:td_bg, :permission_resolver)
+
   @doc """
   Returns the list of permissions.
 
@@ -41,10 +43,8 @@ defmodule TdBg.Permissions do
   """
   def get_permission!(id), do: Repo.get!(Permission, id)
 
-  def get_domain_permissions(%User{} = user) do
-    user
-      |> get_or_store_session_permissions
-      |> Enum.filter(&(&1.resource_type == "domain"))
+  def get_domain_permissions(%User{jti: jti}) do
+    @permission_resolver.get_acls_by_resource_type(jti, "domain")
   end
 
   def has_any_permission(%User{} = user, permissions, Domain) do
@@ -78,18 +78,9 @@ defmodule TdBg.Permissions do
       false
 
   """
-  def authorized?(%User{} = user, permission, domain_id) do
-    domain_ids = Taxonomies.get_parent_ids(domain_id, true)
-    authorized = user
-    |> get_or_store_session_permissions
-    |> Enum.filter(&(contains?(domain_ids, &1)))
-    |> Enum.any?(&(Enum.member?(&1.permissions, permission)))
-    authorized
+  def authorized?(%User{jti: jti}, permission, domain_id) do
+    Taxonomies.get_parent_ids(domain_id, true)
+      |> Enum.any?(&(@permission_resolver.has_permission?(jti, permission, "domain", &1)))
   end
-
-  defp contains?(domain_ids, %{resource_type: "domain", resource_id: domain_id}) do
-    Enum.member?(domain_ids, domain_id)
-  end
-  defp contains?(_, __), do: false
 
 end

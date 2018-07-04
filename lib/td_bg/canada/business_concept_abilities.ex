@@ -90,6 +90,9 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     authorized?(user, Permission.permissions().delete_business_concept, business_concept_version)
   end
 
+  # TODO: Check status is versioned??
+  def can?(%User{is_admin: true}, :view_versions, %BusinessConceptVersion{}), do: true
+
   def can?(%User{} = user, :view_versions, %BusinessConceptVersion{} = business_concept_version) do
     valid_statuses = [
       BusinessConcept.status().draft,

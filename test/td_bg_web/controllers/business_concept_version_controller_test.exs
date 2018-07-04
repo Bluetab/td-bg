@@ -7,6 +7,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Templates
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
@@ -15,6 +16,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockTdDdService)
+    start_supervised(MockPermissionResolver)
     :ok
   end
 

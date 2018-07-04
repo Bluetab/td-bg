@@ -6,6 +6,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   import TdBgWeb.Taxonomy
   import TdBgWeb.BusinessConcept
   import TdBgWeb.Authentication, only: :functions
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias Poison, as: JSON
@@ -19,6 +20,7 @@ defmodule TdBg.TaxonomyNavigationTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 

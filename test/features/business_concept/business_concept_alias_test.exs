@@ -10,6 +10,7 @@ defmodule TdBg.BusinessConceptAliasTest do
   import TdBgWeb.Authentication, only: :functions
 
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -25,6 +26,7 @@ defmodule TdBg.BusinessConceptAliasTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 

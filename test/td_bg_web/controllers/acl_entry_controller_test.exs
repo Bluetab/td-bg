@@ -3,6 +3,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TdBg.Permissions.AclEntry
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Permissions.Role
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -14,6 +15,7 @@ defmodule TdBgWeb.AclEntryControllerTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 

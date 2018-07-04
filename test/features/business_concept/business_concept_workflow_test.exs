@@ -11,6 +11,7 @@ defmodule TdBg.BusinessConceptWorkflowTest do
   import TdBg.BusinessConceptSteps
 
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -26,6 +27,7 @@ defmodule TdBg.BusinessConceptWorkflowTest do
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
+    start_supervised MockPermissionResolver
     :ok
   end
 
