@@ -8,6 +8,12 @@ defmodule TdBg.BusinessConcept.Search do
   alias TdBg.Search.Aggregations
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+  @map_field_to_condition %{
+    "q_rule_terms" => %{gt: 0},
+    "linked_terms" => %{gt: 0},
+    "not_linked_terms" =>  %{gte: 0, lt: 1},
+    "not_q_rule_terms" =>  %{gte: 0, lt: 1}
+  }
 
   def get_filter_values(%User{is_admin: true}) do
     query = %{} |> create_query
@@ -84,16 +90,36 @@ defmodule TdBg.BusinessConcept.Search do
   def create_filters(_), do: []
 
   defp to_terms_query({filter, values}) do
-    field =
-      Aggregations.aggregation_terms()
+    Aggregations.aggregation_terms()
       |> Map.get(filter)
-      |> get_filter_field
+      |> get_filter(values, filter)
+  end
 
+  defp get_filter(%{terms: %{field: field}}, values, _) do
     %{terms: %{field => values}}
   end
 
-  defp get_filter_field(%{terms: %{field: field}}) do
-    field
+  defp get_filter(%{terms: %{script: _}}, values, filter) do
+     %{range: create_range(filter, values)}
+  end
+
+  defp create_range(_filter, []), do: []
+
+  defp create_range(filter, values) do
+    Map.new()
+      |> Map.put_new(filter, buid_range_condition(values))
+  end
+
+  defp buid_range_condition(values) do
+    case length(values) do
+      1 -> get_param_condition(values)
+      2 -> %{gte: 0}
+      _ -> %{}
+    end
+  end
+
+  defp get_param_condition([head|_tail]) do
+    Map.fetch!(@map_field_to_condition, head)
   end
 
   defp filter_business_concept_versions(_params, [], _page, _size), do: []
