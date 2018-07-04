@@ -14,35 +14,6 @@ defmodule TdBg.Permissions do
 
   @permission_resolver Application.get_env(:td_bg, :permission_resolver)
 
-  @doc """
-  Returns the list of permissions.
-
-  ## Examples
-
-      iex> list_permissions()
-      [%Permission{}, ...]
-
-  """
-  def list_permissions do
-    Repo.all(Permission)
-  end
-
-  @doc """
-  Gets a single permission.
-
-  Raises `Ecto.NoResultsError` if the Permission does not exist.
-
-  ## Examples
-
-      iex> get_permissions!(123)
-      %Permission{}
-
-      iex> get_permissions!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_permission!(id), do: Repo.get!(Permission, id)
-
   def get_domain_permissions(%User{jti: jti}) do
     @permission_resolver.get_acls_by_resource_type(jti, "domain")
   end

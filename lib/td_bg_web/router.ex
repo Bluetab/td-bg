@@ -30,7 +30,6 @@ defmodule TdBgWeb.Router do
 
   scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure]
-    resources "/roles", RoleController, except: [:new, :edit]
 
     resources "/acl_entries", AclEntryController, except: [:new, :edit]
     post "/acl_entries/create_or_update", AclEntryController, :create_or_update

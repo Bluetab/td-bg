@@ -4,8 +4,6 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canada.BusinessConceptAbilities
   alias TdBg.Canada.TaxonomyAbilities
-  alias TdBg.Permissions.AclEntry
-  alias TdBg.Permissions.Role
   alias TdBg.Taxonomies.Domain
 
   defimpl Canada.Can, for: User do
@@ -15,18 +13,6 @@ defmodule TdBg.Canada.Abilities do
     end
 
     def can?(%User{is_admin: true}, _action, %Domain{}) do
-      true
-    end
-
-    def can?(%User{is_admin: true}, _action, Role) do
-      true
-    end
-
-    def can?(%User{is_admin: true}, _action, %Role{}) do
-      true
-    end
-
-    def can?(%User{is_admin: true}, _action, %AclEntry{}) do
       true
     end
 
@@ -48,14 +34,6 @@ defmodule TdBg.Canada.Abilities do
 
     def can?(%User{} = user, :delete, %Domain{} = domain) do
       TaxonomyAbilities.can?(user, :delete, domain)
-    end
-
-    def can?(
-          %User{} = user,
-          :create,
-          %AclEntry{principal_type: "user", resource_type: "domain"} = acl_entry
-        ) do
-      TaxonomyAbilities.can?(user, :create, acl_entry)
     end
 
     def can?(%User{} = user, :create_business_concept, %Domain{} = domain) do

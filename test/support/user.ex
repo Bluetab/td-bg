@@ -1,24 +1,14 @@
 defmodule TdBgWeb.User do
   @moduledoc false
 
-  alias Poison, as: JSON
-  import TdBgWeb.Router.Helpers
-  import TdBgWeb.Authentication, only: :functions
-  @endpoint TdBgWeb.Endpoint
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
-  def role_list(token) do
-    headers = get_header(token)
-
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(role_url(@endpoint, :index), headers, [])
-
-    {:ok, status_code, resp |> JSON.decode!()}
+  def role_list(_token) do
+    @td_auth_api.index_roles()
   end
 
-  def get_role_by_name(token, role_name) do
-    {:ok, _status_code, json_resp} = role_list(token)
-    Enum.find(json_resp["data"], fn role -> role["name"] == role_name end)
+  def get_role_by_name(role_name) do
+    @td_auth_api.find_or_create_role(role_name)
   end
 
   def is_admin_bool(is_admin) do

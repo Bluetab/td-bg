@@ -109,4 +109,16 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     |> List.first
   end
 
+  def find_or_create_role(name) do
+    roles = index_roles()
+    case Enum.find(roles, &(&1.name == name)) do
+      nil ->
+        last_id = roles |> Enum.map(&(&1.id)) |> Enum.max(fn -> 0 end)
+        role = %{id: last_id + 1, name: name}
+        Agent.update(MockTdAuthService, &Map.put(&1, :roles, [role|roles]))
+        role
+      role -> role
+    end
+  end
+
 end

@@ -7,6 +7,7 @@ defmodule TdBg.Canada.TaxonomyAbilities do
   alias TdBg.Taxonomies.Domain
 
   def can?(%User{} = user, :list, Domain) do
+    # TODO: Migrate to td_perms
     permissions = [
       Permission.permissions.create_domain,
       Permission.permissions.update_domain,

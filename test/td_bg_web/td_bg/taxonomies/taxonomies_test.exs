@@ -1,8 +1,8 @@
 defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
-  alias TdBg.Permissions.AclEntry
-  alias TdBg.Permissions.Role
+  import TdBgWeb.User, only: :functions
+
   alias TdBg.Taxonomies
 
   describe "domains" do
@@ -26,7 +26,7 @@ defmodule TdBg.TaxonomiesTest do
 
     def acl_entry_fixture(%Domain{} = domain) do
       user = build(:user)
-      role = Role.get_role_by_name("watch")
+      role = get_role_by_name("watch")
       acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
       acl_entry_attrs
     end
@@ -100,13 +100,7 @@ defmodule TdBg.TaxonomiesTest do
       assert {:ok, %Domain{}} = Taxonomies.create_domain(@valid_attrs)
     end
 
-    test "delete acl_entries when deleting domain with acl_entries" do
-      domain = domain_fixture()
-      acl_entry = acl_entry_fixture(domain)
-      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      assert_raise Ecto.NoResultsError, fn -> AclEntry.get_acl_entry!(acl_entry.id) == nil end
-      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain!(domain.id) end
-    end
+    # TODO test "delete acl_entries when deleting domain with acl_entries"
 
     test "change_domain/1 returns a domain changeset" do
       domain = domain_fixture()
