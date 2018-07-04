@@ -11,37 +11,12 @@
 # and so on) as they will fail if something goes wrong.
 alias TdBg.Templates.Template
 alias TdBg.Taxonomies.Domain
-alias TdBg.Permissions.Permission
 alias TdBg.Permissions.Role
 alias TdBg.Permissions.AclEntry
 alias TdBg.BusinessConcepts.BusinessConcept
 alias TdBg.BusinessConcepts.BusinessConceptVersion
 alias TdBg.Repo
 alias Ecto.Changeset
-
-Repo.insert!(%Permission{name: Permission.permissions.create_acl_entry})
-Repo.insert!(%Permission{name: Permission.permissions.update_acl_entry})
-Repo.insert!(%Permission{name: Permission.permissions.delete_acl_entry})
-
-Repo.insert!(%Permission{name: Permission.permissions.create_domain})
-Repo.insert!(%Permission{name: Permission.permissions.update_domain})
-Repo.insert!(%Permission{name: Permission.permissions.delete_domain})
-Repo.insert!(%Permission{name: Permission.permissions.view_domain})
-
-Repo.insert!(%Permission{name: Permission.permissions.create_business_concept})
-Repo.insert!(%Permission{name: Permission.permissions.update_business_concept})
-Repo.insert!(%Permission{name: Permission.permissions.send_business_concept_for_approval})
-Repo.insert!(%Permission{name: Permission.permissions.delete_business_concept})
-Repo.insert!(%Permission{name: Permission.permissions.publish_business_concept})
-Repo.insert!(%Permission{name: Permission.permissions.reject_business_concept})
-Repo.insert!(%Permission{name: Permission.permissions.deprecate_business_concept})
-Repo.insert!(%Permission{name: Permission.permissions.manage_business_concept_alias})
-Repo.insert!(%Permission{name: Permission.permissions.view_draft_business_concepts})
-Repo.insert!(%Permission{name: Permission.permissions.view_approval_pending_business_concepts})
-Repo.insert!(%Permission{name: Permission.permissions.view_published_business_concepts})
-Repo.insert!(%Permission{name: Permission.permissions.view_versioned_business_concepts})
-Repo.insert!(%Permission{name: Permission.permissions.view_rejected_business_concepts})
-Repo.insert!(%Permission{name: Permission.permissions.view_deprecated_business_concepts})
 
 template = Repo.insert!(%Template{
   name: "empty",

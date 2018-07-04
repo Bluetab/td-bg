@@ -18,20 +18,10 @@ defmodule TdBg.Application do
       # TdBg.Worker.start_link(arg1, arg2, arg3)
       # worker(TdBg.Worker, [arg1, arg2, arg3]),
       supervisor(ConCache, [[
-        name: :permissions_cache,
-        ttl_check_interval: :timer.seconds(2),
-        global_ttl: :timer.seconds(120)
-      ]], id: :permissions_cache),
-      supervisor(ConCache, [[
         name: :domains_cache,
         ttl_check_interval: :timer.seconds(2),
         global_ttl: :timer.seconds(300)
-      ]], id: :domains_cache),
-      supervisor(ConCache, [[
-        name: :session_permissions,
-        ttl_check_interval: :timer.seconds(2),
-        global_ttl: :timer.seconds(300)
-      ]], id: :session_permissions)
+      ]], id: :domains_cache)
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -47,6 +47,7 @@ defmodule TdBgWeb.TemplateSupport do
     acc ++ [field]
   end
 
+  # TODO: Refactor (roles and ACL entries are now in td_auth)
   defp process_role_meta(%{} = field, %User{} = user,  %Role{} = role,  %Domain{} = domain)
     when not is_nil(user) and
          not is_nil(role) and

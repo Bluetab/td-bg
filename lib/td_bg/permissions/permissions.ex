@@ -6,9 +6,6 @@ defmodule TdBg.Permissions do
   import Ecto.Query, warn: false
 
   alias TdBg.Accounts.User
-  alias TdBg.Permissions.AclEntry
-  alias TdBg.Permissions.Permission
-  alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
 
@@ -18,26 +15,12 @@ defmodule TdBg.Permissions do
     @permission_resolver.get_acls_by_resource_type(jti, "domain")
   end
 
-  def has_any_permission(%User{} = user, permissions, Domain) do
-    session_permissions = get_or_store_session_permissions(user)
-    session_permissions
-      |> Enum.filter(&(&1.resource_type == "domain"))
+  def has_any_permission?(%User{} = user, permissions, Domain) do
+    user
+      |> get_domain_permissions
       |> Enum.flat_map(&(&1.permissions))
       |> Enum.uniq
       |> Enum.any?(&(Enum.member?(permissions, &1)))
-  end
-
-  def get_or_store_session_permissions(%User{id: id, jti: jti, gids: gids}) do
-    ConCache.get_or_store(:session_permissions, jti, fn ->
-      %{user_id: id, gids: gids}
-        |> AclEntry.list_acl_entries_by_user_with_groups
-        |> Enum.map(&(acl_entry_to_permissions/1))
-    end)
-  end
-
-  defp acl_entry_to_permissions(%{resource_type: resource_type, resource_id: resource_id, role: %{permissions: permissions}}) do
-    permission_names = permissions |> Enum.map(&(&1.name))
-    %{resource_type: resource_type, resource_id: resource_id, permissions: permission_names}
   end
 
   @doc """
