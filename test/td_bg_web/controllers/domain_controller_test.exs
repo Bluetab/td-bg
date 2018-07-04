@@ -4,8 +4,8 @@ defmodule TdBgWeb.DomainControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBg.Permissions.Role
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Permissions.Role
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBgWeb.ApiServices.MockTdAuditService

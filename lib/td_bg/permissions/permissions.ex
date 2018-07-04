@@ -79,7 +79,8 @@ defmodule TdBg.Permissions do
 
   """
   def authorized?(%User{jti: jti}, permission, domain_id) do
-    Taxonomies.get_parent_ids(domain_id, true)
+    domain_id
+      |> Taxonomies.get_parent_ids(true)
       |> Enum.any?(&(@permission_resolver.has_permission?(jti, permission, "domain", &1)))
   end
 

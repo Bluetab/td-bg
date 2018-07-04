@@ -2,8 +2,8 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdBg.Search.MockSearch
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.MockSearch
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 

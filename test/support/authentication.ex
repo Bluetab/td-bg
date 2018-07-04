@@ -106,7 +106,8 @@ defmodule TdBgWeb.Authentication do
   end
 
   def get_user_token(user_name) do
-    build_user_token(user_name, is_admin: user_name == "app-admin")
+    user_name
+      |> build_user_token(is_admin: user_name == "app-admin")
       |> register_token
   end
 
