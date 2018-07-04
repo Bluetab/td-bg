@@ -38,12 +38,20 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   def permissions_to_status do
     permissions = Permission.permissions
     status = BusinessConcept.status
-    %{permissions.view_draft_business_concepts => status.draft,
+    %{
+      :view_approval_pending_business_concepts => status.pending_approval,
+      :view_deprecated_business_concepts => status.deprecated,
+      :view_draft_business_concepts => status.draft,
+      :view_published_business_concepts => status.published,
+      :view_rejected_business_concepts => status.rejected,
+      :view_versioned_business_concepts => status.versioned,
       permissions.view_approval_pending_business_concepts => status.pending_approval,
+      permissions.view_deprecated_business_concepts => status.deprecated,
+      permissions.view_draft_business_concepts => status.draft,
       permissions.view_published_business_concepts => status.published,
-      permissions.view_versioned_business_concepts => status.versioned,
       permissions.view_rejected_business_concepts => status.rejected,
-      permissions.view_deprecated_business_concepts => status.deprecated}
+      permissions.view_versioned_business_concepts => status.versioned
+    }
   end
 
   def status_to_permissions do
