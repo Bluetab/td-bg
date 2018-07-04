@@ -167,7 +167,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       last_change_by: last_change_by,
       type: concept.business_concept.type,
       content: concept.content,
-      last_change_at: concept.business_concept.last_change_at,
+      last_change_at: concept.last_change_at,
       bc_aliases: aliases,
       domain_ids: domain_ids,
       current: concept.current,

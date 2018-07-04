@@ -179,7 +179,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
          "audit" => %{
            "resource_id" => business_concept_id,
            "resource_type" => "concept",
-           "payload" => business_concept_params
+           "payload" => creation_attrs
          }
        }
 
@@ -323,11 +323,14 @@ end
          {:ok, %BusinessConceptVersion{}} <-
            BusinessConcepts.delete_business_concept_version(business_concept_version) do
 
+       audit_payload = business_concept_version
+        |> Map.take([:version])
+
        audit = %{
           "audit" => %{
             "resource_id" => business_concept_id,
             "resource_type" => "concept",
-            "payload" => %{}
+            "payload" => audit_payload
           }
         }
 
@@ -676,11 +679,14 @@ end
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
            BusinessConcepts.version_business_concept(user, business_concept_version) do
 
+       audit_payload = new_version
+        |> Map.take([:version])
+
        audit = %{
           "audit" => %{
             "resource_id" => business_concept_id,
             "resource_type" => "concept",
-            "payload" => %{}
+            "payload" => audit_payload
           }
         }
 
@@ -764,11 +770,12 @@ end
              update_params
            ) do
 
+      audit_payload = get_changed_params(business_concept_version, concept_version)
       audit = %{
          "audit" => %{
            "resource_id" => business_concept_id,
            "resource_type" => "concept",
-           "payload" => business_concept_version_params
+           "payload" => audit_payload
          }
        }
 
@@ -806,6 +813,50 @@ end
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  defp get_changed_params(%BusinessConceptVersion{} = old,
+                          %BusinessConceptVersion{} = new) do
+    fields_to_compare = [:name, :description]
+    diffs = Enum.reduce(fields_to_compare, %{}, fn(field, acc) ->
+      oldval = Map.get(old, field)
+      newval = Map.get(new, field)
+      case oldval == newval do
+        true -> acc
+        false -> Map.put(acc, field, newval)
+      end
+    end)
+
+    oldcontent = Map.get(old, :content)
+    newcontent = Map.get(new, :content)
+
+    added_keys = Map.keys(newcontent) -- Map.keys(oldcontent)
+    added = Enum.reduce(added_keys, %{}, fn(key, acc) ->
+      Map.put(acc, key, Map.get(newcontent, key))
+    end)
+
+    removed_keys = Map.keys(oldcontent) -- Map.keys(newcontent)
+    removed = Enum.reduce(removed_keys, %{}, fn(key, acc) ->
+      Map.put(acc, key, Map.get(oldcontent, key))
+    end)
+
+    changed_keys = Map.keys(newcontent) -- removed_keys -- added_keys
+    changed = Enum.reduce(changed_keys, %{}, fn(key, acc) ->
+      oldval = Map.get(oldcontent, key)
+      newval = Map.get(newcontent, key)
+      case oldval == newval do
+        true -> acc
+        false -> Map.put(acc, key, newval)
+      end
+    end)
+
+    changed_content = %{}
+    |> Map.put(:added, added)
+    |> Map.put(:removed, removed)
+    |> Map.put(:changed, changed)
+
+    diffs
+    |> Map.put(:content, changed_content)
   end
 
   swagger_path :get_fields do
@@ -898,7 +949,7 @@ end
     response(400, "Client Error")
   end
 
-  def add_field(conn, %{"business_concept_version_id" => id, "field" => field} = params) do
+  def add_field(conn, %{"business_concept_version_id" => id, "field" => field}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept_id = business_concept_version.business_concept_id
@@ -912,7 +963,7 @@ end
         "audit" => %{
           "resource_id" => business_concept_id,
           "resource_type" => "concept",
-          "payload" => params
+          "payload" => create_attrs
         }
       }
 
@@ -950,7 +1001,7 @@ end
 
   def delete_field(
         conn,
-        %{"business_concept_version_id" => id, "concept_field_id" => concept_field_id} = params
+        %{"business_concept_version_id" => id, "concept_field_id" => concept_field_id}
       ) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -960,11 +1011,15 @@ end
     with true <- can?(user, delete_field(business_concept_version)) do
       ConceptFields.delete_concept_field(concept_field)
 
+      audit_payload = concept_field
+       |> Map.drop([:__meta__])
+       |> Map.from_struct
+
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
           "resource_type" => "concept",
-          "payload" => params
+          "payload" => audit_payload
         }
       }
 
