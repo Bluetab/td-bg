@@ -59,8 +59,7 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   def list_business_concept_versions(business_concept_id, %User{is_admin: true}) do
-    query = %{business_concept_id: business_concept_id}
-    |> create_query
+    query = %{business_concept_id: business_concept_id} |> create_query
     search = %{query: query}
     @search_service.search("business_concept", search)
     |> Enum.map(&Map.get(&1, "_source"))
@@ -68,8 +67,12 @@ defmodule TdBg.BusinessConcept.Search do
 
   def list_business_concept_versions(business_concept_id, %User{} = user) do
     permissions = user |> Permissions.get_domain_permissions()
-    params = %{business_concept_id: business_concept_id}
-    filter_business_concept_versions(params, permissions, 0, 100)
+    predefined_query = %{business_concept_id: business_concept_id} |> create_query
+    filter = permissions |> create_filter_clause([predefined_query])
+    query = create_query(nil, filter)
+    search = %{query: query}
+    @search_service.search("business_concept", search)
+    |> Enum.map(&Map.get(&1, "_source"))
   end
 
   def create_filters(%{"filters" => filters}) do
@@ -97,7 +100,9 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp filter_business_concept_versions(params, [_h | _t] = permissions, page, size) do
     user_defined_filters = create_filters(params)
+
     filter = permissions |> create_filter_clause(user_defined_filters)
+
     query = create_query(params, filter)
     search = %{from: page * size, size: size, query: query}
 
@@ -148,6 +153,7 @@ defmodule TdBg.BusinessConcept.Search do
          %{resource_id: resource_id, permissions: permissions},
          user_defined_filters
        ) do
+
     domain_clause = %{term: %{domain_ids: resource_id}}
 
     status_clause =
