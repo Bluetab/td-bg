@@ -90,8 +90,8 @@ defmodule TdBg.Search do
   def get_filters(query) do
     response = ESClientApi.search_es("business_concept", query)
     case response do
-      {:ok, %HTTPoison.Response{body: %{"aggregations" => aggretations}}} ->
-        aggretations
+      {:ok, %HTTPoison.Response{body: %{"aggregations" => aggregations}}} ->
+        aggregations
           |> Map.to_list
           |> Enum.map(&filter_values/1)
           |> Enum.into(%{})
