@@ -953,6 +953,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           properties do
             name(:string, "Name", required: true)
             content(:array, "Content", required: true)
+            is_default(:boolean, "Is Default", required: true)
           end
 
           example(%{
@@ -960,7 +961,8 @@ defmodule TdBgWeb.SwaggerDefinitions do
             content: [
               %{name: "name1", max_size: 100, type: "type1", required: true},
               %{related_area: "related_area1", max_size: 100, type: "type2", required: false}
-            ]
+            ],
+            is_default: false
           })
         end,
       TemplateCreateUpdate:
@@ -971,6 +973,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                 properties do
                   name(:string, "Name", required: true)
                   content(:array, "Content", required: true)
+                  is_default(:boolean, "Is Default", required: true)
                 end
               end
             )

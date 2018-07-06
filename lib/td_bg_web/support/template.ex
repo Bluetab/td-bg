@@ -2,10 +2,12 @@ defmodule TdBgWeb.TemplateSupport do
   @moduledoc false
 
   alias TdBg.Accounts.User
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Role
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Templates
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
@@ -74,6 +76,27 @@ defmodule TdBgWeb.TemplateSupport do
         parent = domain |> Repo.preload(:parent) |> Map.get(:parent)
         acl_entries ++ get_acl_entries(role, parent)
     end
+  end
+
+  # TODO: unit test this
+  def get_preprocessed_template(%BusinessConceptVersion{} = version, %User{} = user) do
+    domain = version.business_concept
+    |> Repo.preload(:domain)
+    |> Map.get(:domain)
+
+    template = version.business_concept.type
+    |> Templates.get_template_by_name
+
+    process_template_meta([], [template], domain: domain, user: user)
+    |> Enum.at(0)
+  end
+
+  # TODO: unit test this
+  def get_template(%BusinessConceptVersion{} = version) do
+    version
+    |> Map.get(:business_concept)
+    |> Map.get(:type)
+    |> Templates.get_template_by_name
   end
 
 end

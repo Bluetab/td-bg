@@ -30,6 +30,7 @@ defmodule TdBgWeb.BusinessConcept do
       %{}
       |> Map.put("name", type)
       |> Map.put("content", definition)
+      |> Map.put("is_default", false)
 
     body = %{template: attrs} |> JSON.encode!()
 

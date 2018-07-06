@@ -23,6 +23,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.DataStructureView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
+  alias TdBgWeb.TemplateSupport
 
   @td_dd_api   Application.get_env(:td_bg, :dd_service)[:api_service]
 
@@ -140,7 +141,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     validate_required_bc_fields(business_concept_params)
 
     concept_type = Map.get(business_concept_params, "type")
-    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
+    template = Templates.get_template_by_name(concept_type)
+    content_schema = Map.get(template, :content)
 
     concept_name = Map.get(business_concept_params, "name")
 
@@ -192,8 +194,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
           "location",
           business_concept_path(conn, :show, version.business_concept)
         )
-        |> render("show.json", business_concept_version: version)
-
+        |> render(
+          "show.json",
+          business_concept_version: version,
+          template: template
+          )
       conn
     else
       error ->
@@ -286,7 +291,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         conn,
         "show.json",
         business_concept_version: business_concept_version,
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_version)
+        hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
+        template: TemplateSupport.get_preprocessed_template(business_concept_version, user)
       )
     else
       false ->
@@ -554,6 +560,7 @@ end
 
   defp publish(conn, user, business_concept_version) do
     business_concept_id = business_concept_version.business_concept.id
+
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            BusinessConcepts.publish_business_concept_version(business_concept_version) do
@@ -572,7 +579,8 @@ end
         conn,
         "show.json",
         business_concept_version: concept,
-        hypermedia: hypermedia("business_concept_version", conn, concept)
+        hypermedia: hypermedia("business_concept_version", conn, concept),
+        template: TemplateSupport.get_template(business_concept_version)
       )
     else
       false ->
@@ -609,7 +617,8 @@ end
         conn,
         "show.json",
         business_concept_version: version,
-        hypermedia: hypermedia("business_concept_version", conn, version)
+        hypermedia: hypermedia("business_concept_version", conn, version),
+        template: TemplateSupport.get_template(business_concept_version)
       )
     else
       false ->
@@ -637,6 +646,7 @@ end
   defp update_status(conn, business_concept_version, status, event, authorized) do
     attrs = %{status: status}
     business_concept_id = business_concept_version.business_concept.id
+
     with true <- authorized,
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.update_business_concept_version_status(
@@ -658,7 +668,8 @@ end
         conn,
         "show.json",
         business_concept_version: concept,
-        hypermedia: hypermedia("business_concept_version", conn, concept)
+        hypermedia: hypermedia("business_concept_version", conn, concept),
+        template: TemplateSupport.get_template(business_concept_version)
       )
     else
       false ->
@@ -697,7 +708,8 @@ end
       |> render(
         "show.json",
         business_concept_version: new_version,
-        hypermedia: hypermedia("business_concept_version", conn, new_version)
+        hypermedia: hypermedia("business_concept_version", conn, new_version),
+        template: TemplateSupport.get_template(new_version)
       )
     else
       false ->
@@ -736,9 +748,9 @@ end
 
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept_id = business_concept_version.business_concept.id
-    concept_type = business_concept_version.business_concept.type
     concept_name = Map.get(business_concept_version_params, "name")
-    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
+    template  = TemplateSupport.get_template(business_concept_version)
+    content_schema = Map.get(template, :content)
 
     business_concept_attrs =
       %{}
@@ -759,11 +771,11 @@ end
     with true <- can?(user, update(business_concept_version)),
          {:name_available} <-
            BusinessConcepts.check_business_concept_name_availability(
-             concept_type,
+             template.name,
              concept_name,
              business_concept_version.business_concept.id
            ),
-         {:valid_related_to} <- BusinessConcepts.check_valid_related_to(concept_type, related_to),
+         {:valid_related_to} <- BusinessConcepts.check_valid_related_to(template.name, related_to),
          {:ok, %BusinessConceptVersion{} = concept_version} <-
            BusinessConcepts.update_business_concept_version(
              business_concept_version,
@@ -785,8 +797,9 @@ end
         conn,
         "show.json",
         business_concept_version: concept_version,
-        hypermedia: hypermedia("business_concept_version", conn, concept_version)
-      )
+        hypermedia: hypermedia("business_concept_version", conn, concept_version),
+        template: template
+    )
     else
       false ->
         conn

@@ -14,21 +14,25 @@ defmodule TdBgWeb.TemplateControllerTest do
   @create_attrs %{content: [], name: "some name"}
   @generic_attrs %{
     content: [%{type: "type1", required: true, name: "name1", max_size: 100}],
-    name: "generic_true"
+    name: "generic_true",
+    is_default: false
   }
   @create_attrs_generic_true %{
     content: [%{includes: ["generic_true"]}, %{other_field: "other_field"}],
-    name: "some name"
+    name: "some name",
+    is_default: false
   }
   @create_attrs_generic_false %{
     content: [%{includes: ["generic_false"]}, %{other_field: "other_field"}],
-    name: "some name"
+    name: "some name",
+    is_default: false
   }
   @others_create_attrs_generic_true %{
     content: [%{includes: ["generic_true", "generic_false"]}, %{other_field: "other_field"}],
-    name: "some name"
+    name: "some name",
+    is_default: false
   }
-  @update_attrs %{content: [], name: "some updated name"}
+  @update_attrs %{content: [], name: "some updated name", is_default: false}
   @invalid_attrs %{content: nil, name: nil}
   @domain_attrs %{name: "domain1", type: "type", description: "description"}
 
@@ -70,6 +74,7 @@ defmodule TdBgWeb.TemplateControllerTest do
       assert json_response(conn, 200)["data"] == %{
                "id" => id,
                "content" => [],
+               "is_default" => true,
                "name" => "some name"
              }
     end
@@ -101,6 +106,7 @@ defmodule TdBgWeb.TemplateControllerTest do
                    %{other_field: "other_field"},
                    %{type: "type1", required: true, name: "name1", max_size: 100}
                  ],
+                 "is_default" => false,
                  "name" => "some name"
                })
     end
@@ -123,6 +129,7 @@ defmodule TdBgWeb.TemplateControllerTest do
                JSON.encode(%{
                  "id" => id,
                  "content" => [%{other_field: "other_field"}],
+                 "is_default" => false,
                  "name" => "some name"
                })
     end
@@ -148,6 +155,7 @@ defmodule TdBgWeb.TemplateControllerTest do
                    %{other_field: "other_field"},
                    %{type: "type1", required: true, name: "name1", max_size: 100}
                  ],
+                 "is_default" => false,
                  "name" => "some name"
                })
     end
@@ -173,6 +181,7 @@ defmodule TdBgWeb.TemplateControllerTest do
       assert json_response(conn, 200)["data"] == %{
                "id" => id,
                "content" => [],
+               "is_default" => false,
                "name" => "some updated name"
              }
     end

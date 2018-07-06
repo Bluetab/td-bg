@@ -16,8 +16,9 @@ defmodule TdBg.Factory do
 
   def template_factory do
     %TdBg.Templates.Template {
-      name: "empty",
-      content: []
+      name: "some type",
+      content: [],
+      is_default: false
     }
   end
 

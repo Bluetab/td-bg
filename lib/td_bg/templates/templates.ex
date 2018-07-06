@@ -10,6 +10,7 @@ defmodule TdBg.Templates do
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBg.Templates.Template
+  alias TdBg.Utils.CollectionUtils
 
   @doc """
   Returns the list of templates.
@@ -43,6 +44,12 @@ defmodule TdBg.Templates do
   def get_template_by_name(name) do
     Repo.one from r in Template, where: r.name == ^name
   end
+
+  # TODO: unit test this method
+  def get_default_template do
+    Repo.one from r in Template, where: r.is_default == true, limit: 1
+  end
+
   @doc """
   Creates a template.
 
@@ -56,9 +63,33 @@ defmodule TdBg.Templates do
 
   """
   def create_template(attrs \\ %{}) do
-    %Template{}
-    |> Template.changeset(attrs)
-    |> Repo.insert()
+    attrs = CollectionUtils.atomize_keys(attrs)
+    case get_default_template() do
+      nil ->
+          attrs = Map.put(attrs, :is_default, true)
+          %Template{}
+          |> Template.changeset(attrs)
+          |> Repo.insert()
+
+      default_template ->
+        do_create_template(default_template, attrs)
+    end
+  end
+
+  def do_create_template(default_template, attrs) do
+    case Map.get(attrs, :is_default) do
+      true ->
+        default_template
+        |> Template.changeset(%{is_default: false})
+        |> Repo.update()
+        %Template{}
+        |> Template.changeset(attrs)
+        |> Repo.insert()
+      false ->
+        %Template{}
+        |> Template.changeset(attrs)
+        |> Repo.insert()
+    end
   end
 
   @doc """
@@ -74,9 +105,41 @@ defmodule TdBg.Templates do
 
   """
   def update_template(%Template{} = template, attrs) do
-    template
-    |> Template.changeset(attrs)
-    |> Repo.update()
+    attrs = CollectionUtils.atomize_keys(attrs)
+    case get_default_template() do
+      nil ->
+        attrs = Map.put(attrs, :is_default, true)
+        template
+        |> Template.changeset(attrs)
+        |> Repo.update()
+
+      default_template ->
+        case default_template.id == template.id do
+          true ->
+            template
+            |> Template.changeset(attrs)
+            |> Repo.update()
+
+          false ->
+            do_update_template(default_template, template, attrs)
+        end
+    end
+  end
+
+  def do_update_template(default_template, template, attrs) do
+    case Map.get(attrs, :is_default) do
+      true ->
+        default_template
+        |> Template.changeset(%{is_default: false})
+        |> Repo.update()
+        template
+        |> Template.changeset(attrs)
+        |> Repo.update()
+      false ->
+        template
+        |> Template.changeset(attrs)
+        |> Repo.update()
+    end
   end
 
   @doc """
@@ -92,7 +155,28 @@ defmodule TdBg.Templates do
 
   """
   def delete_template(%Template{} = template) do
-    Repo.delete(template)
+    delresp = Repo.delete(template)
+    case get_default_template() do
+      nil ->
+        do_delete_template()
+      _ -> nil
+    end
+    delresp
+  end
+
+  defp do_delete_template do
+    case get_any_template() do
+      nil -> nil
+      template ->
+        template
+        |> Template.changeset(%{is_default: true})
+        |> Repo.update()
+    end
+
+  end
+
+  defp get_any_template do
+    Repo.one from r in Template, limit: 1
   end
 
   @doc """

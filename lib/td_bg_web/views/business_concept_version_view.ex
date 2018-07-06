@@ -30,22 +30,24 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   def render("show.json", %{
         business_concept_version: business_concept_version,
         hypermedia: hypermedia
-      }) do
+      } = assigns) do
     render_one_hypermedia(
       business_concept_version,
       hypermedia,
       BusinessConceptVersionView,
-      "business_concept_version.json"
+      "business_concept_version.json",
+      Map.drop(assigns, [:business_concept_version, :hypermedia])
     )
   end
 
-  def render("show.json", %{business_concept_version: business_concept_version}) do
+  def render("show.json", %{business_concept_version: business_concept_version} = assigns) do
     %{
       data:
         render_one(
           business_concept_version,
           BusinessConceptVersionView,
-          "business_concept_version.json"
+          "business_concept_version.json",
+          Map.drop(assigns, [:business_concept_version])
         )
     }
   end
@@ -72,9 +74,11 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     Map.take(business_concept_version, view_fields ++ test_fields)
   end
 
+  # TODO: update swagger with embedded
   def render("business_concept_version.json", %{
         business_concept_version: business_concept_version
-      }) do
+      } = assigns) do
+
     %{
       id: business_concept_version.id,
       business_concept_id: business_concept_version.business_concept.id,
@@ -99,6 +103,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       business_concept_version.version
     )
     |> add_aliases(business_concept_version.business_concept)
+    |> add_template(assigns)
   end
 
   def render("versions.json", %{business_concept_versions: business_concept_versions, hypermedia: hypermedia}) do
@@ -142,4 +147,14 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       concept
     end
   end
+
+  def add_template(concept, assigns)  do
+    case Map.get(assigns, :template, nil) do
+      nil -> concept
+      template ->
+        template_view = Map.take(template, [:content])
+        Map.put(concept, :template, template_view)
+    end
+  end
+
 end

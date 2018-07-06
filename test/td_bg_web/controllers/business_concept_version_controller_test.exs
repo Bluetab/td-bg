@@ -28,6 +28,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
+      insert(:template)
       business_concept_version =
         insert(
           :business_concept_version,

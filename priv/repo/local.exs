@@ -20,6 +20,7 @@ alias Ecto.Changeset
 
 template = Repo.insert!(%Template{
   name: "empty",
+  is_default: false,
   content: [
   %{
     name: "dominio",
@@ -87,7 +88,6 @@ domain3 = Repo.insert!(%Domain{
     parent_id: domain2.id
 })
 
-
 Repo.insert!(%AclEntry{
   principal_id: 3,
   principal_type: "user",
@@ -108,6 +108,69 @@ Repo.insert!(%AclEntry{
   principal_id: 1,
   principal_type: "group",
   resource_id: domain1.id,
+  resource_type: "domain",
+  role_id: rolename.id
+})
+
+Repo.insert!(%Template{
+  name: "default_template",
+  is_default: true,
+  content: [
+  %{
+    name: "field_1",
+    type: "string",
+    label: "Field 1",
+  },
+  %{
+    name: "field_2",
+    type: "string",
+    label: "Field 2",
+  },
+  %{
+    name: "field_3",
+    type: "string",
+    label: "Field 3",
+  },
+  %{
+    name: "dominio",
+    type: "list",
+    label: "Dominio Información de Gestión",
+    values: [],
+    required: false,
+    "form_type": "dropdown",
+    description: "Indicar si el término pertenece al dominio de Información de Gestión",
+    meta: %{ role: "rolename"}
+  }
+]
+})
+
+domain_with_no_template = Repo.insert!(%Domain{
+    description: "Domain with no template",
+    type: "No template",
+    name: "Domain with no template"
+})
+
+
+Repo.insert!(%AclEntry{
+  principal_id: 3,
+  principal_type: "user",
+  resource_id: domain_with_no_template.id,
+  resource_type: "domain",
+  role_id: rolename.id
+})
+
+Repo.insert!(%AclEntry{
+  principal_id: 4,
+  principal_type: "user",
+  resource_id: domain_with_no_template.id,
+  resource_type: "domain",
+  role_id: rolename.id
+})
+
+Repo.insert!(%AclEntry{
+  principal_id: 1,
+  principal_type: "group",
+  resource_id: domain_with_no_template.id,
   resource_type: "domain",
   role_id: rolename.id
 })

@@ -6,8 +6,8 @@ defmodule TdBg.TemplatesTest do
   describe "templates" do
     alias TdBg.Templates.Template
 
-    @valid_attrs %{content: [], name: "some name"}
-    @update_attrs %{content: [], name: "some updated name"}
+    @valid_attrs %{content: [], name: "some name", is_default: false}
+    @update_attrs %{content: [], name: "some updated name", is_default: false}
     @invalid_attrs %{content: nil, name: nil}
 
     def template_fixture(attrs \\ %{}) do
@@ -65,12 +65,92 @@ defmodule TdBg.TemplatesTest do
     end
   end
 
+  describe "working with default templates" do
+
+    test "get_default_template/1 gets default template" do
+      insert(:template, name: "name_1", is_default: false)
+      template_2 = insert(:template, name: "name_2", is_default: true)
+
+      default_template = Templates.get_default_template()
+      assert default_template.id == template_2.id
+    end
+
+    test "get_default_template/1 gets nil template when no one is default" do
+      insert(:template, name: "name_1", is_default: false)
+      insert(:template, name: "name_2", is_default: false)
+
+      assert Templates.get_default_template() == nil
+    end
+
+    test "get_default_template/1 raise exception when no template exists" do
+      assert  Templates.get_default_template() == nil
+    end
+
+    test "create_template/1 sets is_default" do
+      creation_attrs = %{name: "name", content: [], is_default: false}
+      assert {:ok, template} = Templates.create_template(creation_attrs)
+      assert template.is_default
+    end
+
+    test "create_template/1 takes is_default" do
+      creation_attrs_1 = %{name: "name_1", content: [], is_default: true}
+      assert {:ok, template_1} = Templates.create_template(creation_attrs_1)
+
+      creation_attrs_2 = %{name: "name_2", content: [], is_default: true}
+      assert {:ok, template_2} = Templates.create_template(creation_attrs_2)
+
+      template_1 = Templates.get_template_by_name(template_1.name)
+      template_2 = Templates.get_template_by_name(template_2.name)
+
+      assert !template_1.is_default
+      assert template_2.is_default
+    end
+
+    test "update_template/1 takes is_default" do
+      template_1 = insert(:template, name: "name_1", is_default: true)
+      template_2 = insert(:template, name: "name_2", is_default: false)
+
+      assert {:ok, _} = Templates.update_template(template_2, %{is_default: true})
+
+      template_1 = Templates.get_template_by_name(template_1.name)
+      template_2 = Templates.get_template_by_name(template_2.name)
+
+      assert !template_1.is_default
+      assert template_2.is_default
+    end
+
+    test "update_template/1 avoid taking is_default" do
+      template_1 = insert(:template, name: "name_1", is_default: true)
+      template_2 = insert(:template, name: "name_2", is_default: false)
+
+      assert {:ok, _} = Templates.update_template(template_1, %{is_default: true})
+
+      template_1 = Templates.get_template_by_name(template_1.name)
+      template_2 = Templates.get_template_by_name(template_2.name)
+
+      assert template_1.is_default
+      assert !template_2.is_default
+    end
+
+    test "delete_template/1 sets is_default" do
+      template_1 = insert(:template, name: "name_1", is_default: false)
+      template_2 = insert(:template, name: "name_2", is_default: true)
+
+      Templates.delete_template(template_2)
+
+      template_1 = Templates.get_template_by_name(template_1.name)
+
+      assert template_1.is_default
+    end
+
+  end
+
   describe "domain templates" do
     alias TdBg.Taxonomies
 
     @domain_attrs %{description: "some description", name: "some name"}
-    @empty_template_attrs %{content: [], name: "some name"}
-    @other_empty_template_attrs %{content: [], name: "other name"}
+    @empty_template_attrs %{content: [], name: "some name", is_default: false}
+    @other_empty_template_attrs %{content: [], name: "other name", is_default: false}
 
     test "add_templates_to_domain/2 and get_domain_templates/1 adds empty template to a domain" do
       {:ok, template} = Templates.create_template(@empty_template_attrs)

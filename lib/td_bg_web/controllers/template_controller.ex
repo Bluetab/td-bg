@@ -200,7 +200,14 @@ defmodule TdBgWeb.TemplateController do
   def get_domain_templates(conn, %{"domain_id" => domain_id} = params) do
     user = conn.assigns[:current_user]
     domain = Taxonomies.get_domain!(domain_id)
-    templates = Templates.get_domain_templates(domain)
+    templates = case Templates.get_domain_templates(domain) do
+        [] ->
+          case Templates.get_default_template do
+            nil -> []
+            domain_template -> [domain_template]
+          end
+        domain_templates -> domain_templates
+    end
 
     templates =
       case Map.get(params, @preprocess, false) do
