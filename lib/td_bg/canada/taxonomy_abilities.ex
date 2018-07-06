@@ -2,7 +2,6 @@ defmodule TdBg.Canada.TaxonomyAbilities do
   @moduledoc false
   alias TdBg.Accounts.User
   alias TdBg.Permissions
-  alias TdBg.Permissions.AclEntry
   alias TdBg.Permissions.Permission
   alias TdBg.Taxonomies.Domain
 
@@ -35,7 +34,4 @@ defmodule TdBg.Canada.TaxonomyAbilities do
     Permissions.authorized?(user, Permission.permissions.delete_domain, domain_id)
   end
 
-  def can?(%User{} = user, :create, %AclEntry{principal_type: "user", resource_type: "domain", resource_id: domain_id}) do
-    Permissions.authorized?(user, Permission.permissions.create_acl_entry, domain_id)
-  end
 end

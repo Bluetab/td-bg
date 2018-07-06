@@ -29,20 +29,9 @@ defmodule TdBgWeb.Router do
   end
 
   scope "/api", TdBgWeb do
-    pipe_through [:api, :api_secure]
-
-    resources "/acl_entries", AclEntryController, except: [:new, :edit]
-    post "/acl_entries/create_or_update", AclEntryController, :create_or_update
-  end
-
-  scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure, :api_authorized]
     options "/domains", DomainController, :options
-    resources "/domains", DomainController, except: [:new, :edit] do
-      get "/available_users", DomainController, :available_users
-      get "/acl_entries", DomainController, :acl_entries
-      post "/acl_entries", DomainController, :create_acl_entry
-    end
+    resources "/domains", DomainController, except: [:new, :edit]
 
     post "/business_concept_versions/csv", BusinessConceptVersionController, :csv
     put "/business_concept_versions/:id", BusinessConceptVersionController, :update

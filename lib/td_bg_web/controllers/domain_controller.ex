@@ -6,18 +6,14 @@ defmodule TdBgWeb.DomainController do
   import Canada, only: [can?: 2]
 
   alias Canada.Can
-  alias TdBg.Permissions.AclEntry
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.TaxonomySupport
-  alias TdBgWeb.UserView
 
   action_fallback(TdBgWeb.FallbackController)
-
-  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   def swagger_definitions do
     SwaggerDefinitions.domain_swagger_definitions()
@@ -260,102 +256,6 @@ defmodule TdBgWeb.DomainController do
     else
       error ->
         TaxonomySupport.handle_taxonomy_errors_on_delete(conn, error)
-    end
-  end
-
-  swagger_path :available_users do
-    get("/domains/{domain_id}/available_users")
-    description("Lists users available in a domain group")
-    produces("application/json")
-
-    parameters do
-      domain_id(:path, :integer, "Domain ID", required: true)
-    end
-
-    response(200, "Ok", Schema.ref(:UsersResponse))
-    response(400, "Client Error")
-  end
-
-  def available_users(conn, %{"domain_id" => id}) do
-    domain = Taxonomies.get_domain!(id)
-    acl_entries = AclEntry.list_acl_entries(%{domain: domain})
-
-    role_user_id =
-      Enum.map(acl_entries, fn acl_entry ->
-        %{user_id: acl_entry.principal_id, role: acl_entry.role.name}
-      end)
-
-    all_users = @td_auth_api.index()
-
-    available_users =
-      Enum.filter(all_users, fn user ->
-        Enum.find(role_user_id, &(&1.user_id == user.id)) == nil and user.is_admin == false
-      end)
-
-    render(conn, UserView, "index.json", users: available_users)
-  end
-
-  swagger_path :acl_entries do
-    get("/domains/{domain_id}/acl_entries")
-    description("Lists user-role list of a domain group")
-    produces("application/json")
-
-    parameters do
-      domain_id(:path, :integer, "Domain ID", required: true)
-    end
-
-    response(200, "Ok", Schema.ref(:DomainAclEntriesResponse))
-    response(400, "Client Error")
-  end
-
-  def acl_entries(conn, %{"domain_id" => id}) do
-    domain = Taxonomies.get_domain!(id)
-    acl_entries = AclEntry.get_list_acl_from_domain(domain)
-
-    render(
-      conn,
-      "index_acl_entries.json",
-      acl_entries: acl_entries,
-      hypermedia: hypermedia("acl_entries", conn, acl_entries)
-    )
-  end
-
-  swagger_path :create_acl_entry do
-    post("/domains/{domain_id}/acl_entries")
-    description("Creates an Acl Entry")
-    produces("application/json")
-
-    parameters do
-      domain_id(:path, :integer, "Domain ID", required: true)
-      acl_entry(:body, Schema.ref(:DomainAclEntryCreate), "Acl entry create attrs")
-    end
-
-    response(201, "OK", Schema.ref(:DomainAclEntryResponse))
-    response(400, "Client Error")
-  end
-
-  def create_acl_entry(conn, %{"domain_id" => id, "acl_entry" => acl_entry_params}) do
-    current_user = conn.assigns[:current_user]
-    acl_entry_params =
-      Map.merge(%{"resource_id" => id, "resource_type" => "domain"}, acl_entry_params)
-
-    acl_entry = %AclEntry{} |> Map.merge(CollectionUtils.to_struct(AclEntry, acl_entry_params))
-
-    if current_user |> can?(create(acl_entry)) do
-      with {:ok, %AclEntry{} = acl_entry} <- AclEntry.create_acl_entry(acl_entry_params) do
-        conn
-        |> put_status(:created)
-        |> render("acl_entry_show.json", acl_entry: acl_entry)
-      else
-        _error ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> render(ErrorView, :"422.json")
-      end
-    else
-      conn
-      |> put_status(403)
-      |> render(ErrorView, :"403")
     end
   end
 

@@ -140,60 +140,6 @@ defmodule TdBgWeb.DomainControllerTest do
     end
   end
 
-  describe "create acl_entry from domain route" do
-    @tag :admin_authenticated
-    test "renders acl_entry when data is valid", %{conn: conn, swagger_schema: schema} do
-      user = build(:user)
-      domain = insert(:domain)
-      role = get_role_by_name("watch")
-      acl_entry_attrs = %{
-        principal_id: user.id,
-        principal_type: "user",
-        role_id: role.id
-      }
-      conn = post conn, domain_domain_path(conn, :create_acl_entry, domain.id), acl_entry: acl_entry_attrs
-      assert %{"id" => id} = json_response(conn, 201)["data"]
-      validate_resp_schema(conn, schema, "DomainAclEntryResponse")
-
-      conn = recycle_and_put_headers(conn)
-      conn = get conn, acl_entry_path(conn, :show, id)
-      validate_resp_schema(conn, schema, "DomainAclEntryResponse")
-      assert json_response(conn, 200)["data"] == %{
-        "id" => id,
-        "principal_id" => user.id,
-        "principal_type" => "user",
-        "resource_id" => domain.id,
-        "resource_type" => "domain",
-        "role_id" => role.id
-      }
-    end
-
-    @tag :admin_authenticated
-    test "renders error for duplicated acl_entry from domain route", %{conn: conn, swagger_schema: schema} do
-      user = build(:user)
-      domain = insert(:domain)
-      role = get_role_by_name("watch")
-      acl_entry_attrs = %{
-        principal_id: user.id,
-        principal_type: "user",
-        role_id: role.id
-      }
-      conn = post conn, domain_domain_path(conn, :create_acl_entry, domain.id), acl_entry: acl_entry_attrs
-      assert %{"id" => _id} = json_response(conn, 201)["data"]
-      validate_resp_schema(conn, schema, "DomainAclEntryResponse")
-
-      conn = recycle_and_put_headers(conn)
-      conn = post conn, acl_entry_path(conn, :create), acl_entry: acl_entry_attrs
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-
-    @tag :admin_authenticated
-    test "renders errors when data is invalid", %{conn: conn} do
-      conn = post conn, acl_entry_path(conn, :create), acl_entry: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-  end
-
   defp create_domain(_) do
     domain = fixture(:domain)
     {:ok, domain: domain}

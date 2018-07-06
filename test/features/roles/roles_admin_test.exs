@@ -1,13 +1,12 @@
 defmodule TdBg.RolesAdminTest do
   use Cabbage.Feature, async: false, file: "roles/roles_admin.feature"
   use TdBgWeb.FeatureCase
-  import TdBgWeb.Router.Helpers
+  import TdBgWeb.AclEntry
+  import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy
-  import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.User, only: :functions
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias Poison, as: JSON
 
   import_steps(TdBg.DomainSteps)
   import_steps(TdBg.ResultSteps)
@@ -156,13 +155,4 @@ defmodule TdBg.RolesAdminTest do
     end)
   end
 
-  defp acl_entry_create(token, acl_entry_params) do
-    headers = get_header(token)
-    body = %{acl_entry: acl_entry_params} |> JSON.encode!()
-
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(acl_entry_url(TdBgWeb.Endpoint, :create), body, headers, [])
-
-    {:ok, status_code, resp |> JSON.decode!()}
-  end
 end

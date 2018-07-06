@@ -1,10 +1,6 @@
 defmodule TdBgWeb.DomainView do
   use TdBgWeb, :view
-  alias TdBg.Accounts.Group
-  alias TdBg.Accounts.User
   alias TdBgWeb.DomainView
-  alias TdBgWeb.GroupView
-  alias TdBgWeb.UserView
   use TdBg.Hypermedia, :view
 
   def render("index.json", %{domains: domains, hypermedia: hypermedia}) do
@@ -41,49 +37,4 @@ defmodule TdBgWeb.DomainView do
     %{id: domain.id, name: domain.name}
   end
 
-  def render("index_acl_entries.json", %{acl_entries: acl_entries, hypermedia: hypermedia}) do
-    render_many_hypermedia(acl_entries, hypermedia, DomainView, "acl_entry.json")
-  end
-
-  def render("index_acl_entries.json", %{acl_entries: acl_entries}) do
-    %{data: render_many(acl_entries, DomainView, "acl_entry.json")}
-  end
-
-  def render("user_domain_entry.json", %{domain: user_domain_entry}) do
-    %{
-      id: user_domain_entry.id,
-      domain_name: user_domain_entry.name
-    }
-  end
-
-  def render("acl_entry.json", %{domain: acl_entry}) do
-    %{
-      principal: render_principal(acl_entry.principal),
-      principal_type: acl_entry.principal_type,
-      role_name: acl_entry.role_name,
-      role_id: acl_entry.role_id,
-      acl_entry_id: acl_entry.acl_entry_id
-    }
-  end
-
-  def render("acl_entry_show.json", %{acl_entry: acl_entry}) do
-    %{
-      data: %{
-        id: acl_entry.id,
-        principal_type: acl_entry.principal_type,
-        principal_id: acl_entry.principal_id,
-        resource_type: acl_entry.resource_type,
-        resource_id: acl_entry.resource_id,
-        role_id: acl_entry.role_id
-      }
-    }
-  end
-
-  def render_principal(%Group{} = group) do
-    render_one(group, GroupView, "group.json")
-  end
-
-  def render_principal(%User{} = user) do
-    render_one(user, UserView, "user.json")
-  end
 end

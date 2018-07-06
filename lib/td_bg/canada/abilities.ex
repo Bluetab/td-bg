@@ -7,7 +7,7 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.Taxonomies.Domain
 
   defimpl Canada.Can, for: User do
-    # administrator is superpowerful for Domain, Role and AclEntry
+    # administrator is superpowerful for Domain
     def can?(%User{is_admin: true}, _action, Domain) do
       true
     end

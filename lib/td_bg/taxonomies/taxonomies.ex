@@ -4,9 +4,7 @@ defmodule TdBg.Taxonomies do
   """
 
   import Ecto.Query, warn: false
-  alias Ecto.Multi
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.Permissions.AclEntry
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
 
@@ -132,20 +130,7 @@ defmodule TdBg.Taxonomies do
 
   """
   def delete_domain(%Domain{} = domain) do
-    Multi.new()
-    |> Multi.delete_all(
-      :acl_entry,
-      from(
-        acl in AclEntry,
-        where: acl.resource_type == "domain" and acl.resource_id == ^domain.id
-      )
-    )
-    |> Multi.delete(:domain, Domain.delete_changeset(domain))
-    |> Repo.transaction()
-    |> case do
-      {:ok, %{acl_entry: _acl_entry, domain: domain}} ->
-        {:ok, domain}
-    end
+    Repo.delete(domain)
   end
 
   @doc """

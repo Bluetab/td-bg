@@ -11,8 +11,6 @@
 # and so on) as they will fail if something goes wrong.
 alias TdBg.Templates.Template
 alias TdBg.Taxonomies.Domain
-alias TdBg.Permissions.Role
-alias TdBg.Permissions.AclEntry
 alias TdBg.BusinessConcepts.BusinessConcept
 alias TdBg.BusinessConcepts.BusinessConceptVersion
 alias TdBg.Repo
@@ -34,10 +32,6 @@ template = Repo.insert!(%Template{
   }
 ]
 
-})
-
-rolename = Repo.insert!(%Role{
-    name: "rolename"
 })
 
 domain1 = Repo.insert!(%Domain{
@@ -88,29 +82,7 @@ domain3 = Repo.insert!(%Domain{
     parent_id: domain2.id
 })
 
-Repo.insert!(%AclEntry{
-  principal_id: 3,
-  principal_type: "user",
-  resource_id: domain3.id,
-  resource_type: "domain",
-  role_id: rolename.id
-})
 
-Repo.insert!(%AclEntry{
-  principal_id: 4,
-  principal_type: "user",
-  resource_id: domain3.id,
-  resource_type: "domain",
-  role_id: rolename.id
-})
-
-Repo.insert!(%AclEntry{
-  principal_id: 1,
-  principal_type: "group",
-  resource_id: domain1.id,
-  resource_type: "domain",
-  role_id: rolename.id
-})
 
 Repo.insert!(%Template{
   name: "default_template",
@@ -150,27 +122,3 @@ domain_with_no_template = Repo.insert!(%Domain{
     name: "Domain with no template"
 })
 
-
-Repo.insert!(%AclEntry{
-  principal_id: 3,
-  principal_type: "user",
-  resource_id: domain_with_no_template.id,
-  resource_type: "domain",
-  role_id: rolename.id
-})
-
-Repo.insert!(%AclEntry{
-  principal_id: 4,
-  principal_type: "user",
-  resource_id: domain_with_no_template.id,
-  resource_type: "domain",
-  role_id: rolename.id
-})
-
-Repo.insert!(%AclEntry{
-  principal_id: 1,
-  principal_type: "group",
-  resource_id: domain_with_no_template.id,
-  resource_type: "domain",
-  role_id: rolename.id
-})
