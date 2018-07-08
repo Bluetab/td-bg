@@ -3,23 +3,26 @@ defmodule TdBgWeb.TemplateSupport do
 
   alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Permissions.AclEntry
-  alias TdBg.Permissions.Role
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
   alias TdBg.Templates
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
-  def preprocess_templates(templates, ctx \\ []) do
+  def preprocess_templates(templates, ctx \\ %{}) do
     process_template_meta([], templates, ctx)
   end
 
   defp process_template_meta(acc, [], _context), do: acc
-  defp process_template_meta(acc, [head|tail], ctx) do
+  defp process_template_meta(acc, [head|tail], %{user_roles: _} = ctx) do
     acc
     |> process_template_meta(head, ctx)
     |> process_template_meta(tail, ctx)
+  end
+  defp process_template_meta(acc, [head|tail], %{domain: domain} = ctx) do
+    user_roles = @td_auth_api.get_domain_user_roles(domain.id)
+    ctx = ctx |> Map.put(:user_roles, user_roles)
+    process_template_meta(acc, [head|tail], ctx)
   end
   defp process_template_meta(acc, template, ctx) do
     content = process_meta([], template.content, ctx)
@@ -35,11 +38,11 @@ defmodule TdBgWeb.TemplateSupport do
   end
   defp process_meta(acc, %{"type" => type, "meta" => meta} = field, ctx) do
     field = case {type, meta} do
-      {"list", %{"role" => rolename}} ->
-        user = Keyword.get(ctx, :user, nil)
-        role = Role.get_role_by_name(rolename)
-        domain = Keyword.get(ctx, :domain, nil)
-        process_role_meta(field, user, role, domain)
+      {"list", %{"role" => role_name}} ->
+        user = Map.get(ctx, :user, nil)
+        domain = Map.get(ctx, :domain, nil)
+        user_roles = Map.get(ctx, :user_roles, [])
+        process_role_meta(field, user, role_name, domain, user_roles)
       _ -> field
     end
     field_without_meta = Map.delete(field, "meta")
@@ -50,33 +53,25 @@ defmodule TdBgWeb.TemplateSupport do
   end
 
   # TODO: Refactor (roles and ACL entries are now in td_auth)
-  defp process_role_meta(%{} = field, %User{} = user,  %Role{} = role,  %Domain{} = domain)
+  defp process_role_meta(%{} = field, %User{} = user, role_name, %Domain{} = domain, user_roles)
     when not is_nil(user) and
-         not is_nil(role) and
+         not is_nil(role_name) and
          not is_nil(domain) do
-    acl_entries = get_acl_entries(role, domain)
-    user_and_groups = Enum.group_by(acl_entries, &(&1.principal_type), &(&1.principal_id))
-    group_ids = Map.get(user_and_groups, "group", [])
-    user_ids  = Map.get(user_and_groups, "user", [])
-    users = @td_auth_api.get_groups_users(group_ids, user_ids)
-    usernames = Enum.map(users, &Map.get(&1, :full_name))
+    users_by_role = user_roles
+      |> Enum.find(&(&1.role_name == role_name))
+    users = case users_by_role do
+      %{users: u} -> u
+      nil -> []
+    end
+    usernames = users
+      |> Enum.map(&(&1.full_name))
     field = Map.put(field, "values", usernames)
     case Enum.find(users, &(&1.id == user.id)) do
       nil -> field
       u -> Map.put(field, "default", u.full_name)
     end
   end
-  defp process_role_meta(field, _user, _role, _domain), do: field
-
-  defp get_acl_entries(role, domain) do
-    acl_entries = AclEntry.list_acl_entries(%{domain: domain, role: role})
-    case domain.parent_id do
-      nil -> acl_entries
-      _ ->
-        parent = domain |> Repo.preload(:parent) |> Map.get(:parent)
-        acl_entries ++ get_acl_entries(role, parent)
-    end
-  end
+  defp process_role_meta(field, _user, _role, _domain, _user_roles), do: field
 
   # TODO: unit test this
   def get_preprocessed_template(%BusinessConceptVersion{} = version, %User{} = user) do
@@ -87,7 +82,7 @@ defmodule TdBgWeb.TemplateSupport do
     template = version.business_concept.type
     |> Templates.get_template_by_name
 
-    process_template_meta([], [template], domain: domain, user: user)
+    process_template_meta([], [template], %{domain: domain, user: user})
     |> Enum.at(0)
   end
 

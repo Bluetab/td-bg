@@ -1,8 +1,6 @@
 defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
-  import TdBgWeb.User, only: :functions
-
   alias TdBg.Taxonomies
 
   describe "domains" do
@@ -22,13 +20,6 @@ defmodule TdBg.TaxonomiesTest do
         |> Enum.into(@valid_attrs)
         |> Taxonomies.create_domain()
       domain
-    end
-
-    def acl_entry_fixture(%Domain{} = domain) do
-      user = build(:user)
-      role = get_role_by_name("watch")
-      acl_entry_attrs = insert(:acl_entry_domain_user, principal_id: user.id, resource_id: domain.id, role: role)
-      acl_entry_attrs
     end
 
     test "list_domains/0 returns all domains" do

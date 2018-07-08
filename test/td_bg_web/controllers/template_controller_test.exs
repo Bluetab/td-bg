@@ -240,6 +240,7 @@ defmodule TdBgWeb.TemplateControllerTest do
     end
   end
 
+  @tag :skip # TODO: Refactor this test
   @tag authenticated_user: "user_name"
   test "get domain templates. Check role meta", %{conn: conn, swagger_schema: schema} do
     role_name = "role_name"

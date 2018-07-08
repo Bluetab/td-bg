@@ -4,6 +4,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   alias Poison, as: JSON
   alias TdBg.Accounts.Group
   alias TdBg.Accounts.User
+  alias TdBg.Taxonomies
   alias TdBg.Utils.CollectionUtils
 
   defp get_config do
@@ -38,6 +39,10 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   defp get_groups_path do
     auth_service_config = get_config()
     "#{get_auth_endpoint()}#{auth_service_config[:groups_path]}"
+  end
+
+  def get_user_roles_path(resource_type, resource_id) do
+    "#{get_auth_endpoint()}/api/#{resource_type}/#{resource_id}/user_roles"
   end
 
   def create(%{"user" => _user_params} = body) do
@@ -183,6 +188,30 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     json = json["data"]
     users = Enum.map(json, fn(user) -> %User{} |> Map.merge(CollectionUtils.to_struct(User, user)) end)
     users
+  end
+
+  def get_domain_user_roles(domain_id) do
+    domain_id
+    |> Taxonomies.get_parent_ids(true)
+    |> Enum.flat_map(&(get_user_roles/1))
+    |> Enum.group_by(&(&1.role_name), &(&1.users))
+    |> Enum.map(fn {role_name, users} -> %{role_name: role_name, users: Enum.uniq(Enum.concat(users))} end)
+  end
+
+  defp get_user_roles(domain_id) do
+    token = get_api_user_token()
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
+    api = get_user_roles_path("domains", domain_id)
+    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.get!("#{api}", headers, [])
+    resp
+    |> JSON.decode!
+    |> Enum.map(fn %{"role_name" => role_name, "users" => users} ->
+      %{role_name: role_name, users: users |> Enum.map(&(json_to_user/1))}
+    end)
+  end
+
+  defp json_to_user(json) do
+    %User{} |> Map.merge(CollectionUtils.to_struct(User, json))
   end
 
 end

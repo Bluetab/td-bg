@@ -212,7 +212,7 @@ defmodule TdBgWeb.TemplateController do
     templates =
       case Map.get(params, @preprocess, false) do
         "true" ->
-          TemplateSupport.preprocess_templates(templates, domain: domain, user: user)
+          TemplateSupport.preprocess_templates(templates, %{domain: domain, user: user})
 
         _ ->
           templates
