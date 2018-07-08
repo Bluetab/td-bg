@@ -15,7 +15,7 @@ defmodule TdBgWeb.TemplateSupport do
     process_template_meta([], templates, ctx)
   end
 
-  defp process_template_meta(acc, [], _contetx), do: acc
+  defp process_template_meta(acc, [], _context), do: acc
   defp process_template_meta(acc, [head|tail], ctx) do
     acc
     |> process_template_meta(head, ctx)
