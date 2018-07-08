@@ -31,8 +31,8 @@ defmodule TdBg.Search.Mappings do
         }
       },
       domain_ids: %{type: "long"},
-      link_count: %{type: "int"},
-      q_rule_count: %{type: "int"},
+      link_count: %{type: "short"},
+      q_rule_count: %{type: "short"},
       content: content_mappings
     }
 
