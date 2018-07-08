@@ -4,7 +4,6 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Permissions
-  alias TdBg.Permissions.Permission
   alias TdBg.Taxonomies.Domain
 
   def can?(%User{is_admin: true}, :create_business_concept), do: true
@@ -12,7 +11,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   def can?(%User{} = user, :create_business_concept) do
     Permissions.has_any_permission?(
       user,
-      [Permission.permissions().create_business_concept],
+      [:create_business_concept],
       Domain
     )
   end
@@ -20,14 +19,14 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   def can?(%User{} = user, :create_business_concept, %Domain{
         id: domain_id
       }) do
-    Permissions.authorized?(user, Permission.permissions().create_business_concept, domain_id)
+    Permissions.authorized?(user, :create_business_concept, domain_id)
   end
 
   def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -44,7 +43,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -53,7 +52,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -66,7 +65,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -75,7 +74,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -88,7 +87,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -97,7 +96,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_rejectable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().reject_business_concept,
+        :reject_business_concept,
         business_concept_version
       )
   end
@@ -106,7 +105,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_undo_rejectable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -115,7 +114,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_publishable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().publish_business_concept,
+        :publish_business_concept,
         business_concept_version
       )
   end
@@ -124,7 +123,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_versionable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().update_business_concept,
+        :update_business_concept,
         business_concept_version
       )
   end
@@ -133,7 +132,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_deprecatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().deprecate_business_concept,
+        :deprecate_business_concept,
         business_concept_version
       )
   end
@@ -142,7 +141,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_deletable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().delete_business_concept,
+        :delete_business_concept,
         business_concept_version
       )
   end
@@ -164,7 +163,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.has_any_status?(business_concept_version, valid_statuses) &&
       authorized?(
         user,
-        Permission.permissions().view_versioned_business_concepts,
+        :view_versioned_business_concepts,
         business_concept_version
       )
   end
@@ -184,7 +183,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        Permission.permissions().manage_business_concept_alias,
+        :manage_business_concept_alias,
         business_concept_version
       )
   end

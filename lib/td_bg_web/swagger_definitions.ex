@@ -142,55 +142,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
             actions(Schema.ref(:Actions))
           end
         end,
-      UserResponse:
-        swagger_schema do
-          properties do
-            data(
-              Schema.new do
-                properties do
-                  id(:integer, "user id")
-                  user_name(:string, "username")
-                  is_admin(:boolean, "is admin")
-                end
-              end
-            )
-          end
-        end,
-      UsersResponse:
-        swagger_schema do
-          type(:array)
-          items(Schema.ref(:UserResponse))
-        end,
-      UsersRolesRequest:
-        swagger_schema do
-          properties do
-            data(:object)
-          end
-        end,
-      DomainAclEntriesResponse:
-        swagger_schema do
-          properties do
-            data(
-              Schema.new do
-                properties do
-                  principal(
-                    Schema.new do
-                      properties do
-                        id(:integer, "principal_id")
-                        name(:string, "group1")
-                      end
-                    end
-                  )
-
-                  principal_type(:string, "principal_type")
-                  role_id(:integer, "role id")
-                  role_name(:string, "role name")
-                  acl_entry_id(:integer, "acl entry id")
-                end
-              end
-            )
-          end
-        end,
       Actions:
         swagger_schema do
           title("Actions")
@@ -235,29 +186,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
               end
             )
           end
-        end,
-      TaxonomyRolesResponse:
-        swagger_schema do
-          properties do
-            data(
-              Schema.new do
-                properties do
-                  domains(Schema.ref(:DomainItem))
-                end
-              end
-            )
-          end
-
-          example(%{
-            data: [
-              %{
-                domains: %{
-                  "69": %{inherited: false, role: "publish", role_id: 2, acl_entry_id: 2},
-                  "70": %{inherited: true, role: "publish", role_id: 2, acl_entry_id: nil}
-                }
-              }
-            ]
-          })
         end
     }
   end

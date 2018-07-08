@@ -69,39 +69,6 @@ defmodule TdBg.Factory do
     }
   end
 
-  def permission_factory do
-    %TdBg.Permissions.Permission {
-      name: "custom_permission"
-    }
-  end
-
-  def role_factory do
-    %TdBg.Permissions.Role {
-      name: "custom_role",
-      permissions: []
-    }
-  end
-
-  def acl_entry_factory do
-    %TdBg.Permissions.AclEntry {
-      principal_id: nil,
-      principal_type: nil,
-      resource_id: nil,
-      resource_type: nil,
-      role: nil
-    }
-  end
-
-  def acl_entry_domain_user_factory do
-    %TdBg.Permissions.AclEntry {
-      principal_id: nil,
-      principal_type: "user",
-      resource_id: nil,
-      resource_type: "domain",
-      role: nil
-    }
-  end
-
   def concept_field_factory do
     %ConceptField {
       concept: "a business_concept",
