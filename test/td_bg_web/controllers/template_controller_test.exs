@@ -240,7 +240,6 @@ defmodule TdBgWeb.TemplateControllerTest do
     end
   end
 
-  @tag :skip # TODO: Refactor this test
   @tag authenticated_user: "user_name"
   test "get domain templates. Check role meta", %{conn: conn, swagger_schema: schema} do
     role_name = "role_name"
@@ -262,7 +261,7 @@ defmodule TdBgWeb.TemplateControllerTest do
         ]
       )
 
-    role = insert(:role, name: role_name)
+    role = MockTdAuthService.find_or_create_role(role_name)
 
     parent_domain = insert(:domain, templates: [template])
     child_domain = insert(:child_domain, parent: parent_domain)
@@ -283,28 +282,22 @@ defmodule TdBgWeb.TemplateControllerTest do
     })
 
     user_name = "user_name"
-    # This is more desirable but we have to improve auth mock service
-    # user = MockTdAuthService.create_user(%{"user" => %{"user_name" => user_name,
-    # { }"full_name" => "#{user_name}", "is_admin" => false, "password" => "password",
-    # {}"email" => "nobody@bluetab.net", "groups" => []}})
 
-    insert(
-      :acl_entry,
+    MockPermissionResolver.create_acl_entry(%{
       principal_id: group.id,
       principal_type: "group",
       resource_id: parent_domain.id,
       resource_type: "domain",
       role_id: role.id
-    )
+    })
 
-    insert(
-      :acl_entry,
+    MockPermissionResolver.create_acl_entry(%{
       principal_id: User.gen_id_from_user_name(user_name),
       principal_type: "user",
       resource_id: child_domain.id,
       resource_type: "domain",
       role_id: role.id
-    )
+    })
 
     conn =
       get(conn, template_path(conn, :get_domain_templates, child_domain.id, preprocess: true))
@@ -326,7 +319,7 @@ defmodule TdBgWeb.TemplateControllerTest do
       |> Enum.at(0)
       |> Map.get("default")
 
-    assert values == [group_user_name, user_name]
+    assert values |> Enum.sort == [group_user_name, user_name] |> Enum.sort
     assert default == user_name
   end
 

@@ -5,6 +5,8 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
 
   alias TdBg.Accounts.Group
   alias TdBg.Accounts.User
+  alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Taxonomies
 
   def start_link(_) do
     Agent.start_link(fn -> %{} end, name: MockTdAuthService)
@@ -66,50 +68,21 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     lista
   end
 
-  def index_groups do
+  defp list_groups do
     Agent.get(MockTdAuthService, &Map.get(&1, :groups)) || []
   end
 
   def create_group(%{"group" => %{"name" => name}}) do
     group = %{id: Group.gen_id_from_name(name), name: name}
-    groups = index_groups()
+    groups = list_groups()
     Agent.update(MockTdAuthService, &Map.put(&1, :groups, groups ++ [group]))
     group
   end
 
   def get_group_by_name(name) do
-    index_groups()
+    list_groups()
     |> Enum.filter(&(&1.name == name))
     |> List.first()
-  end
-
-  def search_groups(%{"ids" => ids}) do
-    Enum.filter(index_groups(), fn group -> Enum.find(ids, &(&1 == group.id)) != nil end)
-  end
-
-  def search_groups_by_user_id(id) do
-    user = get_user(id)
-    user.groups
-  end
-
-  def get_groups_users(group_ids, extra_user_ids \\ [])
-
-  def get_groups_users(group_ids, extra_user_ids) do
-    accumulate_if_user_in_groups = fn user, acc, group_ids ->
-      case Enum.find(user.groups, &Enum.member?(group_ids, Group.gen_id_from_name(&1))) do
-        nil -> acc
-        _ -> [user | acc]
-      end
-    end
-
-    users = index()
-
-    Enum.reduce(users, [], fn user, acc ->
-      case Enum.member?(extra_user_ids, user.id) do
-        true -> [user | acc]
-        false -> accumulate_if_user_in_groups.(user, acc, group_ids)
-      end
-    end)
   end
 
   def index_roles do
@@ -137,7 +110,32 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     end
   end
 
-  def get_domain_user_roles(_domain_id) do
-    [] # TODO: Implement this...
+  def get_domain_user_roles(domain_id) do
+    domain_ids =
+      domain_id
+      |> Taxonomies.get_parent_ids(true)
+
+    MockPermissionResolver.get_acl_entries()
+    |> Enum.filter(&(&1.resource_type == "domain" && Enum.member?(domain_ids, &1.resource_id)))
+    |> Enum.map(&Map.put(&1, :role, get_role_by_id(&1.role_id)))
+    |> Enum.map(&Map.put(&1, :users, get_users(&1)))
+    |> Enum.group_by(& &1.role.name, & &1.users)
+    |> Enum.map(fn {role_name, users} -> %{role_name: role_name, users: Enum.concat(users)} end)
+  end
+
+  defp get_role_by_id(id) do
+    index_roles()
+    |> Enum.find(&(&1.id == id))
+  end
+
+  defp get_users(%{principal_type: "group", principal_id: group_id}) do
+    index()
+    |> Enum.filter(&Enum.member?(&1.gids, group_id))
+    |> Enum.map(&Map.take(&1, [:id, :user_name, :full_name]))
+  end
+
+  defp get_users(%{principal_type: "user", principal_id: user_id}) do
+    [get_user(user_id)]
+    |> Enum.map(&Map.take(&1, [:id, :user_name, :full_name]))
   end
 end

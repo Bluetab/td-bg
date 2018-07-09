@@ -122,19 +122,6 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     end
   end
 
-  def index_groups do
-    token = get_api_user_token()
-
-    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
-    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.get!("#{get_groups_path()}", headers, [])
-    json =
-      resp
-      |> JSON.decode!
-    json = json["data"]
-    groups = Enum.map(json, fn(group) -> %Group{} |> Map.merge(CollectionUtils.to_struct(Group, group)) end)
-    groups
-  end
-
   def create_group(%{"group" => _group_params} = req) do
     token = get_api_user_token()
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
@@ -147,47 +134,6 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
     json_group = json_group["data"]
     group = %Group{} |> Map.merge(CollectionUtils.to_struct(Group, json_group))
     group
-  end
-
-  def search_groups(%{"ids" => _ids} = ids) do
-    token = get_api_user_token()
-
-    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
-    req = %{"data" => ids}
-    body = req |> JSON.encode!
-    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_groups_path()}/search", body, headers, [])
-    json =
-      resp
-      |> JSON.decode!
-    json = json["data"]
-    groups = Enum.map(json, fn(group) -> %Group{} |> Map.merge(CollectionUtils.to_struct(Group, group)) end)
-    groups
-  end
-
-  def search_groups_by_user_id(id) do
-    token = get_api_user_token()
-
-    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
-    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.get!("#{get_users_path()}/#{id}/groups", headers, [])
-    json =
-      resp
-      |> JSON.decode!
-    json = json["data"]
-    groups = Enum.map(json, fn(group) -> %Group{} |> Map.merge(CollectionUtils.to_struct(Group, group)) end)
-    groups
-  end
-
-  def get_groups_users(group_ids, extra_user_ids \\ [])
-  def get_groups_users(group_ids, extra_user_ids) do
-    token = get_api_user_token()
-    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
-    req = %{"data" => %{"group_ids" => group_ids, "extra_user_ids" => extra_user_ids}}
-    body = req |> JSON.encode!
-    %HTTPoison.Response{status_code: _status_code, body: resp} = HTTPoison.post!("#{get_groups_path()}/users", body, headers, [])
-    json = resp |> JSON.decode!
-    json = json["data"]
-    users = Enum.map(json, fn(user) -> %User{} |> Map.merge(CollectionUtils.to_struct(User, user)) end)
-    users
   end
 
   def get_domain_user_roles(domain_id) do

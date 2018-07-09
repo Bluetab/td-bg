@@ -99,6 +99,10 @@ defmodule TdBg.Permissions.MockPermissionResolver do
     Agent.update(:MockPermissions, &[item | &1])
   end
 
+  def get_acl_entries do
+    Agent.get(:MockPermissions, &(&1))
+  end
+
   def register_token(resource) do
     %{"sub" => sub, "jti" => jti} = resource |> Map.take(["sub", "jti"])
     %{"id" => user_id} = sub |> Poison.decode!()
