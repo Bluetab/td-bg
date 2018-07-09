@@ -210,15 +210,6 @@ defmodule TdBg.TaxonomyTest do
     {:ok, Map.merge(state, %{status_code: status_code, token: token})}
   end
 
-  defwhen ~r/^user "(?<user_name>[^"]+)" tries to delete a Domain with the name "(?<domain_group_name>[^"]+)"$/,
-          %{user_name: user_name, domain_group_name: domain_group_name},
-          state do
-    token = get_user_token(user_name)
-    domain_group_info = get_domain_by_name(token, domain_group_name)
-    {:ok, status_code} = domain_group_delete(token, domain_group_info["id"])
-    {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
-  end
-
   defand ~r/^if result (?<actual_result>[^"]+) is "(?<expected_result>[^"]+)", Domain "(?<domain_name_child>[^"]+)" is a child of Domain "(?<domain_name_parent>[^"]+)"$/,
          %{
            actual_result: actual_result,

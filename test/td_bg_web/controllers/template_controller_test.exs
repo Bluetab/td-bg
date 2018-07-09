@@ -9,6 +9,7 @@ defmodule TdBgWeb.TemplateControllerTest do
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Templates
   alias TdBg.Templates.Template
+  alias TdBg.Taxonomies
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{content: [], name: "some name"}
@@ -264,7 +265,10 @@ defmodule TdBgWeb.TemplateControllerTest do
     role = MockTdAuthService.find_or_create_role(role_name)
 
     parent_domain = insert(:domain, templates: [template])
-    child_domain = insert(:child_domain, parent: parent_domain)
+    {:ok, child_domain} = build(:child_domain, parent: parent_domain)
+      |> Map.put(:parent_id, parent_domain.id)
+      |> Map.take([:name, :description, :parent_id])
+      |> Taxonomies.create_domain
 
     group_name = "group_name"
     group = MockTdAuthService.create_group(%{"group" => %{"name" => group_name}})
