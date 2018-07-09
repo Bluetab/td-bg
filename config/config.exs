@@ -52,6 +52,8 @@ config :td_bg, :audit_service,
         protocol: "http",
         audits_path: "/api/audits/"
 
+config :td_bg, cache_domains_on_startup: true
+
 config :td_bg, permission_resolver: TdPerms.Permissions
 
 config :td_perms, permissions: [

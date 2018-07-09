@@ -6,7 +6,6 @@ defmodule TdBg.Permissions do
   import Ecto.Query, warn: false
 
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
 
   @permission_resolver Application.get_env(:td_bg, :permission_resolver)
@@ -33,9 +32,7 @@ defmodule TdBg.Permissions do
 
   """
   def authorized?(%User{jti: jti}, permission, domain_id) do
-    domain_id
-      |> Taxonomies.get_parent_ids(true)
-      |> Enum.any?(&(@permission_resolver.has_permission?(jti, permission, "domain", &1)))
+    @permission_resolver.has_permission?(jti, permission, "domain", domain_id)
   end
 
 end

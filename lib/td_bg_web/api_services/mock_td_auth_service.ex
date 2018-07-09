@@ -6,7 +6,7 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
   alias TdBg.Accounts.Group
   alias TdBg.Accounts.User
   alias TdBg.Permissions.MockPermissionResolver
-  alias TdBg.Taxonomies
+  alias TdPerms.TaxonomyCache
 
   def start_link(_) do
     Agent.start_link(fn -> %{} end, name: MockTdAuthService)
@@ -113,7 +113,7 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
   def get_domain_user_roles(domain_id) do
     domain_ids =
       domain_id
-      |> Taxonomies.get_parent_ids(true)
+      |> TaxonomyCache.get_parent_ids
 
     MockPermissionResolver.get_acl_entries()
     |> Enum.filter(&(&1.resource_type == "domain" && Enum.member?(domain_ids, &1.resource_id)))

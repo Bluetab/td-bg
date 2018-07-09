@@ -4,8 +4,8 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   alias Poison, as: JSON
   alias TdBg.Accounts.Group
   alias TdBg.Accounts.User
-  alias TdBg.Taxonomies
   alias TdBg.Utils.CollectionUtils
+  alias TdPerms.TaxonomyCache
 
   defp get_config do
     Application.get_env(:td_bg, :auth_service)
@@ -138,7 +138,7 @@ defmodule TdBgWeb.ApiServices.HttpTdAuthService do
 
   def get_domain_user_roles(domain_id) do
     domain_id
-    |> Taxonomies.get_parent_ids(true)
+    |> TaxonomyCache.get_parent_ids
     |> Enum.flat_map(&(get_user_roles/1))
     |> Enum.group_by(&(&1.role_name), &(&1.users))
     |> Enum.map(fn {role_name, users} -> %{role_name: role_name, users: Enum.uniq(Enum.concat(users))} end)

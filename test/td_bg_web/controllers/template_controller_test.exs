@@ -7,9 +7,9 @@ defmodule TdBgWeb.TemplateControllerTest do
   alias Poison, as: JSON
   alias TdBg.Accounts.User
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Taxonomies
   alias TdBg.Templates
   alias TdBg.Templates.Template
-  alias TdBg.Taxonomies
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{content: [], name: "some name"}

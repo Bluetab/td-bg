@@ -33,6 +33,11 @@ defmodule TdBg.DataCase do
 
     unless tags[:async] do
       Sandbox.mode(TdBg.Repo, {:shared, self()})
+      parent = self()
+      case Process.whereis(TdBg.DomainLoader) do
+        nil -> nil
+        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
+      end
     end
 
     :ok

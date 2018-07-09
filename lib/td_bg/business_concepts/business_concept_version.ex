@@ -7,6 +7,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Searchable
   alias TdBg.Taxonomies
+  alias TdPerms.TaxonomyCache
 
   @behaviour Searchable
 
@@ -141,7 +142,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     domain = Taxonomies.get_domain!(concept.business_concept.domain_id)
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
-    domain_ids = Taxonomies.get_parent_ids(domain.id, true)
+    domain_ids = TaxonomyCache.get_parent_ids(domain.id)
     # TODO: Cache user list for indexing instead of querying for every document
     last_change_by = case @td_auth_api.get_user(last_change_by_id) do
       nil -> %{}

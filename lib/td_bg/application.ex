@@ -17,11 +17,7 @@ defmodule TdBg.Application do
       # Start your own worker by calling:
       # TdBg.Worker.start_link(arg1, arg2, arg3)
       # worker(TdBg.Worker, [arg1, arg2, arg3]),
-      supervisor(ConCache, [[
-        name: :domains_cache,
-        ttl_check_interval: :timer.seconds(2),
-        global_ttl: :timer.seconds(300)
-      ]], id: :domains_cache)
+      worker(TdBg.DomainLoader, [TdBg.DomainLoader])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

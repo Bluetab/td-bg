@@ -5,6 +5,7 @@ defmodule TdBg.Taxonomies do
 
   import Ecto.Query, warn: false
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.DomainLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
 
@@ -92,8 +93,8 @@ defmodule TdBg.Taxonomies do
 
     case result do
       {:ok, domain} ->
+        DomainLoader.refresh(domain.id)
         {:ok, get_domain!(domain.id)}
-
       _ ->
         result
     end
@@ -129,8 +130,13 @@ defmodule TdBg.Taxonomies do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_domain(%Domain{} = domain) do
-    Repo.delete(domain)
+  def delete_domain(%Domain{id: id} = domain) do
+    case Repo.delete(domain) do
+      {:ok, struct} ->
+        DomainLoader.delete(id)
+        {:ok, struct}
+      error -> error
+    end
   end
 
   @doc """
@@ -165,24 +171,6 @@ defmodule TdBg.Taxonomies do
     get_domain_ancestors(domain, with_self)
   end
 
-  def get_parent_ids(nil, _), do: []
-  def get_parent_ids(domain_id, with_self) do
-    ConCache.get_or_store(:domains_cache, {domain_id, with_self}, fn ->
-      domain_id
-        |> get_ancestors_for_domain_id(with_self)
-        |> Enum.map(&(&1.id))
-      end)
-  end
-
-  def preload_domain_cache do
-    list_domains()
-    |> Enum.map(&(&1.id))
-    |> Enum.map(&({&1, get_parent_ids(&1, true)}))
-  end
-
-  @doc """
-
-  """
   def get_parent_id(nil) do
     {:error, nil}
   end

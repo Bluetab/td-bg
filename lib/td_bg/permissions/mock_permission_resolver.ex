@@ -6,6 +6,7 @@ defmodule TdBg.Permissions.MockPermissionResolver do
   use Agent
 
   alias Poision
+  alias TdPerms.TaxonomyCache
 
   @role_permissions %{
     "admin" => [
@@ -75,7 +76,13 @@ defmodule TdBg.Permissions.MockPermissionResolver do
     Agent.start_link(fn -> Map.new() end, name: :MockSessions)
   end
 
-  def has_permission?(session_id, permission, resource_type, resource_id) do
+  def has_permission?(session_id, permission, "domain", domain_id) do
+    domain_id
+    |> TaxonomyCache.get_parent_ids
+    |> Enum.any?(&has_resource_permission?(session_id, permission, "domain", &1))
+  end
+
+  def has_resource_permission?(session_id, permission, resource_type, resource_id) do
     user_id = Agent.get(:MockSessions, &Map.get(&1, session_id))
 
     Agent.get(:MockPermissions, & &1)
@@ -100,7 +107,7 @@ defmodule TdBg.Permissions.MockPermissionResolver do
   end
 
   def get_acl_entries do
-    Agent.get(:MockPermissions, &(&1))
+    Agent.get(:MockPermissions, & &1)
   end
 
   def register_token(resource) do
