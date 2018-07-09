@@ -47,7 +47,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :index do
-    get("/business_concept_versions")
     description("Business Concept Versions")
 
     parameters do
@@ -78,7 +77,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :search do
-    post("/business_concept_versions/search")
     description("Business Concept Versions")
 
     parameters do
@@ -118,7 +116,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :create do
-    post("/business_concept_versions")
     description("Creates a Business Concept version child of Data Domain")
     produces("application/json")
 
@@ -230,7 +227,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :versions do
-    get("/business_concepts/{business_concept_version_id}/versions")
     description("List Business Concept Versions")
 
     parameters do
@@ -270,7 +266,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :show do
-    get("/business_concept_versions/{id}")
     description("Show Business Concept Version")
     produces("application/json")
 
@@ -308,7 +303,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 end
 
   swagger_path :delete do
-    delete("/business_concept_versions/{id}")
     description("Delete a business concept version")
     produces("application/json")
 
@@ -358,7 +352,6 @@ end
   end
 
   swagger_path :send_for_approval do
-    post("/business_concept_versions/{id}/send_for_approval")
     description("Submit a draft business concept for approval")
     produces("application/json")
 
@@ -388,7 +381,6 @@ end
   end
 
   swagger_path :publish do
-    post("/business_concept_versions/{id}/publish")
     description("Publish a business concept which is pending approval")
     produces("application/json")
 
@@ -418,7 +410,6 @@ end
   end
 
   swagger_path :reject do
-    post("/business_concept_versions/{id}/reject")
     description("Reject a business concept which is pending approval")
     produces("application/json")
 
@@ -449,7 +440,6 @@ end
   end
 
   swagger_path :undo_rejection do
-    post("/business_concept_versions/{id}/undo_rejection")
     description("Create a draft from a rejected business concept")
     produces("application/json")
 
@@ -479,7 +469,6 @@ end
   end
 
   swagger_path :version do
-    post("/business_concept_versions/{id}/version")
     description("Create a new draft from a published business concept")
     produces("application/json")
 
@@ -509,7 +498,6 @@ end
   end
 
   swagger_path :deprecate do
-    post("/business_concept_versions/{id}/deprecate")
     description("Deprecate a published business concept")
     produces("application/json")
 
@@ -725,7 +713,6 @@ end
   end
 
   swagger_path :update do
-    put("/business_concept_versions/{id}")
     description("Updates Business Concept Version")
     produces("application/json")
 
@@ -873,7 +860,6 @@ end
   end
 
   swagger_path :get_fields do
-    get("/business_concept_versions/{business_concept_version_id}/fields")
     description("Get business concept version data fields")
     produces("application/json")
 
@@ -910,7 +896,6 @@ end
   end
 
   swagger_path :get_field do
-    get("/business_concept_versions/{business_concept_id}/fields/{concept_field_id}")
     description("Get business concept version field")
     produces("application/json")
 
@@ -949,7 +934,6 @@ end
   end
 
   swagger_path :add_field do
-    post("/business_concept_versions/{business_concept_version_id}/fields")
     description("Updates Business Concept Version Field")
     produces("application/json")
 
@@ -999,7 +983,6 @@ end
   end
 
   swagger_path :delete_field do
-    delete("/business_concept_versions/{business_concept_version_id}/fields/{concept_field_id}")
     description("Deletes Business Concept Version Field")
     produces("application/json")
 
@@ -1055,7 +1038,6 @@ end
   end
 
   swagger_path :get_data_structures do
-    get("/business_concept_versions/{id}/data_structures")
     description("Get business concept version associated data structures")
     produces("application/json")
 
@@ -1098,10 +1080,6 @@ end
   end
 
   swagger_path :get_data_fields do
-    get(
-      "/business_concept_versions/{business_concept_id}/data_structures/{data_structure_id}/data_fields"
-    )
-
     description("Get business concept version associated data structure data fields")
     produces("application/json")
 

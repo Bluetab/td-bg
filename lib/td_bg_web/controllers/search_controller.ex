@@ -14,7 +14,6 @@
   end
 
   swagger_path :create do
-    post "/search"
     description "Creates ES indexes"
     produces "application/json"
     response 201, "Created"
@@ -26,7 +25,6 @@
   end
 
   swagger_path :delete do
-    delete "/search"
     description "Deletes ES indexes"
     produces "application/json"
     response 204, "Deleted"
@@ -38,7 +36,6 @@
   end
 
   swagger_path :reindex_all do
-    get "/search/reindex_all"
     description "Reindex all ES indexes with DB content"
     produces "application/json"
     response 200, "OK"

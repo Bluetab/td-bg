@@ -13,7 +13,6 @@ defmodule TdBgWeb.BusinessConceptFilterController do
   end
 
   swagger_path :index do
-    get("/business_concept_filters")
     description("List Business Concept Filters")
     response(200, "OK", Schema.ref(:FilterResponse))
   end

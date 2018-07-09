@@ -23,7 +23,6 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :index_children_business_concept do
-    get("/business_concepts/domains/{id}")
     description("List Business Concepts children of Domain")
     produces("application/json")
 
@@ -63,7 +62,6 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :show do
-    get("/business_concepts/{id}")
     description("Show Business Concepts")
     produces("application/json")
 
@@ -87,7 +85,6 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :update do
-    put("/business_concepts/{id}")
     description("Updates Business Concepts")
     produces("application/json")
 
@@ -147,7 +144,6 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :update_status do
-    patch("/business_concepts/{business_concept_id}/status")
     description("Updates Business Ccncept status")
     produces("application/json")
 
@@ -343,7 +339,6 @@ defmodule TdBgWeb.BusinessConceptController do
   end
 
   swagger_path :index_status do
-    get("/business_concepts/index/{status}")
     description("List Business Concept with certain status")
     produces("application/json")
 

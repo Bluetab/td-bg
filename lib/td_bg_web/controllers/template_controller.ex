@@ -18,7 +18,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :index do
-    get("/templates")
     description("List Templates")
     response(200, "OK", Schema.ref(:TemplatesResponse))
   end
@@ -29,7 +28,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :create do
-    post("/templates")
     description("Creates a Template")
     produces("application/json")
 
@@ -63,7 +61,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :show do
-    get("/templates/{id}")
     description("Show Template")
     produces("application/json")
 
@@ -81,7 +78,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :load_and_show do
-    get("/templates/load/{id}")
     description("Load and show Template")
     produces("application/json")
 
@@ -137,7 +133,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :update do
-    put("/templates/{id}")
     description("Updates Template")
     produces("application/json")
 
@@ -159,7 +154,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :delete do
-    delete("/templates/{id}")
     description("Delete Template")
     produces("application/json")
 
@@ -186,7 +180,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :get_domain_templates do
-    get("/domains/{domain_id}/templates")
     description("List Domain Templates")
 
     parameters do
@@ -222,7 +215,6 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :add_templates_to_domain do
-    post("/domains/{domain_id}/templates")
     description("Add Templates to Domain")
 
     parameters do

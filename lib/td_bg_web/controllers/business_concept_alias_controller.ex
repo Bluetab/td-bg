@@ -19,7 +19,6 @@ defmodule TdBgWeb.BusinessConceptAliasController do
   end
 
   swagger_path :index do
-    get("/business_concepts/{business_concept_id}/aliases")
     description("List Business Concept Aliases")
 
     parameters do
@@ -42,7 +41,6 @@ defmodule TdBgWeb.BusinessConceptAliasController do
   end
 
   swagger_path :create do
-    post("/business_concepts/{business_concept_id}/aliases")
     description("Creates a Business Concept Alias")
     produces("application/json")
 
@@ -109,7 +107,6 @@ defmodule TdBgWeb.BusinessConceptAliasController do
   end
 
   swagger_path :delete do
-    delete("/business_concept_aliases/{business_concept_alias_id}")
     description("Deletes a Business Concept Alias")
     produces("application/json")
 

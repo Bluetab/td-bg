@@ -38,7 +38,6 @@ defmodule TdBgWeb.DomainController do
   end
 
   swagger_path :index do
-    get("/domains")
     description("List Domains")
 
     parameters do
@@ -91,7 +90,6 @@ defmodule TdBgWeb.DomainController do
   end
 
   swagger_path :create do
-    post("/domains")
     description("Creates a Domain")
     produces("application/json")
 
@@ -159,7 +157,6 @@ defmodule TdBgWeb.DomainController do
   end
 
   swagger_path :show do
-    get("/domains/{id}")
     description("Show Domain")
     produces("application/json")
 
@@ -190,7 +187,6 @@ defmodule TdBgWeb.DomainController do
   end
 
   swagger_path :update do
-    put("/domains/{id}")
     description("Updates Domain")
     produces("application/json")
 
@@ -223,7 +219,6 @@ defmodule TdBgWeb.DomainController do
   end
 
   swagger_path :delete do
-    delete("/domains/{id}")
     description("Delete Domain")
     produces("application/json")
 

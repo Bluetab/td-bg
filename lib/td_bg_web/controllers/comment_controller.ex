@@ -21,7 +21,6 @@ defmodule TdBgWeb.CommentController do
   end
 
   swagger_path :index do
-    get "/business_concepts/comments"
     description "List Comments"
     response 200, "OK", Schema.ref(:CommentsResponse)
   end
@@ -35,7 +34,6 @@ defmodule TdBgWeb.CommentController do
   end
 
   swagger_path :create do
-    post "/business_concepts/comments"
     description "Creates Comments"
     produces "application/json"
     parameters do
@@ -65,7 +63,6 @@ defmodule TdBgWeb.CommentController do
   end
 
   swagger_path :show do
-    get "/business_concepts/comments/{id}"
     description "Show Comment"
     produces "application/json"
     parameters do
@@ -80,7 +77,6 @@ defmodule TdBgWeb.CommentController do
   end
 
   swagger_path :update do
-    patch "/business_concepts/comments/{id}"
     description "Update Comments"
     produces "application/json"
     parameters do
@@ -101,7 +97,6 @@ defmodule TdBgWeb.CommentController do
   end
 
   swagger_path :delete do
-    delete "/business_concepts/comments/{id}"
     description "Delete Comment"
     produces "application/json"
     parameters do
