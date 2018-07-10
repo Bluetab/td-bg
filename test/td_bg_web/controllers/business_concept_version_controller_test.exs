@@ -524,6 +524,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       %{}
       |> Map.put("name", "some type")
       |> Map.put("content", [])
+      |> Map.put("is_default", false)
 
     body = %{template: attrs} |> JSON.encode!()
     HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])

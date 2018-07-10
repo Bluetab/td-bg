@@ -82,43 +82,6 @@ defmodule TdBg.TemplatesTest do
       assert Templates.get_default_template() == nil
     end
 
-    test "get_default_template/1 raise exception when no template exists" do
-      assert  Templates.get_default_template() == nil
-    end
-
-    test "create_template/1 sets is_default" do
-      creation_attrs = %{name: "name", content: [], is_default: false}
-      assert {:ok, template} = Templates.create_template(creation_attrs)
-      assert template.is_default
-    end
-
-    test "create_template/1 takes is_default" do
-      creation_attrs_1 = %{name: "name_1", content: [], is_default: true}
-      assert {:ok, template_1} = Templates.create_template(creation_attrs_1)
-
-      creation_attrs_2 = %{name: "name_2", content: [], is_default: true}
-      assert {:ok, template_2} = Templates.create_template(creation_attrs_2)
-
-      template_1 = Templates.get_template_by_name(template_1.name)
-      template_2 = Templates.get_template_by_name(template_2.name)
-
-      assert !template_1.is_default
-      assert template_2.is_default
-    end
-
-    test "update_template/1 takes is_default" do
-      template_1 = insert(:template, name: "name_1", is_default: true)
-      template_2 = insert(:template, name: "name_2", is_default: false)
-
-      assert {:ok, _} = Templates.update_template(template_2, %{is_default: true})
-
-      template_1 = Templates.get_template_by_name(template_1.name)
-      template_2 = Templates.get_template_by_name(template_2.name)
-
-      assert !template_1.is_default
-      assert template_2.is_default
-    end
-
     test "update_template/1 avoid taking is_default" do
       template_1 = insert(:template, name: "name_1", is_default: true)
       template_2 = insert(:template, name: "name_2", is_default: false)
@@ -130,17 +93,6 @@ defmodule TdBg.TemplatesTest do
 
       assert template_1.is_default
       assert !template_2.is_default
-    end
-
-    test "delete_template/1 sets is_default" do
-      template_1 = insert(:template, name: "name_1", is_default: false)
-      template_2 = insert(:template, name: "name_2", is_default: true)
-
-      Templates.delete_template(template_2)
-
-      template_1 = Templates.get_template_by_name(template_1.name)
-
-      assert template_1.is_default
     end
 
   end
@@ -167,13 +119,6 @@ defmodule TdBg.TemplatesTest do
       Templates.add_templates_to_domain(domain, [template1, template2])
       stored_templates = Templates.get_domain_templates(domain)
       assert [template1, template2] == stored_templates
-    end
-
-    test "delete_template/1 deletes template with related domain" do
-      {:ok, template} = Templates.create_template(@empty_template_attrs)
-      {:ok, domain} = Taxonomies.create_domain(@domain_attrs)
-      Templates.add_templates_to_domain(domain, [template])
-      assert_raise Ecto.ConstraintError, fn -> Templates.delete_template(template) end
     end
 
     test "add_templates_to_domain_parent/2 and get_domain_templates/1 adds empty template to a domain" do

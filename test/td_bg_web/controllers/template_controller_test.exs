@@ -12,7 +12,7 @@ defmodule TdBgWeb.TemplateControllerTest do
   alias TdBg.Templates.Template
   alias TdBgWeb.ApiServices.MockTdAuthService
 
-  @create_attrs %{content: [], name: "some name"}
+  @create_attrs %{content: [], name: "some name", is_default: false}
   @generic_attrs %{
     content: [%{type: "type1", required: true, name: "name1", max_size: 100}],
     name: "generic_true",
@@ -75,7 +75,7 @@ defmodule TdBgWeb.TemplateControllerTest do
       assert json_response(conn, 200)["data"] == %{
                "id" => id,
                "content" => [],
-               "is_default" => true,
+               "is_default" => false,
                "name" => "some name"
              }
     end
