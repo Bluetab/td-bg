@@ -50,7 +50,7 @@
   "redix": {:hex, :redix, "0.7.1", "25a6c1c0d9b2d12a35aef759f9e49bd9bca00e0cd857ce766412f08fdda72163", [:mix], [{:connection, "~> 1.0", [hex: :connection, repo: "hexpm", optional: false]}], "hexpm"},
   "rummage_ecto": {:hex, :rummage_ecto, "1.2.0", "06b9f77a5a7b4a319b3d9992de4bcb37ea70bcbea5d4b5cc328b74c1b3958be1", [:mix], [{:ecto, "~> 2.1", [hex: :ecto, repo: "hexpm", optional: false]}], "hexpm"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], []},
-  "td_perms": {:git, "https://github.com/Bluetab/td-perms.git", "fcf8ab243720d1de37b348c7a90a14f47c982b47", []},
+  "td_perms": {:git, "https://github.com/Bluetab/td-perms.git", "c61bbc480b99d39e4b33ca17d16b0a9ab3d45b55", [tag: "v0.1.8"]},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.3.1", "a1f612a7b512638634a603c8f401892afbf99b8ce93a45041f8aaca99cadb85e", [:rebar3], []},
   "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], []},
 }

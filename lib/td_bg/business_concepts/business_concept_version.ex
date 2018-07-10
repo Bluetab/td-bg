@@ -8,10 +8,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.Searchable
   alias TdBg.Taxonomies
   alias TdPerms.TaxonomyCache
+  alias TdPerms.UserCache
 
   @behaviour Searchable
 
-  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
   @default_bc_version_params %{:link_count => 0, :q_rule_count => 0}
 
   schema "business_concept_versions" do
@@ -143,10 +143,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
     domain_ids = TaxonomyCache.get_parent_ids(domain.id)
-    # TODO: Cache user list for indexing instead of querying for every document
-    last_change_by = case @td_auth_api.get_user(last_change_by_id) do
+    last_change_by = case UserCache.get_user(last_change_by_id) do
       nil -> %{}
-      user -> user |> Map.take([:id, :user_name, :full_name])
+      user -> user
     end
     #By default we will set to 0 the bc params but the values in this map
     #shoul never be empty!!
