@@ -10,7 +10,7 @@ defmodule TdBg.Search.Mappings do
 
     mapping_type = %{
       id: %{type: "long"},
-      name: %{type: "text"},
+      name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
       description: %{type: "text"},
       version: %{type: "short"},
       type: %{type: "keyword"},
@@ -36,7 +36,9 @@ defmodule TdBg.Search.Mappings do
       content: content_mappings
     }
 
-    %{mappings: %{doc: %{properties: mapping_type}}}
+    settings = %{analysis: %{normalizer: %{sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}}}}
+
+    %{mappings: %{doc: %{properties: mapping_type}}, settings: settings}
   end
 
   def get_dynamic_mappings do

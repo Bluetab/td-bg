@@ -9,7 +9,7 @@ defmodule TdBg.Search.Indexer do
   def reindex(:business_concept) do
     ESClientApi.delete!("business_concept")
     mapping = Mappings.get_mappings() |> Poison.encode!()
-    ESClientApi.put!("business_concept", mapping)
+    %{status_code: 200} = ESClientApi.put!("business_concept", mapping)
     Search.put_bulk_search(:business_concept)
   end
 end

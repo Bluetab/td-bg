@@ -90,7 +90,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def search(conn, params) do
     user = conn.assigns[:current_user]
-    business_concept_versions = Search.search_business_concept_versions(params, user)
+    page = params |> Map.get("page", 0)
+    params = Map.drop(params, ["page"])
+    business_concept_versions = Search.search_business_concept_versions(params, user, page)
 
     render(
       conn,
