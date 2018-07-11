@@ -6,6 +6,7 @@ defmodule TdBg.BusinessConcepts do
   import Ecto.Query, warn: false
   alias Ecto.Changeset
   alias Ecto.Multi
+  alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
@@ -56,6 +57,22 @@ defmodule TdBg.BusinessConcepts do
       (c.id != ^exclude_concept_id and (v.name == ^name or a.name == ^name)) or
         (c.id == ^exclude_concept_id and a.name == ^name)
     )
+  end
+
+  @doc """
+    list all business concepts
+    """
+  def list_all_business_concepts do
+    BusinessConcept
+      |> Repo.all()
+  end
+
+  @doc """
+    Fetch an exsisting business_concept by its id
+  """
+  def get_business_concept!(business_concept_id) do
+     Repo.one!(from(c in BusinessConcept,
+        where: c.id == ^business_concept_id))
   end
 
   @doc """
@@ -144,6 +161,7 @@ defmodule TdBg.BusinessConcepts do
         new_version = get_business_concept_version!(business_concept_version.id)
         business_concept_id = new_version.business_concept_id
         params = retrieve_last_bc_version_params(business_concept_id)
+        BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         {:ok, new_version}
 
@@ -484,7 +502,8 @@ defmodule TdBg.BusinessConcepts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
+  def delete_business_concept_version(%BusinessConceptVersion{business_concept_id: business_concept_id}
+    = business_concept_version) do
     if business_concept_version.version == 1 do
       Multi.new()
       |> Multi.delete(:business_concept_version, business_concept_version)
@@ -496,6 +515,7 @@ defmodule TdBg.BusinessConcepts do
            business_concept: %BusinessConcept{},
            business_concept_version: %BusinessConceptVersion{} = version
          }} ->
+          BusinessConceptLoader.delete(business_concept_id)
           @search_service.delete_search(business_concept_version)
           {:ok, version}
       end

@@ -17,7 +17,8 @@ defmodule TdBg.Application do
       # Start your own worker by calling:
       # TdBg.Worker.start_link(arg1, arg2, arg3)
       # worker(TdBg.Worker, [arg1, arg2, arg3]),
-      worker(TdBg.DomainLoader, [TdBg.DomainLoader])
+      worker(TdBg.DomainLoader, [TdBg.DomainLoader]),
+      worker(TdBg.BusinessConceptLoader, [TdBg.BusinessConceptLoader])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

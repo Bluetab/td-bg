@@ -53,6 +53,7 @@ config :td_bg, :audit_service,
         audits_path: "/api/audits/"
 
 config :td_bg, cache_domains_on_startup: true
+config :td_bg, cache_busines_concepts_on_startup: true
 
 config :td_bg, permission_resolver: TdPerms.Permissions
 
