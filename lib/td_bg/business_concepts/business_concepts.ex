@@ -303,6 +303,7 @@ defmodule TdBg.BusinessConcepts do
     }
 
     @search_service.search("business_concept", query)
+      |> Map.get(:results)
       |> parse_params_result(default_map)
   end
 

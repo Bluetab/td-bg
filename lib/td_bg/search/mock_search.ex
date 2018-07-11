@@ -17,6 +17,7 @@ defmodule TdBg.Search.MockSearch do
     |> Enum.map(&%{_source: &1})
     |> Poison.encode!()
     |> Poison.decode!()
+    |> search_results
   end
 
   def search("business_concept", %{query: %{term: %{business_concept_id: business_concept_id}}}) do
@@ -26,6 +27,7 @@ defmodule TdBg.Search.MockSearch do
     |> Enum.map(&%{_source: &1})
     |> Poison.encode!()
     |> Poison.decode!()
+    |> search_results
   end
 
   def search("business_concept", %{
@@ -37,6 +39,7 @@ defmodule TdBg.Search.MockSearch do
     |> Enum.map(&%{_source: &1})
     |> Poison.encode!()
     |> Poison.decode!()
+    |> search_results
   end
 
   def search("business_concept", %{
@@ -47,11 +50,12 @@ defmodule TdBg.Search.MockSearch do
     default_params_map = %{:link_count => 0, :q_rule_count => 0}
     BusinessConcepts.list_all_business_concept_versions()
       |> Enum.map(&BusinessConceptVersion.search_fields(&1))
-      |> Enum.map(fn(bv) ->
-        Map.merge(bv, default_params_map, fn _k, v1, v2 ->
-          v1 || v2
-        end)
-      end)
+      |> Enum.map(fn(bv) -> Map.merge(bv, default_params_map, fn _k, v1, v2 -> v1 || v2 end) end)
+      |> search_results
+  end
+
+  defp search_results(results) do
+    %{results: results, total: Enum.count(results)}
   end
 
   defp matches(string, query) when is_bitstring(string) do

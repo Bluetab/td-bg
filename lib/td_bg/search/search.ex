@@ -82,8 +82,8 @@ defmodule TdBg.Search do
     |> Map.put(:sort, ["name.raw"])
     response = ESClientApi.search_es(index_name, query)
     case response do
-      {:ok, %HTTPoison.Response{body: %{"hits" => %{"hits" => results}}}} ->
-        results
+      {:ok, %HTTPoison.Response{body: %{"hits" => %{"hits" => results, "total" => total}}}} ->
+        %{results: results, total: total}
       {:ok, %HTTPoison.Response{body: error}} ->
         error
     end

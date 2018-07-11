@@ -60,20 +60,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def index(conn, params) do
     user = conn.assigns[:current_user]
-    business_concept_versions = Search.search_business_concept_versions(params, user)
-
-    render(
-      conn,
-      "list.json",
-      business_concept_versions: business_concept_versions,
-      hypermedia:
-        collection_hypermedia(
-          "business_concept_version",
-          conn,
-          business_concept_versions,
-          BusinessConceptVersion
-        )
-    )
+    params
+    |> Search.search_business_concept_versions(user)
+    |> render_search_results(conn)
   end
 
   swagger_path :search do
@@ -91,30 +80,27 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def search(conn, params) do
     user = conn.assigns[:current_user]
     page = params |> Map.get("page", 0)
-    params = Map.drop(params, ["page"])
-    business_concept_versions = Search.search_business_concept_versions(params, user, page)
+    size = params |> Map.get("size", 50)
+    params
+    |> Map.drop(["page", "size"])
+    |> Search.search_business_concept_versions(user, page, size)
+    |> render_search_results(conn)
+  end
 
-    render(
-      conn,
-      "list.json",
-      business_concept_versions: business_concept_versions,
-      hypermedia:
-        collection_hypermedia(
-          "business_concept_version",
-          conn,
-          business_concept_versions,
-          BusinessConceptVersion
-        )
-    )
+  defp render_search_results(%{results: business_concept_versions, total: total}, conn) do
+    hypermedia = collection_hypermedia("business_concept_version", conn, business_concept_versions, BusinessConceptVersion)
+    conn
+    |> put_resp_header("x-total-count", "#{total}")
+    |> render("list.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia)
   end
 
   def csv(conn, params) do
     user = conn.assigns[:current_user]
-    concepts = Search.search_business_concept_versions(params, user, 0, 10_000)
+    %{results: business_concept_versions} = Search.search_business_concept_versions(params, user, 0, 10_000)
     conn
       |> put_resp_content_type("text/csv", "utf-8")
       |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
-      |> send_resp(200, Download.to_csv(concepts))
+      |> send_resp(200, Download.to_csv(business_concept_versions))
   end
 
   swagger_path :create do
@@ -245,7 +231,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       BusinessConcepts.get_business_concept_version!(business_concept_version_id)
 
     with true <- can?(user, view_versions(business_concept_version)) do
-      business_concept_versions =
+      %{results: business_concept_versions} =
         Search.list_business_concept_versions(business_concept_version.business_concept_id, user)
 
       render(

@@ -54,8 +54,7 @@ defmodule TdBg.BusinessConcept.Search do
       aggs: Aggregations.aggregation_terms()
     }
 
-    @search_service.search("business_concept", search)
-    |> Enum.map(&Map.get(&1, "_source"))
+    do_search(search)
   end
 
   # Non-admin user search, filters applied
@@ -66,9 +65,8 @@ defmodule TdBg.BusinessConcept.Search do
 
   def list_business_concept_versions(business_concept_id, %User{is_admin: true}) do
     query = %{business_concept_id: business_concept_id} |> create_query
-    search = %{query: query}
-    @search_service.search("business_concept", search)
-    |> Enum.map(&Map.get(&1, "_source"))
+    %{query: query}
+    |> do_search
   end
 
   def list_business_concept_versions(business_concept_id, %User{} = user) do
@@ -76,9 +74,8 @@ defmodule TdBg.BusinessConcept.Search do
     predefined_query = %{business_concept_id: business_concept_id} |> create_query
     filter = permissions |> create_filter_clause([predefined_query])
     query = create_query(nil, filter)
-    search = %{query: query}
-    @search_service.search("business_concept", search)
-    |> Enum.map(&Map.get(&1, "_source"))
+    %{query: query}
+    |> do_search
   end
 
   def create_filters(%{"filters" => filters}) do
@@ -130,10 +127,8 @@ defmodule TdBg.BusinessConcept.Search do
     filter = permissions |> create_filter_clause(user_defined_filters)
 
     query = create_query(params, filter)
-    search = %{from: page * size, size: size, query: query}
-
-    @search_service.search("business_concept", search)
-    |> Enum.map(&Map.get(&1, "_source"))
+    %{from: page * size, size: size, query: query}
+    |> do_search
   end
 
   defp create_query(%{business_concept_id: id}) do
@@ -190,5 +185,11 @@ defmodule TdBg.BusinessConcept.Search do
     %{
       bool: %{filter: user_defined_filters ++ [domain_clause, %{terms: %{status: status_clause}}]}
     }
+  end
+
+  defp do_search(search) do
+    %{results: results, total: total} = @search_service.search("business_concept", search)
+    results = results |> Enum.map(&Map.get(&1, "_source"))
+    %{results: results, total: total}
   end
 end
