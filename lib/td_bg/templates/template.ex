@@ -18,6 +18,6 @@ defmodule TdBg.Templates.Template do
     template
     |> cast(attrs, [:name, :content, :is_default])
     |> validate_required([:name, :content, :is_default])
-    # |> unique_constraint(:is_default)
+    |> unique_constraint(:is_default)
   end
 end

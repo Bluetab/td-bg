@@ -4,12 +4,12 @@ defmodule TdBg.BusinessConcepts do
   """
 
   import Ecto.Query, warn: false
-  alias Ecto.Changeset
   alias Ecto.Multi
   alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
+  alias TdBg.Templates
   alias ValidationError
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
@@ -17,10 +17,6 @@ defmodule TdBg.BusinessConcepts do
   @changeset :changeset
   @content :content
   @content_schema :content_schema
-
-  @string "string"
-  @list "list"
-  @variable_list "variable_list"
 
   @doc """
     check business concept name availability
@@ -39,7 +35,7 @@ defmodule TdBg.BusinessConcepts do
       |> join(:left, [c], _ in assoc(c, :aliases))
       |> join(:left, [c, a], _ in assoc(c, :versions))
       |> where([c, a, v], c.type == ^type and v.status not in ^status)
-      |> include_name_where(name, exclude_concept_id)
+      |> include_name_where(name,  exclude_concept_id)
       |> select([c, a, v], count(c.id))
       |> Repo.one!()
 
@@ -299,7 +295,7 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp index_business_concept_versions(business_concept_id, params) do
+  def index_business_concept_versions(business_concept_id, params) do
     business_concept_id
     |> list_business_concept_versions(nil)
     |> Enum.map(fn(bv) ->
@@ -312,7 +308,7 @@ defmodule TdBg.BusinessConcepts do
     |> Enum.each(&@search_service.put_search/1)
   end
 
-  defp retrieve_last_bc_version_params(business_concept_id) do
+  def retrieve_last_bc_version_params(business_concept_id) do
     default_map = %{"link_count" => 0, "q_rule_count" => 0}
     query = %{
       query: %{term: %{"business_concept_id" => business_concept_id}},
@@ -644,74 +640,13 @@ defmodule TdBg.BusinessConcepts do
   defp do_validate_concept_content(attrs) do
     content = Map.get(attrs, @content)
     content_schema = Map.get(attrs, @content_schema)
-    ecto_types = get_ecto_types(content_schema)
-
-    changeset =
-      {content, ecto_types}
-      |> Changeset.cast(content, Map.keys(ecto_types))
-      |> validate_content(content_schema)
-
+    changeset = Templates.build_changeset(content, content_schema)
     if not changeset.valid? do
       Map.put(attrs, @changeset, changeset)
     else
       attrs
     end
   end
-
-  defp get_ecto_types(content_schema) do
-    item_mapping = fn item ->
-      name = item |> Map.get("name")
-      type = item |> Map.get("type")
-      {String.to_atom(name), get_ecto_type(type)}
-    end
-
-    content_schema
-    |> Enum.map(item_mapping)
-    |> Map.new()
-  end
-
-  defp get_ecto_type(type) do
-    case type do
-      @string -> :string
-      @list -> :string
-      @variable_list -> {:array, :string}
-    end
-  end
-
-  defp validate_content(changeset, %{} = content_item) do
-    changeset
-    |> validate_required(content_item)
-    |> validate_max_length(content_item)
-    |> validate_inclusion(content_item)
-  end
-
-  defp validate_content(changeset, [tail | head]) do
-    changeset
-    |> validate_content(tail)
-    |> validate_content(head)
-  end
-
-  defp validate_content(changeset, []), do: changeset
-
-  defp validate_required(changeset, %{"name" => name, "required" => true}) do
-    Changeset.validate_required(changeset, [String.to_atom(name)])
-  end
-
-  defp validate_required(changeset, %{}), do: changeset
-
-  defp validate_max_length(changeset, %{"name" => name, "max_size" => max_size}) do
-    Changeset.validate_length(changeset, String.to_atom(name), max: max_size)
-  end
-
-  defp validate_max_length(changeset, %{}), do: changeset
-
-  defp validate_inclusion(changeset,
-    %{"type" => "list", "meta" => %{"role" => _rolename}}), do: changeset
-  defp validate_inclusion(changeset, %{"name" => name, "type" => "list", "values" => values}) do
-    Changeset.validate_inclusion(changeset, String.to_atom(name), values)
-  end
-
-  defp validate_inclusion(changeset, %{}), do: changeset
 
   defp update_concept(attrs) do
     changeset = Map.get(attrs, @changeset)

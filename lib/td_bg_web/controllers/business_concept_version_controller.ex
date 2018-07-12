@@ -9,6 +9,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Audit
   alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcept.Search
+  alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -101,6 +102,35 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> put_resp_content_type("text/csv", "utf-8")
       |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
       |> send_resp(200, Download.to_csv(business_concept_versions))
+  end
+
+  def upload(conn, params) do
+    user = conn.assigns[:current_user]
+    business_concepts_upload = Map.get(params, "business_concepts")
+    with true <- user.is_admin,
+         {:ok, _} <- Upload.from_csv(business_concepts_upload, user) do
+      send_resp(conn, :no_content, "")
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> render(ErrorView, "403.json")
+
+      {:error, error} ->
+        Logger.error "While uploading business concepts... #{inspect error}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, "422.json")
+
+      error ->
+        Logger.error "While uploading business concepts... #{inspect error}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, "422.json")
+    end
+  rescue e in RuntimeError ->
+    Logger.error "While uploading business concepts... #{e.message}"
+    send_resp(conn, :unprocessable_entity, Poison.encode!(%{error: e.message}))
   end
 
   swagger_path :create do

@@ -34,6 +34,7 @@ defmodule TdBgWeb.Router do
     resources "/domains", DomainController, except: [:new, :edit]
 
     post "/business_concept_versions/csv", BusinessConceptVersionController, :csv
+    post "/business_concept_versions/upload", BusinessConceptVersionController, :upload
     put "/business_concept_versions/:id", BusinessConceptVersionController, :update
     resources "/business_concept_versions", BusinessConceptVersionController, except: [:new, :edit, :update] do
       post "/submit", BusinessConceptVersionController, :send_for_approval
