@@ -17,8 +17,8 @@ Scenario Outline: Delete existing Business Concept in Draft Status
   And the status of business concept with name "My Business Term" of type "Business Term" is set to "draft"
   When <user> tries to delete a business concept "My Business Term" of type "Business Term"
   Then the system returns a result with code "<result>"
-  And if result <result> is "Deleted", user <user> is not able to view business concept "My Business Term" of type "Business Term"
-  And if result <result> is not "Deleted", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
+  And if result <result> is "No Content", user <user> is not able to view business concept "My Business Term" of type "Business Term"
+  And if result <result> is not "No Content", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
     | Field                 | Value                                              |
     | Type                  | Business Term                                      |
     | Name                  | My Business Term                                   |
@@ -27,9 +27,9 @@ Scenario Outline: Delete existing Business Concept in Draft Status
   Examples:
     | user      | result       |
     | watcher   | Unauthorized |
-    | creator   | Deleted      |
-    | publisher | Deleted      |
-    | admin     | Deleted      |
+    | creator   | No Content      |
+    | publisher | No Content      |
+    | admin     | No Content      |
 
   Scenario Outline: Delete existing Business Concept in Reject Status
     Given an existing Domain called "My Parent Domain"
@@ -50,8 +50,8 @@ Scenario Outline: Delete existing Business Concept in Draft Status
     And the status of business concept with name "My Business Term" of type "Business Term" is set to "rejected"
     When <user> tries to delete a business concept "My Business Term" of type "Business Term"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Deleted", user <user> is not able to view business concept "My Business Term" of type "Business Term"
-    And if result <result> is not "Deleted", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
+    And if result <result> is "No Content", user <user> is not able to view business concept "My Business Term" of type "Business Term"
+    And if result <result> is not "No Content", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
       | Field                 | Value                                              |
       | Type                  | Business Term                                      |
       | Name                  | My Business Term                                   |
@@ -60,9 +60,9 @@ Scenario Outline: Delete existing Business Concept in Draft Status
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
-      | creator   | Deleted      |
-      | publisher | Deleted      |
-      | admin     | Deleted      |
+      | creator   | No Content      |
+      | publisher | No Content      |
+      | admin     | No Content      |
 
     Scenario Outline: Delete current draft version for a BC that has been published previously
       Given an existing Domain called "My Parent Domain"
@@ -93,13 +93,13 @@ Scenario Outline: Delete existing Business Concept in Draft Status
         | Current           | true                                                               |
         | Version           | 1                                                                  |
         | Status            | published                                                          |
-      And if result <result> is "Deleted",  business concept "My Business Term" of type "Business Term" and version "2" does not exist
+      And if result <result> is "No Content",  business concept "My Business Term" of type "Business Term" and version "2" does not exist
 
       Examples:
         | user      | result       |
-        | creator   | Deleted      |
-        | publisher | Deleted      |
-        | admin     | Deleted      |
+        | creator   | No Content      |
+        | publisher | No Content      |
+        | admin     | No Content      |
 
 
       Scenario Outline: Delete current draft version for a BC that has been published previously Unauthorized
@@ -131,7 +131,7 @@ Scenario Outline: Delete existing Business Concept in Draft Status
           | Current           | false                                                               |
           | Version           | 1                                                                  |
           | Status            | published                                                          |
-        And if result <result> is "Deleted",  business concept "My Business Term" of type "Business Term" and version "2" does not exist
+        And if result <result> is "No Content",  business concept "My Business Term" of type "Business Term" and version "2" does not exist
 
         Examples:
           | user      | result       |

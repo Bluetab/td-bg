@@ -341,6 +341,23 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code, resp |> JSON.decode!()}
   end
 
+  def business_concept_version_upload(token, business_concepts) do
+    headers = get_header(token)
+
+    form =
+      {:multipart,
+       [
+         {"file", business_concepts,
+          {"form-data", [{"name", "business_concepts"}, {"filename", "business_concepts.csv"}]},
+          [{"Content-Type", "text/csv"}]},
+       ]}
+
+    %HTTPoison.Response{status_code: status_code, body: _resp} =
+      HTTPoison.post!(business_concept_version_url(@endpoint, :upload), form, headers)
+
+    {:ok, status_code}
+  end
+
   def business_concept_alias_create(token, business_concept_id, attrs) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{"business_concept_alias" => attrs} |> JSON.encode!()

@@ -46,10 +46,10 @@ Scenario Outline: Delete alias for a business concept
   And business concept with name "My Business Term" of type "Business Term" has an alias "My Second Synonym Term"
   When <user> tries to delete alias "My Synonym Term" for business concept with name "My Business Term" of type "Business Term"
   Then the system returns a result with code "<result>"
-  And if <result> is "Deleted", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
+  And if <result> is "No Content", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
       | name                  |
       | My Second Synonym Term |
-  And if <result> is not "Deleted", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
+  And if <result> is not "No Content", user <user> is able to see following list of aliases for business concept with name "My Business Term" of type "Business Term"
       | name                  |
       | My Synonym Term        |
       | My Second Synonym Term |
@@ -58,8 +58,8 @@ Scenario Outline: Delete alias for a business concept
     | user      | result       |
     | watcher   | Unauthorized |
     | creator   | Unauthorized |
-    | publisher | Deleted      |
-    | admin     | Deleted      |
+    | publisher | No Content      |
+    | admin     | No Content      |
 
   Scenario: User should not be able to create an alias with same type and name as an existing business concept
     Given an existing Domain called "My Parent Group"

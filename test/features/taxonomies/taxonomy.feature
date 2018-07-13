@@ -91,15 +91,15 @@ Feature: Taxonomy administration
       | admin     | admin   |
     When user "<user>" tries to delete a Domain with the name "My Child Domain"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Deleted", Domain "My Child Domain" does not exist as child of Domain "My Parent Group"
-    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Group"
+    And if result <result> is "No Content", Domain "My Child Domain" does not exist as child of Domain "My Parent Group"
+    And if result <result> is not "No Content", Domain "My Child Domain" is a child of Domain "My Parent Group"
 
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
       | creator   | Unauthorized |
       | publisher | Unauthorized |
-      | admin     | Deleted      |
+      | admin     | No Content      |
 
   Scenario Outline: Deleting a Domain without any Business Concept by Group Manager
     Given an existing Domain called "My Parent Domain"
@@ -112,15 +112,15 @@ Feature: Taxonomy administration
       | admin     | admin   |
     When user "<user>" tries to delete a Domain with the name "My Child Domain"
     Then the system returns a result with code "<result>"
-    And if result <result> is "Deleted", Domain "My Child Domain" does not exist as child of Domain "My Parent Domain"
-    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
+    And if result <result> is "No Content", Domain "My Child Domain" does not exist as child of Domain "My Parent Domain"
+    And if result <result> is not "No Content", Domain "My Child Domain" is a child of Domain "My Parent Domain"
 
     Examples:
       | user      | result       |
       | watcher   | Unauthorized |
       | creator   | Unauthorized |
       | publisher | Unauthorized |
-      | admin     | Deleted      |
+      | admin     | No Content      |
 
   Scenario Outline: Deleting a Domain with some Domain Child
     Given an existing Domain called "My Parent Domain"
@@ -130,7 +130,7 @@ Feature: Taxonomy administration
       | admin     | admin   |
     When user "<user>" tries to delete a Domain with the name "My Parent Domain"
     Then the system returns a result with code "<result>"
-    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
+    And if result <result> is not "No Content", Domain "My Child Domain" is a child of Domain "My Parent Domain"
     And a error message with key "ETD001" and alias "domain.error.existing.domain" is retrieved
 
     Examples:
@@ -151,7 +151,7 @@ Feature: Taxonomy administration
       | admin     | admin   |
     When user "<user>" tries to delete a Domain with the name "My Child Domain"
     Then the system returns a result with code "<result>"
-    And if result <result> is not "Deleted", Domain "My Child Domain" is a child of Domain "My Parent Domain"
+    And if result <result> is not "No Content", Domain "My Child Domain" is a child of Domain "My Parent Domain"
     And a error message with key "ETD002" and alias "domain.error.existing.business.concept" is retrieved
 
     Examples:

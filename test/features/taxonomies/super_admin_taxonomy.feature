@@ -90,7 +90,7 @@ Feature: Super-admin Taxonomy administration
      Given an existing Domain called "My Parent Domain"
      And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
      When user "app-admin" tries to delete a Domain with the name "My Child Domain"
-     Then the system returns a result with code "Deleted"
+     Then the system returns a result with code "No Content"
      And Domain "My Child Domain" does not exist as child of Domain "My Parent Domain"
 
    Scenario: Deleting a Domain with a Domain pending on it
@@ -104,7 +104,7 @@ Feature: Super-admin Taxonomy administration
      Given an existing Domain called "My Parent Domain"
      And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
      When user "app-admin" tries to delete a Domain with the name "My Child Domain" child of Domain "My Parent Domain"
-     Then the system returns a result with code "Deleted"
+     Then the system returns a result with code "No Content"
      And Domain "My Child Domain" does not exist as child of Domain "My Parent Domain"
 
    Scenario: Deleting a Domain with existing Business Concepts pending on them

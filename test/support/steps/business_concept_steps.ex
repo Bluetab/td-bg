@@ -756,6 +756,64 @@ defmodule TdBg.BusinessConceptSteps do
     end)
   end
 
+  defwhen ~r/^"(?<user_name>[^"]+)" uploads business concepts with the following data:$/,
+    %{user_name: user_name, table: to_upload},
+    state do
+
+      headers = [
+        :template,
+        :domain,
+        :name,
+        :description,
+        :Format,
+        :Formula,
+        :Values
+      ]
+
+      business_concepts =
+        to_upload
+        |> Enum.reduce([], fn(item, acc) ->
+            row = Enum.reduce(headers, [], &(&2 ++ [Map.get(item, &1)]))
+            [row|acc]
+        end)
+        |> List.insert_at(0, headers)
+        |> CSV.encode(separator: ?;)
+        |> Enum.to_list()
+        |> Enum.join()
+
+      token = get_user_token(user_name)
+      {:ok, status_code} = business_concept_version_upload(token, business_concepts)
+      {:ok, Map.merge(state, %{status_code: status_code})}
+  end
+
+  defthen ~r/^"(?<user_name>[^"]+)" is able to view the following uploaded business concepts:$/,
+    %{user_name: user_name, table: values},
+    _state do
+
+    token = get_user_token(user_name)
+    {:ok, 200, %{"data" => concept_list}} = business_concept_list(token)
+
+    business_concepts = Enum.reduce(concept_list, [], fn(concept, acc) ->
+      {:ok, 200, %{"data" => data}} = business_concept_show(token, concept["business_concept_id"])
+      acc ++ [data]
+    end)
+
+    assert length(business_concepts) == length(values)
+
+    l = length(business_concepts) - 1
+    Enum.each(0..l, fn(i) ->
+      concept = Enum.at(business_concepts, i)
+      value = Enum.at(values, i)
+      assert concept["type"] == value.template
+      assert concept["domain"]["name"] == value.domain
+      assert concept["name"] == value.name
+      assert concept["description"] == value.description
+      assert concept["content"]["Formula"] == value."Formula"
+      assert concept["content"]["Format"] == value."Format"
+      assert concept["content"]["Values"] == value."Values"
+    end)
+  end
+
   def assert_attr("content" = attr, value, %{} = target) do
     assert_attrs(value, target[attr])
   end
