@@ -800,13 +800,11 @@ defmodule TdBg.BusinessConceptSteps do
 
     assert length(business_concepts) == length(values)
 
-    l = length(business_concepts) - 1
-    Enum.each(0..l, fn(i) ->
-      concept = Enum.at(business_concepts, i)
-      value = Enum.at(values, i)
+    Enum.each(business_concepts, fn(concept) ->
+      value = Enum.find(values, fn(v) -> concept["name"] == v.name end)
+      assert concept["name"] == value.name
       assert concept["type"] == value.template
       assert concept["domain"]["name"] == value.domain
-      assert concept["name"] == value.name
       assert concept["description"] == value.description
       assert concept["content"]["Formula"] == value."Formula"
       assert concept["content"]["Format"] == value."Format"
