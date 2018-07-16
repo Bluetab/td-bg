@@ -62,7 +62,6 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
         :get_data_structures,
         %BusinessConceptVersion{} = business_concept_version
       ) do
-    BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
         :update_business_concept,

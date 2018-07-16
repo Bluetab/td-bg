@@ -1056,6 +1056,7 @@ end
   end
 
   swagger_path :get_data_structures do
+    get("/business_concept_versions/{id}/data_structures")
     description("Get business concept version associated data structures")
     produces("application/json")
 
