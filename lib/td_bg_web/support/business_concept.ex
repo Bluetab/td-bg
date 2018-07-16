@@ -42,8 +42,9 @@ defmodule TdBgWeb.BusinessConceptSupport do
   end
   defp get_ous(%Domain{} = domain, user) do
     child_domains = Taxonomies.get_children_domains(domain)
-
+    Logger.info("Child domains in get_ous... #{inspect(child_domains)}")
     child_ous = get_ous(child_domains, user)
+    Logger.info("Child ous in get_ous... #{inspect(child_ous)}")
     case can?(user, show(domain)) do
       true -> [domain.name|child_ous]
       false -> child_ous

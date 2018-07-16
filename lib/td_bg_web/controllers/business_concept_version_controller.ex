@@ -1074,6 +1074,7 @@ end
 
     with true <- can?(user, get_data_structures(business_concept_version)) do
       ous = BusinessConceptSupport.get_concept_ous(business_concept_version, user)
+      Logger.info("Retrieved ous #{inspect(ous)}")
       data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, "§")})
       cooked_data_structures = cooked_data_structures(data_structures)
 
