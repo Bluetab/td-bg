@@ -417,30 +417,12 @@ defmodule TdBgWeb.SwaggerDefinitions do
             field(:object, "Data field", required: true)
           end
         end,
-      Field:
-        swagger_schema do
-          title("Field")
-          description("Field representation")
-          type(:object)
-        end,
-      AddField:
-        swagger_schema do
-          properties do
-            field(Schema.ref(:Field))
-          end
-        end,
       ConceptFields:
         swagger_schema do
           title("Concept Fields")
           description("A collection of concept fields")
           type(:array)
           items(Schema.ref(:ConceptField))
-        end,
-      ConceptFieldResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:ConceptField))
-          end
         end,
       ConceptFieldsResponse:
         swagger_schema do

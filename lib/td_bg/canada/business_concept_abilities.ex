@@ -70,7 +70,6 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%User{} = user, :get_data_fields, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
         :update_business_concept,
