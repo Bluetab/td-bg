@@ -24,20 +24,21 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.TemplateSupport
 
-  @td_dd_api   Application.get_env(:td_bg, :dd_service)[:api_service]
+  @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
-  @events %{create_concept_draft: "create_concept_draft",
-            update_concept_draft: "update_concept_draft",
-            delete_concept_draft: "delete_concept_draft",
-            new_concept_draft: "new_concept_draft",
-            concept_sent_for_approval: "concept_sent_for_approval",
-            concept_rejected: "concept_rejected",
-            concept_rejection_canceled: "concept_rejection_canceled",
-            concept_published: "concept_published",
-            concept_deprecated: "concept_deprecated",
-            add_concept_field: "add_concept_field",
-            delete_concept_field: "delete_concept_field"
-          }
+  @events %{
+    create_concept_draft: "create_concept_draft",
+    update_concept_draft: "update_concept_draft",
+    delete_concept_draft: "delete_concept_draft",
+    new_concept_draft: "new_concept_draft",
+    concept_sent_for_approval: "concept_sent_for_approval",
+    concept_rejected: "concept_rejected",
+    concept_rejection_canceled: "concept_rejection_canceled",
+    concept_published: "concept_published",
+    concept_deprecated: "concept_deprecated",
+    add_concept_field: "add_concept_field",
+    delete_concept_field: "delete_concept_field"
+  }
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -50,7 +51,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     parameters do
       search(
-        :body, Schema.ref(:BusinessConceptVersionFilterRequest), "Search query and filter parameters"
+        :body,
+        Schema.ref(:BusinessConceptVersionFilterRequest),
+        "Search query and filter parameters"
       )
     end
 
@@ -59,6 +62,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def index(conn, params) do
     user = conn.assigns[:current_user]
+
     params
     |> Search.search_business_concept_versions(user)
     |> render_search_results(conn)
@@ -69,7 +73,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     parameters do
       search(
-        :body, Schema.ref(:BusinessConceptVersionFilterRequest), "Search query and filter parameters"
+        :body,
+        Schema.ref(:BusinessConceptVersionFilterRequest),
+        "Search query and filter parameters"
       )
     end
 
@@ -80,6 +86,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     page = params |> Map.get("page", 0)
     size = params |> Map.get("size", 50)
+
     params
     |> Map.drop(["page", "size"])
     |> Search.search_business_concept_versions(user, page, size)
@@ -87,27 +94,43 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp render_search_results(%{results: business_concept_versions, total: total}, conn) do
-    hypermedia = collection_hypermedia("business_concept_version", conn, business_concept_versions, BusinessConceptVersion)
+    hypermedia =
+      collection_hypermedia(
+        "business_concept_version",
+        conn,
+        business_concept_versions,
+        BusinessConceptVersion
+      )
+
     conn
     |> put_resp_header("x-total-count", "#{total}")
-    |> render("list.json", business_concept_versions: business_concept_versions, hypermedia: hypermedia)
+    |> render(
+      "list.json",
+      business_concept_versions: business_concept_versions,
+      hypermedia: hypermedia
+    )
   end
 
   def csv(conn, params) do
     user = conn.assigns[:current_user]
-    %{results: business_concept_versions} = Search.search_business_concept_versions(params, user, 0, 10_000)
+
+    %{results: business_concept_versions} =
+      Search.search_business_concept_versions(params, user, 0, 10_000)
+
     conn
-      |> put_resp_content_type("text/csv", "utf-8")
-      |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
-      |> send_resp(200, Download.to_csv(business_concept_versions))
+    |> put_resp_content_type("text/csv", "utf-8")
+    |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
+    |> send_resp(200, Download.to_csv(business_concept_versions))
   end
 
   def upload(conn, params) do
     user = conn.assigns[:current_user]
     business_concepts_upload = Map.get(params, "business_concepts")
+
     with true <- user.is_admin,
-         {:ok, _} <- Upload.from_csv(business_concepts_upload, user) do
-      send_resp(conn, :no_content, "")
+         {:ok, response} <- Upload.from_csv(business_concepts_upload, user) do
+      body = Poison.encode!(%{data: %{message: response}})
+      send_resp(conn, 200, body)
     else
       false ->
         conn
@@ -115,20 +138,25 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> render(ErrorView, "403.json")
 
       {:error, error} ->
-        Logger.error "While uploading business concepts... #{inspect error}"
+        Logger.error("While uploading business concepts... #{inspect(error)}")
+
+        error_message = Poison.encode!(%{errors: %{detail: error}})
+
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        |> send_resp(422, error_message)
 
       error ->
-        Logger.error "While uploading business concepts... #{inspect error}"
+        Logger.error("While uploading business concepts... #{inspect(error)}")
+
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, "422.json")
     end
-  rescue e in RuntimeError ->
-    Logger.error "While uploading business concepts... #{e.message}"
-    send_resp(conn, :unprocessable_entity, Poison.encode!(%{error: e.message}))
+  rescue
+    e in RuntimeError ->
+      Logger.error("While uploading business concepts... #{e.message}")
+      send_resp(conn, :unprocessable_entity, Poison.encode!(%{error: e.message}))
   end
 
   swagger_path :create do
@@ -188,15 +216,15 @@ defmodule TdBgWeb.BusinessConceptVersionController do
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.create_business_concept(creation_attrs) do
+      business_concept_id = version.business_concept.id
 
-       business_concept_id = version.business_concept.id
-       audit = %{
-         "audit" => %{
-           "resource_id" => business_concept_id,
-           "resource_type" => "concept",
-           "payload" => creation_attrs
-         }
-       }
+      audit = %{
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => creation_attrs
+        }
+      }
 
       Audit.create_event(conn, audit, @events.create_concept_draft)
 
@@ -211,7 +239,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
           "show.json",
           business_concept_version: version,
           template: template
-          )
+        )
+
       conn
     else
       error ->
@@ -316,7 +345,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
-end
+  end
 
   swagger_path :delete do
     description("Delete a business concept version")
@@ -338,22 +367,21 @@ end
     with true <- can?(user, delete(business_concept_version)),
          {:ok, %BusinessConceptVersion{}} <-
            BusinessConcepts.delete_business_concept_version(business_concept_version) do
-
-       audit_payload = business_concept_version
+      audit_payload =
+        business_concept_version
         |> Map.take([:version])
 
-       audit = %{
-          "audit" => %{
-            "resource_id" => business_concept_id,
-            "resource_type" => "concept",
-            "payload" => audit_payload
-          }
+      audit = %{
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => audit_payload
         }
+      }
 
-       Audit.create_event(conn, audit, @events.delete_concept_draft)
+      Audit.create_event(conn, audit, @events.delete_concept_draft)
 
       send_resp(conn, :no_content, "")
-
     else
       false ->
         conn
@@ -568,14 +596,13 @@ end
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            BusinessConcepts.publish_business_concept_version(business_concept_version) do
-
-       audit = %{
-          "audit" => %{
-            "resource_id" => business_concept_id,
-            "resource_type" => "concept",
-            "payload" => %{}
-          }
+      audit = %{
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => %{}
         }
+      }
 
       Audit.create_event(conn, audit, @events.concept_published)
 
@@ -605,15 +632,15 @@ end
     with true <- can?(user, reject(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
-
       business_concept_id = version.business_concept.id
+
       audit = %{
-         "audit" => %{
-           "resource_id" => business_concept_id,
-           "resource_type" => "concept",
-           "payload" => %{}
-         }
-       }
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => %{}
+        }
+      }
 
       Audit.create_event(conn, audit, @events.concept_rejected)
 
@@ -657,16 +684,15 @@ end
              business_concept_version,
              attrs
            ) do
-
-       audit = %{
-          "audit" => %{
-            "resource_id" => business_concept_id,
-            "resource_type" => "concept",
-            "payload" => %{}
-          }
+      audit = %{
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => %{}
         }
+      }
 
-       Audit.create_event(conn, audit, event)
+      Audit.create_event(conn, audit, event)
 
       render(
         conn,
@@ -690,22 +716,23 @@ end
 
   defp do_version(conn, user, business_concept_version) do
     business_concept_id = business_concept_version.business_concept.id
+
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
            BusinessConcepts.version_business_concept(user, business_concept_version) do
-
-       audit_payload = new_version
+      audit_payload =
+        new_version
         |> Map.take([:version])
 
-       audit = %{
-          "audit" => %{
-            "resource_id" => business_concept_id,
-            "resource_type" => "concept",
-            "payload" => audit_payload
-          }
+      audit = %{
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => audit_payload
         }
+      }
 
-       Audit.create_event(conn, audit, @events.new_concept_draft)
+      Audit.create_event(conn, audit, @events.new_concept_draft)
 
       conn
       |> put_status(:created)
@@ -752,7 +779,7 @@ end
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept_id = business_concept_version.business_concept.id
     concept_name = Map.get(business_concept_version_params, "name")
-    template  = TemplateSupport.get_template(business_concept_version)
+    template = TemplateSupport.get_template(business_concept_version)
     content_schema = Map.get(template, :content)
 
     business_concept_attrs =
@@ -778,21 +805,22 @@ end
              concept_name,
              business_concept_version.business_concept.id
            ),
-         {:valid_related_to} <- BusinessConcepts.check_valid_related_to(template.name, related_to),
+         {:valid_related_to} <-
+           BusinessConcepts.check_valid_related_to(template.name, related_to),
          {:ok, %BusinessConceptVersion{} = concept_version} <-
            BusinessConcepts.update_business_concept_version(
              business_concept_version,
              update_params
            ) do
-
       audit_payload = get_changed_params(business_concept_version, concept_version)
+
       audit = %{
-         "audit" => %{
-           "resource_id" => business_concept_id,
-           "resource_type" => "concept",
-           "payload" => audit_payload
-         }
-       }
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => audit_payload
+        }
+      }
 
       Audit.create_event(conn, audit, @events.update_concept_draft)
 
@@ -802,7 +830,7 @@ end
         business_concept_version: concept_version,
         hypermedia: hypermedia("business_concept_version", conn, concept_version),
         template: template
-    )
+      )
     else
       false ->
         conn
@@ -831,45 +859,58 @@ end
     end
   end
 
-  defp get_changed_params(%BusinessConceptVersion{} = old,
-                          %BusinessConceptVersion{} = new) do
+  defp get_changed_params(
+         %BusinessConceptVersion{} = old,
+         %BusinessConceptVersion{} = new
+       ) do
     fields_to_compare = [:name, :description]
-    diffs = Enum.reduce(fields_to_compare, %{}, fn(field, acc) ->
-      oldval = Map.get(old, field)
-      newval = Map.get(new, field)
-      case oldval == newval do
-        true -> acc
-        false -> Map.put(acc, field, newval)
-      end
-    end)
+
+    diffs =
+      Enum.reduce(fields_to_compare, %{}, fn field, acc ->
+        oldval = Map.get(old, field)
+        newval = Map.get(new, field)
+
+        case oldval == newval do
+          true -> acc
+          false -> Map.put(acc, field, newval)
+        end
+      end)
 
     oldcontent = Map.get(old, :content)
     newcontent = Map.get(new, :content)
 
     added_keys = Map.keys(newcontent) -- Map.keys(oldcontent)
-    added = Enum.reduce(added_keys, %{}, fn(key, acc) ->
-      Map.put(acc, key, Map.get(newcontent, key))
-    end)
+
+    added =
+      Enum.reduce(added_keys, %{}, fn key, acc ->
+        Map.put(acc, key, Map.get(newcontent, key))
+      end)
 
     removed_keys = Map.keys(oldcontent) -- Map.keys(newcontent)
-    removed = Enum.reduce(removed_keys, %{}, fn(key, acc) ->
-      Map.put(acc, key, Map.get(oldcontent, key))
-    end)
+
+    removed =
+      Enum.reduce(removed_keys, %{}, fn key, acc ->
+        Map.put(acc, key, Map.get(oldcontent, key))
+      end)
 
     changed_keys = Map.keys(newcontent) -- removed_keys -- added_keys
-    changed = Enum.reduce(changed_keys, %{}, fn(key, acc) ->
-      oldval = Map.get(oldcontent, key)
-      newval = Map.get(newcontent, key)
-      case oldval == newval do
-        true -> acc
-        false -> Map.put(acc, key, newval)
-      end
-    end)
 
-    changed_content = %{}
-    |> Map.put(:added, added)
-    |> Map.put(:removed, removed)
-    |> Map.put(:changed, changed)
+    changed =
+      Enum.reduce(changed_keys, %{}, fn key, acc ->
+        oldval = Map.get(oldcontent, key)
+        newval = Map.get(newcontent, key)
+
+        case oldval == newval do
+          true -> acc
+          false -> Map.put(acc, key, newval)
+        end
+      end)
+
+    changed_content =
+      %{}
+      |> Map.put(:added, added)
+      |> Map.put(:removed, removed)
+      |> Map.put(:changed, changed)
 
     diffs
     |> Map.put(:content, changed_content)
@@ -977,5 +1018,4 @@ end
     |> Enum.map(&CollectionUtils.atomize_keys(&1))
     |> Enum.map(&Map.take(&1, [:id, :name]))
   end
-
 end

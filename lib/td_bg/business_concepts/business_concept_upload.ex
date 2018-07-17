@@ -1,5 +1,6 @@
 defmodule TdBg.BusinessConcept.Upload do
   require Logger
+
   @moduledoc """
     Helper module to upload business concepts in csv format.
 
@@ -63,49 +64,63 @@ defmodule TdBg.BusinessConcept.Upload do
   alias TdBg.Templates
 
   def from_csv(nil, _user), do: {:error, :no_csv_uploaded}
+
   def from_csv(business_concept_upload, user) do
     path = business_concept_upload.path
+
     case create_concepts(path, user) do
       {:ok, concepts_ids} ->
         index_concepts(concepts_ids)
         cache_concepts(concepts_ids)
         {:ok, concepts_ids}
-       error -> error
+
+      error ->
+        error
     end
   end
 
   defp create_concepts(path, user) do
-    Logger.info "Inserting business concepts..."
+    Logger.info("Inserting business concepts...")
     start_time = DateTime.utc_now()
 
-    transaction_result = Repo.transaction(fn ->
-      upload_in_transaction(path, user)
-    end)
+    transaction_result =
+      Repo.transaction(fn ->
+        upload_in_transaction(path, user)
+      end)
 
     end_time = DateTime.utc_now()
-    Logger.info "Business concepts inserted. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+
+    Logger.info(
+      "Business concepts inserted. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+    )
 
     transaction_result
   end
 
   defp index_concepts(concept_ids) do
-    Logger.info "Indexing business concepts..."
+    Logger.info("Indexing business concepts...")
     start_time = DateTime.utc_now()
 
     Enum.each(concept_ids, &index_concept(&1))
 
     end_time = DateTime.utc_now()
-    Logger.info "Business concepts indexed. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+
+    Logger.info(
+      "Business concepts indexed. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+    )
   end
 
   defp cache_concepts(concepts_ids) do
-    Logger.info "Caching business concepts..."
+    Logger.info("Caching business concepts...")
     start_time = DateTime.utc_now()
 
     Enum.each(concepts_ids, &BusinessConceptLoader.refresh(&1))
 
     end_time = DateTime.utc_now()
-    Logger.info "Business concepts cached. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+
+    Logger.info(
+      "Business concepts cached. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+    )
   end
 
   defp index_concept(concept_id) do
@@ -115,78 +130,93 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp upload_in_transaction(path, user) do
     path
-    |> File.stream!
+    |> File.stream!()
     |> CSV.decode!(separator: ?;, headers: true)
-    |> Enum.to_list
+    |> Enum.to_list()
     |> upload_data(user, [])
   end
 
-  defp upload_data([head|tail], user, acc) do
+  defp upload_data([head | tail], user, acc) do
     case insert_business_concept(%{data: head, user: user}) do
-      {:ok, concept_id} -> upload_data(tail, user, [concept_id|acc])
+      {:ok, concept_id} ->
+        upload_data(tail, user, [concept_id | acc])
+
       {:error, value} ->
-        Repo.rollback(value)
-        acc
+        Repo.rollback(%{row: head, message: value})
     end
   end
-  defp upload_data(_ , _, acc), do: acc
 
-  defp insert_business_concept(%{data: _data,
-                                 user: user,
-                                 template: template,
-                                 content: content,
-                                 concept_data: concept_data,
-                                 version_data: version_data}) do
-     now = DateTime.utc_now()
-     draft = BusinessConcept.status.draft
-     concept_query_input = [concept_data[@domain],
-                            template.name, user.id, now]
+  defp upload_data(_, _, acc), do: acc
+
+  defp insert_business_concept(%{
+         data: _data,
+         user: user,
+         template: template,
+         content: content,
+         concept_data: concept_data,
+         version_data: version_data
+       }) do
+    now = DateTime.utc_now()
+    draft = BusinessConcept.status().draft
+    concept_query_input = [concept_data[@domain], template.name, user.id, now]
+
     %Result{rows: [[concept_id]]} =
       SQL.query!(Repo, @insert_business_concept, concept_query_input)
 
-      version_query_input = [concept_id,
-                             version_data[@name],
-                             version_data[@description],
-                             content, user.id, now, draft,
-                             1, [], true]
+    version_query_input = [
+      concept_id,
+      version_data[@name],
+      version_data[@description],
+      content,
+      user.id,
+      now,
+      draft,
+      1,
+      [],
+      true
+    ]
 
-      SQL.query!(Repo, @insert_business_concept_version, version_query_input)
+    SQL.query!(Repo, @insert_business_concept_version, version_query_input)
 
     {:ok, concept_id}
   end
 
-  defp insert_business_concept(%{data: data,
-                                 user: user,
-                                 template: template,
-                                 content: content}) do
-     concept_data = data
-     |> Map.take([@domain])
+  defp insert_business_concept(%{data: data, user: user, template: template, content: content}) do
+    concept_data =
+      data
+      |> Map.take([@domain])
 
-     version_data = data
-     |> Map.take([@name, @description])
+    version_data =
+      data
+      |> Map.take([@name, @description])
 
-     case validate_name_availability(template.name, data[@name]) do
-       {:ok, _} -> nil
-       insert_business_concept(%{data: data,
-                                 user: user,
-                                 template: template,
-                                 content: content,
-                                 concept_data: concept_data,
-                                 version_data: version_data})
+    case validate_name_availability(template.name, data[@name]) do
+      {:ok, _} ->
+        nil
 
-       error -> error
-     end
+        insert_business_concept(%{
+          data: data,
+          user: user,
+          template: template,
+          content: content,
+          concept_data: concept_data,
+          version_data: version_data
+        })
+
+      error ->
+        error
+    end
   end
 
   defp insert_business_concept(%{data: data, user: user, template: template}) do
     content = Map.drop(data, @no_content)
+
     case validate_content(content, template) do
       {:ok, content} ->
-        insert_business_concept(%{data: data,
-                                  user: user,
-                                  template: template,
-                                  content: content})
-      error -> error
+        insert_business_concept(%{data: data, user: user, template: template, content: content})
+
+      error ->
+        error
     end
   end
 
@@ -194,7 +224,9 @@ defmodule TdBg.BusinessConcept.Upload do
     case get_template(data) do
       {:ok, template} ->
         insert_business_concept(%{data: data, user: user, template: template})
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -205,6 +237,7 @@ defmodule TdBg.BusinessConcept.Upload do
       template -> {:ok, template}
     end
   end
+
   defp get_template(_) do
     case Templates.get_default_template() do
       nil -> {:error, :no_template_found}
@@ -214,17 +247,20 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp validate_content(content, template) do
     changeset = Templates.build_changeset(content, template.content)
+
     case changeset.valid? do
-      true ->  {:ok, content}
+      true -> {:ok, content}
       false -> {:error, changeset}
     end
   end
 
   defp validate_name_availability(type, name) do
-    deprecated = BusinessConcept.status.deprecated
-    versioned = BusinessConcept.status.versioned
+    deprecated = BusinessConcept.status().deprecated
+    versioned = BusinessConcept.status().versioned
+
     %Result{rows: [[count]]} =
       SQL.query!(Repo, @check_name_availability, [type, deprecated, versioned, name])
+
     if count == 0, do: {:ok, count}, else: {:error, :name_not_available}
   end
 end
