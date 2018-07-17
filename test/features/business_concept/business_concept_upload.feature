@@ -14,7 +14,7 @@ Scenario: Upload business concepts
     | Business Term | My Parent Group | First  | First Term  | one     | Date    | some,values       |
     | Business Term | My Child Domain | Second | Second Term | two     | Numeric | some,funny,values |
     | Business Term | My Domain       | Third  | Third Term  | three   | Amount  | some,great,values |
-  Then the system returns a result with code "No Content"
+  Then the system returns a result with code "Ok"
   Then "app-admin" is able to view the following uploaded business concepts:
     | template      | domain          | name   | description | Formula | Format  | Values            |
     | Business Term | My Parent Group | First  | First Term  | one     | Date    | some,values       |

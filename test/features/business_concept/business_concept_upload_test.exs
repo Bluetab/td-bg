@@ -15,25 +15,24 @@ defmodule TdBg.BusinessConceptUploadTest do
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
-  import_steps TdBg.BusinessConceptSteps
-  import_steps TdBg.DomainSteps
-  import_steps TdBg.ResultSteps
-  import_steps TdBg.UsersSteps
+  import_steps(TdBg.BusinessConceptSteps)
+  import_steps(TdBg.DomainSteps)
+  import_steps(TdBg.ResultSteps)
+  import_steps(TdBg.UsersSteps)
 
   import TdBg.BusinessConceptSteps
   import TdBg.ResultSteps
 
   setup_all do
-    start_supervised MockTdAuthService
-    start_supervised MockTdAuditService
-    start_supervised MockPermissionResolver
+    start_supervised(MockTdAuthService)
+    start_supervised(MockTdAuditService)
+    start_supervised(MockPermissionResolver)
     :ok
   end
 
   setup do
-    on_exit fn ->
+    on_exit(fn ->
       rm_business_concept_schema()
-    end
+    end)
   end
-
 end
