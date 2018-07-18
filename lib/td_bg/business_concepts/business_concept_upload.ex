@@ -63,7 +63,7 @@ defmodule TdBg.BusinessConcept.Upload do
   alias TdBg.Repo
   alias TdBg.Templates
 
-  def from_csv(nil, _user), do: {:error, %{ message: :no_csv_uploaded }}
+  def from_csv(nil, _user), do: {:error, %{message: :no_csv_uploaded}}
 
   def from_csv(business_concept_upload, user) do
     path = business_concept_upload.path

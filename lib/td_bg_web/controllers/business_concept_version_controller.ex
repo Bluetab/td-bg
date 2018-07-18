@@ -139,7 +139,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       {:error, error} ->
         Logger.error("While uploading business concepts... #{inspect(error)}")
-        
         conn
         |> put_status(:unprocessable_entity)
         |> send_resp(422, Poison.encode!(error))
