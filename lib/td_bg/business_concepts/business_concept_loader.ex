@@ -54,19 +54,33 @@ defmodule TdBg.BusinessConceptLoader do
   end
 
   defp load_business_concept(business_concept_id) do
-    business_concept = BusinessConcepts.get_business_concept!(business_concept_id)
+    business_concept = business_concept_id
+      |> BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+      |> load_bc_version_data()
     [business_concept]
     |> load_business_concept_data()
   end
 
   defp load_all_business_concepts do
     BusinessConcepts.list_all_business_concepts()
+    |> Enum.map(&load_current_bc_version(&1))
     |> load_business_concept_data()
+  end
+
+  defp load_current_bc_version(business_concept) do
+    business_concept.id
+     |> BusinessConcepts.get_current_version_by_business_concept_id!(business_concept.id)
+     |> load_bc_version_data()
+  end
+
+  defp load_bc_version_data(business_concept_version) do
+    %{id: business_concept_version.business_concept_id, domain_id: business_concept_version.business_concept.domain_id,
+      name: business_concept_version.name}
   end
 
   def load_business_concept_data(business_concepts) do
     results = business_concepts
-    |> Enum.map(&(Map.take(&1, [:id, :domain_id])))
+    |> Enum.map(&(Map.take(&1, [:id, :domain_id, :name])))
     |> Enum.map(&(BusinessConceptCache.put_business_concept(&1)))
     |> Enum.map(fn {res, _} -> res end)
 
