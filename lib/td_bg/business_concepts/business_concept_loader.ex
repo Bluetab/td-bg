@@ -55,7 +55,7 @@ defmodule TdBg.BusinessConceptLoader do
 
   defp load_business_concept(business_concept_id) do
     business_concept = business_concept_id
-      |> BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
+      |> BusinessConcepts.get_current_version_by_business_concept_id!()
       |> load_bc_version_data()
     [business_concept]
     |> load_business_concept_data()
@@ -69,7 +69,7 @@ defmodule TdBg.BusinessConceptLoader do
 
   defp load_current_bc_version(business_concept) do
     business_concept.id
-     |> BusinessConcepts.get_current_version_by_business_concept_id!(business_concept.id)
+     |> BusinessConcepts.get_current_version_by_business_concept_id!()
      |> load_bc_version_data()
   end
 
