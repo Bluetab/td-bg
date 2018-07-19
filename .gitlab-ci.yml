@@ -2,7 +2,6 @@ stages:
   - build
   - test
   - deploy
-  - pushToECR
 
 build:
   stage: build
@@ -37,8 +36,8 @@ deploy:
   only:
     - master
 
-pushToECR:
-  stage: pushToECR
+publish:
+  stage: deploy
   script:
     - git branch -f master HEAD
     - export VERSION=$(cat version)
