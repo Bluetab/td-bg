@@ -10,10 +10,13 @@ defmodule TdBg.BusinessConceptLoader do
 
   require Logger
 
-  @cache_busines_concepts_on_startup Application.get_env(:td_bg, :cache_busines_concepts_on_startup)
+  @cache_busines_concepts_on_startup Application.get_env(
+                                       :td_bg,
+                                       :cache_busines_concepts_on_startup
+                                     )
 
   def start_link(name \\ nil) do
-    GenServer.start_link(__MODULE__, nil, [name: name])
+    GenServer.start_link(__MODULE__, nil, name: name)
   end
 
   def refresh(business_concept_id) do
@@ -54,29 +57,36 @@ defmodule TdBg.BusinessConceptLoader do
   end
 
   defp load_business_concept(business_concept_id) do
-    business_concept = business_concept_id
+    business_concept =
+      business_concept_id
       |> BusinessConcepts.get_current_version_by_business_concept_id!()
       |> load_bc_version_data()
+
     [business_concept]
     |> load_business_concept_data()
   end
 
   defp load_all_business_concepts do
     BusinessConcepts.list_current_business_concept_versions()
-    |> Enum.map(&(load_bc_version_data/1))
+    |> Enum.map(&load_bc_version_data/1)
     |> load_business_concept_data()
   end
 
   defp load_bc_version_data(business_concept_version) do
-    %{id: business_concept_version.business_concept_id, domain_id: business_concept_version.business_concept.domain_id,
-      name: business_concept_version.name}
+    %{
+      id: business_concept_version.business_concept_id,
+      domain_id: business_concept_version.business_concept.domain_id,
+      name: business_concept_version.name,
+      business_concept_version_id: business_concept_version.id
+    }
   end
 
   def load_business_concept_data(business_concepts) do
-    results = business_concepts
-    |> Enum.map(&(Map.take(&1, [:id, :domain_id, :name])))
-    |> Enum.map(&(BusinessConceptCache.put_business_concept(&1)))
-    |> Enum.map(fn {res, _} -> res end)
+    results =
+      business_concepts
+      |> Enum.map(&Map.take(&1, [:id, :domain_id, :name, :business_concept_version_id]))
+      |> Enum.map(&BusinessConceptCache.put_business_concept(&1))
+      |> Enum.map(fn {res, _} -> res end)
 
     if Enum.any?(results, &(&1 != :ok)) do
       Logger.warn("Cache loading of business concepts failed")
@@ -84,5 +94,4 @@ defmodule TdBg.BusinessConceptLoader do
       Logger.info("Cached #{length(results)} business concepts")
     end
   end
-
 end

@@ -204,6 +204,7 @@ defmodule TdBg.BusinessConcepts do
       {:ok, %{current: new_version}} ->
         business_concept_id = new_version.business_concept_id
         params = retrieve_last_bc_version_params(business_concept_id)
+        BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         result
 
@@ -241,6 +242,7 @@ defmodule TdBg.BusinessConcepts do
         updated_version = get_business_concept_version!(business_concept_version.id)
         business_concept_id = updated_version.business_concept_id
         params = retrieve_last_bc_version_params(business_concept_id)
+        BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         {:ok, updated_version}
 
@@ -262,6 +264,7 @@ defmodule TdBg.BusinessConcepts do
       {:ok, updated_version} ->
         business_concept_id = updated_version.business_concept_id
         params = retrieve_last_bc_version_params(business_concept_id)
+        BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         result
 
@@ -294,6 +297,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
         params = retrieve_last_bc_version_params(business_concept_id)
+        BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         result
 
@@ -353,6 +357,7 @@ defmodule TdBg.BusinessConcepts do
       {:ok, updated_version} ->
         business_concept_id = updated_version.business_concept_id
         params = retrieve_last_bc_version_params(business_concept_id)
+        BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         result
 
