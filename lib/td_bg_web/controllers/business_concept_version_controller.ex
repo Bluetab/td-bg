@@ -35,9 +35,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     concept_rejected: "concept_rejected",
     concept_rejection_canceled: "concept_rejection_canceled",
     concept_published: "concept_published",
-    concept_deprecated: "concept_deprecated",
-    add_concept_field: "add_concept_field",
-    delete_concept_field: "delete_concept_field"
+    concept_deprecated: "concept_deprecated"
   }
 
   action_fallback(TdBgWeb.FallbackController)
