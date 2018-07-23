@@ -62,15 +62,9 @@ defmodule TdBg.BusinessConceptLoader do
   end
 
   defp load_all_business_concepts do
-    BusinessConcepts.list_all_business_concepts()
-    |> Enum.map(&load_current_bc_version(&1))
+    BusinessConcepts.list_current_business_concept_versions()
+    |> Enum.map(&(load_bc_version_data/1))
     |> load_business_concept_data()
-  end
-
-  defp load_current_bc_version(business_concept) do
-    business_concept.id
-     |> BusinessConcepts.get_current_version_by_business_concept_id!()
-     |> load_bc_version_data()
   end
 
   defp load_bc_version_data(business_concept_version) do

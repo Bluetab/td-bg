@@ -27,10 +27,13 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     }
   end
 
-  def render("show.json", %{
-        business_concept_version: business_concept_version,
-        hypermedia: hypermedia
-      } = assigns) do
+  def render(
+        "show.json",
+        %{
+          business_concept_version: business_concept_version,
+          hypermedia: hypermedia
+        } = assigns
+      ) do
     render_one_hypermedia(
       business_concept_version,
       hypermedia,
@@ -69,16 +72,32 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   end
 
   def render("list_item.json", %{business_concept_version: business_concept_version}) do
-    view_fields = ["id", "name", "description", "domain", "status", "q_rule_count", "link_count"]
+    view_fields = [
+      "id",
+      "name",
+      "description",
+      "domain",
+      "status",
+      "q_rule_count",
+      "link_count",
+      "content",
+      "last_change_by",
+      "last_change_at",
+      "inserted_at",
+      "updated_at"
+    ]
+
     test_fields = ["business_concept_id", "current", "type", "version"]
     Map.take(business_concept_version, view_fields ++ test_fields)
   end
 
   # TODO: update swagger with embedded
-  def render("business_concept_version.json", %{
-        business_concept_version: business_concept_version
-      } = assigns) do
-
+  def render(
+        "business_concept_version.json",
+        %{
+          business_concept_version: business_concept_version
+        } = assigns
+      ) do
     %{
       id: business_concept_version.id,
       business_concept_id: business_concept_version.business_concept.id,
@@ -106,8 +125,16 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_template(assigns)
   end
 
-  def render("versions.json", %{business_concept_versions: business_concept_versions, hypermedia: hypermedia}) do
-    render_many_hypermedia(business_concept_versions, hypermedia, BusinessConceptVersionView, "version.json")
+  def render("versions.json", %{
+        business_concept_versions: business_concept_versions,
+        hypermedia: hypermedia
+      }) do
+    render_many_hypermedia(
+      business_concept_versions,
+      hypermedia,
+      BusinessConceptVersionView,
+      "version.json"
+    )
   end
 
   def render("version.json", %{business_concept_version: business_concept_version}) do
@@ -148,13 +175,14 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     end
   end
 
-  def add_template(concept, assigns)  do
+  def add_template(concept, assigns) do
     case Map.get(assigns, :template, nil) do
-      nil -> concept
+      nil ->
+        concept
+
       template ->
         template_view = Map.take(template, [:content])
         Map.put(concept, :template, template_view)
     end
   end
-
 end

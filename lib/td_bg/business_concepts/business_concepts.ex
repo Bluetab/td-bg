@@ -63,6 +63,13 @@ defmodule TdBg.BusinessConcepts do
       |> Repo.all()
   end
 
+  def list_current_business_concept_versions do
+    BusinessConceptVersion
+    |> where([v], v.current == true)
+    |> preload(:business_concept)
+    |> Repo.all()
+  end
+
   @doc """
     Fetch an exsisting business_concept by its id
   """
