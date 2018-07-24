@@ -143,15 +143,21 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
     domain_ids = TaxonomyCache.get_parent_ids(domain.id)
-    last_change_by = case UserCache.get_user(last_change_by_id) do
-      nil -> %{}
-      user -> user
-    end
-    #By default we will set to 0 the bc params but the values in this map
-    #shoul never be empty!!
-    concept = Map.merge(concept, @default_bc_version_params, fn _k, v1, v2 ->
+
+    last_change_by =
+      case UserCache.get_user(last_change_by_id) do
+        nil -> %{}
+        user -> user
+      end
+
+    # By default we will set to 0 the bc params but the values in this map
+    # shoul never be empty!!
+    concept =
+      Map.merge(concept, @default_bc_version_params, fn _k, v1, v2 ->
         v1 || v2
-    end)
+      end)
+
+    domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
 
     %{
       id: concept.id,
@@ -164,6 +170,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         id: domain.id,
         name: domain.name
       },
+      domain_parents: domain_parents,
       last_change_by: last_change_by,
       type: concept.business_concept.type,
       content: concept.content,
@@ -180,29 +187,39 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     "business_concept"
   end
 
-  def has_any_status?(%BusinessConceptVersion{status: status}, statuses), do: has_any_status?(status, statuses)
+  def has_any_status?(%BusinessConceptVersion{status: status}, statuses),
+    do: has_any_status?(status, statuses)
+
   def has_any_status?(_status, []), do: false
-  def has_any_status?(status, [h|t]) do
+
+  def has_any_status?(status, [h | t]) do
     status == h || has_any_status?(status, t)
   end
 
   def is_updatable?(%BusinessConceptVersion{current: current, status: status}) do
     current && status == BusinessConcept.status().draft
   end
+
   def is_publishable?(%BusinessConceptVersion{current: current, status: status}) do
     current && status == BusinessConcept.status().pending_approval
   end
-  def is_rejectable?(%BusinessConceptVersion{} = business_concept_version), do: is_publishable?(business_concept_version)
+
+  def is_rejectable?(%BusinessConceptVersion{} = business_concept_version),
+    do: is_publishable?(business_concept_version)
+
   def is_versionable?(%BusinessConceptVersion{current: current, status: status}) do
     current && status == BusinessConcept.status().published
   end
-  def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version), do: is_versionable?(business_concept_version)
+
+  def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version),
+    do: is_versionable?(business_concept_version)
+
   def is_undo_rejectable?(%BusinessConceptVersion{current: current, status: status}) do
     current && status == BusinessConcept.status().rejected
   end
+
   def is_deletable?(%BusinessConceptVersion{current: current, status: status}) do
     valid_statuses = [BusinessConcept.status().draft, BusinessConcept.status().rejected]
     current && Enum.member?(valid_statuses, status)
   end
-
 end

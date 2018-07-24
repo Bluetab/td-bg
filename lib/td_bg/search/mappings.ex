@@ -31,12 +31,24 @@ defmodule TdBg.Search.Mappings do
         }
       },
       domain_ids: %{type: "long"},
+      domain_parents: %{
+        properties: %{
+          id: %{type: "long"},
+          name: %{type: "text"}
+        }
+      },
       link_count: %{type: "short"},
       q_rule_count: %{type: "short"},
       content: content_mappings
     }
 
-    settings = %{analysis: %{normalizer: %{sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}}}}
+    settings = %{
+      analysis: %{
+        normalizer: %{
+          sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}
+        }
+      }
+    }
 
     %{mappings: %{doc: %{properties: mapping_type}}, settings: settings}
   end

@@ -84,7 +84,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "last_change_by",
       "last_change_at",
       "inserted_at",
-      "updated_at"
+      "updated_at",
+      "domain_parents"
     ]
 
     test_fields = ["business_concept_id", "current", "type", "version"]
@@ -111,7 +112,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       domain: Map.take(business_concept_version.business_concept.domain, [:id, :name]),
       status: business_concept_version.status,
       current: business_concept_version.current,
-      version: business_concept_version.version
+      version: business_concept_version.version,
     }
     |> add_reject_reason(
       business_concept_version.reject_reason,
