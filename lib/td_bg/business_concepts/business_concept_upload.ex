@@ -55,13 +55,17 @@ defmodule TdBg.BusinessConcept.Upload do
 
   @no_content [@template, @domain, @name, @description]
 
+  alias Codepagex
   alias Ecto.Adapters.SQL
+  alias NimbleCSV
   alias Postgrex.Result
   alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Repo
   alias TdBg.Templates
+
+  NimbleCSV.define(ParserCSVUpload, separator: ";")
 
   def from_csv(nil, _user), do: {:error, %{message: :no_csv_uploaded}}
 
@@ -130,10 +134,34 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp upload_in_transaction(path, user) do
     path
-    |> File.stream!()
-    |> CSV.decode!(separator: ?;, headers: true)
+    |> Path.expand
+    |> File.stream!([:raw])
+    |> ParserCSVUpload.parse_stream(headers: false)
     |> Enum.to_list()
+    |> parse_data_list()
     |> upload_data(user, [])
+  end
+
+  defp parse_data_list([headers|tail]) do
+    tail
+      |> Enum.map(&parse_uncoded_rows(&1))
+      |> Enum.map(&row_list_to_map(headers, &1))
+  end
+
+  defp row_list_to_map(headers, row) do
+    headers
+      |> Enum.zip(row)
+      |> Enum.into(%{})
+  end
+
+  defp parse_uncoded_rows(fiel_row_list) do
+    fiel_row_list
+     |> Enum.map(fn(row) ->
+      case String.valid?(row) do
+        true -> row
+        false -> Codepagex.to_string!(row, "VENDORS/MICSFT/WINDOWS/CP1252", Codepagex.use_utf_replacement())
+      end
+     end)
   end
 
   defp upload_data([head | tail], user, acc) do

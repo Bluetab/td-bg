@@ -53,6 +53,8 @@ defmodule TdBg.Mixfile do
       {:ex_json_schema, "~> 0.5"},
       {:json_diff, "~> 0.1.0"},
       {:csv, "~> 2.0.0"},
+      {:nimble_csv, "~> 0.3"},
+      {:codepagex, "~> 0.1.4"},
       {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "v0.2.5"}
     ]
   end
