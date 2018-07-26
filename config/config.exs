@@ -15,10 +15,6 @@ config :td_bg, hashing_module: Comeonin.Bcrypt
 config :codepagex, :encodings, [
   :ascii,
   ~r[iso8859]i,
-  "ETSI/GSM0338",
-  "VENDORS/MISC/KPS9566",
-  "VENDORS/MICSFT/WINDOWS/CP932",
-  "VENDORS/MICSFT/WINDOWS/CP1250",
   "VENDORS/MICSFT/WINDOWS/CP1252"
 ]
 
