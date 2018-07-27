@@ -19,6 +19,7 @@ priv/static/swagger.json
 # variables.
 /config/*.secret.exs.deliver/releases/
 .idea/
+.vscode
 
 # business concept content schema definition for testing
 bc_schema.test
