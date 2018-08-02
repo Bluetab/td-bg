@@ -23,9 +23,9 @@ defmodule TdBg.Taxonomies.Domain do
   @doc false
   def changeset(%Domain{} = domain, attrs) do
     domain
-      |> cast(attrs, [:name, :type, :description, :parent_id])
-      |> validate_required([:name])
-      |> unique_constraint(:name)
+      |> cast(attrs, [:name, :type, :description, :parent_id], message: "domain.field.cast")
+      |> validate_required([:name], message: "domain.field.required")
+      |> unique_constraint(:name, name: :index_domain_by_name, message: "domain.field.unique")
   end
 
   @doc false

@@ -12,7 +12,7 @@ Feature: taxonomy creation/edition errors
     {
       "errors": {
         "name": [
-          "blank"
+          "domain.field.required"
         ]
       }
     }
@@ -31,7 +31,7 @@ Feature: taxonomy creation/edition errors
     {
       "errors": {
         "name": [
-          "blank"
+          "domain.field.required"
         ]
       }
     }
@@ -47,7 +47,7 @@ Feature: taxonomy creation/edition errors
     {
       "errors": {
         "name": [
-          "blank"
+          "domain.field.required"
         ]
       }
     }
