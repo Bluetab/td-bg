@@ -7,8 +7,10 @@ defmodule TdBg.BusinessConceptsTest do
     defp fixture do
       template_content = [%{"name" => "fieldname", "type" => "string", "required" =>  false}]
       template = insert(:template, name: "onefield", content: template_content)
-      insert(:business_concept, type: template.name)
-      insert(:business_concept, type: template.name)
+      parent_domain = insert(:domain, templates: [template])
+      child_domain = insert(:child_domain, parent: parent_domain)
+      insert(:business_concept, type: template.name, domain: child_domain)
+      insert(:business_concept, type: template.name, domain: parent_domain)
     end
 
     test "list_all_business_concepts/0 return all business_concetps" do

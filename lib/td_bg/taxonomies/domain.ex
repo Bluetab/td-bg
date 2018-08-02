@@ -25,6 +25,7 @@ defmodule TdBg.Taxonomies.Domain do
     domain
       |> cast(attrs, [:name, :type, :description, :parent_id])
       |> validate_required([:name])
+      |> unique_constraint(:name)
   end
 
   @doc false
