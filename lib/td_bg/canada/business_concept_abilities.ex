@@ -31,32 +31,6 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{} = user, :get_fields, %BusinessConceptVersion{} = business_concept_version) do
-    can?(user, :view_business_concept, business_concept_version)
-  end
-
-  def can?(%User{} = user, :get_field, %BusinessConceptVersion{} = business_concept_version) do
-    can?(user, :view_business_concept, business_concept_version)
-  end
-
-  def can?(%User{} = user, :add_field, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_updatable?(business_concept_version) &&
-      authorized?(
-        user,
-        :update_business_concept,
-        business_concept_version
-      )
-  end
-
-  def can?(%User{} = user, :delete_field, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_updatable?(business_concept_version) &&
-      authorized?(
-        user,
-        :update_business_concept,
-        business_concept_version
-      )
-  end
-
   def can?(
         %User{} = user,
         :get_data_structures,
