@@ -9,7 +9,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   def can?(%User{is_admin: true}, :create_business_concept), do: true
 
   def can?(%User{} = user, :create_business_concept) do
-    Permissions.has_any_permission?(
+    Permissions.has_any_permission_on_resource_type?(
       user,
       [:create_business_concept],
       Domain

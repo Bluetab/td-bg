@@ -14,7 +14,7 @@ defmodule TdBg.Permissions do
     @permission_resolver.get_acls_by_resource_type(jti, "domain")
   end
 
-  def has_any_permission?(%User{} = user, permissions, Domain) do
+  def has_any_permission_on_resource_type?(%User{} = user, permissions, Domain) do
     user
       |> get_domain_permissions
       |> Enum.flat_map(&(&1.permissions))

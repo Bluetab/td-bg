@@ -14,7 +14,7 @@ defmodule TdBg.Canada.TaxonomyAbilities do
       :delete_acl_entry
     ]
 
-    Permissions.has_any_permission?(user, permissions, Domain)
+    Permissions.has_any_permission_on_resource_type?(user, permissions, Domain)
   end
 
   def can?(%User{} = user, :create, %Domain{id: domain_id}) do
