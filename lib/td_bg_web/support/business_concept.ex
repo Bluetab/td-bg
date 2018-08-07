@@ -36,18 +36,34 @@ defmodule TdBgWeb.BusinessConceptSupport do
     end
   end
 
-  defp get_ous([], _user), do: []
-  defp get_ous([head|tail], user) do
-    get_ous(head, user) ++ get_ous(tail, user)
-  end
-  defp get_ous(%Domain{} = domain, user) do
-    child_domains = Taxonomies.get_children_domains(domain)
-    Logger.info("Child domains in get_ous... #{inspect(child_domains)}")
-    child_ous = get_ous(child_domains, user)
-    Logger.info("Child ous in get_ous... #{inspect(child_ous)}")
+  # TODO: Should we retrieve the domains children too ??
+  # defp get_ous([], _user), do: []
+  # defp get_ous([head|tail], user) do
+  #   get_ous(head, user) ++ get_ous(tail, user)
+  # end
+  # defp get_ous(%Domain{} = domain, user) do
+  #   child_domains = Taxonomies.get_children_domains(domain)
+  #   Logger.info("Child domains in get_ous... #{inspect(child_domains)}")
+  #   child_ous = get_ous(child_domains, user)
+  #   Logger.info("Child ous in get_ous... #{inspect(child_ous)}")
+  #   case can?(user, show(domain)) do
+  #     true -> [domain.name|child_ous]
+  #     false -> child_ous
+  #   end
+  # end
+
+  defp get_ous(%Domain{parent_id: nil} = domain, user) do
     case can?(user, show(domain)) do
-      true -> [domain.name|child_ous]
-      false -> child_ous
+      true -> [domain.name]
+      false -> []
+    end
+  end
+
+  defp get_ous(%Domain{parent_id: parent_id} = domain, user) do
+    parent_domain = Taxonomies.get_domain!(parent_id)
+    case can?(user, show(domain)) do
+      true -> [domain.name] ++ get_ous(parent_domain, user)
+      false -> []
     end
   end
 
