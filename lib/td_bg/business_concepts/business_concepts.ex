@@ -10,6 +10,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
   alias TdBg.Templates
+  alias TdPerms.BusinessConceptCache
   alias ValidationError
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
@@ -319,32 +320,24 @@ defmodule TdBg.BusinessConcepts do
     |> Enum.each(&@search_service.put_search/1)
   end
 
+  def get_concept_counts(business_concept_id) do
+    {:ok, values} =
+      BusinessConceptCache.get_field_values(business_concept_id,
+        [:q_rule_count, :link_count])
+
+    values
+    |> Enum.map(fn {key, value} ->
+      new_value = case value do
+        nil -> 0
+        v -> max(0, String.to_integer(v))
+      end
+      {key, new_value}
+    end)
+    |> Map.new
+  end
+
   def retrieve_last_bc_version_params(business_concept_id) do
-    default_map = %{"link_count" => 0, "q_rule_count" => 0}
-    query = %{
-      query: %{term: %{"business_concept_id" => business_concept_id}},
-      sort: [%{"version" => %{"order" => "desc"}}],
-      size: "1"
-    }
-
-    @search_service.search("business_concept", query)
-      |> Map.get(:results)
-      |> parse_params_result(default_map)
-  end
-
-  defp parse_params_result([], default_map), do: parse_map_to_atom(default_map)
-  #I only expect one element
-  defp parse_params_result([result|_tail], default_map) do
-    result
-      |> Map.take(Map.keys(default_map))
-      |> Map.merge(default_map, fn _k, v1, v2 ->
-        v1 || v2
-      end)
-      |> parse_map_to_atom
-  end
-
-  defp parse_map_to_atom(map) do
-    Map.new(map, fn {k, v} -> {String.to_atom(k), v} end)
+    get_concept_counts(business_concept_id)
   end
 
   def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do

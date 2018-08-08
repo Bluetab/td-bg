@@ -12,8 +12,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   @behaviour Searchable
 
-  @default_bc_version_params %{:link_count => 0, :q_rule_count => 0}
-
   schema "business_concept_versions" do
     field(:content, :map)
     field(:related_to, {:array, :integer})
@@ -150,10 +148,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         user -> user
       end
 
-    # By default we will set to 0 the bc params but the values in this map
-    # shoul never be empty!!
+    counts = BusinessConcepts.get_concept_counts(concept.business_concept.id)
+
     concept =
-      Map.merge(concept, @default_bc_version_params, fn _k, v1, v2 ->
+      Map.merge(concept, counts, fn _k, v1, v2 ->
         v1 || v2
       end)
 
