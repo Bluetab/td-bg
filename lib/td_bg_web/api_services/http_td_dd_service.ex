@@ -31,13 +31,14 @@ defmodule TdBgWeb.ApiServices.HttpTdDdService do
   def get_data_structures(%{} = params) do
     token = get_api_user_token()
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
-
-    case HTTPoison.get(get_data_structures_path(), headers, params: params) do
-      {:ok, %HTTPoison.Response{body: resp, status_code: 200}} ->
-        resp |> JSON.decode! |> Map.get("data")
-      error ->
-        Logger.error "While getting data structures... #{error}"
-        []
+    #TODO: The view launching this function should be paginated in order to erase the time_out from the options
+    case HTTPoison.get(get_data_structures_path(), headers, params: params,
+      options: [timeout: 50_000, recv_timeout: 50_000]) do
+        {:ok, %HTTPoison.Response{body: resp, status_code: 200}} ->
+          resp |> JSON.decode! |> Map.get("data")
+        error ->
+          Logger.error "While getting data structures... #{error}"
+          []
     end
   end
 
