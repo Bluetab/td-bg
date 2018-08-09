@@ -38,6 +38,8 @@ defmodule TdBgWeb.Endpoint do
 
   plug Corsica, origins: "*"
 
+  plug TdBg.Metrics.PrometheusExporter
+
   plug TdBgWeb.Router
 
   @doc """

@@ -2,6 +2,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
   use TdBg.Hypermedia, :view
 
+  # alias Grafana.Dashboard
   alias TdBgWeb.BusinessConceptVersionView
   alias TdPerms.UserCache
 
@@ -125,6 +126,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       business_concept_version.version
     )
     |> add_aliases(business_concept_version.business_concept)
+    # |> add_graphs_url()
     |> add_template(assigns)
   end
 
@@ -188,4 +190,19 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         Map.put(concept, :template, template_view)
     end
   end
+  #
+  # def add_graphs_url(concept) do
+  #   case Dashboard.get("bc_"<> to_string(concept.id)) do
+  #     {:ok, %{"dashboard" => dashboard}} ->
+  #       src = get_url Map.get(dashboard, "uid"), Map.get(dashboard, "title"), concept.id * 10
+  #       Map.put(concept, :graphs, %{:completness => src})
+  #     {:error, _resp} ->
+  #       concept
+  #   end
+  # end
+  # defp get_url(uid, title, panel_id) do
+  #   "#{api_host()}/d-solo/#{uid}/#{title}?orgId=1&panelId=#{panel_id}"
+  # end
+  # defp api_host, do: Application.get_env(:grafana, :api_host)
+
 end

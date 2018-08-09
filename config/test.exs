@@ -20,7 +20,7 @@ config :td_bg, TdBg.Repo,
   database: "td_bg_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 1
+  pool_size: 10
 
 config :td_bg,
   # business concept content  schema location

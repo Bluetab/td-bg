@@ -28,6 +28,8 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :create do
+    post("/templates")
+
     description("Creates a Template")
     produces("application/json")
 
@@ -180,6 +182,7 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :get_domain_templates do
+    get("/domains/{domain_id}/templates")
     description("List Domain Templates")
 
     parameters do
@@ -215,6 +218,7 @@ defmodule TdBgWeb.TemplateController do
   end
 
   swagger_path :add_templates_to_domain do
+    post("/domains/{domain_id}/templates")
     description("Add Templates to Domain")
 
     parameters do

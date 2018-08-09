@@ -63,6 +63,10 @@ config :td_bg, cache_busines_concepts_on_startup: true
 
 config :td_bg, permission_resolver: TdPerms.Permissions
 
+# config :grafana,
+#   api_host: "http://localhost:3000",
+#   api_key: "Bearer eyJrIjoiemtnWDB1WnpsTzVVNjYwS3BjQjljMDVEYzFYeGpZR3IiLCJuIjoiYWRtaW4yIiwiaWQiOjF9"
+
 config :td_perms, permissions: [
   :is_admin,
   :create_acl_entry,

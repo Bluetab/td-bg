@@ -25,6 +25,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.TemplateSupport
 
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
+  # @td_grafana_api Application.get_env(:grafana, :api_service)
 
   @events %{
     create_concept_draft: "create_concept_draft",
@@ -155,6 +156,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :create do
+    post("/business_concept_versions")
     description("Creates a Business Concept version child of Data Domain")
     produces("application/json")
 
@@ -222,6 +224,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       }
 
       Audit.create_event(conn, audit, @events.create_concept_draft)
+      # @td_grafana_api.create_panels(version.id)
 
       conn =
         conn
@@ -818,6 +821,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       }
 
       Audit.create_event(conn, audit, @events.update_concept_draft)
+      # @td_grafana_api.create_panels(concept_version.id)
 
       render(
         conn,

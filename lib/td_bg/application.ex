@@ -1,6 +1,7 @@
 defmodule TdBg.Application do
   @moduledoc false
   use Application
+  alias TdBg.Metrics.PrometheusExporter
   alias TdBgWeb.Endpoint
 
   # See https://hexdocs.pm/elixir/Application.html
@@ -18,9 +19,11 @@ defmodule TdBg.Application do
       # TdBg.Worker.start_link(arg1, arg2, arg3)
       # worker(TdBg.Worker, [arg1, arg2, arg3]),
       worker(TdBg.DomainLoader, [TdBg.DomainLoader]),
-      worker(TdBg.BusinessConceptLoader, [TdBg.BusinessConceptLoader])
+      worker(TdBg.BusinessConceptLoader, [TdBg.BusinessConceptLoader]),
+      worker(TdBg.Metrics.BusinessConcepts, [])
     ]
 
+    PrometheusExporter.setup()
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TdBg.Supervisor]
