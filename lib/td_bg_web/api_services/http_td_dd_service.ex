@@ -32,8 +32,7 @@ defmodule TdBgWeb.ApiServices.HttpTdDdService do
     token = get_api_user_token()
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json", "Accept": "Application/json; Charset=utf-8"]
     #TODO: The view launching this function should be paginated in order to erase the time_out from the options
-    case HTTPoison.get(get_data_structures_path(), headers, params: params,
-      options: [timeout: 50_000, recv_timeout: 50_000]) do
+    case HTTPoison.get(get_data_structures_path(), headers, params: params, recv_timeout: 25_000) do
         {:ok, %HTTPoison.Response{body: resp, status_code: 200}} ->
           resp |> JSON.decode! |> Map.get("data")
         error ->
