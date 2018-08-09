@@ -34,7 +34,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp schedule_work do
-    Process.send_after(self(), :work, 2000) # 2 seconds
+    Process.send_after(self(), :work, 1000 * 60 * 15) # 15 min
   end
 
   def get_concepts_count do
