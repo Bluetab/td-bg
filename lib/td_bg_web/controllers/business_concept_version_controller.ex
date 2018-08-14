@@ -25,7 +25,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.TemplateSupport
 
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
-  # @td_grafana_api Application.get_env(:grafana, :api_service)
+  @td_grafana_api Application.get_env(:grafana, :api_service)
 
   @events %{
     create_concept_draft: "create_concept_draft",
@@ -378,7 +378,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       Audit.create_event(conn, audit, @events.delete_concept_draft)
 
-      # @td_grafana_api.delete_panel(business_concept_version.id)
+      @td_grafana_api.delete_panel(business_concept_version.id)
 
       send_resp(conn, :no_content, "")
     else
