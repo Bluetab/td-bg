@@ -60,12 +60,20 @@ config :td_bg, :audit_service,
 
 config :td_bg, cache_domains_on_startup: true
 config :td_bg, cache_busines_concepts_on_startup: true
+config :td_bg, metrics_busines_concepts_on_startup: true
 
 config :td_bg, permission_resolver: TdPerms.Permissions
 
 # config :grafana,
 #   api_host: "http://localhost:3000",
-#   api_key: "Bearer eyJrIjoiemtnWDB1WnpsTzVVNjYwS3BjQjljMDVEYzFYeGpZR3IiLCJuIjoiYWRtaW4yIiwiaWQiOjF9"
+#   api_key: "Bearer eyJrIjoieTRlVWZpZmhZQmRidE56YUV5eDdBaDRoMTRyclcyYXYiLCJuIjoiYWRzZnNhIiwiaWQiOjF9",
+#   datasource: "grafana_pro",
+#   grafana_json: "static/dashboard_panel.json"
+# config :grafana,
+#   api_host: "http://grafana.truedat.io",
+#   api_key: "Bearer eyJrIjoiUXh5UWxPSjMxNDBkYXJuZ3oxUlVDZGNVR3Y3YkZlcnMiLCJuIjoidXNlcjEiLCJpZCI6MX0=",
+#   datasource: "Prometheus",
+#   grafana_json: "static/dashboard_panel.json"
 
 config :td_perms, permissions: [
   :is_admin,

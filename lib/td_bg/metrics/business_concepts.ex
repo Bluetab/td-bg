@@ -12,13 +12,20 @@ defmodule TdBg.Metrics.BusinessConcepts do
   @fixed_concepts_count_dimensions [:status, :domain_parents, :q_rule_count, :link_count]
   @fixed_completness_dimensions [:id, :group, :field, :status, :domain_parents]
 
+  @metrics_busines_concepts_on_startup Application.get_env(
+                                       :td_bg,
+                                       :metrics_busines_concepts_on_startup
+                                     )
+
   def start_link do
     GenServer.start_link(__MODULE__, %{})
   end
 
   def init(state) do
-    Instrumenter.setup()
-    schedule_work() # Schedule work to be performed at some point
+    if @metrics_busines_concepts_on_startup do
+      Instrumenter.setup()
+      schedule_work() # Schedule work to be performed at some point
+    end
     {:ok, state}
   end
 
@@ -34,7 +41,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp schedule_work do
-    Process.send_after(self(), :work, 1000 * 60 * 15) # 15 min
+    Process.send_after(self(), :work, 1000 * 60 * 5) # 5 min
   end
 
   def get_concepts_count do
@@ -73,7 +80,9 @@ defmodule TdBg.Metrics.BusinessConcepts do
       |> Enum.map(fn {key, value} ->
           %{dimensions: Enum.into(key, %{}), count: value |> Enum.map(& &1.count) |> Enum.sum()}
         end)
-      |> Enum.map(fn (metric) -> Map.put(metric, :template_id, get_template(metric.dimensions.domain_parents).id) end)
+      |> Enum.map(fn (metric) ->
+          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name)
+        end)
   end
 
   defp include_empty_metrics_dimensions(concept) do
@@ -109,7 +118,9 @@ defmodule TdBg.Metrics.BusinessConcepts do
           end) |acc]
         end) |> List.flatten
 
-      |> Enum.map(fn (metric) -> Map.put(metric, :template_id, get_template(metric.dimensions.domain_parents).id) end)
+      |> Enum.map(fn (metric) ->
+          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name)
+        end)
   end
 
   defp get_map_dimensions(concept, field) do
@@ -161,7 +172,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
   def get_dimensions_from_templates do
     Templates.list_templates()
-      |> Enum.map(fn(template) -> %{id: template.id, dimensions: template.content |> Enum.map(fn(content) ->
+      |> Enum.map(fn(template) -> %{name: template.name, dimensions: template.content |> Enum.map(fn(content) ->
           get_name_dimension(content) end)}
         end)
       |> Enum.map(&Map.update!(&1, :dimensions, fn(current_dimensions) ->

@@ -224,7 +224,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       }
 
       Audit.create_event(conn, audit, @events.create_concept_draft)
-      # @td_grafana_api.create_panels(version.id)
 
       conn =
         conn
@@ -378,6 +377,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       }
 
       Audit.create_event(conn, audit, @events.delete_concept_draft)
+
+      # @td_grafana_api.delete_panel(business_concept_version.id)
 
       send_resp(conn, :no_content, "")
     else
@@ -821,7 +822,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       }
 
       Audit.create_event(conn, audit, @events.update_concept_draft)
-      # @td_grafana_api.create_panels(concept_version.id)
 
       render(
         conn,

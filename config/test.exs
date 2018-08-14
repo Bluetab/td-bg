@@ -20,7 +20,7 @@ config :td_bg, TdBg.Repo,
   database: "td_bg_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 1
 
 config :td_bg,
   # business concept content  schema location
@@ -55,5 +55,8 @@ config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
 
 config :td_bg, cache_domains_on_startup: false
 config :td_bg, cache_busines_concepts_on_startup: false
+config :td_bg, metrics_busines_concepts_on_startup: false
 
 config :td_perms, redis_uri: "redis://localhost"
+
+# config :grafana, api_service: TdBgWeb.ApiServices.MockGrafanaService

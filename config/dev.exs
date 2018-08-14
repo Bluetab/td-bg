@@ -44,7 +44,7 @@ config :td_bg, TdBg.Repo,
   password: "postgres",
   database: "td_bg_dev",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 1
 
 config :td_bg,
   # business concept content  schema location

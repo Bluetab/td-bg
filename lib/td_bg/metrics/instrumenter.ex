@@ -4,33 +4,31 @@ defmodule TdBg.Metrics.Instrumenter do
   use Prometheus.Metric
 
   alias TdBg.Metrics.BusinessConcepts
-  # @td_grafana_api Application.get_env(:grafana, :api_service)
+
   def setup do
     BusinessConcepts.get_dimensions_from_templates()
     |> Enum.each(fn(template) ->
       Gauge.declare([
-        name: String.to_atom("concepts_count_" <> "#{template.id}"),
+        name: String.to_atom("bg_concepts_count_" <> "#{template.name}"),
         help: "Business Concepts Versions Counter",
         labels: Enum.sort([:status, :domain0, :domain1, :q_rule_count, :link_count] ++ template.dimensions)
       ])
       Gauge.declare([
-        name: String.to_atom("concept_completness_" <> "#{template.id}"),
+        name: String.to_atom("bg_concept_completness_" <> "#{template.name}"),
         help: "Business Concepts Versions Completness",
         labels: Enum.sort([:id, :field, :group, :status, :domain0, :domain1] ++ template.dimensions)
       ])
     end)
-
-    # @td_grafana_api.create_panels()
   end
 
-  def set_concepts_count(%{count: count, dimensions: dimensions, template_id: template_id}) do
+  def set_concepts_count(%{count: count, dimensions: dimensions, template_name: template_name}) do
     dimensions = format_domain_parents_field(dimensions)
-    Gauge.set([name: String.to_atom("concepts_count_" <> "#{template_id}"), labels: dimensions], count)
+    Gauge.set([name: String.to_atom("bg_concepts_count_" <> "#{template_name}"), labels: dimensions], count)
   end
 
-  def set_concept_fields_completness(%{count: count, dimensions: dimensions, template_id: template_id}) do
+  def set_concept_fields_completness(%{count: count, dimensions: dimensions, template_name: template_name}) do
     dimensions = format_domain_parents_field(dimensions)
-    Gauge.set([name: String.to_atom("concept_completness_" <> "#{template_id}"), labels: dimensions], count)
+    Gauge.set([name: String.to_atom("bg_concept_completness_" <> "#{template_name}"), labels: dimensions], count)
   end
 
   defp format_domain_parents_field(dimensions) do
