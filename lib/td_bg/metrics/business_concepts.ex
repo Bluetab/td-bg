@@ -147,7 +147,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp get_template(domain_parents) do
-    List.first(Templates.get_domain_templates(Taxonomies.get_domain_by_name(List.first(domain_parents))))
+    List.last(Templates.get_domain_templates(Taxonomies.get_domain_by_name(List.first(domain_parents))))
   end
 
   defp get_concept_field_and_group(concept, field) do
