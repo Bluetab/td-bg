@@ -2,6 +2,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   @moduledoc false
 
   use GenServer
+  require Logger
   alias TdBg.Metrics.Instrumenter
   alias TdBg.Taxonomies
   alias TdBg.Templates
@@ -30,11 +31,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def handle_info(:work, state) do
-    get_concepts_count()
-    |> Enum.each(&Instrumenter.set_concepts_count(&1))
+    concepts_count_metrics = get_concepts_count()
+    Logger.info("Number of concepts_count metric #{inspect(length(concepts_count_metrics))}")
+    Enum.each(concepts_count_metrics, &Instrumenter.set_concepts_count(&1))
 
-    get_concept_fields_completness()
-    |> Enum.each(&Instrumenter.set_concept_fields_completness(&1))
+    concept_fields_completness_metrics = get_concept_fields_completness()
+    Logger.info("Number of concept_fields_completness metric #{inspect(length(concept_fields_completness_metrics))}")
+    Enum.each(concept_fields_completness_metrics, &Instrumenter.set_concept_fields_completness(&1))
 
     schedule_work() # Reschedule once more
     {:noreply, state}
