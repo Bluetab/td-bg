@@ -73,6 +73,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
             _ -> "Si"
           end
         end))
+      |> Enum.filter(fn(concept) -> !is_nil(Templates.get_template_by_name(concept.type)) end)
       |> Enum.map(&include_empty_metrics_dimensions(&1))
 
       |> Enum.reduce([], fn(elem, acc) -> [Map.put(elem, :count, 1) |acc] end)
@@ -110,6 +111,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
       |> Enum.map(&Map.update!(&1, :domain_parents, fn(current) ->
           Enum.map(current, fn(domain) -> domain.name end)
         end))
+      |> Enum.filter(fn(concept) -> !is_nil(Templates.get_template_by_name(concept.type)) end)
       |> Enum.map(&include_empty_metrics_dimensions(&1))
 
       |> Enum.reduce([], fn(concept, acc) ->
