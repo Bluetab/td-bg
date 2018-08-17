@@ -44,7 +44,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp schedule_work do
-    Process.send_after(self(), :work, 1000 * 5) # 5 min
+    Process.send_after(self(), :work, 1000 * 60 * 5) # 5 min
   end
 
   def get_concepts_count do
@@ -90,8 +90,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp include_empty_metrics_dimensions(concept) do
-    IO.inspect("DEBUGGEANDO METRICS")
-    IO.inspect(concept)
+    Logger.info("include_empty_metrics_dimensions #{inspect(concept)}")
     Map.put(
       concept,
       :content, Map.merge(Enum.into(get_concept_template_dimensions(concept.type), %{}, fn(dim) -> {dim, ""} end),
