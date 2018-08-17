@@ -47,7 +47,8 @@ defmodule TdBg.Metrics.BusinessConcepts do
   def get_concepts_count do
 
     search = %{
-      query: %{bool: %{must: %{match_all: %{}}}}
+      query: %{bool: %{must: %{match_all: %{}}}},
+      size: 100
     }
 
     @search_service.search("business_concept", search)
