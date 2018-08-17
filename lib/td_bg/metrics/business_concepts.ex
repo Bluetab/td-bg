@@ -90,7 +90,6 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp include_empty_metrics_dimensions(concept) do
-    Logger.info("include_empty_metrics_dimensions #{inspect(concept)}")
     Map.put(
       concept,
       :content, Map.merge(Enum.into(get_concept_template_dimensions(concept.type), %{}, fn(dim) -> {dim, ""} end),
