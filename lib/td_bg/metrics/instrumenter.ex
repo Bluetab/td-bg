@@ -8,17 +8,14 @@ defmodule TdBg.Metrics.Instrumenter do
   def setup do
     BusinessConcepts.get_dimensions_from_templates()
     |> Enum.each(fn(template) ->
-      template_name = template.name
-      |> String.replace(~r/[^A-z\s]/u, "")
-      |> String.replace(~r/\s+/, "_")
 
       Gauge.declare([
-        name: String.to_atom("bg_concepts_count_" <> "#{template_name}"),
+        name: String.to_atom("bg_concepts_count_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),
         help: "Business Concepts Versions Counter",
         labels: Enum.sort([:status, :domain0, :domain1, :q_rule_count, :link_count] ++ template.dimensions)
       ])
       Gauge.declare([
-        name: String.to_atom("bg_concept_completness_" <> "#{template_name}"),
+        name: String.to_atom("bg_concept_completness_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),
         help: "Business Concepts Versions Completness",
         labels: Enum.sort([:id, :field, :group, :status, :domain0, :domain1] ++ template.dimensions)
       ])

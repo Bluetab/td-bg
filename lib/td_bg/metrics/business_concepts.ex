@@ -86,8 +86,16 @@ defmodule TdBg.Metrics.BusinessConcepts do
           %{dimensions: Enum.into(key, %{}), count: value |> Enum.map(& &1.count) |> Enum.sum()}
         end)
       |> Enum.map(fn (metric) ->
-          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name)
+          Logger.info("Debugging get_concepts_count #{inspect(metric)}")
+          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name
+            |> normalize_template_name())
         end)
+  end
+
+  def normalize_template_name(template_name) do
+    template_name
+      |> String.replace(~r/[^A-z\s]/u, "")
+      |> String.replace(~r/\s+/, "_")
   end
 
   defp include_empty_metrics_dimensions(concept) do
@@ -125,7 +133,8 @@ defmodule TdBg.Metrics.BusinessConcepts do
         end) |> List.flatten
 
       |> Enum.map(fn (metric) ->
-          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name)
+          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name
+          |> normalize_template_name())
         end)
   end
 
