@@ -86,7 +86,6 @@ defmodule TdBg.Metrics.BusinessConcepts do
           %{dimensions: Enum.into(key, %{}), count: value |> Enum.map(& &1.count) |> Enum.sum()}
         end)
       |> Enum.map(fn (metric) ->
-          Logger.info("Debugging get_concepts_count #{inspect(metric)}")
           Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name
             |> normalize_template_name())
         end)
@@ -156,7 +155,15 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp get_template(domain_parents) do
-    List.last(Templates.get_domain_templates(Taxonomies.get_domain_by_name(List.first(domain_parents))))
+    templates = case Templates.get_domain_templates(Taxonomies.get_domain_by_name(List.first(domain_parents))) do
+        [] ->
+          case Templates.get_default_template do
+            nil -> []
+            domain_template -> [domain_template]
+          end
+        domain_templates -> domain_templates
+    end
+    templates |> List.last()
   end
 
   defp get_concept_field_and_group(concept, field) do
