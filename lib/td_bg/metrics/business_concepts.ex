@@ -59,7 +59,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
       |> atomize_concept_map()
 
       |> Enum.map(&Map.update!(&1, :domain_parents, fn(current) ->
-          Enum.map(current, fn(domain) -> domain.name end)
+          current = Enum.map(current, fn(domain) -> domain.name end)
+          if length(current) > 2 do
+            [domain0, domain1|_] = current
+            [domain0, domain1]
+          else
+            current
+          end
         end))
       |> Enum.map(&Map.update!(&1, :q_rule_count, fn(current) ->
           case current do
