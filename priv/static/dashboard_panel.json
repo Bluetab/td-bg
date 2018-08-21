@@ -1,0 +1,91 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "title_bc",
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "panels": [
+            {
+                "cacheTimeout": null,
+                "colorBackground": false,
+                "colorValue": false,
+                "colors": [
+                    "#d44a3a",
+                    "rgba(237, 129, 40, 0.89)",
+                    "#299c46"
+                ],
+                "datasource": "datasource_name",
+                "decimals": 0,
+                "format": "percent",
+                "gauge": {
+                    "maxValue": 100,
+                    "minValue": 0,
+                    "show": true,
+                    "thresholdLabels": false,
+                    "thresholdMarkers": true
+                },
+                "gridPos": {
+                    "h": 9,
+                    "w": 12,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": "id_panel",
+                "interval": null,
+                "links": [],
+                "mappingType": 1,
+                "mappingTypes": [
+                    {
+                        "name": "value to text",
+                        "value": 1
+                    },
+                    {
+                        "name": "range to text",
+                        "value": 2
+                    }
+                ],
+                "maxDataPoints": 100,
+                "nullPointMode": "connected",
+                "nullText": null,
+                "postfix": "",
+                "postfixFontSize": "50%",
+                "prefix": "",
+                "prefixFontSize": "50%",
+                "rangeMaps": [
+                    {
+                        "from": "null",
+                        "text": "N/A",
+                        "to": "null"
+                    }
+                ],
+                "sparkline": {
+                    "fillColor": "rgba(31, 118, 189, 0.18)",
+                    "full": false,
+                    "lineColor": "rgb(31, 120, 193)",
+                    "show": false
+                },
+                "tableColumn": "",
+                "targets": [
+                    {
+                        "expr": "(sum(bg_concept_completness_template_name{id=\"XXX\"}) / sum(count_values(\"count\", bg_concept_completness_template_name{id=\"XXX\"})))*100",
+                        "format": "time_series",
+                        "hide": false,
+                        "intervalFactor": 1,
+                        "refId": "A"
+                    }
+                ],
+                "thresholds": "33,66",
+                "title": "",
+                "type": "singlestat",
+                "valueFontSize": "80%",
+                "valueMaps": [],
+                "valueName": "current"
+            }
+        ]
+  },
+  "folderId": 0,
+  "overwrite": false
+
+}

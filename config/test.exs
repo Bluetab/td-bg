@@ -58,3 +58,5 @@ config :td_bg, cache_busines_concepts_on_startup: false
 config :td_bg, metrics_busines_concepts_on_startup: false
 
 config :td_perms, redis_uri: "redis://localhost"
+
+config :grafana, api_service: TdBgWeb.ApiServices.MockGrafanaService
