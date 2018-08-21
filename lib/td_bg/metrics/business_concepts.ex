@@ -51,7 +51,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
     search = %{
       query: %{bool: %{must: %{match_all: %{}}}},
-      size: 100
+      size: 10_000
     }
 
     @search_service.search("business_concept", search)
@@ -114,7 +114,8 @@ defmodule TdBg.Metrics.BusinessConcepts do
   def get_concept_fields_completness do
 
     search = %{
-      query: %{bool: %{must: %{match_all: %{}}}}
+      query: %{bool: %{must: %{match_all: %{}}}},
+      size: 10_000
     }
 
     @search_service.search("business_concept", search)
@@ -122,7 +123,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
       |> atomize_concept_map()
 
       |> Enum.map(&Map.update!(&1, :domain_parents, fn(current) ->
-          Enum.map(current, fn(domain) -> domain.name end)
+          current = Enum.map(current, fn(domain) -> domain.name end)
+          if length(current) > 2 do
+            [domain0, domain1|_] = current
+            [domain0, domain1]
+          else
+            current
+          end
         end))
       |> Enum.filter(fn(concept) -> !is_nil(Templates.get_template_by_name(concept.type)) end)
       |> Enum.map(&include_empty_metrics_dimensions(&1))
