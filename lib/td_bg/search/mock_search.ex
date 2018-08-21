@@ -59,7 +59,8 @@ defmodule TdBg.Search.MockSearch do
   end
 
   defp matches(string, query) when is_bitstring(string) do
-    String.starts_with?(string, query)
+    prefix = String.replace(query, "*", "")
+    String.starts_with?(string, prefix)
   end
 
   defp matches(list, query) when is_list(list) do

@@ -3,6 +3,7 @@ defmodule TdBg.BusinessConcept.Search do
     Helper module to construct business concept search queries.
   """
   alias TdBg.Accounts.User
+  alias TdBg.BusinessConcept.Query
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions
   alias TdBg.Search.Aggregations
@@ -135,7 +136,8 @@ defmodule TdBg.BusinessConcept.Search do
     %{term: %{business_concept_id: id}}
   end
   defp create_query(%{"query" => query}) do
-    %{simple_query_string: %{query: query}}
+    equery = Query.add_query_wildcard(query)
+    %{simple_query_string: %{query: equery}}
     |> bool_query
   end
 
@@ -145,7 +147,8 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   defp create_query(%{"query" => query}, filter) do
-    %{simple_query_string: %{query: query}}
+    equery = Query.add_query_wildcard(query)
+    %{simple_query_string: %{query: equery}}
     |> bool_query(filter)
   end
 
