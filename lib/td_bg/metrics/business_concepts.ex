@@ -163,7 +163,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
           end
         domain_templates -> domain_templates
     end
-    templates |> List.first()
+    templates |> List.last()
   end
 
   defp get_concept_field_and_group(concept, field) do

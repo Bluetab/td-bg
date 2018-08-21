@@ -2,6 +2,7 @@ defmodule TdBg.Metrics.Instrumenter do
   @moduledoc false
 
   use Prometheus.Metric
+  require Logger
 
   alias TdBg.Metrics.BusinessConcepts
 
@@ -24,6 +25,7 @@ defmodule TdBg.Metrics.Instrumenter do
 
   def set_concepts_count(%{count: count, dimensions: dimensions, template_name: template_name}) do
     dimensions = format_domain_parents_field(dimensions)
+    Logger.info("Template metrics: #{inspect(template_name)}")
     Gauge.set([name: String.to_atom("bg_concepts_count_" <> "#{template_name}"), labels: dimensions], count)
   end
 
