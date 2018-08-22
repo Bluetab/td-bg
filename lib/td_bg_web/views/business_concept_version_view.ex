@@ -5,8 +5,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   alias TdBgWeb.BusinessConceptVersionView
   alias TdPerms.UserCache
 
-  @td_grafana_api Application.get_env(:grafana, :api_service)
-
   def render("index.json", %{
         business_concept_versions: business_concept_versions,
         hypermedia: hypermedia
@@ -193,19 +191,14 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   end
 
   def add_graphs_url(concept) do
-    @td_grafana_api.create_panels(concept.id)
-    src =
-      case @td_grafana_api.get_dashboard(concept.id) do
-        {:ok, %{"dashboard" => dashboard}} ->
-          get_url Map.get(dashboard, "uid"), Map.get(dashboard, "title"), concept.id * 10
-        {:error, _resp} ->
-          ""
-      end
-    Map.put(concept, :graphs, %{:completness => src})
+    Map.put(concept, :graphs, %{:completness => get_url(concept.id)})
   end
-  defp get_url(uid, title, panel_id) do
-    "#{api_host()}/d-solo/#{uid}/#{title}?orgId=1&panelId=#{panel_id}"
+  defp get_url(business_concept_version_id) do
+    "#{api_host()}/d/#{dashboard_uid()}/#{dashboard_title()}?orgId=1&#{varname()}=#{business_concept_version_id}&kiosk&inactive"
   end
   defp api_host, do: Application.get_env(:grafana, :api_host)
+  defp dashboard_uid, do: Application.get_env(:grafana, :dashboard_uid)
+  defp dashboard_title, do: Application.get_env(:grafana, :dashboard_title)
+  defp varname, do: Application.get_env(:grafana, :varname)
 
 end
