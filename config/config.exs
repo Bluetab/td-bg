@@ -64,6 +64,19 @@ config :td_bg, metrics_busines_concepts_on_startup: true
 
 config :td_bg, permission_resolver: TdPerms.Permissions
 
+config :grafana,
+  api_host: "https://grafana.truedat.io",
+  # api_key: "Bearer eyJrIjoieTRlVWZpZmhZQmRidE56YUV5eDdBaDRoMTRyclcyYXYiLCJuIjoiYWRzZnNhIiwiaWQiOjF9",
+  dashboard_uid: "x0M49Jpmk",
+  dashboard_title: "completitud",
+  varname: "var-bcv_id"
+# config :grafana,
+#   api_host: "http://localhost:3000",
+#   # api_key: "Bearer eyJrIjoieTRlVWZpZmhZQmRidE56YUV5eDdBaDRoMTRyclcyYXYiLCJuIjoiYWRzZnNhIiwiaWQiOjF9",
+#   dashboard_uid: "x0M49Jpmk",
+#   dashboard_title: "completitud2",
+#   varname: "var-bcv_id"
+
 config :td_perms, permissions: [
   :is_admin,
   :create_acl_entry,
