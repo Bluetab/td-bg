@@ -57,7 +57,8 @@ defmodule TdBg.Mixfile do
       {:codepagex, "~> 0.1.4"},
       {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "v0.3.5"},
       {:prometheus_ex, "~> 3.0"},
-      {:prometheus_plugs, "~> 1.0"}
+      {:prometheus_plugs, "~> 1.0"},
+      {:grafana, git: "https://github.com/BoringButGreat/grafana.git"}
     ]
   end
 
