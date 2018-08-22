@@ -21,7 +21,11 @@ defmodule TdBgWeb.Endpoint do
   plug Plug.Logger
 
   plug Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
+    parsers: [
+      :urlencoded,
+      {:multipart, length: 60_000_000},
+      :json
+    ],
     pass: ["*/*"],
     json_decoder: Poison
 

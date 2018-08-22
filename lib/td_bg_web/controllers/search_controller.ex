@@ -36,7 +36,6 @@
   end
 
   swagger_path :reindex_all do
-    get("/search/reindex_all")
     description "Reindex all ES indexes with DB content"
     produces "application/json"
     response 200, "OK"

@@ -83,7 +83,7 @@ defmodule TdBgWeb.Router do
         title: "TdBg"
       },
       "host": @endpoint_url,
-      "basePath": "/api",
+      #"basePath": "/api",
       "securityDefinitions":
         %{
           bearer:
