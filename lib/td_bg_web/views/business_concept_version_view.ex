@@ -194,11 +194,12 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     Map.put(concept, :graphs, %{:completness => get_url(concept.id)})
   end
   defp get_url(business_concept_version_id) do
-    "#{api_host()}/d/#{dashboard_uid()}/#{dashboard_title()}?orgId=1&#{varname()}=#{business_concept_version_id}&kiosk&inactive"
+    "#{api_host()}/d-solo/#{dashboard_uid()}/#{dashboard_title()}?orgId=1&#{varname()}=#{business_concept_version_id}&panelId=#{panel_id()}&inactive"
   end
   defp api_host, do: Application.get_env(:grafana, :api_host)
   defp dashboard_uid, do: Application.get_env(:grafana, :dashboard_uid)
   defp dashboard_title, do: Application.get_env(:grafana, :dashboard_title)
+  defp panel_id, do: Application.get_env(:grafana, :panel_id)
   defp varname, do: Application.get_env(:grafana, :varname)
 
 end

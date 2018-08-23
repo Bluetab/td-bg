@@ -69,13 +69,8 @@ config :grafana,
   # api_key: "Bearer eyJrIjoieTRlVWZpZmhZQmRidE56YUV5eDdBaDRoMTRyclcyYXYiLCJuIjoiYWRzZnNhIiwiaWQiOjF9",
   dashboard_uid: "x0M49Jpmk",
   dashboard_title: "completitud",
+  panel_id: "2",
   varname: "var-bcv_id"
-# config :grafana,
-#   api_host: "http://localhost:3000",
-#   # api_key: "Bearer eyJrIjoieTRlVWZpZmhZQmRidE56YUV5eDdBaDRoMTRyclcyYXYiLCJuIjoiYWRzZnNhIiwiaWQiOjF9",
-#   dashboard_uid: "x0M49Jpmk",
-#   dashboard_title: "completitud2",
-#   varname: "var-bcv_id"
 
 config :td_perms, permissions: [
   :is_admin,
