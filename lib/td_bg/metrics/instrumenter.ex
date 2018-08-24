@@ -12,7 +12,7 @@ defmodule TdBg.Metrics.Instrumenter do
       Gauge.declare([
         name: String.to_atom("bg_concepts_count_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),
         help: "Business Concepts Versions Counter",
-        labels: Enum.sort([:status, :domain0, :domain1, :q_rule_count, :link_count] ++ template.dimensions)
+        labels: Enum.sort([:status, :domain0, :domain1, :has_quality, :has_link] ++ template.dimensions)
       ])
       Gauge.declare([
         name: String.to_atom("bg_concept_completness_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),

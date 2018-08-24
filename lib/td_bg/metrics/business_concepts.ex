@@ -10,7 +10,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
-  @fixed_concepts_count_dimensions [:status, :domain_parents, :q_rule_count, :link_count]
+  @fixed_concepts_count_dimensions [:status, :domain_parents, :has_quality, :has_link]
   @fixed_completness_dimensions [:id, :group, :field, :status, :domain_parents]
 
   @metrics_busines_concepts_on_startup Application.get_env(
@@ -69,16 +69,18 @@ defmodule TdBg.Metrics.BusinessConcepts do
         end))
       |> Enum.map(&Map.update!(&1, :q_rule_count, fn(current) ->
           case current do
-            0 -> "No"
-            _ -> "Si"
+            0 -> false
+            _ -> true
           end
         end))
+      |> Enum.map(&Map.put(&1, :has_quality, Map.get(&1, :q_rule_count)))
       |> Enum.map(&Map.update!(&1, :link_count, fn(current) ->
           case current do
-            0 -> "No"
-            _ -> "Si"
+            0 -> false
+            _ -> true
           end
         end))
+      |> Enum.map(&Map.put(&1, :has_link, Map.get(&1, :link_count)))
       |> Enum.filter(fn(concept) -> !is_nil(Templates.get_template_by_name(concept.type)) end)
       |> Enum.map(&include_empty_metrics_dimensions(&1))
 
