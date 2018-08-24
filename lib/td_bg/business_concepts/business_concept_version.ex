@@ -54,7 +54,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     ])
     |> put_change(:status, BusinessConcept.status().draft)
     |> validate_length(:name, max: 255)
-    |> validate_length(:description, max: 500)
     |> validate_length(:mod_comments, max: 500)
   end
 
@@ -73,7 +72,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> put_change(:status, BusinessConcept.status().draft)
     |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at])
     |> validate_length(:name, max: 255)
-    |> validate_length(:description, max: 500)
     |> validate_length(:mod_comments, max: 500)
   end
 
