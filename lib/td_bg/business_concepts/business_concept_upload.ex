@@ -59,6 +59,7 @@ defmodule TdBg.BusinessConcept.Upload do
   alias Ecto.Adapters.SQL
   alias NimbleCSV
   alias Postgrex.Result
+  alias TdBg.BusinessConcept.RichText
   alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
@@ -194,7 +195,7 @@ defmodule TdBg.BusinessConcept.Upload do
     version_query_input = [
       concept_id,
       version_data[@name],
-      version_data[@description],
+      RichText.to_rich_text(version_data[@description]),
       content,
       user.id,
       now,

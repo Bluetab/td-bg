@@ -15,6 +15,10 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
     :ok
   end
 
+  defp to_rich_text(plain) do
+    %{"document" => plain}
+  end
+
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -32,7 +36,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       update_attrs = %{
         content: %{},
         name: "The new name",
-        description: "The new description"
+        description: to_rich_text("The new description")
       }
 
       conn =
@@ -66,7 +70,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       update_attrs = %{
         content: %{},
         name: nil,
-        description: "The new description"
+        description: to_rich_text("The new description")
       }
 
       conn =

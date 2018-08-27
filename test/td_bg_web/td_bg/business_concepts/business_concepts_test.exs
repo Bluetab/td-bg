@@ -11,6 +11,10 @@ defmodule TdBg.BusinessConceptsTests do
     :ok
   end
 
+  defp to_rich_text(plain) do
+    %{"document" => plain}
+  end
+
   describe "business_concepts" do
     alias TdBg.BusinessConcepts.BusinessConcept
     alias TdBg.BusinessConcepts.BusinessConceptAlias
@@ -64,7 +68,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: %{},
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -128,7 +132,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: content,
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -165,7 +169,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: content,
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -204,7 +208,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: content,
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -241,7 +245,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: content,
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -277,7 +281,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: content,
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -309,7 +313,7 @@ defmodule TdBg.BusinessConceptsTests do
       version_attrs = %{
         business_concept: concept_attrs,
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -343,7 +347,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: nil,
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -373,7 +377,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: %{},
         related_to: [],
         name: "some name",
-        description: "some description",
+        description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -469,7 +473,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: %{},
         related_to: [],
         name: "updated name",
-        description: "updated description",
+        description: to_rich_text("updated description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -524,7 +528,7 @@ defmodule TdBg.BusinessConceptsTests do
         content: update_content,
         related_to: [],
         name: "updated name",
-        description: "updated description",
+        description: to_rich_text("updated description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
         version: 1

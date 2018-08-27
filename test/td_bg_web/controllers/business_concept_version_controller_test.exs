@@ -34,7 +34,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           :business_concept_version,
           content: %{"foo" => "bar"},
           name: "Concept Name",
-          description: "The awesome concept"
+          description: to_rich_text("The awesome concept")
         )
 
       conn = get(conn, business_concept_version_path(conn, :show, business_concept_version.id))
@@ -87,7 +87,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         content: %{},
         type: "some type",
         name: "Some name",
-        description: "Some description",
+        description: to_rich_text("Some description"),
         domain_id: domain.id
       }
 
@@ -134,7 +134,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         content: %{},
         type: "some type",
         name: nil,
-        description: "Some description",
+        description: to_rich_text("Some description"),
         domain_id: domain.id
       }
 
@@ -208,7 +208,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       update_attrs = Map.from_struct(template)
-      update_attrs = Map.drop(update_attrs, [:__meta__, :id, :inserted_at, :udpated_at])
+      update_attrs = Map.drop(update_attrs, [:__meta__, :id, :insedocd_at, :udpated_at])
       updated_content = update_attrs
       |> Map.get(:content)
       |> Enum.reduce([], fn(field, acc) ->
@@ -247,7 +247,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       update_attrs = %{
         content: %{},
         name: "The new name",
-        description: "The new description"
+        description: to_rich_text("The new description")
       }
 
       conn =
@@ -287,7 +287,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "system" => "system 1",
         "group" => "group 1",
         "name" => "name 1",
-        "description" => "description 1"
+        "description" => to_rich_text("description 1")
       }
 
       data_structure_2 = %{
@@ -296,7 +296,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "system" => "system 2",
         "group" => "group 2",
         "name" => "name 2",
-        "description" => "description 2"
+        "description" => to_rich_text("description 2")
       }
 
       MockTdDdService.set_data_structure(data_structure_1)
@@ -374,6 +374,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       name: name,
       status: status
     )
+  end
+
+  defp to_rich_text(plain) do
+    %{"document" => plain}
   end
 
   def create_template(_) do

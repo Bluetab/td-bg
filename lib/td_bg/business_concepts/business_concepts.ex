@@ -564,7 +564,6 @@ defmodule TdBg.BusinessConcepts do
 
   defp attrs_keys_to_atoms(key_values) do
     map = map_keys_to_atoms(key_values)
-
     case map.business_concept do
       %BusinessConcept{} -> map
       %{} = concept -> Map.put(map, :business_concept, map_keys_to_atoms(concept))

@@ -45,9 +45,12 @@ defmodule TdBg.TaxonomyNavigationTest do
 
   defthen ~r/^user sees following business concepts list:$/, %{table: table}, state do
     bc_list = state[:resp]["data"]
-    bc_list =
-      bc_list
-      |> Enum.map(&(Map.take(&1, ["name", "type", "status", "description"])))
+      |> Enum.map(fn(bc) ->
+          description = Map.get(bc, "description")
+          Map.put(bc, "description", to_plain_text(description))
+        end)
+      |> Enum.map(&Map.take(&1, ["name", "type", "status", "description"]))
+
     bc_list = Enum.reduce(bc_list, [], fn(item, acc) ->
       nitem = Map.new(item, fn {k, v} -> {String.to_atom(k), v} end)
       acc ++ [nitem]

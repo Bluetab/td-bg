@@ -53,7 +53,7 @@ defmodule TdBg.Factory do
       content: %{},
       related_to: [],
       name: "My business term",
-      description: "My business term description",
+      description: %{"document" => "My business term description"},
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
       status: BusinessConcept.status.draft,

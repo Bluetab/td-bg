@@ -64,8 +64,15 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_create(token, domain_id, attrs) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
-    attrs = Map.put(attrs, "domain_id", domain_id)
-    body = %{"business_concept_version" => attrs} |> JSON.encode!()
+    create_attrs = case Map.has_key?(attrs, "description") do
+      true ->
+        description = Map.get(attrs, "description")
+        Map.put(attrs, "description" , to_rich_text(description))
+      false -> attrs
+    end
+    create_attrs = Map.put(create_attrs, "domain_id", domain_id)
+
+    body = %{"business_concept_version" => create_attrs} |> JSON.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(business_concept_version_url(@endpoint, :create), body, headers, [])
@@ -75,6 +82,15 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_update(token, business_concept_id, attrs) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
+
+    attrs =
+      case Map.has_key?(attrs, "description") do
+        true ->
+          description = Map.get(attrs, "description")
+          Map.put(attrs, "description" , to_rich_text(description))
+        false -> attrs
+      end
+
     body = %{"business_concept" => attrs} |> JSON.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
@@ -412,4 +428,27 @@ defmodule TdBgWeb.BusinessConcept do
 
     {:ok, status_code, resp |> JSON.decode!()}
   end
+
+  def to_rich_text(nil), do: %{}
+  def to_rich_text(""),  do: %{}
+  def to_rich_text(text) do
+    %{document: %{nodes: [%{object: "block",
+      type: "paragraph",
+      nodes: [%{object: "text",
+                leaves: [%{text: text}
+             ]}]}]}}
+  end
+
+  def to_plain_text(text) do
+    text
+    |> Map.get("document")
+    |> Map.get("nodes")
+    |> Enum.at(0)
+    |> Map.get("nodes")
+    |> Enum.at(0)
+    |> Map.get("leaves")
+    |> Enum.at(0)
+    |> Map.get("text")
+  end
+
 end

@@ -2,6 +2,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+  alias TdBg.BusinessConcept.RichText
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -15,7 +16,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   schema "business_concept_versions" do
     field(:content, :map)
     field(:related_to, {:array, :integer})
-    field(:description, :string)
+    field(:description, :map)
     field(:last_change_at, :utc_datetime)
     field(:mod_comments, :string)
     field(:last_change_by, :integer)
@@ -159,7 +160,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       id: concept.id,
       business_concept_id: concept.business_concept.id,
       name: concept.name,
-      description: concept.description,
+      description: RichText.to_plain_text(concept.description),
       status: concept.status,
       version: concept.version,
       domain: %{

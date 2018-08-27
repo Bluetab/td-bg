@@ -217,7 +217,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             )
 
             name(:string, "Business Concept name", required: true)
-            description(:string, "Business Concept description", required: true)
+            description(:object, "Business Concept description", required: true)
             last_change_by(:integer, "Business Concept last updated by", required: true)
             last_change_at(:string, "Business Concept last updated date", required: true)
             domain(Schema.ref(:DomainRef))
@@ -241,7 +241,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                 properties do
                   content(:object, "Business Concept content")
                   name(:string, "Business Concept name")
-                  description(:string, "Business Concept description")
+                  description(:object, "Business Concept description")
                 end
               end
             )
@@ -314,7 +314,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             )
 
             name(:string, "Business Concept Version name", required: true)
-            description(:string, "Business Concept Version description", required: true)
+            description(:object, "Business Concept Version description", required: true)
             last_change_by(:integer, "Business Concept Version last change by", required: true)
             last_change_at(:string, "Business Concept Verion last change at", required: true)
             domain(Schema.ref(:DomainRef))
@@ -343,7 +343,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                 properties do
                   content(:object, "Business Concept Version content")
                   name(:string, "Business Concept Version name")
-                  description(:string, "Business Concept Version description")
+                  description(:object, "Business Concept Version description")
                 end
               end
             )
@@ -383,7 +383,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   type(:string, "Business Concept type (empty,...)", required: true)
                   content(:object, "Business Concept content", required: true)
                   name(:string, "Business Concept name", required: true)
-                  description(:string, "Business Concept description", required: true)
+                  description(:object, "Business Concept description", required: true)
                   domain_id(:integer, "Business Concept Domain ID", required: true)
                 end
               end

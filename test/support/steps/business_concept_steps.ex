@@ -805,7 +805,7 @@ defmodule TdBg.BusinessConceptSteps do
       assert concept["name"] == value.name
       assert concept["type"] == value.template
       assert concept["domain"]["name"] == value.domain
-      assert concept["description"] == value.description
+      assert to_plain_text(concept["description"]) == value.description
       assert concept["content"]["Formula"] == value."Formula"
       assert concept["content"]["Format"] == value."Format"
       assert concept["content"]["Values"] == value."Values"
@@ -830,6 +830,10 @@ defmodule TdBg.BusinessConceptSteps do
 
   def assert_attr("version" = attr, value, %{} = target) do
     assert Integer.parse(value) == {target[attr], ""}
+  end
+
+  def assert_attr("description" = attr, value, %{} = target) do
+    assert value == to_plain_text(target[attr])
   end
 
   def assert_attr(attr, value, %{} = target) do
