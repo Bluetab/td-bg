@@ -55,7 +55,7 @@ defmodule TdBg.Mixfile do
       {:csv, "~> 2.0.0"},
       {:nimble_csv, "~> 0.3"},
       {:codepagex, "~> 0.1.4"},
-      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "v0.3.5"},
+      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "v0.3.6"},
       {:prometheus_ex, "~> 3.0"},
       {:prometheus_plugs, "~> 1.0"},
       {:grafana, git: "https://github.com/BoringButGreat/grafana.git"}
