@@ -100,7 +100,7 @@ config :td_perms, permissions: [
   :view_rejected_business_concepts,
   :view_deprecated_business_concepts,
   :manage_business_concept_links,
-  :create_quality_rule
+  :manage_quality_rule
 ]
 
 # Import environment specific config. This must remain at the bottom
