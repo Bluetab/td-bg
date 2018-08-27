@@ -186,7 +186,10 @@ defmodule TdBg.Metrics.BusinessConcepts do
       |> Enum.map(fn (x) -> if field == String.to_atom(x["name"]) do x["group"] end end)
       |> Enum.filter(fn(elem) -> !is_nil(elem) end)
 
-    group ++ [field]
+    case length(group) do
+      0 -> ["No group"] ++ [field]
+      _ -> group ++ [field]
+    end
   end
 
   defp get_not_required_fields(concept) do
