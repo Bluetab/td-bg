@@ -19,12 +19,14 @@ defmodule TdBg.BusinessConcept.RichText do
   def to_plain_text(%{"document" => doc}) do
      plain_text = to_plain_text(doc)
      case String.last(plain_text) do
-       "\n" -> String.slice(plain_text, 0..-2)
+       " " -> String.slice(plain_text, 0..-2)
+       # "\n" -> String.slice(plain_text, 0..-2)
         _ -> plain_text
      end
   end
   def to_plain_text(%{"object" => "block", "nodes" => nodes}) do
-    [to_plain_text(nodes), "\n"] |> Enum.join("")
+    [to_plain_text(nodes), " "] |> Enum.join("")
+    #[to_plain_text(nodes), "\n"] |> Enum.join("")
   end
   def to_plain_text(%{"object" => "text", "leaves" => leaves}) do
     to_plain_text(leaves)

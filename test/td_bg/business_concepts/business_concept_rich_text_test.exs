@@ -58,7 +58,8 @@ defmodule TdBg.BusinessConceptRichTextTest do
         }
       }
 
-      assert RichText.to_plain_text(input) == "Hola\nMundo"
+      #assert RichText.to_plain_text(input) == "Hola\nMundo"
+      assert RichText.to_plain_text(input) == "Hola Mundo"
     end
 
   end

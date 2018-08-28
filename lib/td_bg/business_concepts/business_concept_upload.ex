@@ -187,8 +187,8 @@ defmodule TdBg.BusinessConcept.Upload do
        }) do
     now = DateTime.utc_now()
     draft = BusinessConcept.status().draft
-    concept_query_input = [concept_data[@domain], template.name, user.id, now]
 
+    concept_query_input = [concept_data[@domain], template.name, user.id, now]
     %Result{rows: [[concept_id]]} =
       SQL.query!(Repo, @insert_business_concept, concept_query_input)
 
