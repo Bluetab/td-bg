@@ -282,23 +282,15 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version =
       BusinessConcepts.get_business_concept_version!(business_concept_version_id)
 
-    with true <- can?(user, view_versions(business_concept_version)) do
-      %{results: business_concept_versions} =
-        Search.list_business_concept_versions(business_concept_version.business_concept_id, user)
-
-      render(
-        conn,
-        "versions.json",
-        business_concept_versions: business_concept_versions,
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
-      )
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-
-      _error ->
+    case Search.list_business_concept_versions(business_concept_version.business_concept_id, user) do
+      %{results: business_concept_versions} ->
+          render(
+            conn,
+            "versions.json",
+            business_concept_versions: business_concept_versions,
+            hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
+          )
+      _ ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
