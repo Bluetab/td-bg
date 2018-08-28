@@ -20,7 +20,7 @@ defmodule TdBg.Application do
       # worker(TdBg.Worker, [arg1, arg2, arg3]),
       worker(TdBg.DomainLoader, [TdBg.DomainLoader]),
       worker(TdBg.BusinessConceptLoader, [TdBg.BusinessConceptLoader]),
-      #worker(TdBg.Metrics.BusinessConcepts, [])
+      worker(TdBg.Metrics.BusinessConcepts, [])
     ]
 
     PrometheusExporter.setup()
