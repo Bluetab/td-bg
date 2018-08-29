@@ -6,9 +6,12 @@ defmodule TdBgWeb.BusinessConceptSupport do
   alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
+  alias TdBgWeb.ErrorConstantsSupport
   alias TdBgWeb.ErrorView
 
   import Canada, only: [can?: 2]
+
+  @errors ErrorConstantsSupport.glossary_support_errors
 
   def handle_bc_errors(conn, error) do
     case error do
@@ -19,8 +22,9 @@ defmodule TdBgWeb.BusinessConceptSupport do
       {:name_not_available} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{name: ["unique"]}})
+        |> json(%{"errors": [@errors.existing_concept]})
       {:not_valid_related_to} ->
+        # TODO: change this error to standard format
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{"errors": %{related_to: ["invalid"]}})

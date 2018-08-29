@@ -71,11 +71,12 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
     """
     {
-      "errors": {
-        "name": [
-          "unique"
+      "errors": [
+          {
+            "code": "EBG001",
+            "name": "concept.error.existing.business.concept"
+          }
         ]
-      }
     }
     """
 
@@ -147,10 +148,11 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
       """
       {
-        "errors": {
-          "name": [
-            "unique"
+        "errors": [
+            {
+              "code": "EBG001",
+              "name": "concept.error.existing.business.concept"
+            }
           ]
-        }
       }
       """
