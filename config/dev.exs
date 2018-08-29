@@ -76,3 +76,5 @@ config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.HttpTdAuditServi
   audit_domain: ""
 
 config :td_perms, redis_uri: "redis://localhost"
+
+config :td_bg, metrics_busines_concepts_on_startup: false
