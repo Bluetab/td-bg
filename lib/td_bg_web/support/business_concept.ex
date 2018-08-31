@@ -28,10 +28,16 @@ defmodule TdBgWeb.BusinessConceptSupport do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{"errors": %{related_to: ["invalid"]}})
+      {:error, %Ecto.Changeset{data: %{__struct__: _}} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset,
+                  prefix: "concept")
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
+        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset,
+                  prefix: "concept.content")
       error ->
         Logger.error("Business concept... #{inspect(error)}")
         conn

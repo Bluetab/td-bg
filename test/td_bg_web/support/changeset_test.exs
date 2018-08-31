@@ -36,6 +36,24 @@ defmodule TdBg.ChangesetSupportTest do
       assert errors == expected_errors
     end
 
+    test "translate_errors/1 translate one required error with prefix" do
+      data  = %{}
+      types = %{first_name: :string}
+      errors = {data, types}
+      |> Changeset.cast(%{}, Map.keys(types))
+      |> validate_required([:first_name])
+      |> ChangesetSupport.translate_errors("blah.blah.blah")
+
+      expected_errors = [
+        %{
+          code: "undefined",
+          name: "blah.blah.blah.error.first_name.required"
+        }
+      ]
+
+      assert errors == expected_errors
+    end
+
     test "translate_errors/1 translate two required error" do
       data  = %{}
       types = %{first_name: :string, second_name: :string}
