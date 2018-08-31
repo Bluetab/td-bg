@@ -10,11 +10,12 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
     """
     {
-      "errors": {
-        "name": [
-          "domain.field.required"
-        ]
-      }
+      "errors": [
+        {
+          "code": "undefined",
+          "name": "domain.error.name.required"
+        }
+      ]
     }
     """
 
@@ -29,11 +30,12 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
     """
     {
-      "errors": {
-        "name": [
-          "domain.field.required"
-        ]
-      }
+      "errors": [
+        {
+          "code": "undefined",
+          "name": "domain.error.name.required"
+        }
+      ]
     }
     """
 
@@ -45,11 +47,12 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
     """
     {
-      "errors": {
-        "name": [
-          "domain.field.required"
-        ]
-      }
+      "errors": [
+                    {
+                      "code": "undefined",
+                      "name": "domain.error.name.required"
+                    }
+                ]
     }
     """
 
