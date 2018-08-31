@@ -91,11 +91,9 @@ defmodule TdBg.Metrics.BusinessConcepts do
       )
 
       |> Enum.map(fn {key, value} ->
-          %{dimensions: Enum.into(key, %{}), count: value |> Enum.map(& &1.count) |> Enum.sum()}
-        end)
-      |> Enum.map(fn (metric) ->
-          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name
-            |> normalize_template_name())
+          %{dimensions: Enum.into(key, %{}),
+            count: value |> Enum.map(& &1.count) |> Enum.sum(),
+            template_name: List.first(value).type |> normalize_template_name()}
         end)
   end
 
@@ -139,17 +137,18 @@ defmodule TdBg.Metrics.BusinessConcepts do
       |> Enum.reduce([], fn(concept, acc) ->
           [Enum.reduce(get_not_required_fields(concept), [], fn(field, acc) ->
             case Map.get(concept.content, field) do
-              nil -> [%{dimensions: get_map_dimensions(concept, field), count: 0} |acc]
-              "" -> [%{dimensions: get_map_dimensions(concept, field), count: 0} |acc]
-              _ -> [%{dimensions: get_map_dimensions(concept, field), count: 1} |acc]
+              nil -> [%{dimensions: get_map_dimensions(concept, field),
+                        count: 0,
+                        template_name: concept.type |> normalize_template_name()} |acc]
+              "" -> [%{dimensions: get_map_dimensions(concept, field),
+                       count: 0,
+                       template_name: concept.type |> normalize_template_name()} |acc]
+              _ -> [%{dimensions: get_map_dimensions(concept, field),
+                      count: 1,
+                      template_name: concept.type |> normalize_template_name()} |acc]
             end
           end) |acc]
         end) |> List.flatten
-
-      |> Enum.map(fn (metric) ->
-          Map.put(metric, :template_name, get_template(metric.dimensions.domain_parents).name
-          |> normalize_template_name())
-        end)
   end
 
   defp get_map_dimensions(concept, field) do
@@ -167,18 +166,6 @@ defmodule TdBg.Metrics.BusinessConcepts do
   defp get_values(concept, fixed_dimensions) do
     Map.values(Map.take(concept, fixed_dimensions)) ++
     Map.values(Map.take(concept.content, get_concept_template_dimensions(concept.type)))
-  end
-
-  defp get_template(domain_parents) do
-    templates = case Templates.get_domain_templates(Taxonomies.get_domain_by_name(List.first(domain_parents))) do
-        [] ->
-          case Templates.get_default_template do
-            nil -> []
-            domain_template -> [domain_template]
-          end
-        domain_templates -> domain_templates
-    end
-    templates |> List.last()
   end
 
   defp get_concept_field_and_group(concept, field) do
