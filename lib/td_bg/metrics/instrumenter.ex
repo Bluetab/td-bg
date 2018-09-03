@@ -12,12 +12,12 @@ defmodule TdBg.Metrics.Instrumenter do
       Gauge.declare([
         name: String.to_atom("bg_concepts_count_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),
         help: "Business Concepts Versions Counter",
-        labels: Enum.sort([:status, :domain0, :domain1, :has_quality, :has_link] ++ template.dimensions)
+        labels: Enum.sort([:status, :parent_domains, :has_quality, :has_link] ++ template.dimensions)
       ])
       Gauge.declare([
         name: String.to_atom("bg_concept_completness_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),
         help: "Business Concepts Versions Completness",
-        labels: Enum.sort([:id, :field, :group, :status, :domain0, :domain1] ++ template.dimensions)
+        labels: Enum.sort([:id, :field, :group, :status, :parent_domains] ++ template.dimensions)
       ])
     end)
   end
@@ -34,13 +34,10 @@ defmodule TdBg.Metrics.Instrumenter do
 
   defp format_domain_parents_field(dimensions) do
     dimensions
-    |> Map.update!(:domain_parents, fn(current) ->
-      case length(current) do
-        1 -> current ++ [""]
-        _ -> current
-      end
-    end)
-    |> Map.values() |> List.flatten |> Enum.map(&to_string(&1)) |> Enum.map(&String.to_atom(&1))
+    |> Map.values()
+    |> List.flatten
+    |> Enum.map(&to_string(&1))
+    |> Enum.map(&String.to_atom(&1))
   end
 
 end

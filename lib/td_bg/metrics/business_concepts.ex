@@ -4,14 +4,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
   use GenServer
   require Logger
   alias TdBg.Metrics.Instrumenter
-  alias TdBg.Taxonomies
   alias TdBg.Templates
   alias TdBg.Utils.CollectionUtils
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
-  @fixed_concepts_count_dimensions [:status, :domain_parents, :has_quality, :has_link]
-  @fixed_completness_dimensions [:id, :group, :field, :status, :domain_parents]
+  @fixed_concepts_count_dimensions [:status, :parent_domains, :has_quality, :has_link]
+  @fixed_completness_dimensions [:id, :group, :field, :status, :parent_domains]
 
   @metrics_busines_concepts_on_startup Application.get_env(
                                        :td_bg,
@@ -57,7 +56,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
     @search_service.search("business_concept", search)
       |> Map.get(:results)
       |> atomize_concept_map()
-      |> Enum.map(&Map.update!(&1, :domain_parents, fn(current) ->
+      |> Enum.map(&Map.update!(&1, :parent_domains, fn(current) ->
           current
           |> Enum.map(fn(domain) -> domain.name end)
           |> Enum.join(";")
@@ -116,16 +115,11 @@ defmodule TdBg.Metrics.BusinessConcepts do
     @search_service.search("business_concept", search)
       |> Map.get(:results)
       |> atomize_concept_map()
-
-      |> Enum.map(&Map.update!(&1, :domain_parents, fn(current) ->
-          current = Enum.map(current, fn(domain) -> domain.name end)
-          if length(current) > 2 do
-            [domain0, domain1|_] = current
-            [domain0, domain1]
-          else
-            current
-          end
-        end))
+      |> Enum.map(&Map.update!(&1, :parent_domains, fn(current) ->
+          current
+          |> Enum.map(fn(domain) -> domain.name end)
+          |> Enum.join(";")
+          end))
       |> Enum.filter(fn(concept) -> !is_nil(Templates.get_template_by_name(concept.type)) end)
       |> Enum.map(&include_empty_metrics_dimensions(&1))
 
@@ -176,10 +170,10 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
   defp get_not_required_fields(concept) do
     Enum.reduce(Map.get(Templates.get_template_by_name(Map.get(concept, :type)), :content), [], fn(field, acc) ->
-      if CollectionUtils.atomize_keys(field).required == false do
-        acc ++ [String.to_atom(CollectionUtils.atomize_keys(field).name)]
-      else
+      if Map.get(CollectionUtils.atomize_keys(field), :required, false) do
         acc ++ []
+      else
+        acc ++ [String.to_atom(CollectionUtils.atomize_keys(field).name)]
       end
     end)
   end
@@ -188,7 +182,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
     business_concept_version
     |> Enum.map(&Map.get(&1, "_source"))
     |> Enum.map(&Map.put(&1, "content", CollectionUtils.atomize_keys(Map.get(&1, "content"))))
-    |> Enum.map(&Map.put(&1, "domain_parents", Enum.map(Map.get(&1, "domain_parents"), fn(domain) -> CollectionUtils.atomize_keys(domain) end)))
+    |> Enum.map(&Map.put(&1, "parent_domains", Enum.map(Map.get(&1, "domain_parents"), fn(domain) -> CollectionUtils.atomize_keys(domain) end)))
     |> Enum.map(&CollectionUtils.atomize_keys(&1))
   end
 
