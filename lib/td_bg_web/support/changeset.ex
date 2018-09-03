@@ -5,6 +5,7 @@ defmodule TdBgWeb.ChangesetSupport do
   @cast "cast"
   @unique "unique"
   @code "undefined"
+  @error "error"
 
   def translate_errors(changeset, prefix \\ nil)
   def translate_errors(%Changeset{} = changeset, nil) do
@@ -18,7 +19,7 @@ defmodule TdBgWeb.ChangesetSupport do
     prefix_items = get_actual_prefix(changeset, prefix)
     Enum.reduce(changeset.errors, [], fn(error, acc) ->
       name_items = prefix_items ++
-      ["error", Atom.to_string(elem(error, 0))] ++
+      [Atom.to_string(elem(error, 0))] ++
       translate_error_desc(elem(error, 1))
       name = Enum.join(name_items, ".")
       acc ++ [%{code: @code, name: name}]
@@ -34,9 +35,9 @@ defmodule TdBgWeb.ChangesetSupport do
         |> List.last
         |> String.replace(~r/.([A-Z])/, ".\\1")
         |> String.downcase
-        [entity]
+        [entity, @error]
 
-      _ -> []
+      _ -> [@error]
     end
 
   end

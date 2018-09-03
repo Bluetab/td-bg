@@ -32,12 +32,12 @@ defmodule TdBgWeb.BusinessConceptSupport do
         conn
         |> put_status(:unprocessable_entity)
         |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset,
-                  prefix: "concept")
+                  prefix: "concept.error")
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset,
-                  prefix: "concept.content")
+                  prefix: "concept.content.error")
       error ->
         Logger.error("Business concept... #{inspect(error)}")
         conn

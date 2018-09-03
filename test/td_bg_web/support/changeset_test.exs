@@ -42,12 +42,12 @@ defmodule TdBg.ChangesetSupportTest do
       errors = {data, types}
       |> Changeset.cast(%{}, Map.keys(types))
       |> validate_required([:first_name])
-      |> ChangesetSupport.translate_errors("blah.blah.blah")
+      |> ChangesetSupport.translate_errors("blah.blah.error")
 
       expected_errors = [
         %{
           code: "undefined",
-          name: "blah.blah.blah.error.first_name.required"
+          name: "blah.blah.error.first_name.required"
         }
       ]
 
