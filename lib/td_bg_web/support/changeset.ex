@@ -2,12 +2,12 @@ defmodule TdBgWeb.ChangesetSupport do
   @moduledoc false
   alias Ecto.Changeset
 
-  @cast "cast"
   @unique "unique"
   @code "undefined"
   @error "error"
   @msgids ["can't be blank",
            "is invalid",
+           "has already been taken",
            "must be accepted",
            "has invalid format",
            "has an invalid entry",
@@ -65,15 +65,11 @@ defmodule TdBgWeb.ChangesetSupport do
   defp get_actual_prefix(_, prefix), do: prefix
 
   defp translate_msgid({"has already been taken", []}), do: [@unique]
-  defp translate_msgid({msgid , desc}) when msgid in @msgids do
-    case Keyword.get(desc, :validation) do
-      :cast ->
-        cast_type = desc
-        |> Keyword.get(:type)
-        |> Atom.to_string
-        [@cast, cast_type]
-      validation -> [Atom.to_string(validation)]
-    end
+  defp translate_msgid({"is invalid", [type: type, validation: validation]}) do
+    [Atom.to_string(validation), Atom.to_string(type)]
+  end
+  defp translate_msgid({msgid , [validation: validation]}) when msgid in @msgids do
+    [Atom.to_string(validation)]
   end
   defp translate_msgid({msgid, _}), do: String.split(msgid, ".")
 
