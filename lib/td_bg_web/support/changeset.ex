@@ -6,6 +6,27 @@ defmodule TdBgWeb.ChangesetSupport do
   @unique "unique"
   @code "undefined"
   @error "error"
+  @msgids ["can't be blank",
+           "is invalid",
+           "must be accepted",
+           "has invalid format",
+           "has an invalid entry",
+           "is reserved",
+           "does not match confirmation",
+           "is still associated with this entry",
+           "are still associated with this entry",
+           "should be %{count} character(s)",
+           "should have %{count} item(s)",
+           "should be at least %{count} character(s)",
+           "should have at least %{count} item(s)",
+           "should be at most %{count} character(s)",
+           "should have at most %{count} item(s)",
+           "should have at most %{count} item(s)",
+           "must be less than %{number}",
+           "must be greater than %{number}",
+           "must be less than or equal to %{number}",
+           "must be greater than or equal to %{number}",
+           "must be equal to %{number}"]
 
   def translate_errors(changeset, prefix \\ nil)
   def translate_errors(%Changeset{} = changeset, nil) do
@@ -20,7 +41,7 @@ defmodule TdBgWeb.ChangesetSupport do
     Enum.reduce(changeset.errors, [], fn(error, acc) ->
       name_items = prefix_items ++
       [Atom.to_string(elem(error, 0))] ++
-      translate_error_desc(elem(error, 1))
+      translate_msgid(elem(error, 1))
       name = Enum.join(name_items, ".")
       acc ++ [%{code: @code, name: name}]
     end)
@@ -43,16 +64,17 @@ defmodule TdBgWeb.ChangesetSupport do
   end
   defp get_actual_prefix(_, prefix), do: prefix
 
-  defp translate_error_desc({"has already been taken", []}), do: [@unique]
-  defp translate_error_desc({_ , error}) do
-    case Keyword.get(error, :validation) do
+  defp translate_msgid({"has already been taken", []}), do: [@unique]
+  defp translate_msgid({msgid , desc}) when msgid in @msgids do
+    case Keyword.get(desc, :validation) do
       :cast ->
-        cast_type = error
+        cast_type = desc
         |> Keyword.get(:type)
         |> Atom.to_string
         [@cast, cast_type]
       validation -> [Atom.to_string(validation)]
     end
   end
+  defp translate_msgid({msgid, _}), do: String.split(msgid, ".")
 
 end
