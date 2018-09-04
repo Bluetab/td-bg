@@ -17,6 +17,11 @@ defmodule TdBg.Metrics.BusinessConcepts do
                                        :metrics_busines_concepts_on_startup
                                      )
 
+  @metrics_publication_frequency Application.get_env(
+                                      :td_bg,
+                                      :metrics_publication_frequency
+                                    )
+
   def start_link do
     GenServer.start_link(__MODULE__, %{})
   end
@@ -43,7 +48,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp schedule_work do
-    Process.send_after(self(), :work, 1000) # 5 min
+    Process.send_after(self(), :work, @metrics_publication_frequency)
   end
 
   def get_concepts_count do
