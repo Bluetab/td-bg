@@ -51,12 +51,27 @@ defmodule TdBg.Metrics.BusinessConcepts do
     Process.send_after(self(), :work, @metrics_publication_frequency)
   end
 
+  def get_template_map do
+    Templates.list_templates
+      |> Enum.map(&({&1.name, get_template_dimensions(&1)}))
+      |> Map.new
+  end
+
+  defp get_template_dimensions(template) do
+    template
+      |> Map.get(:content)
+      |> Enum.map(&get_name_dimension(&1))
+      |> Enum.filter(&!is_nil(&1))
+  end
+
   def get_concepts_count do
 
     search = %{
       query: %{bool: %{must: %{match_all: %{}}}},
       size: 10_000
     }
+
+    templates_by_name = get_template_map()
 
     @search_service.search("business_concept", search)
       |> Map.get(:results)
@@ -80,15 +95,14 @@ defmodule TdBg.Metrics.BusinessConcepts do
           end
         end))
       |> Enum.map(&Map.put(&1, :has_link, Map.get(&1, :link_count)))
-      |> Enum.filter(fn(concept) -> !is_nil(Templates.get_template_by_name(concept.type)) end)
-      |> Enum.map(&include_empty_metrics_dimensions(&1))
-
+      |> Enum.map(&({&1, Map.get(templates_by_name, &1.type)}))
+      |> Enum.filter(fn({_concept, template}) -> !is_nil(template) end)
+      |> Enum.map(fn({concept, template}) -> include_template_dimensions(concept, template) end)
       |> Enum.reduce([], fn(elem, acc) -> [Map.put(elem, :count, 1) |acc] end)
       |> Enum.group_by(& Enum.zip(
-          get_keys(&1, @fixed_concepts_count_dimensions),
-          get_values(&1, @fixed_concepts_count_dimensions))
+          get_keys(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.type)),
+          get_values(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.type)))
       )
-
       |> Enum.map(fn {key, value} ->
           %{dimensions: Enum.into(key, %{}),
             count: value |> Enum.map(& &1.count) |> Enum.sum(),
@@ -103,9 +117,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp include_empty_metrics_dimensions(concept) do
+    include_template_dimensions(concept, get_concept_template_dimensions(concept.type))
+  end
+
+  defp include_template_dimensions(concept, template_dimensions) do
     Map.put(
       concept,
-      :content, Map.merge(Enum.into(get_concept_template_dimensions(concept.type), %{}, fn(dim) -> {dim, ""} end),
+      :content, Map.merge(Enum.into(template_dimensions, %{}, fn(dim) -> {dim, ""} end),
       concept.content)
     )
   end
@@ -153,13 +171,23 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   defp get_keys(concept, fixed_dimensions) do
+    template_dimensions = get_concept_template_dimensions(concept.type)
+    get_keys(concept, fixed_dimensions, template_dimensions)
+  end
+
+  defp get_keys(concept, fixed_dimensions, template_dimensions) do
     Map.keys(Map.take(concept, fixed_dimensions)) ++
-    Map.keys(Map.take(concept.content, get_concept_template_dimensions(concept.type)))
+    Map.keys(Map.take(concept.content, template_dimensions))
   end
 
   defp get_values(concept, fixed_dimensions) do
+    template_dimensions = get_concept_template_dimensions(concept.type)
+    get_values(concept, fixed_dimensions, template_dimensions)
+  end
+
+  defp get_values(concept, fixed_dimensions, template_dimensions) do
     Map.values(Map.take(concept, fixed_dimensions)) ++
-    Map.values(Map.take(concept.content, get_concept_template_dimensions(concept.type)))
+    Map.values(Map.take(concept.content, template_dimensions))
   end
 
   defp get_concept_field_and_group(concept, field) do
