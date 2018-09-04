@@ -143,10 +143,6 @@ defmodule TdBg.Metrics.BusinessConcepts do
     |> String.replace(~r/\s+/, "_")
   end
 
-  defp include_empty_metrics_dimensions(concept) do
-    include_template_dimensions(concept, get_concept_template_dimensions(concept.type))
-  end
-
   defp include_template_dimensions(concept, template_dimensions) do
     Map.put(
       concept,
@@ -183,7 +179,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
     |> Enum.reduce([], fn concept, acc ->
       [
         Enum.reduce(
-          get_not_required_fields(concept, Map.get(content_by_name, concept.type)),
+          get_not_required_fields(Map.get(content_by_name, concept.type)),
           [],
           fn field, acc ->
             case Map.get(concept.content, field) do
@@ -254,19 +250,9 @@ defmodule TdBg.Metrics.BusinessConcepts do
     )
   end
 
-  defp get_keys(concept, fixed_dimensions) do
-    template_dimensions = get_concept_template_dimensions(concept.type)
-    get_keys(concept, fixed_dimensions, template_dimensions)
-  end
-
   defp get_keys(concept, fixed_dimensions, template_dimensions) do
     Map.keys(Map.take(concept, fixed_dimensions)) ++
       Map.keys(Map.take(concept.content, template_dimensions))
-  end
-
-  defp get_values(concept, fixed_dimensions) do
-    template_dimensions = get_concept_template_dimensions(concept.type)
-    get_values(concept, fixed_dimensions, template_dimensions)
   end
 
   defp get_values(concept, fixed_dimensions, template_dimensions) do
@@ -290,7 +276,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
     end
   end
 
-  defp get_not_required_fields(concept, content) do
+  defp get_not_required_fields(content) do
     Enum.reduce(content, [], fn field, acc ->
       if Map.get(CollectionUtils.atomize_keys(field), :required, false) do
         acc ++ []
