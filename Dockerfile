@@ -1,5 +1,5 @@
 # ---- Copy Files/Build ----
-FROM elixir:1.5.2-alpine AS build
+FROM elixir:1.6.6-alpine AS build
 
 MAINTAINER True-Dat Dev Team
 

@@ -14,41 +14,41 @@ config :td_bg, TdBgWeb.Endpoint,
 # Configure your database
 config :td_bg, TdBg.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "td_bg_prod",
-  hostname: "localhost",
+  username: "${DB_USER}",
+  password: "${DB_PASSWORD}",
+  database: "${DB_NAME}",
+  hostname: "${DB_HOST}",
   pool_size: 10
 
 config :td_bg, TdBg.Auth.Guardian,
   allowed_algos: ["HS512"], # optional
   issuer: "tdauth",
   ttl: { 1, :hours },
-  secret_key: "SuperSecretTruedat"
+  secret_key: "${GUARDIAN_SECRET_KEY}"
 
 config :td_bg, :api_services_login,
-  api_username: "api-admin",
-  api_password: "xxxxx"
+  api_username: "${API_USER}",
+  api_password: "${API_PASSWORD}"
 
 config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService,
-  auth_host: "localhost",
-  auth_port: "4001",
+  auth_host: "${API_AUTH_HOST}",
+  auth_port: "${API_AUTH_PORT}",
   auth_domain: ""
 
 config :td_bg, :dd_service, api_service: TdBgWeb.ApiServices.HttpTdDdService,
-  dd_host: "localhost",
-  dd_port: "4005",
+  dd_host: "${API_DD_HOST}",
+  dd_port: "${API_DD_PORT}",
   dd_domain: ""
 
 config :td_bg, :elasticsearch,
   search_service: TdBg.Search,
-  es_host: "localhost",
-  es_port: 9200,
+  es_host: "${ES_HOST}",
+  es_port: "${ES_PORT}",
   type_name: "doc"
 
 config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.HttpTdAuditService,
-  audit_host: "localhost",
-  audit_port: "4007",
+  audit_host: "${API_AUDIT_HOST}",
+  audit_port: "${API_AUDIT_PORT}",
   audit_domain: ""
 
-config :td_perms, redis_uri: "redis://localhost"
+config :td_perms, redis_uri: "${REDIS_URI}"
