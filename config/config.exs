@@ -65,14 +65,6 @@ config :td_bg, metrics_publication_frequency: 60_000
 
 config :td_bg, permission_resolver: TdPerms.Permissions
 
-config :grafana,
-  api_host: "https://grafana.truedat.io",
-  # api_key: "Bearer eyJrIjoieTRlVWZpZmhZQmRidE56YUV5eDdBaDRoMTRyclcyYXYiLCJuIjoiYWRzZnNhIiwiaWQiOjF9",
-  dashboard_uid: "x0M49Jpmk",
-  dashboard_title: "completitud",
-  panel_id: "2",
-  varname: "var-bcv_id"
-
 config :td_perms, permissions: [
   :is_admin,
   :create_acl_entry,
