@@ -23,6 +23,8 @@ test:
 
 deploy:
   stage: deploy
+  environment:
+    name: prod
   script:
     - git branch -f master HEAD
     - export VERSION=$(grep -e '\bversion:' mix.exs | cut -d\" -f2)
