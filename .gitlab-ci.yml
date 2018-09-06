@@ -25,6 +25,8 @@ deploy:
   stage: deploy
   environment:
     name: prod
+  only:
+    - master
   script:
     - git branch -f master HEAD
     - export VERSION=$(grep -e '\bversion:' mix.exs | cut -d\" -f2)
@@ -39,6 +41,4 @@ deploy:
     - docker push $ECR/bluetab-truedat/$PROJECT_NAME:latest
     - docker push $ECR/bluetab-truedat/$PROJECT_NAME:${VERSION}
     - docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e ECS_CLUSTER -e ECS_SERVICE mesosphere/aws-cli ecs update-service --force-new-deployment --cluster $ECS_CLUSTER --service $ECS_SERVICE
-    - docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e ECS_CLUSTER -e ECS_SERVICE mesosphere/aws-cli ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE
-  only:
-    - master
+    # - docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e ECS_CLUSTER -e ECS_SERVICE mesosphere/aws-cli ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE
