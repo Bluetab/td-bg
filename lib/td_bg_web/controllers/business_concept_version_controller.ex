@@ -314,12 +314,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     with true <- can?(user, view_business_concept(business_concept_version)) do
+      template = TemplateSupport.get_preprocessed_template(business_concept_version, user)
+      add_completeness_to_bc_version(business_concept_version, template)
       render(
         conn,
         "show.json",
         business_concept_version: business_concept_version,
         hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-        template: TemplateSupport.get_preprocessed_template(business_concept_version, user)
+        template: template
       )
     else
       false ->
@@ -555,6 +557,23 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  defp add_completeness_to_bc_version(business_concept_version, template) do
+    business_concept_version
+      |> Map.get(:content)
+      |> calculate_completeness(Map.fetch!(template, :content) |> Enum.filter(&(Map.fetch!(&1, "required"))))
+
+    business_concept_version
+  end
+
+  defp calculate_completeness(_, []), do: 100.00
+
+  defp calculate_completeness(%{}, _), do: 0.00
+
+  defp calculate_completeness(business_concept_content, _template_optional_fields) do
+    #TODO
+    business_concept_content
   end
 
   defp send_for_approval(conn, user, business_concept_version) do
