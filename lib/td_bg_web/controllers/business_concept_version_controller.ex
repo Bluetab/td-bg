@@ -137,6 +137,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       {:error, error} ->
         Logger.error("While uploading business concepts... #{inspect(error)}")
+
         conn
         |> put_status(:unprocessable_entity)
         |> send_resp(422, Poison.encode!(error))
@@ -284,12 +285,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     case Search.list_business_concept_versions(business_concept_version.business_concept_id, user) do
       %{results: business_concept_versions} ->
-          render(
-            conn,
-            "versions.json",
-            business_concept_versions: business_concept_versions,
-            hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
-          )
+        render(
+          conn,
+          "versions.json",
+          business_concept_versions: business_concept_versions,
+          hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
+        )
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -315,7 +317,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     with true <- can?(user, view_business_concept(business_concept_version)) do
       template = TemplateSupport.get_preprocessed_template(business_concept_version, user)
-      add_completeness_to_bc_version(business_concept_version, template)
+
+      business_concept_version =
+        business_concept_version
+        |> add_completeness_to_bc_version(template)
+
       render(
         conn,
         "show.json",
@@ -560,21 +566,42 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp add_completeness_to_bc_version(business_concept_version, template) do
-    business_concept_version
+    bc_completeness =
+      business_concept_version
       |> Map.get(:content)
-      |> calculate_completeness(Map.fetch!(template, :content) |> Enum.filter(&(Map.fetch!(&1, "required"))))
+      |> calculate_completeness(
+        template
+        |> Map.fetch!(:content)
+        |> Enum.filter(&(!Map.fetch!(&1, "required")))
+      )
 
-    business_concept_version
+    Map.put(business_concept_version, :completeness, bc_completeness)
   end
 
   defp calculate_completeness(_, []), do: 100.00
 
-  defp calculate_completeness(%{}, _), do: 0.00
+  defp calculate_completeness(%{} = business_concept_content, _)
+       when business_concept_content == %{},
+       do: 0.00
 
-  defp calculate_completeness(business_concept_content, _template_optional_fields) do
-    #TODO
-    business_concept_content
+  defp calculate_completeness(business_concept_content, template_optional_fields) do
+    valid_keys_length =
+      business_concept_content
+      |> Map.keys()
+      |> Enum.filter(&verify_value_type(Map.fetch!(business_concept_content, &1)))
+      |> Enum.filter(
+        &Enum.any?(template_optional_fields, fn x -> Map.fetch!(x, "name") == &1 end)
+      )
+      |> length()
+
+    Float.round(valid_keys_length / length(template_optional_fields) * 100, 2)
   end
+
+  defp verify_value_type([]), do: false
+  defp verify_value_type(%{} = value) when value == %{}, do: false
+  defp verify_value_type(value) when is_binary(value), do: String.length(String.trim(value)) !== 0
+  # Otherwise, we will assume that the type is correct for now
+  defp verify_value_type(_), do: true
 
   defp send_for_approval(conn, user, business_concept_version) do
     update_status(
