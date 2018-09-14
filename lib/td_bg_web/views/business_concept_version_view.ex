@@ -105,6 +105,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       business_concept_id: business_concept_version.business_concept.id,
       type: business_concept_version.business_concept.type,
       content: business_concept_version.content,
+      completeness: Map.get(business_concept_version, :completeness),
       related_to: business_concept_version.related_to,
       name: business_concept_version.name,
       description: business_concept_version.description,
