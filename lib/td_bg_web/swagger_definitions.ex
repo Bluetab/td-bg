@@ -318,7 +318,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             last_change_by(:integer, "Business Concept Version last change by", required: true)
             last_change_at(:string, "Business Concept Version last change at", required: true)
             domain(Schema.ref(:DomainRef))
-            parent_id( [:integer, :null], "Parent Business Concept ID", required: true)
+            parent_id([:integer, :null], "Parent Business Concept ID", required: true)
             parent(:object, "Parent Business Concept", required: false)
             children(:array, "Children Business Concepts", required: false)
             status(:string, "Business Concept Version status", required: true)
