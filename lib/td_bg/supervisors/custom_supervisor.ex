@@ -1,4 +1,6 @@
 defmodule TdBg.CustomSupervisor do
+  @moduledoc false
+
   use Supervisor
 
   def start_link(opts \\ []) do
