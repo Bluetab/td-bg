@@ -40,6 +40,7 @@ defmodule TdBg.Factory do
   def business_concept_factory do
     %BusinessConcept {
       domain: build(:domain),
+      parent_id: nil,
       type: "some type",
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),

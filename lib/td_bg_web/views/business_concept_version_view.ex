@@ -3,6 +3,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBg.Hypermedia, :view
 
   alias TdBgWeb.BusinessConceptVersionView
+  alias TdPerms.BusinessConceptCache
   alias TdPerms.UserCache
 
   def render("index.json", %{
@@ -103,6 +104,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     %{
       id: business_concept_version.id,
       business_concept_id: business_concept_version.business_concept.id,
+      parent_id: business_concept_version.business_concept.parent_id,
       type: business_concept_version.business_concept.type,
       content: business_concept_version.content,
       completeness: Map.get(business_concept_version, :completeness),
@@ -127,6 +129,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     )
     |> add_aliases(business_concept_version.business_concept)
     |> add_template(assigns)
+    |> add_parent(business_concept_version.business_concept)
+    |> add_children(business_concept_version.business_concept)
   end
 
   def render("versions.json", %{
@@ -187,6 +191,41 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       template ->
         template_view = Map.take(template, [:content])
         Map.put(concept, :template, template_view)
+    end
+  end
+
+  def add_parent(concept_version_map,  concept) do
+    case Ecto.assoc_loaded?(concept.parent) do
+      true ->
+        parent_map = case concept.parent do
+          nil -> %{}
+          parent ->
+            %{
+              id: BusinessConceptCache.get_business_concept_version_id(parent.id),
+              name: BusinessConceptCache.get_name(parent.id)
+            }
+        end
+        Map.put(concept_version_map, :parent, parent_map)
+      false ->
+        concept_version_map
+    end
+  end
+
+  def add_children(concept_version_map,  concept) do
+    case Ecto.assoc_loaded?(concept.children) do
+      true ->
+        children_map = concept.children
+        |> Enum.reduce([], fn(child, acc) ->
+            child_map =
+            %{
+              id: BusinessConceptCache.get_business_concept_version_id(child.id),
+              name: BusinessConceptCache.get_name(child.id)
+            }
+            [child_map|acc]
+           end)
+        Map.put(concept_version_map, :children, children_map)
+      false ->
+        concept_version_map
     end
   end
 

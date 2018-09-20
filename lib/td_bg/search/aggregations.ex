@@ -8,7 +8,9 @@ defmodule TdBg.Search.Aggregations do
   def aggregation_terms do
     static_keywords = [
       {"domain", %{terms: %{field: "domain.name.raw", size: 50}}},
+      {"domain_id", %{terms: %{field: "domain.id"}}},
       {"status", %{terms: %{field: "status"}}},
+      {"current", %{terms: %{field: "current"}}},
       {"type", %{terms: %{field: "type"}}},
       {"q_rule_count", %{terms: %{script: "doc['q_rule_count'].value > 0 ? 'q_rule_terms' : 'not_q_rule_terms'"}}},
       {"link_count", %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}}
