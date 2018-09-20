@@ -22,8 +22,8 @@ defmodule TdBg.Metrics.BusinessConcepts do
                                    :metrics_publication_frequency
                                  )
 
-  def start_link do
-    GenServer.start_link(__MODULE__, %{})
+  def start_link(opts \\ %{}) do
+    GenServer.start_link(__MODULE__, opts)
   end
 
   def init(state) do

@@ -9,6 +9,11 @@ defmodule TdBg.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    metrics_worker = %{
+      id: TdBg.Metrics.BusinessConcepts,
+      start: {TdBg.Metrics.BusinessConcepts, :start_link, []}
+    }
+
     # Define workers and child supervisors to be supervised
     children = [
       # Start the Ecto repository
@@ -20,7 +25,13 @@ defmodule TdBg.Application do
       # worker(TdBg.Worker, [arg1, arg2, arg3]),
       worker(TdBg.DomainLoader, [TdBg.DomainLoader]),
       worker(TdBg.BusinessConceptLoader, [TdBg.BusinessConceptLoader]),
-      worker(TdBg.Metrics.BusinessConcepts, [])
+      %{
+        id: TdBg.CustomSupervisor,
+        start:
+          {TdBg.CustomSupervisor, :start_link,
+           [%{children: [metrics_worker], strategy: :one_for_one}]},
+        type: :supervisor
+      }
     ]
 
     PrometheusExporter.setup()
