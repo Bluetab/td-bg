@@ -9,6 +9,7 @@ defmodule TdBg.Search.Aggregations do
     static_keywords = [
       {"domain", %{terms: %{field: "domain.name.raw", size: 50}}},
       {"domain_id", %{terms: %{field: "domain.id"}}},
+      {"business_concept_id", %{terms: %{field: "business_concept_id"}}},
       {"status", %{terms: %{field: "status"}}},
       {"current", %{terms: %{field: "current"}}},
       {"type", %{terms: %{field: "type"}}},
