@@ -584,12 +584,14 @@ defmodule TdBgWeb.SwaggerDefinitions do
           description("A Template")
 
           properties do
+            label(:string, "Label", required: true)
             name(:string, "Name", required: true)
             content(:array, "Content", required: true)
             is_default(:boolean, "Is Default", required: true)
           end
 
           example(%{
+            label: "Template 1",
             name: "Template1",
             content: [
               %{name: "name1", max_size: 100, type: "type1", required: true},
@@ -604,6 +606,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             template(
               Schema.new do
                 properties do
+                  label(:string, "Label", required: true)
                   name(:string, "Name", required: true)
                   content(:array, "Content", required: true)
                   is_default(:boolean, "Is Default", required: true)

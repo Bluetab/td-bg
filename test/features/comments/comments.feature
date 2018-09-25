@@ -3,10 +3,10 @@ Feature: List of comments of a Business Concept
 
 Scenario: Create comment on a Business Concept
     Given an existing Domain called "Domain 1"
-    And an existing Business Concept type called "Business Term" with empty definition
+    And an existing Business Concept type called "Business_Term" with empty definition
     And an existing Business Concept in the Domain "Domain 1" with following data:
       | Field             | Value                                                                   |
-      | Type              | Business Term                                                           |
+      | Type              | Business_Term                                                           |
       | Name              | My Business Term                                                        |
       | Description       | This is the first description of my business term which is very simple  |
     When "app-admin" tries to create a new comment "This is my first comment" on the business concept "My Business Term"

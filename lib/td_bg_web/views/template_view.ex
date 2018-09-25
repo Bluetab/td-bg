@@ -12,6 +12,7 @@ defmodule TdBgWeb.TemplateView do
 
   def render("template.json", %{template: template}) do
     %{id: template.id,
+      label: template.label,
       name: template.name,
       content: template.content,
       is_default: template.is_default

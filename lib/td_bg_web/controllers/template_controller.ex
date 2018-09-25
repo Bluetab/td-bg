@@ -1,10 +1,12 @@
 defmodule TdBgWeb.TemplateController do
+  require Logger
   use TdBgWeb, :controller
   use PhoenixSwagger
 
   alias TdBg.Taxonomies
   alias TdBg.Templates
   alias TdBg.Templates.Template
+  alias TdBgWeb.ChangesetView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.TemplateSupport
@@ -40,20 +42,18 @@ defmodule TdBgWeb.TemplateController do
   end
 
   def create(conn, %{"template" => template}) do
-    with false <- is_nil(template["name"]),
-         true <- is_nil(Templates.get_template_by_name(template["name"])),
-         {:ok, %Template{} = template} <- Templates.create_template(template) do
+    with {:ok, %Template{} = template} <- Templates.create_template(template) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", template_path(conn, :show, template))
       |> render("show.json", template: template)
     else
-      false ->
+      {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{errors: %{name: ["unique"]}})
-
-      _error ->
+        |> render(ChangesetView, "error.json", changeset: changeset)
+      error ->
+        Logger.error("While creating template... #{inspect(error)}")
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
@@ -148,8 +148,23 @@ defmodule TdBgWeb.TemplateController do
   def update(conn, %{"id" => id, "template" => template_params}) do
     template = Templates.get_template!(id)
 
-    with {:ok, %Template{} = template} <- Templates.update_template(template, template_params) do
+    update_params = template_params
+    |> Map.drop([:name])
+
+    with {:ok, %Template{} = template} <-
+      Templates.update_template(template, update_params) do
+
       render(conn, "show.json", template: template)
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ChangesetView, "error.json", changeset: changeset)
+      error ->
+        Logger.error("While updating template... #{inspect(error)}")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(ErrorView, :"422.json")
     end
   end
 
@@ -172,7 +187,8 @@ defmodule TdBgWeb.TemplateController do
          {:ok, %Template{}} <- Templates.delete_template(template) do
       send_resp(conn, :no_content, "")
     else
-      _error ->
+      error ->
+        Logger.error("While deleting template... #{inspect(error)}")
         conn
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")

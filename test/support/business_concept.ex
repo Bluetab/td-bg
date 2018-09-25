@@ -28,6 +28,7 @@ defmodule TdBgWeb.BusinessConcept do
 
     attrs =
       %{}
+      |> Map.put("label", type)
       |> Map.put("name", type)
       |> Map.put("content", definition)
       |> Map.put("is_default", false)

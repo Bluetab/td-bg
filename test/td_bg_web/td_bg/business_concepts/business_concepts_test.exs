@@ -57,7 +57,7 @@ defmodule TdBg.BusinessConceptsTests do
       domain = insert(:domain)
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -121,7 +121,7 @@ defmodule TdBg.BusinessConceptsTests do
       content = %{"Field1" => "Hello", "Field2" => "World", "Field3" => ["Hellow", "World"]}
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -158,7 +158,7 @@ defmodule TdBg.BusinessConceptsTests do
       content = %{}
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -197,7 +197,7 @@ defmodule TdBg.BusinessConceptsTests do
       content = %{}
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -234,7 +234,7 @@ defmodule TdBg.BusinessConceptsTests do
       content = %{"Field1" => "World"}
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -270,7 +270,7 @@ defmodule TdBg.BusinessConceptsTests do
       content = %{"Field1" => "World"}
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -304,7 +304,7 @@ defmodule TdBg.BusinessConceptsTests do
       ]
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -336,7 +336,7 @@ defmodule TdBg.BusinessConceptsTests do
       ]
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()
@@ -366,7 +366,7 @@ defmodule TdBg.BusinessConceptsTests do
       domain = insert(:domain)
 
       concept_attrs = %{
-        type: "some type",
+        type: "some_type",
         domain_id: domain.id,
         last_change_by: user.id,
         last_change_at: DateTime.utc_now()

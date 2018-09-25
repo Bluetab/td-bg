@@ -85,7 +85,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       creation_attrs = %{
         content: %{},
-        type: "some type",
+        type: "some_type",
         name: "Some name",
         description: to_rich_text("Some description"),
         domain_id: domain.id
@@ -132,7 +132,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       creation_attrs = %{
         content: %{},
-        type: "some type",
+        type: "some_type",
         name: nil,
         description: to_rich_text("Some description"),
         domain_id: domain.id
@@ -385,7 +385,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     attrs =
       %{}
-      |> Map.put("name", "some type")
+      |> Map.put("label", "some type")
+      |> Map.put("name", "some_type")
       |> Map.put("content", [])
       |> Map.put("is_default", false)
 

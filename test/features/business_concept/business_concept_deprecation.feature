@@ -8,18 +8,18 @@ Scenario Outline: Deprecation of existing Business Concept in Published status
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
-  And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
+  And an existing Business Concept type called "Business_Term" with empty definition
+  And an existing Business Concept of type "Business_Term" in the Domain "My Domain" with following data:
     | Field             | Value                                             |
-    | Type              | Business Term                                     |
+    | Type              | Business_Term                                     |
     | Name              | My Business Term                                  |
     | Description       | This is the first description of my business term |
-  And the status of business concept with name "My Business Term" of type "Business Term" is set to "published"
-  When <user> tries to deprecate a business concept "My Business Term" of type "Business Term"
+  And the status of business concept with name "My Business Term" of type "Business_Term" is set to "published"
+  When <user> tries to deprecate a business concept "My Business Term" of type "Business_Term"
   Then the system returns a result with code "<result>"
-  And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
+  And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business_Term" and version "1" with following data:
     | Field                 | Value                                              |
-    | Type                  | Business Term                                      |
+    | Type                  | Business_Term                                      |
     | Name                  | My Business Term                                   |
     | Description           | This is the first description of my business term  |
     | Status                | deprecated                                         |
@@ -41,29 +41,29 @@ Scenario Outline: Deprecate a BC that has a second version published
     | creator   | create  |
     | publisher | publish |
     | admin     | admin   |
-  And an existing Business Concept type called "Business Term" with empty definition
-  And an existing Business Concept of type "Business Term" in the Domain "My Domain" with following data:
+  And an existing Business Concept type called "Business_Term" with empty definition
+  And an existing Business Concept of type "Business_Term" in the Domain "My Domain" with following data:
     | Field             | Value                                             |
-    | Type              | Business Term                                     |
+    | Type              | Business_Term                                     |
     | Name              | My Business Term                                  |
     | Description       | This is the first description of my business term |
-  And the status of business concept with name "My Business Term" of type "Business Term" is set to "published" for version 2
-  When <user> tries to deprecate a business concept "My Business Term" of type "Business Term"
+  And the status of business concept with name "My Business Term" of type "Business_Term" is set to "published" for version 2
+  When <user> tries to deprecate a business concept "My Business Term" of type "Business_Term"
   Then the system returns a result with code "<result>"
-  And user <user> is able to view business concept "My Business Term" of type "Business Term" and version "1" with following data:
+  And user <user> is able to view business concept "My Business Term" of type "Business_Term" and version "1" with following data:
     | Field             | Value                                                              |
     | Name              | My Business Term                                                   |
-    | Type              | Business Term                                                      |
+    | Type              | Business_Term                                                      |
     | Description       | This is the first description of my business term                  |
     | Last Modification | Some timestamp                                                     |
     | Last User         | app-admin                                                          |
     | Current           | false                                                              |
     | Version           | 1                                                                  |
     | Status            | versioned                                                          |
-  And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business Term" and version "2" with following data:
+  And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business_Term" and version "2" with following data:
     | Field                 | Value                                                              |
     | Name                  | My Business Term                                                   |
-    | Type                  | Business Term                                                      |
+    | Type                  | Business_Term                                                      |
     | Description           | This is the first description of my business term                  |
     | Last Modification     | Some timestamp                                                     |
     | Last User             | app-admin                                                          |

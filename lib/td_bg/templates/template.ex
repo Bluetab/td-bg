@@ -7,6 +7,7 @@ defmodule TdBg.Templates.Template do
 
   schema "templates" do
     field :content, {:array, :map}
+    field :label, :string
     field :name, :string
     field :is_default, :boolean
 
@@ -16,8 +17,11 @@ defmodule TdBg.Templates.Template do
   @doc false
   def changeset(%Template{} = template, attrs) do
     template
-    |> cast(attrs, [:name, :content, :is_default])
-    |> validate_required([:name, :content, :is_default])
+    |> cast(attrs, [:label, :name, :content, :is_default])
+    |> validate_required([:label, :name, :content, :is_default])
+    |> validate_format(:name, ~r/^[A-z0-9]*$/)
+    |> unique_constraint(:label)
+    |> unique_constraint(:name)
     |> unique_constraint(:is_default)
   end
 end

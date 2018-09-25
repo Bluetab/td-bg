@@ -6,9 +6,9 @@ defmodule TdBg.TemplatesTest do
   describe "templates" do
     alias TdBg.Templates.Template
 
-    @valid_attrs %{content: [], name: "some name", is_default: false}
-    @update_attrs %{content: [], name: "some updated name", is_default: false}
-    @invalid_attrs %{content: nil, name: nil}
+    @valid_attrs   %{content: [],  label: "some name", name: "some_name", is_default: false}
+    @update_attrs  %{content: [],  label: "some updated name", name: "some_name", is_default: false}
+    @invalid_attrs %{content: nil, label: nil, name: nil}
 
     def template_fixture(attrs \\ %{}) do
       {:ok, template} =
@@ -32,7 +32,8 @@ defmodule TdBg.TemplatesTest do
     test "create_template/1 with valid data creates a template" do
       assert {:ok, %Template{} = template} = Templates.create_template(@valid_attrs)
       assert template.content == []
-      assert template.name == "some name"
+      assert template.label == "some name"
+      assert template.name == "some_name"
     end
 
     test "create_template/1 with invalid data returns error changeset" do
@@ -44,7 +45,8 @@ defmodule TdBg.TemplatesTest do
       assert {:ok, template} = Templates.update_template(template, @update_attrs)
       assert %Template{} = template
       assert template.content == []
-      assert template.name == "some updated name"
+      assert template.label == "some updated name"
+      assert template.name == "some_name"
     end
 
     test "update_template/2 with invalid data returns error changeset" do
@@ -68,23 +70,23 @@ defmodule TdBg.TemplatesTest do
   describe "working with default templates" do
 
     test "get_default_template/1 gets default template" do
-      insert(:template, name: "name_1", is_default: false)
-      template_2 = insert(:template, name: "name_2", is_default: true)
+      insert(:template, label: "label_1", name: "name_1", is_default: false)
+      template_2 = insert(:template, label: "label_2", name: "name_2", is_default: true)
 
       default_template = Templates.get_default_template()
       assert default_template.id == template_2.id
     end
 
     test "get_default_template/1 gets nil template when no one is default" do
-      insert(:template, name: "name_1", is_default: false)
-      insert(:template, name: "name_2", is_default: false)
+      insert(:template, label: "label_1", name: "name_1", is_default: false)
+      insert(:template, label: "label_2", name: "name_2", is_default: false)
 
       assert Templates.get_default_template() == nil
     end
 
     test "update_template/1 avoid taking is_default" do
-      template_1 = insert(:template, name: "name_1", is_default: true)
-      template_2 = insert(:template, name: "name_2", is_default: false)
+      template_1 = insert(:template, label: "label_1", name: "name_1", is_default: true)
+      template_2 = insert(:template, label: "label_2", name: "name_2", is_default: false)
 
       assert {:ok, _} = Templates.update_template(template_1, %{is_default: true})
 
@@ -100,10 +102,10 @@ defmodule TdBg.TemplatesTest do
   describe "domain templates" do
     alias TdBg.Taxonomies
 
-    @domain_attrs_child %{description: "some description", name: "some name child"}
-    @domain_attrs_parent %{description: "some description", name: "some name parent"}
-    @empty_template_attrs %{content: [], name: "some name", is_default: false}
-    @other_empty_template_attrs %{content: [], name: "other name", is_default: false}
+    @domain_attrs_child %{description: "some description", label: "some name child", name: "some_name_child"}
+    @domain_attrs_parent %{description: "some description", label: "some name parent", name: "some_name_parent"}
+    @empty_template_attrs %{content: [], label: "some name", name: "some_name", is_default: false}
+    @other_empty_template_attrs %{content: [], label: "other name", name: "other_name", is_default: false}
 
     test "add_templates_to_domain/2 and get_domain_templates/1 adds empty template to a domain" do
       {:ok, template} = Templates.create_template(@empty_template_attrs)

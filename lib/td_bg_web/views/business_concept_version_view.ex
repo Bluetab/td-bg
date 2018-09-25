@@ -189,7 +189,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         concept
 
       template ->
-        template_view = Map.take(template, [:content])
+        template_view = Map.take(template, [:content, :label])
         Map.put(concept, :template, template_view)
     end
   end

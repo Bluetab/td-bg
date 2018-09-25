@@ -15,7 +15,8 @@ defmodule TdBg.Factory do
 
   def template_factory do
     %TdBg.Templates.Template {
-      name: "some type",
+      label: "some type",
+      name: "some_type",
       content: [],
       is_default: false
     }
@@ -41,7 +42,7 @@ defmodule TdBg.Factory do
     %BusinessConcept {
       domain: build(:domain),
       parent_id: nil,
-      type: "some type",
+      type: "some_type",
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
       aliases: []
