@@ -1,8 +1,5 @@
 defmodule TdBg.Repo.Migrations.AddDefaultTemplate do
   use Ecto.Migration
-  import Ecto.Query
-  alias TdBg.Repo
-  alias TdBg.Templates.Template
 
   def up do
     alter table(:templates) do
@@ -11,15 +8,9 @@ defmodule TdBg.Repo.Migrations.AddDefaultTemplate do
 
     flush()
 
-    Repo.update_all(Template, set: [is_default: false])
+    execute("update templates set is_default = false")
 
-    case Repo.one from(Template, limit: 1) do
-      nil -> nil
-      template ->
-        id = template.id
-        from(t in Template, where: t.id == ^id)
-        |> Repo.update_all(set: [is_default: true])
-    end
+    execute("update templates set is_default = true where id in (select id from templates limit 1)")
 
     alter table(:templates) do
       modify :is_default, :boolean, default: false, null: false
