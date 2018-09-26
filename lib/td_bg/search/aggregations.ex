@@ -12,7 +12,7 @@ defmodule TdBg.Search.Aggregations do
       {"business_concept_id", %{terms: %{field: "business_concept_id"}}},
       {"status", %{terms: %{field: "status"}}},
       {"current", %{terms: %{field: "current"}}},
-      {"type", %{terms: %{field: "type"}}},
+      {"template", %{terms: %{field: "template.label.raw", size: 50}}},
       {"q_rule_count", %{terms: %{script: "doc['q_rule_count'].value > 0 ? 'q_rule_terms' : 'not_q_rule_terms'"}}},
       {"link_count", %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}}
     ]

@@ -90,8 +90,12 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "domain_parents"
     ]
 
-    test_fields = ["business_concept_id", "current", "type", "version"]
-    Map.take(business_concept_version, view_fields ++ test_fields)
+    type = get_in(business_concept_version, ["template", "name"])
+    test_fields = ["business_concept_id", "current", "version"]
+
+    business_concept_version
+    |> Map.take(view_fields ++ test_fields)
+    |> Map.put("type", type)
   end
 
   # TODO: update swagger with embedded
@@ -149,7 +153,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     %{
       id: business_concept_version["id"],
       business_concept_id: business_concept_version["business_concept_id"],
-      type: business_concept_version["type"],
+      type: business_concept_version["template"]["name"],
       content: business_concept_version["content"],
       name: business_concept_version["name"],
       description: business_concept_version["description"],
