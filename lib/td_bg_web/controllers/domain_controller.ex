@@ -57,13 +57,15 @@ defmodule TdBgWeb.DomainController do
     domains = Taxonomies.list_domains()
 
     case params |> get_actions do
-      # Check view_domain permission in this block
+
       [] ->
+        filtered_domains = domains |> Enum.filter(&can?(user, show(&1)))
+
         render(
           conn,
           "index.json",
-          domains: domains,
-          hypermedia: hypermedia("domain", conn, domains)
+          domains: filtered_domains,
+          hypermedia: hypermedia("domain", conn, filtered_domains)
         )
 
       actions ->
