@@ -59,13 +59,13 @@ defmodule TdBgWeb.DomainController do
     case params |> get_actions do
 
       [] ->
-        filtered_domains = domains |> Enum.filter(&can?(user, show(&1)))
+        domains = domains |> Enum.filter(&can?(user, show(&1)))
 
         render(
           conn,
           "index.json",
-          domains: filtered_domains,
-          hypermedia: hypermedia("domain", conn, filtered_domains)
+          domains: domains,
+          hypermedia: hypermedia("domain", conn, domains)
         )
 
       actions ->
