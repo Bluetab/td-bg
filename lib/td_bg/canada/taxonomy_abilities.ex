@@ -11,7 +11,8 @@ defmodule TdBg.Canada.TaxonomyAbilities do
       :delete_domain,
       :create_acl_entry,
       :update_acl_entry,
-      :delete_acl_entry
+      :delete_acl_entry,
+      :view_domain
     ]
 
     Permissions.has_any_permission_on_resource_type?(user, permissions, Domain)
