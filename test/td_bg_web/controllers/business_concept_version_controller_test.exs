@@ -61,6 +61,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "find business_concepts by id and status", %{conn: conn} do
       published = BusinessConcept.status().published
       draft = BusinessConcept.status().draft
+      create_template()
       domain = insert(:domain)
       id = [create_version(domain, "one", draft).business_concept_id]
       id = [create_version(domain, "two", published).business_concept_id | id]
@@ -155,6 +156,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "find business concept by name", %{conn: conn} do
       published = BusinessConcept.status().published
       draft = BusinessConcept.status().draft
+      create_template()
       domain = insert(:domain)
       id = [create_version(domain, "one", draft).business_concept.id]
       id = [create_version(domain, "two", published).business_concept.id | id]
@@ -172,6 +174,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "versions" do
     @tag :admin_authenticated
     test "lists business_concept_versions", %{conn: conn} do
+      create_template()
       business_concept_version = insert(:business_concept_version)
 
       conn =
@@ -363,6 +366,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert Enum.at(response, 0)["name"] == data_field_1["name"]
       assert Enum.at(response, 1)["name"] == data_field_2["name"]
     end
+  end
+
+  defp create_template do
+    insert(:template)
   end
 
   defp create_version(domain, name, status) do

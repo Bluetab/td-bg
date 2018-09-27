@@ -8,6 +8,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Searchable
   alias TdBg.Taxonomies
+  alias TdBg.Templates
   alias TdPerms.TaxonomyCache
   alias TdPerms.UserCache
 
@@ -137,6 +138,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   def search_fields(%BusinessConceptVersion{last_change_by: last_change_by_id} = concept) do
     domain = Taxonomies.get_domain!(concept.business_concept.domain_id)
+    template = Templates.get_template_by_name!(concept.business_concept.type)
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
     domain_ids = TaxonomyCache.get_parent_ids(domain.id)
@@ -169,7 +171,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       },
       domain_parents: domain_parents,
       last_change_by: last_change_by,
-      type: concept.business_concept.type,
+      template: %{
+        name: template.name,
+        label: template.label
+      },
       content: concept.content,
       last_change_at: concept.last_change_at,
       bc_aliases: aliases,

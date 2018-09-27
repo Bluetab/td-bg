@@ -17,6 +17,7 @@ alias TdBg.Repo
 alias Ecto.Changeset
 
 template = Repo.insert!(%Template{
+  label: "Empty Tempalte",
   name: "empty",
   is_default: false,
   content: [
@@ -63,7 +64,7 @@ business_concept = Repo.insert!(%BusinessConcept{
 Repo.insert!(%BusinessConceptVersion{
   content: %{},
   related_to: [],
-  description: "Descripción",
+  description: %{document: %{object: "block", type: "paragraph", nodes: [%{object: "text", leaves: [%{text: "Description"}]}]}},
   last_change_at: DateTime.utc_now(),
   mod_comments: "Mod comments",
   last_change_by: 1234,
@@ -82,9 +83,8 @@ domain3 = Repo.insert!(%Domain{
     parent_id: domain2.id
 })
 
-
-
 Repo.insert!(%Template{
+  label: "Default Template",
   name: "default_template",
   is_default: true,
   content: [
@@ -121,4 +121,3 @@ domain_with_no_template = Repo.insert!(%Domain{
     type: "No template",
     name: "Domain with no template"
 })
-

@@ -13,7 +13,12 @@ defmodule TdBg.Search.Mappings do
       name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
       description: %{type: "text"},
       version: %{type: "short"},
-      type: %{type: "keyword"},
+      template: %{
+        properties: %{
+          name:  %{type: "text"},
+          label: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+        }
+      },
       status: %{type: "keyword"},
       last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
       current: %{type: "boolean"},
