@@ -89,7 +89,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         type: "some_type",
         name: "Some name",
         description: to_rich_text("Some description"),
-        domain_id: domain.id
+        domain_id: domain.id,
+        in_progress: false
       }
 
       conn =
@@ -136,7 +137,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         type: "some_type",
         name: nil,
         description: to_rich_text("Some description"),
-        domain_id: domain.id
+        domain_id: domain.id,
+        in_progress: false
       }
 
       conn =
@@ -250,7 +252,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       update_attrs = %{
         content: %{},
         name: "The new name",
-        description: to_rich_text("The new description")
+        description: to_rich_text("The new description"),
+        in_progress: false
       }
 
       conn =

@@ -188,6 +188,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     domain = Taxonomies.get_domain!(domain_id)
 
     parent_id = Map.get(business_concept_params, "parent_id", nil)
+    in_progress = Map.get(business_concept_params, "in_progress")
 
     business_concept_attrs =
       %{}
@@ -196,6 +197,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> Map.put("type", concept_type)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("in_progress", in_progress)
 
     creation_attrs =
       business_concept_params
@@ -821,6 +823,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     content_schema = Map.get(template, :content)
 
     parent_id = Map.get(business_concept_version_params, "parent_id", nil)
+    in_progress = Map.get(business_concept_version_params, "in_progress")
 
     business_concept_attrs =
       %{}
@@ -836,6 +839,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("in_progress", in_progress)
 
     related_to = Map.get(update_params, "related_to")
 

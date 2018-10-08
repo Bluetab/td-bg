@@ -71,7 +71,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
@@ -99,7 +100,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: nil,
         last_change_by: nil,
         last_change_at: nil,
-        version: nil
+        version: nil,
+        in_progress: nil
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
@@ -135,7 +137,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -172,7 +175,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -211,7 +215,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -248,7 +253,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -284,7 +290,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -350,7 +357,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -380,7 +388,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       assert_raise RuntimeError, "Content Schema is not defined for Business Concept", fn ->
@@ -476,7 +485,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("updated description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       update_attrs = Map.put(version_attrs, :content_schema, [])
@@ -531,7 +541,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("updated description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        in_progress: false
       }
 
       update_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -558,7 +569,8 @@ defmodule TdBg.BusinessConceptsTests do
         description: nil,
         last_change_by: nil,
         last_change_at: nil,
-        version: nil
+        version: nil,
+        in_progress: nil
       }
 
       update_attrs = Map.put(version_attrs, :content_schema, [])

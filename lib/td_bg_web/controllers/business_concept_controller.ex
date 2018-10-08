@@ -119,6 +119,7 @@ defmodule TdBgWeb.BusinessConceptController do
       |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("in_progress", business_concept_version.in_progress)
 
     related_to = Map.get(update_params, "related_to")
 

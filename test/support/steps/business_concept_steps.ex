@@ -17,7 +17,10 @@ defmodule TdBg.BusinessConceptSteps do
          %{user_name: user_name, domain_name: domain_name, table: fields},
          %{token_admin: token_admin} = state do
     token = get_user_token(user_name)
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs =
+      fields
+      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> Map.put("in_progress", false)
     domain = get_domain_by_name(token_admin, domain_name)
     {_, status_code, json_resp} = business_concept_create(token, domain["id"], attrs)
     {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
@@ -69,7 +72,10 @@ defmodule TdBg.BusinessConceptSteps do
       end
 
     domain = get_domain_by_name(token_admin, domain_name)
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs =
+      fields
+      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> Map.put("in_progress", false)
     business_concept_create(token_admin, domain["id"], attrs)
   end
 
@@ -100,7 +106,10 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = state do
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs =
+      fields
+      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> Map.put("in_progress", false)
     domain = get_domain_by_name(token_admin, domain_name)
     business_concept_create(token_admin, domain["id"], attrs)
     {:ok, state}
@@ -122,7 +131,10 @@ defmodule TdBg.BusinessConceptSteps do
 
     business_concept_id = current_business_concept["id"]
     assert business_concept_type == current_business_concept["type"]
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs =
+      fields
+      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> Map.put("in_progress", false)
     status = current_business_concept["status"]
     published = BusinessConcept.status().published
     rejected = BusinessConcept.status().rejected
@@ -322,7 +334,10 @@ defmodule TdBg.BusinessConceptSteps do
          %{token_admin: token_admin} = state do
     business_concept = business_concept_by_name(token_admin, business_concept_name)
     assert business_concept_type == business_concept["type"]
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs =
+      fields
+      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> Map.put("in_progress", false)
     status = business_concept["status"]
 
     case status == BusinessConcept.status().published do

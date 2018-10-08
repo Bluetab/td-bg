@@ -60,6 +60,7 @@ defmodule TdBg.Factory do
       last_change_at: DateTime.utc_now(),
       status: BusinessConcept.status.draft,
       version: 1,
+      in_progress: false
     }
   end
 

@@ -26,6 +26,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     field(:status, :string)
     field(:current, :boolean, default: true)
     field(:version, :integer)
+    field(:in_progress, :boolean, default: false)
     belongs_to(:business_concept, BusinessConcept, on_replace: :update)
 
     timestamps()
@@ -42,7 +43,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :last_change_by,
       :last_change_at,
       :version,
-      :mod_comments
+      :mod_comments,
+      :in_progress
     ])
     |> put_assoc(:business_concept, attrs.business_concept)
     |> validate_required([
@@ -52,7 +54,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :last_change_by,
       :last_change_at,
       :version,
-      :business_concept
+      :business_concept,
+      :in_progress
     ])
     |> put_change(:status, BusinessConcept.status().draft)
     |> validate_length(:name, max: 255)
@@ -68,11 +71,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :description,
       :last_change_by,
       :last_change_at,
-      :mod_comments
+      :mod_comments,
+      :in_progress
     ])
     |> cast_assoc(:business_concept)
     |> put_change(:status, BusinessConcept.status().draft)
-    |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at])
+    |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at, :in_progress])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
@@ -121,7 +125,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :status,
       :version,
       :reject_reason,
-      :mod_comments
+      :mod_comments,
+      :in_progress
     ])
     |> validate_required([
       :name,
@@ -132,7 +137,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :status,
       :version,
       :reject_reason,
-      :mod_comments
+      :mod_comments,
+      :in_progress
     ])
   end
 
@@ -181,7 +187,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       domain_ids: domain_ids,
       current: concept.current,
       link_count: concept.link_count,
-      q_rule_count: concept.q_rule_count
+      q_rule_count: concept.q_rule_count,
+      in_progress: concept.in_progress
     }
   end
 

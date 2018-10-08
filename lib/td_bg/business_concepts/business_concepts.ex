@@ -634,7 +634,7 @@ defmodule TdBg.BusinessConcepts do
   defp validate_concept_content(attrs) do
     changeset = Map.get(attrs, @changeset)
 
-    if changeset.valid? do
+    if changeset.valid? && !attrs.in_progress do
       do_validate_concept_content(attrs)
     else
       attrs

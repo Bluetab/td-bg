@@ -87,7 +87,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "last_change_at",
       "inserted_at",
       "updated_at",
-      "domain_parents"
+      "domain_parents",
+      "in_progress"
     ]
 
     type = get_in(business_concept_version, ["template", "name"])
@@ -121,6 +122,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       status: business_concept_version.status,
       current: business_concept_version.current,
       version: business_concept_version.version,
+      in_progress: business_concept_version.in_progress,
       last_change_user:  UserCache.get_user(business_concept_version.last_change_by),
     }
     |> add_reject_reason(

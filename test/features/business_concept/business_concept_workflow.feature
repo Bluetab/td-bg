@@ -270,10 +270,10 @@ Scenario Outline: Reject existing Business Concept in Pending Approval status
        | admin     | admin   |
      And an existing Business Concept type called "Business_Term" with empty definition
      And some existing Business Concepts in the Domain "My Domain" with following data:
-       | Status           | Name  | Type           | Description   |
-       | draft            | bc_1  | Business_Term  | description_1 |
-       | pending_approval | bc_2  | Business_Term  | description_2 |
-       | pending_approval | bc_3  | Business_Term  | description_3 |
+       | Status           | Name  | Type           | Description   | In Progress |
+       | draft            | bc_1  | Business_Term  | description_1 | false       |
+       | pending_approval | bc_2  | Business_Term  | description_2 | false       |
+       | pending_approval | bc_3  | Business_Term  | description_3 | false       |
      When "<user>" tries to list all the Business Concepts with status "pending_approval"
      Then sees following business concepts:
        | status           | admin      | publisher   | creator | watcher |
