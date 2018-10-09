@@ -164,6 +164,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
     domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
 
+    content = Enum.reduce(template.content, concept.content, &fill_content(&2, &1))
+
     %{
       id: concept.id,
       business_concept_id: concept.business_concept.id,
@@ -181,7 +183,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         name: template.name,
         label: template.label
       },
-      content: concept.content,
+      content: content,
       last_change_at: concept.last_change_at,
       bc_aliases: aliases,
       domain_ids: domain_ids,
@@ -191,6 +193,14 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       in_progress: concept.in_progress
     }
   end
+
+  defp fill_content(content, %{"type" => type, "name" => name}) when type == "list" do
+    case Map.has_key?(content, name) do
+      true -> content
+      false -> Map.put(content, name, "")
+    end
+  end
+  defp fill_content(content, _field), do: content
 
   def index_name do
     "business_concept"
