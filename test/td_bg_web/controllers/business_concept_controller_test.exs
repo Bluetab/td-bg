@@ -36,7 +36,8 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       update_attrs = %{
         content: %{},
         name: "The new name",
-        description: to_rich_text("The new description")
+        description: to_rich_text("The new description"),
+        in_progress: false
       }
 
       conn =
@@ -70,7 +71,8 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
       update_attrs = %{
         content: %{},
         name: nil,
-        description: to_rich_text("The new description")
+        description: to_rich_text("The new description"),
+        in_progress: false
       }
 
       conn =

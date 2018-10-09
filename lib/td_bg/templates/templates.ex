@@ -14,6 +14,7 @@ defmodule TdBg.Templates do
   @string "string"
   @list "list"
   @variable_list "variable_list"
+  @variable_map_list "variable_map_list"
 
   @doc """
   Returns the list of templates.
@@ -176,6 +177,7 @@ defmodule TdBg.Templates do
       @string -> :string
       @list -> :string
       @variable_list -> {:array, :string}
+      @variable_map_list -> {:array, :map}
     end
   end
 

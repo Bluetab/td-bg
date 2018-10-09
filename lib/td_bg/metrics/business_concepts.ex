@@ -118,21 +118,21 @@ defmodule TdBg.Metrics.BusinessConcepts do
       end)
     )
     |> Enum.map(&Map.put(&1, :has_link, Map.get(&1, :link_count)))
-    |> Enum.map(&{&1, Map.get(templates_by_name, &1.type)})
+    |> Enum.map(&{&1, Map.get(templates_by_name, &1.template.name)})
     |> Enum.filter(fn {_concept, template} -> !is_nil(template) end)
     |> Enum.map(fn {concept, template} -> include_template_dimensions(concept, template) end)
     |> Enum.reduce([], fn elem, acc -> [Map.put(elem, :count, 1) | acc] end)
     |> Enum.group_by(
       &Enum.zip(
-        get_keys(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.type)),
-        get_values(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.type))
+        get_keys(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.template.name)),
+        get_values(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.template.name))
       )
     )
     |> Enum.map(fn {key, value} ->
       %{
         dimensions: Enum.into(key, %{}),
         count: value |> Enum.map(& &1.count) |> Enum.sum(),
-        template_name: List.first(value).type |> normalize_template_name()
+        template_name: List.first(value).template.name |> normalize_template_name()
       }
     end)
   end
@@ -173,13 +173,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
         |> Enum.join(";")
       end)
     )
-    |> Enum.map(&{&1, Map.get(templates_by_name, &1.type)})
+    |> Enum.map(&{&1, Map.get(templates_by_name, &1.template.name)})
     |> Enum.filter(fn {_concept, template} -> !is_nil(template) end)
     |> Enum.map(fn {concept, template} -> include_template_dimensions(concept, template) end)
     |> Enum.reduce([], fn concept, acc ->
       [
         Enum.reduce(
-          get_not_required_fields(Map.get(content_by_name, concept.type)),
+          get_not_required_fields(Map.get(content_by_name, concept.template.name)),
           [],
           fn field, acc ->
             case Map.get(concept.content, field) do
@@ -190,11 +190,11 @@ defmodule TdBg.Metrics.BusinessConcepts do
                       get_map_dimensions(
                         concept,
                         field,
-                        Map.get(templates_by_name, concept.type),
-                        Map.get(content_by_name, concept.type)
+                        Map.get(templates_by_name, concept.template.name),
+                        Map.get(content_by_name, concept.template.name)
                       ),
                     count: 0,
-                    template_name: concept.type |> normalize_template_name()
+                    template_name: concept.template.name |> normalize_template_name()
                   }
                   | acc
                 ]
@@ -206,11 +206,11 @@ defmodule TdBg.Metrics.BusinessConcepts do
                       get_map_dimensions(
                         concept,
                         field,
-                        Map.get(templates_by_name, concept.type),
-                        Map.get(content_by_name, concept.type)
+                        Map.get(templates_by_name, concept.template.name),
+                        Map.get(content_by_name, concept.template.name)
                       ),
                     count: 0,
-                    template_name: concept.type |> normalize_template_name()
+                    template_name: concept.template.name |> normalize_template_name()
                   }
                   | acc
                 ]
@@ -222,11 +222,11 @@ defmodule TdBg.Metrics.BusinessConcepts do
                       get_map_dimensions(
                         concept,
                         field,
-                        Map.get(templates_by_name, concept.type),
-                        Map.get(content_by_name, concept.type)
+                        Map.get(templates_by_name, concept.template.name),
+                        Map.get(content_by_name, concept.template.name)
                       ),
                     count: 1,
-                    template_name: concept.type |> normalize_template_name()
+                    template_name: concept.template.name |> normalize_template_name()
                   }
                   | acc
                 ]
@@ -290,6 +290,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
     business_concept_version
     |> Enum.map(&Map.get(&1, "_source"))
     |> Enum.map(&Map.put(&1, "content", CollectionUtils.atomize_keys(Map.get(&1, "content"))))
+    |> Enum.map(&Map.put(&1, "template", CollectionUtils.atomize_keys(Map.get(&1, "template"))))
     |> Enum.map(
       &Map.put(
         &1,

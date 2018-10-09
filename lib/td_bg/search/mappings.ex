@@ -22,6 +22,7 @@ defmodule TdBg.Search.Mappings do
       status: %{type: "keyword"},
       last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
       current: %{type: "boolean"},
+      in_progress: %{type: "boolean"},
       domain: %{
         properties: %{
           id: %{type: "long"},

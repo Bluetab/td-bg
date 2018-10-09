@@ -20,7 +20,8 @@ defmodule TdBgWeb.BusinessConcept do
       "Version" => "version",
       "Reject Reason" => "reject_reason",
       "Modification Comments" => "mod_comments",
-      "Related To" => "related_to"
+      "Related To" => "related_to",
+      "In Progress" => "in_progress"
     }
 
   def create_template(type, definition) do
@@ -105,13 +106,13 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code, resp |> JSON.decode!()}
   end
 
-  def business_concept_send_for_approval(token, business_concept_id) do
+  def business_concept_send_for_approval(token, business_concept_version) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
     body = %{"business_concept" => %{"status" => "pending_approval"}} |> JSON.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: _resp} =
       HTTPoison.patch!(
-        business_concept_business_concept_url(@endpoint, :update_status, business_concept_id),
+        business_concept_business_concept_url(@endpoint, :update_status, business_concept_version |> JSON.encode!()),
         body,
         headers,
         []

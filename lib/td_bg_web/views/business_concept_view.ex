@@ -31,6 +31,7 @@ defmodule TdBgWeb.BusinessConceptView do
       domain: Map.take(business_concept_version.business_concept.domain, [:id, :name]),
       status: business_concept_version.status,
       current: business_concept_version.current,
+      in_progress: business_concept_version.in_progress,
       version: business_concept_version.version}
     |> add_reject_reason(business_concept_version.reject_reason,
                          String.to_atom(business_concept_version.status))
