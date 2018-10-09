@@ -23,7 +23,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       concepts =  [%{
         "name" => concept_name,
         "description" => concept_description,
-        "type" => template_name,
+        "template" => %{"name" => template_name},
         "domain" => %{
           "name" => domain_name
         },
@@ -34,7 +34,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       }]
 
       csv = Download.to_csv(concepts)
-      assert csv == "type;name;domain;status;description;#{field_label}\r\n#{template_name};#{concept_name};#{domain_name};#{concept_status};#{concept_description};#{field_value}\r\n"
+      assert csv == "template;name;domain;status;description;#{field_label}\r\n#{template_name};#{concept_name};#{domain_name};#{concept_status};#{concept_description};#{field_value}\r\n"
     end
   end
 end

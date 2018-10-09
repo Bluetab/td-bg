@@ -6,7 +6,7 @@ defmodule TdBg.BusinessConcept.Download do
   alias TdBg.Templates
 
   def to_csv(concepts) do
-    concepts_by_type = Enum.group_by(concepts, &Map.get(&1, "type"))
+    concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))
     types = Map.keys(concepts_by_type)
     templates_by_type = Enum.reduce(types, %{},  &Map.put(&2, &1, Templates.get_template_by_name(&1)))
 
@@ -27,7 +27,7 @@ defmodule TdBg.BusinessConcept.Download do
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
     content_names_to_types  = Enum.reduce(content, %{}, &Map.put(&2, Map.get(&1, "name"), Map.get(&1, "type")))
 
-    headers = ["type", "name", "domain", "status", "description"] ++ content_labels
+    headers = ["template", "name", "domain", "status", "description"] ++ content_labels
     concepts_list = concepts_to_list(content_names, content_names_to_types, concepts)
     list_to_encode = case add_separation do
       true ->
@@ -44,7 +44,7 @@ defmodule TdBg.BusinessConcept.Download do
   defp concepts_to_list(content_fields, _content_fields_to_types, concepts) do
     Enum.reduce(concepts, [], fn(concept, acc) ->
       content = concept["content"]
-      values = [concept["type"],
+      values = [concept["template"]["name"],
                 concept["name"],
                 concept["domain"]["name"],
                 concept["status"],
