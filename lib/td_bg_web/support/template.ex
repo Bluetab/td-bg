@@ -44,6 +44,7 @@ defmodule TdBgWeb.TemplateSupport do
     |> Map.put("type", "list")
     |> Map.put("widget", "radio")
     |> Map.put("required", true)
+    |> Map.put("values", ["Si", "No"])
     |> Map.put("default", "No")
     |> Map.drop(["meta"])
     acc ++ [redefined_field]
