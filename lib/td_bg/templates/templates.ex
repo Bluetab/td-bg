@@ -11,11 +11,6 @@ defmodule TdBg.Templates do
   alias TdBg.Taxonomies.Domain
   alias TdBg.Templates.Template
 
-  @string "string"
-  @list "list"
-  @variable_list "variable_list"
-  @variable_map_list "variable_map_list"
-
   @doc """
   Returns the list of templates.
 
@@ -161,25 +156,21 @@ defmodule TdBg.Templates do
   end
 
   defp get_changeset_fields(content_schema) do
-    item_mapping = fn item ->
-      name = item |> Map.get("name")
-      type = item |> Map.get("type")
-      {String.to_atom(name), get_changeset_field(type)}
-    end
-
     content_schema
-    |> Enum.map(item_mapping)
+    |> Enum.map(&get_changeset_field/1)
     |> Map.new()
   end
 
-  defp get_changeset_field(type) do
-    case type do
-      @string -> :string
-      @list -> :string
-      @variable_list -> {:array, :string}
-      @variable_map_list -> {:array, :map}
-    end
+  defp get_changeset_field(%{"name" => name} = field) do
+    {String.to_atom(name), to_changeset_field(field)}
   end
+
+  defp to_changeset_field(%{"name" => "_confidential"}), do: :string
+  defp to_changeset_field(%{"type" => type})
+    when type == "string" or type == "list", do: :string
+  defp to_changeset_field(%{"type" => type})
+    when type == "variable_list" or type == "variable_map_list", do: {:array, :string}
+  defp to_changeset_field(_), do: :string
 
   defp add_content_validation(changeset, %{} = content_item) do
     changeset
@@ -196,24 +187,28 @@ defmodule TdBg.Templates do
 
   defp add_content_validation(changeset, []), do: changeset
 
+  defp add_require_validation(changeset, %{"name" => "_confidential"}) do
+    Changeset.validate_required(changeset, [:_confidential])
+  end
   defp add_require_validation(changeset, %{"name" => name, "required" => true}) do
     Changeset.validate_required(changeset, [String.to_atom(name)])
   end
-
   defp add_require_validation(changeset, %{}), do: changeset
 
+  defp add_max_length_validation(changeset, %{"name" => "_confidential"}), do: changeset
   defp add_max_length_validation(changeset, %{"name" => name, "max_size" => max_size}) do
     Changeset.validate_length(changeset, String.to_atom(name), max: max_size)
   end
-
   defp add_max_length_validation(changeset, %{}), do: changeset
 
+  defp add_inclusion_validation(changeset, %{"name" => "_confidential"}) do
+    Changeset.validate_inclusion(changeset, "_confidential", ["Si", "No"])
+  end
   defp add_inclusion_validation(changeset,
     %{"type" => "list", "meta" => %{"role" => _rolename}}), do: changeset
   defp add_inclusion_validation(changeset, %{"name" => name, "type" => "list", "values" => values}) do
     Changeset.validate_inclusion(changeset, String.to_atom(name), values)
   end
-
   defp add_inclusion_validation(changeset, %{}), do: changeset
 
 end

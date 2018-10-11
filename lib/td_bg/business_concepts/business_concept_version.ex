@@ -166,6 +166,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
     content = Enum.reduce(template.content, concept.content, &fill_content(&2, &1))
 
+    content = update_in(content["_confidential"], &(if &1 == "Si", do: &1, else: "No"))
+
     %{
       id: concept.id,
       business_concept_id: concept.business_concept.id,

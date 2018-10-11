@@ -28,10 +28,14 @@ defmodule TdBg.Search.Aggregations do
 
   def template_terms(%Template{content: content}) do
     content
-    |> Enum.filter(&(&1["type"] == "list"))
+    |> Enum.filter(&filter_content_term/1)
     |> Enum.map(& &1["name"])
     |> Enum.map(&content_term/1)
   end
+
+  def filter_content_term(%{"name" => "_confidential"}), do: true
+  def filter_content_term(%{"type" => "list"}), do: true
+  def filter_content_term(_), do: false
 
   defp content_term(field) do
     {field, %{terms: %{field: "content.#{field}.raw"}}}

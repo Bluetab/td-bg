@@ -61,6 +61,8 @@ defmodule TdBg.BusinessConcept.Search do
   # Non-admin user search, filters applied
   def search_business_concept_versions(params, %User{} = user, page, size) do
     permissions = user |> Permissions.get_domain_permissions()
+    # IO.inspect("permissions: ")
+    # IO.inspect(permissions)
     filter_business_concept_versions(params, permissions, page, size)
   end
 
@@ -128,6 +130,7 @@ defmodule TdBg.BusinessConcept.Search do
     filter = permissions |> create_filter_clause(user_defined_filters)
 
     query = create_query(params, filter)
+
     %{from: page * size, size: size, query: query}
     |> do_search
   end
@@ -180,13 +183,23 @@ defmodule TdBg.BusinessConcept.Search do
 
     domain_clause = %{term: %{domain_ids: resource_id}}
 
-    status_clause =
+    status =
       permissions
       |> Enum.map(&Map.get(BusinessConcept.permissions_to_status(), &1))
       |> Enum.filter(&(!is_nil(&1)))
 
+    status_clause =  %{terms: %{status: status}}
+
+    confidential_clause =
+      case Enum.member?(permissions, :view_confidential_business_concepts) do
+        true -> %{terms: %{"content._confidential.raw": ["Si", "No"]}}
+        false -> %{terms: %{"content._confidential.raw": ["No"]}}
+      end
+
     %{
-      bool: %{filter: user_defined_filters ++ [domain_clause, %{terms: %{status: status_clause}}]}
+      bool: %{filter: user_defined_filters ++ [domain_clause,
+                                               status_clause,
+                                               confidential_clause]}
     }
   end
 

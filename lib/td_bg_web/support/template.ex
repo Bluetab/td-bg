@@ -9,51 +9,61 @@ defmodule TdBgWeb.TemplateSupport do
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
-  def preprocess_templates(templates, ctx \\ %{}) do
-    process_template_meta([], templates, ctx)
+  def preprocess_templates(templates, ctx \\ %{})
+  def preprocess_templates(templates, %{domain: domain} = ctx) do
+    user_roles = @td_auth_api.get_domain_user_roles(domain.id)
+    ctx = Map.put(ctx, :user_roles, user_roles)
+    change_templates([], templates, ctx)
+  end
+  def preprocess_templates(templates, ctx) do
+    change_templates([], templates, ctx)
   end
 
-  defp process_template_meta(acc, [], _context), do: acc
-  defp process_template_meta(acc, [head|tail], %{user_roles: _} = ctx) do
+  defp change_templates(acc, [head|tail], ctx) do
     acc
-    |> process_template_meta(head, ctx)
-    |> process_template_meta(tail, ctx)
+    |> change_template(head, ctx)
+    |> change_templates(tail, ctx)
   end
-  defp process_template_meta(acc, [head|tail], %{domain: domain} = ctx) do
-    user_roles = @td_auth_api.get_domain_user_roles(domain.id)
-    ctx = ctx |> Map.put(:user_roles, user_roles)
-    process_template_meta(acc, [head|tail], ctx)
-  end
-  defp process_template_meta(acc, template, ctx) do
-    content = process_meta([], template.content, ctx)
+  defp change_templates(acc, [], _context), do: acc
+
+  defp change_template(acc, template, ctx) do
+    content = change_fields([], template.content, ctx)
     processed = Map.put(template, :content, content)
     [processed|acc]
   end
 
-  defp process_meta(acc, [], _ctx), do: acc
-  defp process_meta(acc, [head|tail], ctx) do
+  defp change_fields(acc, [head|tail], ctx) do
     acc
-    |> process_meta(head, ctx)
-    |> process_meta(tail, ctx)
+    |> change_field(head, ctx)
+    |> change_fields(tail, ctx)
   end
-  defp process_meta(acc, %{"type" => type, "meta" => meta} = field, ctx) do
+  defp change_fields(acc, [], _ctx), do: acc
+
+  defp change_field(acc, %{"name" => "_confidential"} = field, _ctx) do
+    redefined_field = field
+    |> Map.put("type", "list")
+    |> Map.put("widget", "radio")
+    |> Map.put("required", true)
+    |> Map.put("default", "No")
+    |> Map.drop(["meta"])
+    acc ++ [redefined_field]
+  end
+  defp change_field(acc, %{"type" => type, "meta" => meta} = field, ctx) do
     field = case {type, meta} do
       {"list", %{"role" => role_name}} ->
         user = Map.get(ctx, :user, nil)
         domain = Map.get(ctx, :domain, nil)
         user_roles = Map.get(ctx, :user_roles, [])
-        process_role_meta(field, user, role_name, domain, user_roles)
+        apply_role_meta(field, user, role_name, domain, user_roles)
       _ -> field
     end
     field_without_meta = Map.delete(field, "meta")
     acc ++ [field_without_meta]
   end
-  defp process_meta(acc, %{} = field, _ctx) do
-    acc ++ [field]
-  end
+  defp change_field(acc, %{} = field, _ctx),  do: acc ++ [field]
 
   # TODO: Refactor (roles and ACL entries are now in td_auth)
-  defp process_role_meta(%{} = field, %User{} = user, role_name, %Domain{} = domain, user_roles)
+  defp apply_role_meta(%{} = field, %User{} = user, role_name, %Domain{} = domain, user_roles)
     when not is_nil(user) and
          not is_nil(role_name) and
          not is_nil(domain) do
@@ -71,7 +81,7 @@ defmodule TdBgWeb.TemplateSupport do
       u -> Map.put(field, "default", u.full_name)
     end
   end
-  defp process_role_meta(field, _user, _role, _domain, _user_roles), do: field
+  defp apply_role_meta(field, _user, _role, _domain, _user_roles), do: field
 
   # TODO: unit test this
   def get_preprocessed_template(%BusinessConceptVersion{} = version, %User{} = user) do
@@ -82,7 +92,7 @@ defmodule TdBgWeb.TemplateSupport do
     template = version.business_concept.type
     |> Templates.get_template_by_name
 
-    process_template_meta([], [template], %{domain: domain, user: user})
+    change_templates([], [template], %{domain: domain, user: user})
     |> Enum.at(0)
   end
 
