@@ -42,8 +42,8 @@ defmodule TdBgWeb.TemplateSupport do
   defp change_field(acc, %{"name" => "_confidential"} = field, _ctx) do
     redefined_field = field
     |> Map.put("type", "list")
-    |> Map.put("widget", "radio")
-    |> Map.put("required", true)
+    |> Map.put("widget", "checkbox")
+    |> Map.put("required", false)
     |> Map.put("values", ["Si", "No"])
     |> Map.put("default", "No")
     |> Map.drop(["meta"])

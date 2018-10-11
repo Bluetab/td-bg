@@ -202,7 +202,7 @@ defmodule TdBg.Templates do
   defp add_max_length_validation(changeset, %{}), do: changeset
 
   defp add_inclusion_validation(changeset, %{"name" => "_confidential"}) do
-    Changeset.validate_inclusion(changeset, "_confidential", ["Si", "No"])
+    Changeset.validate_inclusion(changeset, :_confidential, ["Si", "No"])
   end
   defp add_inclusion_validation(changeset,
     %{"type" => "list", "meta" => %{"role" => _rolename}}), do: changeset
