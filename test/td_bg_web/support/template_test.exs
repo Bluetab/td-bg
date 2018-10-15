@@ -56,13 +56,13 @@ defmodule TdBg.TemplateSupportTest do
 
       stored_version  = BusinessConcepts.get_business_concept_version!(version.id)
       stored_template = TemplateSupport.get_preprocessed_template(stored_version, user)
-      expected_content = [%{ "default" => "No",
-                             "disabled" => true,
-                             "name" => "_confidential",
-                             "required" => false,
-                             "type" => "list",
-                             "values" => ["Si", "No"],
-                             "widget" => "checkbox"}]
+      expected_content = [%{"default" => "No",
+                            "disabled" => true,
+                            "name" => "_confidential",
+                            "required" => false,
+                            "type" => "list",
+                            "values" => ["Si", "No"],
+                            "widget" => "checkbox"}]
       assert JSONDiff.diff(stored_template.content, expected_content) == []
     end
 
@@ -86,13 +86,13 @@ defmodule TdBg.TemplateSupportTest do
 
       stored_version  = BusinessConcepts.get_business_concept_version!(version.id)
       stored_template = TemplateSupport.get_preprocessed_template(stored_version, user)
-      expected_content = [%{ "default" => "No",
-                             "disabled" => false,
-                             "name" => "_confidential",
-                             "required" => false,
-                             "type" => "list",
-                             "values" => ["Si", "No"],
-                             "widget" => "checkbox"}]
+      expected_content = [%{"default" => "No",
+                            "disabled" => false,
+                            "name" => "_confidential",
+                            "required" => false,
+                            "type" => "list",
+                            "values" => ["Si", "No"],
+                            "widget" => "checkbox"}]
       assert JSONDiff.diff(stored_template.content, expected_content) == []
     end
   end
