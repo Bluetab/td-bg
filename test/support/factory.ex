@@ -9,7 +9,8 @@ defmodule TdBg.Factory do
     %TdBg.Accounts.User {
       id: 0,
       user_name: "bufoncillo",
-      is_admin: false
+      is_admin: false,
+      jti: 0
     }
   end
 

@@ -105,7 +105,6 @@ defmodule TdBgWeb.TemplateSupport do
     |> Enum.at(0)
   end
 
-  # TODO: unit test this
   def get_template(%BusinessConceptVersion{} = version) do
     version
     |> Map.get(:business_concept)
