@@ -613,6 +613,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp send_for_approval(conn, user, business_concept_version) do
     update_status(
       conn,
+      user,
       business_concept_version,
       BusinessConcept.status().pending_approval,
       @events.concept_sent_for_approval,
@@ -623,6 +624,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp undo_rejection(conn, user, business_concept_version) do
     update_status(
       conn,
+      user,
       business_concept_version,
       BusinessConcept.status().draft,
       @events.concept_rejection_canceled,
@@ -689,7 +691,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "show.json",
         business_concept_version: version,
         hypermedia: hypermedia("business_concept_version", conn, version),
-        template: TemplateSupport.get_template(business_concept_version)
+        template: TemplateSupport.get_preprocessed_template(business_concept_version, user)
       )
     else
       false ->
@@ -707,6 +709,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp deprecate(conn, user, business_concept_version) do
     update_status(
       conn,
+      user,
       business_concept_version,
       BusinessConcept.status().deprecated,
       @events.concept_deprecated,
@@ -714,7 +717,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     )
   end
 
-  defp update_status(conn, business_concept_version, status, event, authorized) do
+  defp update_status(conn, user, business_concept_version, status, event, authorized) do
     attrs = %{status: status}
     business_concept_id = business_concept_version.business_concept.id
 
@@ -739,7 +742,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "show.json",
         business_concept_version: concept,
         hypermedia: hypermedia("business_concept_version", conn, concept),
-        template: TemplateSupport.get_template(business_concept_version)
+        template: TemplateSupport.get_preprocessed_template(concept, user)
       )
     else
       false ->

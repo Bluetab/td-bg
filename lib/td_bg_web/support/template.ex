@@ -3,6 +3,7 @@ defmodule TdBgWeb.TemplateSupport do
 
   alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Permissions
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
   alias TdBg.Templates
@@ -39,13 +40,14 @@ defmodule TdBgWeb.TemplateSupport do
   end
   defp change_fields(acc, [], _ctx), do: acc
 
-  defp change_field(acc, %{"name" => "_confidential"} = field, _ctx) do
+  defp change_field(acc, %{"name" => "_confidential"} = field, ctx) do
     redefined_field = field
     |> Map.put("type", "list")
     |> Map.put("widget", "checkbox")
     |> Map.put("required", false)
     |> Map.put("values", ["Si", "No"])
     |> Map.put("default", "No")
+    |> Map.put("disabled", is_confidential_field_disabled?(ctx))
     |> Map.drop(["meta"])
     acc ++ [redefined_field]
   end
@@ -62,6 +64,12 @@ defmodule TdBgWeb.TemplateSupport do
     acc ++ [field_without_meta]
   end
   defp change_field(acc, %{} = field, _ctx),  do: acc ++ [field]
+
+  defp is_confidential_field_disabled?(%{user: %User{is_admin: true}}), do: false
+  defp is_confidential_field_disabled?(%{user: user, domain: domain}) do
+    !Permissions.authorized?(user, :view_confidential_business_concepts, domain.id)
+  end
+  defp is_confidential_field_disabled?(_), do: true
 
   # TODO: Refactor (roles and ACL entries are now in td_auth)
   defp apply_role_meta(%{} = field, %User{} = user, role_name, %Domain{} = domain, user_roles)
