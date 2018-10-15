@@ -192,7 +192,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       current: concept.current,
       link_count: concept.link_count,
       q_rule_count: concept.q_rule_count,
-      in_progress: concept.in_progress
+      in_progress: concept.in_progress,
+      inserted_at: concept.inserted_at
     }
   end
 
