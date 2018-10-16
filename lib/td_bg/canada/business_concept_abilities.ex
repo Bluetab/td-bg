@@ -168,7 +168,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     domain_id = business_concept.domain_id
     case is_confidential?(content) do
       true ->
-        Permissions.authorized?(user, :view_confidential_business_concepts, domain_id) &&
+        Permissions.authorized?(user, :manage_confidential_business_concepts, domain_id) &&
         Permissions.authorized?(user, permission, domain_id)
       false ->
         Permissions.authorized?(user, permission, domain_id)

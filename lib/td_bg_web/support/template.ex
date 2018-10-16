@@ -67,7 +67,7 @@ defmodule TdBgWeb.TemplateSupport do
 
   defp is_confidential_field_disabled?(%{user: %User{is_admin: true}}), do: false
   defp is_confidential_field_disabled?(%{user: user, domain: domain}) do
-    !Permissions.authorized?(user, :view_confidential_business_concepts, domain.id)
+    !Permissions.authorized?(user, :manage_confidential_business_concepts, domain.id)
   end
   defp is_confidential_field_disabled?(_), do: true
 

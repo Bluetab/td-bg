@@ -31,7 +31,7 @@ defmodule TdBg.Permissions.MockPermissionResolver do
       :view_versioned_business_concepts,
       :view_rejected_business_concepts,
       :view_deprecated_business_concepts,
-      :view_confidential_business_concepts
+      :manage_confidential_business_concepts
     ],
     "publish" => [
       :view_domain,

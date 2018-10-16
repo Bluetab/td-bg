@@ -191,7 +191,7 @@ defmodule TdBg.BusinessConcept.Search do
     status_clause =  %{terms: %{status: status}}
 
     confidential_clause =
-      case Enum.member?(permissions, :view_confidential_business_concepts) do
+      case Enum.member?(permissions, :manage_confidential_business_concepts) do
         true -> %{terms: %{"content._confidential.raw": ["Si", "No"]}}
         false -> %{terms: %{"content._confidential.raw": ["No"]}}
       end
