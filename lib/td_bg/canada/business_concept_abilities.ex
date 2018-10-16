@@ -164,13 +164,22 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
 
   defp authorized?(%User{is_admin: true}, _permission, _), do: true
 
-  defp authorized?(%User{} = user, permission, %BusinessConceptVersion{
-         business_concept: business_concept
-       }) do
-    authorized?(user, permission, business_concept)
+  defp authorized?(%User{} = user, permission, %BusinessConceptVersion{content: content, business_concept: business_concept}) do
+    domain_id = business_concept.domain_id
+    case is_confidential?(content) do
+      true ->
+        Permissions.authorized?(user, :view_confidential_business_concepts, domain_id) &&
+        Permissions.authorized?(user, permission, domain_id)
+      false ->
+        Permissions.authorized?(user, permission, domain_id)
+    end
   end
 
-  defp authorized?(%User{} = user, permission, %BusinessConcept{domain_id: domain_id}) do
-    Permissions.authorized?(user, permission, domain_id)
+  defp is_confidential?(content) do
+     case Map.get(content, "_confidential", "No") do
+       "Si" -> true
+       _ -> false
+     end
   end
+
 end
