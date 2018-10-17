@@ -506,13 +506,19 @@ defmodule TdBg.BusinessConcepts do
   def delete_business_concept_version(%BusinessConceptVersion{business_concept_id: business_concept_id}
     = business_concept_version) do
     if business_concept_version.version == 1 do
+      business_concept = business_concept_version.business_concept
+      business_concept_id = business_concept.id
       Multi.new()
+      |> Multi.update_all(:detatch_children,
+        (from child in BusinessConcept, where: child.parent_id == ^business_concept_id),
+        set: [parent_id: nil])
       |> Multi.delete(:business_concept_version, business_concept_version)
-      |> Multi.delete(:business_concept, business_concept_version.business_concept)
+      |> Multi.delete(:business_concept, business_concept)
       |> Repo.transaction()
       |> case do
         {:ok,
          %{
+           detatch_children: {_, nil},
            business_concept: %BusinessConcept{},
            business_concept_version: %BusinessConceptVersion{} = version
          }} ->

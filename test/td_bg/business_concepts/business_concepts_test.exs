@@ -70,4 +70,14 @@ defmodule TdBg.BusinessConceptsTest do
       assert Enum.map(parent.children, &(&1.id)) == [child.id]
     end
   end
+
+  test "delete_business_concept_version/1 delete parent concept with children" do
+    {parent_id, child_id}  = create_hierarchy()
+    parent = BusinessConcepts.get_current_version_by_business_concept_id!(parent_id)
+    BusinessConcepts.delete_business_concept_version(parent)
+    assert_raise Ecto.NoResultsError, fn ->
+      BusinessConcepts.get_current_version_by_business_concept_id!(parent_id)
+    end
+    assert BusinessConcepts.get_current_version_by_business_concept_id!(child_id)
+  end
 end
