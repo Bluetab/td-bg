@@ -169,7 +169,9 @@ defmodule TdBg.Templates do
   defp to_changeset_field(%{"type" => type})
     when type == "string" or type == "list", do: :string
   defp to_changeset_field(%{"type" => type})
-    when type == "variable_list" or type == "variable_map_list", do: {:array, :string}
+    when type == "variable_list", do: {:array, :string}
+  defp to_changeset_field(%{"type" => type})
+    when type == "variable_map_list", do: {:array, :map}
   defp to_changeset_field(_), do: :string
 
   defp add_content_validation(changeset, %{} = content_item) do
