@@ -5,7 +5,7 @@ defmodule TdBg.Mixfile do
   def project do
     [
       app: :td_bg,
-      version: "2.6.0",
+      version: case System.get_env("APP_VERSION") do nil -> "2.6.0-local"; v -> v end,
       elixir: "~> 1.4",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
