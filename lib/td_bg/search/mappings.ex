@@ -2,8 +2,8 @@ defmodule TdBg.Search.Mappings do
   @moduledoc """
     Generates mappings for elasticsearch
   """
-  alias TdBg.Templates
-  alias TdBg.Templates.Template
+  alias TdDf.Templates
+  alias TdDf.Templates.Template
 
   def get_mappings do
     content_mappings = %{properties: get_dynamic_mappings()}

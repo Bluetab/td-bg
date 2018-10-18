@@ -1,10 +1,10 @@
 defmodule TdBg.TemplatesTest do
   use TdBg.DataCase
 
-  alias TdBg.Templates
+  alias TdDf.Templates
 
   describe "templates" do
-    alias TdBg.Templates.Template
+    alias TdDf.Templates.Template
 
     @valid_attrs   %{content: [],  label: "some name", name: "some_name", is_default: false}
     @update_attrs  %{content: [],  label: "some updated name", name: "some_name", is_default: false}
@@ -110,8 +110,8 @@ defmodule TdBg.TemplatesTest do
     test "add_templates_to_domain/2 and get_domain_templates/1 adds empty template to a domain" do
       {:ok, template} = Templates.create_template(@empty_template_attrs)
       {:ok, domain} = Taxonomies.create_domain(@domain_attrs_child)
-      Templates.add_templates_to_domain(domain, [template])
-      [stored_template] = Templates.get_domain_templates(domain)
+      TdBg.Templates.add_templates_to_domain(domain, [template])
+      [stored_template] = TdBg.Templates.get_domain_templates(domain)
       assert template == stored_template
     end
 
@@ -119,8 +119,8 @@ defmodule TdBg.TemplatesTest do
       {:ok, template1} = Templates.create_template(@empty_template_attrs)
       {:ok, template2} = Templates.create_template(@other_empty_template_attrs)
       {:ok, domain} = Taxonomies.create_domain(@domain_attrs_child)
-      Templates.add_templates_to_domain(domain, [template1, template2])
-      stored_templates = Templates.get_domain_templates(domain)
+      TdBg.Templates.add_templates_to_domain(domain, [template1, template2])
+      stored_templates = TdBg.Templates.get_domain_templates(domain)
       assert [template1, template2] == stored_templates
     end
 
@@ -128,8 +128,8 @@ defmodule TdBg.TemplatesTest do
       {:ok, template} = Templates.create_template(@empty_template_attrs)
       {:ok, domain_parent} = Taxonomies.create_domain(@domain_attrs_parent)
       {:ok, domain} = Taxonomies.create_domain(Map.put(@domain_attrs_child, :parent_id, domain_parent.id))
-      Templates.add_templates_to_domain(domain_parent, [template])
-      [stored_template] = Templates.get_domain_templates(domain)
+      TdBg.Templates.add_templates_to_domain(domain_parent, [template])
+      [stored_template] = TdBg.Templates.get_domain_templates(domain)
       assert template == stored_template
     end
 
@@ -137,9 +137,9 @@ defmodule TdBg.TemplatesTest do
       {:ok, template} = Templates.create_template(@empty_template_attrs)
       {:ok, domain_parent} = Taxonomies.create_domain(@domain_attrs_parent)
       {:ok, domain} = Taxonomies.create_domain(Map.put(@domain_attrs_child, :parent_id, domain_parent.id))
-      Templates.add_templates_to_domain(domain_parent, [template])
-      Templates.add_templates_to_domain(domain, [template])
-      stored_template = Templates.get_domain_templates(domain)
+      TdBg.Templates.add_templates_to_domain(domain_parent, [template])
+      TdBg.Templates.add_templates_to_domain(domain, [template])
+      stored_template = TdBg.Templates.get_domain_templates(domain)
       assert [template] == stored_template
     end
 

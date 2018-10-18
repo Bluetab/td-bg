@@ -6,7 +6,7 @@ defmodule TdBgWeb.TemplateSupport do
   alias TdBg.Permissions
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
-  alias TdBg.Templates
+  alias TdDf.Templates
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 

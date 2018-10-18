@@ -4,8 +4,8 @@ defmodule TdBgWeb.TemplateController do
   use PhoenixSwagger
 
   alias TdBg.Taxonomies
-  alias TdBg.Templates
-  alias TdBg.Templates.Template
+  alias TdDf.Templates
+  alias TdDf.Templates.Template
   alias TdBgWeb.ChangesetView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
@@ -183,7 +183,7 @@ defmodule TdBgWeb.TemplateController do
   def delete(conn, %{"id" => id}) do
     template = Templates.get_template!(id)
 
-    with {:count, :domain, 0} <- Templates.count_related_domains(String.to_integer(id)),
+    with {:count, :domain, 0} <- TdBg.Templates.count_related_domains(String.to_integer(id)),
          {:ok, %Template{}} <- Templates.delete_template(template) do
       send_resp(conn, :no_content, "")
     else
@@ -209,7 +209,7 @@ defmodule TdBgWeb.TemplateController do
   def get_domain_templates(conn, %{"domain_id" => domain_id} = params) do
     user = conn.assigns[:current_user]
     domain = Taxonomies.get_domain!(domain_id)
-    templates = case Templates.get_domain_templates(domain) do
+    templates = case TdBg.Templates.get_domain_templates(domain) do
         [] ->
           case Templates.get_default_template do
             nil -> []
@@ -244,7 +244,7 @@ defmodule TdBgWeb.TemplateController do
   def add_templates_to_domain(conn, %{"domain_id" => domain_id, "templates" => templ}) do
     domain = Taxonomies.get_domain!(domain_id)
     templates = Enum.map(templ, &Templates.get_template_by_name(Map.get(&1, "name")))
-    Templates.add_templates_to_domain(domain, templates)
+    TdBg.Templates.add_templates_to_domain(domain, templates)
     render(conn, "index.json", templates: templates)
   end
 end

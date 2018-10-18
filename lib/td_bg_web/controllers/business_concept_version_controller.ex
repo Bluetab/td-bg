@@ -15,7 +15,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
   alias TdBg.Taxonomies
-  alias TdBg.Templates
+  alias TdDf.Templates
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.BusinessConceptSupport

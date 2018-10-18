@@ -3,7 +3,7 @@ defmodule TdBg.BusinessConcept.Download do
     Helper module to download business concepts.
   """
 
-  alias TdBg.Templates
+  alias TdDf.Templates
 
   def to_csv(concepts) do
     concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))

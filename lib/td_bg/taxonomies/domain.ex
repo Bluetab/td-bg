@@ -4,7 +4,7 @@ defmodule TdBg.Taxonomies.Domain do
   import Ecto.Changeset
   alias TdBg.Searchable
   alias TdBg.Taxonomies.Domain
-  alias TdBg.Templates.Template
+  alias TdDf.Templates.Template
   alias TdPerms.TaxonomyCache
 
   @behaviour Searchable

@@ -2,8 +2,8 @@ defmodule TdBg.Search.Aggregations do
   @moduledoc """
     Aggregations for elasticsearch
   """
-  alias TdBg.Templates
-  alias TdBg.Templates.Template
+  alias TdDf.Templates
+  alias TdDf.Templates.Template
 
   def aggregation_terms do
     static_keywords = [

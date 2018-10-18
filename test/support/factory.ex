@@ -15,7 +15,7 @@ defmodule TdBg.Factory do
   end
 
   def template_factory do
-    %TdBg.Templates.Template {
+    %TdDf.Templates.Template {
       label: "some type",
       name: "some_type",
       content: [],

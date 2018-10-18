@@ -8,8 +8,8 @@ defmodule TdBgWeb.TemplateControllerTest do
   alias TdBg.Accounts.User
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Taxonomies
-  alias TdBg.Templates
-  alias TdBg.Templates.Template
+  alias TdDf.Templates
+  alias TdDf.Templates.Template
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{content: [], label: "some name", name: "some_name", is_default: false}

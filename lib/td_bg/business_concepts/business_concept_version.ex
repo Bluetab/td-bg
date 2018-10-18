@@ -8,7 +8,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Searchable
   alias TdBg.Taxonomies
-  alias TdBg.Templates
+  alias TdDf.Templates
   alias TdPerms.TaxonomyCache
   alias TdPerms.UserCache
 

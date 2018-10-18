@@ -9,7 +9,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
-  alias TdBg.Templates
+  alias TdDf.Templates
   alias TdPerms.BusinessConceptCache
   alias ValidationError
 

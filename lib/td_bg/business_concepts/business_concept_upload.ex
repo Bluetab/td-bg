@@ -64,7 +64,7 @@ defmodule TdBg.BusinessConcept.Upload do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Repo
-  alias TdBg.Templates
+  alias TdDf.Templates
 
   NimbleCSV.define(ParserCSVUpload, separator: ";")
 

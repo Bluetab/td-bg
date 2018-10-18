@@ -7,7 +7,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.MockPermissionResolver
-  alias TdBg.Templates
+  alias TdDf.Templates
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
