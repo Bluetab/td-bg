@@ -101,14 +101,14 @@ defmodule TdBg.Metrics.BusinessConcepts do
       end)
     )
     |> Enum.map(
-      &Map.update!(&1, :q_rule_count, fn current ->
+      &Map.update!(&1, :rule_count, fn current ->
         case current do
           0 -> false
           _ -> true
         end
       end)
     )
-    |> Enum.map(&Map.put(&1, :has_quality, Map.get(&1, :q_rule_count)))
+    |> Enum.map(&Map.put(&1, :has_quality, Map.get(&1, :rule_count)))
     |> Enum.map(
       &Map.update!(&1, :link_count, fn current ->
         case current do

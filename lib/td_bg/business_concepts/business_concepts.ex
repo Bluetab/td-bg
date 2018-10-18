@@ -326,7 +326,7 @@ defmodule TdBg.BusinessConcepts do
   def get_concept_counts(business_concept_id) do
     {:ok, values} =
       BusinessConceptCache.get_field_values(business_concept_id,
-        [:q_rule_count, :link_count])
+        [:rule_count, :link_count])
 
     values
     |> Enum.map(fn {key, value} ->

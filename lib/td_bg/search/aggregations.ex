@@ -14,7 +14,7 @@ defmodule TdBg.Search.Aggregations do
       {"current", %{terms: %{field: "current"}}},
       {"in_progress", %{terms: %{field: "in_progress"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
-      {"q_rule_count", %{terms: %{script: "doc['q_rule_count'].value > 0 ? 'q_rule_terms' : 'not_q_rule_terms'"}}},
+      {"rule_count", %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},
       {"link_count", %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}}
     ]
 

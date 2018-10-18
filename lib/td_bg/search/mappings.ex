@@ -45,7 +45,7 @@ defmodule TdBg.Search.Mappings do
         }
       },
       link_count: %{type: "short"},
-      q_rule_count: %{type: "short"},
+      rule_count: %{type: "short"},
       content: content_mappings
     }
 

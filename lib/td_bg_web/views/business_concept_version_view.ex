@@ -80,7 +80,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "description",
       "domain",
       "status",
-      "q_rule_count",
+      "rule_count",
       "link_count",
       "content",
       "last_change_by",

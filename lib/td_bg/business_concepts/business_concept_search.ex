@@ -10,10 +10,10 @@ defmodule TdBg.BusinessConcept.Search do
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
   @map_field_to_condition %{
-    "q_rule_terms" => %{gt: 0},
+    "rule_terms" => %{gt: 0},
     "linked_terms" => %{gt: 0},
     "not_linked_terms" =>  %{gte: 0, lt: 1},
-    "not_q_rule_terms" =>  %{gte: 0, lt: 1}
+    "not_rule_terms" =>  %{gte: 0, lt: 1}
   }
 
   def get_filter_values(%User{is_admin: true}) do

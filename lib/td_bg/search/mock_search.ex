@@ -47,7 +47,7 @@ defmodule TdBg.Search.MockSearch do
     sort: _sort,
     size: _size
   }) do
-    default_params_map = %{:link_count => 0, :q_rule_count => 0}
+    default_params_map = %{:link_count => 0, :rule_count => 0}
     BusinessConcepts.list_all_business_concept_versions()
       |> Enum.map(&BusinessConceptVersion.search_fields(&1))
       |> Enum.map(fn(bv) -> Map.merge(bv, default_params_map, fn _k, v1, v2 -> v1 || v2 end) end)
