@@ -97,6 +97,8 @@ config :td_perms, permissions: [
   :manage_confidential_business_concepts
 ]
 
+config :td_df, repo: TdBg.Repo
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
