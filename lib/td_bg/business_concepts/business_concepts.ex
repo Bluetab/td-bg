@@ -4,6 +4,7 @@ defmodule TdBg.BusinessConcepts do
   """
 
   import Ecto.Query, warn: false
+  import Ecto.Changeset
   alias Ecto.Multi
   alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts.BusinessConcept
@@ -157,6 +158,7 @@ defmodule TdBg.BusinessConcepts do
       |> raise_error_if_no_content_schema
       |> set_content_defaults
       |> validate_new_concept
+      |> validate_description
       |> validate_concept_content
       |> insert_concept
 
@@ -236,6 +238,7 @@ defmodule TdBg.BusinessConcepts do
       |> set_content_defaults
       |> validate_concept(business_concept_version)
       |> validate_concept_content
+      |> validate_description
       |> update_concept
 
     case result do
@@ -640,7 +643,7 @@ defmodule TdBg.BusinessConcepts do
   defp validate_concept_content(attrs) do
     changeset = Map.get(attrs, @changeset)
 
-    if changeset.valid? && !attrs.in_progress do
+    if changeset.valid? do
       do_validate_concept_content(attrs)
     else
       attrs
@@ -652,9 +655,33 @@ defmodule TdBg.BusinessConcepts do
     content_schema = Map.get(attrs, @content_schema)
     changeset = Templates.build_changeset(content, content_schema)
     if not changeset.valid? do
-      Map.put(attrs, @changeset, changeset)
+      attrs
+      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
+      |> Map.put(:in_progress, true)
     else
       attrs
+      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, false))
+      |> Map.put(:in_progress, false)
+    end
+  end
+
+  defp validate_description(attrs) do
+    if Map.has_key?(attrs, :in_progress) && !attrs.in_progress do
+      do_validate_description(attrs)
+    else
+      attrs
+    end
+  end
+
+  defp do_validate_description(attrs) do
+    if !attrs.description == %{} do
+      attrs
+      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
+      |> Map.put(:in_progress, true)
+    else
+      attrs
+      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, false))
+      |> Map.put(:in_progress, false)
     end
   end
 

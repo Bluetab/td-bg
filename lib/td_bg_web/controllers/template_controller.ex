@@ -4,12 +4,12 @@ defmodule TdBgWeb.TemplateController do
   use PhoenixSwagger
 
   alias TdBg.Taxonomies
-  alias TdDf.Templates
-  alias TdDf.Templates.Template
   alias TdBgWeb.ChangesetView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.TemplateSupport
+  alias TdDf.Templates
+  alias TdDf.Templates.Template
 
   @preprocess "preprocess"
 

@@ -4,8 +4,8 @@ defmodule TdBg.Metrics.BusinessConcepts do
   use GenServer
   require Logger
   alias TdBg.Metrics.Instrumenter
-  alias TdDf.Templates
   alias TdBg.Utils.CollectionUtils
+  alias TdDf.Templates
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 

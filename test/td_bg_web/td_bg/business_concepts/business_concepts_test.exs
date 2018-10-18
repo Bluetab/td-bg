@@ -71,8 +71,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
@@ -86,6 +85,7 @@ defmodule TdBg.BusinessConceptsTests do
       assert object.last_change_by == version_attrs.last_change_by
       assert object.current == true
       assert object.version == version_attrs.version
+      assert object.in_progress == false
       assert object.business_concept.type == concept_attrs.type
       assert object.business_concept.domain_id == concept_attrs.domain_id
       assert object.business_concept.last_change_by == concept_attrs.last_change_by
@@ -100,8 +100,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: nil,
         last_change_by: nil,
         last_change_at: nil,
-        version: nil,
-        in_progress: nil
+        version: nil
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
@@ -137,8 +136,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -175,18 +173,24 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:error, %Ecto.Changeset{} = changeset} =
-               BusinessConcepts.create_business_concept(creation_attrs)
+      assert {:ok, %BusinessConceptVersion{} = object} =
+      BusinessConcepts.create_business_concept(creation_attrs)
 
-      changeset
-      |> assert_expected_validation("Field1", :required)
-      |> assert_expected_validation("Field2", :required)
+      assert object.content == version_attrs.content
+      assert object.name == version_attrs.name
+      assert object.description == version_attrs.description
+      assert object.last_change_by == version_attrs.last_change_by
+      assert object.current == true
+      assert object.in_progress == true
+      assert object.version == version_attrs.version
+      assert object.business_concept.type == concept_attrs.type
+      assert object.business_concept.domain_id == concept_attrs.domain_id
+      assert object.business_concept.last_change_by == concept_attrs.last_change_by
     end
 
     test "create_business_concept/1 with content: default values" do
@@ -215,8 +219,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -253,16 +256,23 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
+      assert {:ok, %BusinessConceptVersion{} = object} =
+      BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert {:error, %Ecto.Changeset{} = changeset} =
-               BusinessConcepts.create_business_concept(creation_attrs)
-
-      assert_expected_validation(changeset, "Field1", :inclusion)
+      assert object.content == version_attrs.content
+      assert object.name == version_attrs.name
+      assert object.description == version_attrs.description
+      assert object.last_change_by == version_attrs.last_change_by
+      assert object.current == true
+      assert object.in_progress == true
+      assert object.version == version_attrs.version
+      assert object.business_concept.type == concept_attrs.type
+      assert object.business_concept.domain_id == concept_attrs.domain_id
+      assert object.business_concept.last_change_by == concept_attrs.last_change_by
     end
 
     test "create_business_concept/1 with invalid content: invalid variable list" do
@@ -290,16 +300,24 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:error, %Ecto.Changeset{} = changeset} =
-               BusinessConcepts.create_business_concept(creation_attrs)
+      assert {:ok, %BusinessConceptVersion{} = object} =
+      BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert_expected_validation(changeset, "Field1", :cast)
+      assert object.content == version_attrs.content
+      assert object.name == version_attrs.name
+      assert object.description == version_attrs.description
+      assert object.last_change_by == version_attrs.last_change_by
+      assert object.current == true
+      assert object.in_progress == true
+      assert object.version == version_attrs.version
+      assert object.business_concept.type == concept_attrs.type
+      assert object.business_concept.domain_id == concept_attrs.domain_id
+      assert object.business_concept.last_change_by == concept_attrs.last_change_by
     end
 
     test "create_business_concept/1 with no content" do
@@ -357,8 +375,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -388,8 +405,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("some description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       assert_raise RuntimeError, "Content Schema is not defined for Business Concept", fn ->
@@ -485,8 +501,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("updated description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       update_attrs = Map.put(version_attrs, :content_schema, [])
@@ -502,6 +517,7 @@ defmodule TdBg.BusinessConceptsTests do
       assert object.last_change_by == version_attrs.last_change_by
       assert object.current == true
       assert object.version == version_attrs.version
+      assert object.in_progress == false
 
       assert object.business_concept.id == business_concept_version.business_concept.id
       assert object.business_concept.last_change_by == 1000
@@ -541,8 +557,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: to_rich_text("updated description"),
         last_change_by: user.id,
         last_change_at: DateTime.utc_now(),
-        version: 1,
-        in_progress: false
+        version: 1
       }
 
       update_attrs = Map.put(version_attrs, :content_schema, content_schema)
@@ -569,8 +584,7 @@ defmodule TdBg.BusinessConceptsTests do
         description: nil,
         last_change_by: nil,
         last_change_at: nil,
-        version: nil,
-        in_progress: nil
+        version: nil
       }
 
       update_attrs = Map.put(version_attrs, :content_schema, [])

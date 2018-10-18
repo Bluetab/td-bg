@@ -9,10 +9,10 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdDf.Templates
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
+  alias TdDf.Templates
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
