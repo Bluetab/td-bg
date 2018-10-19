@@ -239,7 +239,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp insert_business_concept(%{data: data, user: user, template: template}) do
     content = Map.drop(data, @no_content)
-
+    content = Enum.reduce(template.content, content, &fill_content(&2, &1))
     case validate_content(content, template) do
       {:ok, content} ->
         insert_business_concept(%{data: data, user: user, template: template, content: content})
@@ -248,7 +248,6 @@ defmodule TdBg.BusinessConcept.Upload do
         error
     end
   end
-
   defp insert_business_concept(%{data: data, user: user}) do
     case get_template(data) do
       {:ok, template} ->
@@ -258,6 +257,14 @@ defmodule TdBg.BusinessConcept.Upload do
         error
     end
   end
+
+  defp fill_content(content, %{"type" => type, "name" => name}) when type == "variable_list" do
+    case Map.get(content, name, nil) do
+      nil -> content
+      value -> Map.put(content, name, [value])
+    end
+  end
+  defp fill_content(content, _field), do: content
 
   # TODO: Cache template retrieval
   defp get_template(%{"template" => template}) do
