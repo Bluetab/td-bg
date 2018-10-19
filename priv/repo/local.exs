@@ -9,11 +9,11 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
-alias TdBg.Templates.Template
 alias TdBg.Taxonomies.Domain
 alias TdBg.BusinessConcepts.BusinessConcept
 alias TdBg.BusinessConcepts.BusinessConceptVersion
 alias TdBg.Repo
+alias TdDf.Templates.Template
 alias Ecto.Changeset
 
 template = Repo.insert!(%Template{
