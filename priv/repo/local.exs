@@ -16,6 +16,104 @@ alias TdBg.Repo
 alias TdDf.Templates.Template
 alias Ecto.Changeset
 
+reference_template = Repo.insert!(%Template{
+  label: "Reference Template",
+  name: "reference",
+  is_default: false,
+  content: [
+    %{name: "_confidential",
+      group: "Campos especiales",
+      label: "Confidencial",
+      description: "Indica si el término es connfidencial"
+      },
+    %{name: "texto",
+      type: "string",
+      group: "Textos",
+      label: "Texto",
+      required: false,
+      description: "Campo para introducir texto libre"
+      },
+    %{name: "texto_multiple",
+      type: "variable_list",
+      group: "Textos",
+      label: "Texto múltiple",
+      widget: "multiple_input",
+      required: false,
+      description: "Campo que permite meter una lista de valores libres"
+      },
+    %{name: "area_texto",
+       type: "string",
+       group: "Textos",
+       label: "Área de texto",
+       widget: "textarea",
+       required: true,
+       description: "Pinta un área de texto para introducir textos de mayor longitud"
+       },
+    %{name: "lista_dropdown",
+      type: "list",
+      group: "Listas",
+      label: "Lista con desplegable",
+      values: ["Elemento1", "Elemento2", "Elemento3", "Elemento4", "Elemento5", "Elemento6", "Elemento7", "Elemento8", "Elemento9", "Elemento10", "Elemento11", "Elemento12"],
+      widget: "dropdown",
+      required: false,
+      description: "Campo con una lista de elementos predefinidos y desplegable donde se puede elegir un valor"
+      },
+    %{name: "dropdown_multiple",
+      type: "variable_list",
+      group: "Listas",
+      label: "Selección múltiple",
+      values: ["Elemento1", "Elemento2", "Elemento3", "Elemento4", "Elemento5", "Elemento6", "Elemento7", "Elemento8", "Elemento9", "Elemento10", "Elemento11", "Elemento12"],
+      widget: "dropdown",
+      required: false,
+      description: "Campo con una lista de elementos predefinidos y desplegable donde se puede elegir un valor"},
+    %{name: "lista_radio",
+      type: "list",
+      group: "Listas",
+      label: "Lista con radio button",
+      values: ["Si", "No"],
+      widget: "radio",
+      required: true,
+      description: "Campo con una lista de elementos predefinidos que se muestran en pantalla para elegir uno"
+      },
+    %{name: "texto_dependiente",
+      type: "string",
+      group: "Listas",
+      label: "Campo texto dependiente",
+      depends: %{on: "lista_radio", to_be: "Si"},
+      required: true,
+      description: "Campo que se muestra o no dependiendo del valor de otro campo"
+      },
+    %{name: "lista_dependiente",
+      type: "list",
+      group: "Listas",
+      label: "Campo lista dependiente",
+      values: ["Elemento1", "Elemento2", "Elemento3", "Elemento4", "Elemento5", "Elemento6", "Elemento7", "Elemento8", "Elemento9", "Elemento10", "Elemento11", "Elemento12"],
+      widget: "dropdown",
+      depends: %{on: "lista_radio", to_be: "Si"},
+      required: false,
+      description: "Campo que se muestra o no dependiendo del valor de otro campo"
+      },
+    %{meta: %{role: "Rol de Prueba"},
+      name: "role",
+      type: "list",
+      group: "Listas",
+      label: "Usuarios con Rol",
+      values: [],
+      widget: "dropdown",
+      required: false,
+      description: "Lista dinámica de usuarios que tienen el rol especificado en la plantilla en el dominio seleccionado al alta del concepto"
+      },
+    %{name: "urls",
+      type: "variable_map_list",
+      group: "Otros",
+      label: "Urls",
+      widget: "pair_list",
+      required: false,
+      description: "URLs con links"
+    }
+  ]
+})
+
 template = Repo.insert!(%Template{
   label: "Empty Tempalte",
   name: "empty",
@@ -34,6 +132,19 @@ template = Repo.insert!(%Template{
 ]
 
 })
+
+reference_domain = Repo.insert!(%Domain{
+    description: "Reference Domain",
+    type: "ReferenceDomain",
+    name: "Reference Domain"
+})
+
+reference_domain
+|> Repo.preload(:templates)
+|> Changeset.change
+|> Changeset.put_assoc(:templates, [reference_template])
+|> Repo.update!
+
 
 domain1 = Repo.insert!(%Domain{
     description: "Dominio 1",
@@ -76,7 +187,7 @@ Repo.insert!(%BusinessConceptVersion{
   business_concept_id: business_concept.id
   })
 
-domain3 = Repo.insert!(%Domain{
+Repo.insert!(%Domain{
     description: "Dominio 3",
     type: "Especial",
     name: "Dominio3",
@@ -116,7 +227,7 @@ Repo.insert!(%Template{
 ]
 })
 
-domain_with_no_template = Repo.insert!(%Domain{
+Repo.insert!(%Domain{
     description: "Domain with no template",
     type: "No template",
     name: "Domain with no template"
