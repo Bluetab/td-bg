@@ -823,7 +823,7 @@ defmodule TdBg.BusinessConceptSteps do
       assert to_plain_text(concept["description"]) == value.description
       assert concept["content"]["Formula"] == value."Formula"
       assert concept["content"]["Format"] == value."Format"
-      assert concept["content"]["Values"] == value."Values"
+      assert Enum.at(concept["content"]["Values"], 0) == value."Values"
     end)
   end
 

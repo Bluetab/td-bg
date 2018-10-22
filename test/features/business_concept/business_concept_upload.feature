@@ -8,15 +8,15 @@ Scenario: Upload business concepts
    | Field    | Format        | Max Size | Values                                        | Mandatory | Default Value | Group      |
    | Formula  | string        | 100      |                                               |    NO     |               | General    |
    | Format   | list          |          | Date, Numeric, Amount, Text                   |    NO     |               | General    |
-   # | Values   | variable_list | 100      |                                               |    NO     |               | Functional |
+   | Values   | variable_list | 100      | Date, Numeric, Amount, Text                   |    NO     |               | Functional |
   When "app-admin" uploads business concepts with the following data:
-    | template      | domain          | name   | description | Formula | Format  | Values            |
-    | Business_Term | My Parent Group | First  | First Term  | one     | Date    | some,values       |
-    | Business_Term | My Child Domain | Second | Second Term | two     | Numeric | some,funny,values |
-    | Business_Term | My Domain       | Third  | Third Term  | three   | Amount  | some,great,values |
+    | template      | domain          | name   | description | Formula | Format  | Values |
+    | Business_Term | My Parent Group | First  | First Term  | one     | Date    | some   |
+    | Business_Term | My Child Domain | Second | Second Term | two     | Numeric | funny  |
+    | Business_Term | My Domain       | Third  | Third Term  | three   | Amount  | values |
   Then the system returns a result with code "Ok"
   Then "app-admin" is able to view the following uploaded business concepts:
-    | template      | domain          | name   | description | Formula | Format  | Values            |
-    | Business_Term | My Parent Group | First  | First Term  | one     | Date    | some,values       |
-    | Business_Term | My Child Domain | Second | Second Term | two     | Numeric | some,funny,values |
-    | Business_Term | My Domain       | Third  | Third Term  | three   | Amount  | some,great,values |
+    | template      | domain          | name   | description | Formula | Format  | Values |
+    | Business_Term | My Parent Group | First  | First Term  | one     | Date    | some   |
+    | Business_Term | My Child Domain | Second | Second Term | two     | Numeric | funny  |
+    | Business_Term | My Domain       | Third  | Third Term  | three   | Amount  | values |
