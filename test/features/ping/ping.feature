@@ -1,5 +1,5 @@
 Feature: Ping
-  Check if the server is alive
+  Check if the server is alive 
 
   Scenario: Send ping
     When you send me a ping
