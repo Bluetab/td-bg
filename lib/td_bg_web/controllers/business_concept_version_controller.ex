@@ -220,7 +220,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
-          "resource_type" => "concept",
+          "resource_type" => "business_concept",
           "payload" => creation_attrs
         }
       }
@@ -373,7 +373,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
-          "resource_type" => "concept",
+          "resource_type" => "business_concept",
           "payload" => audit_payload
         }
       }
@@ -638,7 +638,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
-          "resource_type" => "concept",
+          "resource_type" => "business_concept",
           "payload" => %{}
         }
       }
@@ -676,7 +676,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
-          "resource_type" => "concept",
+          "resource_type" => "business_concept",
           "payload" => %{}
         }
       }
@@ -727,7 +727,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
-          "resource_type" => "concept",
+          "resource_type" => "business_concept",
           "payload" => %{}
         }
       }
@@ -767,7 +767,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
-          "resource_type" => "concept",
+          "resource_type" => "business_concept",
           "payload" => audit_payload
         }
       }
@@ -860,7 +860,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       audit = %{
         "audit" => %{
           "resource_id" => business_concept_id,
-          "resource_type" => "concept",
+          "resource_type" => "business_concept",
           "payload" => audit_payload
         }
       }
