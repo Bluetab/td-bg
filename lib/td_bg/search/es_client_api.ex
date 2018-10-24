@@ -50,6 +50,7 @@ defmodule TdBg.ESClientApi do
   end
 
   def search_es(index_name, query) do
+    Logger.info("Query: #{query}")
     post("#{index_name}/" <> "_search/", query |> JSON.encode!())
   end
 
