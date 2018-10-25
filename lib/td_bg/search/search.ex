@@ -80,7 +80,7 @@ defmodule TdBg.Search do
   def search(index_name, query) do
     query = query
     |> Map.put(:sort, ["name.raw"])
-    Logger.info("Query: #{inspect(query)}")
+    Logger.debug(fn -> "Query: #{inspect(query)}" end)
     response = ESClientApi.search_es(index_name, query)
     case response do
       {:ok, %HTTPoison.Response{body: %{"hits" => %{"hits" => results, "total" => total}}}} ->

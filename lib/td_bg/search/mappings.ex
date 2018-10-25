@@ -64,15 +64,12 @@ defmodule TdBg.Search.Mappings do
     Templates.list_templates()
     |> Enum.flat_map(&get_mappings/1)
     |> Enum.into(%{})
+    |> Map.put("_confidential", %{type: "text", fields: %{raw: %{type: "keyword"}}})
   end
 
   defp get_mappings(%Template{content: content}) do
     content
     |> Enum.map(&field_mapping/1)
-  end
-
-  defp field_mapping(%{"name" => "_confidential"}) do
-    {"_confidential", %{type: "text", fields: %{raw: %{type: "keyword"}}}}
   end
 
   defp field_mapping(%{"name" => name, "type" => type}) do
