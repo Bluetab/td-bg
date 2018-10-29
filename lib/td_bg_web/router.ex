@@ -63,11 +63,7 @@ defmodule TdBgWeb.Router do
 
     resources "/business_concept_aliases", BusinessConceptAliasController, except: [:new, :edit, :index, :create, :update]
 
-    post "/search/:search_id", SearchController, :search
-
-    post "/search", SearchController, :create
-    get "/search/reindex_all", SearchController, :reindex_all
-    delete "/search", SearchController, :delete
+    get "/business_concepts/search/reindex_all", SearchController, :reindex_all
 
     resources "/templates", TemplateController, except: [:new, :edit]
     get "/templates/load/:id", TemplateController, :load_and_show
