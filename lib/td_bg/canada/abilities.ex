@@ -1,6 +1,7 @@
 defmodule TdBg.Canada.Abilities do
   @moduledoc false
   alias TdBg.Accounts.User
+  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canada.BusinessConceptAbilities
   alias TdBg.Canada.TaxonomyAbilities
@@ -8,6 +9,14 @@ defmodule TdBg.Canada.Abilities do
 
   defimpl Canada.Can, for: User do
     # administrator is superpowerful for Domain
+    def can?(%User{is_admin: true}, _action, BusinessConcept) do
+      true
+    end
+
+    def can?(%User{is_admin: true}, _action, %BusinessConcept{}) do
+      true
+    end
+
     def can?(%User{is_admin: true}, _action, Domain) do
       true
     end
