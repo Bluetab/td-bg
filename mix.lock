@@ -61,7 +61,7 @@
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], []},
   "td_df": {:git, "https://github.com/Bluetab/td-df", "27459933ca981f439eb367f700a4184855e1570e", []},
   "td_df_lib": {:git, "https://github.com/netto89/td-df-lib.git", "e226cba8b02bb5c75aaaf955722a7d3d3aa4da75", []},
-  "td_perms": {:git, "https://github.com/Bluetab/td-perms.git", "3a387aa7a2e03948ea6f830e95acc49dce6a0db5", [tag: "v0.3.10"]},
+  "td_perms": {:git, "https://github.com/Bluetab/td-perms.git", "84726cccb6bdea45820064277e60be734daf53dc", [tag: "v0.3.11"]},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.3.1", "a1f612a7b512638634a603c8f401892afbf99b8ce93a45041f8aaca99cadb85e", [:rebar3], []},
   "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], []},
 }
