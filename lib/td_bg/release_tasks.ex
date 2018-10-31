@@ -5,7 +5,8 @@ defmodule TdBg.ReleaseTasks do
 
   @start_apps [
       :postgrex,
-      :ecto
+      :ecto,
+      :td_perms
     ]
 
     @myapps [
