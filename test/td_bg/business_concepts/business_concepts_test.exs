@@ -2,13 +2,24 @@ defmodule TdBg.BusinessConceptsTest do
   use TdBg.DataCase
   alias TdBg.BusinessConcepts
   alias TdBg.Repo
+  @df_cache Application.get_env(:td_bg, :df_cache)
+
+  def create_template(template) do
+    @df_cache.put_template(template)
+    template
+  end
+
+  setup_all do
+    start_supervised(@df_cache)
+    :ok
+  end
 
   describe "business_concepts" do
 
     defp fixture do
-      template_content = [%{"name" => "fieldname", "type" => "string", "required" =>  false}]
-      template = insert(:template, name: "onefield", content: template_content)
-      parent_domain = insert(:domain, templates: [template])
+      template_content = [%{name: "fieldname", type: "string", required: false}]
+      template = create_template(%{name: "onefield", content: template_content, label: "label"})
+      parent_domain = insert(:domain)
       child_domain = insert(:child_domain, parent: parent_domain)
       insert(:business_concept, type: template.name, domain: child_domain)
       insert(:business_concept, type: template.name, domain: parent_domain)

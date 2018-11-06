@@ -1,6 +1,10 @@
 defmodule TdBg.BusinessConcept.Upload do
   require Logger
 
+  alias TdDfLib.Validation
+
+  @df_cache Application.get_env(:td_bg, :df_cache)
+
   @moduledoc """
     Helper module to upload business concepts in csv format.
 
@@ -64,7 +68,6 @@ defmodule TdBg.BusinessConcept.Upload do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Repo
-  alias TdDf.Templates
 
   NimbleCSV.define(ParserCSVUpload, separator: ";")
 
@@ -268,21 +271,21 @@ defmodule TdBg.BusinessConcept.Upload do
 
   # TODO: Cache template retrieval
   defp get_template(%{"template" => template}) do
-    case Templates.get_template_by_name(template) do
+    case @df_cache.get_template_by_name(template) do
       nil -> {:error, :no_template_found}
       template -> {:ok, template}
     end
   end
 
   defp get_template(_) do
-    case Templates.get_default_template() do
+    case @df_cache.get_default_template() do
       nil -> {:error, :no_template_found}
       template -> {:ok, template}
     end
   end
 
   defp validate_content(content, template) do
-    changeset = Templates.build_changeset(content, template.content)
+    changeset = Validation.build_changeset(content, template.content)
 
     case changeset.valid? do
       true -> {:ok, content}

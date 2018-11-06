@@ -22,8 +22,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdBgWeb.TemplateSupport
-  alias TdDf.Templates
 
+  @df_cache Application.get_env(:td_bg, :df_cache)
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
   @events %{
@@ -178,7 +178,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     validate_required_bc_fields(business_concept_params)
 
     concept_type = Map.get(business_concept_params, "type")
-    template = Templates.get_template_by_name(concept_type)
+    template = @df_cache.get_template_by_name(concept_type)
     content_schema = Map.get(template, :content)
 
     concept_name = Map.get(business_concept_params, "name")

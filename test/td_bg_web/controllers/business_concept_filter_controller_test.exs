@@ -7,10 +7,13 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
+  @df_cache Application.get_env(:td_bg, :df_cache)
+
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
     start_supervised MockPermissionResolver
+    start_supervised(@df_cache)
     :ok
   end
 

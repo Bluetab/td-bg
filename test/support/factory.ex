@@ -14,20 +14,10 @@ defmodule TdBg.Factory do
     }
   end
 
-  def template_factory do
-    %TdDf.Templates.Template {
-      label: "some type",
-      name: "some_type",
-      content: [],
-      is_default: false
-    }
-  end
-
   def domain_factory do
     %TdBg.Taxonomies.Domain {
       name: "My domain",
-      description: "My domain description",
-      templates: []
+      description: "My domain description"
     }
   end
 

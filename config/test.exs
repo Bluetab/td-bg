@@ -52,6 +52,7 @@ config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.MockTdAuditServi
   audit_domain: ""
 
 config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
+config :td_bg, df_cache: TdBg.MockDfCache
 
 config :td_bg, cache_domains_on_startup: false
 config :td_bg, cache_busines_concepts_on_startup: false

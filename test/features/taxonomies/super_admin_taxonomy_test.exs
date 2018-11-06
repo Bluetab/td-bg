@@ -16,10 +16,13 @@ defmodule TdBg.SuperAdminTaxonomyTest do
   import TdBg.ResultSteps
   import TdBg.BusinessConceptSteps
 
+  @df_cache Application.get_env(:td_bg, :df_cache)
+
   setup_all do
     start_supervised MockTdAuthService
     start_supervised MockTdAuditService
     start_supervised MockPermissionResolver
+    start_supervised @df_cache
     :ok
   end
 

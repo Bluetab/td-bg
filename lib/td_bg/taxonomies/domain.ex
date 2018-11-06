@@ -4,7 +4,6 @@ defmodule TdBg.Taxonomies.Domain do
   import Ecto.Changeset
   alias TdBg.Searchable
   alias TdBg.Taxonomies.Domain
-  alias TdDf.Templates.Template
   alias TdPerms.TaxonomyCache
 
   @behaviour Searchable
@@ -16,8 +15,6 @@ defmodule TdBg.Taxonomies.Domain do
     belongs_to :parent, Domain
 
     timestamps()
-
-    many_to_many :templates, Template, join_through: "domains_templates", on_replace: :delete, on_delete: :delete_all
   end
 
   @doc false

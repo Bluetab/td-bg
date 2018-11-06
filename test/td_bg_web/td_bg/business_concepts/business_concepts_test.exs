@@ -735,7 +735,6 @@ defmodule TdBg.BusinessConceptsTests do
     business_concept_version
     |> Repo.preload(:business_concept)
     |> Repo.preload(business_concept: [:domain, :aliases])
-    |> Repo.preload(business_concept: [domain: [:templates]])
   end
 
   defp assert_expected_validation(changeset, field, expected_validation) do

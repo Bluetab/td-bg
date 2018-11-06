@@ -2,8 +2,8 @@ defmodule TdBg.Search.Mappings do
   @moduledoc """
     Generates mappings for elasticsearch
   """
-  alias TdDf.Templates
-  alias TdDf.Templates.Template
+
+  @df_cache Application.get_env(:td_bg, :df_cache)
 
   def get_mappings do
     content_mappings = %{properties: get_dynamic_mappings()}
@@ -61,13 +61,13 @@ defmodule TdBg.Search.Mappings do
   end
 
   def get_dynamic_mappings do
-    Templates.list_templates()
+    @df_cache.list_templates()
     |> Enum.flat_map(&get_mappings/1)
     |> Enum.into(%{})
     |> Map.put("_confidential", %{type: "text", fields: %{raw: %{type: "keyword"}}})
   end
 
-  defp get_mappings(%Template{content: content}) do
+  defp get_mappings(%{content: content}) do
     content
     |> Enum.map(&field_mapping/1)
   end

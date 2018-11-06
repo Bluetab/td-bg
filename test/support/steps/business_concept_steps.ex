@@ -706,21 +706,6 @@ defmodule TdBg.BusinessConceptSteps do
     assert_attrs(attrs, business_concept)
   end
 
-  defwhen ~r/^"(?<user_name>[^"]+)" tries to get the list of business concept types$/,
-          %{user_name: user_name},
-          state do
-    token = get_user_token(user_name)
-    {:ok, status_code, %{"data" => resp}} = index_templates(token)
-    resp = Enum.map(resp, fn x -> %{type_name: Map.get(x, "name")} end)
-
-    {:ok,
-     Map.merge(state, %{
-       status_code: status_code,
-       user_name: user_name,
-       business_concept_types: resp
-     })}
-  end
-
   defthen ~r/^user "(?<user_name>[^"]+)" is able to see following list of Business Concept Types$/,
           %{user_name: user_name, table: expected_list},
           state do
@@ -728,21 +713,6 @@ defmodule TdBg.BusinessConceptSteps do
     expected_list = Enum.map(expected_list, fn type -> type.type_name end)
     actual_list = Enum.map(state[:business_concept_types], fn type -> type[:type_name] end)
     assert Enum.sort(expected_list) == Enum.sort(actual_list)
-  end
-
-  defwhen ~r/^"(?<user_name>[^"]+)" tries to get the list of fields of business concept type "(?<bc_type>[^"]+)"$/,
-          %{user_name: user_name, bc_type: bc_type},
-          state do
-    token = get_user_token(user_name)
-    {:ok, status_code, %{"data" => resp}} = index_templates(token)
-    [%{"content" => resp}] = Enum.filter(resp, fn %{"name" => name} -> name == bc_type end)
-
-    {:ok,
-     Map.merge(state, %{
-       status_code: status_code,
-       user_name: user_name,
-       business_concept_type_fields: resp
-     })}
   end
 
   defthen ~r/^user "(?<user_name>[^"]+)" is able to see following list of Business Concept Type Fields$/,
@@ -861,21 +831,21 @@ defmodule TdBg.BusinessConceptSteps do
 
   def add_schema_field(map, _name, ""), do: map
 
-  def add_schema_field(map, :max_size, value) do
-    Map.put(map, :max_size, String.to_integer(value))
+  def add_schema_field(map, "max_size", value) do
+    Map.put(map, "max_size", String.to_integer(value))
   end
 
-  def add_schema_field(map, :values, values) do
+  def add_schema_field(map, "values", values) do
     diff_values =
       values
       |> String.split(",")
       |> Enum.map(&String.trim(&1))
 
-    Map.put(map, :values, diff_values)
+    Map.put(map, "values", diff_values)
   end
 
-  def add_schema_field(map, :required, required) do
-    Map.put(map, :required, required == "YES")
+  def add_schema_field(map, "required", required) do
+    Map.put(map, "required", required == "YES")
   end
 
   def add_schema_field(map, name, value), do: Map.put(map, name, value)
@@ -885,13 +855,13 @@ defmodule TdBg.BusinessConceptSteps do
 
   def add_all_schema_fields(field_data) do
     Map.new()
-    |> add_schema_field(:name, field_data."Field")
-    |> add_schema_field(:type, field_data."Format")
-    |> add_schema_field(:max_size, field_data."Max Size")
-    |> add_schema_field(:values, field_data."Values")
-    |> add_schema_field(:required, field_data."Mandatory")
-    |> add_schema_field(:default, field_data."Default Value")
-    |> add_schema_field(:group, field_data."Group")
+    |> add_schema_field("name", field_data."Field")
+    |> add_schema_field("type", field_data."Format")
+    |> add_schema_field("max_size", field_data."Max Size")
+    |> add_schema_field("values", field_data."Values")
+    |> add_schema_field("required", field_data."Mandatory")
+    |> add_schema_field("default", field_data."Default Value")
+    |> add_schema_field("group", field_data."Group")
   end
 
   def assert_visible_aliases(

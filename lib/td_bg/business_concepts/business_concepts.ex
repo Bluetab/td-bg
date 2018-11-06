@@ -10,7 +10,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
-  alias TdDf.Templates
+  alias TdDfLib.Validation
   alias TdPerms.BusinessConceptCache
   alias ValidationError
 
@@ -653,7 +653,7 @@ defmodule TdBg.BusinessConcepts do
   defp do_validate_concept_content(attrs) do
     content = Map.get(attrs, @content)
     content_schema = Map.get(attrs, @content_schema)
-    changeset = Templates.build_changeset(content, content_schema)
+    changeset = Validation.build_changeset(content, content_schema)
     if not changeset.valid? do
       attrs
       |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))

@@ -2,8 +2,8 @@ defmodule TdBg.Search.Aggregations do
   @moduledoc """
     Aggregations for elasticsearch
   """
-  alias TdDf.Templates
-  alias TdDf.Templates.Template
+
+  @df_cache Application.get_env(:td_bg, :df_cache)
 
   def aggregation_terms do
     static_keywords = [
@@ -19,14 +19,14 @@ defmodule TdBg.Search.Aggregations do
     ]
 
     dynamic_keywords =
-      Templates.list_templates()
+      @df_cache.list_templates()
       |> Enum.flat_map(&template_terms/1)
 
     (static_keywords ++ dynamic_keywords)
     |> Enum.into(%{})
   end
 
-  def template_terms(%Template{content: content}) do
+  def template_terms(%{content: content}) do
     content
     |> Enum.filter(&filter_content_term/1)
     |> Enum.map(& &1["name"])

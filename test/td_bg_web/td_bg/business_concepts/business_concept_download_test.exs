@@ -1,6 +1,18 @@
 defmodule TdBg.BusinessConceptDownloadTests do
   use TdBg.DataCase
 
+  @df_cache Application.get_env(:td_bg, :df_cache)
+
+  setup_all do
+    start_supervised(@df_cache)
+    :ok
+  end
+
+  def create_template(template) do
+    @df_cache.put_template(template)
+    template
+  end
+
   describe "business_concept_download" do
     alias TdBg.BusinessConcept.Download
 
@@ -8,12 +20,14 @@ defmodule TdBg.BusinessConceptDownloadTests do
       template_name = "template_name"
       field_name = "field_name"
       field_label = "field_label"
-      insert(:template, name: template_name, content: [%{
-          name: field_name,
-          type: "list",
-          label: field_label
-        }
-      ])
+      create_template(%{
+          name: template_name, label: "label",
+          content: [%{
+            "name" => field_name,
+            "type" => "list",
+            "label" => field_label
+          }
+      ]})
 
       concept_name = "concept_name"
       concept_description = "concept_description"
