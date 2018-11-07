@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.5] 2018-11-07
+
+### Changed
+
+- Template fields with no type are now interpreted as type "string"
+
 ## [2.7.4] 2018-11-07
 
 ### Changed

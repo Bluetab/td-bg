@@ -76,6 +76,10 @@ defmodule TdBg.Search.Mappings do
     {name, mapping_type(type)}
   end
 
+  defp field_mapping(%{"name" => name}) do
+    {name, mapping_type("string")}
+  end
+
   defp mapping_type("list") do
     %{type: "text", fields: %{raw: %{type: "keyword"}}}
   end
