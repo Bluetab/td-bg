@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.4] 2018-11-07
+
+### Changed
+
+- Use TdPerms.MockDynamicFormCache instead of TdBg.MockDfCache for DfCache testing
+
 ## [2.7.3] 2018-11-06
 
 ### Added

@@ -4,7 +4,6 @@ defmodule TdBgWeb.TemplateControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias Poison, as: JSON
   alias TdBg.Accounts.User
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Taxonomies

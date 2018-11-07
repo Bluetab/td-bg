@@ -29,6 +29,7 @@ defmodule TdBgWeb.BusinessConcept do
   def create_template(type, definition) do
     attrs =
       %{}
+      |> Map.put(:id, 0)
       |> Map.put(:label, type)
       |> Map.put(:name, type)
       |> Map.put(:content, definition)

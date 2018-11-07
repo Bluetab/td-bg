@@ -145,6 +145,7 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   defp create_template(_) do
     attrs =
       %{}
+      |> Map.put(:id, 0)
       |> Map.put(:label, "some type")
       |> Map.put(:name, "some_type")
       |> Map.put(:content, [])

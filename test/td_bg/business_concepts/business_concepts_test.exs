@@ -18,7 +18,7 @@ defmodule TdBg.BusinessConceptsTest do
 
     defp fixture do
       template_content = [%{name: "fieldname", type: "string", required: false}]
-      template = create_template(%{name: "onefield", content: template_content, label: "label"})
+      template = create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
       parent_domain = insert(:domain)
       child_domain = insert(:child_domain, parent: parent_domain)
       insert(:business_concept, type: template.name, domain: child_domain)

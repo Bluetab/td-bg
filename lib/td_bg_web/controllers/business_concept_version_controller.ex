@@ -180,7 +180,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     concept_type = Map.get(business_concept_params, "type")
     template = @df_cache.get_template_by_name(concept_type)
     content_schema = Map.get(template, :content)
-
     concept_name = Map.get(business_concept_params, "name")
 
     domain_id = Map.get(business_concept_params, "domain_id")

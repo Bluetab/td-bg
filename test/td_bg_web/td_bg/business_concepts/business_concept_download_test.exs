@@ -21,7 +21,9 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_name = "field_name"
       field_label = "field_label"
       create_template(%{
-          name: template_name, label: "label",
+          id: 0,
+          name: template_name,
+          label: "label",
           content: [%{
             "name" => field_name,
             "type" => "list",
