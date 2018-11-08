@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.6] 2018-11-08
+
+### Removed
+
+- Remove migration that drops the deprecated Templates table
+
 ## [2.7.5] 2018-11-07
 
 ### Changed
