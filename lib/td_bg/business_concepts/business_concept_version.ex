@@ -8,10 +8,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Searchable
   alias TdBg.Taxonomies
-  alias TdDf.Templates
   alias TdPerms.TaxonomyCache
   alias TdPerms.UserCache
 
+  @df_cache Application.get_env(:td_bg, :df_cache)
   @behaviour Searchable
 
   schema "business_concept_versions" do
@@ -144,7 +144,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   def search_fields(%BusinessConceptVersion{last_change_by: last_change_by_id} = concept) do
     domain = Taxonomies.get_domain!(concept.business_concept.domain_id)
-    template = Templates.get_template_by_name!(concept.business_concept.type)
+    template = @df_cache.get_template_by_name(concept.business_concept.type)
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
     domain_ids = TaxonomyCache.get_parent_ids(domain.id)

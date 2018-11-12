@@ -4,14 +4,15 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuthService
+  @df_cache Application.get_env(:td_bg, :df_cache)
 
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockPermissionResolver)
+    start_supervised(@df_cache)
     :ok
   end
 
@@ -142,17 +143,14 @@ defmodule TdBgWeb.BusinessConceptControllerTest do
   end
 
   defp create_template(_) do
-    headers = get_header(get_user_token("app-admin"))
-
     attrs =
       %{}
-      |> Map.put("label", "some type")
-      |> Map.put("name", "some_type")
-      |> Map.put("content", [])
-      |> Map.put("is_default", false)
+      |> Map.put(:id, 0)
+      |> Map.put(:label, "some type")
+      |> Map.put(:name, "some_type")
+      |> Map.put(:content, [])
 
-    body = %{template: attrs} |> JSON.encode!()
-    HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
+    @df_cache.put_template(attrs)
     :ok
   end
 end

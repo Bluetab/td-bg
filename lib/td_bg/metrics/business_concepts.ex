@@ -5,7 +5,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   require Logger
   alias TdBg.Metrics.Instrumenter
   alias TdBg.Utils.CollectionUtils
-  alias TdDf.Templates
+  @df_cache Application.get_env(:td_bg, :df_cache)
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
@@ -64,13 +64,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def get_template_map do
-    Templates.list_templates()
+    @df_cache.list_templates()
     |> Enum.map(&{&1.name, get_template_dimensions(&1)})
     |> Map.new()
   end
 
   def get_content_map do
-    Templates.list_templates()
+    @df_cache.list_templates()
     |> Enum.map(&{&1.name, &1.content})
     |> Map.new()
   end
@@ -304,7 +304,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def get_dimensions_from_templates do
-    Templates.list_templates()
+    @df_cache.list_templates()
     |> Enum.map(fn template ->
       %{
         name: template.name,
@@ -324,7 +324,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
   def get_concept_template_dimensions(concept_type) do
     concept_type
-    |> Templates.get_template_by_name()
+    |> @df_cache.get_template_by_name()
     |> Map.get(:content)
     |> Enum.map(&get_name_dimension(&1))
     |> Enum.filter(&(!is_nil(&1)))

@@ -5,6 +5,8 @@ defmodule TdBgWeb.BusinessConcept do
   import TdBgWeb.Router.Helpers
   import TdBgWeb.Authentication, only: :functions
 
+  @df_cache Application.get_env(:td_bg, :df_cache)
+
   @endpoint TdBgWeb.Endpoint
   @headers {"Content-type", "application/json"}
 
@@ -25,30 +27,16 @@ defmodule TdBgWeb.BusinessConcept do
     }
 
   def create_template(type, definition) do
-    headers = get_header(get_user_token("app-admin"))
-
     attrs =
       %{}
-      |> Map.put("label", type)
-      |> Map.put("name", type)
-      |> Map.put("content", definition)
-      |> Map.put("is_default", false)
+      |> Map.put(:id, 0)
+      |> Map.put(:label, type)
+      |> Map.put(:name, type)
+      |> Map.put(:content, definition)
 
-    body = %{template: attrs} |> JSON.encode!()
+    @df_cache.put_template(attrs)
 
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
-
-    {:ok, status_code, resp |> JSON.decode!()}
-  end
-
-  def index_templates(token) do
-    headers = get_header(token)
-
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(template_url(@endpoint, :index), headers, [])
-
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, nil, attrs}
   end
 
   def rm_business_concept_schema do

@@ -4,19 +4,19 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   import TdBgWeb.Authentication, only: :functions
 
-  alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
-  alias TdDf.Templates
+  @df_cache Application.get_env(:td_bg, :df_cache)
 
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockTdDdService)
     start_supervised(MockPermissionResolver)
+    start_supervised(@df_cache)
     :ok
   end
 
@@ -28,7 +28,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
-      insert(:template)
+      create_template()
       business_concept_version =
         insert(
           :business_concept_version,
@@ -78,12 +78,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "create business_concept" do
-    setup [:create_template]
-
     @tag :admin_authenticated
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
-
+      create_template()
       creation_attrs = %{
         content: %{},
         type: "some_type",
@@ -132,6 +130,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
+      create_template(%{id: 0, name: "some_type", content: [], label: "label"})
       creation_attrs = %{
         content: %{},
         type: "some_type",
@@ -198,7 +197,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     } do
 
       template_content = [%{"name" => "fieldname", "type" => "string", "required" =>  false}]
-      template = insert(:template, name: "onefield", content: template_content)
+      template = create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
       user = build(:user)
       business_concept =
         insert(:business_concept,
@@ -212,16 +211,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           status: BusinessConcept.status.published
         )
 
-      update_attrs = Map.from_struct(template)
-      update_attrs = Map.drop(update_attrs, [:__meta__, :id, :insedocd_at, :udpated_at])
-      updated_content = update_attrs
+      updated_content = template
       |> Map.get(:content)
       |> Enum.reduce([], fn(field, acc) ->
             [Map.put(field, "required", true)|acc]
          end)
 
-      update_attrs = Map.put(update_attrs, :content, updated_content)
-      Templates.update_template(template, update_attrs)
+      update_attrs = Map.put(template, :content, updated_content)
+      @df_cache.put_template(update_attrs)
 
       conn =
         post(
@@ -238,13 +235,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "update business_concept_version" do
-    setup [:create_template]
 
     @tag :admin_authenticated
     test "renders business_concept_version when data is valid", %{
       conn: conn,
       swagger_schema: schema
     } do
+      create_template()
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
@@ -371,10 +368,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
-  defp create_template do
-    insert(:template)
-  end
-
   defp create_version(domain, name, status) do
     business_concept = insert(:business_concept, domain: domain)
 
@@ -390,18 +383,19 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     %{"document" => plain}
   end
 
-  def create_template(_) do
-    headers = get_header(get_user_token("app-admin"))
-
+  def create_template do
     attrs =
       %{}
-      |> Map.put("label", "some type")
-      |> Map.put("name", "some_type")
-      |> Map.put("content", [])
-      |> Map.put("is_default", false)
+      |> Map.put(:id, 0)
+      |> Map.put(:label, "some type")
+      |> Map.put(:name, "some_type")
+      |> Map.put(:content, [])
 
-    body = %{template: attrs} |> JSON.encode!()
-    HTTPoison.post!(template_url(@endpoint, :create), body, headers, [])
+    @df_cache.put_template(attrs)
     :ok
+  end
+  def create_template(template) do
+    @df_cache.put_template(template)
+    template
   end
 end

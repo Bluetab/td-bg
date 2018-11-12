@@ -64,6 +64,7 @@ config :td_bg, metrics_busines_concepts_on_startup: true
 config :td_bg, metrics_publication_frequency: 60_000
 
 config :td_bg, permission_resolver: TdPerms.Permissions
+config :td_bg, df_cache: TdPerms.DynamicFormCache
 
 config :td_perms, permissions: [
   :is_admin,
@@ -97,7 +98,7 @@ config :td_perms, permissions: [
   :manage_confidential_business_concepts
 ]
 
-config :td_df, repo: TdBg.Repo
+#config :td_df, repo: TdBg.Repo
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

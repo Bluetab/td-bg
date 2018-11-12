@@ -2,13 +2,12 @@ defmodule TdBg.BusinessConcept.Download do
   @moduledoc """
     Helper module to download business concepts.
   """
-
-  alias TdDf.Templates
+  @df_cache Application.get_env(:td_bg, :df_cache)
 
   def to_csv(concepts) do
     concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))
     types = Map.keys(concepts_by_type)
-    templates_by_type = Enum.reduce(types, %{},  &Map.put(&2, &1, Templates.get_template_by_name(&1)))
+    templates_by_type = Enum.reduce(types, %{},  &Map.put(&2, &1, @df_cache.get_template_by_name(&1)))
 
     list = Enum.reduce(types, [], fn(type, acc) ->
       concepts = Map.get(concepts_by_type, type)

@@ -12,8 +12,8 @@ defmodule TdBgWeb.BusinessConceptController do
   alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
-  alias TdDf.Templates
 
+  @df_cache Application.get_env(:td_bg, :df_cache)
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   action_fallback(TdBgWeb.FallbackController)
@@ -104,7 +104,7 @@ defmodule TdBgWeb.BusinessConceptController do
 
     concept_type = business_concept_version.business_concept.type
     concept_name = Map.get(business_concept_params, "name")
-    %{:content => content_schema} = Templates.get_template_by_name(concept_type)
+    %{:content => content_schema} = @df_cache.get_template_by_name(concept_type)
 
     business_concept_attrs =
       %{}

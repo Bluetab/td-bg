@@ -23,8 +23,6 @@ defmodule TdBg.Taxonomies do
 
     query
     |> Repo.all()
-    |> Repo.preload(:templates)
-    |> Repo.preload(parent: :templates)
   end
 
   @doc """

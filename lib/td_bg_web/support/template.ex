@@ -6,7 +6,8 @@ defmodule TdBgWeb.TemplateSupport do
   alias TdBg.Permissions
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
-  alias TdDf.Templates
+
+  @df_cache Application.get_env(:td_bg, :df_cache)
 
   @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
@@ -99,7 +100,7 @@ defmodule TdBgWeb.TemplateSupport do
     |> Map.get(:domain)
 
     template = version.business_concept.type
-    |> Templates.get_template_by_name
+    |> @df_cache.get_template_by_name
 
     change_templates([], [template], %{domain: domain, user: user})
     |> Enum.at(0)
@@ -109,7 +110,7 @@ defmodule TdBgWeb.TemplateSupport do
     version
     |> Map.get(:business_concept)
     |> Map.get(:type)
-    |> Templates.get_template_by_name
+    |> @df_cache.get_template_by_name
   end
 
 end
