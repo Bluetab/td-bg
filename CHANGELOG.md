@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.7] 2018-11-12
+
+### Changed
+
+- Update TD-DF-LIB to validate dependant fields
+
 ## [2.7.6] 2018-11-08
 
 ### Removed
