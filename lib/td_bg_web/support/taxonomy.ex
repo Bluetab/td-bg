@@ -2,7 +2,7 @@ defmodule TdBgWeb.TaxonomySupport do
   @moduledoc false
   require Logger
   use TdBgWeb, :controller
-  alias TdBgWeb.ErrorConstantsSupport
+  alias TdBg.ErrorConstantsSupport
   alias TdBgWeb.ErrorView
 
   @errors ErrorConstantsSupport.taxonomy_support_errors

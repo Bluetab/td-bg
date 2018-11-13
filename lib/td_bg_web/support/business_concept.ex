@@ -3,10 +3,10 @@ defmodule TdBgWeb.BusinessConceptSupport do
   require Logger
   use TdBgWeb, :controller
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.ErrorConstantsSupport
   alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBgWeb.ErrorConstantsSupport
   alias TdBgWeb.ErrorView
 
   import Canada, only: [can?: 2]
