@@ -2,16 +2,20 @@ defmodule TdBg.Taxonomies.Domain do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+  alias TdBg.ErrorConstantsSupport
   alias TdBg.Searchable
+  alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdPerms.TaxonomyCache
 
   @behaviour Searchable
+  @errors ErrorConstantsSupport.taxonomy_support_errors
 
   schema "domains" do
     field :description, :string
     field :type, :string
     field :name, :string
+    field :deleted_at, :utc_datetime
     belongs_to :parent, Domain
 
     timestamps()
@@ -25,10 +29,41 @@ defmodule TdBg.Taxonomies.Domain do
       |> unique_constraint(:name, name: :index_domain_by_name)
   end
 
-  @doc false
   def delete_changeset(%Domain{} = domain) do
     domain
-    |> cast(%{}, [])
+      |> change(deleted_at: DateTime.utc_now())
+      |> validate_domain_children()
+      |> validate_existing_bc_children()
+  end
+
+  defp validate_domain_children(changeset) do
+    case changeset.valid? do
+      true ->
+        domain_id = changeset |> get_field(:id)
+        {:count, :domain, count} = Taxonomies.count_domain_children(domain_id)
+        case count > 0 do
+          true ->
+            domain_error = @errors.existing_child_domain
+            add_error(changeset, :domain, domain_error.name, code: domain_error.code)
+          false -> changeset
+        end
+      _ ->  changeset
+    end
+  end
+
+  defp validate_existing_bc_children(changeset) do
+    case changeset.valid? do
+      true ->
+        domain_id = changeset |> get_field(:id)
+        {:count, :business_concept, count} = Taxonomies.count_domain_business_concept_children(domain_id)
+        case count > 0 do
+          true ->
+            domain_error = @errors.existing_child_business_concept
+            add_error(changeset, :domain, domain_error.name, code: domain_error.code)
+          false -> changeset
+        end
+      false ->  changeset
+    end
   end
 
   def search_fields(%Domain{id: domain_id} = domain) do

@@ -5,6 +5,7 @@ defmodule TdBg.Taxonomies do
 
   import Ecto.Query, warn: false
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.DomainLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
@@ -117,7 +118,7 @@ defmodule TdBg.Taxonomies do
   end
 
   @doc """
-  Deletes a Domain.
+  Soft deletion of a domain.
 
   ## Examples
 
@@ -129,7 +130,12 @@ defmodule TdBg.Taxonomies do
 
   """
   def delete_domain(%Domain{id: id} = domain) do
-    case Repo.delete(domain) do
+    updated_domain =
+      domain
+      |> Domain.delete_changeset()
+      |> Repo.update()
+
+    case updated_domain do
       {:ok, struct} ->
         DomainLoader.delete(id)
         {:ok, struct}
@@ -186,7 +192,15 @@ defmodule TdBg.Taxonomies do
   end
 
   def count_domain_business_concept_children(id) do
-    count = Repo.one(from(r in BusinessConcept, select: count(r.id), where: r.domain_id == ^id))
+    query =
+      from(b in BusinessConcept,
+        where: b.domain_id == ^id,
+        join: bv in BusinessConceptVersion,
+        where: b.id == bv.business_concept_id and bv.status != "deprecated",
+        select: count(b.id)
+      )
+
+      count = query |> Repo.one()
     {:count, :business_concept, count}
   end
 

@@ -82,7 +82,7 @@ defmodule TdBg.TaxonomiesTest do
     test "delete_domain/1 deletes the domain" do
       domain = domain_fixture()
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      assert_raise Ecto.NoResultsError, fn -> Taxonomies.get_domain!(domain.id) end
+      assert Map.fetch!(Taxonomies.get_domain!(domain.id), :deleted_at) != nil
     end
 
     test "delete_domain/1 deletes the domain an create the same domain" do
