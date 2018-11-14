@@ -43,7 +43,7 @@ defmodule TdBgWeb.ChangesetSupport do
       [Atom.to_string(elem(error, 0))] ++
       translate_msgid(elem(error, 1))
       name = Enum.join(name_items, ".")
-      acc ++ [%{code: @code, name: name}]
+      acc ++ [%{code: retrieve_code(elem(error, 1)), name: name}]
     end)
   end
 
@@ -68,9 +68,15 @@ defmodule TdBgWeb.ChangesetSupport do
   defp translate_msgid({"is invalid", [type: type, validation: validation]}) do
     [Atom.to_string(validation), Atom.to_string(type)]
   end
+  defp translate_msgid({msgid , [code: code]}) when msgid in @msgids do
+    [Atom.to_string(code)]
+  end
   defp translate_msgid({msgid , [validation: validation]}) when msgid in @msgids do
     [Atom.to_string(validation)]
   end
   defp translate_msgid({msgid, _}), do: String.split(msgid, ".")
+
+  defp retrieve_code({_, [code: code]}), do: code
+  defp retrieve_code({_, _}), do: @code
 
 end
