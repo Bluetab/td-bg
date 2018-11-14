@@ -237,7 +237,7 @@ defmodule TdBgWeb.DomainController do
     domain = Taxonomies.get_domain!(id)
 
     if can?(current_user, delete(domain)) do
-      do_delete(conn, id, domain)
+      do_delete(conn, domain)
     else
       conn
       |> put_status(:forbidden)
@@ -245,10 +245,8 @@ defmodule TdBgWeb.DomainController do
     end
   end
 
-  defp do_delete(conn, id, domain) do
-    with {:count, :domain, 0} <- Taxonomies.count_domain_children(id),
-         {:count, :business_concept, 0} <- Taxonomies.count_domain_business_concept_children(id),
-         {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
+  defp do_delete(conn, domain) do
+    with {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
       send_resp(conn, :no_content, "")
     else
       error ->
