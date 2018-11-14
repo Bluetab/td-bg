@@ -4,6 +4,7 @@ defmodule TdBg.TaxonomiesTest do
   alias TdBg.Taxonomies
 
   describe "domains" do
+    alias TdBg.BusinessConcepts.BusinessConcept
     alias TdBg.Taxonomies.Domain
 
     @valid_attrs %{description: "some description", name: "some name"}
@@ -51,7 +52,7 @@ defmodule TdBg.TaxonomiesTest do
       assert domain.name == "some name"
     end
 
-    test "create_domain/2 child of a parent domain" do
+    test "create_domain/1 child of a parent domain" do
       parent_domain = domain_fixture()
       child_attrs = Map.put(@child_attrs, :parent_id, parent_domain.id)
 
@@ -59,6 +60,23 @@ defmodule TdBg.TaxonomiesTest do
       assert domain.description == child_attrs.description
       assert domain.name == child_attrs.name
       assert domain.parent_id == parent_domain.id
+    end
+
+    test "create_domain/1 with an existing name should return an error" do
+      domain_fixture()
+      assert {:error, %Ecto.Changeset{} = changeset} = Taxonomies.create_domain(@valid_attrs)
+      [{:domain, {error_message, code}}|_] = changeset.errors
+      [{:code, id}|_] = code
+      assert !changeset.valid?
+      assert error_message == "error.existing.domain.name"
+      assert id == "ETD003"
+    end
+
+    test "create_domain/1 with an existing name in a deleted domain should create the domain" do
+      domain_to_delete = domain_fixture()
+      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
+      assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
+      assert domain.name == @valid_attrs.name
     end
 
     test "create_domain/1 with invalid data returns error changeset" do
@@ -79,15 +97,78 @@ defmodule TdBg.TaxonomiesTest do
       assert domain == Taxonomies.get_domain!(domain.id)
     end
 
+    test "update_domain/2 with an existing domain name should return an error" do
+      domain_fixture()
+      domain_to_update = domain_fixture(%{name: "name to update"})
+      assert {:error, %Ecto.Changeset{} = changeset} =
+        Taxonomies.update_domain(domain_to_update, Map.take(@valid_attrs, [:name]))
+      [{:domain, {error_message, code}}|_] = changeset.errors
+      [{:code, id}|_] = code
+      assert !changeset.valid?
+      assert error_message == "error.existing.domain.name"
+      assert id == "ETD003"
+    end
+
+    test "update_domain/2 with deleted_at field param does not update it" do
+      domain = domain_fixture()
+      assert {:ok, domain} = Taxonomies.update_domain(domain, %{deleted_at: "2018-11-14 09:31:07Z"})
+      assert Map.fetch!(domain, :deleted_at) == nil
+    end
+
     test "delete_domain/1 deletes the domain" do
       domain = domain_fixture()
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
       assert Map.fetch!(Taxonomies.get_domain!(domain.id), :deleted_at) != nil
     end
 
+    test "delete_domain/1 with existing deprecated business concepts is deleted" do
+      domain = domain_fixture()
+      business_concept_1 = insert(:business_concept, domain: domain)
+      business_concept_2 = insert(:business_concept, domain: domain)
+
+      insert(:business_concept_version, status: BusinessConcept.status.deprecated, business_concept: business_concept_1)
+      insert(:business_concept_version, status: BusinessConcept.status.deprecated, business_concept: business_concept_2)
+
+      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
+      assert Map.fetch!(Taxonomies.get_domain!(domain.id), :deleted_at) != nil
+    end
+
+    test "delete_domain/1 with existing deprecated and draft business concepts can not be deleted" do
+      domain = domain_fixture()
+      business_concept_1 = insert(:business_concept, domain: domain)
+      business_concept_2 = insert(:business_concept, domain: domain)
+      business_concept_3 = insert(:business_concept, domain: domain)
+
+      insert(:business_concept_version, status: BusinessConcept.status.deprecated, business_concept: business_concept_1)
+      insert(:business_concept_version, status: BusinessConcept.status.draft, business_concept: business_concept_2)
+      insert(:business_concept_version, status: BusinessConcept.status.draft, business_concept: business_concept_3)
+
+      assert {:error, %Ecto.Changeset{} = changeset} = Taxonomies.delete_domain(domain)
+      [{:domain, {error_message, code}}|_] = changeset.errors
+      [{:code, id}|_] = code
+      assert !changeset.valid?
+      assert error_message == "error.existing.business.concept"
+      assert id == "ETD002"
+      assert Map.fetch!(Taxonomies.get_domain!(domain.id), :deleted_at) == nil
+    end
+
+    test "delete_domain/1 with existing child domains can not be deleted" do
+      parent_domain = domain_fixture()
+      domain_fixture(Map.put(@child_attrs, :parent_id, parent_domain.id))
+
+      assert {:error, %Ecto.Changeset{} = changeset} = Taxonomies.delete_domain(parent_domain)
+      [{:domain, {error_message, code}}|_] = changeset.errors
+      [{:code, id}|_] = code
+      assert !changeset.valid?
+      assert error_message == "error.existing.domain"
+      assert id == "ETD001"
+      assert Map.fetch!(Taxonomies.get_domain!(parent_domain.id), :deleted_at) == nil
+    end
+
     test "delete_domain/1 deletes the domain an create the same domain" do
       assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
+      Taxonomies.get_domain!(domain.id)
       assert {:ok, %Domain{}} = Taxonomies.create_domain(@valid_attrs)
     end
 
