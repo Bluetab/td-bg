@@ -280,7 +280,7 @@ defmodule TdBg.TaxonomyTest do
       token = get_user_token("app-admin")
       domain = get_domain_by_name(token, domain_group_name)
       domain = get_domain_by_name_and_parent(token, domain_name, domain["id"])
-      # assert !domain
+      assert !domain
     end
   end
 

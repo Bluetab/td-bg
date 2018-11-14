@@ -68,7 +68,7 @@ defmodule TdBg.TaxonomiesTest do
       [{:domain, {error_message, code}}|_] = changeset.errors
       [{:code, id}|_] = code
       assert !changeset.valid?
-      assert error_message == "error.existing.domain.name"
+      assert error_message == "existing.domain.name"
       assert id == "ETD003"
     end
 
@@ -105,8 +105,19 @@ defmodule TdBg.TaxonomiesTest do
       [{:domain, {error_message, code}}|_] = changeset.errors
       [{:code, id}|_] = code
       assert !changeset.valid?
-      assert error_message == "error.existing.domain.name"
+      assert error_message == "existing.domain.name"
       assert id == "ETD003"
+    end
+
+    test "update_domain/2 with an existing domain name should be updated when the domain is deleted" do
+      domain_to_update = domain_fixture(%{name: "name to update"})
+
+      domain_to_delete = domain_fixture()
+      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
+      assert {:ok, domain} =
+        Taxonomies.update_domain(domain_to_update, Map.take(@valid_attrs, [:name]))
+
+      assert Map.get(domain, :name) == Map.get(@valid_attrs, :name)
     end
 
     test "update_domain/2 with deleted_at field param does not update it" do
@@ -118,7 +129,7 @@ defmodule TdBg.TaxonomiesTest do
     test "delete_domain/1 deletes the domain" do
       domain = domain_fixture()
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      assert Map.fetch!(Taxonomies.get_domain!(domain.id), :deleted_at) != nil
+      assert Map.fetch!(Taxonomies.get_raw_domain(domain.id), :deleted_at) != nil
     end
 
     test "delete_domain/1 with existing deprecated business concepts is deleted" do
@@ -130,7 +141,7 @@ defmodule TdBg.TaxonomiesTest do
       insert(:business_concept_version, status: BusinessConcept.status.deprecated, business_concept: business_concept_2)
 
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      assert Map.fetch!(Taxonomies.get_domain!(domain.id), :deleted_at) != nil
+      assert Map.fetch!(Taxonomies.get_raw_domain(domain.id), :deleted_at) != nil
     end
 
     test "delete_domain/1 with existing deprecated and draft business concepts can not be deleted" do
@@ -147,9 +158,9 @@ defmodule TdBg.TaxonomiesTest do
       [{:domain, {error_message, code}}|_] = changeset.errors
       [{:code, id}|_] = code
       assert !changeset.valid?
-      assert error_message == "error.existing.business.concept"
+      assert error_message == "existing.business.concept"
       assert id == "ETD002"
-      assert Map.fetch!(Taxonomies.get_domain!(domain.id), :deleted_at) == nil
+      assert Map.fetch!(Taxonomies.get_domain(domain.id), :deleted_at) == nil
     end
 
     test "delete_domain/1 with existing child domains can not be deleted" do
@@ -160,15 +171,15 @@ defmodule TdBg.TaxonomiesTest do
       [{:domain, {error_message, code}}|_] = changeset.errors
       [{:code, id}|_] = code
       assert !changeset.valid?
-      assert error_message == "error.existing.domain"
+      assert error_message == "existing.domain"
       assert id == "ETD001"
-      assert Map.fetch!(Taxonomies.get_domain!(parent_domain.id), :deleted_at) == nil
+      assert Map.fetch!(Taxonomies.get_domain(parent_domain.id), :deleted_at) == nil
     end
 
     test "delete_domain/1 deletes the domain an create the same domain" do
       assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      Taxonomies.get_domain!(domain.id)
+      Taxonomies.get_domain(domain.id)
       assert {:ok, %Domain{}} = Taxonomies.create_domain(@valid_attrs)
     end
 

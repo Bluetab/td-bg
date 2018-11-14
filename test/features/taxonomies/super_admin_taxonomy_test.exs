@@ -90,24 +90,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     {:ok, %{state | status_code: nil}}
   end
 
-  # defand ~r/^Domain "(?<domain_name>[^"]+)" is a child of Domain "(?<domain_name>[^"]+)"$/,
-  #         %{domain_name: domain_name, domain_name: domain_name}, _state do
-  #   token = get_user_token("app-admin")
-  #   domain_info = get_domain_by_name(token, domain_name)
-  #   assert domain_name == domain_info["name"]
-  #   domain_info = get_domain_by_name(token, domain_name)
-  #   assert domain_name == domain_info["name"]
-  #   assert domain_info["domain_id"] == domain_info["id"]
-  # end
-
-  # defgiven ~r/^an existing Domain called "(?<domain_name>[^"]+)" with following data:$/,
-  #       %{domain_name: domain_name, table: [%{Description: description}]}, _state do
-  #   token = get_user_token("app-admin")
-  #   {_, _status_code, json_resp} = domain_create(token, %{name: domain_name, description: description})
-  #   domain = json_resp["data"]
-  #   assert domain["description"] == description
-  # end
-
   defand ~r/^user "app-admin" tries to modify a Domain with the name "(?<domain_name>[^"]+)" introducing following data:$/,
          %{domain_name: domain_name, table: [%{Description: description, Type: type}]},
          state do
@@ -123,17 +105,6 @@ defmodule TdBg.SuperAdminTaxonomyTest do
 
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
-
-  # defand ~r/^an existing Domain called "(?<domain_name>[^"]+)" child of Domain "(?<domain_name>[^"]+)" with following data:$/,
-  #       %{domain_name: domain_name, domain_name: domain_name, table: [%{Description: description}]}, _state do
-  #   token = get_user_token("app-admin")
-  #   domain = get_domain_by_name(token, domain_name)
-  #   assert domain && domain["id"]
-  #   {_, _status_code, json_resp} = domain_create(token, %{name: domain_name, description: description, domain_id: domain["id"]})
-  #   domain = json_resp["data"]
-  #   assert domain["domain_id"] == domain["id"]
-  #   assert domain["description"] == description
-  # end
 
   defwhen ~r/^user "app-admin" tries to modify a Domain with the name "(?<domain_name>[^"]+)" introducing following data:$/,
           %{domain_name: domain_name, table: [%{Description: description, Type: type}]},
