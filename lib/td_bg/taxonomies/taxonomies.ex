@@ -23,6 +23,7 @@ defmodule TdBg.Taxonomies do
     query = from(d in Domain)
 
     query
+    |> where([d], is_nil(d.deleted_at))
     |> Repo.all()
   end
 
@@ -78,20 +79,24 @@ defmodule TdBg.Taxonomies do
 
   """
   def get_domain!(id) do
-    Repo.one!(from(r in Domain, where: r.id == ^id))
+    Repo.one!(from(r in Domain, where: r.id == ^id and is_nil(r.deleted_at)))
   end
 
   def get_domain(id) do
+    Repo.one(from(r in Domain, where: r.id == ^id and is_nil(r.deleted_at)))
+  end
+
+  def get_raw_domain(id) do
     Repo.one(from(r in Domain, where: r.id == ^id))
   end
 
   def get_domain_by_name(name) do
-    Repo.one(from(r in Domain, where: r.name == ^name))
+    Repo.one(from(r in Domain, where: r.name == ^name and is_nil(r.deleted_at)))
   end
 
   def get_children_domains(%Domain{} = domain) do
     id = domain.id
-    Repo.all(from(r in Domain, where: r.parent_id == ^id))
+    Repo.all(from(r in Domain, where: r.parent_id == ^id and is_nil(r.deleted_at)))
   end
 
   @doc """
