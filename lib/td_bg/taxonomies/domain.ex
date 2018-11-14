@@ -26,7 +26,7 @@ defmodule TdBg.Taxonomies.Domain do
     domain
       |> cast(attrs, [:name, :type, :description, :parent_id])
       |> validate_required([:name])
-      |> unique_constraint(:name, name: :index_domain_by_name)
+      |> validate_unique_name(domain)
   end
 
   def delete_changeset(%Domain{} = domain) do
@@ -62,7 +62,22 @@ defmodule TdBg.Taxonomies.Domain do
             add_error(changeset, :domain, domain_error.name, code: domain_error.code)
           false -> changeset
         end
-      false ->  changeset
+      false -> changeset
+    end
+  end
+
+  defp validate_unique_name(changeset, %Domain{id: domain_id}) do
+    case changeset.valid? do
+      true ->
+        domain_name = changeset |> get_field(:name)
+        {:count, :domain, count} = Taxonomies.count_domain_by_name(domain_name, domain_id)
+        case count > 0 do
+          true ->
+            domain_error = @errors.existing_domain_with_same_name
+            add_error(changeset, :domain, domain_error.name, code: domain_error.code)
+          false -> changeset
+        end
+      false -> changeset
     end
   end
 

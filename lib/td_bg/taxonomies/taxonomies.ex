@@ -42,6 +42,28 @@ defmodule TdBg.Taxonomies do
   end
 
   @doc """
+  Returns a count of the existing domains with the same name and which
+  haven't been deleted
+  """
+  def count_domain_by_name(name, domain_id) do
+    count =
+      Domain
+        |> count_domain_by_name_where_clause(name, domain_id)
+        |> select([r], count(r.id))
+        |> Repo.one()
+
+    {:count, :domain, count}
+  end
+
+  defp count_domain_by_name_where_clause(query, name, nil) do
+    query |> where([r], r.name == ^name and is_nil(r.deleted_at))
+  end
+
+  defp count_domain_by_name_where_clause(query, name, domain_id) do
+    query |> where([r], r.name == ^name and is_nil(r.deleted_at) and r.id != ^domain_id)
+  end
+
+  @doc """
   Gets a single domain.
 
   Raises `Ecto.NoResultsError` if the Domain does not exist.
