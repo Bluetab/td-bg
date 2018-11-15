@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.1] 2018-11-15
+
+### Changed
+
+- Add domains' soft deletion 
+
 ## [2.8.0] 2018-11-15
 
 ### Changed
