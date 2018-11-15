@@ -143,11 +143,13 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def search_fields(%BusinessConceptVersion{last_change_by: last_change_by_id} = concept) do
-    domain = Taxonomies.get_domain!(concept.business_concept.domain_id)
     template = @df_cache.get_template_by_name(concept.business_concept.type)
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
-    domain_ids = TaxonomyCache.get_parent_ids(domain.id)
+
+    domain = retrieve_domain(concept.business_concept.domain_id)
+    domain_ids = retrieve_domain_ids(Map.get(domain, :id))
+    domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
 
     last_change_by =
       case UserCache.get_user(last_change_by_id) do
@@ -162,8 +164,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         v1 || v2
       end)
 
-    domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
-
     content = Enum.reduce(template.content, concept.content, &fill_content(&2, &1))
 
     content = update_in(content["_confidential"], &(if &1 == "Si", do: &1, else: "No"))
@@ -175,10 +175,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       description: RichText.to_plain_text(concept.description),
       status: concept.status,
       version: concept.version,
-      domain: %{
-        id: domain.id,
-        name: domain.name
-      },
+      domain: Map.take(domain, [:id, :name]),
       domain_parents: domain_parents,
       last_change_by: last_change_by,
       template: %{
@@ -196,6 +193,19 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       inserted_at: concept.inserted_at
     }
   end
+
+  defp retrieve_domain(domain_id) do
+    domain = Taxonomies.get_domain(domain_id)
+    return_domain_value(domain)
+  end
+
+  defp return_domain_value(nil), do: %{}
+
+  defp return_domain_value(domain), do: domain
+
+  defp retrieve_domain_ids(nil), do: []
+
+  defp retrieve_domain_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
 
   defp fill_content(content, %{"type" => type, "name" => name}) when type == "list" do
     case Map.has_key?(content, name) do

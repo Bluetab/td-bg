@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.2] 2018-11-15
+
+### Changed
+
+- Fix error on reindex while trying to index a deprecated business concept with a deleted parent domain 
+
 ## [2.8.1] 2018-11-15
 
 ### Changed
