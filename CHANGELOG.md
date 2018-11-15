@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.0] 2018-11-15
+
+### Changed
+
+- Update dependencies (td-perms 2.8.1, td-df-lib 2.8.0)
+
 ## [2.7.7] 2018-11-12
 
 ### Changed

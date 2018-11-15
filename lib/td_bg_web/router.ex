@@ -75,18 +75,18 @@ defmodule TdBgWeb.Router do
         version: "1.0",
         title: "TdBg"
       },
-      "host": @endpoint_url,
-      #"basePath": "/api",
-      "securityDefinitions":
+      host: @endpoint_url,
+      #basePath: "/api",
+      securityDefinitions:
         %{
           bearer:
           %{
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header",
+            type: "apiKey",
+            name: "Authorization",
+            in: "header",
           }
       },
-      "security": [
+      security: [
         %{
          bearer: []
         }

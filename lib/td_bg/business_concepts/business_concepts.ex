@@ -506,8 +506,7 @@ defmodule TdBg.BusinessConcepts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_business_concept_version(%BusinessConceptVersion{business_concept_id: business_concept_id}
-    = business_concept_version) do
+  def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
     if business_concept_version.version == 1 do
       business_concept = business_concept_version.business_concept
       business_concept_id = business_concept.id

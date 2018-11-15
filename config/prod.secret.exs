@@ -51,4 +51,4 @@ config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.HttpTdAuditServi
   audit_port: "${API_AUDIT_PORT}",
   audit_domain: ""
 
-config :td_perms, redis_uri: "${REDIS_URI}"
+config :td_perms, redis_host: "${REDIS_HOST}"

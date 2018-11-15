@@ -22,12 +22,12 @@ defmodule TdBgWeb.BusinessConceptSupport do
       {:name_not_available} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{"errors": [@errors.existing_concept]})
+        |> json(%{errors: [@errors.existing_concept]})
       {:not_valid_related_to} ->
         # TODO: change this error to standard format
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{"errors": %{related_to: ["invalid"]}})
+        |> json(%{errors: %{related_to: ["invalid"]}})
       {:error, %Ecto.Changeset{data: %{__struct__: _}} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)

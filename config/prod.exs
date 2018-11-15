@@ -16,8 +16,7 @@ use Mix.Config
 config :td_bg, TdBgWeb.Endpoint,
   http: [port: 4002],
   url: [host: "truedat.bluetab.net", port: 8001],
-  server: true,
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  server: true
 
 # Do not print debug messages in production
 config :logger, :console, format: "[$level] $message\n"
