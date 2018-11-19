@@ -28,7 +28,6 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
   def init(state) do
     if @metrics_busines_concepts_on_startup do
-      Instrumenter.setup()
       # Schedule work to be performed at some point
       schedule_work()
     end
@@ -37,6 +36,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def handle_info(:work, state) do
+    Instrumenter.setup()
     concepts_count_metrics = get_concepts_count()
     Logger.info("Number of concepts_count metric #{inspect(length(concepts_count_metrics))}")
     Enum.each(concepts_count_metrics, &Instrumenter.set_concepts_count(&1))

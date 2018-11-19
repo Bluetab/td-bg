@@ -4,8 +4,11 @@ defmodule TdBg.Metrics.Instrumenter do
   use Prometheus.Metric
 
   alias TdBg.Metrics.BusinessConcepts
+  require Prometheus.Registry
 
   def setup do
+    clean_registry()
+
     BusinessConcepts.get_dimensions_from_templates()
     |> Enum.each(fn(template) ->
 
@@ -40,4 +43,8 @@ defmodule TdBg.Metrics.Instrumenter do
     |> Enum.map(&String.to_atom(&1))
   end
 
+  defp clean_registry do
+    Prometheus.Registry.deregister_collector(:default, :prometheus_gauge)
+    Prometheus.Registry.register_collector(:default, :prometheus_gauge)
+  end
 end
