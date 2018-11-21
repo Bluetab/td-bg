@@ -32,6 +32,33 @@ defmodule TdBg.BusinessConceptsTests do
       assert object |> business_concept_version_preload() == business_concept_version
     end
 
+    test "get_currently_published_version!/1 returns the published business_concept with given id" do
+      user = build(:user)
+      bcv_published =
+        insert(
+          :business_concept_version,
+          last_change_by: user.id,
+          status: BusinessConcept.status().published
+        )
+      assert {:ok, _} = BusinessConcepts.version_business_concept(%User{id: 1234}, bcv_published)
+      bcv_current = BusinessConcepts.get_currently_published_version!(bcv_published.business_concept.id)
+
+      assert bcv_current.id == bcv_published.id
+    end
+
+    test "get_currently_published_version!/1 returns the last when there are no published" do
+      user = build(:user)
+      bcv_draft =
+        insert(
+          :business_concept_version,
+          last_change_by: user.id,
+          status: BusinessConcept.status().draft
+        )
+      bcv_current = BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
+
+      assert bcv_current.id == bcv_draft.id
+    end
+
     test "get_current_version_by_business_concept_id!/1 returns the business concept with several aliases" do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id

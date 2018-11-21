@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.3] 2018-11-21
+
+### Changed
+
+- [TD-1076] Write published Business Concept Version parent and children to Redis
+- Fault tolerant reindex_all when template no longer exists
+
 ## [2.8.2] 2018-11-15
 
 ### Changed

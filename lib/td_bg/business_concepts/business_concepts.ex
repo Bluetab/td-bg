@@ -140,6 +140,35 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
+  Gets a single business_concept searching for the published version instead of the latest.
+
+  Raises `Ecto.NoResultsError` if the Business concept does not exist.
+
+  ## Examples
+
+      iex> get_currently_published_version!(123)
+      %BusinessConcept{}
+
+      iex> get_currently_published_version!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_currently_published_version!(business_concept_id) do
+    published = BusinessConcept.status().published
+
+    version = BusinessConceptVersion
+    |> where([v], v.business_concept_id == ^business_concept_id)
+    |> where([v], v.status == ^published)
+    |> preload(business_concept: [:aliases, :domain])
+    |> Repo.one()
+
+    case version do
+      nil -> get_current_version_by_business_concept_id!(business_concept_id)
+      _ -> version
+    end
+  end
+
+  @doc """
   Creates a business_concept.
 
   ## Examples

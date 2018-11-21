@@ -143,7 +143,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def search_fields(%BusinessConceptVersion{last_change_by: last_change_by_id} = concept) do
-    template = @df_cache.get_template_by_name(concept.business_concept.type)
+    template = case @df_cache.get_template_by_name(concept.business_concept.type) do
+      nil -> %{content: []}
+      template -> template
+    end
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
 
@@ -164,7 +167,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         v1 || v2
       end)
 
-    content = Enum.reduce(template.content, concept.content, &fill_content(&2, &1))
+    content = Enum.reduce(Map.get(template, :content), concept.content, &fill_content(&2, &1))
 
     content = update_in(content["_confidential"], &(if &1 == "Si", do: &1, else: "No"))
 
@@ -179,8 +182,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       domain_parents: domain_parents,
       last_change_by: last_change_by,
       template: %{
-        name: template.name,
-        label: template.label
+        name: Map.get(template, :name),
+        label: Map.get(template, :label)
       },
       content: content,
       last_change_at: concept.last_change_at,
