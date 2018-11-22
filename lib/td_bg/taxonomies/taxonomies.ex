@@ -38,7 +38,7 @@ defmodule TdBg.Taxonomies do
   Returns children of domain id passed as argument
   """
   def count_domain_children(id) do
-    count = Repo.one(from(r in Domain, select: count(r.id), where: r.parent_id == ^id))
+    count = Repo.one(from(r in Domain, select: count(r.id), where: r.parent_id == ^id and is_nil(r.deleted_at)))
     {:count, :domain, count}
   end
 
