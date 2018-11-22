@@ -9,7 +9,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptAlias do
     field :name, :string
     belongs_to :business_concept, BusinessConcept
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false

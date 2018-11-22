@@ -7,7 +7,7 @@ defmodule TdBg.Repo.Migrations.CreateBusinessConcept do
       add :type, :string, null: false
       add :last_change_by, :bigint, null: false
       add :last_change_at, :utc_datetime, null: false
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 end

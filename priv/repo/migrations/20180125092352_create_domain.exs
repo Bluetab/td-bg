@@ -7,7 +7,7 @@ defmodule TdBg.Repo.Migrations.CreateDomain do
       add :type, :string, null: true
       add :description, :string
       add :parent_id, references(:domains), null: true
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 end

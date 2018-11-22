@@ -10,7 +10,7 @@ defmodule TdBg.Comments.Comment do
     field :user, :map
     field :created_at, :utc_datetime
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc """

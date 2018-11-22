@@ -25,7 +25,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
     has_many :versions, BusinessConceptVersion
     has_many :aliases, BusinessConceptAlias
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   def status do

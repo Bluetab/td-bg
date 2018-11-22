@@ -9,7 +9,7 @@ defmodule TdBg.Repo.Migrations.CreateComment do
       add :user, :map
       add :created_at, :utc_datetime
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 end

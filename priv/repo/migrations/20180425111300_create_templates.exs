@@ -6,7 +6,7 @@ defmodule TdBg.Repo.Migrations.CreateTemplates do
       add :name, :string
       add :content, {:array, :map}
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 
   end

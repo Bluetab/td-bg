@@ -13,7 +13,7 @@ defmodule TdBg.Repo.Migrations.CreateBusinessConcepts do
       add :status, :string, null: false
       add :version, :integer, null: false
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 end

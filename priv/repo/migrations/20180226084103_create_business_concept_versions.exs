@@ -14,7 +14,7 @@ defmodule TdBg.Repo.Migrations.CreateBusinessConceptVersions do
       add :reject_reason, :string, size: 500, null: true
       add :mod_comments, :string, size: 500, null: true
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 end

@@ -5,7 +5,7 @@ defmodule TdBg.Repo.Migrations.CreatePermission do
     create table(:permissions) do
       add :name, :string
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 
     create unique_index(:permissions, [:name])

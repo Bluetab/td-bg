@@ -5,7 +5,7 @@ defmodule TdBg.Repo.Migrations.CreateRoles do
     create table(:roles) do
       add :name, :string
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 
   end

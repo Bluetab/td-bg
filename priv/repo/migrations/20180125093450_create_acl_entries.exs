@@ -9,7 +9,7 @@ defmodule TdBg.Repo.Migrations.CreateAclEntries do
       add :resource_id, :integer
       add :role_id, references(:roles, on_delete: :nothing)
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 
     create index(:acl_entries, [:role_id])

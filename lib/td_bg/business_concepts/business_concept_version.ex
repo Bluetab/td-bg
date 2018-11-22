@@ -29,7 +29,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     field(:in_progress, :boolean, default: false)
     belongs_to(:business_concept, BusinessConcept, on_replace: :update)
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false

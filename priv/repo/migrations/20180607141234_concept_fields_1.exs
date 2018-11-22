@@ -6,7 +6,7 @@ defmodule TdBg.Repo.Migrations.ConceptFields1 do
       add :concept, :string
       add :field, :map
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 end

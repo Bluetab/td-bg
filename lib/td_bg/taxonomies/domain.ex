@@ -18,7 +18,7 @@ defmodule TdBg.Taxonomies.Domain do
     field :deleted_at, :utc_datetime
     belongs_to :parent, Domain
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false

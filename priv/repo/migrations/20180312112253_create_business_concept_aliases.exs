@@ -6,7 +6,7 @@ defmodule TdBg.Repo.Migrations.CreateBusinessConceptAliases do
       add :name, :string
       add :business_concept_id, references(:business_concepts, on_delete: :nothing)
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 
     create index(:business_concept_aliases, [:business_concept_id])

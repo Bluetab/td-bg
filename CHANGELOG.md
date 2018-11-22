@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.4] 2018-11-22
+
+### Changed
+
+- Configure Ecto to use UTC datetime for timestamps
+
 ## [2.8.3] 2018-11-21
 
 ### Changed
