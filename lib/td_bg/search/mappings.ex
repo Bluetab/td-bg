@@ -39,9 +39,10 @@ defmodule TdBg.Search.Mappings do
       },
       domain_ids: %{type: "long"},
       domain_parents: %{
+        type: "nested",
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text"}
+          name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
         }
       },
       link_count: %{type: "short"},

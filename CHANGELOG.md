@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.5] 2018-11-23
+
+### Changed
+
+- Added new aggregation to filter the nested list field "domain_parents" in elasticsearch
+
 ## [2.8.4] 2018-11-22
 
 ### Changed

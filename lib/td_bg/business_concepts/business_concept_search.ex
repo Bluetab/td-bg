@@ -61,8 +61,6 @@ defmodule TdBg.BusinessConcept.Search do
   # Non-admin user search, filters applied
   def search_business_concept_versions(params, %User{} = user, page, size) do
     permissions = user |> Permissions.get_domain_permissions()
-    # IO.inspect("permissions: ")
-    # IO.inspect(permissions)
     filter_business_concept_versions(params, permissions, page, size)
   end
 
@@ -101,6 +99,14 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp get_filter(%{terms: %{script: _}}, values, filter) do
      %{range: create_range(filter, values)}
+  end
+
+  defp get_filter(%{aggs: %{distinct_search: distinct_search}, nested: %{path: path}}, values, _) do
+    %{nested: %{path: path, query: build_nested_query(distinct_search, values)}}
+  end
+
+  defp build_nested_query(%{terms: %{field: field}}, values) do
+    %{terms: %{field => values}} |> bool_query()
   end
 
   defp create_range(_filter, []), do: []
