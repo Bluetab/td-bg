@@ -223,7 +223,9 @@ defmodule TdBg.Taxonomies do
       from(b in BusinessConcept,
         where: b.domain_id == ^id,
         join: bv in BusinessConceptVersion,
-        where: b.id == bv.business_concept_id and bv.status != "deprecated",
+        where: b.id == bv.business_concept_id
+        and bv.status != "deprecated"
+        and bv.current == true,
         select: count(b.id)
       )
 
