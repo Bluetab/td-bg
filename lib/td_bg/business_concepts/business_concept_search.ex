@@ -16,21 +16,23 @@ defmodule TdBg.BusinessConcept.Search do
     "not_rule_terms" =>  %{gte: 0, lt: 1}
   }
 
-  def get_filter_values(%User{is_admin: true}) do
-    query = %{} |> create_query
+  def get_filter_values(%User{is_admin: true}, params) do
+    filter_clause = create_filters(params)
+    query = %{} |> create_query(filter_clause)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     @search_service.get_filters(search)
   end
 
-  def get_filter_values(%User{} = user) do
+  def get_filter_values(%User{} = user, params) do
     permissions = user |> Permissions.get_domain_permissions()
-    get_filter_values(permissions)
+    get_filter_values(permissions, params)
   end
 
-  def get_filter_values([]), do: %{}
+  def get_filter_values([], _), do: %{}
 
-  def get_filter_values(permissions) do
-    filter = permissions |> create_filter_clause
+  def get_filter_values(permissions, params) do
+    filter_clause = create_filters(params)
+    filter = permissions |> create_filter_clause(filter_clause)
     query = %{} |> create_query(filter)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     @search_service.get_filters(search)
@@ -174,7 +176,7 @@ defmodule TdBg.BusinessConcept.Search do
     %{bool: %{must: query}}
   end
 
-  defp create_filter_clause(permissions, user_defined_filters \\ []) do
+  defp create_filter_clause(permissions, user_defined_filters) do
     should_clause =
       permissions
       |> Enum.map(&entry_to_filter_clause(&1, user_defined_filters))

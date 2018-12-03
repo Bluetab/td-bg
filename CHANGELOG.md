@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.6] 2018-12-03
+
+### Added
+
+- [TD-1210] Added endpoint for searching concept filters with conditions
+
 ## [2.8.5] 2018-11-23
 
 ### Changed

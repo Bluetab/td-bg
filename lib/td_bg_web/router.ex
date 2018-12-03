@@ -50,6 +50,7 @@ defmodule TdBgWeb.Router do
     post "/business_concept_versions/search", BusinessConceptVersionController, :search
 
     get "/business_concept_filters", BusinessConceptFilterController, :index
+    post "/business_concept_filters/search", BusinessConceptFilterController, :search
 
     resources "/business_concepts/comments", CommentController, except: [:new, :edit]
     get "/business_concepts/index/:status", BusinessConceptController, :index_status
