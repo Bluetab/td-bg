@@ -70,6 +70,7 @@ defmodule TdBg.Search.Mappings do
 
   defp get_mappings(%{content: content}) do
     content
+    |> Enum.filter(& Map.get(&1, "type") != "variable_map_list")
     |> Enum.map(&field_mapping/1)
   end
 
