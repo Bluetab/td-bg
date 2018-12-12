@@ -414,7 +414,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^draft, true} ->
         send_for_approval(conn, user, business_concept_version)
-
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -443,7 +442,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
         publish(conn, user, business_concept_version)
-
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -473,7 +471,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
         reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
-
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -502,7 +499,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^rejected, true} ->
         undo_rejection(conn, user, business_concept_version)
-
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -531,7 +527,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
         do_version(conn, user, business_concept_version)
-
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -560,7 +555,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
         deprecate(conn, user, business_concept_version)
-
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -577,7 +571,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> Map.fetch!(:content)
         |> Enum.filter(&(!Map.get(&1, "required", false)))
       )
-
     Map.put(business_concept_version, :completeness, bc_completeness)
   end
 
@@ -628,29 +621,22 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     )
   end
 
-  defp publish(conn, user, business_concept_version) do
-    business_concept_id = business_concept_version.business_concept.id
+  defp deprecate(conn, user, business_concept_version) do
+    update_status(
+      conn,
+      user,
+      business_concept_version,
+      BusinessConcept.status().deprecated,
+      @events.concept_deprecated,
+      can?(user, deprecate(business_concept_version))
+    )
+  end
 
+  defp publish(conn, user, business_concept_version) do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            BusinessConcepts.publish_business_concept_version(business_concept_version) do
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => %{}
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.concept_published)
-
-      render(
-        conn,
-        "show.json",
-        business_concept_version: concept,
-        hypermedia: hypermedia("business_concept_version", conn, concept),
-        template: TemplateSupport.get_template(business_concept_version)
-      )
+      audit_and_render_concept(conn, concept, user, @events.concept_published)
     else
       false ->
         conn
@@ -670,25 +656,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, reject(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
-      business_concept_id = version.business_concept.id
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => %{}
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.concept_rejected)
-
-      render(
-        conn,
-        "show.json",
-        business_concept_version: version,
-        hypermedia: hypermedia("business_concept_version", conn, version),
-        template: TemplateSupport.get_preprocessed_template(business_concept_version, user)
-      )
+      audit_and_render_concept(conn, version, user, @events.concept_rejected)
     else
       false ->
         conn
@@ -702,20 +670,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp deprecate(conn, user, business_concept_version) do
-    update_status(
-      conn,
-      user,
-      business_concept_version,
-      BusinessConcept.status().deprecated,
-      @events.concept_deprecated,
-      can?(user, deprecate(business_concept_version))
-    )
-  end
-
   defp update_status(conn, user, business_concept_version, status, event, authorized) do
     attrs = %{status: status}
-    business_concept_id = business_concept_version.business_concept.id
 
     with true <- authorized,
          {:ok, %BusinessConceptVersion{} = concept} <-
@@ -723,23 +679,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
              business_concept_version,
              attrs
            ) do
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => %{}
-        }
-      }
-
-      Audit.create_event(conn, audit, event)
-
-      render(
-        conn,
-        "show.json",
-        business_concept_version: concept,
-        hypermedia: hypermedia("business_concept_version", conn, concept),
-        template: TemplateSupport.get_preprocessed_template(concept, user)
-      )
+      audit_and_render_concept(conn, concept, user, event)
     else
       false ->
         conn
@@ -754,8 +694,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp do_version(conn, user, business_concept_version) do
-    business_concept_id = business_concept_version.business_concept.id
-
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
            BusinessConcepts.version_business_concept(user, business_concept_version) do
@@ -763,24 +701,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         new_version
         |> Map.take([:version])
 
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => audit_payload
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.new_concept_draft)
-
-      conn
-      |> put_status(:created)
-      |> render(
-        "show.json",
-        business_concept_version: new_version,
-        hypermedia: hypermedia("business_concept_version", conn, new_version),
-        template: TemplateSupport.get_template(new_version)
-      )
+      conn = put_status(conn, :created)
+      audit_and_render_concept(conn, new_version, user, @events.new_concept_draft, audit_payload)
     else
       false ->
         conn
@@ -792,6 +714,33 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:unprocessable_entity)
         |> render(ErrorView, :"422.json")
     end
+  end
+
+  defp audit_and_render_concept(conn, concept, user, event_type, audit_payload \\ %{}) do
+      business_concept_id = concept.business_concept.id
+      audit = %{
+        "audit" => %{
+          "resource_id" => business_concept_id,
+          "resource_type" => "concept",
+          "payload" => audit_payload
+        }
+      }
+
+      Audit.create_event(conn, audit, event_type)
+
+      template = TemplateSupport.get_preprocessed_template(concept, user)
+      business_concept_version =
+        concept
+        |> Repo.preload([business_concept: [:parent, :children]])
+        |> add_completeness_to_bc_version(template)
+
+      render(
+        conn,
+        "show.json",
+        business_concept_version: business_concept_version,
+        hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
+        template: template
+      )
   end
 
   swagger_path :update do
