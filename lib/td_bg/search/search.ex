@@ -1,6 +1,7 @@
 defmodule TdBg.Search do
 
   require Logger
+
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ESClientApi
@@ -27,6 +28,10 @@ defmodule TdBg.Search do
   def put_bulk_search(:business_concept) do
     business_concepts = BusinessConcepts.list_all_business_concept_versions()
     ESClientApi.bulk_index_content(business_concepts)
+  end
+
+  def put_bulk_search(business_concepts, :business_concept) do
+    ESClientApi.bulk_update_content(business_concepts)
   end
 
   # CREATE AND UPDATE

@@ -4,11 +4,15 @@ defmodule TdBg.Taxonomies do
   """
 
   import Ecto.Query, warn: false
+  alias TdBg.BusinessConcept.Search
+  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.DomainLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
+
+  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   @doc """
   Returns the list of domains.
@@ -139,10 +143,31 @@ defmodule TdBg.Taxonomies do
 
   """
   def update_domain(%Domain{} = domain, attrs) do
-    domain
-    |> Domain.changeset(attrs)
-    |> Repo.update()
+      domain
+      |> Domain.changeset(attrs)
+      |> Repo.update()
+      |> update_related_business_concept_versions_cache()
+      |> update_related_business_concept_versions_search()
   end
+
+  defp update_related_business_concept_versions_cache({:ok, %Domain{id: id}} = response) do
+    DomainLoader.refresh(id)
+    response
+  end
+  defp update_related_business_concept_versions_cache(error), do: error
+
+  defp update_related_business_concept_versions_search({:ok, %Domain{id: id}} = response) do
+    %{resource_id: id}
+      |> Search.get_business_concepts_to_update(0, 10_000)
+      |> Map.get(:results, [])
+      |> Enum.map(&Map.get(&1, "id"))
+      |> Enum.filter(& !is_nil(&1))
+      |> BusinessConcepts.business_concept_versions_by_ids(nil)
+      |> @search_service.put_bulk_search(:business_concept)
+
+    response
+  end
+  defp update_related_business_concept_versions_search(error), do: error
 
   @doc """
   Soft deletion of a domain.

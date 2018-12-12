@@ -24,7 +24,20 @@ defmodule TdBg.ESClientApi do
     json_bulk_data =
       items
       |> Enum.map(fn item ->
-        [build_bulk_metadata(item.__struct__.index_name, item), build_bulk_doc(item)]
+        [build_bulk_metadata(item.__struct__.index_name, item, :index), build_bulk_doc(item, :index)]
+      end)
+      |> List.flatten()
+      |> Enum.join("\n")
+      |> IO.inspect
+
+    post("_bulk", json_bulk_data <> "\n")
+  end
+
+  def bulk_update_content(items) do
+    json_bulk_data =
+      items
+      |> Enum.map(fn item ->
+        [build_bulk_metadata(item.__struct__.index_name, item, :update), build_bulk_doc(item, :update)]
       end)
       |> List.flatten()
       |> Enum.join("\n")
@@ -32,13 +45,22 @@ defmodule TdBg.ESClientApi do
     post("_bulk", json_bulk_data <> "\n")
   end
 
-  defp build_bulk_doc(item) do
+  defp build_bulk_doc(item, :index) do
     search_fields = item.__struct__.search_fields(item)
     "#{search_fields |> Poison.encode!()}"
   end
 
-  defp build_bulk_metadata(index_name, item) do
+  defp build_bulk_doc(item, :update) do
+    search_fields = item.__struct__.search_fields(item)
+    ~s({"doc": #{search_fields |> Poison.encode!()}})
+  end
+
+  defp build_bulk_metadata(index_name, item, :index) do
     ~s({"index": {"_id": #{item.id}, "_type": "#{get_type_name()}", "_index": "#{index_name}"}})
+  end
+
+  defp build_bulk_metadata(index_name, item, :update) do
+    ~s({"update": {"_id": #{item.id}, "_type": "#{get_type_name()}", "_index": "#{index_name}"}})
   end
 
   def index_content(index_name, id, body) do

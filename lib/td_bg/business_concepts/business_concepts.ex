@@ -484,6 +484,27 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
+    @doc """
+    Returns the list of business_concept_versions_by_ids giving a
+    list of ids
+
+    ## Examples
+
+        iex> business_concept_versions_by_ids([bcv_id_1, bcv_id_2], status)
+        [%BusinessConceptVersion{}, ...]
+
+    """
+  def business_concept_versions_by_ids(list_business_concept_version_ids, status) do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> join(:left, [v, c], _ in assoc(c, :domain))
+    |> preload([_, c, d], business_concept: {c, domain: d})
+    |> where([v, _, _], v.id in ^list_business_concept_version_ids)
+    |> include_status_in_where(status)
+    |> order_by(desc: :version)
+    |> Repo.all()
+  end
+
   def list_all_business_concept_with_status(status) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))

@@ -11,6 +11,9 @@ defmodule TdBg.Search.MockSearch do
   def delete_search(_something) do
   end
 
+  def put_bulk_search(_something, _something_else) do
+  end
+
   def search("business_concept", %{query: %{bool: %{must: %{match_all: %{}}}}}) do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))

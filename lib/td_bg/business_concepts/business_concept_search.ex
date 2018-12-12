@@ -143,6 +143,15 @@ defmodule TdBg.BusinessConcept.Search do
     |> do_search
   end
 
+  def get_business_concepts_to_update(params, page, size) do
+    filter = params |> create_filter_clause()
+
+    query = create_query(params, filter)
+
+    %{from: page * size, size: size, query: query}
+    |> do_search
+  end
+
   defp create_query(%{business_concept_id: id}) do
     %{term: %{business_concept_id: id}}
   end
@@ -184,6 +193,11 @@ defmodule TdBg.BusinessConcept.Search do
     %{bool: %{should: should_clause}}
   end
 
+  defp create_filter_clause(resource_filter) do
+    should_clause = resource_filter |> entry_to_filter_clause()
+    %{bool: %{should: should_clause}}
+  end
+
   defp entry_to_filter_clause(
          %{resource_id: resource_id, permissions: permissions},
          user_defined_filters
@@ -209,6 +223,11 @@ defmodule TdBg.BusinessConcept.Search do
                                                status_clause,
                                                confidential_clause]}
     }
+  end
+
+  defp entry_to_filter_clause(%{resource_id: resource_id}) do
+    domain_clause = %{term: %{domain_ids: resource_id}}
+    %{bool: %{filter: domain_clause}}
   end
 
   defp do_search(search) do
