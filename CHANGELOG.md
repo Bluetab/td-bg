@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.10.0] 2018-12-12
+
+### Changed
+
+- [TD-1171] Calculates completeness when perfoming status update actions
+
 ## [2.8.6] 2018-12-03
 
 ### Added
