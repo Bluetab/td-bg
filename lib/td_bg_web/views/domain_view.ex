@@ -33,6 +33,10 @@ defmodule TdBgWeb.DomainView do
     }
   end
 
+  def render("domain_bc_count.json", %{counter: counter}) do
+    %{data: %{counter: counter}}
+  end
+
   def render("domain_tiny.json", %{domain: domain}) do
     %{id: domain.id, name: domain.name}
   end

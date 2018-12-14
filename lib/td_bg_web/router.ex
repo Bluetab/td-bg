@@ -31,7 +31,9 @@ defmodule TdBgWeb.Router do
   scope "/api", TdBgWeb do
     pipe_through [:api, :api_secure, :api_authorized]
     options "/domains", DomainController, :options
-    resources "/domains", DomainController, except: [:new, :edit]
+    resources "/domains", DomainController, except: [:new, :edit] do
+      get  "/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user
+    end
 
     post "/business_concept_versions/csv", BusinessConceptVersionController, :csv
     post "/business_concept_versions/upload", BusinessConceptVersionController, :upload

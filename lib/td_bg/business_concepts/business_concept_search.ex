@@ -143,11 +143,16 @@ defmodule TdBg.BusinessConcept.Search do
     |> do_search
   end
 
-  def get_business_concepts_to_update(params, page, size) do
-    filter = params |> create_filter_clause()
+  def get_business_concepts_from_domain(resource_filter, page, size) do
+    filter = resource_filter |> create_filter_clause()
 
-    query = create_query(params, filter)
+    query = create_query(resource_filter, filter)
 
+    %{from: page * size, size: size, query: query}
+    |> do_search
+  end
+
+  def get_business_concepts_from_query(query, page, size) do
     %{from: page * size, size: size, query: query}
     |> do_search
   end
@@ -227,7 +232,7 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp entry_to_filter_clause(%{resource_id: resource_id}) do
     domain_clause = %{term: %{domain_ids: resource_id}}
-    %{bool: %{filter: domain_clause}}
+    %{bool: %{filter: [domain_clause]}}
   end
 
   defp do_search(search) do

@@ -103,6 +103,28 @@ defmodule TdBg.Taxonomies do
     Repo.all(from(r in Domain, where: r.parent_id == ^id and is_nil(r.deleted_at)))
   end
 
+  def count_existing_users_with_roles(domain_id, user_name) do
+    predefined_query = %{
+      bool: %{
+        must_not: %{
+          term: %{status: "deprecated"}
+        },
+        must: %{
+        	query_string: %{
+    			  query: "content.\\*:(#{user_name |> String.downcase()})"
+    		  }
+        },
+        filter: [%{term: %{current: true}}, %{term: %{domain_ids: domain_id}}]
+      }
+    }
+
+    predefined_query
+      |> Search.get_business_concepts_from_query(0, 10_000)
+      |> Map.get(:results)
+      |> length()
+
+    end
+
   @doc """
   Creates a domain.
 
@@ -158,7 +180,7 @@ defmodule TdBg.Taxonomies do
 
   defp update_related_business_concept_versions_search({:ok, %Domain{id: id}} = response) do
     %{resource_id: id}
-      |> Search.get_business_concepts_to_update(0, 10_000)
+      |> Search.get_business_concepts_from_domain(0, 10_000)
       |> Map.get(:results, [])
       |> Enum.map(&Map.get(&1, "id"))
       |> Enum.filter(& !is_nil(&1))

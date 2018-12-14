@@ -166,7 +166,20 @@ defmodule TdBgWeb.SwaggerDefinitions do
               input: %{}
             }
           })
-        end
+        end,
+        BCInDomainCountResponse:
+          swagger_schema do
+            title("Counter")
+            description("Counter with the business concepts in a domain for a user having a role on these concepts")
+
+            properties do
+              couter(:integer, "BC Count")
+            end
+
+            example(%{
+              counter: 12
+            })
+          end
     }
   end
 

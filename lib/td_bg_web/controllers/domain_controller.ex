@@ -254,4 +254,22 @@ defmodule TdBgWeb.DomainController do
     end
   end
 
+  swagger_path :count_bc_in_domain_for_user do
+    description("Counts the number of Business Concepts where the given user has any role in the provided domain")
+    produces("application/json")
+
+    parameters do
+      id(:path, :integer, "Domain ID", required: true)
+      user_name(:path, :integer, "User Name", required: true)
+    end
+
+    response(200, "OK", Schema.ref(:BCInDomainCountResponse))
+    response(400, "Client Error")
+  end
+
+  def count_bc_in_domain_for_user(conn, %{"domain_id" => id, "user_name" => user_name}) do
+    counter = id |> Taxonomies.count_existing_users_with_roles(user_name)
+    render(conn, "domain_bc_count.json", counter: counter)
+  end
+
 end

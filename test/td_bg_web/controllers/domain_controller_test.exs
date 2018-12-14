@@ -140,6 +140,28 @@ defmodule TdBgWeb.DomainControllerTest do
     end
   end
 
+  describe "count business concept from domain given a user name" do
+    setup [:create_domain]
+
+    @tag :admin_authenticated
+    test "fetch counter", %{conn: conn, swagger_schema: schema, domain: domain} do
+      user_name = "My cool name"
+      business_concept_1 = insert(:business_concept, domain: domain)
+      business_concept_2 = insert(:business_concept, domain: domain)
+      business_concept_3 = insert(:business_concept, domain: domain)
+
+      insert(:business_concept_version, business_concept: business_concept_1, content: %{"data_owner" => user_name})
+      insert(:business_concept_version, business_concept: business_concept_2)
+      insert(:business_concept_version, business_concept: business_concept_3, content: %{"data_owner" => user_name}, status: "deprecated")
+
+      conn = get(conn, domain_domain_path(conn, :count_bc_in_domain_for_user, domain.id, user_name))
+      validate_resp_schema(conn, schema, "BCInDomainCountResponse")
+
+      counter = json_response(conn, 200)["data"] |> Map.fetch!("counter")
+      assert counter == 1
+    end
+  end
+
   defp create_domain(_) do
     domain = fixture(:domain)
     {:ok, domain: domain}

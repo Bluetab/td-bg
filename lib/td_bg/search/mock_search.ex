@@ -57,6 +57,51 @@ defmodule TdBg.Search.MockSearch do
       |> search_results
   end
 
+  def search("business_concept", %{
+      query: %{
+        bool: %{
+          must_not: %{
+            term: %{status: status}
+          },
+          must: %{
+            query_string: %{
+              query: query
+            }
+          },
+          filter: [%{term: %{current: current}}, %{term: %{domain_ids: domain_id}}]
+        }
+      }
+    }) do
+
+      user_name =
+        query
+        |> String.split(":(")
+        |> List.last()
+        |> String.split(")")
+        |> List.first()
+        |> String.downcase()
+
+      BusinessConcepts.list_all_business_concept_versions()
+      |> Enum.filter(&(Map.get(&1, :current) == current))
+      |> Enum.filter(&(Map.get(&1, :status) != status))
+      |> Enum.filter(fn v ->
+        c_domain_id =
+          v
+          |> Map.get(:business_concept)
+          |> Map.get(:domain_id)
+          |> Integer.to_string()
+
+        c_domain_id == domain_id
+      end)
+      |> Enum.filter(fn v ->
+          v
+          |> Map.get(:content)
+          |> Map.values()
+          |> Enum.any?(&(String.downcase(&1) == user_name))
+      end)
+      |> search_results()
+  end
+
   defp search_results(results) do
     %{results: results, total: Enum.count(results)}
   end
