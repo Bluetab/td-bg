@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.1] 2018-12-14
+
+### Changed
+
+- New endpoint to query the count of business concepts in a domain filtering by a user name
+- Update domain's name in Redis and Elastic when it recieves and update
+
 ## [2.10.0] 2018-12-12
 
 ### Changed
