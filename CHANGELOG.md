@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.10.2] 2018-12-14
+
+### Fixed
+
+- count_bc_in_domain_for_user is controlled by domain's permissions
+
 ## [2.10.1] 2018-12-14
 
 ### Changed

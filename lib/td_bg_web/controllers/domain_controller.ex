@@ -268,8 +268,17 @@ defmodule TdBgWeb.DomainController do
   end
 
   def count_bc_in_domain_for_user(conn, %{"domain_id" => id, "user_name" => user_name}) do
-    counter = id |> Taxonomies.count_existing_users_with_roles(user_name)
-    render(conn, "domain_bc_count.json", counter: counter)
+    current_user = conn.assigns[:current_user]
+    domain = Taxonomies.get_domain!(id)
+
+    if can?(current_user, show(domain)) do
+      counter = id |> Taxonomies.count_existing_users_with_roles(user_name)
+      render(conn, "domain_bc_count.json", counter: counter)
+    else
+      conn
+      |> put_status(:forbidden)
+      |> render(ErrorView, "403.json")
+    end
   end
 
 end
