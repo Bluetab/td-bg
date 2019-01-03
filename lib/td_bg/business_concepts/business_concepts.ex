@@ -45,15 +45,18 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp include_name_where(query, name, nil) do
-    query |> where([_, a, v], v.name == ^name or a.name == ^name)
+    downcase_name = String.downcase(name)
+    query |> where([_, a, v], fragment("lower(?)", v.name) == ^downcase_name or fragment("lower(?)", a.name) == ^downcase_name)
   end
 
   defp include_name_where(query, name, exclude_concept_id) do
+    downcase_name = String.downcase(name)
     query
     |> where(
       [c, a, v],
-      (c.id != ^exclude_concept_id and (v.name == ^name or a.name == ^name)) or
-        (c.id == ^exclude_concept_id and a.name == ^name)
+      (c.id != ^exclude_concept_id and (fragment("lower(?)", v.name) == ^downcase_name
+        or fragment("lower(?)", a.name) == ^downcase_name)) or
+        (c.id == ^exclude_concept_id and fragment("lower(?)", a.name) == ^downcase_name)
     )
   end
 

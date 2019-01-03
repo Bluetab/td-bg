@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.0] 2019-01-03
+
+### Changed
+
+- [TD-1108] Concept name is now case insensitive for duplicity
+
 ## [2.10.2] 2018-12-14
 
 ### Fixed
