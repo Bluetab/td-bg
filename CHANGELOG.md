@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.1] 2019-01-04
+
+### Changed
+
+- [TD-1345] Serves type_label on concepts search rendering
+
 ## [2.11.0] 2019-01-03
 
 ### Changed

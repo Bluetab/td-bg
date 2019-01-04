@@ -92,11 +92,13 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     ]
 
     type = get_in(business_concept_version, ["template", "name"])
+    type_label = get_in(business_concept_version, ["template", "label"])
     test_fields = ["business_concept_id", "current", "version"]
 
     business_concept_version
     |> Map.take(view_fields ++ test_fields)
     |> Map.put("type", type)
+    |> Map.put("type_label", type_label)
   end
 
   # TODO: update swagger with embedded
