@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.2] 2019-01-08
+
+### Changed
+
+- [TD-1180] Update audit information when publishing a concept
+
 ## [2.11.1] 2019-01-04
 
 ### Changed

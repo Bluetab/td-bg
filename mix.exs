@@ -5,11 +5,15 @@ defmodule TdBg.Mixfile do
   def project do
     [
       app: :td_bg,
-      version: case System.get_env("APP_VERSION") do nil -> "2.8.0-local"; v -> v end,
-      elixir: "~> 1.4",
-      elixirc_paths: elixirc_paths(Mix.env),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers,
-      start_permanent: Mix.env == :prod,
+      version:
+        case System.get_env("APP_VERSION") do
+          nil -> "2.11.2-local"
+          v -> v
+        end,
+      elixir: "~> 1.6",
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
     ]
@@ -27,7 +31,7 @@ defmodule TdBg.Mixfile do
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_),     do: ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
   #
@@ -40,7 +44,7 @@ defmodule TdBg.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:cabbage, git: "https://github.com/eriosv/cabbage.git"},
+      {:cabbage, git: "https://github.com/Bluetab/cabbage.git"},
       {:httpoison, "~> 1.0"},
       {:edeliver, "~> 1.4.5"},
       {:distillery, "~> 1.5", runtime: false},
@@ -79,9 +83,8 @@ defmodule TdBg.Mixfile do
   end
 
   defp pxh_swagger_generate(_) do
-      if Mix.env in [:dev, :prod] do
-        PhxSwaggerGenerate.run(["priv/static/swagger.json"])
-      end
+    if Mix.env() in [:dev, :prod] do
+      PhxSwaggerGenerate.run(["priv/static/swagger.json"])
     end
-
+  end
 end

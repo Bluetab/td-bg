@@ -84,7 +84,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   @doc false
   def update_status_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [:status])
+    |> cast(attrs, [:status, :last_change_by, :last_change_at])
     |> validate_required([:status])
     |> validate_inclusion(:status, Map.values(BusinessConcept.status()))
   end

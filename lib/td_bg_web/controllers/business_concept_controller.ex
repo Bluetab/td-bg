@@ -280,7 +280,7 @@ defmodule TdBgWeb.BusinessConceptController do
   defp publish(conn, user, business_concept_version, _business_concept_params) do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
-           BusinessConcepts.publish_business_concept_version(business_concept_version) do
+           BusinessConcepts.publish_business_concept_version(business_concept_version, user) do
       render(conn, "show.json", business_concept: concept)
     else
       false ->

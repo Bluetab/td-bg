@@ -309,9 +309,9 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  def publish_business_concept_version(business_concept_version) do
+  def publish_business_concept_version(business_concept_version, %{id: id} = user) do
     status_published = BusinessConcept.status().published
-    attrs = %{status: status_published}
+    attrs = %{status: status_published, last_change_at: DateTime.utc_now, last_change_by: id}
 
     business_concept_id = business_concept_version.business_concept.id
 

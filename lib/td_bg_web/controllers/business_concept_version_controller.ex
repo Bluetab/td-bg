@@ -635,7 +635,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp publish(conn, user, business_concept_version) do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
-           BusinessConcepts.publish_business_concept_version(business_concept_version) do
+           BusinessConcepts.publish_business_concept_version(business_concept_version, user) do
       audit_and_render_concept(conn, concept, user, @events.concept_published)
     else
       false ->
