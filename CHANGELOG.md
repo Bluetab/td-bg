@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.5] 2019-01-09
+
+### Removed
+
+- [TD-1114] Remove obsolete tables and modules
+- Don't include child domains when retrieving linkable structures
+
 ## [2.11.4] 2019-01-09
 
 ### Fixed
