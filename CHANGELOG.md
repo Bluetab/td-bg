@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.4] 2019-01-09
+
+### Fixed
+
+- [TD-1344] Concept count metrics groups by template name
+
 ## [2.11.3] 2019-01-08
 
 ### Added

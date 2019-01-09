@@ -124,13 +124,15 @@ defmodule TdBg.Metrics.BusinessConcepts do
     |> Enum.reduce([], fn elem, acc -> [Map.put(elem, :count, 1) | acc] end)
     |> Enum.group_by(
       &Enum.zip(
-        get_keys(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.template.name)),
-        get_values(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.template.name))
+        get_keys(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.template.name)) ++ [:template_name],
+        get_values(&1, @fixed_concepts_count_dimensions, Map.get(templates_by_name, &1.template.name)) ++ [&1.template.name]
       )
     )
     |> Enum.map(fn {key, value} ->
       %{
-        dimensions: Enum.into(key, %{}),
+        dimensions: key 
+          |> Enum.filter(fn {dim, _} -> dim != :template_name end)
+          |> Enum.into(%{}),
         count: value |> Enum.map(& &1.count) |> Enum.sum(),
         template_name: List.first(value).template.name |> normalize_template_name()
       }
