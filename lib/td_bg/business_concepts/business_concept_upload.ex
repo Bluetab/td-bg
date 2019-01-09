@@ -280,7 +280,6 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp fill_content(content, _field), do: content
 
-  # TODO: Cache template retrieval
   defp get_template(%{"template" => template}) do
     case @df_cache.get_template_by_name(template) do
       nil -> {:error, :no_template_found}

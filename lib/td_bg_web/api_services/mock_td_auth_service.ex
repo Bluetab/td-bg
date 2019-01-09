@@ -5,8 +5,6 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
 
   alias TdBg.Accounts.Group
   alias TdBg.Accounts.User
-  alias TdBg.Permissions.MockPermissionResolver
-  alias TdPerms.TaxonomyCache
 
   def start_link(_) do
     Agent.start_link(fn -> %{} end, name: MockTdAuthService)
@@ -64,8 +62,7 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
   end
 
   def index do
-    lista = Agent.get(MockTdAuthService, &Map.get(&1, :users)) || []
-    lista
+    Agent.get(MockTdAuthService, &Map.get(&1, :users)) || []
   end
 
   defp list_groups do
@@ -83,59 +80,5 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
     list_groups()
     |> Enum.filter(&(&1.name == name))
     |> List.first()
-  end
-
-  def index_roles do
-    Agent.get(MockTdAuthService, &Map.get(&1, :roles)) || []
-  end
-
-  def get_role_by_name(name) do
-    index_roles()
-    |> Enum.filter(&(&1.name == name))
-    |> List.first()
-  end
-
-  def find_or_create_role(name) do
-    roles = index_roles()
-
-    case Enum.find(roles, &(&1.name == name)) do
-      nil ->
-        last_id = roles |> Enum.map(& &1.id) |> Enum.max(fn -> 0 end)
-        role = %{id: last_id + 1, name: name}
-        Agent.update(MockTdAuthService, &Map.put(&1, :roles, [role | roles]))
-        role
-
-      role ->
-        role
-    end
-  end
-
-  def get_domain_user_roles(domain_id) do
-    domain_ids =
-      domain_id
-      |> TaxonomyCache.get_parent_ids
-
-    MockPermissionResolver.get_acl_entries()
-    |> Enum.filter(&(&1.resource_type == "domain" && Enum.member?(domain_ids, &1.resource_id)))
-    |> Enum.map(&Map.put(&1, :role, get_role_by_id(&1.role_id)))
-    |> Enum.map(&Map.put(&1, :users, get_users(&1)))
-    |> Enum.group_by(& &1.role.name, & &1.users)
-    |> Enum.map(fn {role_name, users} -> %{role_name: role_name, users: Enum.concat(users)} end)
-  end
-
-  defp get_role_by_id(id) do
-    index_roles()
-    |> Enum.find(&(&1.id == id))
-  end
-
-  defp get_users(%{principal_type: "group", principal_id: group_id}) do
-    index()
-    |> Enum.filter(&Enum.member?(&1.gids, group_id))
-    |> Enum.map(&Map.take(&1, [:id, :user_name, :full_name]))
-  end
-
-  defp get_users(%{principal_type: "user", principal_id: user_id}) do
-    [get_user(user_id)]
-    |> Enum.map(&Map.take(&1, [:id, :user_name, :full_name]))
   end
 end

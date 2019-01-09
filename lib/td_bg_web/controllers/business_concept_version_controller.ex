@@ -21,7 +21,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.DataStructureView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
-  alias TdBgWeb.TemplateSupport
 
   @df_cache Application.get_env(:td_bg, :df_cache)
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
@@ -326,7 +325,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     with true <- can?(user, view_business_concept(business_concept_version)) do
-      template = TemplateSupport.get_preprocessed_template(business_concept_version, user)
+      template = get_template(business_concept_version)
 
       business_concept_version =
         business_concept_version
@@ -731,7 +730,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp audit_and_render_concept(conn, concept, user, event_type, audit_payload \\ %{}) do
+  defp audit_and_render_concept(conn, concept, _user, event_type, audit_payload \\ %{}) do
     business_concept_id = concept.business_concept.id
 
     audit = %{
@@ -744,7 +743,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     Audit.create_event(conn, audit, event_type)
 
-    template = TemplateSupport.get_preprocessed_template(concept, user)
+    template = get_template(concept)
 
     business_concept_version =
       concept
@@ -784,7 +783,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept_id = business_concept_version.business_concept.id
     concept_name = Map.get(business_concept_version_params, "name")
-    template = TemplateSupport.get_template(business_concept_version)
+    template = get_template(business_concept_version)
     content_schema = Map.get(template, :content)
 
     parent_id = Map.get(business_concept_version_params, "parent_id", nil)
@@ -1024,5 +1023,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     data_fields
     |> Enum.map(&CollectionUtils.atomize_keys(&1))
     |> Enum.map(&Map.take(&1, [:id, :name]))
+  end
+
+  @df_cache Application.get_env(:td_bg, :df_cache)
+
+  defp get_template(%BusinessConceptVersion{} = version) do
+    version
+    |> Map.get(:business_concept)
+    |> Map.get(:type)
+    |> @df_cache.get_template_by_name
   end
 end

@@ -18,7 +18,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
             description(:string, "description")
             parent_id([:integer, :null], "Domain id")
             _actions(Schema.ref(:Actions))
-            _embedded(Schema.ref(:DomainEmbeddings))
           end
 
           example(%{
@@ -29,15 +28,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
             parent_id: 1,
             _actions: %{}
           })
-        end,
-      DomainEmbeddings:
-        swagger_schema do
-          title("Domain Embeddings")
-          description("Embedded resources relating to a domain")
-
-          properties do
-            templates(:array, "Templates", items: Schema.ref(:TemplateRef))
-          end
         end,
       Domain:
         swagger_schema do
@@ -50,7 +40,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
             type([:string, :null], "type")
             description(:string, "description")
             parent_id([:integer, :null], "Domain id")
-            _embedded(Schema.ref(:DomainEmbeddings))
           end
 
           example(%{
@@ -167,38 +156,21 @@ defmodule TdBgWeb.SwaggerDefinitions do
             }
           })
         end,
-        BCInDomainCountResponse:
-          swagger_schema do
-            title("Counter")
-            description("Counter with the business concepts in a domain for a user having a role on these concepts")
-
-            properties do
-              couter(:integer, "BC Count")
-            end
-
-            example(%{
-              counter: 12
-            })
-          end
-    }
-  end
-
-  def taxonomy_swagger_definitions do
-    %{
-      DomainItem:
+      BCInDomainCountResponse:
         swagger_schema do
+          title("Counter")
+
+          description(
+            "Counter with the business concepts in a domain for a user having a role on these concepts"
+          )
+
           properties do
-            id(
-              Schema.new do
-                properties do
-                  role(:string)
-                  role_id(:integer)
-                  acl_entry_id(:integer)
-                  inherited(:boolean)
-                end
-              end
-            )
+            couter(:integer, "BC Count")
           end
+
+          example(%{
+            counter: 12
+          })
         end
     }
   end
@@ -585,84 +557,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
               language: ["Spanish", "English", "French"]
             }
           })
-        end
-    }
-  end
-
-  def template_swagger_definitions do
-    %{
-      Template:
-        swagger_schema do
-          title("Template")
-          description("A Template")
-
-          properties do
-            label(:string, "Label", required: true)
-            name(:string, "Name", required: true)
-            content(:array, "Content", required: true)
-            is_default(:boolean, "Is Default", required: true)
-          end
-
-          example(%{
-            label: "Template 1",
-            name: "Template1",
-            content: [
-              %{name: "name1", max_size: 100, type: "type1", required: true},
-              %{related_area: "related_area1", max_size: 100, type: "type2", required: false}
-            ],
-            is_default: false
-          })
-        end,
-      TemplateCreateUpdate:
-        swagger_schema do
-          properties do
-            template(
-              Schema.new do
-                properties do
-                  label(:string, "Label", required: true)
-                  name(:string, "Name", required: true)
-                  content(:array, "Content", required: true)
-                  is_default(:boolean, "Is Default", required: true)
-                end
-              end
-            )
-          end
-        end,
-      Templates:
-        swagger_schema do
-          title("Templates")
-          description("A collection of Templates")
-          type(:array)
-          items(Schema.ref(:Template))
-        end,
-      TemplateResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:Template))
-          end
-        end,
-      TemplatesResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:Templates))
-          end
-        end,
-      TemplateItem:
-        swagger_schema do
-          properties do
-            name(:string, "Name", required: true)
-          end
-        end,
-      TemplateItems:
-        swagger_schema do
-          type(:array)
-          items(Schema.ref(:TemplateItem))
-        end,
-      AddTemplatesToDomain:
-        swagger_schema do
-          properties do
-            templates(Schema.ref(:TemplateItems))
-          end
         end
     }
   end
