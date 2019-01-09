@@ -138,34 +138,41 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp upload_in_transaction(path, user) do
     path
-    |> Path.expand
-    |> File.stream!([:raw])
+    |> Path.expand()
+    |> File.stream!()
     |> ParserCSVUpload.parse_stream(headers: false)
     |> Enum.to_list()
     |> parse_data_list()
     |> upload_data(user, [])
   end
 
-  defp parse_data_list([headers|tail]) do
+  defp parse_data_list([headers | tail]) do
     tail
-      |> Enum.map(&parse_uncoded_rows(&1))
-      |> Enum.map(&row_list_to_map(headers, &1))
+    |> Enum.map(&parse_uncoded_rows(&1))
+    |> Enum.map(&row_list_to_map(headers, &1))
   end
 
   defp row_list_to_map(headers, row) do
     headers
-      |> Enum.zip(row)
-      |> Enum.into(%{})
+    |> Enum.zip(row)
+    |> Enum.into(%{})
   end
 
   defp parse_uncoded_rows(fiel_row_list) do
     fiel_row_list
-     |> Enum.map(fn(row) ->
+    |> Enum.map(fn row ->
       case String.valid?(row) do
-        true -> row
-        false -> Codepagex.to_string!(row, "VENDORS/MICSFT/WINDOWS/CP1252", Codepagex.use_utf_replacement())
+        true ->
+          row
+
+        false ->
+          Codepagex.to_string!(
+            row,
+            "VENDORS/MICSFT/WINDOWS/CP1252",
+            Codepagex.use_utf_replacement()
+          )
       end
-     end)
+    end)
   end
 
   defp upload_data([head | tail], user, acc) do
@@ -192,6 +199,7 @@ defmodule TdBg.BusinessConcept.Upload do
     draft = BusinessConcept.status().draft
 
     concept_query_input = [concept_data[@domain], template.name, user.id, now]
+
     %Result{rows: [[concept_id]]} =
       SQL.query!(Repo, @insert_business_concept, concept_query_input)
 
@@ -243,6 +251,7 @@ defmodule TdBg.BusinessConcept.Upload do
   defp insert_business_concept(%{data: data, user: user, template: template}) do
     content = Map.drop(data, @no_content)
     content = Enum.reduce(template.content, content, &fill_content(&2, &1))
+
     case validate_content(content, template) do
       {:ok, content} ->
         insert_business_concept(%{data: data, user: user, template: template, content: content})
@@ -251,6 +260,7 @@ defmodule TdBg.BusinessConcept.Upload do
         error
     end
   end
+
   defp insert_business_concept(%{data: data, user: user}) do
     case get_template(data) do
       {:ok, template} ->
@@ -267,6 +277,7 @@ defmodule TdBg.BusinessConcept.Upload do
       value -> Map.put(content, name, [value])
     end
   end
+
   defp fill_content(content, _field), do: content
 
   # TODO: Cache template retrieval

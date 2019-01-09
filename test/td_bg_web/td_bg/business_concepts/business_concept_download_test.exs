@@ -17,42 +17,49 @@ defmodule TdBg.BusinessConceptDownloadTests do
     alias TdBg.BusinessConcept.Download
 
     test "to_csv/1 return cvs content to download" do
-      template_name = "template_name"
+      template = "template_name"
       field_name = "field_name"
       field_label = "field_label"
+
       create_template(%{
-          id: 0,
-          name: template_name,
-          label: "label",
-          content: [%{
+        id: 0,
+        name: template,
+        label: "label",
+        content: [
+          %{
             "name" => field_name,
             "type" => "list",
             "label" => field_label
           }
-      ]})
+        ]
+      })
 
-      concept_name = "concept_name"
-      concept_description = "concept_description"
-      domain_name = "domain_name"
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
       field_value = "field_value"
-      concept_status = "draft"
+      status = "draft"
       inserted_at = "2018-05-05"
-      concepts =  [%{
-        "name" => concept_name,
-        "description" => concept_description,
-        "template" => %{"name" => template_name},
-        "domain" => %{
-          "name" => domain_name
-        },
-        "content" => %{
-          field_name => field_value
-        },
-        "status" => concept_status,
-        "inserted_at"=> inserted_at
-      }]
 
-      csv = Download.to_csv(concepts)
-      assert csv == "template;name;domain;status;description;inserted_at;#{field_label}\r\n#{template_name};#{concept_name};#{domain_name};#{concept_status};#{concept_description};#{inserted_at};#{field_value}\r\n"
+      concepts = [
+        %{
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{field_name => field_value},
+          "status" => status,
+          "inserted_at" => inserted_at
+        }
+      ]
+
+      header_labels = %{"template" => "Plantilla", "description" => "Descripción"}
+      csv = Download.to_csv(concepts, header_labels)
+
+      assert csv == """
+             Plantilla;name;domain;status;Descripción;inserted_at;#{field_label}\r
+             #{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{field_value}\r
+             """
     end
   end
 end

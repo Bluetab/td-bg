@@ -112,13 +112,21 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def csv(conn, params) do
     user = conn.assigns[:current_user]
 
+    header_labels =
+      params
+      |> Map.get("header_labels", %{})
+
+    params =
+      params
+      |> Map.drop(["header_labels"])
+
     %{results: business_concept_versions} =
       Search.search_business_concept_versions(params, user, 0, 10_000)
 
     conn
     |> put_resp_content_type("text/csv", "utf-8")
     |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
-    |> send_resp(200, Download.to_csv(business_concept_versions))
+    |> send_resp(200, Download.to_csv(business_concept_versions, header_labels))
   end
 
   def upload(conn, params) do
@@ -322,7 +330,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       business_concept_version =
         business_concept_version
-        |> Repo.preload([business_concept: [:parent, :children]])
+        |> Repo.preload(business_concept: [:parent, :children])
         |> add_completeness_to_bc_version(template)
 
       render(
@@ -414,6 +422,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^draft, true} ->
         send_for_approval(conn, user, business_concept_version)
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -442,6 +451,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
         publish(conn, user, business_concept_version)
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -471,6 +481,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^pending_approval, true} ->
         reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -499,6 +510,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^rejected, true} ->
         undo_rejection(conn, user, business_concept_version)
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -527,6 +539,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
         do_version(conn, user, business_concept_version)
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -555,6 +568,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     case {business_concept_version.status, business_concept_version.current} do
       {^published, true} ->
         deprecate(conn, user, business_concept_version)
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -571,6 +585,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> Map.fetch!(:content)
         |> Enum.filter(&(!Map.get(&1, "required", false)))
       )
+
     Map.put(business_concept_version, :completeness, bc_completeness)
   end
 
@@ -717,30 +732,32 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp audit_and_render_concept(conn, concept, user, event_type, audit_payload \\ %{}) do
-      business_concept_id = concept.business_concept.id
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => audit_payload
-        }
+    business_concept_id = concept.business_concept.id
+
+    audit = %{
+      "audit" => %{
+        "resource_id" => business_concept_id,
+        "resource_type" => "concept",
+        "payload" => audit_payload
       }
+    }
 
-      Audit.create_event(conn, audit, event_type)
+    Audit.create_event(conn, audit, event_type)
 
-      template = TemplateSupport.get_preprocessed_template(concept, user)
-      business_concept_version =
-        concept
-        |> Repo.preload([business_concept: [:parent, :children]])
-        |> add_completeness_to_bc_version(template)
+    template = TemplateSupport.get_preprocessed_template(concept, user)
 
-      render(
-        conn,
-        "show.json",
-        business_concept_version: business_concept_version,
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-        template: template
-      )
+    business_concept_version =
+      concept
+      |> Repo.preload(business_concept: [:parent, :children])
+      |> add_completeness_to_bc_version(template)
+
+    render(
+      conn,
+      "show.json",
+      business_concept_version: business_concept_version,
+      hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
+      template: template
+    )
   end
 
   swagger_path :update do

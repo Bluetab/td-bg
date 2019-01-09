@@ -37,7 +37,7 @@ defmodule TdBg.BusinessConcepts do
       |> join(:left, [c], _ in assoc(c, :aliases))
       |> join(:left, [c, a], _ in assoc(c, :versions))
       |> where([c, a, v], c.type == ^type and v.status not in ^status)
-      |> include_name_where(name,  exclude_concept_id)
+      |> include_name_where(name, exclude_concept_id)
       |> select([c, a, v], count(c.id))
       |> Repo.one!()
 
@@ -46,26 +46,34 @@ defmodule TdBg.BusinessConcepts do
 
   defp include_name_where(query, name, nil) do
     downcase_name = String.downcase(name)
-    query |> where([_, a, v], fragment("lower(?)", v.name) == ^downcase_name or fragment("lower(?)", a.name) == ^downcase_name)
+
+    query
+    |> where(
+      [_, a, v],
+      fragment("lower(?)", v.name) == ^downcase_name or
+        fragment("lower(?)", a.name) == ^downcase_name
+    )
   end
 
   defp include_name_where(query, name, exclude_concept_id) do
     downcase_name = String.downcase(name)
+
     query
     |> where(
       [c, a, v],
-      (c.id != ^exclude_concept_id and (fragment("lower(?)", v.name) == ^downcase_name
-        or fragment("lower(?)", a.name) == ^downcase_name)) or
+      (c.id != ^exclude_concept_id and
+         (fragment("lower(?)", v.name) == ^downcase_name or
+            fragment("lower(?)", a.name) == ^downcase_name)) or
         (c.id == ^exclude_concept_id and fragment("lower(?)", a.name) == ^downcase_name)
     )
   end
 
   @doc """
-    list all business concepts
-    """
+  list all business concepts
+  """
   def list_all_business_concepts do
     BusinessConcept
-      |> Repo.all()
+    |> Repo.all()
   end
 
   def list_current_business_concept_versions do
@@ -79,8 +87,11 @@ defmodule TdBg.BusinessConcepts do
     Fetch an exsisting business_concept by its id
   """
   def get_business_concept!(business_concept_id) do
-     Repo.one!(from(c in BusinessConcept,
-        where: c.id == ^business_concept_id))
+    Repo.one!(
+      from(c in BusinessConcept,
+        where: c.id == ^business_concept_id
+      )
+    )
   end
 
   @doc """
@@ -159,11 +170,12 @@ defmodule TdBg.BusinessConcepts do
   def get_currently_published_version!(business_concept_id) do
     published = BusinessConcept.status().published
 
-    version = BusinessConceptVersion
-    |> where([v], v.business_concept_id == ^business_concept_id)
-    |> where([v], v.status == ^published)
-    |> preload(business_concept: [:aliases, :domain])
-    |> Repo.one()
+    version =
+      BusinessConceptVersion
+      |> where([v], v.business_concept_id == ^business_concept_id)
+      |> where([v], v.status == ^published)
+      |> preload(business_concept: [:aliases, :domain])
+      |> Repo.one()
 
     case version do
       nil -> get_current_version_by_business_concept_id!(business_concept_id)
@@ -214,6 +226,7 @@ defmodule TdBg.BusinessConcepts do
   """
   def version_business_concept(user, %BusinessConceptVersion{} = business_concept_version) do
     business_concept = business_concept_version.business_concept
+
     business_concept =
       business_concept
       |> Map.put("last_change_by", user.id)
@@ -309,9 +322,9 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  def publish_business_concept_version(business_concept_version, %{id: id} = user) do
+  def publish_business_concept_version(business_concept_version, %{id: id} = _user) do
     status_published = BusinessConcept.status().published
-    attrs = %{status: status_published, last_change_at: DateTime.utc_now, last_change_by: id}
+    attrs = %{status: status_published, last_change_at: DateTime.utc_now(), last_change_by: id}
 
     business_concept_id = business_concept_version.business_concept.id
 
@@ -345,30 +358,33 @@ defmodule TdBg.BusinessConcepts do
   def index_business_concept_versions(business_concept_id, params) do
     business_concept_id
     |> list_business_concept_versions(nil)
-    |> Enum.map(fn(bv) ->
-        case params do
-          params when params == %{} -> bv
-          params -> Map.merge(bv, params)
-        end
+    |> Enum.map(fn bv ->
+      case params do
+        params when params == %{} -> bv
+        params -> Map.merge(bv, params)
       end
-    )
+    end)
     |> Enum.each(&@search_service.put_search/1)
   end
 
   def get_concept_counts(business_concept_id) do
     {:ok, values} =
-      BusinessConceptCache.get_field_values(business_concept_id,
-        [:rule_count, :link_count])
+      BusinessConceptCache.get_field_values(
+        business_concept_id,
+        [:rule_count, :link_count]
+      )
 
     values
     |> Enum.map(fn {key, value} ->
-      new_value = case value do
-        nil -> 0
-        v -> max(0, String.to_integer(v))
-      end
+      new_value =
+        case value do
+          nil -> 0
+          v -> max(0, String.to_integer(v))
+        end
+
       {key, new_value}
     end)
-    |> Map.new
+    |> Map.new()
   end
 
   def retrieve_last_bc_version_params(business_concept_id) do
@@ -487,16 +503,16 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
-    @doc """
-    Returns the list of business_concept_versions_by_ids giving a
-    list of ids
+  @doc """
+  Returns the list of business_concept_versions_by_ids giving a
+  list of ids
 
-    ## Examples
+  ## Examples
 
-        iex> business_concept_versions_by_ids([bcv_id_1, bcv_id_2], status)
-        [%BusinessConceptVersion{}, ...]
+      iex> business_concept_versions_by_ids([bcv_id_1, bcv_id_2], status)
+      [%BusinessConceptVersion{}, ...]
 
-    """
+  """
   def business_concept_versions_by_ids(list_business_concept_version_ids, status) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
@@ -563,10 +579,13 @@ defmodule TdBg.BusinessConcepts do
     if business_concept_version.version == 1 do
       business_concept = business_concept_version.business_concept
       business_concept_id = business_concept.id
+
       Multi.new()
-      |> Multi.update_all(:detatch_children,
-        (from child in BusinessConcept, where: child.parent_id == ^business_concept_id),
-        set: [parent_id: nil])
+      |> Multi.update_all(
+        :detatch_children,
+        from(child in BusinessConcept, where: child.parent_id == ^business_concept_id),
+        set: [parent_id: nil]
+      )
       |> Multi.delete(:business_concept_version, business_concept_version)
       |> Multi.delete(:business_concept, business_concept)
       |> Repo.transaction()
@@ -625,6 +644,7 @@ defmodule TdBg.BusinessConcepts do
 
   defp attrs_keys_to_atoms(key_values) do
     map = map_keys_to_atoms(key_values)
+
     case map.business_concept do
       %BusinessConcept{} -> map
       %{} = concept -> Map.put(map, :business_concept, map_keys_to_atoms(concept))
@@ -706,6 +726,7 @@ defmodule TdBg.BusinessConcepts do
     content = Map.get(attrs, @content)
     content_schema = Map.get(attrs, @content_schema)
     changeset = Validation.build_changeset(content, content_schema)
+
     if not changeset.valid? do
       attrs
       |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))

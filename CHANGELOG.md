@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.3] 2019-01-08
+
+### Added
+
+- [TD-831] Allow client to specify i18n translations for CSV headers
+
 ## [2.11.2] 2019-01-08
 
 ### Changed
