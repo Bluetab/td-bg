@@ -75,9 +75,9 @@ defmodule TdBg.Search.MockSearch do
 
       user_name =
         query
-        |> String.split(":(")
+        |> String.split(":(\"")
         |> List.last()
-        |> String.split(")")
+        |> String.split("\")")
         |> List.first()
         |> String.downcase()
 

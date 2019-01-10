@@ -111,7 +111,7 @@ defmodule TdBg.Taxonomies do
         },
         must: %{
         	query_string: %{
-    			  query: "content.\\*:(#{user_name |> String.downcase()})"
+    			  query: "content.\\*:(\"#{user_name |> String.downcase()}\")"
     		  }
         },
         filter: [%{term: %{current: true}}, %{term: %{domain_ids: domain_id}}]
