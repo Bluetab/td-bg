@@ -1,8 +1,8 @@
 # Changelog
 
-## [2.11.6] 2019-01-09
+## [2.11.6] 2019-01-10
 
-### Removed
+### Fixed
 
 - [TD-1358] The search of the concept chidren of a role in a given domain should be performed over the full string of the field "Full Name" 
 
