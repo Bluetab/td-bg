@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.7] 2019-01-10
+
+### Fixed
+
+- [TD-1361] Check permission create_ingest on domain list
+
 ## [2.11.6] 2019-01-10
 
 ### Fixed
