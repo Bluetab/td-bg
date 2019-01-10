@@ -22,6 +22,12 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     Permissions.authorized?(user, :create_business_concept, domain_id)
   end
 
+  def can?(%User{} = user, :create_ingest, %Domain{
+    id: domain_id
+    }) do
+    Permissions.authorized?(user, :create_ingest, domain_id)
+  end
+
   def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
