@@ -196,7 +196,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn
     } do
 
-      template_content = [%{"name" => "fieldname", "type" => "string", "required" =>  false}]
+      template_content = [%{"name" => "fieldname", "type" => "string", "cardinality" =>  "?"}]
       template = create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
       user = build(:user)
       business_concept =
@@ -214,7 +214,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       updated_content = template
       |> Map.get(:content)
       |> Enum.reduce([], fn(field, acc) ->
-            [Map.put(field, "required", true)|acc]
+            [Map.put(field, "cardinality", "1")|acc]
          end)
 
       update_attrs = Map.put(template, :content, updated_content)

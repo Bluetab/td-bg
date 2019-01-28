@@ -575,6 +575,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  defp add_completeness_to_bc_version(business_concept_version, nil) do
+    Map.put(business_concept_version, :completeness, 0.0)
+  end
   defp add_completeness_to_bc_version(business_concept_version, template) do
     bc_completeness =
       business_concept_version

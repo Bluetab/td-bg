@@ -26,22 +26,20 @@ Scenario: Create a business concept with dynamic data
   Given an existing Domain called "My Child Domain" child of Domain "My Parent Group"
   And an existing Domain called "My Domain" child of Domain "My Child Domain"
   And an existing Business Concept type called "Business_Term" with following definition:
-   | Field            | Format        | Max Size | Values                                        | Mandatory | Default Value | Group      |
-   | Formula          | string        | 100      |                                               |    NO     |               | General    |
-   | Format           | list          |          | Date, Numeric, Amount, Text                   |    YES    |               | General    |
-   | List of Values   | variable_list | 100      |                                               |    NO     |               | Functional |
-   | Sensitive Data   | list          |          | N/A, Personal Data, Related to personal Data  |    NO     | N/A           | Functional |
-   | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly   |    NO     | Not defined   | General    |
-   | Related Area     | string        | 100      |                                               |    NO     |               | Functional |
-   | Default Value    | string        | 100      |                                               |    NO     |               | General    |
-   | Additional Data  | string        | 500      |                                               |    NO     |               | Functional |
+   | Field            | Max Size | Values                                        | Cardinality | Default Value | Group      |
+   | Formula          | 100      |                                               |    ?        |               | General    |
+   | List of Values   | 100      |                                               |    ?        |               | Functional |
+   | Sensitive Data   |          | N/A, Personal Data, Related to personal Data  |    ?        | N/A           | Functional |
+   | Update Frequence |          | Not defined, Daily, Weekly, Monthly, Yearly   |    ?        | Not defined   | General    |
+   | Related Area     | 100      |                                               |    ?        |               | Functional |
+   | Default Value    | 100      |                                               |    ?        |               | General    |
+   | Additional Data  | 500      |                                               |    ?        |               | Functional |
   When "app-admin" tries to create a business concept in the Domain "My Domain" with following data:
     | Field             | Value                                                                    |
     | Type              | Business_Term                                                            |
     | Name              | My Dinamic Business Term                                                 |
     | Description       | This is the first description of my business term which is a date        |
     | Formula           |                                                                          |
-    | Format            | Date                                                                     |
     | List of Values    |                                                                          |
     | Related Area      |                                                                          |
     | Default Value     |                                                                          |
@@ -53,7 +51,6 @@ Scenario: Create a business concept with dynamic data
     | Type              | Business_Term                                                      |
     | Description       | This is the first description of my business term which is a date  |
     | Formula           |                                                                    |
-    | Format            | Date                                                               |
     | List of Values    |                                                                    |
     | Sensitive Data    | N/A                                                                |
     | Update Frequence  | Not defined                                                        |
