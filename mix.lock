@@ -59,8 +59,8 @@
   "redix": {:hex, :redix, "0.8.2", "c25158f905bcf8842e9a11411d65b9257ac70057c4330521d1a4d2a44b4f7ecf", [:mix], [], "hexpm"},
   "rummage_ecto": {:hex, :rummage_ecto, "1.2.0", "06b9f77a5a7b4a319b3d9992de4bcb37ea70bcbea5d4b5cc328b74c1b3958be1", [:mix], [{:ecto, "~> 2.1", [hex: :ecto, repo: "hexpm", optional: false]}], "hexpm"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.4", "f0eafff810d2041e93f915ef59899c923f4568f4585904d010387ed74988e77b", [:make, :mix, :rebar3], [], "hexpm"},
-  "td_df_lib": {:git, "https://github.com/Bluetab/td-df-lib.git", "11e4893dd59f18c3469a6c961cea0fb4bb23d253", [tag: "2.8.3"]},
-  "td_perms": {:git, "https://github.com/Bluetab/td-perms.git", "7f0e5a64038ccb6dd85cf575d4b9f407f9d830d4", [tag: "2.8.4"]},
+  "td_df_lib": {:git, "https://github.com/Bluetab/td-df-lib.git", "34ea5fb02982a2433e6add388c159c7bee78fc42", [tag: "2.12.1"]},
+  "td_perms": {:git, "https://github.com/Bluetab/td-perms.git", "0fe0ba63d71f778808c2e02db78d7079d2884979", [tag: "2.12.0"]},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.4.1", "d869e4c68901dd9531385bb0c8c40444ebf624e60b6962d95952775cac5e90cd", [:rebar3], [], "hexpm"},
   "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], []},
 }

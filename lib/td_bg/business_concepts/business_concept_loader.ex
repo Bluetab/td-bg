@@ -76,11 +76,17 @@ defmodule TdBg.BusinessConceptLoader do
       id: business_concept_version.business_concept_id,
       domain_id: business_concept_version.business_concept.domain_id,
       name: business_concept_version.name,
-      business_concept_version_id: business_concept_version.id
+      business_concept_version_id: business_concept_version.id,
+      status: business_concept_version.status
     }
   end
 
   def load_business_concept_data(business_concepts) do
+    put_business_concepts_in_cache(business_concepts)
+    put_business_concepts_in_deprecated_set(business_concepts)
+  end
+
+  defp put_business_concepts_in_cache(business_concepts) do
     results =
       business_concepts
       |> Enum.map(&Map.take(&1, [:id, :domain_id, :name, :business_concept_version_id]))
@@ -91,6 +97,21 @@ defmodule TdBg.BusinessConceptLoader do
       Logger.warn("Cache loading of business concepts failed")
     else
       Logger.info("Cached #{length(results)} business concepts")
+    end
+  end
+
+  defp put_business_concepts_in_deprecated_set(business_concepts) do
+    results =
+      business_concepts 
+      |> Enum.filter(&(Map.get(&1, :status) == "deprecated"))
+      |> Enum.map(&Map.get(&1, :id))
+      |> Enum.map(&BusinessConceptCache.add_business_concept_to_deprecated_set(&1))
+      |> Enum.map(fn {res, _} -> res end)
+    
+    if Enum.any?(results, &(&1 != :ok)) do
+      Logger.warn("Cache loading of deprecated business concepts failed")
+    else
+      Logger.info("Added #{length(results)} business concepts to deprecated terms set")
     end
   end
 end
