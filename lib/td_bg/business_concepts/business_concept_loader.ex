@@ -68,7 +68,7 @@ defmodule TdBg.BusinessConceptLoader do
 
   defp load_all_business_concepts do
     BusinessConcepts.list_all_business_concepts()
-    |> Enum.map(& load_business_concept(&1.id))
+    |> Enum.map(&load_business_concept(&1.id))
   end
 
   defp load_bc_version_data(business_concept_version) do
@@ -102,12 +102,12 @@ defmodule TdBg.BusinessConceptLoader do
 
   defp put_business_concepts_in_deprecated_set(business_concepts) do
     results =
-      business_concepts 
+      business_concepts
       |> Enum.filter(&(Map.get(&1, :status) == "deprecated"))
       |> Enum.map(&Map.get(&1, :id))
       |> Enum.map(&BusinessConceptCache.add_business_concept_to_deprecated_set(&1))
       |> Enum.map(fn {res, _} -> res end)
-    
+
     if Enum.any?(results, &(&1 != :ok)) do
       Logger.warn("Cache loading of deprecated business concepts failed")
     else
