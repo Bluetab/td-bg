@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.0] 2019-01-28
+
+### Added
+
+- [TD-1390] Add in cache deprecated business concepts on load
+
 ## [2.11.7] 2019-01-10
 
 ### Fixed
