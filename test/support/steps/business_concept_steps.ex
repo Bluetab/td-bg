@@ -750,7 +750,6 @@ defmodule TdBg.BusinessConceptSteps do
         :domain,
         :name,
         :description,
-        :Format,
         :Formula,
         :Values
       ]
@@ -792,8 +791,7 @@ defmodule TdBg.BusinessConceptSteps do
       assert concept["domain"]["name"] == value.domain
       assert to_plain_text(concept["description"]) == value.description
       assert concept["content"]["Formula"] == value."Formula"
-      assert concept["content"]["Format"] == value."Format"
-      assert Enum.at(concept["content"]["Values"], 0) == value."Values"
+      assert concept["content"]["Values"] == value."Values"
     end)
   end
 
@@ -841,11 +839,7 @@ defmodule TdBg.BusinessConceptSteps do
       |> String.split(",")
       |> Enum.map(&String.trim(&1))
 
-    Map.put(map, "values", diff_values)
-  end
-
-  def add_schema_field(map, "required", required) do
-    Map.put(map, "required", required == "YES")
+    Map.put(map, "values", %{"fixed" => diff_values})
   end
 
   def add_schema_field(map, name, value), do: Map.put(map, name, value)
@@ -856,10 +850,10 @@ defmodule TdBg.BusinessConceptSteps do
   def add_all_schema_fields(field_data) do
     Map.new()
     |> add_schema_field("name", field_data."Field")
-    |> add_schema_field("type", field_data."Format")
+    |> add_schema_field("type", "string")
     |> add_schema_field("max_size", field_data."Max Size")
     |> add_schema_field("values", field_data."Values")
-    |> add_schema_field("required", field_data."Mandatory")
+    |> add_schema_field("cardinality", field_data."Cardinality")
     |> add_schema_field("default", field_data."Default Value")
     |> add_schema_field("group", field_data."Group")
   end

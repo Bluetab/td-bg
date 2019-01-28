@@ -9,22 +9,20 @@
      | publisher | publish |
      | admin     | admin   |
    And an existing Business Concept type called "Business_Term" with following definition:
-    | Field            | Format        | Max Size | Values                                       | Mandatory | Default Value | Group      |
-    | Formula          | string        | 100      |                                              |    NO     |               | General    |
-    | Format           | list          |          | Date, Numeric, Amount, Text                  |    YES    |               | General    |
-    | List of Values   | variable_list | 100      |                                              |    NO     |               | Functional |
-    | Sensitive Data    | list         |          | N/A, Personal Data, Related to personal Data |    NO     | N/A           | Functional |
-    | Update Frequence | list          |          | Not defined, Daily, Weekly, Monthly, Yearly  |    NO     | Not defined   | General    |
-    | Related Area     | string        | 100      |                                              |    NO     |               | Functional |
-    | Default Value    | string        | 100      |                                              |    NO     |               | General    |
-    | Additional Data  | string        | 500      |                                              |    NO     |               | Functional |
+    | Field            | Max Size | Values                                       | Cardinality | Default Value | Group      |
+    | Formula          | 100      |                                              |    ?        |               | General    |
+    | List of Values   | 100      |                                              |    ?        |               | Functional |
+    | Sensitive Data   |          | N/A, Personal Data, Related to personal Data |    ?        | N/A           | Functional |
+    | Update Frequence |          | Not defined, Daily, Weekly, Monthly, Yearly  |    ?        | Not defined   | General    |
+    | Related Area     | 100      |                                              |    ?        |               | Functional |
+    | Default Value    | 100      |                                              |    ?        |               | General    |
+    | Additional Data  | 500      |                                              |    ?        |               | Functional |
    And an existing Business Concept of type "Business_Term" in the Domain "My Domain" with following data:
      | Field             | Value                                                                    |
      | Type              | Business_Term                                                            |
      | Name              | My Date Business Term                                                    |
      | Description       | This is the first description of my business term which is a date        |
      | Formula           |                                                                          |
-     | Format            | Date                                                                     |
      | List of Values    |                                                                          |
      | Sensitive Data    | N/A                                                                      |
      | Update Frequence  | Not defined                                                              |
@@ -36,7 +34,6 @@
      | Type              | Business_Term                                                            |
      | Name              | My Date Business Term                                                    |
      | Description       | This is the second description of my business term which is a date       |
-     | Format            | Date                                                                     |
      | Sensitive Data    | Related to personal Data                                                 |
      | Update Frequence  | Monthly                                                                  |
    Then the system returns a result with code "<result>"
@@ -46,7 +43,6 @@
     | Type              | Business_Term                                                      |
     | Description       | This is the second description of my business term which is a date |
     | Formula           |                                                                    |
-    | Format            | Date                                                               |
     | List of Values    |                                                                    |
     | Sensitive Data    | Related to personal Data                                           |
     | Update Frequence  | Monthly                                                            |
