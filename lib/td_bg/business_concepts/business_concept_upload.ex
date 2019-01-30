@@ -20,7 +20,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
   @insert_business_concept """
     INSERT INTO business_concepts (domain_id, "type", last_change_by, last_change_at, inserted_at, updated_at)
-    VALUES ((select id from domains where name = $1), $2, $3, $4, $4, $4) RETURNING id;
+    VALUES ((select id from domains where name = $1 and deleted_at is null), $2, $3, $4, $4, $4) RETURNING id;
   """
 
   # $1 type

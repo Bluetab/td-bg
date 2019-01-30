@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.1] 2019-01-30
+
+### Fixed
+
+- Fixed query for uploading massive concepts on deleted domain
+
 ## [2.12.0] 2019-01-28
 
 ### Added
