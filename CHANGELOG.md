@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.2] 2019-01-31
+
+### Fixed
+
+- Fixed elastic search mapping to get field on new template model
+- REQUIRES REINDEX
+
 ## [2.12.1] 2019-01-30
 
 ### Fixed
