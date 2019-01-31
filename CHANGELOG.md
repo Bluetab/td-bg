@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.3] 2019-01-31
+
+### Changed
+
+- Bulk index in batches of 100 items
+
 ## [2.12.2] 2019-01-31
 
 ### Fixed
@@ -29,7 +35,7 @@
 
 ### Fixed
 
-- [TD-1358] The search of the concept chidren of a role in a given domain should be performed over the full string of the field "Full Name" 
+- [TD-1358] The search of the concept chidren of a role in a given domain should be performed over the full string of the field "Full Name"
 
 ## [2.11.5] 2019-01-09
 
@@ -116,13 +122,13 @@
 
 ### Changed
 
-- Fix error on reindex while trying to index a deprecated business concept with a deleted parent domain 
+- Fix error on reindex while trying to index a deprecated business concept with a deleted parent domain
 
 ## [2.8.1] 2018-11-15
 
 ### Changed
 
-- Add domains' soft deletion 
+- Add domains' soft deletion
 
 ## [2.8.0] 2018-11-15
 

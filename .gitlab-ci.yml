@@ -1,5 +1,5 @@
 variables:
-  VERSION: "2.12.1"
+  VERSION: "2.12.4"
   APP_NAME: "td_bg"
   ECR_NAMESPACE: "truedat"
   K8S_DEPLOYMENT: "bg"
@@ -8,6 +8,7 @@ variables:
 stages:
   - build
   - test
+  - publish
   - deploy
 
 build:
@@ -24,10 +25,8 @@ test:
   artifacts:
     untracked: true
 
-deploy:
-  stage: deploy
-  tags:
-    - kubectl
+publish:
+  stage: publish
   only:
     - master
     - tags
@@ -41,4 +40,15 @@ deploy:
     - rm output
     - docker tag ${ECR_NAMESPACE}/${CI_PROJECT_NAME}:${CI_COMMIT_SHA} ${ECR}/${ECR_NAMESPACE}/${CI_PROJECT_NAME}:${VERSION}
     - docker push ${ECR}/${ECR_NAMESPACE}/${CI_PROJECT_NAME}:${VERSION}
+
+deploy:
+  stage: deploy
+  tags:
+    - kubectl
+  only:
+    - master
+    - tags
+  script:
+    - export VERSION=${CI_COMMIT_TAG:-${VERSION}-alpha.${CI_PIPELINE_ID}}
+    - export ECR=$(docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION mesosphere/aws-cli ecr get-authorization-token --output text --query 'authorizationData[].proxyEndpoint' | cut -d/ -f3)
     - kubectl set image deployment.v1.apps/${K8S_DEPLOYMENT} ${K8S_CONTAINER}=${ECR}/${ECR_NAMESPACE}/${CI_PROJECT_NAME}:${VERSION} --record
