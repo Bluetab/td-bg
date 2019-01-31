@@ -10,22 +10,22 @@ Feature: Taxonomy administration
       | publisher | publish |
       | admin     | admin   |
     When user "<user>" tries to create a Domain with the name "My Domain" as child of Domain "My Domain Parent" with following data:
-       | Description |
-       | First version of my Domain |
+      | Description                |
+      | First version of my Domain |
     Then the system returns a result with code "<result>"
     And if result <result> is "Created", user "<user>" is able to see the Domain "My Domain" with following data:
-       | Description |
-       | First version of my Domain |
+      | Description                |
+      | First version of my Domain |
     And if result <result> is "Created", Domain "My Domain" is a child of Domain "My Domain Parent"
 
     Examples:
-      | user      | result       |
-      | admin     | Created      |
+      | user  | result  |
+      | admin | Created |
 
   Scenario Outline: Modifying a Domain and seeing the new version by Group Manager
     Given an existing Domain called "My Parent Domain"
     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain" with following data:
-      | Description |
+      | Description                   |
       | First version of Child Domain |
     And following users exist with the indicated role in Domain "My Child Domain"
       | user      | role    |
@@ -34,14 +34,14 @@ Feature: Taxonomy administration
       | publisher | publish |
       | admin     | admin   |
     When user "<user>" tries to modify a Domain with the name "My Child Domain" introducing following data:
-      | Description |
+      | Description                       |
       | Second version of My Child Domain |
     Then the system returns a result with code "<result>"
     And if result <result> is "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
-      | Description |
+      | Description                       |
       | Second version of My Child Domain |
     And if result <result> is not "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
-      | Description |
+      | Description                   |
       | First version of Child Domain |
 
     Examples:
@@ -54,7 +54,7 @@ Feature: Taxonomy administration
   Scenario Outline: Modifying a Domain and seeing the new version by Domain Manager
     Given an existing Domain called "My Parent Domain"
     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain" with following data:
-      | Description |
+      | Description                      |
       | First version of My Child Domain |
     And following users exist with the indicated role in Domain "My Child Domain"
       | user      | role    |
@@ -63,14 +63,14 @@ Feature: Taxonomy administration
       | publisher | publish |
       | admin     | admin   |
     When user "<user>" tries to modify a Domain with the name "My Child Domain" introducing following data:
-      | Description |
+      | Description                       |
       | Second version of My Child Domain |
     Then the system returns a result with code "<result>"
     And if result <result> is "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
-      | Description |
+      | Description                       |
       | Second version of My Child Domain |
     And if result <result> is not "Ok", user "<user>" is able to see the Domain "My Child Domain" with following data:
-      | Description |
+      | Description                      |
       | First version of My Child Domain |
 
     Examples:
@@ -99,7 +99,7 @@ Feature: Taxonomy administration
       | watcher   | Unauthorized |
       | creator   | Unauthorized |
       | publisher | Unauthorized |
-      | admin     | No Content      |
+      | admin     | No Content   |
 
   Scenario Outline: Deleting a Domain without any Business Concept by Group Manager
     Given an existing Domain called "My Parent Domain"
@@ -120,40 +120,40 @@ Feature: Taxonomy administration
       | watcher   | Unauthorized |
       | creator   | Unauthorized |
       | publisher | Unauthorized |
-      | admin     | No Content      |
+      | admin     | No Content   |
 
   Scenario Outline: Deleting a Domain with some Domain Child
     Given an existing Domain called "My Parent Domain"
     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
     And following users exist with the indicated role in Domain "My Parent Domain"
-      | user      | role    |
-      | admin     | admin   |
+      | user  | role  |
+      | admin | admin |
     When user "<user>" tries to delete a Domain with the name "My Parent Domain"
     Then the system returns a result with code "<result>"
     And if result <result> is not "No Content", Domain "My Child Domain" is a child of Domain "My Parent Domain"
     And a error message with key "ETD001" and alias "domain.error.domain.existing.domain" is retrieved
 
     Examples:
-      | user      | result                    |
-      | admin     | Unprocessable Entity      |
+      | user  | result               |
+      | admin | Unprocessable Entity |
 
   Scenario Outline: Deleting a Domain with some Business Concept
     Given an existing Domain called "My Parent Domain"
     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
     And an existing Business Concept type called "Business_Term" with empty definition
     And an existing Business Concept in the Domain "My Child Domain" with following data:
-      | Field             | Value                                                                   |
-      | Type              | Business_Term                                                           |
-      | Name              | My Business Term                                                        |
-      | Description       | This is the first description of my business term which is very simple  |
+      | Field       | Value                                                                  |
+      | Type        | Business_Term                                                          |
+      | Name        | My Business Term                                                       |
+      | Description | This is the first description of my business term which is very simple |
     And following users exist with the indicated role in Domain "My Parent Domain"
-      | user      | role    |
-      | admin     | admin   |
+      | user  | role  |
+      | admin | admin |
     When user "<user>" tries to delete a Domain with the name "My Child Domain"
     Then the system returns a result with code "<result>"
     And if result <result> is not "No Content", Domain "My Child Domain" is a child of Domain "My Parent Domain"
     And a error message with key "ETD002" and alias "domain.error.domain.existing.business.concept" is retrieved
 
     Examples:
-      | user      | result                    |
-      | admin     | Unprocessable Entity      |
+      | user  | result               |
+      | admin | Unprocessable Entity |

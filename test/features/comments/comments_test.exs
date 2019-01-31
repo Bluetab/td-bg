@@ -45,7 +45,7 @@ defmodule TdBg.CommentsTest do
           %{admin_name: admin_name, comment: comment, bc_name: bc_name},
           state do
     token = get_user_token(admin_name)
-    business_concept = business_concept_by_name(token, bc_name)
+    business_concept = business_concept_version_by_name(token, bc_name)
 
     comment_params = %{
       "resource_id" => business_concept["business_concept_id"],
@@ -77,7 +77,7 @@ defmodule TdBg.CommentsTest do
          state do
     assert result == to_response_code(state[:status_code])
     token = get_user_token(user_name)
-    business_concept = business_concept_by_name(token, bc_name)
+    business_concept = business_concept_version_by_name(token, bc_name)
 
     {_, status_code, json_resp} =
       list_bc_comments(

@@ -578,6 +578,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp add_completeness_to_bc_version(business_concept_version, nil) do
     Map.put(business_concept_version, :completeness, 0.0)
   end
+
   defp add_completeness_to_bc_version(business_concept_version, template) do
     bc_completeness =
       business_concept_version
@@ -842,30 +843,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         template: template
       )
     else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
-
-      {:name_not_available} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{errors: %{name: ["bc_version unique"]}})
-
-      {:not_valid_related_to} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{errors: %{related_to: ["bc_version invalid"]}})
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+      error ->
+        BusinessConceptSupport.handle_bc_errors(conn, error)
     end
   end
 

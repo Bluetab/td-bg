@@ -48,11 +48,11 @@ Feature: taxonomy creation/edition errors
     """
     {
       "errors": [
-                    {
-                      "code": "undefined",
-                      "name": "domain.error.name.required"
-                    }
-                ]
+        {
+          "code": "undefined",
+          "name": "domain.error.name.required"
+        }
+      ]
     }
     """
 
