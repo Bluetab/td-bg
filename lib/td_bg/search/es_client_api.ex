@@ -24,7 +24,10 @@ defmodule TdBg.ESClientApi do
     json_bulk_data =
       items
       |> Enum.map(fn item ->
-        [build_bulk_metadata(item.__struct__.index_name, item, :index), build_bulk_doc(item, :index)]
+        [
+          build_bulk_metadata(item.__struct__.index_name, item, :index),
+          build_bulk_doc(item, :index)
+        ]
       end)
       |> List.flatten()
       |> Enum.join("\n")
@@ -36,7 +39,10 @@ defmodule TdBg.ESClientApi do
     json_bulk_data =
       items
       |> Enum.map(fn item ->
-        [build_bulk_metadata(item.__struct__.index_name, item, :update), build_bulk_doc(item, :update)]
+        [
+          build_bulk_metadata(item.__struct__.index_name, item, :update),
+          build_bulk_doc(item, :update)
+        ]
       end)
       |> List.flatten()
       |> Enum.join("\n")
@@ -75,7 +81,7 @@ defmodule TdBg.ESClientApi do
   end
 
   defp get_type_name do
-    Application.get_env(:td_bg, :elasticsearch)[:type_name] # doc
+    Application.get_env(:td_bg, :elasticsearch)[:type_name]
   end
 
   defp get_search_path(index_name, id) do
@@ -98,11 +104,19 @@ defmodule TdBg.ESClientApi do
   end
 
   @doc """
-    Concatenates elasticsearch path at the beggining of HTTPoison requests
+  Concatenates elasticsearch path at the beggining of HTTPoison requests
   """
   def process_url(path) do
     es_config = Application.get_env(:td_bg, :elasticsearch)
     "#{es_config[:es_host]}:#{es_config[:es_port]}/" <> path
+  end
+
+  @doc """
+  Set default request options (increase timeout for receiving HTTP response)
+  """
+  def process_request_options(options) do
+    [recv_timeout: 20_000]
+    |> Keyword.merge(options)
   end
 
   @doc """
@@ -114,7 +128,7 @@ defmodule TdBg.ESClientApi do
   end
 
   @doc """
-    Adds requests headers
+  Adds requests headers
   """
   def process_request_headers(_headers) do
     headers = [{"Content-Type", "application/json"}]
