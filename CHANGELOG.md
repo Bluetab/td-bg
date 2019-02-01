@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.4] 2019-02-01
+
+### Removed
+
+- Deleted deprecated API endpoints and controller methods (refactored tests that used them)
+
 ## [2.12.3] 2019-01-31
 
 ### Changed
