@@ -14,6 +14,18 @@ defmodule TdBg.Search.MockSearch do
   def put_bulk_search(_something, _something_else) do
   end
 
+  def search("business_concept", %{
+        query: %{bool: %{filter: [%{terms: %{"status" => status_list}}], must: %{match_all: %{}}}}
+      }) do
+    BusinessConcepts.list_all_business_concept_versions()
+    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.filter(&Enum.member?(status_list, &1.status))
+    |> Enum.map(&%{_source: &1})
+    |> Poison.encode!()
+    |> Poison.decode!()
+    |> search_results
+  end
+
   def search("business_concept", %{query: %{bool: %{must: %{match_all: %{}}}}}) do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))
@@ -46,60 +58,60 @@ defmodule TdBg.Search.MockSearch do
   end
 
   def search("business_concept", %{
-    query: _query,
-    sort: _sort,
-    size: _size
-  }) do
+        query: _query,
+        sort: _sort,
+        size: _size
+      }) do
     default_params_map = %{:link_count => 0, :rule_count => 0}
+
     BusinessConcepts.list_all_business_concept_versions()
-      |> Enum.map(&BusinessConceptVersion.search_fields(&1))
-      |> Enum.map(fn(bv) -> Map.merge(bv, default_params_map, fn _k, v1, v2 -> v1 || v2 end) end)
-      |> search_results
+    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(fn bv -> Map.merge(bv, default_params_map, fn _k, v1, v2 -> v1 || v2 end) end)
+    |> search_results
   end
 
   def search("business_concept", %{
-      query: %{
-        bool: %{
-          must_not: %{
-            term: %{status: status}
-          },
-          must: %{
-            query_string: %{
-              query: query
-            }
-          },
-          filter: [%{term: %{current: current}}, %{term: %{domain_ids: domain_id}}]
+        query: %{
+          bool: %{
+            must_not: %{
+              term: %{status: status}
+            },
+            must: %{
+              query_string: %{
+                query: query
+              }
+            },
+            filter: [%{term: %{current: current}}, %{term: %{domain_ids: domain_id}}]
+          }
         }
-      }
-    }) do
+      }) do
+    user_name =
+      query
+      |> String.split(":(\"")
+      |> List.last()
+      |> String.split("\")")
+      |> List.first()
+      |> String.downcase()
 
-      user_name =
-        query
-        |> String.split(":(\"")
-        |> List.last()
-        |> String.split("\")")
-        |> List.first()
-        |> String.downcase()
+    BusinessConcepts.list_all_business_concept_versions()
+    |> Enum.filter(&(Map.get(&1, :current) == current))
+    |> Enum.filter(&(Map.get(&1, :status) != status))
+    |> Enum.filter(fn v ->
+      c_domain_id =
+        v
+        |> Map.get(:business_concept)
+        |> Map.get(:domain_id)
+        |> Integer.to_string()
 
-      BusinessConcepts.list_all_business_concept_versions()
-      |> Enum.filter(&(Map.get(&1, :current) == current))
-      |> Enum.filter(&(Map.get(&1, :status) != status))
-      |> Enum.filter(fn v ->
-        c_domain_id =
-          v
-          |> Map.get(:business_concept)
-          |> Map.get(:domain_id)
-          |> Integer.to_string()
-
-        c_domain_id == domain_id
-      end)
-      |> Enum.filter(fn v ->
-          v
-          |> Map.get(:content)
-          |> Map.values()
-          |> Enum.any?(&(String.downcase(&1) == user_name))
-      end)
-      |> search_results()
+      c_domain_id == domain_id
+    end)
+    |> Enum.filter(fn v ->
+      v
+      |> Map.get(:content)
+      |> Map.values()
+      |> Enum.any?(&(String.downcase(&1) == user_name))
+    end)
+    |> search_results()
   end
 
   defp search_results(results) do

@@ -1,6 +1,6 @@
 defmodule TdBgWeb.SwaggerDefinitions do
   @moduledoc """
-   Swagger definitions used by controllers
+  Swagger definitions used by controllers
   """
   import PhoenixSwagger
 
@@ -171,109 +171,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
           example(%{
             counter: 12
           })
-        end
-    }
-  end
-
-  def business_concept_definitions do
-    %{
-      BusinessConcept:
-        swagger_schema do
-          title("Business Concept")
-          description("Business Concept")
-
-          properties do
-            id(:integer, "unique identifier", required: true)
-
-            business_concept_version_id(
-              :integer,
-              "Business Concept current version id",
-              required: true
-            )
-
-            type(:string, "Business Concept type", required: true)
-            content(:object, "Business Concept content", required: true)
-
-            related_to(
-              :array,
-              "Related Business Concepts",
-              items: %{type: :integer},
-              required: true
-            )
-
-            name(:string, "Business Concept name", required: true)
-            description(:object, "Business Concept description", required: true)
-            last_change_by(:integer, "Business Concept last updated by", required: true)
-            last_change_at(:string, "Business Concept last updated date", required: true)
-            domain(Schema.ref(:DomainRef))
-            status(:string, "Business Concept status", required: true)
-            current(:boolean, "Is this the current version?", required: true)
-            version(:integer, "Business Concept version", required: true)
-            reject_reason([:string, :null], "Business Concept reject reason", required: false)
-
-            mod_comments(
-              [:string, :null],
-              "Business Concept modification comments",
-              required: false
-            )
-          end
-        end,
-      BusinessConceptUpdate:
-        swagger_schema do
-          properties do
-            business_concept(
-              Schema.new do
-                properties do
-                  content(:object, "Business Concept content")
-                  name(:string, "Business Concept name")
-                  description(:object, "Business Concept description")
-                end
-              end
-            )
-          end
-        end,
-      BusinessConceptUpdateStatus:
-        swagger_schema do
-          properties do
-            business_concept(
-              Schema.new do
-                properties do
-                  status(
-                    :string,
-                    "Business Concept status (rejected, published, deprecated...)",
-                    required: true
-                  )
-
-                  reject_reason([:string, :null], "Business Concept reject reason")
-                end
-              end
-            )
-          end
-        end,
-      BusinessConcepts:
-        swagger_schema do
-          title("Business Concepts")
-          description("A collection of Business Concepts")
-          type(:array)
-          items(Schema.ref(:BusinessConcept))
-        end,
-      BusinessConceptResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:BusinessConcept))
-          end
-        end,
-      BusinessConceptsResponse:
-        swagger_schema do
-          properties do
-            data(
-              Schema.new do
-                properties do
-                  collection(Schema.ref(:BusinessConcepts))
-                end
-              end
-            )
-          end
         end
     }
   end

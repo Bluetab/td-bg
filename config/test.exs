@@ -22,20 +22,18 @@ config :td_bg, TdBg.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_bg,
-  # business concept content  schema location
-  bc_schema_location: "bc_schema.test"
-
 config :td_bg, :api_services_login,
   api_username: "api-admin",
   api_password: "apipass"
 
-config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.MockTdAuthService,
+config :td_bg, :auth_service,
+  api_service: TdBgWeb.ApiServices.MockTdAuthService,
   auth_host: "localhost",
   auth_port: "4001",
   domain: ""
 
-config :td_bg, :dd_service, api_service: TdBgWeb.ApiServices.MockTdDdService,
+config :td_bg, :dd_service,
+  api_service: TdBgWeb.ApiServices.MockTdDdService,
   auth_host: "localhost",
   auth_port: "4005",
   domain: ""
@@ -46,7 +44,8 @@ config :td_bg, :elasticsearch,
   es_port: 9200,
   type_name: "doc"
 
-config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.MockTdAuditService,
+config :td_bg, :audit_service,
+  api_service: TdBgWeb.ApiServices.MockTdAuditService,
   audit_host: "localhost",
   audit_port: "4007",
   audit_domain: ""
@@ -59,6 +58,5 @@ config :td_bg, cache_busines_concepts_on_startup: false
 
 config :td_bg, metrics_busines_concepts_on_startup: false
 config :td_bg, metrics_publication_frequency: 1000
-
 
 config :td_perms, redis_host: "localhost"

@@ -145,7 +145,7 @@ defmodule TdBg.BusinessConceptSteps do
       |> Map.put("in_progress", false)
 
     {_, status_code, json_resp} =
-      business_concept_update(token, business_concept_version_id, attrs)
+      business_concept_version_update(token, business_concept_version_id, attrs)
 
     {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
   end
@@ -189,11 +189,15 @@ defmodule TdBg.BusinessConceptSteps do
     token = get_user_token(user_name)
 
     business_concept =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept["id"]
 
-    {_, status_code} =
+    {_, status_code, _} =
       business_concept_version_send_for_approval(token, business_concept_version_id)
 
     {:ok, Map.merge(state, %{status_code: status_code})}
@@ -206,7 +210,11 @@ defmodule TdBg.BusinessConceptSteps do
          },
          %{token_admin: token_admin} = state do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept_version["id"]
     business_concept_version_send_for_approval(token_admin, business_concept_version_id)
@@ -220,7 +228,11 @@ defmodule TdBg.BusinessConceptSteps do
          },
          %{token_admin: token_admin} = state do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept_version["id"]
     business_concept_version_redraft(token_admin, business_concept_version_id)
@@ -234,7 +246,11 @@ defmodule TdBg.BusinessConceptSteps do
          },
          %{token_admin: token_admin} = state do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept_version["id"]
     business_concept_version_publish(token_admin, business_concept_version_id)
@@ -249,7 +265,11 @@ defmodule TdBg.BusinessConceptSteps do
          },
          %{token_admin: token_admin} = state do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept_version["id"]
     business_concept_version_reject(token_admin, business_concept_version_id, reason)
@@ -263,7 +283,11 @@ defmodule TdBg.BusinessConceptSteps do
          },
          %{token_admin: token_admin} = state do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept_version["id"]
     business_concept_new_version(token_admin, business_concept_version_id)
@@ -280,10 +304,14 @@ defmodule TdBg.BusinessConceptSteps do
     token = get_user_token(user_name)
 
     business_concept =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept["id"]
-    {_, status_code} = business_concept_version_publish(token, business_concept_version_id)
+    {_, status_code, _} = business_concept_version_publish(token, business_concept_version_id)
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -298,11 +326,15 @@ defmodule TdBg.BusinessConceptSteps do
     token = get_user_token(user_name)
 
     business_concept =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept["id"]
 
-    {_, status_code} =
+    {_, status_code, _} =
       business_concept_version_reject(token, business_concept_version_id, reject_reason)
 
     {:ok, Map.merge(state, %{status_code: status_code})}
@@ -367,13 +399,13 @@ defmodule TdBg.BusinessConceptSteps do
 
     case business_concept["status"] do
       ^published ->
-        {:ok, _status_code, new_version_id} =
+        {:ok, _, %{"data" => %{"id" => business_concept_version_id}}} =
           business_concept_new_version(token_admin, business_concept["id"])
 
-        business_concept_update(token_admin, new_version_id, attrs)
+        business_concept_version_update(token_admin, business_concept_version_id, attrs)
 
       ^draft ->
-        business_concept_update(token_admin, business_concept["id"], attrs)
+        business_concept_version_update(token_admin, business_concept["id"], attrs)
 
       _ ->
         raise("Invalid status for modification")
@@ -390,7 +422,11 @@ defmodule TdBg.BusinessConceptSteps do
           },
           %{token_admin: token_admin} = state do
     business_concept_tmp =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     assert business_concept_tmp
     token = get_user_token(user_name)
@@ -424,6 +460,7 @@ defmodule TdBg.BusinessConceptSteps do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
   defand ~r/^if result (?<result>[^"]+) is not "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" with following data:$/,
          %{
            result: result,
@@ -494,6 +531,7 @@ defmodule TdBg.BusinessConceptSteps do
     {:ok, state}
   end
 
+  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
   defand ~r/^if result (?<result>[^"]+) is "(?<status_code>[^"]+)",  business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" does not exist$/,
          %{
            result: result,
@@ -528,10 +566,14 @@ defmodule TdBg.BusinessConceptSteps do
     token = get_user_token(user_name)
 
     business_concept =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept["id"]
-    {_, status_code} = business_concept_version_deprecate(token, business_concept_version_id)
+    {_, status_code, _} = business_concept_version_deprecate(token, business_concept_version_id)
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
@@ -543,7 +585,11 @@ defmodule TdBg.BusinessConceptSteps do
           },
           %{token_admin: token_admin} = state do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_version_id = business_concept_version["id"]
     token = get_user_token(user_name)
@@ -565,7 +611,11 @@ defmodule TdBg.BusinessConceptSteps do
           },
           %{token_admin: token_admin} = state do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_id = business_concept_version["business_concept_id"]
     token = get_user_token(user_name)
@@ -577,6 +627,7 @@ defmodule TdBg.BusinessConceptSteps do
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
+  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
   defand ~r/^if (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
          %{
            result: result,
@@ -606,7 +657,11 @@ defmodule TdBg.BusinessConceptSteps do
          },
          %{token_admin: token_admin} = _state do
     business_concept =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_id = business_concept["business_concept_id"]
     creation_attrs = %{name: business_concept_alias}
@@ -627,7 +682,11 @@ defmodule TdBg.BusinessConceptSteps do
           },
           %{token_admin: token_admin} = state do
     business_concept =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_id = business_concept["business_concept_id"]
 
@@ -640,6 +699,7 @@ defmodule TdBg.BusinessConceptSteps do
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
 
+  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
   defand ~r/^if (?<result>[^"]+) is not "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
          %{
            result: result,
@@ -681,6 +741,7 @@ defmodule TdBg.BusinessConceptSteps do
     assert !business_concept_tmp
   end
 
+  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
   defand ~r/^user "(?<user_name>[^"]+)" is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
          %{
            user_name: user_name,
@@ -701,22 +762,6 @@ defmodule TdBg.BusinessConceptSteps do
     {:ok, state}
   end
 
-  defwhen ~r/^"(?<user_name>[^"]+)" tries to list all the Business Concepts with status "(?<status>[^"]+)"$/,
-          %{user_name: user_name, status: status},
-          state do
-    token = get_user_token(user_name)
-    {:ok, 200, %{"data" => list_by_status}} = business_concept_list_with_status(token, status)
-    {:ok, Map.merge(state, %{list_by_status: list_by_status, user_name: user_name})}
-  end
-
-  defthen ~r/^sees following business concepts:$/, %{table: [table]}, state do
-    actual_list = state[:list_by_status]
-    user_name = state[:user_name]
-    expected_list = String.split(table[String.to_atom(user_name)], ",", trim: true)
-    actual_list = Enum.map(actual_list, fn %{"name" => name} -> name end)
-    assert Enum.sort(actual_list) == Enum.sort(expected_list)
-  end
-
   defand ~r/^"(?<user_name>[^"]+)" is able to view business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" with following data:$/,
          %{
            user_name: user_name,
@@ -728,7 +773,11 @@ defmodule TdBg.BusinessConceptSteps do
     token = get_user_token(user_name)
 
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     {_, http_status_code, %{"data" => business_concept_version}} =
       business_concept_version_show(token, business_concept_version["id"])
@@ -899,7 +948,11 @@ defmodule TdBg.BusinessConceptSteps do
         fields
       ) do
     business_concept_version =
-      business_concept_by_name_and_type(token_admin, business_concept_name, business_concept_type)
+      business_concept_version_by_name_and_type(
+        token_admin,
+        business_concept_name,
+        business_concept_type
+      )
 
     business_concept_id = business_concept_version["business_concept_id"]
     token = get_user_token(user_name)

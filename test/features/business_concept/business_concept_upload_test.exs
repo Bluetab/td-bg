@@ -29,13 +29,7 @@ defmodule TdBg.BusinessConceptUploadTest do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
-    start_supervised @df_cache
+    start_supervised(@df_cache)
     :ok
-  end
-
-  setup do
-    on_exit(fn ->
-      rm_business_concept_schema()
-    end)
   end
 end

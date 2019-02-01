@@ -264,35 +264,3 @@
       | creator   | Unauthorized |
       | publisher | Ok           |
       | admin     | Ok           |
-
-  Scenario Outline: List of Business Concepts in pending_approval for a certain user
-    Given an existing Domain called "My Parent Domain"
-    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
-    And an existing Domain called "My Domain" child of Domain "My Child Domain"
-    And following users exist with the indicated role in Domain "My Domain"
-      | user      | role    |
-      | watcher   | watch   |
-      | creator   | create  |
-      | publisher | publish |
-      | admin     | admin   |
-    And an existing Business Concept type called "Business_Term" with empty definition
-    And some existing Business Concepts in the Domain "My Domain" with following data:
-      | Status           | Name | Type          | Description   | In Progress |
-      | draft            | bc_1 | Business_Term | description_1 | false       |
-      | pending_approval | bc_2 | Business_Term | description_2 | false       |
-      | pending_approval | bc_3 | Business_Term | description_3 | false       |
-    When "<user>" tries to list all the Business Concepts with status "pending_approval"
-    Then sees following business concepts:
-      | status           | admin     | publisher | creator | watcher |
-      | pending_approval | bc_2,bc_3 | bc_2,bc_3 |         |         |
-    # | draft            | bc_1       | bc_1        | bc_1    |         |
-    # | rejected         |            |             |         |         |
-    # | published        |            |             |         |         |
-    # | versioned        |            |             |         |         |
-    # | deprecated       |            |             |         |         |
-    Examples:
-      | user      |
-      | watcher   |
-      | creator   |
-      | publisher |
-      | admin     |

@@ -67,21 +67,14 @@ defmodule TdBgWeb.Router do
     post("/business_concept_filters/search", BusinessConceptFilterController, :search)
 
     resources("/business_concepts/comments", CommentController, except: [:new, :edit])
-    get("/business_concepts/index/:status", BusinessConceptController, :index_status)
-    get("/business_concepts/search", BusinessConceptController, :search)
 
-    get(
-      "/business_concepts/domains/:domain_id",
-      BusinessConceptController,
-      :index_children_business_concept
+    get("/business_concepts/:business_concept_id/aliases", BusinessConceptAliasController, :index)
+
+    post(
+      "/business_concepts/:business_concept_id/aliases",
+      BusinessConceptAliasController,
+      :create
     )
-
-    resources "/business_concepts", BusinessConceptController,
-      except: [:index, :new, :edit, :delete] do
-      get("/aliases", BusinessConceptAliasController, :index)
-      post("/aliases", BusinessConceptAliasController, :create)
-      patch("/status", BusinessConceptController, :update_status)
-    end
 
     resources("/business_concept_aliases", BusinessConceptAliasController,
       except: [:new, :edit, :index, :create, :update]

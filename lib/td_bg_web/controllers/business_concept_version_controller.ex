@@ -238,7 +238,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_status(:created)
         |> put_resp_header(
           "location",
-          business_concept_path(conn, :show, version.business_concept)
+          business_concept_version_path(conn, :show, version.id)
         )
         |> render(
           "show.json",
@@ -408,7 +408,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       id(:path, :integer, "Business Concept Version ID", required: true)
     end
 
-    response(200, "OK", Schema.ref(:BusinessConceptResponse))
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
     response(403, "User is not authorized to perform this action")
     response(422, "Business concept invalid state")
   end
@@ -437,7 +437,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       id(:path, :integer, "Business Concept Version ID", required: true)
     end
 
-    response(200, "OK", Schema.ref(:BusinessConceptResponse))
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
     response(403, "User is not authorized to perform this action")
     response(422, "Business concept invalid state")
   end
@@ -467,7 +467,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       reject_reason(:body, :string, "Rejection reason")
     end
 
-    response(200, "OK", Schema.ref(:BusinessConceptResponse))
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
     response(403, "User is not authorized to perform this action")
     response(422, "Business concept invalid state")
   end
@@ -496,7 +496,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       id(:path, :integer, "Business Concept Version ID", required: true)
     end
 
-    response(200, "OK", Schema.ref(:BusinessConceptResponse))
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
     response(403, "User is not authorized to perform this action")
     response(422, "Business concept invalid state")
   end
@@ -525,7 +525,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       id(:path, :integer, "Business Concept Version ID", required: true)
     end
 
-    response(200, "OK", Schema.ref(:BusinessConceptResponse))
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
     response(403, "User is not authorized to perform this action")
     response(422, "Business concept invalid state")
   end
@@ -554,7 +554,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       id(:path, :integer, "Business Concept Version ID", required: true)
     end
 
-    response(200, "OK", Schema.ref(:BusinessConceptResponse))
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
     response(403, "User is not authorized to perform this action")
     response(422, "Business concept invalid state")
   end

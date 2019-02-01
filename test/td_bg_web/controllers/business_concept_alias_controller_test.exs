@@ -20,7 +20,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
   describe "index" do
     @tag :admin_authenticated
     test "lists all business_concept_aliases", %{conn: conn} do
-      conn = get(conn, business_concept_business_concept_alias_path(conn, :index, 123))
+      conn = get(conn, business_concept_alias_path(conn, :index, 123))
       assert json_response(conn, 200)["data"] == []
     end
   end
@@ -41,7 +41,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
       conn =
         post(
           conn,
-          business_concept_business_concept_alias_path(conn, :create, business_concept_id),
+          business_concept_alias_path(conn, :create, business_concept_id),
           business_concept_alias: creation_attrs
         )
 
@@ -72,7 +72,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
       conn =
         post(
           conn,
-          business_concept_business_concept_alias_path(conn, :create, business_concept_id),
+          business_concept_alias_path(conn, :create, business_concept_id),
           business_concept_alias: creation_attrs
         )
 

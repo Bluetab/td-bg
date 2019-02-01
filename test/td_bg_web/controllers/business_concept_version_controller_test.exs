@@ -29,6 +29,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
       create_template()
+
       business_concept_version =
         insert(
           :business_concept_version,
@@ -58,19 +59,18 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "search" do
     @tag :admin_authenticated
-    test "find business_concepts by id and status", %{conn: conn} do
+    test "find business_concepts by status", %{conn: conn} do
       published = BusinessConcept.status().published
       draft = BusinessConcept.status().draft
       create_template()
       domain = insert(:domain)
-      id = [create_version(domain, "one", draft).business_concept_id]
-      id = [create_version(domain, "two", published).business_concept_id | id]
-      id = [create_version(domain, "three", published).business_concept_id | id]
+      create_version(domain, "one", draft).business_concept_id
+      create_version(domain, "two", published).business_concept_id
+      create_version(domain, "three", published).business_concept_id
 
       conn =
-        get(conn, business_concept_path(conn, :search), %{
-          id: Enum.join(id, ","),
-          status: published
+        post(conn, business_concept_version_path(conn, :search), %{
+          filters: %{status: ["published"]}
         })
 
       assert 2 == length(json_response(conn, 200)["data"])
@@ -82,6 +82,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
       create_template()
+
       creation_attrs = %{
         content: %{},
         type: "some_type",
@@ -99,12 +100,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert %{"business_concept_id" => id} = json_response(conn, 201)["data"]
+      assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
 
-      conn = get(conn, business_concept_path(conn, :show, id))
-      validate_resp_schema(conn, schema, "BusinessConceptResponse")
+      conn = get(conn, business_concept_version_path(conn, :show, id))
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       business_concept = json_response(conn, 200)["data"]
 
       %{
@@ -131,6 +132,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       domain = insert(:domain)
 
       create_template(%{id: 0, name: "some_type", content: [], label: "label"})
+
       creation_attrs = %{
         content: %{},
         type: "some_type",
@@ -181,7 +183,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         get(
           conn,
-          business_concept_version_business_concept_version_path(conn, :versions, business_concept_version.id)
+          business_concept_version_business_concept_version_path(
+            conn,
+            :versions,
+            business_concept_version.id
+          )
         )
 
       [data | _] = json_response(conn, 200)["data"]
@@ -190,32 +196,37 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "create new versions" do
-
     @tag :admin_authenticated
     test "create new version with modified template", %{
       conn: conn
     } do
+      template_content = [%{"name" => "fieldname", "type" => "string", "cardinality" => "?"}]
 
-      template_content = [%{"name" => "fieldname", "type" => "string", "cardinality" =>  "?"}]
-      template = create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+      template =
+        create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+
       user = build(:user)
+
       business_concept =
         insert(:business_concept,
-                type: template.name,
-                last_change_by: user.id)
+          type: template.name,
+          last_change_by: user.id
+        )
+
       business_concept_version =
         insert(
           :business_concept_version,
           business_concept: business_concept,
           last_change_by: user.id,
-          status: BusinessConcept.status.published
+          status: BusinessConcept.status().published
         )
 
-      updated_content = template
-      |> Map.get(:content)
-      |> Enum.reduce([], fn(field, acc) ->
-            [Map.put(field, "cardinality", "1")|acc]
-         end)
+      updated_content =
+        template
+        |> Map.get(:content)
+        |> Enum.reduce([], fn field, acc ->
+          [Map.put(field, "cardinality", "1") | acc]
+        end)
 
       update_attrs = Map.put(template, :content, updated_content)
       @df_cache.put_template(update_attrs)
@@ -230,12 +241,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           )
         )
 
-        assert json_response(conn, 201)["data"]
+      assert json_response(conn, 201)["data"]
     end
   end
 
   describe "update business_concept_version" do
-
     @tag :admin_authenticated
     test "renders business_concept_version when data is valid", %{
       conn: conn,
@@ -394,6 +404,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @df_cache.put_template(attrs)
     :ok
   end
+
   def create_template(template) do
     @df_cache.put_template(template)
     template

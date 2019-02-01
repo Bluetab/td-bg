@@ -62,7 +62,3 @@ config :logger, :console, format: "[$level] $message\n"
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
 import_config "prod.secret.exs"
-
-config :td_bg,
-  # business concept content  schema location
-  bc_schema_location: "bc_schema.prod"

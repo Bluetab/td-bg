@@ -46,20 +46,18 @@ config :td_bg, TdBg.Repo,
   hostname: "localhost",
   pool_size: 10
 
-config :td_bg,
-  # business concept content  schema location
-  bc_schema_location: "bc_schema.dev"
-
 config :td_bg, :api_services_login,
   api_username: "api-admin",
   api_password: "apipass"
 
-config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService,
+config :td_bg, :auth_service,
+  api_service: TdBgWeb.ApiServices.HttpTdAuthService,
   auth_host: "localhost",
   auth_port: "4001",
   domain: ""
 
-config :td_bg, :dd_service, api_service: TdBgWeb.ApiServices.HttpTdDdService,
+config :td_bg, :dd_service,
+  api_service: TdBgWeb.ApiServices.HttpTdDdService,
   dd_host: "localhost",
   dd_port: "4005",
   domain: ""
@@ -70,7 +68,8 @@ config :td_bg, :elasticsearch,
   es_port: 9200,
   type_name: "doc"
 
-config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.HttpTdAuditService,
+config :td_bg, :audit_service,
+  api_service: TdBgWeb.ApiServices.HttpTdAuditService,
   audit_host: "localhost",
   audit_port: "4007",
   audit_domain: ""
