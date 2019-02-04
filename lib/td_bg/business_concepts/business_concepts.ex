@@ -195,6 +195,21 @@ defmodule TdBg.BusinessConcepts do
       {:error, %Ecto.Changeset{}}
 
   """
+  def create_business_concept_and_index(attrs \\ %{}) do
+    result = create_business_concept(attrs)
+    case result do
+      {:ok, business_concept_version} ->
+        new_version = get_business_concept_version!(business_concept_version.id)
+        business_concept_id = new_version.business_concept_id
+        params = retrieve_last_bc_version_params(business_concept_id)
+        BusinessConceptLoader.refresh(business_concept_id)
+        index_business_concept_versions(business_concept_id, params)
+        {:ok, new_version}
+      _ ->
+        result
+    end
+  end
+
   def create_business_concept(attrs \\ %{}) do
     result =
       attrs
@@ -205,19 +220,6 @@ defmodule TdBg.BusinessConcepts do
       |> validate_description
       |> validate_concept_content
       |> insert_concept
-
-    case result do
-      {:ok, business_concept_version} ->
-        new_version = get_business_concept_version!(business_concept_version.id)
-        business_concept_id = new_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
-        {:ok, new_version}
-
-      _ ->
-        result
-    end
   end
 
   @doc """

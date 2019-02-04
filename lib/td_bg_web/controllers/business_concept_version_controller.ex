@@ -220,7 +220,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = version} <-
-           BusinessConcepts.create_business_concept(creation_attrs) do
+           BusinessConcepts.create_business_concept_and_index(creation_attrs) do
       business_concept_id = version.business_concept.id
 
       audit = %{
