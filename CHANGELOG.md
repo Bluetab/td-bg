@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 2019-02-04
+
+### Removed
+
+- [TD-1331] Deleted deprecated tables relating to templates
+
 ## [2.12.4] 2019-02-01
 
 ### Removed
