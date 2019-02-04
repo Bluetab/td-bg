@@ -1,0 +1,8 @@
+defmodule TdBg.Repo.Migrations.DropTemplates do
+  use Ecto.Migration
+
+  def change do
+    drop unique_index(:templates, [:name])
+    drop table("templates")
+  end
+end
