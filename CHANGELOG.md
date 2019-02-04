@@ -6,6 +6,13 @@
 
 - [TD-1331] Deleted deprecated tables relating to templates
 
+### Changed
+
+- Revised CSV Upload process:
+ - It now uses entity helpers to create new concepts instead of hardcoded SQL statments
+ - Added structural validations before trying to parse and insert values
+ - Refactor messages for specific internationalization instead of general errors
+
 ## [2.12.4] 2019-02-01
 
 ### Removed
