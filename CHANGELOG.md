@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] 2019-02-04
+## [2.12.5] 2019-02-06
 
 ### Removed
 
