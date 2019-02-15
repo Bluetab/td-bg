@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased] 2019-02-15
+
+### Changed
+
+- [TD-1085] support to index on elasticsearch the empty values in the fields of a template having cardinality `+` or `*`  
+
+### Added
+
+- [TD-1085] test of function search_fields on business concept versions
+
 ## [2.13.0] 2019-02-06
 
 ### Removed
