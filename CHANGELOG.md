@@ -10,7 +10,7 @@
 
 - [TD-1085] test of function search_fields on business concept versions
 
-## [2.13.0] 2019-02-06
+## [2.13.1] 2019-02-04
 
 ### Removed
 
