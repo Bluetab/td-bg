@@ -76,7 +76,14 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     ])
     |> cast_assoc(:business_concept)
     |> put_change(:status, BusinessConcept.status().draft)
-    |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at, :in_progress])
+    |> validate_required([
+      :content,
+      :related_to,
+      :name,
+      :last_change_by,
+      :last_change_at,
+      :in_progress
+    ])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
@@ -143,10 +150,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def search_fields(%BusinessConceptVersion{last_change_by: last_change_by_id} = concept) do
-    template = case @df_cache.get_template_by_name(concept.business_concept.type) do
-      nil -> %{content: []}
-      template -> template
-    end
+    template =
+      case @df_cache.get_template_by_name(concept.business_concept.type) do
+        nil -> %{content: []}
+        template -> template
+      end
+
     aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
     aliases = Enum.map(aliases, &%{name: &1.name})
 
@@ -169,7 +178,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
     content = Enum.reduce(Map.get(template, :content), concept.content, &fill_content(&2, &1))
 
-    content = update_in(content["_confidential"], &(if &1 == "Si", do: &1, else: "No"))
+    content = update_in(content["_confidential"], &if(&1 == "Si", do: &1, else: "No"))
 
     %{
       id: concept.id,
@@ -210,13 +219,34 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   defp retrieve_domain_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
 
-  defp fill_content(content, %{"type" => type, "name" => name}) when type == "list" do
-    case Map.has_key?(content, name) do
-      true -> content
-      false -> Map.put(content, name, "")
+  defp fill_content(content, field) do
+    values = Map.get(field, "values", nil)
+    case not is_nil(values) do
+      true ->
+        fill_content_list(content, field)
+
+      false ->
+        content
     end
   end
-  defp fill_content(content, _field), do: content
+
+  defp fill_content_list(content, %{"name" => name, "cardinality" => "*"}) do
+    put_value_in_content(content, name, [""])
+  end
+
+  defp fill_content_list(content, %{"cardinality" => "+"}), do: content
+
+  defp fill_content_list(content, %{"name" => name}) do
+    put_value_in_content(content, name, "")
+  end
+
+  defp put_value_in_content(content, name, value) do
+    if Map.has_key?(content, name) do
+      content
+    else
+      Map.put(content, name, value)
+    end
+  end
 
   def index_name do
     "business_concept"
