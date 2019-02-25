@@ -5,9 +5,11 @@ defmodule TdBg.BusinessConceptsTests do
   alias TdBg.BusinessConcepts
   alias TdBg.Repo
   alias TdBgWeb.ApiServices.MockTdAuthService
+  alias TdPerms.MockDynamicFormCache
 
   setup_all do
     start_supervised(MockTdAuthService)
+    start_supervised(MockDynamicFormCache)
     :ok
   end
 
@@ -34,27 +36,34 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "get_currently_published_version!/1 returns the published business_concept with given id" do
       user = build(:user)
+
       bcv_published =
         insert(
           :business_concept_version,
           last_change_by: user.id,
           status: BusinessConcept.status().published
         )
+
       assert {:ok, _} = BusinessConcepts.version_business_concept(%User{id: 1234}, bcv_published)
-      bcv_current = BusinessConcepts.get_currently_published_version!(bcv_published.business_concept.id)
+
+      bcv_current =
+        BusinessConcepts.get_currently_published_version!(bcv_published.business_concept.id)
 
       assert bcv_current.id == bcv_published.id
     end
 
     test "get_currently_published_version!/1 returns the last when there are no published" do
       user = build(:user)
+
       bcv_draft =
         insert(
           :business_concept_version,
           last_change_by: user.id,
           status: BusinessConcept.status().draft
         )
-      bcv_current = BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
+
+      bcv_current =
+        BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
 
       assert bcv_current.id == bcv_draft.id
     end
@@ -142,7 +151,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       content_schema = [
         %{"name" => "Field1", "type" => "string", "cardinality" => "?"},
-        %{"name" => "Field2", "type" => "string", "values" => %{"fixed"=>["Hello", "World"]}},
+        %{"name" => "Field2", "type" => "string", "values" => %{"fixed" => ["Hello", "World"]}},
         %{"name" => "Field3", "type" => "string", "cardinality" => "?"}
       ]
 
@@ -206,7 +215,7 @@ defmodule TdBg.BusinessConceptsTests do
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
       assert {:ok, %BusinessConceptVersion{} = object} =
-      BusinessConcepts.create_business_concept(creation_attrs)
+               BusinessConcepts.create_business_concept(creation_attrs)
 
       assert object.content == version_attrs.content
       assert object.name == version_attrs.name
@@ -334,7 +343,7 @@ defmodule TdBg.BusinessConceptsTests do
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
       assert {:ok, %BusinessConceptVersion{} = object} =
-      BusinessConcepts.create_business_concept(creation_attrs)
+               BusinessConcepts.create_business_concept(creation_attrs)
 
       assert object.content == version_attrs.content
       assert object.name == version_attrs.name
@@ -642,7 +651,10 @@ defmodule TdBg.BusinessConceptsTests do
         )
 
       assert {:ok, %{current: new_version}} =
-               BusinessConcepts.version_business_concept(%User{id: 1234}, business_concept_version)
+               BusinessConcepts.version_business_concept(
+                 %User{id: 1234},
+                 business_concept_version
+               )
 
       assert %BusinessConceptVersion{} = new_version
 
@@ -756,6 +768,48 @@ defmodule TdBg.BusinessConceptsTests do
 
       assert %Ecto.Changeset{} =
                BusinessConcepts.change_business_concept_version(business_concept_version)
+    end
+
+    test "search_fields/1 returns a business_concept_version with default values in its content" do
+      user = build(:user)
+      template_label = "search_fields"
+      template_name = "search_fields_template"
+      field_name = "multiple_1"
+
+      MockDynamicFormCache.put_template(%{
+        name: template_name,
+        content: [
+          %{
+            "name" => field_name,
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => %{
+              "fixed" => ["1", "2", "3", "4", "5"]
+            },
+            "widget" => "dropdown",
+            "cardinality" => "*"
+          }
+        ],
+        label: template_label,
+        id: "999"
+      })
+
+      business_concept = insert(:business_concept, type: template_name)
+
+      business_concept_version =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          last_change_by: user.id
+        )
+
+      %{template: template, content: content} =
+        BusinessConceptVersion.search_fields(business_concept_version)
+
+      assert Map.get(template, :label) == template_label
+      assert Map.get(template, :name) == template_name
+      assert Map.get(content, field_name) == [""]
     end
   end
 
