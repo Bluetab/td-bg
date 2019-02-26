@@ -1,20 +1,12 @@
 # Changelog
 
-## Unreleased 2019-02-21
-
-### Changed
-
-- [TD-1422] Bump td_perms and td-df-lib versions to 2.14.0
-- 
 ## [Unreleased] 2019-02-15
-
-### Changed
-
-- [TD-1085] support to index on elasticsearch the empty values in the fields of a template having cardinality `+` or `*`  
 
 ### Added
 
 - [TD-1085] test of function search_fields on business concept versions
+- [TD-1085] support to index on elasticsearch the empty values in the fields of a template having cardinality `+` or `*`  
+- [TD-1422] Bump td_perms and td-df-lib versions to 2.14.0
 
 ## [2.13.1] 2019-02-04
 
