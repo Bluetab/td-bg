@@ -15,21 +15,26 @@ defmodule TdBg.BusinessConcept.Upload do
   alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.BusinessConcepts.Events
   alias TdBg.Repo
   alias TdBg.Taxonomies
 
   NimbleCSV.define(ParserCSVUpload, separator: ";")
 
   def from_csv(nil, _user), do: {:error, %{message: :no_csv_uploaded}}
+
   def from_csv(business_concept_upload, user) do
     path = business_concept_upload.path
 
     case create_concepts(path, user) do
-      {:ok, concepts_ids} ->
-        index_concepts(concepts_ids)
-        cache_concepts(concepts_ids)
-        {:ok, concepts_ids}
-      error -> error
+      {:ok, concept_ids} ->
+        Events.business_concepts_created(concept_ids)
+        index_concepts(concept_ids)
+        cache_concepts(concept_ids)
+        {:ok, concept_ids}
+
+      error ->
+        error
     end
   end
 
@@ -69,11 +74,11 @@ defmodule TdBg.BusinessConcept.Upload do
     BusinessConcepts.index_business_concept_versions(concept_id, params)
   end
 
-  defp cache_concepts(concepts_ids) do
+  defp cache_concepts(concept_ids) do
     Logger.info("Caching business concepts...")
     start_time = DateTime.utc_now()
 
-    Enum.each(concepts_ids, &BusinessConceptLoader.refresh(&1))
+    Enum.each(concept_ids, &BusinessConceptLoader.refresh(&1))
 
     end_time = DateTime.utc_now()
 
@@ -83,39 +88,45 @@ defmodule TdBg.BusinessConcept.Upload do
   end
 
   defp upload_in_transaction(path, user) do
-    file = path
-    |> Path.expand()
-    |> File.stream!()
+    file =
+      path
+      |> Path.expand()
+      |> File.stream!()
+
     with {:ok, parsed_file} <- parse_file(file),
          {:ok, parsed_list} <- parse_data_list(parsed_file),
          {:ok, uploaded_ids} <- upload_data(parsed_list, user, [], 2) do
-         uploaded_ids
-      else
-        {:error, err} -> Repo.rollback(err)
+      uploaded_ids
+    else
+      {:error, err} -> Repo.rollback(err)
     end
   end
 
   defp parse_file(file) do
-    parsed_file = file
+    parsed_file =
+      file
       |> ParserCSVUpload.parse_stream(headers: false)
       |> Enum.to_list()
+
     {:ok, parsed_file}
   rescue
     _ -> {:error, %{error: :invalid_file_format}}
   end
 
   defp parse_data_list([headers | tail]) do
-    case Enum.reduce(@required_header, true,
-      fn head, acc -> Enum.member?(headers, head) and acc end) do
+    case Enum.reduce(@required_header, true, fn head, acc ->
+           Enum.member?(headers, head) and acc
+         end) do
       true ->
-        parsed_list = tail
+        parsed_list =
+          tail
           |> Enum.map(&parse_uncoded_rows(&1))
           |> Enum.map(&row_list_to_map(headers, &1))
-          {:ok, parsed_list}
-      false -> {:error, %{
-        error: :missing_required_columns,
-        expected: @required_header,
-        found: headers}}
+
+        {:ok, parsed_list}
+
+      false ->
+        {:error, %{error: :missing_required_columns, expected: @required_header, found: headers}}
     end
   end
 
@@ -146,88 +157,107 @@ defmodule TdBg.BusinessConcept.Upload do
     case insert_business_concept(head, user) do
       {:ok, %{business_concept_id: concept_id}} ->
         upload_data(tail, user, [concept_id | acc], row_count + 1)
-      {:error, error} -> {:error, Map.put(error, :row, row_count)}
+
+      {:error, error} ->
+        {:error, Map.put(error, :row, row_count)}
     end
   end
 
   defp upload_data(_, _, acc, _), do: {:ok, acc}
 
   defp insert_business_concept(data, user) do
-    with {:ok, %{
-            name: concept_type,
-            content: content_schema}} <- validate_template(data),
+    with {:ok, %{name: concept_type, content: content_schema}} <- validate_template(data),
          {:ok} <- validate_name(data),
          {:ok, %{id: domain_id}} <- validate_domain(data),
          {:ok} <- validate_description(data) do
-        content = Map.drop(data, [
+      content =
+        Map.drop(data, [
           "name",
           "domain",
           "description",
           "template"
         ])
-        business_concept_attrs =
-          %{}
-          |> Map.put("domain_id", domain_id)
-          |> Map.put("type", concept_type)
-          |> Map.put("last_change_by", user.id)
-          |> Map.put("last_change_at", DateTime.utc_now())
 
-        creation_attrs =
-          data
-          |> Map.take(["name"])
-          |> Map.put("description", convert_description(Map.get(data, "description")))
-          |> Map.put("content", content)
-          |> Map.put("business_concept", business_concept_attrs)
-          |> Map.put("content_schema", content_schema)
-          |> Map.update("related_to", [], & &1)
-          |> Map.put("last_change_by", user.id)
-          |> Map.put("last_change_at", DateTime.utc_now())
-          |> Map.put("status", BusinessConcept.status().draft)
-          |> Map.put("version", 1)
+      business_concept_attrs =
+        %{}
+        |> Map.put("domain_id", domain_id)
+        |> Map.put("type", concept_type)
+        |> Map.put("last_change_by", user.id)
+        |> Map.put("last_change_at", DateTime.utc_now())
 
-        BusinessConcepts.create_business_concept(creation_attrs)
-      else
-        error -> error
+      creation_attrs =
+        data
+        |> Map.take(["name"])
+        |> Map.put("description", convert_description(Map.get(data, "description")))
+        |> Map.put("content", content)
+        |> Map.put("business_concept", business_concept_attrs)
+        |> Map.put("content_schema", content_schema)
+        |> Map.update("related_to", [], & &1)
+        |> Map.put("last_change_by", user.id)
+        |> Map.put("last_change_at", DateTime.utc_now())
+        |> Map.put("status", BusinessConcept.status().draft)
+        |> Map.put("version", 1)
+
+      BusinessConcepts.create_business_concept(creation_attrs)
+    else
+      error -> error
     end
   end
 
-  defp validate_template(%{"template" => ""}), do: {:error, %{error: :missing_value, field: "template"}}
+  defp validate_template(%{"template" => ""}),
+    do: {:error, %{error: :missing_value, field: "template"}}
+
   defp validate_template(%{"template" => template}) do
     case @df_cache.get_template_by_name(template) do
       nil ->
-        {:error,  %{error: :invalid_template, template: template}}
-      template -> {:ok, template}
+        {:error, %{error: :invalid_template, template: template}}
+
+      template ->
+        {:ok, template}
     end
   end
-  defp validate_template(_), do: {:error,  %{error: :missing_value, field: "template"}}
+
+  defp validate_template(_), do: {:error, %{error: :missing_value, field: "template"}}
 
   defp validate_name(%{"name" => ""}), do: {:error, %{error: :missing_value, field: "name"}}
+
   defp validate_name(%{"name" => name, "template" => template}) do
     case BusinessConcepts.check_business_concept_name_availability(template, name) do
       {:name_available} -> {:ok}
       _ -> {:error, %{error: :name_not_available, name: name}}
     end
   end
-  defp validate_name(_), do: {:error,  %{error: :missing_value, field: "name"}}
+
+  defp validate_name(_), do: {:error, %{error: :missing_value, field: "name"}}
 
   defp validate_domain(%{"domain" => ""}), do: {:error, %{error: :missing_value, field: "domain"}}
+
   defp validate_domain(%{"domain" => domain}) do
     case Taxonomies.get_domain_by_name(domain) do
       nil -> {:error, %{error: :invalid_domain, domain: domain}}
       domain -> {:ok, domain}
     end
   end
-  defp validate_domain(_), do: {:error,  %{error: :missing_value, field: "domain"}}
 
-  defp validate_description(%{"description" => ""}), do: {:error, %{error: :missing_value, field: "description"}}
+  defp validate_domain(_), do: {:error, %{error: :missing_value, field: "domain"}}
+
+  defp validate_description(%{"description" => ""}),
+    do: {:error, %{error: :missing_value, field: "description"}}
+
   defp validate_description(%{"description" => _}), do: {:ok}
-  defp validate_description(_), do: {:error,  %{error: :missing_value, field: "description"}}
+  defp validate_description(_), do: {:error, %{error: :missing_value, field: "description"}}
 
   defp convert_description(description) do
-    %{document: %{nodes: [%{object: "block",
-      type: "paragraph",
-      nodes: [%{object: "text",
-                leaves: [%{text: description}
-             ]}]}]}}
+    %{
+      document: %{
+        nodes: [
+          %{
+            object: "block",
+            type: "paragraph",
+            nodes: [%{object: "text", leaves: [%{text: description}]}]
+          }
+        ]
+      }
+    }
   end
 end
