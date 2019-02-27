@@ -8,6 +8,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Searchable
   alias TdBg.Taxonomies
+  alias TdDfLib.Format
   alias TdPerms.TaxonomyCache
   alias TdPerms.UserCache
 
@@ -176,7 +177,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         v1 || v2
       end)
 
-    content = Enum.reduce(Map.get(template, :content), concept.content, &fill_content(&2, &1))
+    content =
+      concept
+      |> Map.get(:content)
+      |> Format.apply_template(Map.get(template, :content))
 
     content = update_in(content["_confidential"], &if(&1 == "Si", do: &1, else: "No"))
 
@@ -218,35 +222,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   defp retrieve_domain_ids(nil), do: []
 
   defp retrieve_domain_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
-
-  defp fill_content(content, field) do
-    values = Map.get(field, "values", nil)
-    case not is_nil(values) do
-      true ->
-        fill_content_list(content, field)
-
-      false ->
-        content
-    end
-  end
-
-  defp fill_content_list(content, %{"name" => name, "cardinality" => "*"}) do
-    put_value_in_content(content, name, [""])
-  end
-
-  defp fill_content_list(content, %{"cardinality" => "+"}), do: content
-
-  defp fill_content_list(content, %{"name" => name}) do
-    put_value_in_content(content, name, "")
-  end
-
-  defp put_value_in_content(content, name, value) do
-    if Map.has_key?(content, name) do
-      content
-    else
-      Map.put(content, name, value)
-    end
-  end
 
   def index_name do
     "business_concept"
