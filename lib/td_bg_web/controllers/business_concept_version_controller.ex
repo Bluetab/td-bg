@@ -6,13 +6,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   import Canada, only: [can?: 2]
 
-  alias TdBg.Audit
   alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.Events
   alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdBg.Utils.CollectionUtils
@@ -24,18 +24,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   @df_cache Application.get_env(:td_bg, :df_cache)
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
-
-  @events %{
-    create_concept_draft: "create_concept_draft",
-    update_concept_draft: "update_concept_draft",
-    delete_concept_draft: "delete_concept_draft",
-    new_concept_draft: "new_concept_draft",
-    concept_sent_for_approval: "concept_sent_for_approval",
-    concept_rejected: "concept_rejected",
-    concept_rejection_canceled: "concept_rejection_canceled",
-    concept_published: "concept_published",
-    concept_deprecated: "concept_deprecated"
-  }
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -221,32 +209,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
          {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
          {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.create_business_concept_and_index(creation_attrs) do
-      business_concept_id = version.business_concept.id
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => creation_attrs
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.create_concept_draft)
-
-      conn =
-        conn
-        |> put_status(:created)
-        |> put_resp_header(
-          "location",
-          business_concept_version_path(conn, :show, version.id)
-        )
-        |> render(
-          "show.json",
-          business_concept_version: version,
-          template: template
-        )
+      Events.business_concept_created(version)
 
       conn
+      |> put_status(:created)
+      |> put_resp_header("location", business_concept_version_path(conn, :show, version.id))
+      |> render("show.json", business_concept_version: version, template: template)
     else
       error ->
         BusinessConceptSupport.handle_bc_errors(conn, error)
@@ -367,25 +335,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def delete(conn, %{"id" => id}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    business_concept_id = business_concept_version.business_concept.id
 
     with true <- can?(user, delete(business_concept_version)),
          {:ok, %BusinessConceptVersion{}} <-
            BusinessConcepts.delete_business_concept_version(business_concept_version) do
-      audit_payload =
-        business_concept_version
-        |> Map.take([:version])
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => audit_payload
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.delete_concept_draft)
-
+      Events.business_concept_deleted(business_concept_version, user.id)
       send_resp(conn, :no_content, "")
     else
       false ->
@@ -620,10 +574,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp send_for_approval(conn, user, business_concept_version) do
     update_status(
       conn,
-      user,
       business_concept_version,
       BusinessConcept.status().pending_approval,
-      @events.concept_sent_for_approval,
+      &Events.business_concept_submitted/1,
       can?(user, send_for_approval(business_concept_version))
     )
   end
@@ -631,10 +584,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp undo_rejection(conn, user, business_concept_version) do
     update_status(
       conn,
-      user,
       business_concept_version,
       BusinessConcept.status().draft,
-      @events.concept_rejection_canceled,
+      &Events.business_concept_redrafted/1,
       can?(user, undo_rejection(business_concept_version))
     )
   end
@@ -642,10 +594,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp deprecate(conn, user, business_concept_version) do
     update_status(
       conn,
-      user,
       business_concept_version,
       BusinessConcept.status().deprecated,
-      @events.concept_deprecated,
+      &Events.business_concept_deprecated/1,
       can?(user, deprecate(business_concept_version))
     )
   end
@@ -654,7 +605,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, publish(business_concept_version)),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            BusinessConcepts.publish_business_concept_version(business_concept_version, user) do
-      audit_and_render_concept(conn, concept, user, @events.concept_published)
+      Events.business_concept_published(concept)
+      render_concept(conn, concept)
     else
       false ->
         conn
@@ -674,7 +626,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, reject(business_concept_version)),
          {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
-      audit_and_render_concept(conn, version, user, @events.concept_rejected)
+      Events.business_concept_rejected(version)
+      render_concept(conn, version)
     else
       false ->
         conn
@@ -688,7 +641,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp update_status(conn, user, business_concept_version, status, event, authorized) do
+  defp update_status(conn, business_concept_version, status, audit_fn, authorized) do
     attrs = %{status: status}
 
     with true <- authorized,
@@ -697,7 +650,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
              business_concept_version,
              attrs
            ) do
-      audit_and_render_concept(conn, concept, user, event)
+      audit_fn.(concept)
+      render_concept(conn, concept)
     else
       false ->
         conn
@@ -715,12 +669,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- can?(user, version(business_concept_version)),
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
            BusinessConcepts.version_business_concept(user, business_concept_version) do
-      audit_payload =
-        new_version
-        |> Map.take([:version])
-
       conn = put_status(conn, :created)
-      audit_and_render_concept(conn, new_version, user, @events.new_concept_draft, audit_payload)
+      Events.business_concept_versioned(new_version)
+      render_concept(conn, new_version)
     else
       false ->
         conn
@@ -734,19 +685,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp audit_and_render_concept(conn, concept, _user, event_type, audit_payload \\ %{}) do
-    business_concept_id = concept.business_concept.id
-
-    audit = %{
-      "audit" => %{
-        "resource_id" => business_concept_id,
-        "resource_type" => "concept",
-        "payload" => audit_payload
-      }
-    }
-
-    Audit.create_event(conn, audit, event_type)
-
+  defp render_concept(conn, concept) do
     template = get_template(concept)
 
     business_concept_version =
@@ -785,7 +724,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
 
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    business_concept_id = business_concept_version.business_concept.id
     concept_name = Map.get(business_concept_version_params, "name")
     template = get_template(business_concept_version)
     content_schema = Map.get(template, :content)
@@ -823,17 +761,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
              business_concept_version,
              update_params
            ) do
-      audit_payload = get_changed_params(business_concept_version, concept_version)
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => business_concept_id,
-          "resource_type" => "concept",
-          "payload" => audit_payload
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.update_concept_draft)
+      Events.business_concept_updated(business_concept_version, concept_version)
 
       render(
         conn,
@@ -846,63 +774,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       error ->
         BusinessConceptSupport.handle_bc_errors(conn, error)
     end
-  end
-
-  defp get_changed_params(
-         %BusinessConceptVersion{} = old,
-         %BusinessConceptVersion{} = new
-       ) do
-    fields_to_compare = [:name, :description]
-
-    diffs =
-      Enum.reduce(fields_to_compare, %{}, fn field, acc ->
-        oldval = Map.get(old, field)
-        newval = Map.get(new, field)
-
-        case oldval == newval do
-          true -> acc
-          false -> Map.put(acc, field, newval)
-        end
-      end)
-
-    oldcontent = Map.get(old, :content)
-    newcontent = Map.get(new, :content)
-
-    added_keys = Map.keys(newcontent) -- Map.keys(oldcontent)
-
-    added =
-      Enum.reduce(added_keys, %{}, fn key, acc ->
-        Map.put(acc, key, Map.get(newcontent, key))
-      end)
-
-    removed_keys = Map.keys(oldcontent) -- Map.keys(newcontent)
-
-    removed =
-      Enum.reduce(removed_keys, %{}, fn key, acc ->
-        Map.put(acc, key, Map.get(oldcontent, key))
-      end)
-
-    changed_keys = Map.keys(newcontent) -- removed_keys -- added_keys
-
-    changed =
-      Enum.reduce(changed_keys, %{}, fn key, acc ->
-        oldval = Map.get(oldcontent, key)
-        newval = Map.get(newcontent, key)
-
-        case oldval == newval do
-          true -> acc
-          false -> Map.put(acc, key, newval)
-        end
-      end)
-
-    changed_content =
-      %{}
-      |> Map.put(:added, added)
-      |> Map.put(:removed, removed)
-      |> Map.put(:changed, changed)
-
-    diffs
-    |> Map.put(:content, changed_content)
   end
 
   swagger_path :get_data_structures do

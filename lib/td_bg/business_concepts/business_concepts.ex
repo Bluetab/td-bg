@@ -197,6 +197,7 @@ defmodule TdBg.BusinessConcepts do
   """
   def create_business_concept_and_index(attrs \\ %{}) do
     result = create_business_concept(attrs)
+
     case result do
       {:ok, business_concept_version} ->
         new_version = get_business_concept_version!(business_concept_version.id)
@@ -205,21 +206,21 @@ defmodule TdBg.BusinessConcepts do
         BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         {:ok, new_version}
+
       _ ->
         result
     end
   end
 
   def create_business_concept(attrs \\ %{}) do
-    result =
-      attrs
-      |> attrs_keys_to_atoms
-      |> raise_error_if_no_content_schema
-      |> set_content_defaults
-      |> validate_new_concept
-      |> validate_description
-      |> validate_concept_content
-      |> insert_concept
+    attrs
+    |> attrs_keys_to_atoms
+    |> raise_error_if_no_content_schema
+    |> set_content_defaults
+    |> validate_new_concept
+    |> validate_description
+    |> validate_concept_content
+    |> insert_concept
   end
 
   @doc """
@@ -905,5 +906,32 @@ defmodule TdBg.BusinessConcepts do
     input_count = length(ids)
     actual_count = count_published_business_concepts(type, ids)
     if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
+  end
+
+  def diff(%BusinessConceptVersion{} = old, %BusinessConceptVersion{} = new) do
+    old_content = Map.get(old, :content, %{})
+    new_content = Map.get(new, :content, %{})
+    content_diff = diff_content(old_content, new_content)
+
+    [:name, :description]
+    |> Enum.map(fn field -> {field, Map.get(old, field), Map.get(new, field)} end)
+    |> Enum.reject(fn {_, old, new} -> old == new end)
+    |> Enum.map(fn {field, _, new} -> {field, new} end)
+    |> Map.new()
+    |> Map.put(:content, content_diff)
+  end
+
+  defp diff_content(old, new) do
+    added = Map.drop(new, Map.keys(old))
+    removed = Map.drop(old, Map.keys(new))
+
+    changed =
+      new
+      |> Map.drop(Map.keys(added))
+      |> Map.drop(Map.keys(removed))
+      |> Enum.reject(fn {key, val} -> Map.get(old, key) == val end)
+      |> Map.new()
+
+    %{added: added, changed: changed, removed: removed}
   end
 end
