@@ -194,6 +194,7 @@ defmodule TdBg.BusinessConcepts do
   """
   def create_business_concept_and_index(attrs \\ %{}) do
     result = create_business_concept(attrs)
+
     case result do
       {:ok, business_concept_version} ->
         new_version = get_business_concept_version!(business_concept_version.id)
@@ -202,21 +203,21 @@ defmodule TdBg.BusinessConcepts do
         BusinessConceptLoader.refresh(business_concept_id)
         index_business_concept_versions(business_concept_id, params)
         {:ok, new_version}
+
       _ ->
         result
     end
   end
 
   def create_business_concept(attrs \\ %{}) do
-    result =
-      attrs
-      |> attrs_keys_to_atoms
-      |> raise_error_if_no_content_schema
-      |> set_content_defaults
-      |> validate_new_concept
-      |> validate_description
-      |> validate_concept_content
-      |> insert_concept
+    attrs
+    |> attrs_keys_to_atoms
+    |> raise_error_if_no_content_schema
+    |> set_content_defaults
+    |> validate_new_concept
+    |> validate_description
+    |> validate_concept_content
+    |> insert_concept
   end
 
   @doc """
@@ -687,8 +688,12 @@ defmodule TdBg.BusinessConcepts do
   defp set_content_defaults(attrs) do
     content = Map.get(attrs, :content)
     content_schema = Map.get(attrs, :content_schema)
-    content = Format.apply_template(content, content_schema)
-    Map.put(attrs, :content, content)
+    case content do
+      nil -> attrs
+      _ ->
+        content = Format.apply_template(content, content_schema)
+        Map.put(attrs, :content, content)
+    end
   end
 
   defp validate_concept_content(attrs) do
