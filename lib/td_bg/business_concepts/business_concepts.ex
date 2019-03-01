@@ -10,15 +10,12 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
+  alias TdDfLib.Format
   alias TdDfLib.Validation
   alias TdPerms.BusinessConceptCache
   alias ValidationError
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
-
-  @changeset :changeset
-  @content :content
-  @content_schema :content_schema
 
   @doc """
     check business concept name availability
@@ -656,7 +653,7 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp raise_error_if_no_content_schema(attrs) do
-    if not Map.has_key?(attrs, @content_schema) do
+    if not Map.has_key?(attrs, :content_schema) do
       raise "Content Schema is not defined for Business Concept"
     end
 
@@ -664,8 +661,8 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp add_content_if_not_exist(attrs) do
-    if not Map.has_key?(attrs, @content) do
-      Map.put(attrs, @content, %{})
+    if not Map.has_key?(attrs, :content) do
+      Map.put(attrs, :content, %{})
     else
       attrs
     end
@@ -673,50 +670,34 @@ defmodule TdBg.BusinessConcepts do
 
   defp validate_new_concept(attrs) do
     changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, attrs)
-    Map.put(attrs, @changeset, changeset)
+    Map.put(attrs, :changeset, changeset)
   end
 
   defp validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
     changeset = BusinessConceptVersion.update_changeset(business_concept_version, attrs)
-    Map.put(attrs, @changeset, changeset)
+    Map.put(attrs, :changeset, changeset)
   end
 
   defp merge_content_with_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
-    content = Map.get(attrs, @content)
+    content = Map.get(attrs, :content)
     concept_content = Map.get(business_concept_version, :content, %{})
     new_content = Map.merge(concept_content, content)
-    Map.put(attrs, @content, new_content)
+    Map.put(attrs, :content, new_content)
   end
 
   defp set_content_defaults(attrs) do
-    content = Map.get(attrs, @content)
-    content_schema = Map.get(attrs, @content_schema)
-    new_content = set_default_values(content, content_schema)
-    Map.put(attrs, @content, new_content)
-  end
-
-  defp set_default_values(content, [tails | head]) do
-    content
-    |> set_default_value(tails)
-    |> set_default_values(head)
-  end
-
-  defp set_default_values(content, []), do: content
-
-  defp set_default_value(content, %{"name" => name, "default" => default}) do
-    case content[name] do
-      nil ->
-        content |> Map.put(name, default)
-
+    content = Map.get(attrs, :content)
+    content_schema = Map.get(attrs, :content_schema)
+    case content do
+      nil -> attrs
       _ ->
-        content
+        content = Format.apply_template(content, content_schema)
+        Map.put(attrs, :content, content)
     end
   end
 
-  defp set_default_value(content, %{}), do: content
-
   defp validate_concept_content(attrs) do
-    changeset = Map.get(attrs, @changeset)
+    changeset = Map.get(attrs, :changeset)
 
     if changeset.valid? do
       do_validate_concept_content(attrs)
@@ -726,17 +707,17 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp do_validate_concept_content(attrs) do
-    content = Map.get(attrs, @content)
-    content_schema = Map.get(attrs, @content_schema)
+    content = Map.get(attrs, :content)
+    content_schema = Map.get(attrs, :content_schema)
     changeset = Validation.build_changeset(content, content_schema)
 
     if not changeset.valid? do
       attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
+      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
       |> Map.put(:in_progress, true)
     else
       attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, false))
+      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
       |> Map.put(:in_progress, false)
     end
   end
@@ -752,17 +733,17 @@ defmodule TdBg.BusinessConcepts do
   defp do_validate_description(attrs) do
     if !attrs.description == %{} do
       attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
+      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
       |> Map.put(:in_progress, true)
     else
       attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, false))
+      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
       |> Map.put(:in_progress, false)
     end
   end
 
   defp update_concept(attrs) do
-    changeset = Map.get(attrs, @changeset)
+    changeset = Map.get(attrs, :changeset)
 
     if changeset.valid? do
       Repo.update(changeset)
@@ -772,7 +753,7 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp insert_concept(attrs) do
-    changeset = Map.get(attrs, @changeset)
+    changeset = Map.get(attrs, :changeset)
 
     if changeset.valid? do
       Repo.insert(changeset)
@@ -782,7 +763,7 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp version_concept(attrs, business_concept_version) do
-    changeset = Map.get(attrs, @changeset)
+    changeset = Map.get(attrs, :changeset)
 
     if changeset.valid? do
       Multi.new()
