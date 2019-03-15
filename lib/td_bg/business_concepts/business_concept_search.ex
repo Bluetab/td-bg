@@ -48,9 +48,10 @@ defmodule TdBg.BusinessConcept.Search do
         |> Enum.map(&BusinessConcepts.business_concept_versions_by_ids(&1))
         |> Enum.map(&cast_bc_version(&1))
 
+      custom_size =
       case (page + 1) * size > Enum.count(array) do
-        true -> custom_size = Enum.count(array) - size
-        _ -> custom_size = size
+        true -> Enum.count(array) - size
+        _ -> size
       end
 
       %{
@@ -118,9 +119,10 @@ defmodule TdBg.BusinessConcept.Search do
         # this do not work properly
         |> filter_array_by_perms(permissions)
 
+      custom_size =
       case (page + 1) * size > Enum.count(array) do
-        true -> custom_size = Enum.count(array) - size
-        _ -> custom_size = size
+        true -> Enum.count(array) - size
+        _ -> size
       end
 
       %{
@@ -151,8 +153,14 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp check_perms(elem, permissions) do
     permissions
-    |> Enum.map(&(Map.values(&1) |> Enum.member?(elem["domain"]["id"])))
+    |> Enum.map(&(check_domain_id(&1, elem["domain"]["id"])))
     |> Enum.member?(true)
+  end
+
+  defp check_domain_id(map, id) do
+    values = Map.values(map)
+    values
+    |> Enum.member?(id)
   end
 
   def list_business_concept_versions(business_concept_id, %User{is_admin: true}) do
