@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 2019-03-15
+
+### Changed
+
+- [TD-1529] Search business concept versions now do not return deprecated or different versions of same bc 
+
 ## [2.14.0] 2019-03-04
 
 ### Added
