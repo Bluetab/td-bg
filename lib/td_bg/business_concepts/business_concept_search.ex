@@ -42,23 +42,35 @@ defmodule TdBg.BusinessConcept.Search do
   def search_business_concept_versions(params, user, page \\ 0, size \\ 50)
 
   # Admin user search, no filters applied
-  def search_business_concept_versions(%{"filters" => %{"status" => _status, "versions" => _versions}}, %User{is_admin: true}, page, size) do
-      array =
-        BusinessConcepts.max_business_concepts_version_by_version_status()
-        |> Enum.map(&BusinessConcepts.business_concept_versions_by_ids(&1))
-        |> Enum.map(&cast_bc_version(&1))
-
-      custom_size =
-      case (page + 1) * size > Enum.count(array) do
-        true -> Enum.count(array) - size
-        _ -> size
-      end
-
-      %{
-        results: Enum.take(Enum.take(array, (page + 1) * size), custom_size * -1),
-        total: Enum.count(array)
-      }
+  def search_business_concept_versions(
+        %{"filters" => %{"status" => _status, "versions" => _versions}, "query" => query} =
+          params,
+        %User{is_admin: true} = user,
+        page,
+        size
+      ) do
+    search_bc_with_filter(
+      %{"filters" => Map.delete(Map.get(params, "filters"), "versions"), "query" => query},
+      user,
+      page,
+      size
+    )
   end
+
+  def search_business_concept_versions(
+        %{"filters" => %{"status" => _status, "versions" => _versions}} = params,
+        %User{is_admin: true} = user,
+        page,
+        size
+      ) do
+    search_bc_with_filter(
+      %{"filters" => Map.delete(Map.get(params, "filters"), "versions")},
+      user,
+      page,
+      size
+    )
+  end
+
   def search_business_concept_versions(%{} = params, %User{is_admin: true}, page, size) do
     filter_clause = create_filters(params)
 
@@ -76,6 +88,100 @@ defmodule TdBg.BusinessConcept.Search do
     }
 
     do_search(search)
+  end
+
+  defp search_bc_with_filter(filter, user, page, size) do
+    search =
+      search_business_concept_versions(filter, user, page, size)
+      |> filter_search
+
+    # case Enum.count(Map.get(search, :results)) < size do
+    #   true ->
+    #     %{
+    #       results:
+    #         Map.get(search, :results) ++
+    #           Map.get(
+    #             filter_search(
+    #               filter,
+    #               user,
+    #               page + 1,
+    #               size
+    #             ),
+    #             :results
+    #           ),
+    #       total: Map.get(search, :total)
+    #     }
+
+    #   _ ->
+    #     search
+    # end
+  end
+
+  # Non-admin user search, filters applied
+  def search_business_concept_versions(
+        %{"filters" => %{"status" => _status, "versions" => _versions}} = params,
+        %User{} = user,
+        page,
+        size
+      ) do
+    search_business_concept_versions(
+      %{"filters" => Map.delete(Map.get(params, "filters"), "versions")},
+      user,
+      page,
+      size
+    )
+    |> filter_search
+  end
+
+  def search_business_concept_versions(
+        %{"filters" => %{"status" => _status, "versions" => _versions}, "query" => query} =
+          params,
+        %User{} = user,
+        page,
+        size
+      ) do
+    search_business_concept_versions(
+      %{"filters" => Map.delete(Map.get(params, "filters"), "versions"), "query" => query},
+      user,
+      page,
+      size
+    )
+    |> filter_search
+  end
+
+  def search_business_concept_versions(%{} = params, %User{} = user, page, size) do
+    permissions = user |> Permissions.get_domain_permissions()
+    filter_business_concept_versions(params, permissions, page, size)
+  end
+
+  defp filter_search(search) do
+    filtered_search =
+      search
+      |> Map.get(:results)
+      |> filter_same_bc_id
+      |> Enum.filter(&(not is_nil(&1)))
+
+    %{results: filtered_search, total: Map.get(search, :total)}
+  end
+
+  defp filter_same_bc_id(map) do
+    map
+    |> Enum.map(
+      &if &1 == get_max_version(map, &1["business_concept_id"]) do
+        &1
+      else
+        nil
+      end
+    )
+  end
+
+  defp get_max_version(list, id) do
+    list
+    |> Enum.max_by(
+      &if &1["business_concept_id"] == id do
+        &1
+      end
+    )
   end
 
   defp cast_bc_version(bc_version) do
@@ -107,38 +213,6 @@ defmodule TdBg.BusinessConcept.Search do
     }
   end
 
-  # Non-admin user search, filters applied
-  def search_business_concept_versions(%{"filters" => %{"status" => _status, "versions" => _versions}} = params, %User{} = user, page, size) do
-    permissions = user |> Permissions.get_domain_permissions()
-
-    if Map.has_key?(Map.get(params, "filters"), "versions") do
-      array =
-        BusinessConcepts.max_business_concepts_version_by_version_status()
-        |> Enum.map(&BusinessConcepts.business_concept_versions_by_ids(&1))
-        |> Enum.map(&cast_bc_version(&1))
-        # this do not work properly
-        |> filter_array_by_perms(permissions)
-
-      custom_size =
-      case (page + 1) * size > Enum.count(array) do
-        true -> Enum.count(array) - size
-        _ -> size
-      end
-
-      %{
-        results: Enum.take(Enum.take(array, (page + 1) * size), custom_size * -1),
-        total: Enum.count(array)
-      }
-    else
-      filter_business_concept_versions(params, permissions, page, size)
-    end
-  end
-
-  def search_business_concept_versions(%{} = params, %User{} = user, page, size) do
-    permissions = user |> Permissions.get_domain_permissions()
-    filter_business_concept_versions(params, permissions, page, size)
-  end
-
   defp filter_array_by_perms(array, permissions) do
     array
     |> Enum.map(
@@ -153,13 +227,13 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp check_perms(elem, permissions) do
     permissions
-    |> Enum.map(&(check_domain_id(&1, elem["domain"]["id"])))
+    |> Enum.map(&check_domain_id(&1, elem["domain"]["id"]))
     |> Enum.member?(true)
   end
 
   defp check_domain_id(map, id) do
-    values = Map.values(map)
-    values
+    map
+    |> Map.values(map)
     |> Enum.member?(id)
   end
 
