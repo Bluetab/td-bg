@@ -43,32 +43,32 @@ defmodule TdBg.BusinessConcept.Search do
 
   # Admin user search, no filters applied
   def search_business_concept_versions(
-        %{"filters" => %{"status" => _status, "versions" => _versions}, "query" => query} =
+        %{"filters" => %{"status" => _status, "id" => id}, "query" => query} =
           params,
         %User{is_admin: true} = user,
         page,
         size
       ) do
-    search_bc_with_filter(
-      %{"filters" => Map.delete(Map.get(params, "filters"), "versions"), "query" => query},
+    search_business_concept_versions(
+      %{"filters" => Map.delete(Map.get(params, "filters"), "id"), "query" => query},
       user,
       page,
       size
-    )
+    )|> filter_search(get_bc_from_version(id))
   end
 
   def search_business_concept_versions(
-        %{"filters" => %{"status" => _status, "versions" => _versions}} = params,
+        %{"filters" => %{"status" => _status, "id" => id}} = params,
         %User{is_admin: true} = user,
         page,
         size
       ) do
-    search_bc_with_filter(
-      %{"filters" => Map.delete(Map.get(params, "filters"), "versions")},
+    search_business_concept_versions(
+      %{"filters" => Map.delete(Map.get(params, "filters"), "id")},
       user,
       page,
       size
-    )
+    )|> filter_search(get_bc_from_version(id))
   end
 
   def search_business_concept_versions(%{} = params, %User{is_admin: true}, page, size) do
@@ -90,63 +90,36 @@ defmodule TdBg.BusinessConcept.Search do
     do_search(search)
   end
 
-  defp search_bc_with_filter(filter, user, page, size) do
-    search =
-      search_business_concept_versions(filter, user, page, size)
-      |> filter_search
-
-    # case Enum.count(Map.get(search, :results)) < size do
-    #   true ->
-    #     %{
-    #       results:
-    #         Map.get(search, :results) ++
-    #           Map.get(
-    #             filter_search(
-    #               filter,
-    #               user,
-    #               page + 1,
-    #               size
-    #             ),
-    #             :results
-    #           ),
-    #       total: Map.get(search, :total)
-    #     }
-
-    #   _ ->
-    #     search
-    # end
-  end
-
   # Non-admin user search, filters applied
   def search_business_concept_versions(
-        %{"filters" => %{"status" => _status, "versions" => _versions}} = params,
+        %{"filters" => %{"status" => _status, "id" => id}} = params,
         %User{} = user,
         page,
         size
       ) do
     search_business_concept_versions(
-      %{"filters" => Map.delete(Map.get(params, "filters"), "versions")},
+      %{"filters" => Map.delete(Map.get(params, "filters"), "id")},
       user,
       page,
       size
     )
-    |> filter_search
+    |> filter_search(get_bc_from_version(id))
   end
 
   def search_business_concept_versions(
-        %{"filters" => %{"status" => _status, "versions" => _versions}, "query" => query} =
+        %{"filters" => %{"status" => _status, "id" => id}, "query" => query} =
           params,
         %User{} = user,
         page,
         size
       ) do
     search_business_concept_versions(
-      %{"filters" => Map.delete(Map.get(params, "filters"), "versions"), "query" => query},
+      %{"filters" => Map.delete(Map.get(params, "filters"), "id"), "query" => query},
       user,
       page,
       size
     )
-    |> filter_search
+    |> filter_search(get_bc_from_version(id))
   end
 
   def search_business_concept_versions(%{} = params, %User{} = user, page, size) do
@@ -154,20 +127,27 @@ defmodule TdBg.BusinessConcept.Search do
     filter_business_concept_versions(params, permissions, page, size)
   end
 
-  defp filter_search(search) do
+  defp get_bc_from_version(id) do 
+    bca = BusinessConcepts.get_business_concept_version!(id)
+    bca.business_concept_id
+  end
+
+  defp filter_search(search, id) do
     filtered_search =
       search
       |> Map.get(:results)
-      |> filter_same_bc_id
+      # |> IO.inspect
+      |> filter_same_bc_id(id)
+      # |> IO.inspect
       |> Enum.filter(&(not is_nil(&1)))
 
     %{results: filtered_search, total: Map.get(search, :total)}
   end
 
-  defp filter_same_bc_id(map) do
+  defp filter_same_bc_id(map, id) do
     map
     |> Enum.map(
-      &if &1 == get_max_version(map, &1["business_concept_id"]) do
+      &if &1 == get_max_version(map, &1["business_concept_id"] )and &1["business_concept_id"] != id do
         &1
       else
         nil
