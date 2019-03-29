@@ -49,12 +49,15 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    search_business_concept_versions(
+    IO.inspect "CALLED 1"
+    bc_id = get_bc_from_version(id)
+    search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id"), "query" => query},
       user,
       page,
-      size
-    )|> filter_search(get_bc_from_version(id))
+      nil
+    )
+    filter_search(search, bc_id, page, size)
   end
 
   def search_business_concept_versions(
@@ -63,15 +66,19 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    search_business_concept_versions(
+    IO.inspect id, label: "CALLED 2"
+    bc_id = get_bc_from_version(id)
+    search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id")},
       user,
       page,
-      size
-    )|> filter_search(get_bc_from_version(id))
+      nil
+    )
+    filter_search(search, bc_id, page, size)
   end
 
   def search_business_concept_versions(%{} = params, %User{is_admin: true}, page, size) do
+    IO.inspect params, label: "CALLED"
     filter_clause = create_filters(params)
 
     query =
@@ -80,13 +87,17 @@ defmodule TdBg.BusinessConcept.Search do
         _ -> create_query(params, filter_clause)
       end
 
-    search = %{
-      from: page * size,
-      size: size,
-      query: query,
-      aggs: Aggregations.aggregation_terms()
-    }
-
+    search = 
+      case size do
+        nil -> %{ query: query,
+                  aggs: Aggregations.aggregation_terms()
+                }
+        _ -> %{ from: page * size,
+                size: size,
+                query: query,
+                aggs: Aggregations.aggregation_terms()
+              }
+      end
     do_search(search)
   end
 
@@ -97,13 +108,15 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    search_business_concept_versions(
+    IO.inspect "CALLED 3"
+    bc_id = get_bc_from_version(id)
+    search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id")},
       user,
       page,
-      size
+      nil
     )
-    |> filter_search(get_bc_from_version(id))
+    filter_search(search, bc_id, page, size)
   end
 
   def search_business_concept_versions(
@@ -113,13 +126,15 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    search_business_concept_versions(
+    IO.inspect "CALLED 4"
+    bc_id = get_bc_from_version(id)
+    search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id"), "query" => query},
       user,
       page,
-      size
+      nil
     )
-    |> filter_search(get_bc_from_version(id))
+    filter_search(search, bc_id, page, size)
   end
 
   def search_business_concept_versions(%{} = params, %User{} = user, page, size) do
@@ -127,27 +142,27 @@ defmodule TdBg.BusinessConcept.Search do
     filter_business_concept_versions(params, permissions, page, size)
   end
 
-  defp get_bc_from_version(id) do 
+  defp get_bc_from_version(id) do
     bca = BusinessConcepts.get_business_concept_version!(id)
     bca.business_concept_id
   end
 
-  defp filter_search(search, id) do
+  defp filter_search(search, id, page, size) do
     filtered_search =
       search
       |> Map.get(:results)
-      # |> IO.inspect
       |> filter_same_bc_id(id)
-      # |> IO.inspect
       |> Enum.filter(&(not is_nil(&1)))
 
-    %{results: filtered_search, total: Map.get(search, :total)}
+    IO.inspect Enum.count(filtered_search), label: "TOTAL "
+
+    %{results: filtered_search |> Enum.slice(page * size, size), total: Enum.count(filtered_search)}
   end
 
   defp filter_same_bc_id(map, id) do
     map
     |> Enum.map(
-      &if &1 == get_max_version(map, &1["business_concept_id"] )and &1["business_concept_id"] != id do
+      &if &1 == get_max_version(map, &1["business_concept_id"]) and &1["business_concept_id"] != id do
         &1
       else
         nil
@@ -162,59 +177,6 @@ defmodule TdBg.BusinessConcept.Search do
         &1
       end
     )
-  end
-
-  defp cast_bc_version(bc_version) do
-    cast = bc_version |> hd
-
-    %{
-      "bc_aliases" => [],
-      "business_concept_id" => Map.get(cast, :business_concept_id),
-      "content" => Map.get(cast, :content),
-      "current" => Map.get(cast, :current),
-      "description" => "1234",
-      "domain" => %{
-        "id" => Map.get(cast, :business_concept).domain.id,
-        "name" => Map.get(cast, :business_concept).domain.name
-      },
-      "domain_ids" => nil,
-      "domain_parents" => nil,
-      "id" => Map.get(cast, :id),
-      "in_progress" => Map.get(cast, :in_progress),
-      "inserted_at" => Map.get(cast, :inserted_at),
-      "last_change_at" => Map.get(cast, :last_change_at),
-      "last_change_by" => Map.get(cast, :last_change_by),
-      "link_count" => nil,
-      "name" => Map.get(cast, :name),
-      "rule_count" => nil,
-      "status" => Map.get(cast, :status),
-      "template" => nil,
-      "version" => Map.get(cast, :version)
-    }
-  end
-
-  defp filter_array_by_perms(array, permissions) do
-    array
-    |> Enum.map(
-      &if not check_perms(&1, permissions) do
-        nil
-      else
-        &1
-      end
-    )
-    |> Enum.filter(&(not is_nil(&1)))
-  end
-
-  defp check_perms(elem, permissions) do
-    permissions
-    |> Enum.map(&check_domain_id(&1, elem["domain"]["id"]))
-    |> Enum.member?(true)
-  end
-
-  defp check_domain_id(map, id) do
-    map
-    |> Map.values(map)
-    |> Enum.member?(id)
   end
 
   def list_business_concept_versions(business_concept_id, %User{is_admin: true}) do
@@ -292,7 +254,8 @@ defmodule TdBg.BusinessConcept.Search do
 
     query = create_query(params, filter)
 
-    %{from: page * size, size: size, query: query}
+    #%{from: page * size, size: size, query: query}
+    %{query: query}
     |> do_search
   end
 
@@ -301,12 +264,14 @@ defmodule TdBg.BusinessConcept.Search do
 
     query = create_query(resource_filter, filter)
 
-    %{from: page * size, size: size, query: query}
+    #%{from: page * size, size: size, query: query}
+    %{query: query}
     |> do_search
   end
 
   def get_business_concepts_from_query(query, page, size) do
-    %{from: page * size, size: size, query: query}
+    #%{from: page * size, size: size, query: query}
+    %{query: query}
     |> do_search
   end
 
