@@ -49,7 +49,6 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    IO.inspect "CALLED 1"
     bc_id = get_bc_from_version(id)
     search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id"), "query" => query},
@@ -66,7 +65,6 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    IO.inspect id, label: "CALLED 2"
     bc_id = get_bc_from_version(id)
     search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id")},
@@ -78,7 +76,6 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   def search_business_concept_versions(%{} = params, %User{is_admin: true}, page, size) do
-    IO.inspect params, label: "CALLED"
     filter_clause = create_filters(params)
 
     query =
@@ -87,12 +84,12 @@ defmodule TdBg.BusinessConcept.Search do
         _ -> create_query(params, filter_clause)
       end
 
-    search = 
+    search =
       case size do
-        nil -> %{ query: query,
+        nil -> %{query: query,
                   aggs: Aggregations.aggregation_terms()
                 }
-        _ -> %{ from: page * size,
+        _ -> %{from: page * size,
                 size: size,
                 query: query,
                 aggs: Aggregations.aggregation_terms()
@@ -108,7 +105,6 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    IO.inspect "CALLED 3"
     bc_id = get_bc_from_version(id)
     search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id")},
@@ -126,7 +122,6 @@ defmodule TdBg.BusinessConcept.Search do
         page,
         size
       ) do
-    IO.inspect "CALLED 4"
     bc_id = get_bc_from_version(id)
     search = search_business_concept_versions(
       %{"filters" => Map.delete(Map.get(params, "filters"), "id"), "query" => query},
@@ -153,8 +148,6 @@ defmodule TdBg.BusinessConcept.Search do
       |> Map.get(:results)
       |> filter_same_bc_id(id)
       |> Enum.filter(&(not is_nil(&1)))
-
-    IO.inspect Enum.count(filtered_search), label: "TOTAL "
 
     %{results: filtered_search |> Enum.slice(page * size, size), total: Enum.count(filtered_search)}
   end
