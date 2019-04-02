@@ -113,7 +113,7 @@ defmodule TdBg.BusinessConceptSearch do
       search = Search.search_business_concept_versions(params, @not_admin, @page, @size)
       assert Map.get(search, :total) == 0
     end
-
+  end
   def create_template(template) do
     @df_cache.put_template(template)
     template
