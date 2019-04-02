@@ -143,13 +143,16 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   defp filter_search(search, id, page, size) do
-    filtered_search =
-      search
-      |> Map.get(:results)
-      |> filter_same_bc_id(id)
-      |> Enum.filter(&(not is_nil(&1)))
+    case search do
+      [] -> %{results: [], total: 0}
+      _ -> filtered_search =
+            search
+            |> Map.get(:results)
+            |> filter_same_bc_id(id)
+            |> Enum.filter(&(not is_nil(&1)))
 
-    %{results: filtered_search |> Enum.slice(page * size, size), total: Enum.count(filtered_search)}
+          %{results: filtered_search |> Enum.slice(page * size, size), total: Enum.count(filtered_search)}
+    end
   end
 
   defp filter_same_bc_id(map, id) do
