@@ -6,6 +6,12 @@
 
 - [TD-1529] Search business concept versions now do not return deprecated or different versions of same bc 
 
+## [2.16.0] 2019-04-01
+
+### Added
+
+- [TD-1571] Elixir's Logger config will check for EX_LOGGER_FORMAT variable to override format
+
 ## [2.14.0] 2019-03-04
 
 ### Added
