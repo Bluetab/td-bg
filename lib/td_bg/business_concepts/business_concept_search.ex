@@ -132,9 +132,9 @@ defmodule TdBg.BusinessConcept.Search do
     filter_search(search, bc_id, page, size)
   end
 
-  def search_business_concept_versions(%{} = params, %User{} = user, page, size) do
+  def search_business_concept_versions(%{} = params, %User{} = user, _, _) do
     permissions = user |> Permissions.get_domain_permissions()
-    filter_business_concept_versions(params, permissions, page, size)
+    filter_business_concept_versions(params, permissions)
   end
 
   defp get_bc_from_version(id) do
@@ -241,32 +241,29 @@ defmodule TdBg.BusinessConcept.Search do
     Map.fetch!(@map_field_to_condition, head)
   end
 
-  defp filter_business_concept_versions(_params, [], _page, _size), do: []
+  defp filter_business_concept_versions(_params, []), do: []
 
-  defp filter_business_concept_versions(params, [_h | _t] = permissions, page, size) do
+  defp filter_business_concept_versions(params, [_h | _t] = permissions) do
     user_defined_filters = create_filters(params)
 
     filter = permissions |> create_filter_clause(user_defined_filters)
 
     query = create_query(params, filter)
 
-    #%{from: page * size, size: size, query: query}
     %{query: query}
     |> do_search
   end
 
-  def get_business_concepts_from_domain(resource_filter, page, size) do
+  def get_business_concepts_from_domain(resource_filter) do
     filter = resource_filter |> create_filter_clause()
 
     query = create_query(resource_filter, filter)
 
-    #%{from: page * size, size: size, query: query}
     %{query: query}
     |> do_search
   end
 
-  def get_business_concepts_from_query(query, page, size) do
-    #%{from: page * size, size: size, query: query}
+  def get_business_concepts_from_query(query) do
     %{query: query}
     |> do_search
   end

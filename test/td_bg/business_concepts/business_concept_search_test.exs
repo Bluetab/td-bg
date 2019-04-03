@@ -2,18 +2,12 @@ defmodule TdBg.BusinessConceptSearch do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBgWeb.Authentication, only: :functions
-
   alias TdBg.BusinessConcept.Search
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
-  alias TdBgWeb.Authentication
 
-  alias TdBg.BusinessConcepts
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.Repo
   @df_cache Application.get_env(:td_bg, :df_cache)
 
   setup_all do
@@ -57,8 +51,6 @@ defmodule TdBg.BusinessConceptSearch do
     @page 0
     @size 5
 
-    @jwt "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZGF1dGgiLCJleHAiOjE1NTQyNDM2MzYsImdpZHMiOltdLCJoYXNfcGVybWlzc2lvbnMiOnRydWUsImlhdCI6MTU1NDIwMDQzNiwiaXNfYWRtaW4iOnRydWUsImlzcyI6InRkYXV0aCIsImp0aSI6ImYxYjQ1MmI1LTZmMDMtNDIyOS04ODhkLTI5MTljY2EwMDY2ZCIsIm5iZiI6MTU1NDIwMDQzNSwic3ViIjoie1widXNlcl9uYW1lXCI6XCJkYXZpZC5mZXJuYW5kZXpAYmx1ZXRhYi5uZXRcIixcImlzX2FkbWluXCI6dHJ1ZSxcImlkXCI6NDZ9IiwidHlwIjoiYWNjZXNzIiwidXNlcl9uYW1lIjoiZGF2aWQuZmVybmFuZGV6QGJsdWV0YWIubmV0In0.HcBMx_HPuSO3QxeWMQmI9k18rPu9ommip7e6QdWFWb3G6f0igScR5m6n4lFoerbSJyDVseiPFyuBD2CDUcWFWg"
-
     defp create_versions do
       template_content = [%{name: "fieldname", type: "string", cardinality: "?"}]
 
@@ -72,21 +64,14 @@ defmodule TdBg.BusinessConceptSearch do
       version1 = insert(:business_concept_version, business_concept: child)
       version2 = insert(:business_concept_version, business_concept: parent)
 
-      version3 = insert(:business_concept_version, business_concept: child)
-      version4 = insert(:business_concept_version, business_concept: parent)
+      insert(:business_concept_version, business_concept: child)
+      insert(:business_concept_version, business_concept: parent)
 
       {domain, version1, version2}
     end
 
-    defp acl_entry_fixture(role_name \\ "watch") do
-      user = insert(:user)
-      role = Role.role_get_or_create_by_name(role_name)
-
-      insert(:acl_entry_resource, principal_id: user.id, resource_id: 1234, role: role)
-    end
-
     test "return list of bc_versions with user admin" do
-      {domain, version1, version2} = create_versions()
+      {_, _, version2} = create_versions()
 
       params = %{
         "filters" => %{
@@ -101,7 +86,7 @@ defmodule TdBg.BusinessConceptSearch do
     end
 
     test "return list of bc_versions with user not admin" do
-      {domain, version1, version2} = create_versions()
+      {_, _, version2} = create_versions()
 
       params = %{
         "filters" => %{
