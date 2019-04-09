@@ -62,6 +62,7 @@ defmodule TdBg.Permissions.MockPermissionResolver do
       :view_domain,
       :create_business_concept,
       :update_business_concept,
+      :manage_business_concept_links,
       :send_business_concept_for_approval,
       :delete_business_concept,
       :view_draft_business_concepts,

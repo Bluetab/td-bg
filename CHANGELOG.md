@@ -4,7 +4,8 @@
 
 ### Changed
 
-- [TD-1529] Search business concept versions now do not return deprecated or different versions of same bc 
+- [TD-1529] Search business concept versions now do not return deprecated or different versions of same bc
+- [TD-71] Additional functionality for searching concepts filtering by user apability of managing links
 
 ## [2.16.0] 2019-04-01
 

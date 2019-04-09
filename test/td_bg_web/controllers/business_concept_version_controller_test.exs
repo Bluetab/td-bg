@@ -3,6 +3,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import TdBgWeb.Authentication, only: :functions
+  import TdBgWeb.User, only: :functions
 
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.MockPermissionResolver
@@ -19,6 +20,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     start_supervised(@df_cache)
     :ok
   end
+
+  @user_name "user"
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -74,6 +77,47 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         })
 
       assert 2 == length(json_response(conn, 200)["data"])
+    end
+
+    @tag authenticated_user: @user_name
+    test "find only linkable concepts", %{conn: conn} do
+      user = create_user(@user_name)
+      domain_watch = insert(:domain)
+      domain_create = insert(:domain)
+      role_watch = get_role_by_name("watch")
+      role_create = get_role_by_name("create")
+      MockPermissionResolver.create_acl_entry(%{
+        principal_id: user.id,
+        principal_type: "user",
+        resource_id: domain_watch.id,
+        resource_type: "domain",
+        role_id: role_watch.id,
+        role_name: role_watch.name
+      })
+      MockPermissionResolver.create_acl_entry(%{
+        principal_id: user.id,
+        principal_type: "user",
+        resource_id: domain_create.id,
+        resource_type: "domain",
+        role_id: role_create.id,
+        role_name: role_create.name
+      })
+
+      draft = BusinessConcept.status().draft
+      create_version(domain_watch, "bc_watch", draft).business_concept_id
+      bc_create_id = create_version(domain_create, "bc_create", draft).business_concept_id
+
+      conn =
+        post(conn, business_concept_version_path(conn, :search), %{
+          only_linkable: true
+        })
+
+      data = json_response(conn, 200)["data"]
+      assert 1 == length(data)
+      assert bc_create_id ==
+        data
+        |> Enum.at(0)
+        |> Map.get("business_concept_id")
     end
   end
 
