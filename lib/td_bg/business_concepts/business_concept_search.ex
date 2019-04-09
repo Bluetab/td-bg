@@ -140,7 +140,7 @@ defmodule TdBg.BusinessConcept.Search do
     Map.fetch!(@map_field_to_condition, head)
   end
 
-  defp filter_business_concept_versions(_params, [], _page, _size), do: []
+  defp filter_business_concept_versions(_params, [], _page, _size), do: %{results: [], total: 0}
 
   defp filter_business_concept_versions(params, [_h | _t] = permissions, page, size) do
     user_defined_filters = create_filters(params)
