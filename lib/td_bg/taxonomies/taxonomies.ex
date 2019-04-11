@@ -119,7 +119,7 @@ defmodule TdBg.Taxonomies do
     }
 
     predefined_query
-      |> Search.get_business_concepts_from_query
+      |> Search.get_business_concepts_from_query(0, 10_000)
       |> Map.get(:results)
       |> length()
 
@@ -180,7 +180,7 @@ defmodule TdBg.Taxonomies do
 
   defp update_related_business_concept_versions_search({:ok, %Domain{id: id}} = response) do
     %{resource_id: id}
-      |> Search.get_business_concepts_from_domain
+      |> Search.get_business_concepts_from_domain(0, 10_000)
       |> Map.get(:results, [])
       |> Enum.map(&Map.get(&1, "id"))
       |> Enum.filter(& !is_nil(&1))

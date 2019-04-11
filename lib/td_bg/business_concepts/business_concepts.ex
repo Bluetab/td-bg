@@ -85,8 +85,7 @@ defmodule TdBg.BusinessConcepts do
   """
   def get_business_concept!(business_concept_id) do
     Repo.one!(
-      from(
-        c in BusinessConcept,
+      from(c in BusinessConcept,
         where: c.id == ^business_concept_id
       )
     )
@@ -115,27 +114,6 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> preload([_, c], business_concept: c)
     |> where([_, c], c.domain_id == ^domain_id)
-    |> Repo.all()
-  end
-
-  @doc """
-  Returns bc id and bc_version_id with bc_version status draft, published, pending_approval and rejected
-  """
-  def max_business_concepts_version_by_version_status do
-    published = BusinessConcept.status().published
-    draft = BusinessConcept.status().draft
-    pending_approval = BusinessConcept.status().pending_approval
-    rejected = BusinessConcept.status().rejected
-
-    BusinessConcept
-    |> join(:left, [c], _ in assoc(c, :versions))
-    |> where(
-      [c, v],
-      v.status == ^published or v.status == ^draft or v.status == ^pending_approval or
-        v.status == ^rejected
-    )
-    |> select([c, v], [max(v.id)])
-    |> group_by([c, v], c.id)
     |> Repo.all()
   end
 
@@ -546,15 +524,6 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
-  def business_concept_versions_by_ids(list_business_concept_version_ids) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
-    |> where([v, _, _], v.id in ^list_business_concept_version_ids)
-    |> Repo.all()
-  end
-
   def list_all_business_concept_with_status(status) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
@@ -719,11 +688,8 @@ defmodule TdBg.BusinessConcepts do
   defp set_content_defaults(attrs) do
     content = Map.get(attrs, :content)
     content_schema = Map.get(attrs, :content_schema)
-
     case content do
-      nil ->
-        attrs
-
+      nil -> attrs
       _ ->
         content = Format.apply_template(content, content_schema)
         Map.put(attrs, :content, content)
