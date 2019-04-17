@@ -50,14 +50,16 @@ defmodule TdBg.BusinessConcept.Search do
         _ -> create_query(params, filter_clause)
       end
 
-     search = %{
+    sort = Map.get(params, "sort", ["_score", "name.raw"])
+
+    %{
       from: page * size,
       size: size,
       query: query,
+      sort: sort,
       aggs: Aggregations.aggregation_terms()
     }
-
-    do_search(search)
+    |> do_search
   end
 
   # Non-admin user search, filters applied
@@ -69,15 +71,18 @@ defmodule TdBg.BusinessConcept.Search do
   defp get_permissions(%{"only_linkable" => true}, user) do
     user
     |> Permissions.get_domain_permissions()
-    |> Enum.filter(&(&1
-      |> Map.get(:permissions)
-      |> Enum.member?(:manage_business_concept_links)
-    ))
+    |> Enum.filter(
+      &(&1
+        |> Map.get(:permissions)
+        |> Enum.member?(:manage_business_concept_links))
+    )
   end
+
   defp get_permissions(_, user), do: Permissions.get_domain_permissions(user)
 
   def list_business_concept_versions(business_concept_id, %User{is_admin: true}) do
     query = %{business_concept_id: business_concept_id} |> create_query
+
     %{query: query}
     |> do_search
   end
@@ -87,6 +92,7 @@ defmodule TdBg.BusinessConcept.Search do
     predefined_query = %{business_concept_id: business_concept_id} |> create_query
     filter = permissions |> create_filter_clause([predefined_query])
     query = create_query(nil, filter)
+
     %{query: query}
     |> do_search
   end
@@ -101,8 +107,8 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp to_terms_query({filter, values}) do
     Aggregations.aggregation_terms()
-      |> Map.get(filter)
-      |> get_filter(values, filter)
+    |> Map.get(filter)
+    |> get_filter(values, filter)
   end
 
   defp get_filter(%{terms: %{field: field}}, values, _) do
@@ -110,7 +116,7 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   defp get_filter(%{terms: %{script: _}}, values, filter) do
-     %{range: create_range(filter, values)}
+    %{range: create_range(filter, values)}
   end
 
   defp get_filter(%{aggs: %{distinct_search: distinct_search}, nested: %{path: path}}, values, _) do
@@ -125,7 +131,7 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp create_range(filter, values) do
     Map.new()
-      |> Map.put_new(filter, buid_range_condition(values))
+    |> Map.put_new(filter, buid_range_condition(values))
   end
 
   defp buid_range_condition(values) do
@@ -136,7 +142,7 @@ defmodule TdBg.BusinessConcept.Search do
     end
   end
 
-  defp get_param_condition([head|_tail]) do
+  defp get_param_condition([head | _tail]) do
     Map.fetch!(@map_field_to_condition, head)
   end
 
@@ -148,8 +154,9 @@ defmodule TdBg.BusinessConcept.Search do
     filter = permissions |> create_filter_clause(user_defined_filters)
 
     query = create_query(params, filter)
+    sort = Map.get(params, "sort", ["_score", "name.raw"])
 
-    %{from: page * size, size: size, query: query}
+    %{from: page * size, size: size, query: query, sort: sort}
     |> do_search
   end
 
@@ -170,8 +177,10 @@ defmodule TdBg.BusinessConcept.Search do
   defp create_query(%{business_concept_id: id}) do
     %{term: %{business_concept_id: id}}
   end
+
   defp create_query(%{"query" => query}) do
     equery = Query.add_query_wildcard(query)
+
     %{simple_query_string: %{query: equery}}
     |> bool_query
   end
@@ -183,6 +192,7 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp create_query(%{"query" => query}, filter) do
     equery = Query.add_query_wildcard(query)
+
     %{simple_query_string: %{query: equery}}
     |> bool_query(filter)
   end
@@ -217,7 +227,6 @@ defmodule TdBg.BusinessConcept.Search do
          %{resource_id: resource_id, permissions: permissions},
          user_defined_filters
        ) do
-
     domain_clause = %{term: %{domain_ids: resource_id}}
 
     status =
@@ -225,7 +234,7 @@ defmodule TdBg.BusinessConcept.Search do
       |> Enum.map(&Map.get(BusinessConcept.permissions_to_status(), &1))
       |> Enum.filter(&(!is_nil(&1)))
 
-    status_clause =  %{terms: %{status: status}}
+    status_clause = %{terms: %{status: status}}
 
     confidential_clause =
       case Enum.member?(permissions, :manage_confidential_business_concepts) do
@@ -234,9 +243,7 @@ defmodule TdBg.BusinessConcept.Search do
       end
 
     %{
-      bool: %{filter: user_defined_filters ++ [domain_clause,
-                                               status_clause,
-                                               confidential_clause]}
+      bool: %{filter: user_defined_filters ++ [domain_clause, status_clause, confidential_clause]}
     }
   end
 
