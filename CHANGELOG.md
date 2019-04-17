@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- [TD-1705] Search results are ordered by relevance and name by default
+
 ## [2.17.0] 2019-04-17
 
 ### Changed
