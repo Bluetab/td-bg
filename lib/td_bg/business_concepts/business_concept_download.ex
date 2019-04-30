@@ -23,21 +23,40 @@ defmodule TdBg.BusinessConcept.Download do
     to_string(list)
   end
 
+  defp template_concepts_to_csv(nil, concepts, header_labels, add_separation) do
+    headers = build_headers(header_labels)
+    concepts_list = concepts_to_list(concepts)
+    export_to_csv(headers, concepts_list, add_separation)
+  end
+
   defp template_concepts_to_csv(template, concepts, header_labels, add_separation) do
     content = template.content
     content_names = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "name")]))
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
-
-    content_names_to_types =
-      Enum.reduce(content, %{}, &Map.put(&2, Map.get(&1, "name"), Map.get(&1, "type")))
-
-    headers =
-      ["template", "name", "domain", "status", "description", "inserted_at"]
-      |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
-
+    headers = build_headers(header_labels)
     headers = headers ++ content_labels
-    concepts_list = concepts_to_list(content_names, content_names_to_types, concepts)
+    concepts_list = concepts_to_list(concepts, content_names)
+    export_to_csv(headers, concepts_list, add_separation)
+  end
 
+  defp concepts_to_list(concepts, content_fields \\ []) do
+    Enum.reduce(concepts, [], fn concept, acc ->
+      content = concept["content"]
+
+      values = [
+        concept["template"]["name"],
+        concept["name"],
+        concept["domain"]["name"],
+        concept["status"],
+        concept["description"],
+        concept["inserted_at"]
+      ]
+
+      acc ++ [Enum.reduce(content_fields, values, &(&2 ++ [Map.get(content, &1, "")]))]
+    end)
+  end
+
+  defp export_to_csv(headers, concepts_list, add_separation) do
     list_to_encode =
       case add_separation do
         true ->
@@ -53,21 +72,9 @@ defmodule TdBg.BusinessConcept.Download do
     |> Enum.to_list()
   end
 
-  defp concepts_to_list(content_fields, _content_fields_to_types, concepts) do
-    Enum.reduce(concepts, [], fn concept, acc ->
-      content = concept["content"]
-
-      values = [
-        concept["template"]["name"],
-        concept["name"],
-        concept["domain"]["name"],
-        concept["status"],
-        concept["description"],
-        concept["inserted_at"]
-      ]
-
-      acc ++ [Enum.reduce(content_fields, values, &(&2 ++ [Map.get(content, &1, "")]))]
-    end)
+  defp build_headers(header_labels) do
+    ["template", "name", "domain", "status", "description", "inserted_at"]
+      |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
   end
 
   defp build_empty_list(acc, l) when l < 1, do: acc
