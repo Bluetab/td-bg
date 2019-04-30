@@ -63,7 +63,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
     end
 
     test "to_csv/1 return business concepts non-dynamic content when related template does not exist" do
-      template = "template_name"
+      template = "template_name_delete"
       field_name = "field_name"
 
       name = "concept_name"
