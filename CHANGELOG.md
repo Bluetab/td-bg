@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 
+
+### Fixed
+
+- [TD-1701] Return business concepts non-dynamic content when related template does not exist on csv download
+
 ## [2.17.1] 2019-04-22
 
 ### Changed
