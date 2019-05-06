@@ -31,11 +31,11 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp template_concepts_to_csv(template, concepts, header_labels, add_separation) do
     content = template.content
-    content_names = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "name")]))
+    content_fields = Enum.reduce(content, [], &(&2 ++ [Map.take(&1, ["name", "values", "type"])]))
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
     headers = build_headers(header_labels)
     headers = headers ++ content_labels
-    concepts_list = concepts_to_list(concepts, content_names)
+    concepts_list = concepts_to_list(concepts, content_fields)
     export_to_csv(headers, concepts_list, add_separation)
   end
 
@@ -52,7 +52,7 @@ defmodule TdBg.BusinessConcept.Download do
         concept["inserted_at"]
       ]
 
-      acc ++ [Enum.reduce(content_fields, values, &(&2 ++ [Map.get(content, &1, "")]))]
+      acc ++ [Enum.reduce(content_fields, values, &(&2 ++ [&1 |> get_content_field(content)]))]
     end)
   end
 
@@ -74,8 +74,44 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp build_headers(header_labels) do
     ["template", "name", "domain", "status", "description", "inserted_at"]
-      |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
+    |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
   end
+
+  defp get_content_field(%{"type" => "url", "name" => name}, content) do
+    content
+    |> Map.get(name, [])
+    |> Enum.map(&Map.get(&1, "url_value"))
+    |> Enum.filter(&(not is_nil(&1)))
+    |> Enum.join(", ")
+  end
+
+  defp get_content_field(
+         %{
+           "type" => "string",
+           "name" => name,
+           "values" => %{"fixed_tuple" => values}
+         },
+         content
+       ) do
+    content
+    |> Map.get(name, [])
+    |> quotes_to_list()
+    |> Enum.map(fn map_value ->
+      Enum.find(values, fn %{"value" => value} -> value == map_value end)
+    end)
+    |> Enum.map(&Map.get(&1, "text", ""))
+    |> Enum.join(", ")
+  end
+
+  defp get_content_field(%{"name" => name}, content) do
+    Map.get(content, name, "")
+  end
+
+  defp quotes_to_list([""]), do: []
+
+  defp quotes_to_list(""), do: []
+
+  defp quotes_to_list(content), do: content
 
   defp build_empty_list(acc, l) when l < 1, do: acc
   defp build_empty_list(acc, l), do: ["" | build_empty_list(acc, l - 1)]
