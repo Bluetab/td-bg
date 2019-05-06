@@ -94,7 +94,8 @@ defmodule TdBg.BusinessConcept.Download do
          content
        ) do
     content
-    |> Map.get(name, "")
+    |> Map.get(name, [])
+    |> quotes_to_list()
     |> Enum.map(fn map_value ->
       Enum.find(values, fn %{"value" => value} -> value == map_value end)
     end)
@@ -105,6 +106,12 @@ defmodule TdBg.BusinessConcept.Download do
   defp get_content_field(%{"name" => name}, content) do
     Map.get(content, name, "")
   end
+
+  defp quotes_to_list([""]), do: []
+
+  defp quotes_to_list(""), do: []
+
+  defp quotes_to_list(content), do: content
 
   defp build_empty_list(acc, l) when l < 1, do: acc
   defp build_empty_list(acc, l), do: ["" | build_empty_list(acc, l - 1)]
