@@ -20,7 +20,13 @@ defmodule TdBg.BusinessConceptsTest do
       template_content = [%{name: "fieldname", type: "string", cardinality: "?"}]
 
       template =
-        create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+        create_template(%{
+          id: 0,
+          name: "onefield",
+          content: template_content,
+          label: "label",
+          scope: "test"
+        })
 
       parent_domain = insert(:domain)
       child_domain = insert(:child_domain, parent: parent_domain)

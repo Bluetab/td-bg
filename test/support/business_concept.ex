@@ -32,6 +32,7 @@ defmodule TdBgWeb.BusinessConcept do
       |> Map.put(:id, 0)
       |> Map.put(:label, type)
       |> Map.put(:name, type)
+      |> Map.put(:scope, "test")
       |> Map.put(:content, definition)
 
     @df_cache.put_template(attrs)

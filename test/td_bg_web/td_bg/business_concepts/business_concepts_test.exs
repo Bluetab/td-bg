@@ -791,6 +791,7 @@ defmodule TdBg.BusinessConceptsTests do
             "cardinality" => "*"
           }
         ],
+        scope: "test",
         label: template_label,
         id: "999"
       })
