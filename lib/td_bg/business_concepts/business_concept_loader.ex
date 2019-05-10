@@ -56,19 +56,18 @@ defmodule TdBg.BusinessConceptLoader do
     Process.send_after(self(), action, seconds)
   end
 
+  defp load_all_business_concepts do
+    BusinessConcepts.list_all_business_concepts()
+    |> Enum.map(&load_business_concept(&1.id))
+  end
+
   defp load_business_concept(business_concept_id) do
     business_concept =
       business_concept_id
       |> BusinessConcepts.get_currently_published_version!()
       |> load_bc_version_data()
 
-    [business_concept]
-    |> load_business_concept_data()
-  end
-
-  defp load_all_business_concepts do
-    BusinessConcepts.list_all_business_concepts()
-    |> Enum.map(&load_business_concept(&1.id))
+    load_business_concept_data(business_concept)
   end
 
   defp load_bc_version_data(business_concept_version) do
@@ -76,42 +75,51 @@ defmodule TdBg.BusinessConceptLoader do
       id: business_concept_version.business_concept_id,
       domain_id: business_concept_version.business_concept.domain_id,
       name: business_concept_version.name,
+      current_version: business_concept_version.version,
       business_concept_version_id: business_concept_version.id,
-      status: business_concept_version.status
+      status: business_concept_version.status,
+      parent_id: business_concept_version.business_concept.parent_id
     }
   end
 
-  def load_business_concept_data(business_concepts) do
-    put_business_concepts_in_cache(business_concepts)
-    put_business_concepts_in_deprecated_set(business_concepts)
+  def load_business_concept_data(business_concept) do
+    put_business_concepts_in_cache(business_concept)
+    put_business_concepts_in_deprecated_set(business_concept)
+    put_bc_parents_in_cache(business_concept)
   end
 
-  defp put_business_concepts_in_cache(business_concepts) do
-    results =
-      business_concepts
-      |> Enum.map(&Map.take(&1, [:id, :domain_id, :name, :business_concept_version_id]))
-      |> Enum.map(&BusinessConceptCache.put_business_concept(&1))
-      |> Enum.map(fn {res, _} -> res end)
+  defp put_business_concepts_in_cache(business_concept) do
+    result =
+      business_concept
+      |> Map.take([:id, :domain_id, :name, :current_version, :business_concept_version_id])
+      |> BusinessConceptCache.put_business_concept
 
-    if Enum.any?(results, &(&1 != :ok)) do
-      Logger.warn("Cache loading of business concepts failed")
-    else
-      Logger.info("Cached #{length(results)} business concepts")
+    case result do
+      {:ok, _} -> Logger.info("Cached business concepts")
+      _ -> Logger.warn("Cache loading of business concept failed")
     end
   end
 
-  defp put_business_concepts_in_deprecated_set(business_concepts) do
-    results =
-      business_concepts
-      |> Enum.filter(&(Map.get(&1, :status) == "deprecated"))
-      |> Enum.map(&Map.get(&1, :id))
-      |> Enum.map(&BusinessConceptCache.add_business_concept_to_deprecated_set(&1))
-      |> Enum.map(fn {res, _} -> res end)
+  defp put_business_concepts_in_deprecated_set(%{status: "deprecated"} = business_concept) do
+    result =
+      business_concept
+      |> Map.get(:id)
+      |> BusinessConceptCache.add_business_concept_to_deprecated_set
 
-    if Enum.any?(results, &(&1 != :ok)) do
-      Logger.warn("Cache loading of deprecated business concepts failed")
-    else
-      Logger.info("Added #{length(results)} business concepts to deprecated terms set")
+    case result do
+      {:ok, _} -> Logger.info("Added business concept to deprecated terms set")
+      _ -> Logger.warn("Cache loading of deprecated business concept failed")
+    end
+  end
+  defp put_business_concepts_in_deprecated_set(_), do: nil
+
+  defp put_bc_parents_in_cache(%{parent_id: nil}), do: nil
+  defp put_bc_parents_in_cache(business_concept) do
+    result = BusinessConceptCache.put_bc_parent(business_concept)
+
+    case result do
+      {:ok, _} -> Logger.info("Added business concept parent")
+      _ -> Logger.warn("Cache loading of business concept parent failed")
     end
   end
 end

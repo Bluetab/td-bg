@@ -175,7 +175,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
-      create_template(%{id: 0, name: "some_type", content: [], label: "label"})
+      create_template(%{id: 0, name: "some_type", content: [], label: "label", scope: "test"})
 
       creation_attrs = %{
         content: %{},
@@ -247,7 +247,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       template_content = [%{"name" => "fieldname", "type" => "string", "cardinality" => "?"}]
 
       template =
-        create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+        create_template(%{
+          id: 0,
+          name: "onefield",
+          content: template_content,
+          label: "label",
+          scope: "test"
+        })
 
       user = build(:user)
 
@@ -443,6 +449,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> Map.put(:id, 0)
       |> Map.put(:label, "some type")
       |> Map.put(:name, "some_type")
+      |> Map.put(:scope, "test")
       |> Map.put(:content, [])
 
     @df_cache.put_template(attrs)

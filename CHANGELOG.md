@@ -6,6 +6,10 @@
 
 - [TD-1701] Return business concepts non-dynamic content when related template does not exist on csv download
 
+### Added
+
+- [TD-1519] Initial Redis Loader will write business_concepts parents for migration
+
 ## [2.17.1] 2019-04-22
 
 ### Changed

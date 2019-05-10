@@ -25,6 +25,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
         id: 0,
         name: template,
         label: "label",
+        scope: "test",
         content: [
           %{
             "name" => field_name,
@@ -107,6 +108,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
         id: 0,
         name: template,
         label: "label",
+        scope: "test",
         content: [
           %{
             "name" => url_field,
