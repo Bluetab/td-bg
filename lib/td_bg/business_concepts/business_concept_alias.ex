@@ -6,10 +6,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptAlias do
   alias TdBg.BusinessConcepts.BusinessConceptAlias
 
   schema "business_concept_aliases" do
-    field :name, :string
-    belongs_to :business_concept, BusinessConcept
+    field(:name, :string)
+    belongs_to(:business_concept, BusinessConcept)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   @doc false

@@ -9,31 +9,31 @@ defmodule TdBg.Taxonomies.Domain do
   alias TdPerms.TaxonomyCache
 
   @behaviour Searchable
-  @errors ErrorConstantsSupport.taxonomy_support_errors
+  @errors ErrorConstantsSupport.taxonomy_support_errors()
 
   schema "domains" do
-    field :description, :string
-    field :type, :string
-    field :name, :string
-    field :deleted_at, :utc_datetime
-    belongs_to :parent, Domain
+    field(:description, :string)
+    field(:type, :string)
+    field(:name, :string)
+    field(:deleted_at, :utc_datetime_usec)
+    belongs_to(:parent, Domain)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   @doc false
   def changeset(%Domain{} = domain, attrs) do
     domain
-      |> cast(attrs, [:name, :type, :description, :parent_id])
-      |> validate_required([:name])
-      |> validate_unique_name(domain)
+    |> cast(attrs, [:name, :type, :description, :parent_id])
+    |> validate_required([:name])
+    |> validate_unique_name(domain)
   end
 
   def delete_changeset(%Domain{} = domain) do
     domain
-      |> change(deleted_at: DateTime.utc_now())
-      |> validate_domain_children()
-      |> validate_existing_bc_children()
+    |> change(deleted_at: DateTime.utc_now())
+    |> validate_domain_children()
+    |> validate_existing_bc_children()
   end
 
   defp validate_domain_children(changeset) do
@@ -41,13 +41,18 @@ defmodule TdBg.Taxonomies.Domain do
       true ->
         domain_id = changeset |> get_field(:id)
         {:count, :domain, count} = Taxonomies.count_domain_children(domain_id)
+
         case count > 0 do
           true ->
             domain_error = @errors.existing_child_domain
             add_error(changeset, :domain, domain_error.name, code: domain_error.code)
-          false -> changeset
+
+          false ->
+            changeset
         end
-      _ ->  changeset
+
+      _ ->
+        changeset
     end
   end
 
@@ -55,14 +60,21 @@ defmodule TdBg.Taxonomies.Domain do
     case changeset.valid? do
       true ->
         domain_id = changeset |> get_field(:id)
-        {:count, :business_concept, count} = Taxonomies.count_domain_business_concept_children(domain_id)
+
+        {:count, :business_concept, count} =
+          Taxonomies.count_domain_business_concept_children(domain_id)
+
         case count > 0 do
           true ->
             domain_error = @errors.existing_child_business_concept
             add_error(changeset, :domain, domain_error.name, code: domain_error.code)
-          false -> changeset
+
+          false ->
+            changeset
         end
-      false -> changeset
+
+      false ->
+        changeset
     end
   end
 
@@ -71,23 +83,33 @@ defmodule TdBg.Taxonomies.Domain do
       true ->
         domain_name = changeset |> get_field(:name)
         {:count, :domain, count} = Taxonomies.count_domain_by_name(domain_name, domain_id)
+
         case count > 0 do
           true ->
             domain_error = @errors.existing_domain_with_same_name
             add_error(changeset, :domain, domain_error.name, code: domain_error.code)
-          false -> changeset
+
+          false ->
+            changeset
         end
-      false -> changeset
+
+      false ->
+        changeset
     end
   end
 
   def search_fields(%Domain{id: domain_id} = domain) do
     parent_ids = TaxonomyCache.get_parent_ids(domain_id, false)
-    %{name: domain.name, description: domain.description, parent_id: domain.parent_id, parent_ids: parent_ids}
+
+    %{
+      name: domain.name,
+      description: domain.description,
+      parent_id: domain.parent_id,
+      parent_ids: parent_ids
+    }
   end
 
   def index_name do
     "domain"
   end
-
 end

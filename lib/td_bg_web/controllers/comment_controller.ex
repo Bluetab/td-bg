@@ -60,7 +60,7 @@ defmodule TdBgWeb.CommentController do
 
       conn
       |> put_status(:created)
-      |> put_resp_header("location", comment_path(conn, :show, comment))
+      |> put_resp_header("location", Routes.comment_path(conn, :show, comment))
       |> render("show.json", comment: comment)
     end
   end

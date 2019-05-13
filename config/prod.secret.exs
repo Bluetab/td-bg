@@ -13,7 +13,6 @@ config :td_bg, TdBgWeb.Endpoint,
 
 # Configure your database
 config :td_bg, TdBg.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "${DB_USER}",
   password: "${DB_PASSWORD}",
   database: "${DB_NAME}",
@@ -21,21 +20,24 @@ config :td_bg, TdBg.Repo,
   pool_size: 10
 
 config :td_bg, TdBg.Auth.Guardian,
-  allowed_algos: ["HS512"], # optional
+  # optional
+  allowed_algos: ["HS512"],
   issuer: "tdauth",
-  ttl: { 1, :hours },
+  ttl: {1, :hours},
   secret_key: "${GUARDIAN_SECRET_KEY}"
 
 config :td_bg, :api_services_login,
   api_username: "${API_USER}",
   api_password: "${API_PASSWORD}"
 
-config :td_bg, :auth_service, api_service: TdBgWeb.ApiServices.HttpTdAuthService,
+config :td_bg, :auth_service,
+  api_service: TdBgWeb.ApiServices.HttpTdAuthService,
   auth_host: "${API_AUTH_HOST}",
   auth_port: "${API_AUTH_PORT}",
   auth_domain: ""
 
-config :td_bg, :dd_service, api_service: TdBgWeb.ApiServices.HttpTdDdService,
+config :td_bg, :dd_service,
+  api_service: TdBgWeb.ApiServices.HttpTdDdService,
   dd_host: "${API_DD_HOST}",
   dd_port: "${API_DD_PORT}",
   dd_domain: ""
@@ -46,7 +48,8 @@ config :td_bg, :elasticsearch,
   es_port: "${ES_PORT}",
   type_name: "doc"
 
-config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.HttpTdAuditService,
+config :td_bg, :audit_service,
+  api_service: TdBgWeb.ApiServices.HttpTdAuditService,
   audit_host: "${API_AUDIT_HOST}",
   audit_port: "${API_AUDIT_PORT}",
   audit_domain: ""

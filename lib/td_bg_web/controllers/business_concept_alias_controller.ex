@@ -85,19 +85,21 @@ defmodule TdBgWeb.BusinessConceptAliasController do
       |> put_status(:created)
       |> put_resp_header(
         "location",
-        business_concept_alias_path(conn, :show, business_concept_alias)
+        Routes.business_concept_alias_path(conn, :show, business_concept_alias)
       )
       |> render("show.json", business_concept_alias: business_concept_alias)
     else
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -136,12 +138,14 @@ defmodule TdBgWeb.BusinessConceptAliasController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 end

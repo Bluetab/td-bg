@@ -7,25 +7,27 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Taxonomies.Domain
 
-  @status %{draft: "draft",
-            pending_approval: "pending_approval",
-            rejected: "rejected",
-            published: "published",
-            versioned: "versioned",
-            deprecated: "deprecated"}
+  @status %{
+    draft: "draft",
+    pending_approval: "pending_approval",
+    rejected: "rejected",
+    published: "published",
+    versioned: "versioned",
+    deprecated: "deprecated"
+  }
 
   schema "business_concepts" do
-    belongs_to :domain, Domain
-    belongs_to :parent, BusinessConcept
-    has_many :children, BusinessConcept, foreign_key: :parent_id
-    field :type, :string
-    field :last_change_by, :integer
-    field :last_change_at, :utc_datetime
+    belongs_to(:domain, Domain)
+    belongs_to(:parent, BusinessConcept)
+    has_many(:children, BusinessConcept, foreign_key: :parent_id)
+    field(:type, :string)
+    field(:last_change_by, :integer)
+    field(:last_change_at, :utc_datetime_usec)
 
-    has_many :versions, BusinessConceptVersion
-    has_many :aliases, BusinessConceptAlias
+    has_many(:versions, BusinessConceptVersion)
+    has_many(:aliases, BusinessConceptAlias)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def status do
@@ -33,12 +35,14 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   end
 
   def status_values do
-    @status |> Map.values
+    @status |> Map.values()
   end
 
   def permissions_to_status do
-    status = BusinessConcept.status
-    %{view_approval_pending_business_concepts: status.pending_approval,
+    status = BusinessConcept.status()
+
+    %{
+      view_approval_pending_business_concepts: status.pending_approval,
       view_deprecated_business_concepts: status.deprecated,
       view_draft_business_concepts: status.draft,
       view_published_business_concepts: status.published,
@@ -48,7 +52,9 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   end
 
   def status_to_permissions do
-    Enum.reduce(BusinessConcept.permissions_to_status(), %{}, fn ({k, v}, acc) -> Map.put(acc, v, k) end)
+    Enum.reduce(BusinessConcept.permissions_to_status(), %{}, fn {k, v}, acc ->
+      Map.put(acc, v, k)
+    end)
   end
 
   @doc false
@@ -57,5 +63,4 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
     |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at, :parent_id])
     |> validate_required([:domain_id, :type, :last_change_by, :last_change_at])
   end
-
 end

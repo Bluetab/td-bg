@@ -3,18 +3,18 @@ defmodule TdBg.Repo.Migrations.CreateBusinessConceptVersions do
 
   def change do
     create table(:business_concept_versions) do
-      add :business_concept_id, references(:business_concepts), null: false
-      add :name, :string, null: false, size: 255
-      add :description, :string, size: 500
-      add :content, :map
-      add :last_change_by, :bigint, null: false
-      add :last_change_at, :utc_datetime, null: false
-      add :status, :string, null: false
-      add :version, :integer, null: false
-      add :reject_reason, :string, size: 500, null: true
-      add :mod_comments, :string, size: 500, null: true
+      add(:business_concept_id, references(:business_concepts), null: false)
+      add(:name, :string, null: false, size: 255)
+      add(:description, :string, size: 500)
+      add(:content, :map)
+      add(:last_change_by, :bigint, null: false)
+      add(:last_change_at, :utc_datetime_usec, null: false)
+      add(:status, :string, null: false)
+      add(:version, :integer, null: false)
+      add(:reject_reason, :string, size: 500, null: true)
+      add(:mod_comments, :string, size: 500, null: true)
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
   end
 end

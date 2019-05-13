@@ -4,13 +4,13 @@ defmodule TdBg.Comments.Comment do
   import Ecto.Changeset
 
   schema "comments" do
-    field :content, :string
-    field :resource_id, :integer
-    field :resource_type, :string
-    field :user, :map
-    field :created_at, :utc_datetime
+    field(:content, :string)
+    field(:resource_id, :integer)
+    field(:resource_type, :string)
+    field(:user, :map)
+    field(:created_at, :utc_datetime_usec)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   @doc """

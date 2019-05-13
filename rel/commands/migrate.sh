@@ -1,3 +1,3 @@
 #!/bin/sh
 
-bin/td_bg command Elixir.TdBg.ReleaseTasks seed
+$RELEASE_ROOT_DIR/bin/td_bg eval 'Elixir.TdBg.ReleaseTasks.seed()'

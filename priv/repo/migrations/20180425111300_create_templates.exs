@@ -3,11 +3,10 @@ defmodule TdBg.Repo.Migrations.CreateTemplates do
 
   def change do
     create table(:templates) do
-      add :name, :string
-      add :content, {:array, :map}
+      add(:name, :string)
+      add(:content, {:array, :map})
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
-
   end
 end

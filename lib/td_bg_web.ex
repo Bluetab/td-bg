@@ -21,22 +21,22 @@ defmodule TdBgWeb do
     quote do
       use Phoenix.Controller, namespace: TdBgWeb
       import Plug.Conn
-      import TdBgWeb.Router.Helpers
       import TdBgWeb.Gettext
+      alias TdBgWeb.Router.Helpers, as: Routes
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/TdBg_web/templates",
-                        namespace: TdBgWeb
+      use Phoenix.View,
+        root: "lib/TdBg_web/templates",
+        namespace: TdBgWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
-
-      import TdBgWeb.Router.Helpers
       import TdBgWeb.ErrorHelpers
       import TdBgWeb.Gettext
+      alias TdBgWeb.Router.Helpers, as: Routes
     end
   end
 

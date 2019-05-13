@@ -3,10 +3,10 @@ defmodule TdBg.Repo.Migrations.ConceptFields1 do
 
   def change do
     create table(:concept_fields) do
-      add :concept, :string
-      add :field, :map
+      add(:concept, :string)
+      add(:field, :map)
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
   end
 end

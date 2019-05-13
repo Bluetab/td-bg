@@ -57,7 +57,6 @@ defmodule TdBgWeb.DomainController do
     domains = Taxonomies.list_domains()
 
     case params |> get_actions do
-
       [] ->
         domains = domains |> Enum.filter(&can?(user, show(&1)))
 
@@ -118,7 +117,8 @@ defmodule TdBgWeb.DomainController do
     else
       conn
       |> put_status(:forbidden)
-      |> render(ErrorView, :"403.json")
+      |> put_view(ErrorView)
+      |> render("403.json")
     end
   end
 
@@ -136,7 +136,7 @@ defmodule TdBgWeb.DomainController do
         conn =
           conn
           |> put_status(:created)
-          |> put_resp_header("location", domain_path(conn, :show, domain))
+          |> put_resp_header("location", Routes.domain_path(conn, :show, domain))
           |> render("show.json", domain: domain)
 
         conn
@@ -144,17 +144,20 @@ defmodule TdBgWeb.DomainController do
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(TdBgWeb.ChangesetView)
+        |> render("error.json", changeset: changeset)
 
       {:error, nil} ->
         conn
         |> put_status(:not_found)
-        |> render(ErrorView, :"404.json")
+        |> put_view(ErrorView)
+        |> render("404.json")
 
       _ ->
         conn
         |> put_status(:internal_server_error)
-        |> render(ErrorView, :"500.json")
+        |> put_view(ErrorView)
+        |> render("500.json")
     end
   end
 
@@ -179,13 +182,16 @@ defmodule TdBgWeb.DomainController do
     else
       conn
       |> put_status(:forbidden)
-      |> render(ErrorView, :"403.json")
+      |> put_view(ErrorView)
+      |> render("403.json")
     end
   end
 
   defp do_show(conn, domain) do
-    render(conn, "show.json", domain: domain,
-      hypermedia: hypermedia("domain", conn, domain))
+    render(conn, "show.json",
+      domain: domain,
+      hypermedia: hypermedia("domain", conn, domain)
+    )
   end
 
   swagger_path :update do
@@ -210,7 +216,8 @@ defmodule TdBgWeb.DomainController do
     else
       conn
       |> put_status(:forbidden)
-      |> render(ErrorView, :"403.json")
+      |> put_view(ErrorView)
+      |> render("403.json")
     end
   end
 
@@ -241,7 +248,8 @@ defmodule TdBgWeb.DomainController do
     else
       conn
       |> put_status(:forbidden)
-      |> render(ErrorView, :"403.json")
+      |> put_view(ErrorView)
+      |> render("403.json")
     end
   end
 
@@ -255,7 +263,10 @@ defmodule TdBgWeb.DomainController do
   end
 
   swagger_path :count_bc_in_domain_for_user do
-    description("Counts the number of Business Concepts where the given user has any role in the provided domain")
+    description(
+      "Counts the number of Business Concepts where the given user has any role in the provided domain"
+    )
+
     produces("application/json")
 
     parameters do
@@ -277,8 +288,8 @@ defmodule TdBgWeb.DomainController do
     else
       conn
       |> put_status(:forbidden)
-      |> render(ErrorView, "403.json")
+      |> put_view(ErrorView)
+      |> render("403.json")
     end
   end
-
 end
