@@ -5,6 +5,7 @@
 ### Fixed
 
 - [TD-1701] Return business concepts non-dynamic content when related template does not exist on csv download
+- [TD-1774] Newline is missing in logger format
 
 ### Added
 
