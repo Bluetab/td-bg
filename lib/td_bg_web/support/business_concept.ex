@@ -18,7 +18,8 @@ defmodule TdBgWeb.BusinessConceptSupport do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       {:name_not_available} ->
         conn
@@ -34,7 +35,8 @@ defmodule TdBgWeb.BusinessConceptSupport do
       {:error, %Ecto.Changeset{data: %{__struct__: _}} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdBgWeb.ChangesetView, "error.json",
+        |> put_view(TdBgWeb.ChangesetView)
+        |> render("error.json",
           changeset: changeset,
           prefix: "concept.error"
         )
@@ -42,7 +44,8 @@ defmodule TdBgWeb.BusinessConceptSupport do
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdBgWeb.ChangesetView, "error.json",
+        |> put_view(TdBgWeb.ChangesetView)
+        |> render("error.json",
           changeset: changeset,
           prefix: "concept.content.error"
         )
@@ -52,7 +55,8 @@ defmodule TdBgWeb.BusinessConceptSupport do
 
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 

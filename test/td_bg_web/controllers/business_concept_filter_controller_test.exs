@@ -10,9 +10,9 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   @df_cache Application.get_env(:td_bg, :df_cache)
 
   setup_all do
-    start_supervised MockTdAuthService
-    start_supervised MockTdAuditService
-    start_supervised MockPermissionResolver
+    start_supervised(MockTdAuthService)
+    start_supervised(MockTdAuditService)
+    start_supervised(MockPermissionResolver)
     start_supervised(@df_cache)
     :ok
   end
@@ -25,15 +25,14 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   describe "index" do
     @tag :admin_authenticated
     test "lists all filters (admin user)", %{conn: conn} do
-      conn = get conn, business_concept_filter_path(conn, :index)
+      conn = get(conn, Routes.business_concept_filter_path(conn, :index))
       assert json_response(conn, 200)["data"] == MockSearch.get_filters(%{})
     end
 
     @tag authenticated_user: @user_name
     test "lists all filters (non-admin user)", %{conn: conn} do
-      conn = get conn, business_concept_filter_path(conn, :index)
+      conn = get(conn, Routes.business_concept_filter_path(conn, :index))
       assert json_response(conn, 200)["data"] == %{}
     end
   end
-
 end

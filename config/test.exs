@@ -14,11 +14,10 @@ config :logger, level: :warn
 
 # Configure your database
 config :td_bg, TdBg.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "td_bg_test",
-  hostname: "localhost",
+  hostname: "postgres",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
@@ -40,7 +39,7 @@ config :td_bg, :dd_service,
 
 config :td_bg, :elasticsearch,
   search_service: TdBg.Search.MockSearch,
-  es_host: "localhost",
+  es_host: "elastic",
   es_port: 9200,
   type_name: "doc"
 
@@ -59,4 +58,4 @@ config :td_bg, cache_busines_concepts_on_startup: false
 config :td_bg, metrics_busines_concepts_on_startup: false
 config :td_bg, metrics_publication_frequency: 1000
 
-config :td_perms, redis_host: "localhost"
+config :td_perms, redis_host: "redis"

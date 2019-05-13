@@ -20,7 +20,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
   describe "index" do
     @tag :admin_authenticated
     test "lists all business_concept_aliases", %{conn: conn} do
-      conn = get(conn, business_concept_alias_path(conn, :index, 123))
+      conn = get(conn, Routes.business_concept_alias_path(conn, :index, 123))
       assert json_response(conn, 200)["data"] == []
     end
   end
@@ -41,7 +41,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
       conn =
         post(
           conn,
-          business_concept_alias_path(conn, :create, business_concept_id),
+          Routes.business_concept_alias_path(conn, :create, business_concept_id),
           business_concept_alias: creation_attrs
         )
 
@@ -50,7 +50,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
 
       conn = recycle_and_put_headers(conn)
 
-      conn = get(conn, business_concept_alias_path(conn, :show, id))
+      conn = get(conn, Routes.business_concept_alias_path(conn, :show, id))
       validate_resp_schema(conn, schema, "BusinessConceptAliasResponse")
 
       assert json_response(conn, 200)["data"] == %{
@@ -72,7 +72,7 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
       conn =
         post(
           conn,
-          business_concept_alias_path(conn, :create, business_concept_id),
+          Routes.business_concept_alias_path(conn, :create, business_concept_id),
           business_concept_alias: creation_attrs
         )
 
@@ -90,13 +90,15 @@ defmodule TdBgWeb.BusinessConceptAliasControllerTest do
       business_concept_alias =
         insert(:business_concept_alias, business_concept_id: business_concept_id)
 
-      conn = delete(conn, business_concept_alias_path(conn, :delete, business_concept_alias))
+      conn =
+        delete(conn, Routes.business_concept_alias_path(conn, :delete, business_concept_alias))
+
       assert response(conn, 204)
 
       conn = recycle_and_put_headers(conn)
 
       assert_error_sent(404, fn ->
-        get(conn, business_concept_alias_path(conn, :show, business_concept_alias))
+        get(conn, Routes.business_concept_alias_path(conn, :show, business_concept_alias))
       end)
     end
   end

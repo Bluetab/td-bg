@@ -661,10 +661,10 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp add_content_if_not_exist(attrs) do
-    if not Map.has_key?(attrs, :content) do
-      Map.put(attrs, :content, %{})
-    else
+    if Map.has_key?(attrs, :content) do
       attrs
+    else
+      Map.put(attrs, :content, %{})
     end
   end
 
@@ -688,8 +688,11 @@ defmodule TdBg.BusinessConcepts do
   defp set_content_defaults(attrs) do
     content = Map.get(attrs, :content)
     content_schema = Map.get(attrs, :content_schema)
+
     case content do
-      nil -> attrs
+      nil ->
+        attrs
+
       _ ->
         content = Format.apply_template(content, content_schema)
         Map.put(attrs, :content, content)
@@ -711,14 +714,14 @@ defmodule TdBg.BusinessConcepts do
     content_schema = Map.get(attrs, :content_schema)
     changeset = Validation.build_changeset(content, content_schema)
 
-    if not changeset.valid? do
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
-    else
+    if changeset.valid? do
       attrs
       |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
       |> Map.put(:in_progress, false)
+    else
+      attrs
+      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
+      |> Map.put(:in_progress, true)
     end
   end
 

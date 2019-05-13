@@ -10,16 +10,18 @@ defmodule TdBgWeb.FeatureCase do
 
   using do
     quote do
-      import TdBgWeb.Router.Helpers
+      alias TdBgWeb.Router.Helpers, as: Routes
       @endpoint TdBgWeb.Endpoint
     end
   end
 
   setup tags do
     :ok = Sandbox.checkout(TdBg.Repo)
+
     unless tags[:async] do
       Sandbox.mode(TdBg.Repo, {:shared, self()})
     end
+
     :ok
   end
 end

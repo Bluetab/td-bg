@@ -9,13 +9,12 @@ defmodule TdBg.CommentsTest do
   import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
 
-  alias TdBgWeb.ApiServices.MockTdAuditService
-  alias TdBgWeb.ApiServices.MockTdAuthService
-
+  alias Poison, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Utils.CollectionUtils
-  alias Poison, as: JSON
+  alias TdBgWeb.ApiServices.MockTdAuditService
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
   import_steps(TdBg.DomainSteps)
@@ -100,7 +99,7 @@ defmodule TdBg.CommentsTest do
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(
-        comment_url(TdBgWeb.Endpoint, :index,
+        Routes.comment_url(TdBgWeb.Endpoint, :index,
           resource_id: params["resource_id"],
           resource_type: params["resource_type"]
         ),
@@ -116,7 +115,7 @@ defmodule TdBg.CommentsTest do
     body = %{"comment" => comment_params} |> JSON.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(comment_url(TdBgWeb.Endpoint, :create), body, headers, [])
+      HTTPoison.post!(Routes.comment_url(TdBgWeb.Endpoint, :create), body, headers, [])
 
     {:ok, status_code, resp |> JSON.decode!()}
   end

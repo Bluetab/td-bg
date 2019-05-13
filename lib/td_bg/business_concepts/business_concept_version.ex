@@ -19,7 +19,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     field(:content, :map)
     field(:related_to, {:array, :integer})
     field(:description, :map)
-    field(:last_change_at, :utc_datetime)
+    field(:last_change_at, :utc_datetime_usec)
     field(:mod_comments, :string)
     field(:last_change_by, :integer)
     field(:name, :string)
@@ -30,7 +30,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     field(:in_progress, :boolean, default: false)
     belongs_to(:business_concept, BusinessConcept, on_replace: :update)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   @doc false

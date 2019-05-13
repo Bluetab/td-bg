@@ -9,12 +9,14 @@ defmodule TdBgWeb.FallbackController do
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
-    |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
+    |> put_view(TdBgWeb.ChangesetView)
+    |> render("error.json", changeset: changeset)
   end
 
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> render(TdBgWeb.ErrorView, :"404")
+    |> put_view(TdBgWeb.ErrorView)
+    |> render("404.json")
   end
 end

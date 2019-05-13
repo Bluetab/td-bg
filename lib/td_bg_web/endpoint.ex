@@ -1,15 +1,11 @@
 defmodule TdBgWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :td_bg
 
-  socket "/socket", TdBgWeb.UserSocket
-
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phoenix.digest
   # when deploying your static files in production.
-  plug Plug.Static,
-    at: "/", from: :td_bg, gzip: false,
-    only: ~w(swagger.json)
+  plug Plug.Static, at: "/", from: :td_bg, gzip: false, only: ~w(swagger.json)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

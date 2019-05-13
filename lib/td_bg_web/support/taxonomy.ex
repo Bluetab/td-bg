@@ -9,12 +9,16 @@ defmodule TdBgWeb.TaxonomySupport do
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdBgWeb.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(TdBgWeb.ChangesetView)
+        |> render("error.json", changeset: changeset)
+
       _error ->
         Logger.error("Unexpected error... #{inspect(error)}")
+
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 end

@@ -128,7 +128,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       {:error, error} ->
         Logger.error("While uploading business concepts... #{inspect(error)}")
@@ -142,7 +143,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   rescue
     e in RuntimeError ->
@@ -213,7 +215,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       conn
       |> put_status(:created)
-      |> put_resp_header("location", business_concept_version_path(conn, :show, version.id))
+      |> put_resp_header(
+        "location",
+        Routes.business_concept_version_path(conn, :show, version.id)
+      )
       |> render("show.json", business_concept_version: version, template: template)
     else
       error ->
@@ -272,7 +277,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       _ ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -311,12 +317,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -345,12 +353,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -379,7 +389,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       _ ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -408,7 +419,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       _ ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -438,7 +450,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       _ ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -467,7 +480,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       _ ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -496,7 +510,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       _ ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -525,7 +540,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       _ ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -611,12 +627,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -632,12 +650,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -656,12 +676,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -676,12 +698,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       _error ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -798,9 +822,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, "§")})
       cooked_data_structures = cooked_data_structures(data_structures)
 
-      render(
-        conn,
-        DataStructureView,
+      conn
+      |> put_view(DataStructureView)
+      |> render(
         "data_structures.json",
         data_structures: cooked_data_structures
       )
@@ -808,14 +832,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       error ->
         Logger.error("While getting data structures... #{inspect(error)}")
 
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 
@@ -850,19 +876,24 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         end
 
       cooked_data_fields = cooked_data_fields(data_fields)
-      render(conn, DataFieldView, "data_fields.json", data_fields: cooked_data_fields)
+
+      conn
+      |> put_view(DataFieldView)
+      |> render("data_fields.json", data_fields: cooked_data_fields)
     else
       false ->
         conn
         |> put_status(:forbidden)
-        |> render(ErrorView, :"403.json")
+        |> put_view(ErrorView)
+        |> render("403.json")
 
       error ->
         Logger.error("While getting data structures... #{inspect(error)}")
 
         conn
         |> put_status(:unprocessable_entity)
-        |> render(ErrorView, :"422.json")
+        |> put_view(ErrorView)
+        |> render("422.json")
     end
   end
 

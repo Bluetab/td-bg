@@ -41,7 +41,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           description: to_rich_text("The awesome concept")
         )
 
-      conn = get(conn, business_concept_version_path(conn, :show, business_concept_version.id))
+      conn =
+        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version.id))
+
       data = json_response(conn, 200)["data"]
       assert data["name"] == business_concept_version.name
       assert data["description"] == business_concept_version.description
@@ -55,7 +57,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "index" do
     @tag :admin_authenticated
     test "lists all business_concept_versions", %{conn: conn} do
-      conn = get(conn, business_concept_version_path(conn, :index))
+      conn = get(conn, Routes.business_concept_version_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
   end
@@ -72,7 +74,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       create_version(domain, "three", published).business_concept_id
 
       conn =
-        post(conn, business_concept_version_path(conn, :search), %{
+        post(conn, Routes.business_concept_version_path(conn, :search), %{
           filters: %{status: ["published"]}
         })
 
@@ -86,6 +88,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       domain_create = insert(:domain)
       role_watch = get_role_by_name("watch")
       role_create = get_role_by_name("create")
+
       MockPermissionResolver.create_acl_entry(%{
         principal_id: user.id,
         principal_type: "user",
@@ -94,6 +97,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         role_id: role_watch.id,
         role_name: role_watch.name
       })
+
       MockPermissionResolver.create_acl_entry(%{
         principal_id: user.id,
         principal_type: "user",
@@ -108,16 +112,17 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       bc_create_id = create_version(domain_create, "bc_create", draft).business_concept_id
 
       conn =
-        post(conn, business_concept_version_path(conn, :search), %{
+        post(conn, Routes.business_concept_version_path(conn, :search), %{
           only_linkable: true
         })
 
       data = json_response(conn, 200)["data"]
       assert 1 == length(data)
+
       assert bc_create_id ==
-        data
-        |> Enum.at(0)
-        |> Map.get("business_concept_id")
+               data
+               |> Enum.at(0)
+               |> Map.get("business_concept_id")
     end
   end
 
@@ -139,7 +144,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         post(
           conn,
-          business_concept_version_path(conn, :create),
+          Routes.business_concept_version_path(conn, :create),
           business_concept_version: creation_attrs
         )
 
@@ -148,7 +153,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       conn = recycle_and_put_headers(conn)
 
-      conn = get(conn, business_concept_version_path(conn, :show, id))
+      conn = get(conn, Routes.business_concept_version_path(conn, :show, id))
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
       business_concept = json_response(conn, 200)["data"]
 
@@ -189,7 +194,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         post(
           conn,
-          business_concept_version_path(conn, :create),
+          Routes.business_concept_version_path(conn, :create),
           business_concept_version: creation_attrs
         )
 
@@ -209,11 +214,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       id = [create_version(domain, "two", published).business_concept.id | id]
       [create_version(domain, "two", published).business_concept.id | id]
 
-      conn = get(conn, business_concept_version_path(conn, :index), %{query: "two"})
+      conn = get(conn, Routes.business_concept_version_path(conn, :index), %{query: "two"})
       assert 2 == length(json_response(conn, 200)["data"])
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, business_concept_version_path(conn, :index), %{query: "one"})
+      conn = get(conn, Routes.business_concept_version_path(conn, :index), %{query: "one"})
       assert 1 == length(json_response(conn, 200)["data"])
     end
   end
@@ -227,7 +232,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         get(
           conn,
-          business_concept_version_business_concept_version_path(
+          Routes.business_concept_version_business_concept_version_path(
             conn,
             :versions,
             business_concept_version.id
@@ -284,7 +289,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         post(
           conn,
-          business_concept_version_business_concept_version_path(
+          Routes.business_concept_version_business_concept_version_path(
             conn,
             :version,
             business_concept_version.id
@@ -316,7 +321,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         put(
           conn,
-          business_concept_version_path(conn, :update, business_concept_version),
+          Routes.business_concept_version_path(conn, :update, business_concept_version),
           business_concept_version: update_attrs
         )
 
@@ -324,7 +329,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"id" => ^business_concept_version_id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, business_concept_version_path(conn, :show, business_concept_version_id))
+
+      conn =
+        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version_id))
+
       validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
 
       updated_business_concept_version = json_response(conn, 200)["data"]
@@ -368,7 +376,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         get(
           conn,
-          business_concept_version_business_concept_version_path(
+          Routes.business_concept_version_business_concept_version_path(
             conn,
             :get_data_structures,
             business_concept_version_id
@@ -411,7 +419,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         get(
           conn,
-          business_concept_version_business_concept_version_path(
+          Routes.business_concept_version_business_concept_version_path(
             conn,
             :get_data_fields,
             business_concept_version_id,

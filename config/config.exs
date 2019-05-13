@@ -23,8 +23,7 @@ config :td_bg, TdBgWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "tOxTkbz1LLqsEmoRRhSorwFZm35yQbVPP/gdU3cFUYV5IdcoIRNroCeADl4ysBBg",
   render_errors: [view: TdBgWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: TdBg.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: TdBg.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 # set EX_LOGGER_FORMAT environment variable to override Elixir's Logger format
@@ -34,10 +33,14 @@ config :logger, :console,
   format: (System.get_env("EX_LOGGER_FORMAT") || "$time $metadata[$level] $message") <> "\n",
   metadata: [:request_id]
 
+# Configuration for Phoenix
+config :phoenix, :json_library, Jason
+
 config :td_bg, TdBg.Auth.Guardian,
-  allowed_algos: ["HS512"], # optional
+  # optional
+  allowed_algos: ["HS512"],
   issuer: "tdauth",
-  ttl: { 1, :hours },
+  ttl: {1, :hours},
   secret_key: "SuperSecretTruedat"
 
 config :td_bg, :auth_service,
@@ -53,13 +56,13 @@ config :td_bg, :dd_service,
   groups_path: "/api/groups"
 
 config :td_bg, :phoenix_swagger,
-       swagger_files: %{
-         "priv/static/swagger.json" => [router: TdBgWeb.Router]
-       }
+  swagger_files: %{
+    "priv/static/swagger.json" => [router: TdBgWeb.Router]
+  }
 
 config :td_bg, :audit_service,
-        protocol: "http",
-        audits_path: "/api/audits/"
+  protocol: "http",
+  audits_path: "/api/audits/"
 
 config :td_bg, cache_domains_on_startup: true
 config :td_bg, cache_busines_concepts_on_startup: true
@@ -69,53 +72,54 @@ config :td_bg, metrics_publication_frequency: 60_000
 config :td_bg, permission_resolver: TdPerms.Permissions
 config :td_bg, df_cache: TdPerms.DynamicFormCache
 
-config :td_perms, permissions: [
-  :is_admin,
-  :create_acl_entry,
-  :update_acl_entry,
-  :delete_acl_entry,
-  :create_domain,
-  :update_domain,
-  :delete_domain,
-  :view_domain,
-  :create_business_concept,
-  :create_data_structure,
-  :update_business_concept,
-  :update_data_structure,
-  :send_business_concept_for_approval,
-  :delete_business_concept,
-  :delete_data_structure,
-  :publish_business_concept,
-  :reject_business_concept,
-  :deprecate_business_concept,
-  :manage_business_concept_alias,
-  :view_data_structure,
-  :view_draft_business_concepts,
-  :view_approval_pending_business_concepts,
-  :view_published_business_concepts,
-  :view_versioned_business_concepts,
-  :view_rejected_business_concepts,
-  :view_deprecated_business_concepts,
-  :manage_business_concept_links,
-  :manage_quality_rule,
-  :manage_confidential_business_concepts,
-  :create_ingest,
-  :update_ingest,
-  :send_ingest_for_approval,
-  :delete_ingest,
-  :publish_ingest,
-  :reject_ingest,
-  :deprecate_ingest,
-  :view_draft_ingests,
-  :view_approval_pending_ingests,
-  :view_published_ingests,
-  :view_versioned_ingests,
-  :view_rejected_ingests,
-  :view_deprecated_ingests
-]
+config :td_perms,
+  permissions: [
+    :is_admin,
+    :create_acl_entry,
+    :update_acl_entry,
+    :delete_acl_entry,
+    :create_domain,
+    :update_domain,
+    :delete_domain,
+    :view_domain,
+    :create_business_concept,
+    :create_data_structure,
+    :update_business_concept,
+    :update_data_structure,
+    :send_business_concept_for_approval,
+    :delete_business_concept,
+    :delete_data_structure,
+    :publish_business_concept,
+    :reject_business_concept,
+    :deprecate_business_concept,
+    :manage_business_concept_alias,
+    :view_data_structure,
+    :view_draft_business_concepts,
+    :view_approval_pending_business_concepts,
+    :view_published_business_concepts,
+    :view_versioned_business_concepts,
+    :view_rejected_business_concepts,
+    :view_deprecated_business_concepts,
+    :manage_business_concept_links,
+    :manage_quality_rule,
+    :manage_confidential_business_concepts,
+    :create_ingest,
+    :update_ingest,
+    :send_ingest_for_approval,
+    :delete_ingest,
+    :publish_ingest,
+    :reject_ingest,
+    :deprecate_ingest,
+    :view_draft_ingests,
+    :view_approval_pending_ingests,
+    :view_published_ingests,
+    :view_versioned_ingests,
+    :view_rejected_ingests,
+    :view_deprecated_ingests
+  ]
 
-#config :td_df, repo: TdBg.Repo
+# config :td_df, repo: TdBg.Repo
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

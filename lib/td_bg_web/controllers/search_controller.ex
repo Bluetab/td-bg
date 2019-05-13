@@ -1,4 +1,4 @@
-  defmodule TdBgWeb.SearchController do
+defmodule TdBgWeb.SearchController do
   use TdBgWeb, :controller
   import Canada, only: [can?: 2]
   use PhoenixSwagger
@@ -7,11 +7,11 @@
   alias TdBgWeb.ErrorView
 
   swagger_path :reindex_all do
-    description "Reindex all ES indexes with DB content"
-    produces "application/json"
-    response 200, "OK"
-    response 403, "Unauthorized"
-    response 500, "Client Error"
+    description("Reindex all ES indexes with DB content")
+    produces("application/json")
+    response(200, "OK")
+    response(403, "Unauthorized")
+    response(500, "Client Error")
   end
 
   def reindex_all(conn, _params) do
@@ -23,12 +23,15 @@
     else
       false ->
         conn
-          |> put_status(:forbidden)
-          |> render(ErrorView, "403.json")
+        |> put_status(:forbidden)
+        |> put_view(ErrorView)
+        |> render("403.json")
+
       _error ->
         conn
-          |> put_status(:internal_server_error)
-          |> render(ErrorView, "500.json")
+        |> put_status(:internal_server_error)
+        |> put_view(ErrorView)
+        |> render("500.json")
     end
   end
 end

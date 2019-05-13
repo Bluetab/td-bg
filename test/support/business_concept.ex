@@ -2,7 +2,7 @@ defmodule TdBgWeb.BusinessConcept do
   @moduledoc false
 
   alias Poison, as: JSON
-  import TdBgWeb.Router.Helpers
+  alias TdBgWeb.Router.Helpers, as: Routes
   import TdBgWeb.Authentication, only: :functions
 
   @df_cache Application.get_env(:td_bg, :df_cache)
@@ -67,7 +67,7 @@ defmodule TdBgWeb.BusinessConcept do
     body = %{"business_concept_version" => create_attrs} |> JSON.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(business_concept_version_url(@endpoint, :create), body, headers, [])
+      HTTPoison.post!(Routes.business_concept_version_url(@endpoint, :create), body, headers, [])
 
     {:ok, status_code, resp |> JSON.decode!()}
   end
@@ -89,7 +89,7 @@ defmodule TdBgWeb.BusinessConcept do
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.put!(
-        business_concept_version_url(@endpoint, :update, business_concept_version_id),
+        Routes.business_concept_version_url(@endpoint, :update, business_concept_version_id),
         body,
         headers,
         []
@@ -102,7 +102,7 @@ defmodule TdBgWeb.BusinessConcept do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_version_url(@endpoint, :show, id), headers, [])
+      HTTPoison.get!(Routes.business_concept_version_url(@endpoint, :show, id), headers, [])
 
     {:ok, status_code, resp |> JSON.decode!()}
   end
@@ -111,7 +111,7 @@ defmodule TdBgWeb.BusinessConcept do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
 
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-      HTTPoison.delete!(business_concept_version_url(@endpoint, :delete, id), headers, [])
+      HTTPoison.delete!(Routes.business_concept_version_url(@endpoint, :delete, id), headers, [])
 
     {:ok, status_code}
   end
@@ -121,7 +121,7 @@ defmodule TdBgWeb.BusinessConcept do
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(
-        business_concept_version_business_concept_version_url(
+        Routes.business_concept_version_business_concept_version_url(
           @endpoint,
           :versions,
           business_concept_version_id
@@ -137,7 +137,7 @@ defmodule TdBgWeb.BusinessConcept do
     headers = get_header(token)
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(business_concept_version_url(@endpoint, :index), headers, [])
+      HTTPoison.get!(Routes.business_concept_version_url(@endpoint, :index), headers, [])
 
     {:ok, status_code, resp |> JSON.decode!()}
   end
@@ -172,7 +172,7 @@ defmodule TdBgWeb.BusinessConcept do
 
     %HTTPoison.Response{status_code: status_code, body: body} =
       HTTPoison.post!(
-        business_concept_version_business_concept_version_url(
+        Routes.business_concept_version_business_concept_version_url(
           @endpoint,
           action,
           business_concept_version_id
@@ -238,7 +238,7 @@ defmodule TdBgWeb.BusinessConcept do
        ]}
 
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-      HTTPoison.post!(business_concept_version_url(@endpoint, :upload), form, headers)
+      HTTPoison.post!(Routes.business_concept_version_url(@endpoint, :upload), form, headers)
 
     {:ok, status_code}
   end
@@ -249,7 +249,7 @@ defmodule TdBgWeb.BusinessConcept do
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(
-        business_concept_alias_url(@endpoint, :create, business_concept_id),
+        Routes.business_concept_alias_url(@endpoint, :create, business_concept_id),
         body,
         headers,
         []
@@ -263,7 +263,7 @@ defmodule TdBgWeb.BusinessConcept do
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(
-        business_concept_alias_url(@endpoint, :index, business_concept_id),
+        Routes.business_concept_alias_url(@endpoint, :index, business_concept_id),
         headers,
         []
       )
@@ -275,7 +275,7 @@ defmodule TdBgWeb.BusinessConcept do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
 
     %HTTPoison.Response{status_code: status_code, body: _resp} =
-      HTTPoison.delete!(business_concept_alias_url(@endpoint, :delete, id), headers, [])
+      HTTPoison.delete!(Routes.business_concept_alias_url(@endpoint, :delete, id), headers, [])
 
     {:ok, status_code}
   end

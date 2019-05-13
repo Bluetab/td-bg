@@ -1,6 +1,5 @@
 defmodule TdBg.Mixfile do
   use Mix.Project
-  alias Mix.Tasks.Phx.Swagger.Generate, as: PhxSwaggerGenerate
 
   def project do
     [
@@ -12,7 +11,7 @@ defmodule TdBg.Mixfile do
         end,
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers() ++ [:phoenix_swagger],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -38,20 +37,21 @@ defmodule TdBg.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.3.0"},
-      {:phoenix_pubsub, "~> 1.0"},
-      {:phoenix_ecto, "~> 3.2"},
+      {:phoenix, "~> 1.4.0"},
+      {:plug_cowboy, "~> 2.0"},
+      {:plug, "~> 1.7"},
+      {:phoenix_ecto, "~> 4.0", override: true},
+      {:ecto_sql, "~> 3.0"},
+      {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
-      {:cowboy, "~> 1.0"},
       {:cabbage, git: "https://github.com/Bluetab/cabbage.git"},
       {:httpoison, "~> 1.0"},
-      {:edeliver, "~> 1.4.5"},
-      {:distillery, "~> 1.5", runtime: false},
-      {:credo, "~> 0.9.3", only: [:dev, :test], runtime: false},
+      {:distillery, "~> 2.0", runtime: false},
+      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:guardian, "~> 1.0"},
       {:canada, "~> 1.0.1"},
-      {:ex_machina, "~> 2.1", only: :test},
+      {:ex_machina, "~> 2.2.2", only: [:test]},
       {:corsica, "~> 1.0"},
       {:phoenix_swagger, "~> 0.8.0"},
       {:ex_json_schema, "~> 0.5"},
@@ -77,14 +77,7 @@ defmodule TdBg.Mixfile do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate", "run priv/repo/seeds.exs", "test"],
-      compile: ["compile", &pxh_swagger_generate/1]
+      test: ["ecto.create --quiet", "ecto.migrate", "run priv/repo/seeds.exs", "test"]
     ]
-  end
-
-  defp pxh_swagger_generate(_) do
-    if Mix.env() in [:dev, :prod] do
-      PhxSwaggerGenerate.run(["priv/static/swagger.json"])
-    end
   end
 end
