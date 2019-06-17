@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 2019-05-14
+
+### Fixed
+
+- [TD-1893] Use CI_JOB_ID in gitlab ci
+
 ## [2.19.0] 2019-05-14
 
 ### Fixed
