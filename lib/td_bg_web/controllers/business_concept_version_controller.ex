@@ -6,6 +6,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   import Canada, only: [can?: 2]
 
+  alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcept.Upload
@@ -800,6 +801,57 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  swagger_path :bulk_update do
+    description("Bulk Update of Business Concept Versions")
+    produces("application/json")
+
+    parameters do
+      bulk_update_request(
+        :body,
+        Schema.ref(:BulkUpdateRequest),
+        "Search query filter parameters and update attributes"
+      )
+    end
+
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
+    response(400, "Client Error")
+  end
+
+  def bulk_update(conn, %{
+        "update_attributes" => update_attributes,
+        "search_params" => search_params
+      }) do
+    user = conn.assigns[:current_user]
+
+    with true <- user.is_admin,
+         %{results: results} <- search_all_business_concept_versions(user, search_params),
+         {:ok, response} <- BulkUpdate.update_all(user, results, update_attributes) do
+      body = Poison.encode!(%{data: %{message: response}})
+      send_resp(conn, 200, body)
+    else
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> put_view(ErrorView)
+        |> render("403.json")
+
+      {:error, error} ->
+        Logger.error("While updating business concepts... #{inspect(error)}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> send_resp(422, Poison.encode!(error))
+
+      error ->
+        Logger.error("While updating business concepts... #{inspect(error)}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(ErrorView)
+        |> render("422.json")
+    end
+  end
+
   swagger_path :get_data_structures do
     description("Get business concept version associated data structures")
     produces("application/json")
@@ -916,5 +968,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Map.get(:business_concept)
     |> Map.get(:type)
     |> @df_cache.get_template_by_name
+  end
+
+  defp search_all_business_concept_versions(params, user) do
+    params
+    |> Map.drop(["page", "size"])
+    |> Search.search_business_concept_versions(user, 0, 10_000)
   end
 end

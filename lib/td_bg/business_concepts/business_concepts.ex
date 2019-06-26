@@ -513,7 +513,7 @@ defmodule TdBg.BusinessConcepts do
       [%BusinessConceptVersion{}, ...]
 
   """
-  def business_concept_versions_by_ids(list_business_concept_version_ids, status) do
+  def business_concept_versions_by_ids(list_business_concept_version_ids, status \\ nil) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [v, c], _ in assoc(c, :domain))
