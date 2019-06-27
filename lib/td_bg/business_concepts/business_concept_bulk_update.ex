@@ -81,29 +81,33 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
 
   defp update_attributes_from_params(user, params, business_concept_version) do
     template = get_template(business_concept_version)
-    content_schema = Map.get(template, :content)
-    domain_id = Map.get(params, "domain_id", nil)
-
-    case domain_id && Taxonomies.get_domain(domain_id) do
-      nil ->
-        {:error, :missing_domain}
-
+    case template do
+      nil -> {:error, :template_not_found}
       _ ->
-        business_concept_attrs =
-          %{}
-          |> Map.put("domain_id", domain_id)
-          |> Map.put("last_change_by", user.id)
-          |> Map.put("last_change_at", DateTime.utc_now())
-
-        update_attributes =
-          params
-          |> Map.put("business_concept", business_concept_attrs)
-          |> Map.put("content_schema", content_schema)
-          |> Map.update("content", %{}, & &1)
-          |> Map.put("last_change_by", user.id)
-          |> Map.put("last_change_at", DateTime.utc_now())
-
-        {:ok, update_attributes}
+        content_schema = Map.get(template, :content)
+        domain_id = Map.get(params, "domain_id", nil)
+    
+        case domain_id && Taxonomies.get_domain(domain_id) do
+          nil ->
+            {:error, :missing_domain}
+    
+          _ ->
+            business_concept_attrs =
+              %{}
+              |> Map.put("domain_id", domain_id)
+              |> Map.put("last_change_by", user.id)
+              |> Map.put("last_change_at", DateTime.utc_now())
+    
+            update_attributes =
+              params
+              |> Map.put("business_concept", business_concept_attrs)
+              |> Map.put("content_schema", content_schema)
+              |> Map.update("content", %{}, & &1)
+              |> Map.put("last_change_by", user.id)
+              |> Map.put("last_change_at", DateTime.utc_now())
+    
+            {:ok, update_attributes}
+        end
     end
   end
 
