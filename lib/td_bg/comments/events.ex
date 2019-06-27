@@ -4,20 +4,32 @@ defmodule TdBg.Comments.Events do
   """
 
   alias TdBg.Audit
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Comments.Comment
 
-  def comment_created(id, payload, user) do
+  def comment_created(%Comment{id: id} = comment, payload, user) do
+    publish_event_stream(comment)
+
     %{resource_id: id, resource_type: :comment, payload: payload}
     |> publish_event(:create_comment, user)
   end
 
-  def comment_updated(id, payload, user) do
+  def comment_updated(%Comment{id: id}, payload, user) do
     %{resource_id: id, resource_type: :comment, payload: payload}
     |> publish_event(:update_comment, user)
   end
 
-  def comment_deleted(id, user) do
+  def comment_deleted(%Comment{id: id}, user) do
     %{resource_id: id, resource_type: :comment, payload: %{}}
     |> publish_event(:delete_comment, user)
+  end
+
+  defp publish_event_stream(%Comment{
+         resource_type: "business_concept",
+         resource_id: business_concept_id
+       }) do
+    ConceptLoader.refresh(business_concept_id)
+    # TODO: Publish event to event stream, consume in td-audit
   end
 
   defp publish_event(event_params, event, %{id: user_id, user_name: user_name}) do

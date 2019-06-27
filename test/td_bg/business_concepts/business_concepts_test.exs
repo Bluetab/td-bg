@@ -3,16 +3,11 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  alias TdCache.TemplateCache
 
   def create_template(template) do
-    @df_cache.put_template(template)
+    TemplateCache.put(template)
     template
-  end
-
-  setup_all do
-    start_supervised(@df_cache)
-    :ok
   end
 
   describe "business_concepts" do

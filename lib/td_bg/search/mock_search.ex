@@ -11,29 +11,48 @@ defmodule TdBg.Search.MockSearch do
   def delete_search(_something) do
   end
 
+  def put_bulk_search(_something) do
+  end
+
   def put_bulk_search(_something, _something_else) do
   end
 
   def search("business_concept", %{
-        query: %{bool: %{
-          filter: %{bool: %{should: [%{bool: %{filter: [
-            %{term: %{domain_ids: domain_id}}, _, _
-          ]}}]}},
-          must: %{match_all: %{}}
-        }}
+        query: %{
+          bool: %{
+            filter: %{
+              bool: %{
+                should: [
+                  %{
+                    bool: %{
+                      filter: [
+                        %{term: %{domain_ids: domain_id}},
+                        _,
+                        _
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            must: %{match_all: %{}}
+          }
+        }
       }) do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))
     |> Enum.filter(fn bcv ->
-      domain_id == bcv
-      |> Map.get(:domain)
-      |> Map.get(:id)
+      domain_id ==
+        bcv
+        |> Map.get(:domain)
+        |> Map.get(:id)
     end)
     |> Enum.map(&%{_source: &1})
     |> Poison.encode!()
     |> Poison.decode!()
     |> search_results
   end
+
   def search("business_concept", %{
         query: %{bool: %{filter: [%{terms: %{"status" => status_list}}], must: %{match_all: %{}}}}
       }) do

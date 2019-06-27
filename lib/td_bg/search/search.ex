@@ -29,12 +29,13 @@ defmodule TdBg.Search do
 
   def put_bulk_search(:business_concept) do
     BusinessConcepts.list_all_business_concept_versions()
-    |> Enum.chunk_every(100)
-    |> Enum.map(&ESClientApi.bulk_index_content/1)
+    |> put_bulk_search(:business_concept)
   end
 
   def put_bulk_search(business_concepts, :business_concept) do
-    ESClientApi.bulk_update_content(business_concepts)
+    business_concepts
+    |> Enum.chunk_every(100)
+    |> Enum.map(&ESClientApi.bulk_index_content/1)
   end
 
   # CREATE AND UPDATE

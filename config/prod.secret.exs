@@ -54,4 +54,11 @@ config :td_bg, :audit_service,
   audit_port: "${API_AUDIT_PORT}",
   audit_domain: ""
 
-config :td_perms, redis_host: "${REDIS_HOST}"
+config :td_cache, redis_host: "${REDIS_HOST}"
+
+config :td_cache, :event_stream,
+  consumer_id: "${HOSTNAME}",
+  consumer_group: "bg",
+  streams: [
+    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader]
+  ]

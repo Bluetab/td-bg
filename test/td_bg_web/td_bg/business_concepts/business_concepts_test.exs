@@ -5,11 +5,10 @@ defmodule TdBg.BusinessConceptsTests do
   alias TdBg.BusinessConcepts
   alias TdBg.Repo
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias TdPerms.MockDynamicFormCache
+  alias TdCache.TemplateCache
 
   setup_all do
     start_supervised(MockTdAuthService)
-    start_supervised(MockDynamicFormCache)
     :ok
   end
 
@@ -66,26 +65,6 @@ defmodule TdBg.BusinessConceptsTests do
         BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
 
       assert bcv_current.id == bcv_draft.id
-    end
-
-    test "get_current_version_by_business_concept_id!/1 returns the business concept with several aliases" do
-      business_concept_version = insert(:business_concept_version)
-      business_concept_id = business_concept_version.business_concept.id
-
-      creation_attrs = %{business_concept_id: business_concept_id, name: "Alias 1"}
-
-      assert {:ok, %BusinessConceptAlias{} = _bc} =
-               BusinessConcepts.create_business_concept_alias(creation_attrs)
-
-      creation_attrs = %{business_concept_id: business_concept_id, name: "Alias 2"}
-
-      assert {:ok, %BusinessConceptAlias{} = _bc} =
-               BusinessConcepts.create_business_concept_alias(creation_attrs)
-
-      business_concept_version =
-        BusinessConcepts.get_current_version_by_business_concept_id!(business_concept_id)
-
-      assert length(business_concept_version.business_concept.aliases) == 2
     end
 
     test "create_business_concept/1 with valid data creates a business_concept" do
@@ -776,7 +755,7 @@ defmodule TdBg.BusinessConceptsTests do
       template_name = "search_fields_template"
       field_name = "multiple_1"
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: template_name,
         content: [
           %{

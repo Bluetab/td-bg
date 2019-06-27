@@ -74,7 +74,6 @@ config :td_bg, :audit_service,
   audit_port: "4007",
   audit_domain: ""
 
-config :td_perms, redis_host: "localhost"
+config :td_cache, redis_host: "localhost"
 
-config :td_bg, metrics_busines_concepts_on_startup: false
 config :td_bg, metrics_publication_frequency: 1000

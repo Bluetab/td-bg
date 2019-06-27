@@ -1,15 +1,10 @@
 defmodule TdBg.BusinessConceptDownloadTests do
   use TdBg.DataCase
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
-
-  setup_all do
-    start_supervised(@df_cache)
-    :ok
-  end
+  alias TdCache.TemplateCache
 
   def create_template(template) do
-    @df_cache.put_template(template)
+    TemplateCache.put(template)
     template
   end
 

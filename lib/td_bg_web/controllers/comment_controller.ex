@@ -56,7 +56,7 @@ defmodule TdBgWeb.CommentController do
       |> is_timestamp_informed?
 
     with {:ok, %Comment{} = comment} <- Comments.create_comment(creation_attrs) do
-      Events.comment_created(comment.id, comment_params, conn.assigns[:current_user])
+      Events.comment_created(comment, comment_params, conn.assigns[:current_user])
 
       conn
       |> put_status(:created)
@@ -105,7 +105,7 @@ defmodule TdBgWeb.CommentController do
     comment = Comments.get_comment!(id)
 
     with {:ok, %Comment{} = comment} <- Comments.update_comment(comment, comment_params) do
-      Events.comment_updated(id, comment_params, conn.assigns[:current_user])
+      Events.comment_updated(comment, comment_params, conn.assigns[:current_user])
       render(conn, "show.json", comment: comment)
     end
   end
@@ -126,7 +126,7 @@ defmodule TdBgWeb.CommentController do
     comment = Comments.get_comment!(id)
 
     with {:ok, %Comment{}} <- Comments.delete_comment(comment) do
-      Events.comment_deleted(id, conn.assigns[:current_user])
+      Events.comment_deleted(comment, conn.assigns[:current_user])
       send_resp(conn, :no_content, "")
     end
   end
