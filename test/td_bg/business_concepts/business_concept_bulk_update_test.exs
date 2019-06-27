@@ -1,6 +1,7 @@
 defmodule TdBg.BusinessConceptBulkUpdateTest do
   use TdBg.DataCase
 
+  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -69,8 +70,20 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "domain_id" => d3.id,
         "content" => update_content
       }
+      assert {:ok, bcv_ids} = BulkUpdate.update_all(user, bc_versions, params)
+      assert length(bcv_ids) == 2
+      
+      assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id == d3.id
+      assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content ==  %{
+        "Field1" => "First udpate",
+        "Field2" => "Second field"
+      }
 
-      IO.inspect(BulkUpdate.update_all(user, bc_versions, params))
+      assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id == d3.id
+      assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content ==  %{
+        "Field1" => "First udpate",
+        "Field2" => "Second field"
+      }
     end
   end
 end

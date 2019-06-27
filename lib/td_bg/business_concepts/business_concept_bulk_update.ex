@@ -20,9 +20,9 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
            update_attributes_from_params(user, params, Enum.at(business_concept_versions, 0)),
            {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
 
-      bcv_list
-      |> Enum.each(&refreshInfo(&1))
-
+        bcv_list |> Enum.each(&refreshInfo(&1))
+        
+        {:ok, bcv_list |> Enum.map(& &1.id)}
     else
       error ->
         error
