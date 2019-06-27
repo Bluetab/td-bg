@@ -1,9 +1,11 @@
 defmodule TdBgWeb.Taxonomy do
   @moduledoc false
 
-  alias Poison, as: JSON
-  alias TdBgWeb.Router.Helpers, as: Routes
   import TdBgWeb.Authentication, only: :functions
+
+  alias Jason, as: JSON
+  alias TdBgWeb.Router.Helpers, as: Routes
+
   @endpoint TdBgWeb.Endpoint
 
   def domain_create(token, domain_params) do

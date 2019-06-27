@@ -5,6 +5,7 @@
 ### Changed
 
 - [TD-1618] Cache improvements (using td-cache instead of td-perms)
+- [TD-1942] Use Jason instead of Posion for JSON encoding/decoding
 
 ## [3.0.0] 2019-06-25
 

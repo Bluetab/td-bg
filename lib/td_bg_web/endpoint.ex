@@ -23,7 +23,7 @@ defmodule TdBgWeb.Endpoint do
       :json
     ],
     pass: ["*/*"],
-    json_decoder: Poison
+    json_decoder: Jason
 
   plug Plug.MethodOverride
   plug Plug.Head

@@ -1,11 +1,11 @@
 defmodule TdBgWeb.BusinessConceptVersionController do
-  require Logger
   use TdBgWeb, :controller
   use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
+  alias Jason, as: JSON
   alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcept.Upload
@@ -22,6 +22,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdCache.TemplateCache
+
+  require Logger
 
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
@@ -122,7 +124,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     with true <- user.is_admin,
          {:ok, response} <- Upload.from_csv(business_concepts_upload, user) do
-      body = Poison.encode!(%{data: %{message: response}})
+      body = JSON.encode!(%{data: %{message: response}})
       send_resp(conn, 200, body)
     else
       false ->
@@ -136,7 +138,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
         conn
         |> put_status(:unprocessable_entity)
-        |> send_resp(422, Poison.encode!(error))
+        |> send_resp(422, JSON.encode!(error))
 
       error ->
         Logger.error("While uploading business concepts... #{inspect(error)}")
@@ -149,7 +151,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   rescue
     e in RuntimeError ->
       Logger.error("While uploading business concepts... #{e.message}")
-      send_resp(conn, :unprocessable_entity, Poison.encode!(%{error: e.message}))
+      send_resp(conn, :unprocessable_entity, JSON.encode!(%{error: e.message}))
   end
 
   swagger_path :create do

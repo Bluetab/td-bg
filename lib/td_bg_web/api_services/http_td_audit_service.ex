@@ -1,8 +1,9 @@
 defmodule TdBgWeb.ApiServices.HttpTdAuditService do
   @moduledoc false
 
+  alias Jason, as: JSON
+
   require Logger
-  alias Poison, as: JSON
 
   def post_audits(%{audit: _audit_params} = req) do
     headers = [{"Content-Type", "application/json"}]
