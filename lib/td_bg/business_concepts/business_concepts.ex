@@ -273,7 +273,11 @@ defmodule TdBg.BusinessConcepts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def update_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        attrs,
+        refreshFlag \\ true
+      ) do
     result =
       attrs
       |> attrs_keys_to_atoms
@@ -289,15 +293,20 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
-        business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        if refreshFlag, do: refreshInfo(updated_version)
         {:ok, updated_version}
 
       _ ->
         result
     end
+  end
+
+  # TODO: put in utils file, this func is used in business_concept_bulk_update too, REFACTOR: use this func in other places
+  defp refreshInfo(%BusinessConceptVersion{} = business_concept_version) do
+    business_concept_id = business_concept_version.business_concept_id
+    params = retrieve_last_bc_version_params(business_concept_id)
+    BusinessConceptLoader.refresh(business_concept_id)
+    index_business_concept_versions(business_concept_id, params)
   end
 
   def update_business_concept_version_status(
@@ -726,7 +735,8 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp validate_description(attrs) do
-    if Map.has_key?(attrs, :in_progress) && !attrs.in_progress do
+    if Map.has_key?(attrs, :description) && Map.has_key?(attrs, :in_progress) &&
+         !attrs.in_progress do
       do_validate_description(attrs)
     else
       attrs

@@ -2,6 +2,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   @moduledoc false
   require Logger
 
+  alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
@@ -16,16 +17,20 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
       |> BusinessConcepts.business_concept_versions_by_ids()
 
     with {:ok, update_attributes} <-
-           update_attributes_from_params(user, params, Enum.at(business_concept_versions, 0)) do
-      update(business_concept_versions, update_attributes)
+           update_attributes_from_params(user, params, Enum.at(business_concept_versions, 0)),
+           {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
+
+      bcv_list
+      |> Enum.each(&refreshInfo(&1))
+
     else
       error ->
         error
+      end
     end
-  end
 
   defp update(business_concept_versions, update_attributes) do
-    Logger.info("Updating business concepts...")
+    Logger.info("Updating business concept versions...")
 
     start_time = DateTime.utc_now()
 
@@ -37,7 +42,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     end_time = DateTime.utc_now()
 
     Logger.info(
-      "Business concepts updated. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+      "Business concept versions updated. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
     )
 
     transaction_result
@@ -45,22 +50,30 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
 
   defp update_in_transaction(business_concept_versions, update_attributes) do
     case update_data(business_concept_versions, update_attributes, []) do
-      {:ok, business_concept_ids} -> Enum.uniq(business_concept_ids)
-      {:error, err} -> Repo.rollback(err)
+      {:ok, bcv_list} -> 
+        bcv_list
+      {:error, err} ->
+        Repo.rollback(err)
     end
   end
 
   defp update_data([head | tail], update_attributes, acc) do
-    case BusinessConcepts.update_business_concept_version(head, update_attributes) do
-      {:ok, %{business_concept_id: concept_id}} ->
-        update_data(tail, update_attributes, [concept_id | acc])
-
+    case BusinessConcepts.update_business_concept_version(head, update_attributes, false) do
+      {:ok, bcv} ->
+        update_data(tail, update_attributes, [bcv | acc])
       error ->
         error
     end
   end
 
   defp update_data(_, _, acc), do: {:ok, acc}
+
+  defp refreshInfo(%BusinessConceptVersion{} = business_concept_version) do # TODO: put in utils file
+    business_concept_id = business_concept_version.business_concept_id
+    BusinessConceptLoader.refresh(business_concept_id)
+    params = BusinessConcepts.retrieve_last_bc_version_params(business_concept_id)
+    BusinessConcepts.index_business_concept_versions(business_concept_id, params)
+  end
 
   defp ids_from_business_concept_versions(business_concept_versions) do
     Enum.map(business_concept_versions, &Map.get(&1, "id"))
@@ -87,7 +100,6 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
           |> Map.put("business_concept", business_concept_attrs)
           |> Map.put("content_schema", content_schema)
           |> Map.update("content", %{}, & &1)
-          |> Map.update("related_to", [], & &1)
           |> Map.put("last_change_by", user.id)
           |> Map.put("last_change_at", DateTime.utc_now())
 
