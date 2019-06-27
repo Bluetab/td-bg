@@ -10,14 +10,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  alias TdCache.TemplateCache
 
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockTdDdService)
     start_supervised(MockPermissionResolver)
-    start_supervised(@df_cache)
     :ok
   end
 
@@ -284,7 +283,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         end)
 
       update_attrs = Map.put(template, :content, updated_content)
-      @df_cache.put_template(update_attrs)
+      TemplateCache.put(update_attrs)
 
       conn =
         post(
@@ -460,12 +459,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> Map.put(:scope, "test")
       |> Map.put(:content, [])
 
-    @df_cache.put_template(attrs)
+    TemplateCache.put(attrs)
     :ok
   end
 
   def create_template(template) do
-    @df_cache.put_template(template)
+    TemplateCache.put(template)
     template
   end
 end

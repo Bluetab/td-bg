@@ -200,9 +200,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
             last_change_by(:integer, "Business Concept Version last change by", required: true)
             last_change_at(:string, "Business Concept Version last change at", required: true)
             domain(Schema.ref(:DomainRef))
-            parent_id([:integer, :null], "Parent Business Concept ID", required: true)
-            parent(:object, "Parent Business Concept", required: false)
-            children(:array, "Children Business Concepts", required: false)
             status(:string, "Business Concept Version status", required: true)
             current(:boolean, "Is this the current version?", required: true)
             version(:integer, "Business Concept Version version number", required: true)
@@ -229,7 +226,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   content(:object, "Business Concept Version content")
                   name(:string, "Business Concept Version name")
                   description(:object, "Business Concept Version description")
-                  parent_id(:object, "Parent Business Concept ID")
                 end
               end
             )
@@ -271,7 +267,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   name(:string, "Business Concept name", required: true)
                   description(:object, "Business Concept description", required: true)
                   domain_id(:integer, "Business Concept Domain ID", required: true)
-                  parent_id(:integer, "Parent Business Concept ID", required: false)
                 end
               end
             )

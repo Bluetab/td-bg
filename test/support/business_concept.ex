@@ -3,9 +3,8 @@ defmodule TdBgWeb.BusinessConcept do
 
   alias Poison, as: JSON
   alias TdBgWeb.Router.Helpers, as: Routes
+  alias TdCache.TemplateCache
   import TdBgWeb.Authentication, only: :functions
-
-  @df_cache Application.get_env(:td_bg, :df_cache)
 
   @endpoint TdBgWeb.Endpoint
   @headers {"Content-type", "application/json"}
@@ -35,7 +34,7 @@ defmodule TdBgWeb.BusinessConcept do
       |> Map.put(:scope, "test")
       |> Map.put(:content, definition)
 
-    @df_cache.put_template(attrs)
+    TemplateCache.put(attrs)
 
     {:ok, nil, attrs}
   end

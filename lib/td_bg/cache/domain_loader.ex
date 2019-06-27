@@ -1,4 +1,4 @@
-defmodule TdBg.DomainLoader do
+defmodule TdBg.Cache.DomainLoader do
   @moduledoc """
   GenServer to load taxonomy hierarchy into Redis
   """
@@ -6,28 +6,35 @@ defmodule TdBg.DomainLoader do
   use GenServer
 
   alias TdBg.Taxonomies
-  alias TdPerms.TaxonomyCache
+  alias TdCache.TaxonomyCache
 
   require Logger
 
-  @cache_domains_on_startup Application.get_env(:td_bg, :cache_domains_on_startup)
-
   def start_link(name \\ nil) do
-    GenServer.start_link(__MODULE__, nil, [name: name])
+    GenServer.start_link(__MODULE__, nil, name: name)
   end
 
   def refresh(domain_id) do
-    GenServer.call(TdBg.DomainLoader, {:refresh, domain_id})
+    GenServer.call(__MODULE__, {:refresh, domain_id})
   end
 
   def delete(domain_id) do
-    GenServer.call(TdBg.DomainLoader, {:delete, domain_id})
+    GenServer.call(__MODULE__, {:delete, domain_id})
   end
 
   @impl true
   def init(state) do
-    if @cache_domains_on_startup, do: schedule_work(:load_cache, 0)
+    unless Application.get_env(:td_bg, :env) == :test do
+      schedule_work(:load_cache, 0)
+    end
+
     {:ok, state}
+  end
+
+  @impl true
+  def handle_call({:refresh, :all}, _from, state) do
+    load_all_domains()
+    {:reply, :ok, state}
   end
 
   @impl true
@@ -55,6 +62,7 @@ defmodule TdBg.DomainLoader do
 
   defp load_domain(domain_id) do
     domain = Taxonomies.get_domain!(domain_id)
+
     [domain]
     |> load_domain_data()
   end
@@ -65,11 +73,12 @@ defmodule TdBg.DomainLoader do
   end
 
   def load_domain_data(domains) do
-    results = domains
-    |> Enum.map(&(Map.take(&1, [:id, :name])))
-    |> Enum.map(&(Map.put(&1, :parent_ids, load_parent_ids(&1.id))))
-    |> Enum.map(&(TaxonomyCache.put_domain(&1)))
-    |> Enum.map(fn {res, _} -> res end)
+    results =
+      domains
+      |> Enum.map(&Map.take(&1, [:id, :name]))
+      |> Enum.map(&Map.put(&1, :parent_ids, load_parent_ids(&1.id)))
+      |> Enum.map(&TaxonomyCache.put_domain(&1))
+      |> Enum.map(fn {res, _} -> res end)
 
     if Enum.any?(results, &(&1 != :ok)) do
       Logger.warn("Cache loading failed")
@@ -81,7 +90,6 @@ defmodule TdBg.DomainLoader do
   defp load_parent_ids(domain_id) do
     domain_id
     |> Taxonomies.get_ancestors_for_domain_id(false)
-    |> Enum.map(&(&1.id))
+    |> Enum.map(& &1.id)
   end
-
 end

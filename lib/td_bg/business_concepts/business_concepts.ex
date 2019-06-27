@@ -6,13 +6,14 @@ defmodule TdBg.BusinessConcepts do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   alias Ecto.Multi
-  alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
+  alias TdCache.ConceptCache
+  alias TdCache.EventStream.Publisher
   alias TdDfLib.Format
   alias TdDfLib.Validation
-  alias TdPerms.BusinessConceptCache
   alias ValidationError
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
@@ -117,6 +118,25 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
+  def get_all_versions_by_business_concept_ids([]), do: []
+
+  def get_all_versions_by_business_concept_ids(business_concept_ids) do
+    BusinessConceptVersion
+    |> where([v], v.business_concept_id in ^business_concept_ids)
+    |> preload(:business_concept)
+    |> Repo.all()
+  end
+
+  def get_active_ids do
+    Repo.all(
+      from(v in "business_concept_versions",
+        where: v.current,
+        where: v.status != "deprecated",
+        select: v.business_concept_id
+      )
+    )
+  end
+
   @doc """
   Gets a single business_concept.
 
@@ -136,7 +156,7 @@ defmodule TdBg.BusinessConcepts do
     |> where([v], v.business_concept_id == ^business_concept_id)
     |> order_by(desc: :version)
     |> limit(1)
-    |> preload(business_concept: [:aliases, :domain])
+    |> preload(business_concept: :domain)
     |> Repo.one!()
   end
 
@@ -146,7 +166,7 @@ defmodule TdBg.BusinessConcepts do
     |> where([v], v.current == ^current)
     |> order_by(desc: :version)
     |> limit(1)
-    |> preload(business_concept: [:aliases, :domain])
+    |> preload(business_concept: :domain)
     |> Repo.one!()
   end
 
@@ -199,9 +219,7 @@ defmodule TdBg.BusinessConcepts do
       {:ok, business_concept_version} ->
         new_version = get_business_concept_version!(business_concept_version.id)
         business_concept_id = new_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         {:ok, new_version}
 
       _ ->
@@ -251,9 +269,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, %{current: new_version}} ->
         business_concept_id = new_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -290,9 +306,7 @@ defmodule TdBg.BusinessConcepts do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
         business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         {:ok, updated_version}
 
       _ ->
@@ -312,9 +326,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, updated_version} ->
         business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -345,9 +357,7 @@ defmodule TdBg.BusinessConcepts do
 
     case result do
       {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -355,40 +365,14 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  def index_business_concept_versions(business_concept_id, params) do
-    business_concept_id
-    |> list_business_concept_versions(nil)
-    |> Enum.map(fn bv ->
-      case params do
-        params when params == %{} -> bv
-        params -> Map.merge(bv, params)
-      end
-    end)
-    |> Enum.each(&@search_service.put_search/1)
-  end
-
   def get_concept_counts(business_concept_id) do
-    {:ok, values} =
-      BusinessConceptCache.get_field_values(
-        business_concept_id,
-        [:rule_count, :link_count]
-      )
+    case ConceptCache.get(business_concept_id) do
+      {:ok, %{rule_count: rule_count, link_count: link_count}} ->
+        %{rule_count: rule_count, link_count: link_count}
 
-    values
-    |> Enum.map(fn {key, value} ->
-      new_value =
-        case value do
-          nil -> 0
-          v -> max(0, String.to_integer(v))
-        end
-
-      {key, new_value}
-    end)
-    |> Map.new()
-  end
-
-  def retrieve_last_bc_version_params(business_concept_id) do
-    get_concept_counts(business_concept_id)
+      _ ->
+        %{rule_count: 0, link_count: 0}
+    end
   end
 
   def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
@@ -400,9 +384,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, updated_version} ->
         business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -596,7 +578,16 @@ defmodule TdBg.BusinessConcepts do
            business_concept: %BusinessConcept{},
            business_concept_version: %BusinessConceptVersion{} = version
          }} ->
-          BusinessConceptLoader.delete(business_concept_id)
+          Publisher.publish(
+            %{
+              event: "delete_concept",
+              resource_type: "business_concept",
+              resource_id: business_concept_id
+            },
+            "business_concept:events"
+          )
+
+          # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
           @search_service.delete_search(business_concept_version)
           {:ok, version}
       end

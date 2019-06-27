@@ -20,6 +20,17 @@ defmodule TdBgWeb.FeatureCase do
 
     unless tags[:async] do
       Sandbox.mode(TdBg.Repo, {:shared, self()})
+      parent = self()
+
+      case Process.whereis(TdBg.Cache.ConceptLoader) do
+        nil -> nil
+        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
+      end
+
+      case Process.whereis(TdBg.Cache.DomainLoader) do
+        nil -> nil
+        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
+      end
     end
 
     :ok

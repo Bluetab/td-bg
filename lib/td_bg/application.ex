@@ -20,11 +20,12 @@ defmodule TdBg.Application do
       supervisor(TdBg.Repo, []),
       # Start the endpoint when the application starts
       supervisor(TdBgWeb.Endpoint, []),
-      # Start your own worker by calling:
-      # TdBg.Worker.start_link(arg1, arg2, arg3)
-      # worker(TdBg.Worker, [arg1, arg2, arg3]),
-      worker(TdBg.DomainLoader, [TdBg.DomainLoader]),
-      worker(TdBg.BusinessConceptLoader, [TdBg.BusinessConceptLoader]),
+      # Worker for background indexing
+      worker(TdBg.Search.IndexWorker, [TdBg.Search.IndexWorker]),
+      # Cache workers
+      worker(TdBg.Cache.ConceptLoader, []),
+      worker(TdBg.Cache.DomainLoader, [TdBg.Cache.DomainLoader]),
+      # Metrics worker
       %{
         id: TdBg.CustomSupervisor,
         start:

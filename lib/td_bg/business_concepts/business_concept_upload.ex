@@ -1,23 +1,21 @@
 defmodule TdBg.BusinessConcept.Upload do
-  require Logger
-
-  @df_cache Application.get_env(:td_bg, :df_cache)
-
   @moduledoc """
-    Helper module to upload business concepts in csv format.
-
+  Helper module to upload business concepts in csv format.
   """
 
   @required_header ["template", "domain", "name", "description"]
 
   alias Codepagex
   alias NimbleCSV
-  alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.Events
+  alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies
+  alias TdCache.TemplateCache
+
+  require Logger
 
   NimbleCSV.define(ParserCSVUpload, separator: ";")
 
@@ -29,8 +27,7 @@ defmodule TdBg.BusinessConcept.Upload do
     case create_concepts(path, user) do
       {:ok, concept_ids} ->
         Events.business_concepts_created(concept_ids)
-        index_concepts(concept_ids)
-        cache_concepts(concept_ids)
+        ConceptLoader.refresh(concept_ids)
         {:ok, concept_ids}
 
       error ->
@@ -54,37 +51,6 @@ defmodule TdBg.BusinessConcept.Upload do
     )
 
     transaction_result
-  end
-
-  defp index_concepts(concept_ids) do
-    Logger.info("Indexing business concepts...")
-    start_time = DateTime.utc_now()
-
-    Enum.each(concept_ids, &index_concept(&1))
-
-    end_time = DateTime.utc_now()
-
-    Logger.info(
-      "Business concepts indexed. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
-    )
-  end
-
-  defp index_concept(concept_id) do
-    params = BusinessConcepts.retrieve_last_bc_version_params(concept_id)
-    BusinessConcepts.index_business_concept_versions(concept_id, params)
-  end
-
-  defp cache_concepts(concept_ids) do
-    Logger.info("Caching business concepts...")
-    start_time = DateTime.utc_now()
-
-    Enum.each(concept_ids, &BusinessConceptLoader.refresh(&1))
-
-    end_time = DateTime.utc_now()
-
-    Logger.info(
-      "Business concepts cached. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
-    )
   end
 
   defp upload_in_transaction(path, user) do
@@ -208,7 +174,7 @@ defmodule TdBg.BusinessConcept.Upload do
     do: {:error, %{error: :missing_value, field: "template"}}
 
   defp validate_template(%{"template" => template}) do
-    case @df_cache.get_template_by_name(template) do
+    case TemplateCache.get_by_name!(template) do
       nil ->
         {:error, %{error: :invalid_template, template: template}}
 

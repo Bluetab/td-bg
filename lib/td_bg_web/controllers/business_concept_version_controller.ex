@@ -21,8 +21,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.DataStructureView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
+  alias TdCache.TemplateCache
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
   action_fallback(TdBgWeb.FallbackController)
@@ -175,7 +175,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     validate_required_bc_fields(business_concept_params)
 
     concept_type = Map.get(business_concept_params, "type")
-    template = @df_cache.get_template_by_name(concept_type)
+    template = TemplateCache.get_by_name!(concept_type)
     content_schema = Map.get(template, :content)
     concept_name = Map.get(business_concept_params, "name")
 
@@ -909,12 +909,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
-
   defp get_template(%BusinessConceptVersion{} = version) do
     version
     |> Map.get(:business_concept)
     |> Map.get(:type)
-    |> @df_cache.get_template_by_name
+    |> TemplateCache.get_by_name!()
   end
 end

@@ -6,7 +6,7 @@ defmodule TdBg.Taxonomies.Domain do
   alias TdBg.Searchable
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdPerms.TaxonomyCache
+  alias TdCache.TaxonomyCache
 
   @behaviour Searchable
   @errors ErrorConstantsSupport.taxonomy_support_errors()

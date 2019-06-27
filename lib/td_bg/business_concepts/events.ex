@@ -9,7 +9,7 @@ defmodule TdBg.BusinessConcepts.Events do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
-  alias TdPerms.UserCache
+  alias TdCache.UserCache
 
   def business_concepts_created(concept_ids) do
     audit_fields = [
@@ -39,6 +39,8 @@ defmodule TdBg.BusinessConcepts.Events do
   def business_concept_created(%BusinessConceptVersion{business_concept_id: business_concept_id}) do
     business_concepts_created([business_concept_id])
   end
+
+  # TODO: TD-1618 publish events in event stream
 
   def business_concept_created({id, %{last_change_at: ts, last_change_by: user_id} = payload}) do
     publish_event(payload, :create_concept_draft, id, user_id, ts)
@@ -110,8 +112,8 @@ defmodule TdBg.BusinessConcepts.Events do
 
   defp publish_event(payload, event_type, resource_id, user_id, ts) do
     user_name =
-      case UserCache.get_user(user_id) do
-        %{full_name: name} -> name
+      case UserCache.get(user_id) do
+        {:ok, %{full_name: name}} -> name
         _ -> ""
       end
 
