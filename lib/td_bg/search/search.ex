@@ -1,11 +1,12 @@
 defmodule TdBg.Search do
-  require Logger
-
+  alias Jason, as: JSON
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ESClientApi
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
+
+  require Logger
 
   @moduledoc """
   Search Engine calls
@@ -46,7 +47,7 @@ defmodule TdBg.Search do
       ESClientApi.index_content(
         domain.__struct__.index_name(),
         domain.id,
-        search_fields |> Poison.encode!()
+        search_fields |> JSON.encode!()
       )
 
     case response do
@@ -65,7 +66,7 @@ defmodule TdBg.Search do
       ESClientApi.index_content(
         concept.__struct__.index_name(),
         concept.id,
-        search_fields |> Poison.encode!()
+        search_fields |> JSON.encode!()
       )
 
     case response do

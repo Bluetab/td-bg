@@ -9,7 +9,7 @@ defmodule TdBg.CommentsTest do
   import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
 
-  alias Poison, as: JSON
+  alias Jason, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Utils.CollectionUtils
