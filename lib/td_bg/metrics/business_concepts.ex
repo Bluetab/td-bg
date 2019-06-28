@@ -112,7 +112,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
       end)
     )
     |> Enum.map(&Map.put(&1, :has_link, Map.get(&1, :link_count)))
-    |> Enum.map(&{&1, Map.get(templates_by_name, &1.template.name)})
+    |> Enum.map(&{&1, Map.get(templates_by_name, Map.get(&1.template, :name))})
     |> Enum.filter(fn {_concept, template} -> !is_nil(template) end)
     |> Enum.map(fn {concept, template} -> include_template_dimensions(concept, template) end)
     |> Enum.reduce([], fn elem, acc -> [Map.put(elem, :count, 1) | acc] end)
