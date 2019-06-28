@@ -164,7 +164,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         template -> template
       end
 
-    domain = Taxonomies.get_domain(domain_id)
+    domain = Taxonomies.get_raw_domain(domain_id)
     domain_ids = Taxonomies.get_parent_ids(domain_id)
 
     domain_parents =
