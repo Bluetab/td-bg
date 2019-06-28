@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [TD-1946] Fixed error indexing concepts pertaining to soft-deleted domains
+
 ### Changed
 
 - [TD-1618] Cache improvements (using td-cache instead of td-perms)
