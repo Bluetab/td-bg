@@ -1,12 +1,13 @@
 defmodule TdBg.Factory do
   @moduledoc false
+
   use ExMachina.Ecto, repo: TdBg.Repo
+
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptAlias
   alias TdBg.BusinessConcepts.BusinessConceptVersion
 
   def user_factory do
-    %TdBg.Accounts.User {
+    %TdBg.Accounts.User{
       id: 0,
       user_name: "bufoncillo",
       is_admin: false,
@@ -15,14 +16,14 @@ defmodule TdBg.Factory do
   end
 
   def domain_factory do
-    %TdBg.Taxonomies.Domain {
+    %TdBg.Taxonomies.Domain{
       name: "My domain",
       description: "My domain description"
     }
   end
 
   def child_domain_factory do
-    %TdBg.Taxonomies.Domain {
+    %TdBg.Taxonomies.Domain{
       name: "My child domain",
       description: "My child domain description",
       parent: build(:domain)
@@ -30,18 +31,16 @@ defmodule TdBg.Factory do
   end
 
   def business_concept_factory do
-    %BusinessConcept {
+    %BusinessConcept{
       domain: build(:domain),
-      parent_id: nil,
       type: "some_type",
       last_change_by: 1,
-      last_change_at: DateTime.utc_now(),
-      aliases: []
+      last_change_at: DateTime.utc_now()
     }
   end
 
   def business_concept_version_factory do
-    %BusinessConceptVersion {
+    %BusinessConceptVersion{
       business_concept: build(:business_concept),
       content: %{},
       related_to: [],
@@ -49,17 +48,9 @@ defmodule TdBg.Factory do
       description: %{"document" => "My business term description"},
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
-      status: BusinessConcept.status.draft,
+      status: BusinessConcept.status().draft,
       version: 1,
       in_progress: false
     }
   end
-
-  def business_concept_alias_factory do
-    %BusinessConceptAlias {
-      business_concept_id: 0,
-      name: "my great alias",
-    }
-  end
-
 end

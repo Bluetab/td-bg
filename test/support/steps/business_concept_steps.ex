@@ -1,10 +1,10 @@
 defmodule TdBg.BusinessConceptSteps do
   @moduledoc false
+
   use Cabbage.Feature
   use ExUnit.CaseTemplate
+
   import TdBgWeb.BusinessConcept
-  import TdBgWeb.ResponseCode
-  import TdBgWeb.Authentication, only: :functions
 
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
          %{business_concept_type: business_concept_type},
@@ -601,126 +601,6 @@ defmodule TdBg.BusinessConceptSteps do
     {:ok, Map.merge(state, %{business_concept_versions: business_concept_versions})}
   end
 
-  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
-  defwhen ~r/^"(?<user_name>[^"]+)" tries to create a new alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-          %{
-            user_name: user_name,
-            business_concept_alias: business_concept_alias,
-            business_concept_name: business_concept_name,
-            business_concept_type: business_concept_type
-          },
-          %{token_admin: token_admin} = state do
-    business_concept_version =
-      business_concept_version_by_name_and_type(
-        token_admin,
-        business_concept_name,
-        business_concept_type
-      )
-
-    business_concept_id = business_concept_version["business_concept_id"]
-    token = get_user_token(user_name)
-    creation_attrs = %{name: business_concept_alias}
-
-    {_, status_code, _} =
-      business_concept_alias_create(token, business_concept_id, creation_attrs)
-
-    {:ok, Map.merge(state, %{status_code: status_code})}
-  end
-
-  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
-  defand ~r/^if (?<result>[^"]+) is "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-         %{
-           result: result,
-           status_code: status_code,
-           user_name: user_name,
-           business_concept_name: business_concept_name,
-           business_concept_type: business_concept_type,
-           table: fields
-         },
-         %{token_admin: token_admin} = _state do
-    if result == status_code do
-      assert_visible_aliases(
-        token_admin,
-        business_concept_name,
-        business_concept_type,
-        user_name,
-        fields
-      )
-    end
-  end
-
-  defand ~r/^business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" has an alias "(?<business_concept_alias>[^"]+)"$/,
-         %{
-           business_concept_name: business_concept_name,
-           business_concept_type: business_concept_type,
-           business_concept_alias: business_concept_alias
-         },
-         %{token_admin: token_admin} = _state do
-    business_concept =
-      business_concept_version_by_name_and_type(
-        token_admin,
-        business_concept_name,
-        business_concept_type
-      )
-
-    business_concept_id = business_concept["business_concept_id"]
-    creation_attrs = %{name: business_concept_alias}
-
-    {_, status_code, _} =
-      business_concept_alias_create(token_admin, business_concept_id, creation_attrs)
-
-    assert rc_created() == to_response_code(status_code)
-  end
-
-  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
-  defwhen ~r/^(?<user_name>[^"]+) tries to delete alias "(?<business_concept_alias>[^"]+)" for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-          %{
-            user_name: user_name,
-            business_concept_alias: business_concept_alias,
-            business_concept_name: business_concept_name,
-            business_concept_type: business_concept_type
-          },
-          %{token_admin: token_admin} = state do
-    business_concept =
-      business_concept_version_by_name_and_type(
-        token_admin,
-        business_concept_name,
-        business_concept_type
-      )
-
-    business_concept_id = business_concept["business_concept_id"]
-
-    business_concept_alias =
-      business_concept_alias_by_name(token_admin, business_concept_id, business_concept_alias)
-
-    assert business_concept_alias
-    token = get_user_token(user_name)
-    {_, status_code} = business_concept_alias_delete(token, business_concept_alias["id"])
-    {:ok, Map.merge(state, %{status_code: status_code})}
-  end
-
-  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
-  defand ~r/^if (?<result>[^"]+) is not "(?<status_code>[^"]+)", user (?<user_name>[^"]+) is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-         %{
-           result: result,
-           status_code: status_code,
-           user_name: user_name,
-           business_concept_name: business_concept_name,
-           business_concept_type: business_concept_type,
-           table: fields
-         },
-         %{token_admin: token_admin} = _state do
-    if result != status_code do
-      assert_visible_aliases(
-        token_admin,
-        business_concept_name,
-        business_concept_type,
-        user_name,
-        fields
-      )
-    end
-  end
-
   defand ~r/^business concept "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)" and version "(?<version>[^"]+)" does not exist$/,
          %{
            business_concept_name: business_concept_name,
@@ -739,19 +619,6 @@ defmodule TdBg.BusinessConceptSteps do
       )
 
     assert !business_concept_tmp
-  end
-
-  # credo:disable-for-next-line Credo.Check.Readability.MaxLineLength
-  defand ~r/^user "(?<user_name>[^"]+)" is able to see following list of aliases for business concept with name "(?<business_concept_name>[^"]+)" of type "(?<business_concept_type>[^"]+)"$/,
-         %{
-           user_name: user_name,
-           business_concept_name: business_concept_name,
-           business_concept_type: business_concept_type,
-           table: fields
-         },
-         _state do
-    token = get_user_token(user_name)
-    assert_visible_aliases(token, business_concept_name, business_concept_type, user_name, fields)
   end
 
   defand ~r/^some existing Business Concepts in the Domain "(?<domain_name>[^"]+)" with following data:$/,
@@ -938,44 +805,6 @@ defmodule TdBg.BusinessConceptSteps do
     |> add_schema_field("cardinality", field_data."Cardinality")
     |> add_schema_field("default", field_data."Default Value")
     |> add_schema_field("group", field_data."Group")
-  end
-
-  def assert_visible_aliases(
-        token_admin,
-        business_concept_name,
-        business_concept_type,
-        user_name,
-        fields
-      ) do
-    business_concept_version =
-      business_concept_version_by_name_and_type(
-        token_admin,
-        business_concept_name,
-        business_concept_type
-      )
-
-    business_concept_id = business_concept_version["business_concept_id"]
-    token = get_user_token(user_name)
-
-    {_, status_code, %{"data" => business_concept_aliases}} =
-      business_concept_alias_list(token, business_concept_id)
-
-    assert rc_ok() == to_response_code(status_code)
-
-    field_atoms = [:name]
-
-    cooked_aliases =
-      business_concept_aliases
-      |> Enum.reduce([], &[map_keys_to_atoms(&1) | &2])
-      |> Enum.map(&Map.take(&1, field_atoms))
-      |> Enum.sort()
-
-    cooked_fields =
-      fields
-      |> Enum.map(&Map.take(&1, field_atoms))
-      |> Enum.sort()
-
-    assert cooked_aliases == cooked_fields
   end
 
   def map_keys_to_atoms(version),

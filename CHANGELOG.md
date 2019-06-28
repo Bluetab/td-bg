@@ -11,6 +11,10 @@
 - [TD-1618] Cache improvements (using td-cache instead of td-perms)
 - [TD-1942] Use Jason instead of Posion for JSON encoding/decoding
 
+### Removed
+
+- [TD-1917] Remove unused functionality for business concept parent/children and aliases
+
 ## [3.0.0] 2019-06-25
 
 ### Fixed

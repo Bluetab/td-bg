@@ -5,6 +5,7 @@ defmodule TdBg.BusinessConcepts do
 
   import Ecto.Query, warn: false
   import Ecto.Changeset
+
   alias Ecto.Multi
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -32,37 +33,25 @@ defmodule TdBg.BusinessConcepts do
 
     count =
       BusinessConcept
-      |> join(:left, [c], _ in assoc(c, :aliases))
-      |> join(:left, [c, a], _ in assoc(c, :versions))
-      |> where([c, a, v], c.type == ^type and v.status not in ^status)
+      |> join(:left, [c], _ in assoc(c, :versions))
+      |> where([c, v], c.type == ^type and v.status not in ^status)
       |> include_name_where(name, exclude_concept_id)
-      |> select([c, a, v], count(c.id))
+      |> select([c, v], count(c.id))
       |> Repo.one!()
 
     if count == 0, do: {:name_available}, else: {:name_not_available}
   end
 
   defp include_name_where(query, name, nil) do
-    downcase_name = String.downcase(name)
-
     query
-    |> where(
-      [_, a, v],
-      fragment("lower(?)", v.name) == ^downcase_name or
-        fragment("lower(?)", a.name) == ^downcase_name
-    )
+    |> where([_, v], fragment("lower(?)", v.name) == ^String.downcase(name))
   end
 
   defp include_name_where(query, name, exclude_concept_id) do
-    downcase_name = String.downcase(name)
-
     query
     |> where(
-      [c, a, v],
-      (c.id != ^exclude_concept_id and
-         (fragment("lower(?)", v.name) == ^downcase_name or
-            fragment("lower(?)", a.name) == ^downcase_name)) or
-        (c.id == ^exclude_concept_id and fragment("lower(?)", a.name) == ^downcase_name)
+      [c, v],
+      c.id != ^exclude_concept_id and fragment("lower(?)", v.name) == ^String.downcase(name)
     )
   end
 
@@ -191,7 +180,7 @@ defmodule TdBg.BusinessConcepts do
       BusinessConceptVersion
       |> where([v], v.business_concept_id == ^business_concept_id)
       |> where([v], v.status == ^published)
-      |> preload(business_concept: [:aliases, :domain])
+      |> preload(business_concept: [:domain])
       |> Repo.one()
 
     case version do
@@ -563,18 +552,12 @@ defmodule TdBg.BusinessConcepts do
       business_concept_id = business_concept.id
 
       Multi.new()
-      |> Multi.update_all(
-        :detatch_children,
-        from(child in BusinessConcept, where: child.parent_id == ^business_concept_id),
-        set: [parent_id: nil]
-      )
       |> Multi.delete(:business_concept_version, business_concept_version)
       |> Multi.delete(:business_concept, business_concept)
       |> Repo.transaction()
       |> case do
         {:ok,
          %{
-           detatch_children: {_, nil},
            business_concept: %BusinessConcept{},
            business_concept_version: %BusinessConceptVersion{} = version
          }} ->
@@ -770,88 +753,6 @@ defmodule TdBg.BusinessConcepts do
     else
       {:error, %{current: changeset}}
     end
-  end
-
-  alias TdBg.BusinessConcepts.BusinessConceptAlias
-
-  @doc """
-  Returns the list of business_concept_aliases
-  of a business_concept
-
-  ## Examples
-
-      iex> list_business_concept_aliases(123)
-      [%BusinessConceptAlias{}, ...]
-
-  """
-  def list_business_concept_aliases(business_concept_id) do
-    BusinessConceptAlias
-    |> where([v], v.business_concept_id == ^business_concept_id)
-    |> order_by(desc: :business_concept_id)
-    |> Repo.all()
-  end
-
-  @doc """
-  Gets a single business_concept_alias.
-
-  Raises `Ecto.NoResultsError` if the Business concept alias does not exist.
-
-  ## Examples
-
-      iex> get_business_concept_alias!(123)
-      %BusinessConceptAlias{}
-
-      iex> get_business_concept_alias!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_business_concept_alias!(id), do: Repo.get!(BusinessConceptAlias, id)
-
-  @doc """
-  Creates a business_concept_alias.
-
-  ## Examples
-
-      iex> create_business_concept_alias(%{field: value})
-      {:ok, %BusinessConceptAlias{}}
-
-      iex> create_business_concept_alias(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_business_concept_alias(attrs \\ %{}) do
-    %BusinessConceptAlias{}
-    |> BusinessConceptAlias.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Deletes a BusinessConceptAlias.
-
-  ## Examples
-
-      iex> delete_business_concept_alias(business_concept_alias)
-      {:ok, %BusinessConceptAlias{}}
-
-      iex> delete_business_concept_alias(business_concept_alias)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
-    Repo.delete(business_concept_alias)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking business_concept_alias changes.
-
-  ## Examples
-
-      iex> change_business_concept_alias(business_concept_alias)
-      %Ecto.Changeset{source: %BusinessConceptAlias{}}
-
-  """
-  def change_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
-    BusinessConceptAlias.changeset(business_concept_alias, %{})
   end
 
   def get_business_concept_by_name(name) do

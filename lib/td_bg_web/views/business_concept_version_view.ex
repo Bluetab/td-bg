@@ -112,7 +112,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     %{
       id: business_concept_version.id,
       business_concept_id: business_concept_version.business_concept.id,
-      parent_id: business_concept_version.business_concept.parent_id,
       type: business_concept_version.business_concept.type,
       content: business_concept_version.content,
       completeness: Map.get(business_concept_version, :completeness),
@@ -136,7 +135,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       business_concept_version.mod_comments,
       business_concept_version.version
     )
-    |> add_aliases(business_concept_version.business_concept)
     |> add_template(assigns)
   end
 
@@ -179,15 +177,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   defp add_mod_comments(concept, mod_comments, _version) do
     Map.put(concept, :mod_comments, mod_comments)
-  end
-
-  defp add_aliases(concept, business_concept) do
-    if Ecto.assoc_loaded?(business_concept.aliases) do
-      alias_array = Enum.map(business_concept.aliases, &%{id: &1.id, name: &1.name})
-      Map.put(concept, :aliases, alias_array)
-    else
-      concept
-    end
   end
 
   def add_template(concept, assigns) do

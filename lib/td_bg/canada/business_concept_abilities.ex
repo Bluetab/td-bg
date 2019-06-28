@@ -1,5 +1,6 @@
 defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
+
   alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -23,8 +24,8 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%User{} = user, :create_ingest, %Domain{
-    id: domain_id
-    }) do
+        id: domain_id
+      }) do
     Permissions.authorized?(user, :create_ingest, domain_id)
   end
 
@@ -42,19 +43,19 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
         :get_data_structures,
         %BusinessConceptVersion{} = business_concept_version
       ) do
-      authorized?(
-        user,
-        :update_business_concept,
-        business_concept_version
-      )
+    authorized?(
+      user,
+      :update_business_concept,
+      business_concept_version
+    )
   end
 
   def can?(%User{} = user, :get_data_fields, %BusinessConceptVersion{} = business_concept_version) do
-      authorized?(
-        user,
-        :update_business_concept,
-        business_concept_version
-      )
+    authorized?(
+      user,
+      :update_business_concept,
+      business_concept_version
+    )
   end
 
   def can?(
@@ -157,35 +158,30 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     authorized?(user, permission, business_concept_version)
   end
 
-  def can?(%User{} = user, :manage_alias, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_updatable?(business_concept_version) &&
-      authorized?(
-        user,
-        :manage_business_concept_alias,
-        business_concept_version
-      )
-  end
-
   def can?(%User{}, _action, _business_concept_version), do: false
 
   defp authorized?(%User{is_admin: true}, _permission, _), do: true
 
-  defp authorized?(%User{} = user, permission, %BusinessConceptVersion{content: content, business_concept: business_concept}) do
+  defp authorized?(%User{} = user, permission, %BusinessConceptVersion{
+         content: content,
+         business_concept: business_concept
+       }) do
     domain_id = business_concept.domain_id
+
     case is_confidential?(content) do
       true ->
         Permissions.authorized?(user, :manage_confidential_business_concepts, domain_id) &&
-        Permissions.authorized?(user, permission, domain_id)
+          Permissions.authorized?(user, permission, domain_id)
+
       false ->
         Permissions.authorized?(user, permission, domain_id)
     end
   end
 
   defp is_confidential?(content) do
-     case Map.get(content, "_confidential", "No") do
-       "Si" -> true
-       _ -> false
-     end
+    case Map.get(content, "_confidential", "No") do
+      "Si" -> true
+      _ -> false
+    end
   end
-
 end

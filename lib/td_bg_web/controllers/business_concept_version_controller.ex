@@ -13,7 +13,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Events
-  alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.BusinessConceptSupport
@@ -184,12 +183,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     domain_id = Map.get(business_concept_params, "domain_id")
     domain = Taxonomies.get_domain!(domain_id)
 
-    parent_id = Map.get(business_concept_params, "parent_id", nil)
-
     business_concept_attrs =
       %{}
       |> Map.put("domain_id", domain_id)
-      |> Map.put("parent_id", parent_id)
       |> Map.put("type", concept_type)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
@@ -305,7 +301,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       business_concept_version =
         business_concept_version
-        |> Repo.preload(business_concept: [:parent, :children])
         |> add_completeness_to_bc_version(template)
 
       render(
@@ -716,7 +711,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     business_concept_version =
       concept
-      |> Repo.preload(business_concept: [:parent, :children])
       |> add_completeness_to_bc_version(template)
 
     render(
@@ -754,11 +748,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     template = get_template(business_concept_version)
     content_schema = Map.get(template, :content)
 
-    parent_id = Map.get(business_concept_version_params, "parent_id", nil)
-
     business_concept_attrs =
       %{}
-      |> Map.put("parent_id", parent_id)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
