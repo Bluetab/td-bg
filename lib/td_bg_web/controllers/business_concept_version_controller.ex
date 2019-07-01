@@ -813,8 +813,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       )
     end
 
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(400, "Client Error")
+    response(200, "OK", Schema.ref(:BulkUpdateResponse))
+    response(403, "User is not authorized to perform this action")
+    response(422, "Error while bulk update")
   end
 
   def bulk_update(conn, %{
@@ -827,7 +828,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
          %{results: results} <- search_all_business_concept_versions(user, search_params),
          {:ok, response} <- BulkUpdate.update_all(user, results, update_attributes) do
       body = Poison.encode!(%{data: %{message: response}})
-      send_resp(conn, 200, body)
+
+      conn
+      |> put_resp_content_type("application/json", "utf-8")
+      |> send_resp(200, body)
     else
       false ->
         conn
@@ -836,14 +840,15 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> render("403.json")
 
       {:error, error} ->
-        Logger.error("While updating business concepts... #{inspect(error)}")
+        Logger.info("While updating business concepts... #{inspect(error)}")
 
         conn
         |> put_status(:unprocessable_entity)
-        |> send_resp(422, Poison.encode!(error))
+        |> put_resp_content_type("application/json", "utf-8")
+        |> send_resp(422, Poison.encode!(%{error: error}))
 
       error ->
-        Logger.error("While updating business concepts... #{inspect(error)}")
+        Logger.info("Unexpected error while updating business concepts... #{inspect(error)}")
 
         conn
         |> put_status(:unprocessable_entity)
@@ -970,7 +975,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> @df_cache.get_template_by_name
   end
 
-  defp search_all_business_concept_versions(params, user) do
+  defp search_all_business_concept_versions(user, params) do
     params
     |> Map.drop(["page", "size"])
     |> Search.search_business_concept_versions(user, 0, 10_000)

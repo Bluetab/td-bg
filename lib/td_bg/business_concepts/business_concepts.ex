@@ -293,7 +293,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
-        if refreshFlag, do: refreshInfo(updated_version)
+        if refreshFlag, do: refreshCacheAndElastic(updated_version)
         {:ok, updated_version}
 
       _ ->
@@ -301,8 +301,9 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  # TODO: put in utils file, this func is used in business_concept_bulk_update too, REFACTOR: use this func in other places
-  defp refreshInfo(%BusinessConceptVersion{} = business_concept_version) do
+  # TODO: put in utils file, this func is used in business_concept_bulk_update too
+  # REFACTOR: use this func in other places
+  defp refreshCacheAndElastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
     params = retrieve_last_bc_version_params(business_concept_id)
     BusinessConceptLoader.refresh(business_concept_id)

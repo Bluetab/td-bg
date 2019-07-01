@@ -235,12 +235,44 @@ defmodule TdBgWeb.SwaggerDefinitions do
             )
           end
         end,
+      BulkUpdateRequest:
+        swagger_schema do
+          properties do
+            bulk_update_request(
+              Schema.new do
+                properties do
+                  update_attributes(:object, "Update attributes")
+                  search_params(:object, "Search params")
+                end
+              end
+            )
+          end
+        end,
       BusinessConceptVersions:
         swagger_schema do
           title("Business Concept Versions")
           description("A collection of Business Concept Versions")
           type(:array)
           items(Schema.ref(:BusinessConceptVersion))
+        end,
+      BusinessConceptVersionIDs:
+        swagger_schema do
+          title("Business Concept Version IDs updated")
+          description("An array of Business Concept Version IDs")
+          type(:array)
+          items(%{type: :integer})
+        end,
+      BulkUpdateResponse:
+        swagger_schema do
+          properties do
+            data(
+              Schema.new do
+                properties do
+                  message(Schema.ref(:BusinessConceptVersionIDs))
+                end
+              end
+            )
+          end
         end,
       BusinessConceptVersionResponse:
         swagger_schema do

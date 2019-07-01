@@ -10,6 +10,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
+  alias TdPerms.MockDynamicFormCache
   @df_cache Application.get_env(:td_bg, :df_cache)
 
   setup_all do
@@ -17,6 +18,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     start_supervised(MockTdAuditService)
     start_supervised(MockTdDdService)
     start_supervised(MockPermissionResolver)
+    start_supervised(MockDynamicFormCache)
     start_supervised(@df_cache)
     :ok
   end
@@ -433,6 +435,124 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert Enum.at(response, 0)["name"] == data_field_1["name"]
       assert Enum.at(response, 1)["name"] == data_field_2["name"]
+    end
+  end
+
+  describe "bulk_update" do
+    @tag :admin_authenticated
+    test "bulk update of business concept", %{conn: conn, swagger_schema: schema} do
+      domain = insert(:domain, name: "domain1")
+      domain_new = insert(:domain, name: "domain_new")
+      business_concept = insert(:business_concept, domain: domain, type: "template_test")
+
+      MockDynamicFormCache.put_template(%{
+        name: "template_test",
+        content: [
+          %{
+            "name" => "Field1",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          },
+          %{
+            "name" => "Field2",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          }
+        ],
+        scope: "test",
+        label: "template_label",
+        id: "999"
+      })
+
+      version_draft =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          name: "version_draft",
+          status: BusinessConcept.status().draft
+        )
+
+      version_published =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          name: "version_published",
+          status: BusinessConcept.status().published
+        )
+
+      conn =
+        post(conn, Routes.business_concept_version_path(conn, :bulk_update), %{
+          "update_attributes" => %{
+            "domain_id" => domain_new.id
+          },
+          "search_params" => %{"filters" => %{"status" => ["published"]}}
+        })
+
+      %{"message" => updated_version_ids} = json_response(conn, 200)["data"]
+      assert Enum.at(updated_version_ids, 0) == version_published.id
+    end
+
+    @tag :admin_authenticated
+    test "bulk update of business concept with no domain", %{conn: conn, swagger_schema: schema} do
+      domain = insert(:domain, name: "domain1")
+      business_concept = insert(:business_concept, domain: domain, type: "template_test")
+
+      MockDynamicFormCache.put_template(%{
+        name: "template_test",
+        content: [
+          %{
+            "name" => "Field1",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          },
+          %{
+            "name" => "Field2",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          }
+        ],
+        scope: "test",
+        label: "template_label",
+        id: "999"
+      })
+
+      version_draft =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          name: "version_draft",
+          status: BusinessConcept.status().draft
+        )
+
+      version_published =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          name: "version_published",
+          status: BusinessConcept.status().published
+        )
+
+      conn =
+        post(conn, Routes.business_concept_version_path(conn, :bulk_update), %{
+          "update_attributes" => %{
+            "domain_id" => 78_482
+          },
+          "search_params" => %{"filters" => %{"status" => ["published"]}}
+        })
+        %{"error" => error} = json_response(conn, 422)
+      assert error == "missing_domain"
     end
   end
 

@@ -40,6 +40,7 @@ defmodule TdBgWeb.Router do
 
     post("/business_concept_versions/csv", BusinessConceptVersionController, :csv)
     post("/business_concept_versions/upload", BusinessConceptVersionController, :upload)
+    post("/business_concept_versions/bulk_update", BusinessConceptVersionController, :bulk_update)
     put("/business_concept_versions/:id", BusinessConceptVersionController, :update)
 
     resources "/business_concept_versions", BusinessConceptVersionController,
