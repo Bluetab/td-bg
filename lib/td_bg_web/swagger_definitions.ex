@@ -376,59 +376,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
     }
   end
 
-  def business_concept_alias_definitions do
-    %{
-      BusinessConceptAlias:
-        swagger_schema do
-          title("Business Concept Alias")
-          description("Business Concept Alias")
-
-          properties do
-            id(:integer, "unique identifier", required: true)
-            business_concept_id(:integer, "Business Concept unique id", required: true)
-            name(:string, "Business Concept Alias", required: true)
-          end
-        end,
-      BusinessConceptAliasCreate:
-        swagger_schema do
-          properties do
-            business_concept_alias(
-              Schema.new do
-                properties do
-                  name(:string, "Business Concept Alias")
-                end
-              end
-            )
-          end
-        end,
-      BusinessConceptAliases:
-        swagger_schema do
-          title("Business Concept Aliases")
-          description("A collection of Business Concept Aliases")
-          type(:array)
-          items(Schema.ref(:BusinessConceptAlias))
-        end,
-      BusinessConceptAliasResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:BusinessConceptAlias))
-          end
-        end,
-      BusinessConceptAliasesResponse:
-        swagger_schema do
-          properties do
-            data(
-              Schema.new do
-                properties do
-                  collection(Schema.ref(:BusinessConceptAliases))
-                end
-              end
-            )
-          end
-        end
-    }
-  end
-
   def filter_swagger_definitions do
     %{
       FilterResponse:

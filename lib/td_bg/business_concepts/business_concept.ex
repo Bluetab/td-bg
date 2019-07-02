@@ -1,9 +1,11 @@
 defmodule TdBg.BusinessConcepts.BusinessConcept do
   @moduledoc false
+
   use Ecto.Schema
+
   import Ecto.Changeset
+
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptAlias
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Taxonomies.Domain
 
@@ -18,14 +20,11 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
 
   schema "business_concepts" do
     belongs_to(:domain, Domain)
-    belongs_to(:parent, BusinessConcept)
-    has_many(:children, BusinessConcept, foreign_key: :parent_id)
     field(:type, :string)
     field(:last_change_by, :integer)
     field(:last_change_at, :utc_datetime_usec)
 
     has_many(:versions, BusinessConceptVersion)
-    has_many(:aliases, BusinessConceptAlias)
 
     timestamps(type: :utc_datetime_usec)
   end
@@ -60,7 +59,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
   @doc false
   def changeset(%BusinessConcept{} = business_concept, attrs) do
     business_concept
-    |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at, :parent_id])
+    |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at])
     |> validate_required([:domain_id, :type, :last_change_by, :last_change_at])
   end
 end

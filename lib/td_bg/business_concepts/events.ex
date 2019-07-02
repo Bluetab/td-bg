@@ -23,7 +23,7 @@ defmodule TdBg.BusinessConcepts.Events do
       :status,
       :version,
       :business_concept_id,
-      business_concept: [:domain_id, :last_change_at, :last_change_by, :parent_id, :type]
+      business_concept: [:domain_id, :last_change_at, :last_change_by, :type]
     ]
 
     BusinessConceptVersion

@@ -68,18 +68,6 @@ defmodule TdBgWeb.Router do
 
     resources("/business_concepts/comments", CommentController, except: [:new, :edit])
 
-    get("/business_concepts/:business_concept_id/aliases", BusinessConceptAliasController, :index)
-
-    post(
-      "/business_concepts/:business_concept_id/aliases",
-      BusinessConceptAliasController,
-      :create
-    )
-
-    resources("/business_concept_aliases", BusinessConceptAliasController,
-      except: [:new, :edit, :index, :create, :update]
-    )
-
     get("/business_concepts/search/reindex_all", SearchController, :reindex_all)
   end
 

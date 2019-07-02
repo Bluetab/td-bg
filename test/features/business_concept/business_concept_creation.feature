@@ -113,22 +113,3 @@
       | Current           | true                                                                   |
       | Version           | 1                                                                      |
     And "app-admin" is not able to view business concept "My Business Term" as a child of Domain "My Second Domain"
-
-  Scenario: User should not be able to create a business concept with same type and name as an existing alias
-    Given an existing Domain called "My Domain" child of Domain "My Parent Group"
-    And an existing Business Concept type called "Business_Term" with empty definition
-    And an existing Business Concept in the Domain "My Domain" with following data:
-      | Field       | Value                                                                  |
-      | Type        | Business_Term                                                          |
-      | Name        | My Business Term                                                       |
-      | Description | This is the first description of my business term which is very simple |
-    And business concept with name "My Business Term" of type "Business_Term" has an alias "My Synonym Term"
-    And an existing Domain called "My Second Parent Group"
-    And an existing Domain called "My Second Domain" child of Domain "My Second Parent Group"
-    When "app-admin" tries to create a business concept in the Domain "My Second Domain" with following data:
-      | Field       | Value                                              |
-      | Type        | Business_Term                                      |
-      | Name        | My Synonym Term                                    |
-      | Description | This is the second description of my business term |
-    Then the system returns a result with code "Unprocessable Entity"
-    And business concept "My Synonym Term" of type "Business_Term" and version "1" does not exist
