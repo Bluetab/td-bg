@@ -200,9 +200,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
             last_change_by(:integer, "Business Concept Version last change by", required: true)
             last_change_at(:string, "Business Concept Version last change at", required: true)
             domain(Schema.ref(:DomainRef))
-            parent_id([:integer, :null], "Parent Business Concept ID", required: true)
-            parent(:object, "Parent Business Concept", required: false)
-            children(:array, "Children Business Concepts", required: false)
             status(:string, "Business Concept Version status", required: true)
             current(:boolean, "Is this the current version?", required: true)
             version(:integer, "Business Concept Version version number", required: true)
@@ -229,7 +226,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   content(:object, "Business Concept Version content")
                   name(:string, "Business Concept Version name")
                   description(:object, "Business Concept Version description")
-                  parent_id(:object, "Parent Business Concept ID")
                 end
               end
             )
@@ -303,7 +299,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   name(:string, "Business Concept name", required: true)
                   description(:object, "Business Concept description", required: true)
                   domain_id(:integer, "Business Concept Domain ID", required: true)
-                  parent_id(:integer, "Parent Business Concept ID", required: false)
                 end
               end
             )
@@ -408,59 +403,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
         swagger_schema do
           properties do
             data(Schema.ref(:DataFields))
-          end
-        end
-    }
-  end
-
-  def business_concept_alias_definitions do
-    %{
-      BusinessConceptAlias:
-        swagger_schema do
-          title("Business Concept Alias")
-          description("Business Concept Alias")
-
-          properties do
-            id(:integer, "unique identifier", required: true)
-            business_concept_id(:integer, "Business Concept unique id", required: true)
-            name(:string, "Business Concept Alias", required: true)
-          end
-        end,
-      BusinessConceptAliasCreate:
-        swagger_schema do
-          properties do
-            business_concept_alias(
-              Schema.new do
-                properties do
-                  name(:string, "Business Concept Alias")
-                end
-              end
-            )
-          end
-        end,
-      BusinessConceptAliases:
-        swagger_schema do
-          title("Business Concept Aliases")
-          description("A collection of Business Concept Aliases")
-          type(:array)
-          items(Schema.ref(:BusinessConceptAlias))
-        end,
-      BusinessConceptAliasResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:BusinessConceptAlias))
-          end
-        end,
-      BusinessConceptAliasesResponse:
-        swagger_schema do
-          properties do
-            data(
-              Schema.new do
-                properties do
-                  collection(Schema.ref(:BusinessConceptAliases))
-                end
-              end
-            )
           end
         end
     }

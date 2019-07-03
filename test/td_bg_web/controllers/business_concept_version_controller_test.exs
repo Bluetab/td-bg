@@ -10,16 +10,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdDdService
-  alias TdPerms.MockDynamicFormCache
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  alias TdCache.TemplateCache
 
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockTdDdService)
     start_supervised(MockPermissionResolver)
-    start_supervised(MockDynamicFormCache)
-    start_supervised(@df_cache)
     :ok
   end
 
@@ -286,7 +283,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         end)
 
       update_attrs = Map.put(template, :content, updated_content)
-      @df_cache.put_template(update_attrs)
+      TemplateCache.put(update_attrs)
 
       conn =
         post(
@@ -440,12 +437,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "bulk_update" do
     @tag :admin_authenticated
-    test "bulk update of business concept", %{conn: conn, swagger_schema: schema} do
+    test "bulk update of business concept", %{conn: conn} do
       domain = insert(:domain, name: "domain1")
       domain_new = insert(:domain, name: "domain_new")
       business_concept = insert(:business_concept, domain: domain, type: "template_test")
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test",
         content: [
           %{
@@ -470,13 +467,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         id: "999"
       })
 
-      version_draft =
-        insert(
-          :business_concept_version,
-          business_concept: business_concept,
-          name: "version_draft",
-          status: BusinessConcept.status().draft
-        )
+      insert(
+        :business_concept_version,
+        business_concept: business_concept,
+        name: "version_draft",
+        status: BusinessConcept.status().draft
+      )
 
       version_published =
         insert(
@@ -499,11 +495,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag :admin_authenticated
-    test "bulk update of business concept with no domain", %{conn: conn, swagger_schema: schema} do
+    test "bulk update of business concept with no domain", %{conn: conn} do
       domain = insert(:domain, name: "domain1")
       business_concept = insert(:business_concept, domain: domain, type: "template_test")
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test",
         content: [
           %{
@@ -528,21 +524,19 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         id: "999"
       })
 
-      version_draft =
-        insert(
-          :business_concept_version,
-          business_concept: business_concept,
-          name: "version_draft",
-          status: BusinessConcept.status().draft
-        )
+      insert(
+        :business_concept_version,
+        business_concept: business_concept,
+        name: "version_draft",
+        status: BusinessConcept.status().draft
+      )
 
-      version_published =
-        insert(
-          :business_concept_version,
-          business_concept: business_concept,
-          name: "version_published",
-          status: BusinessConcept.status().published
-        )
+      insert(
+        :business_concept_version,
+        business_concept: business_concept,
+        name: "version_published",
+        status: BusinessConcept.status().published
+      )
 
       conn =
         post(conn, Routes.business_concept_version_path(conn, :bulk_update), %{
@@ -551,7 +545,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           },
           "search_params" => %{"filters" => %{"status" => ["published"]}}
         })
-        %{"error" => error} = json_response(conn, 422)
+
+      %{"error" => error} = json_response(conn, 422)
       assert error == "missing_domain"
     end
   end
@@ -580,12 +575,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> Map.put(:scope, "test")
       |> Map.put(:content, [])
 
-    @df_cache.put_template(attrs)
+    TemplateCache.put(attrs)
     :ok
   end
 
   def create_template(template) do
-    @df_cache.put_template(template)
+    TemplateCache.put(template)
     template
   end
 end

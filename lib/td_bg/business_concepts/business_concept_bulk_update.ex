@@ -2,13 +2,12 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   @moduledoc false
   require Logger
 
-  alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies
-
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  alias TdCache.TemplateCache
 
   def update_all(user, business_concept_versions, params) do
     business_concept_versions =
@@ -19,7 +18,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     with {:ok, update_attributes} <-
            update_attributes_from_params(user, params, Enum.at(business_concept_versions, 0)),
          {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
-      bcv_list |> Enum.each(&refreshInfo(&1))
+      bcv_list |> Enum.each(&refresh_cache_and_elastic(&1))
 
       {:ok, bcv_list |> Enum.map(& &1.id)}
     else
@@ -69,12 +68,11 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
 
   defp update_data(_, _, acc), do: {:ok, acc}
 
-  # TODO: put in utils file
-  defp refreshInfo(%BusinessConceptVersion{} = business_concept_version) do
+  # TODO: review
+  defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
-    BusinessConceptLoader.refresh(business_concept_id)
-    params = BusinessConcepts.retrieve_last_bc_version_params(business_concept_id)
-    BusinessConcepts.index_business_concept_versions(business_concept_id, params)
+    ConceptLoader.refresh(business_concept_id)
+    # TODO review elastic
   end
 
   defp ids_from_business_concept_versions(business_concept_versions) do
@@ -120,6 +118,6 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     version
     |> Map.get(:business_concept)
     |> Map.get(:type)
-    |> @df_cache.get_template_by_name
+    |> TemplateCache.get_by_name!()
   end
 end

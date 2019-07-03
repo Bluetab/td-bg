@@ -9,7 +9,7 @@ defmodule TdBg.CommentsTest do
   import TdBgWeb.AclEntry, only: :functions
   import TdBgWeb.Authentication, only: :functions
 
-  alias Poison, as: JSON
+  alias Jason, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Utils.CollectionUtils
@@ -24,13 +24,10 @@ defmodule TdBg.CommentsTest do
   import TdBg.BusinessConceptSteps
   import TdBg.ResultSteps
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
-
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
-    start_supervised(@df_cache)
     :ok
   end
 

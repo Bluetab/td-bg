@@ -24,7 +24,7 @@ defmodule TdBg.Mixfile do
   def application do
     [
       mod: {TdBg.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :td_cache]
     ]
   end
 
@@ -45,7 +45,7 @@ defmodule TdBg.Mixfile do
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
-      {:cabbage, git: "https://github.com/Bluetab/cabbage.git"},
+      {:cabbage, only: [:test], git: "https://github.com/Bluetab/cabbage", tag: "v0.3.7-alpha"},
       {:httpoison, "~> 1.0"},
       {:distillery, "~> 2.0", runtime: false},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
@@ -59,11 +59,11 @@ defmodule TdBg.Mixfile do
       {:csv, "~> 2.0.0"},
       {:nimble_csv, "~> 0.3"},
       {:codepagex, "~> 0.1.4"},
-      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.21.4"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "2.21.4"},
       {:prometheus_ex, "~> 3.0"},
       {:prometheus_plugs, "~> 1.0"},
-      {:grafana, git: "https://github.com/BoringButGreat/grafana.git"}
+      {:grafana, git: "https://github.com/BoringButGreat/grafana.git"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.0.5"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.0.1"}
     ]
   end
 

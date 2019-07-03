@@ -20,13 +20,10 @@ defmodule TdBg.TaxonomyTest do
   import TdBg.ResultSteps
   import TdBg.BusinessConceptSteps
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
-
   setup_all do
-    start_supervised MockTdAuthService
-    start_supervised MockTdAuditService
-    start_supervised MockPermissionResolver
-    start_supervised @df_cache
+    start_supervised(MockTdAuthService)
+    start_supervised(MockTdAuditService)
+    start_supervised(MockPermissionResolver)
     :ok
   end
 
@@ -102,10 +99,12 @@ defmodule TdBg.TaxonomyTest do
           %{token_admin: token_admin} = state do
     parent = get_domain_by_name(token_admin, domain_group_name)
     assert parent["name"] == domain_group_name
-    token = case Map.get(state, :token) do
-      nil -> build_user_token(user_name)
-      t -> t
-    end
+
+    token =
+      case Map.get(state, :token) do
+        nil -> build_user_token(user_name)
+        t -> t
+      end
 
     {_, status_code, _json_resp} =
       domain_create(token, %{
@@ -127,10 +126,12 @@ defmodule TdBg.TaxonomyTest do
          },
          state do
     if actual_result == expected_result do
-      token = case Map.get(state, :token) do
-        nil -> build_user_token(user_name)
-        t -> t
-      end
+      token =
+        case Map.get(state, :token) do
+          nil -> build_user_token(user_name)
+          t -> t
+        end
+
       domain_group_info = get_domain_by_name(token, domain_group_name)
       assert domain_group_name == domain_group_info["name"]
       {:ok, status_code, json_resp} = domain_show(token, domain_group_info["id"])
@@ -152,10 +153,12 @@ defmodule TdBg.TaxonomyTest do
          },
          state do
     if actual_result != expected_result do
-      token = case Map.get(state, :token) do
-        nil -> build_user_token(user_name)
-        t -> t
-      end
+      token =
+        case Map.get(state, :token) do
+          nil -> build_user_token(user_name)
+          t -> t
+        end
+
       domain_group_info = get_domain_by_name(token, domain_group_name)
       assert domain_group_name == domain_group_info["name"]
       {:ok, status_code, json_resp} = domain_show(token, domain_group_info["id"])

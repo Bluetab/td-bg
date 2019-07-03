@@ -8,9 +8,10 @@ defmodule TdBg.Taxonomies do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.DomainLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
+  alias TdCache.TaxonomyCache
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
@@ -42,7 +43,11 @@ defmodule TdBg.Taxonomies do
   Returns children of domain id passed as argument
   """
   def count_domain_children(id) do
-    count = Repo.one(from(r in Domain, select: count(r.id), where: r.parent_id == ^id and is_nil(r.deleted_at)))
+    count =
+      Repo.one(
+        from(r in Domain, select: count(r.id), where: r.parent_id == ^id and is_nil(r.deleted_at))
+      )
+
     {:count, :domain, count}
   end
 
@@ -53,9 +58,9 @@ defmodule TdBg.Taxonomies do
   def count_domain_by_name(name, domain_id) do
     count =
       Domain
-        |> count_domain_by_name_where_clause(name, domain_id)
-        |> select([r], count(r.id))
-        |> Repo.one()
+      |> count_domain_by_name_where_clause(name, domain_id)
+      |> select([r], count(r.id))
+      |> Repo.one()
 
     {:count, :domain, count}
   end
@@ -90,6 +95,9 @@ defmodule TdBg.Taxonomies do
     Repo.one(from(r in Domain, where: r.id == ^id and is_nil(r.deleted_at)))
   end
 
+  def get_parent_ids(nil), do: []
+  def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
+
   def get_raw_domain(id) do
     Repo.one(from(r in Domain, where: r.id == ^id))
   end
@@ -110,20 +118,19 @@ defmodule TdBg.Taxonomies do
           term: %{status: "deprecated"}
         },
         must: %{
-        	query_string: %{
-    			  query: "content.\\*:(\"#{user_name |> String.downcase()}\")"
-    		  }
+          query_string: %{
+            query: "content.\\*:(\"#{user_name |> String.downcase()}\")"
+          }
         },
         filter: [%{term: %{current: true}}, %{term: %{domain_ids: domain_id}}]
       }
     }
 
     predefined_query
-      |> Search.get_business_concepts_from_query(0, 10_000)
-      |> Map.get(:results)
-      |> length()
-
-    end
+    |> Search.get_business_concepts_from_query(0, 10_000)
+    |> Map.get(:results)
+    |> length()
+  end
 
   @doc """
   Creates a domain.
@@ -147,6 +154,7 @@ defmodule TdBg.Taxonomies do
       {:ok, domain} ->
         DomainLoader.refresh(domain.id)
         {:ok, get_domain!(domain.id)}
+
       _ ->
         result
     end
@@ -165,30 +173,32 @@ defmodule TdBg.Taxonomies do
 
   """
   def update_domain(%Domain{} = domain, attrs) do
-      domain
-      |> Domain.changeset(attrs)
-      |> Repo.update()
-      |> update_related_business_concept_versions_cache()
-      |> update_related_business_concept_versions_search()
+    domain
+    |> Domain.changeset(attrs)
+    |> Repo.update()
+    |> update_related_business_concept_versions_cache()
+    |> update_related_business_concept_versions_search()
   end
 
   defp update_related_business_concept_versions_cache({:ok, %Domain{id: id}} = response) do
     DomainLoader.refresh(id)
     response
   end
+
   defp update_related_business_concept_versions_cache(error), do: error
 
   defp update_related_business_concept_versions_search({:ok, %Domain{id: id}} = response) do
     %{resource_id: id}
-      |> Search.get_business_concepts_from_domain(0, 10_000)
-      |> Map.get(:results, [])
-      |> Enum.map(&Map.get(&1, "id"))
-      |> Enum.filter(& !is_nil(&1))
-      |> BusinessConcepts.business_concept_versions_by_ids(nil)
-      |> @search_service.put_bulk_search(:business_concept)
+    |> Search.get_business_concepts_from_domain(0, 10_000)
+    |> Map.get(:results, [])
+    |> Enum.map(&Map.get(&1, "id"))
+    |> Enum.filter(&(!is_nil(&1)))
+    |> BusinessConcepts.business_concept_versions_by_ids(nil)
+    |> @search_service.put_bulk_search(:business_concept)
 
     response
   end
+
   defp update_related_business_concept_versions_search(error), do: error
 
   @doc """
@@ -213,7 +223,9 @@ defmodule TdBg.Taxonomies do
       {:ok, struct} ->
         DomainLoader.delete(id)
         {:ok, struct}
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -235,15 +247,18 @@ defmodule TdBg.Taxonomies do
   the domain itself will be included in the list of ancestors.
   """
   def get_domain_ancestors(nil, _), do: []
+
   def get_domain_ancestors(domain, false) do
     get_ancestors_for_domain_id(domain.parent_id, true)
   end
+
   def get_domain_ancestors(domain, true) do
     [domain | get_ancestors_for_domain_id(domain.parent_id, true)]
   end
 
   def get_ancestors_for_domain_id(domain_id, with_self \\ true)
   def get_ancestors_for_domain_id(nil, _), do: []
+
   def get_ancestors_for_domain_id(domain_id, with_self) do
     domain = get_domain(domain_id)
     get_domain_ancestors(domain, with_self)
@@ -270,13 +285,14 @@ defmodule TdBg.Taxonomies do
       from(b in BusinessConcept,
         where: b.domain_id == ^id,
         join: bv in BusinessConceptVersion,
-        where: b.id == bv.business_concept_id
-        and bv.status != "deprecated"
-        and bv.current == true,
+        where:
+          b.id == bv.business_concept_id and
+            bv.status != "deprecated" and
+            bv.current == true,
         select: count(b.id)
       )
 
-      count = query |> Repo.one()
+    count = query |> Repo.one()
     {:count, :business_concept, count}
   end
 

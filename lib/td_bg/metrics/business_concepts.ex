@@ -5,17 +5,12 @@ defmodule TdBg.Metrics.BusinessConcepts do
   require Logger
   alias TdBg.Metrics.Instrumenter
   alias TdBg.Utils.CollectionUtils
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  alias TdCache.TemplateCache
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   @fixed_concepts_count_dimensions [:status, :parent_domains, :has_quality, :has_link]
   @fixed_completness_dimensions [:id, :group, :field, :status, :parent_domains]
-
-  @metrics_busines_concepts_on_startup Application.get_env(
-                                         :td_bg,
-                                         :metrics_busines_concepts_on_startup
-                                       )
 
   @metrics_publication_frequency Application.get_env(
                                    :td_bg,
@@ -27,8 +22,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def init(state) do
-    if @metrics_busines_concepts_on_startup do
-      # Schedule work to be performed at some point
+    if Application.get_env(:td_bg, :env) == :prod do
       schedule_work()
     end
 
@@ -64,13 +58,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def get_template_map do
-    @df_cache.list_templates()
+    TemplateCache.list!()
     |> Enum.map(&{&1.name, get_template_dimensions(&1)})
     |> Map.new()
   end
 
   def get_content_map do
-    @df_cache.list_templates()
+    TemplateCache.list!()
     |> Enum.map(&{&1.name, &1.content})
     |> Map.new()
   end
@@ -118,21 +112,28 @@ defmodule TdBg.Metrics.BusinessConcepts do
       end)
     )
     |> Enum.map(&Map.put(&1, :has_link, Map.get(&1, :link_count)))
-    |> Enum.map(&{&1, Map.get(templates_by_name, &1.template.name)})
+    |> Enum.map(&{&1, Map.get(templates_by_name, Map.get(&1.template, :name))})
     |> Enum.filter(fn {_concept, template} -> !is_nil(template) end)
     |> Enum.map(fn {concept, template} -> include_template_dimensions(concept, template) end)
     |> Enum.reduce([], fn elem, acc -> [Map.put(elem, :count, 1) | acc] end)
     |> Enum.group_by(
       &Enum.zip(
-        get_keys(&1, @fixed_concepts_count_dimensions,
-          Map.get(templates_by_name, &1.template.name)) ++ [:template_name],
-        get_values(&1, @fixed_concepts_count_dimensions,
-          Map.get(templates_by_name, &1.template.name)) ++ [&1.template.name]
+        get_keys(
+          &1,
+          @fixed_concepts_count_dimensions,
+          Map.get(templates_by_name, &1.template.name)
+        ) ++ [:template_name],
+        get_values(
+          &1,
+          @fixed_concepts_count_dimensions,
+          Map.get(templates_by_name, &1.template.name)
+        ) ++ [&1.template.name]
       )
     )
     |> Enum.map(fn {key, value} ->
       %{
-        dimensions: key
+        dimensions:
+          key
           |> Enum.filter(fn {dim, _} -> dim != :template_name end)
           |> Enum.into(%{}),
         count: value |> Enum.map(& &1.count) |> Enum.sum(),
@@ -308,7 +309,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def get_dimensions_from_templates do
-    @df_cache.list_templates()
+    TemplateCache.list!()
     |> Enum.map(fn template ->
       %{
         name: template.name,
@@ -328,7 +329,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
   def get_concept_template_dimensions(concept_type) do
     concept_type
-    |> @df_cache.get_template_by_name()
+    |> TemplateCache.get_by_name!()
     |> Map.get(:content)
     |> Enum.map(&get_name_dimension(&1))
     |> Enum.filter(&(!is_nil(&1)))

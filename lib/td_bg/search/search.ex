@@ -1,11 +1,12 @@
 defmodule TdBg.Search do
-  require Logger
-
+  alias Jason, as: JSON
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ESClientApi
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
+
+  require Logger
 
   @moduledoc """
   Search Engine calls
@@ -29,12 +30,13 @@ defmodule TdBg.Search do
 
   def put_bulk_search(:business_concept) do
     BusinessConcepts.list_all_business_concept_versions()
-    |> Enum.chunk_every(100)
-    |> Enum.map(&ESClientApi.bulk_index_content/1)
+    |> put_bulk_search(:business_concept)
   end
 
   def put_bulk_search(business_concepts, :business_concept) do
-    ESClientApi.bulk_update_content(business_concepts)
+    business_concepts
+    |> Enum.chunk_every(100)
+    |> Enum.map(&ESClientApi.bulk_index_content/1)
   end
 
   # CREATE AND UPDATE
@@ -45,7 +47,7 @@ defmodule TdBg.Search do
       ESClientApi.index_content(
         domain.__struct__.index_name(),
         domain.id,
-        search_fields |> Poison.encode!()
+        search_fields |> JSON.encode!()
       )
 
     case response do
@@ -64,7 +66,7 @@ defmodule TdBg.Search do
       ESClientApi.index_content(
         concept.__struct__.index_name(),
         concept.id,
-        search_fields |> Poison.encode!()
+        search_fields |> JSON.encode!()
       )
 
     case response do

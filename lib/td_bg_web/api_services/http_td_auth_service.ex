@@ -1,7 +1,7 @@
 defmodule TdBgWeb.ApiServices.HttpTdAuthService do
   @moduledoc false
 
-  alias Poison, as: JSON
+  alias Jason, as: JSON
   alias TdBg.Accounts.Group
   alias TdBg.Accounts.User
   alias TdBg.Utils.CollectionUtils

@@ -42,7 +42,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
     Router.__routes__()
     |> Enum.filter(&(!is_nil(&1.helper)))
     |> Enum.filter(&String.starts_with?(&1.helper, helper))
-    |> Enum.filter(&can?(current_user, &1.opts, resource_type))
+    |> Enum.filter(&can?(current_user, &1.plug_opts, resource_type))
     |> Enum.map(&interpolate(&1, %{}))
     |> Enum.filter(&(&1.path != nil))
   end
@@ -55,7 +55,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
     Router.__routes__()
     |> Enum.filter(&(!is_nil(&1.helper)))
     |> Enum.filter(&String.starts_with?(&1.helper, helper))
-    |> Enum.filter(&can?(current_user, &1.opts, resource))
+    |> Enum.filter(&can?(current_user, &1.plug_opts, resource))
     |> Enum.map(&interpolate(&1, resource))
     |> Enum.filter(&(&1.path != nil))
     |> Enum.filter(
@@ -66,7 +66,7 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
 
   defp interpolate(route, resource) do
     %Link{
-      action: route.opts,
+      action: route.plug_opts,
       path: interpolation(route.path, resource),
       method: route.verb,
       schema: %{}
@@ -92,8 +92,8 @@ defmodule TdBgWeb.Hypermedia.HypermediaControllerHelper do
     current_user = conn.assigns[:current_user]
 
     Router.__routes__()
-    |> Enum.filter(&(&1.helper == helper and &1.opts == :index))
-    |> Enum.filter(&can?(current_user, &1.opts, resource))
+    |> Enum.filter(&(&1.helper == helper and &1.plug_opts == :index))
+    |> Enum.filter(&can?(current_user, &1.plug_opts, resource))
     |> Enum.map(&interpolate(&1, resource))
     |> Enum.filter(&(&1.path != nil))
   end

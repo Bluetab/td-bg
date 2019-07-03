@@ -1,7 +1,7 @@
 defmodule TdBg.Search.MockSearch do
   @moduledoc false
 
-  alias Poison
+  alias Jason, as: JSON
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
 
@@ -11,29 +11,48 @@ defmodule TdBg.Search.MockSearch do
   def delete_search(_something) do
   end
 
+  def put_bulk_search(_something) do
+  end
+
   def put_bulk_search(_something, _something_else) do
   end
 
   def search("business_concept", %{
-        query: %{bool: %{
-          filter: %{bool: %{should: [%{bool: %{filter: [
-            %{term: %{domain_ids: domain_id}}, _, _
-          ]}}]}},
-          must: %{match_all: %{}}
-        }}
+        query: %{
+          bool: %{
+            filter: %{
+              bool: %{
+                should: [
+                  %{
+                    bool: %{
+                      filter: [
+                        %{term: %{domain_ids: domain_id}},
+                        _,
+                        _
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            must: %{match_all: %{}}
+          }
+        }
       }) do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))
     |> Enum.filter(fn bcv ->
-      domain_id == bcv
-      |> Map.get(:domain)
-      |> Map.get(:id)
+      domain_id ==
+        bcv
+        |> Map.get(:domain)
+        |> Map.get(:id)
     end)
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
+
   def search("business_concept", %{
         query: %{bool: %{filter: [%{terms: %{"status" => status_list}}], must: %{match_all: %{}}}}
       }) do
@@ -41,8 +60,8 @@ defmodule TdBg.Search.MockSearch do
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))
     |> Enum.filter(&Enum.member?(status_list, &1.status))
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
 
@@ -50,8 +69,8 @@ defmodule TdBg.Search.MockSearch do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
 
@@ -60,8 +79,8 @@ defmodule TdBg.Search.MockSearch do
     |> Enum.filter(&(&1.business_concept_id == business_concept_id))
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
 
@@ -72,8 +91,8 @@ defmodule TdBg.Search.MockSearch do
     |> Enum.map(&BusinessConceptVersion.search_fields(&1))
     |> Enum.filter(&matches(&1, query))
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
 

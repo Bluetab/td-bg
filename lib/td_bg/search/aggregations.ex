@@ -1,26 +1,32 @@
 defmodule TdBg.Search.Aggregations do
   @moduledoc """
-    Aggregations for elasticsearch
+  Aggregations for elasticsearch
   """
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  alias TdCache.TemplateCache
 
   def aggregation_terms do
     static_keywords = [
       {"domain", %{terms: %{field: "domain.name.raw", size: 50}}},
       {"domain_id", %{terms: %{field: "domain.id"}}},
       {"business_concept_id", %{terms: %{field: "business_concept_id"}}},
-      {"domain_parents", %{nested: %{path: "domain_parents"}, aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}}},
+      {"domain_parents",
+       %{
+         nested: %{path: "domain_parents"},
+         aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}
+       }},
       {"status", %{terms: %{field: "status"}}},
       {"current", %{terms: %{field: "current"}}},
       {"in_progress", %{terms: %{field: "in_progress"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
-      {"rule_count", %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},
-      {"link_count", %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}}
+      {"rule_count",
+       %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},
+      {"link_count",
+       %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}}
     ]
 
     dynamic_keywords =
-      @df_cache.list_templates()
+      TemplateCache.list!()
       |> Enum.flat_map(&template_terms/1)
 
     (static_keywords ++ dynamic_keywords)

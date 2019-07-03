@@ -5,6 +5,9 @@
 # is restricted to this project.
 use Mix.Config
 
+# Environment
+config :td_bg, :env, Mix.env()
+
 # General application configuration
 config :td_bg,
   ecto_repos: [TdBg.Repo]
@@ -22,8 +25,7 @@ config :codepagex, :encodings, [
 config :td_bg, TdBgWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "tOxTkbz1LLqsEmoRRhSorwFZm35yQbVPP/gdU3cFUYV5IdcoIRNroCeADl4ysBBg",
-  render_errors: [view: TdBgWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: TdBg.PubSub, adapter: Phoenix.PubSub.PG2]
+  render_errors: [view: TdBgWeb.ErrorView, accepts: ~w(json)]
 
 # Configures Elixir's Logger
 # set EX_LOGGER_FORMAT environment variable to override Elixir's Logger format
@@ -64,15 +66,11 @@ config :td_bg, :audit_service,
   protocol: "http",
   audits_path: "/api/audits/"
 
-config :td_bg, cache_domains_on_startup: true
-config :td_bg, cache_busines_concepts_on_startup: true
-config :td_bg, metrics_busines_concepts_on_startup: true
 config :td_bg, metrics_publication_frequency: 60_000
 
-config :td_bg, permission_resolver: TdPerms.Permissions
-config :td_bg, df_cache: TdPerms.DynamicFormCache
+config :td_bg, permission_resolver: TdCache.Permissions
 
-config :td_perms,
+config :td_cache,
   permissions: [
     :is_admin,
     :create_acl_entry,
@@ -92,7 +90,7 @@ config :td_perms,
     :publish_business_concept,
     :reject_business_concept,
     :deprecate_business_concept,
-    :manage_business_concept_alias,
+    :__manage_business_concept_alias,
     :view_data_structure,
     :view_draft_business_concepts,
     :view_approval_pending_business_concepts,
@@ -115,10 +113,18 @@ config :td_perms,
     :view_published_ingests,
     :view_versioned_ingests,
     :view_rejected_ingests,
-    :view_deprecated_ingests
+    :view_deprecated_ingests,
+    :manage_confidential_structures,
+    :manage_ingest_relations,
+    :view_data_structures_profile
   ]
 
-# config :td_df, repo: TdBg.Repo
+config :td_cache, :event_stream,
+  consumer_id: "default",
+  consumer_group: "bg",
+  streams: [
+    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader]
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

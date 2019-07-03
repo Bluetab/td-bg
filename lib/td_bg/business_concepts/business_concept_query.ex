@@ -12,5 +12,4 @@ defmodule TdBg.BusinessConcept.Query do
       _ -> "#{query}*"
     end
   end
-
 end

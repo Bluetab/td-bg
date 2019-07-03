@@ -8,11 +8,11 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Searchable
   alias TdBg.Taxonomies
+  alias TdCache.TaxonomyCache
+  alias TdCache.TemplateCache
+  alias TdCache.UserCache
   alias TdDfLib.Format
-  alias TdPerms.TaxonomyCache
-  alias TdPerms.UserCache
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
   @behaviour Searchable
 
   schema "business_concept_versions" do
@@ -150,78 +150,65 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     ])
   end
 
-  def search_fields(%BusinessConceptVersion{last_change_by: last_change_by_id} = concept) do
+  def search_fields(
+        %BusinessConceptVersion{
+          last_change_by: last_change_by_id,
+          business_concept: business_concept
+        } = bcv
+      ) do
+    %{id: business_concept_id, type: type, domain_id: domain_id} = business_concept
+
     template =
-      case @df_cache.get_template_by_name(concept.business_concept.type) do
+      case TemplateCache.get_by_name!(type) do
         nil -> %{content: []}
         template -> template
       end
 
-    aliases = BusinessConcepts.list_business_concept_aliases(concept.id)
-    aliases = Enum.map(aliases, &%{name: &1.name})
+    domain = Taxonomies.get_raw_domain(domain_id)
+    domain_ids = Taxonomies.get_parent_ids(domain_id)
 
-    domain = retrieve_domain(concept.business_concept.domain_id)
-    domain_ids = retrieve_domain_ids(Map.get(domain, :id))
-    domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
+    domain_parents =
+      domain_ids
+      |> Enum.map(&%{id: &1, name: TaxonomyCache.get_name(&1)})
 
     last_change_by =
-      case UserCache.get_user(last_change_by_id) do
-        nil -> %{}
-        user -> user
+      case UserCache.get(last_change_by_id) do
+        {:ok, nil} -> %{}
+        {:ok, user} -> user
       end
 
-    counts = BusinessConcepts.get_concept_counts(concept.business_concept.id)
-
-    concept =
-      Map.merge(concept, counts, fn _k, v1, v2 ->
-        v1 || v2
-      end)
+    counts = BusinessConcepts.get_concept_counts(business_concept_id)
+    bcv = Map.merge(bcv, counts)
 
     content =
-      concept
+      bcv
       |> Map.get(:content)
       |> Format.apply_template(Map.get(template, :content))
 
     content = update_in(content["_confidential"], &if(&1 == "Si", do: &1, else: "No"))
 
-    %{
-      id: concept.id,
-      business_concept_id: concept.business_concept.id,
-      name: concept.name,
-      description: RichText.to_plain_text(concept.description),
-      status: concept.status,
-      version: concept.version,
-      domain: Map.take(domain, [:id, :name]),
-      domain_parents: domain_parents,
-      last_change_by: last_change_by,
-      template: %{
-        name: Map.get(template, :name),
-        label: Map.get(template, :label)
-      },
-      content: content,
-      last_change_at: concept.last_change_at,
-      bc_aliases: aliases,
-      domain_ids: domain_ids,
-      current: concept.current,
-      link_count: concept.link_count,
-      rule_count: concept.rule_count,
-      in_progress: concept.in_progress,
-      inserted_at: concept.inserted_at
-    }
+    bcv
+    |> Map.take([
+      :id,
+      :business_concept_id,
+      :name,
+      :status,
+      :version,
+      :last_change_at,
+      :current,
+      :link_count,
+      :rule_count,
+      :in_progress,
+      :inserted_at
+    ])
+    |> Map.put(:content, content)
+    |> Map.put(:description, RichText.to_plain_text(bcv.description))
+    |> Map.put(:domain, Map.take(domain, [:id, :name]))
+    |> Map.put(:domain_ids, domain_ids)
+    |> Map.put(:domain_parents, domain_parents)
+    |> Map.put(:last_change_by, last_change_by)
+    |> Map.put(:template, Map.take(template, [:name, :label]))
   end
-
-  defp retrieve_domain(domain_id) do
-    domain = Taxonomies.get_domain(domain_id)
-    return_domain_value(domain)
-  end
-
-  defp return_domain_value(nil), do: %{}
-
-  defp return_domain_value(domain), do: domain
-
-  defp retrieve_domain_ids(nil), do: []
-
-  defp retrieve_domain_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
 
   def index_name do
     "business_concept"

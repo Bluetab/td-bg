@@ -1,11 +1,11 @@
 defmodule TdBgWeb.BusinessConcept do
   @moduledoc false
 
-  alias Poison, as: JSON
-  alias TdBgWeb.Router.Helpers, as: Routes
   import TdBgWeb.Authentication, only: :functions
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  alias Jason, as: JSON
+  alias TdBgWeb.Router.Helpers, as: Routes
+  alias TdCache.TemplateCache
 
   @endpoint TdBgWeb.Endpoint
   @headers {"Content-type", "application/json"}
@@ -35,7 +35,7 @@ defmodule TdBgWeb.BusinessConcept do
       |> Map.put(:scope, "test")
       |> Map.put(:content, definition)
 
-    @df_cache.put_template(attrs)
+    TemplateCache.put(attrs)
 
     {:ok, nil, attrs}
   end
@@ -241,52 +241,6 @@ defmodule TdBgWeb.BusinessConcept do
       HTTPoison.post!(Routes.business_concept_version_url(@endpoint, :upload), form, headers)
 
     {:ok, status_code}
-  end
-
-  def business_concept_alias_create(token, business_concept_id, attrs) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-    body = %{"business_concept_alias" => attrs} |> JSON.encode!()
-
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.post!(
-        Routes.business_concept_alias_url(@endpoint, :create, business_concept_id),
-        body,
-        headers,
-        []
-      )
-
-    {:ok, status_code, resp |> JSON.decode!()}
-  end
-
-  def business_concept_alias_list(token, business_concept_id) do
-    headers = get_header(token)
-
-    %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(
-        Routes.business_concept_alias_url(@endpoint, :index, business_concept_id),
-        headers,
-        []
-      )
-
-    {:ok, status_code, resp |> JSON.decode!()}
-  end
-
-  def business_concept_alias_delete(token, id) do
-    headers = [@headers, {"authorization", "Bearer #{token}"}]
-
-    %HTTPoison.Response{status_code: status_code, body: _resp} =
-      HTTPoison.delete!(Routes.business_concept_alias_url(@endpoint, :delete, id), headers, [])
-
-    {:ok, status_code}
-  end
-
-  def business_concept_alias_by_name(token, business_concept_id, business_concept_alias) do
-    {:ok, _status_code, json_resp} = business_concept_alias_list(token, business_concept_id)
-
-    Enum.find(
-      json_resp["data"],
-      fn alias_item -> alias_item["name"] == business_concept_alias end
-    )
   end
 
   def to_rich_text(nil), do: %{}

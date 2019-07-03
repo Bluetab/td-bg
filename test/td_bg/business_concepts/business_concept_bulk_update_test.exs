@@ -6,11 +6,10 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias TdPerms.MockDynamicFormCache
+  alias TdCache.TemplateCache
 
   setup_all do
     start_supervised(MockTdAuthService)
-    start_supervised(MockDynamicFormCache)
     :ok
   end
 
@@ -22,7 +21,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d2 = insert(:domain, name: "d2")
       d3 = insert(:domain, name: "d3")
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test",
         content: [
           %{
@@ -100,7 +99,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d2 = insert(:domain, name: "d2")
       d3 = insert(:domain, name: "d3")
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test1",
         content: [
           %{
@@ -125,7 +124,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         id: "999"
       })
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test2",
         content: [
           %{
@@ -210,7 +209,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d2 = insert(:domain, name: "d2")
       d3 = insert(:domain, name: "d3")
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test1",
         content: [
           %{
@@ -235,7 +234,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         id: "999"
       })
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test2",
         content: [
           %{
@@ -352,7 +351,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d2 = insert(:domain, name: "d2")
       d3 = insert(:domain, name: "d3")
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test",
         content: [
           %{
@@ -416,7 +415,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d1 = insert(:domain, name: "d1")
       d3 = insert(:domain, name: "d3")
 
-      MockDynamicFormCache.put_template(%{
+      TemplateCache.put(%{
         name: "template_test",
         content: [
           %{

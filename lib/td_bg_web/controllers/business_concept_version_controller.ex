@@ -1,11 +1,11 @@
 defmodule TdBgWeb.BusinessConceptVersionController do
-  require Logger
   use TdBgWeb, :controller
   use TdBg.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
+  alias Jason, as: JSON
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcept.Search
@@ -14,7 +14,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Events
-  alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.BusinessConceptSupport
@@ -22,8 +21,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.DataStructureView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
+  alias TdCache.TemplateCache
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
+  require Logger
+
   @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
   action_fallback(TdBgWeb.FallbackController)
@@ -123,7 +124,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     with true <- user.is_admin,
          {:ok, response} <- Upload.from_csv(business_concepts_upload, user) do
-      body = Poison.encode!(%{data: %{message: response}})
+      body = JSON.encode!(%{data: %{message: response}})
       send_resp(conn, 200, body)
     else
       false ->
@@ -137,7 +138,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
         conn
         |> put_status(:unprocessable_entity)
-        |> send_resp(422, Poison.encode!(error))
+        |> send_resp(422, JSON.encode!(error))
 
       error ->
         Logger.error("While uploading business concepts... #{inspect(error)}")
@@ -150,7 +151,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   rescue
     e in RuntimeError ->
       Logger.error("While uploading business concepts... #{e.message}")
-      send_resp(conn, :unprocessable_entity, Poison.encode!(%{error: e.message}))
+      send_resp(conn, :unprocessable_entity, JSON.encode!(%{error: e.message}))
   end
 
   swagger_path :create do
@@ -176,19 +177,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     validate_required_bc_fields(business_concept_params)
 
     concept_type = Map.get(business_concept_params, "type")
-    template = @df_cache.get_template_by_name(concept_type)
+    template = TemplateCache.get_by_name!(concept_type)
     content_schema = Map.get(template, :content)
     concept_name = Map.get(business_concept_params, "name")
 
     domain_id = Map.get(business_concept_params, "domain_id")
     domain = Taxonomies.get_domain!(domain_id)
 
-    parent_id = Map.get(business_concept_params, "parent_id", nil)
-
     business_concept_attrs =
       %{}
       |> Map.put("domain_id", domain_id)
-      |> Map.put("parent_id", parent_id)
       |> Map.put("type", concept_type)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
@@ -304,7 +302,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       business_concept_version =
         business_concept_version
-        |> Repo.preload(business_concept: [:parent, :children])
         |> add_completeness_to_bc_version(template)
 
       render(
@@ -715,7 +712,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     business_concept_version =
       concept
-      |> Repo.preload(business_concept: [:parent, :children])
       |> add_completeness_to_bc_version(template)
 
     render(
@@ -753,11 +749,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     template = get_template(business_concept_version)
     content_schema = Map.get(template, :content)
 
-    parent_id = Map.get(business_concept_version_params, "parent_id", nil)
-
     business_concept_attrs =
       %{}
-      |> Map.put("parent_id", parent_id)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
@@ -966,13 +959,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 
-  @df_cache Application.get_env(:td_bg, :df_cache)
-
   defp get_template(%BusinessConceptVersion{} = version) do
     version
     |> Map.get(:business_concept)
     |> Map.get(:type)
-    |> @df_cache.get_template_by_name
+    |> TemplateCache.get_by_name!()
   end
 
   defp search_all_business_concept_versions(user, params) do

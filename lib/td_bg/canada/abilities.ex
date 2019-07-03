@@ -1,5 +1,6 @@
 defmodule TdBg.Canada.Abilities do
   @moduledoc false
+
   alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -61,11 +62,19 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :update, business_concept_version)
     end
 
-    def can?(%User{} = user, :get_data_structures, %BusinessConceptVersion{} = business_concept_version) do
+    def can?(
+          %User{} = user,
+          :get_data_structures,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
       BusinessConceptAbilities.can?(user, :get_data_structures, business_concept_version)
     end
 
-    def can?(%User{} = user, :get_data_fields, %BusinessConceptVersion{} = business_concept_version) do
+    def can?(
+          %User{} = user,
+          :get_data_fields,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
       BusinessConceptAbilities.can?(user, :get_data_fields, business_concept_version)
     end
 
@@ -115,14 +124,6 @@ defmodule TdBg.Canada.Abilities do
           %BusinessConceptVersion{} = business_concept_version
         ) do
       BusinessConceptAbilities.can?(user, :view_business_concept, business_concept_version)
-    end
-
-    def can?(%User{} = user, :create_alias, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :manage_alias, business_concept_version)
-    end
-
-    def can?(%User{} = user, :delete_alias, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :manage_alias, business_concept_version)
     end
 
     def can?(%User{is_admin: true}, _action, %{}) do

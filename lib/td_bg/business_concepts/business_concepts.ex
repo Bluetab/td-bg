@@ -5,14 +5,16 @@ defmodule TdBg.BusinessConcepts do
 
   import Ecto.Query, warn: false
   import Ecto.Changeset
+
   alias Ecto.Multi
-  alias TdBg.BusinessConceptLoader
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
+  alias TdCache.ConceptCache
+  alias TdCache.EventStream.Publisher
   alias TdDfLib.Format
   alias TdDfLib.Validation
-  alias TdPerms.BusinessConceptCache
   alias ValidationError
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
@@ -31,37 +33,25 @@ defmodule TdBg.BusinessConcepts do
 
     count =
       BusinessConcept
-      |> join(:left, [c], _ in assoc(c, :aliases))
-      |> join(:left, [c, a], _ in assoc(c, :versions))
-      |> where([c, a, v], c.type == ^type and v.status not in ^status)
+      |> join(:left, [c], _ in assoc(c, :versions))
+      |> where([c, v], c.type == ^type and v.status not in ^status)
       |> include_name_where(name, exclude_concept_id)
-      |> select([c, a, v], count(c.id))
+      |> select([c, v], count(c.id))
       |> Repo.one!()
 
     if count == 0, do: {:name_available}, else: {:name_not_available}
   end
 
   defp include_name_where(query, name, nil) do
-    downcase_name = String.downcase(name)
-
     query
-    |> where(
-      [_, a, v],
-      fragment("lower(?)", v.name) == ^downcase_name or
-        fragment("lower(?)", a.name) == ^downcase_name
-    )
+    |> where([_, v], fragment("lower(?)", v.name) == ^String.downcase(name))
   end
 
   defp include_name_where(query, name, exclude_concept_id) do
-    downcase_name = String.downcase(name)
-
     query
     |> where(
-      [c, a, v],
-      (c.id != ^exclude_concept_id and
-         (fragment("lower(?)", v.name) == ^downcase_name or
-            fragment("lower(?)", a.name) == ^downcase_name)) or
-        (c.id == ^exclude_concept_id and fragment("lower(?)", a.name) == ^downcase_name)
+      [c, v],
+      c.id != ^exclude_concept_id and fragment("lower(?)", v.name) == ^String.downcase(name)
     )
   end
 
@@ -117,6 +107,25 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
+  def get_all_versions_by_business_concept_ids([]), do: []
+
+  def get_all_versions_by_business_concept_ids(business_concept_ids) do
+    BusinessConceptVersion
+    |> where([v], v.business_concept_id in ^business_concept_ids)
+    |> preload(:business_concept)
+    |> Repo.all()
+  end
+
+  def get_active_ids do
+    Repo.all(
+      from(v in "business_concept_versions",
+        where: v.current,
+        where: v.status != "deprecated",
+        select: v.business_concept_id
+      )
+    )
+  end
+
   @doc """
   Gets a single business_concept.
 
@@ -136,7 +145,7 @@ defmodule TdBg.BusinessConcepts do
     |> where([v], v.business_concept_id == ^business_concept_id)
     |> order_by(desc: :version)
     |> limit(1)
-    |> preload(business_concept: [:aliases, :domain])
+    |> preload(business_concept: :domain)
     |> Repo.one!()
   end
 
@@ -146,7 +155,7 @@ defmodule TdBg.BusinessConcepts do
     |> where([v], v.current == ^current)
     |> order_by(desc: :version)
     |> limit(1)
-    |> preload(business_concept: [:aliases, :domain])
+    |> preload(business_concept: :domain)
     |> Repo.one!()
   end
 
@@ -171,7 +180,7 @@ defmodule TdBg.BusinessConcepts do
       BusinessConceptVersion
       |> where([v], v.business_concept_id == ^business_concept_id)
       |> where([v], v.status == ^published)
-      |> preload(business_concept: [:aliases, :domain])
+      |> preload(business_concept: [:domain])
       |> Repo.one()
 
     case version do
@@ -199,9 +208,7 @@ defmodule TdBg.BusinessConcepts do
       {:ok, business_concept_version} ->
         new_version = get_business_concept_version!(business_concept_version.id)
         business_concept_id = new_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         {:ok, new_version}
 
       _ ->
@@ -251,9 +258,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, %{current: new_version}} ->
         business_concept_id = new_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -293,7 +298,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
-        if refreshFlag, do: refreshCacheAndElastic(updated_version)
+        if refreshFlag, do: refresh_cache_and_elastic(updated_version)
         {:ok, updated_version}
 
       _ ->
@@ -303,11 +308,10 @@ defmodule TdBg.BusinessConcepts do
 
   # TODO: put in utils file, this func is used in business_concept_bulk_update too
   # REFACTOR: use this func in other places
-  defp refreshCacheAndElastic(%BusinessConceptVersion{} = business_concept_version) do
+  defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
-    params = retrieve_last_bc_version_params(business_concept_id)
-    BusinessConceptLoader.refresh(business_concept_id)
-    index_business_concept_versions(business_concept_id, params)
+    ConceptLoader.refresh(business_concept_id)
+    # TODO review elastic
   end
 
   def update_business_concept_version_status(
@@ -322,9 +326,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, updated_version} ->
         business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -355,9 +357,7 @@ defmodule TdBg.BusinessConcepts do
 
     case result do
       {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -365,40 +365,14 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  def index_business_concept_versions(business_concept_id, params) do
-    business_concept_id
-    |> list_business_concept_versions(nil)
-    |> Enum.map(fn bv ->
-      case params do
-        params when params == %{} -> bv
-        params -> Map.merge(bv, params)
-      end
-    end)
-    |> Enum.each(&@search_service.put_search/1)
-  end
-
   def get_concept_counts(business_concept_id) do
-    {:ok, values} =
-      BusinessConceptCache.get_field_values(
-        business_concept_id,
-        [:rule_count, :link_count]
-      )
+    case ConceptCache.get(business_concept_id) do
+      {:ok, %{rule_count: rule_count, link_count: link_count}} ->
+        %{rule_count: rule_count, link_count: link_count}
 
-    values
-    |> Enum.map(fn {key, value} ->
-      new_value =
-        case value do
-          nil -> 0
-          v -> max(0, String.to_integer(v))
-        end
-
-      {key, new_value}
-    end)
-    |> Map.new()
-  end
-
-  def retrieve_last_bc_version_params(business_concept_id) do
-    get_concept_counts(business_concept_id)
+      _ ->
+        %{rule_count: 0, link_count: 0}
+    end
   end
 
   def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
@@ -410,9 +384,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, updated_version} ->
         business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ConceptLoader.refresh(business_concept_id)
         result
 
       _ ->
@@ -591,22 +563,25 @@ defmodule TdBg.BusinessConcepts do
       business_concept_id = business_concept.id
 
       Multi.new()
-      |> Multi.update_all(
-        :detatch_children,
-        from(child in BusinessConcept, where: child.parent_id == ^business_concept_id),
-        set: [parent_id: nil]
-      )
       |> Multi.delete(:business_concept_version, business_concept_version)
       |> Multi.delete(:business_concept, business_concept)
       |> Repo.transaction()
       |> case do
         {:ok,
          %{
-           detatch_children: {_, nil},
            business_concept: %BusinessConcept{},
            business_concept_version: %BusinessConceptVersion{} = version
          }} ->
-          BusinessConceptLoader.delete(business_concept_id)
+          Publisher.publish(
+            %{
+              event: "delete_concept",
+              resource_type: "business_concept",
+              resource_id: business_concept_id
+            },
+            "business_concept:events"
+          )
+
+          # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
           @search_service.delete_search(business_concept_version)
           {:ok, version}
       end
@@ -790,88 +765,6 @@ defmodule TdBg.BusinessConcepts do
     else
       {:error, %{current: changeset}}
     end
-  end
-
-  alias TdBg.BusinessConcepts.BusinessConceptAlias
-
-  @doc """
-  Returns the list of business_concept_aliases
-  of a business_concept
-
-  ## Examples
-
-      iex> list_business_concept_aliases(123)
-      [%BusinessConceptAlias{}, ...]
-
-  """
-  def list_business_concept_aliases(business_concept_id) do
-    BusinessConceptAlias
-    |> where([v], v.business_concept_id == ^business_concept_id)
-    |> order_by(desc: :business_concept_id)
-    |> Repo.all()
-  end
-
-  @doc """
-  Gets a single business_concept_alias.
-
-  Raises `Ecto.NoResultsError` if the Business concept alias does not exist.
-
-  ## Examples
-
-      iex> get_business_concept_alias!(123)
-      %BusinessConceptAlias{}
-
-      iex> get_business_concept_alias!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_business_concept_alias!(id), do: Repo.get!(BusinessConceptAlias, id)
-
-  @doc """
-  Creates a business_concept_alias.
-
-  ## Examples
-
-      iex> create_business_concept_alias(%{field: value})
-      {:ok, %BusinessConceptAlias{}}
-
-      iex> create_business_concept_alias(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_business_concept_alias(attrs \\ %{}) do
-    %BusinessConceptAlias{}
-    |> BusinessConceptAlias.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Deletes a BusinessConceptAlias.
-
-  ## Examples
-
-      iex> delete_business_concept_alias(business_concept_alias)
-      {:ok, %BusinessConceptAlias{}}
-
-      iex> delete_business_concept_alias(business_concept_alias)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
-    Repo.delete(business_concept_alias)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking business_concept_alias changes.
-
-  ## Examples
-
-      iex> change_business_concept_alias(business_concept_alias)
-      %Ecto.Changeset{source: %BusinessConceptAlias{}}
-
-  """
-  def change_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
-    BusinessConceptAlias.changeset(business_concept_alias, %{})
   end
 
   def get_business_concept_by_name(name) do
