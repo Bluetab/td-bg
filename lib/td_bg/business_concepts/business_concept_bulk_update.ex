@@ -16,7 +16,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
       |> BusinessConcepts.business_concept_versions_by_ids()
 
     with {:ok, update_attributes} <-
-           update_attributes_from_params(user, params, Enum.at(business_concept_versions, 0)),
+           update_attributes_from_params(user, params, business_concept_versions),
          {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
       bcv_list |> Enum.each(&refresh_cache_and_elastic(&1))
 
@@ -79,7 +79,13 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     Enum.map(business_concept_versions, &Map.get(&1, "id"))
   end
 
-  defp update_attributes_from_params(user, params, business_concept_version) do
+  defp update_attributes_from_params(_user, _params, []) do
+    {:error, :empty_business_concepts}
+  end
+
+  defp update_attributes_from_params(user, params, business_concept_versions) do
+    business_concept_version = Enum.at(business_concept_versions, 0)
+
     template = get_template(business_concept_version)
 
     case template do
