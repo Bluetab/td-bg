@@ -57,7 +57,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   end
 
   defp update_data([head | tail], update_attributes, acc) do
-    case BusinessConcepts.update_business_concept_version(head, update_attributes, false) do
+    case BusinessConcepts.bulk_update_business_concept_version(head, update_attributes) do
       {:ok, bcv} ->
         update_data(tail, update_attributes, [bcv | acc])
 
@@ -68,11 +68,9 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
 
   defp update_data(_, _, acc), do: {:ok, acc}
 
-  # TODO: review
   defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
     ConceptLoader.refresh(business_concept_id)
-    # TODO review elastic
   end
 
   defp ids_from_business_concept_versions(business_concept_versions) do

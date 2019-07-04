@@ -280,8 +280,7 @@ defmodule TdBg.BusinessConcepts do
   """
   def update_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        attrs,
-        refreshFlag \\ true
+        attrs
       ) do
     result =
       attrs
@@ -298,7 +297,33 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
-        if refreshFlag, do: refresh_cache_and_elastic(updated_version)
+        refresh_cache_and_elastic(updated_version)
+        {:ok, updated_version}
+
+      _ ->
+        result
+    end
+  end
+
+  def bulk_update_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        attrs
+      ) do
+    result =
+      attrs
+      |> attrs_keys_to_atoms
+      |> raise_error_if_no_content_schema
+      |> add_content_if_not_exist
+      |> merge_content_with_concept(business_concept_version)
+      |> set_content_defaults
+      |> bulk_validate_concept(business_concept_version)
+      |> validate_concept_content
+      |> validate_description
+      |> update_concept
+
+    case result do
+      {:ok, _} ->
+        updated_version = get_business_concept_version!(business_concept_version.id)
         {:ok, updated_version}
 
       _ ->
@@ -660,6 +685,11 @@ defmodule TdBg.BusinessConcepts do
 
   defp validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
     changeset = BusinessConceptVersion.update_changeset(business_concept_version, attrs)
+    Map.put(attrs, :changeset, changeset)
+  end
+
+  defp bulk_validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
+    changeset = BusinessConceptVersion.update_bulk_changeset(business_concept_version, attrs)
     Map.put(attrs, :changeset, changeset)
   end
 

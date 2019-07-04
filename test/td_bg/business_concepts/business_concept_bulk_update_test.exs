@@ -285,8 +285,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert {:ok, bcv_ids} = BulkUpdate.update_all(user, bc_versions, params)
       assert length(bcv_ids) == 2
 
-      assert Enum.at(bcv_ids, 0) == bc_version1.id
-
       assert BusinessConcepts.get_business_concept_version!(bc_version1.id).business_concept.domain_id ==
                d3.id
 
@@ -294,8 +292,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                "template_test1"
 
       assert BusinessConcepts.get_business_concept_version!(bc_version1.id).content == %{}
-
-      assert Enum.at(bcv_ids, 1) == bc_version2.id
 
       assert BusinessConcepts.get_business_concept_version!(bc_version2.id).business_concept.domain_id ==
                d3.id
