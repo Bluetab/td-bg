@@ -332,11 +332,9 @@ defmodule TdBg.BusinessConcepts do
   end
 
   # TODO: put in utils file, this func is used in business_concept_bulk_update too
-  # REFACTOR: use this func in other places
   defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
     ConceptLoader.refresh(business_concept_id)
-    # TODO review elastic
   end
 
   def update_business_concept_version_status(
