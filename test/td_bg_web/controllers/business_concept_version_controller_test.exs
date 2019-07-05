@@ -435,6 +435,122 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
+  describe "bulk_update" do
+    @tag :admin_authenticated
+    test "bulk update of business concept", %{conn: conn} do
+      domain = insert(:domain, name: "domain1")
+      domain_new = insert(:domain, name: "domain_new")
+      business_concept = insert(:business_concept, domain: domain, type: "template_test")
+
+      TemplateCache.put(%{
+        name: "template_test",
+        content: [
+          %{
+            "name" => "Field1",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          },
+          %{
+            "name" => "Field2",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          }
+        ],
+        scope: "test",
+        label: "template_label",
+        id: "999"
+      })
+
+      insert(
+        :business_concept_version,
+        business_concept: business_concept,
+        name: "version_draft",
+        status: BusinessConcept.status().draft
+      )
+
+      version_published =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          name: "version_published",
+          status: BusinessConcept.status().published
+        )
+
+      conn =
+        post(conn, Routes.business_concept_version_path(conn, :bulk_update), %{
+          "update_attributes" => %{
+            "domain_id" => domain_new.id
+          },
+          "search_params" => %{"filters" => %{"status" => ["published"]}}
+        })
+
+      %{"message" => updated_version_ids} = json_response(conn, 200)["data"]
+      assert Enum.at(updated_version_ids, 0) == version_published.id
+    end
+
+    @tag :admin_authenticated
+    test "bulk update of business concept with no domain", %{conn: conn} do
+      domain = insert(:domain, name: "domain1")
+      business_concept = insert(:business_concept, domain: domain, type: "template_test")
+
+      TemplateCache.put(%{
+        name: "template_test",
+        content: [
+          %{
+            "name" => "Field1",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          },
+          %{
+            "name" => "Field2",
+            "type" => "string",
+            "group" => "Multiple Group",
+            "label" => "Multiple 1",
+            "values" => nil,
+            "cardinality" => "1"
+          }
+        ],
+        scope: "test",
+        label: "template_label",
+        id: "999"
+      })
+
+      insert(
+        :business_concept_version,
+        business_concept: business_concept,
+        name: "version_draft",
+        status: BusinessConcept.status().draft
+      )
+
+      insert(
+        :business_concept_version,
+        business_concept: business_concept,
+        name: "version_published",
+        status: BusinessConcept.status().published
+      )
+
+      conn =
+        post(conn, Routes.business_concept_version_path(conn, :bulk_update), %{
+          "update_attributes" => %{
+            "domain_id" => 78_482
+          },
+          "search_params" => %{"filters" => %{"status" => ["published"]}}
+        })
+
+      %{"error" => error} = json_response(conn, 422)
+      assert error == "missing_domain"
+    end
+  end
+
   defp create_version(domain, name, status) do
     business_concept = insert(:business_concept, domain: domain)
 

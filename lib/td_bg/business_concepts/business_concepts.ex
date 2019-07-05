@@ -278,7 +278,10 @@ defmodule TdBg.BusinessConcepts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def update_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        attrs
+      ) do
     result =
       attrs
       |> attrs_keys_to_atoms
@@ -294,13 +297,44 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
-        business_concept_id = updated_version.business_concept_id
-        ConceptLoader.refresh(business_concept_id)
+        refresh_cache_and_elastic(updated_version)
         {:ok, updated_version}
 
       _ ->
         result
     end
+  end
+
+  def bulk_update_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        attrs
+      ) do
+    result =
+      attrs
+      |> attrs_keys_to_atoms
+      |> raise_error_if_no_content_schema
+      |> add_content_if_not_exist
+      |> merge_content_with_concept(business_concept_version)
+      |> set_content_defaults
+      |> bulk_validate_concept(business_concept_version)
+      |> validate_concept_content
+      |> validate_description
+      |> update_concept
+
+    case result do
+      {:ok, _} ->
+        updated_version = get_business_concept_version!(business_concept_version.id)
+        {:ok, updated_version}
+
+      _ ->
+        result
+    end
+  end
+
+  # TODO: put in utils file, this func is used in business_concept_bulk_update too
+  defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
+    business_concept_id = business_concept_version.business_concept_id
+    ConceptLoader.refresh(business_concept_id)
   end
 
   def update_business_concept_version_status(
@@ -484,7 +518,7 @@ defmodule TdBg.BusinessConcepts do
       [%BusinessConceptVersion{}, ...]
 
   """
-  def business_concept_versions_by_ids(list_business_concept_version_ids, status) do
+  def business_concept_versions_by_ids(list_business_concept_version_ids, status \\ nil) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [v, c], _ in assoc(c, :domain))
@@ -652,6 +686,11 @@ defmodule TdBg.BusinessConcepts do
     Map.put(attrs, :changeset, changeset)
   end
 
+  defp bulk_validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
+    changeset = BusinessConceptVersion.bulk_update_changeset(business_concept_version, attrs)
+    Map.put(attrs, :changeset, changeset)
+  end
+
   defp merge_content_with_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
     content = Map.get(attrs, :content)
     concept_content = Map.get(business_concept_version, :content, %{})
@@ -700,7 +739,8 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp validate_description(attrs) do
-    if Map.has_key?(attrs, :in_progress) && !attrs.in_progress do
+    if Map.has_key?(attrs, :description) && Map.has_key?(attrs, :in_progress) &&
+         !attrs.in_progress do
       do_validate_description(attrs)
     else
       attrs
