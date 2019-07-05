@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-1316] Bulk update endpoint for business concept versions
+
 ### Fixed
 
 - [TD-1946] Fixed error indexing concepts pertaining to soft-deleted domains
