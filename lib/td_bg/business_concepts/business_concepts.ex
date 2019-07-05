@@ -689,7 +689,7 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp bulk_validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
-    changeset = BusinessConceptVersion.update_bulk_changeset(business_concept_version, attrs)
+    changeset = BusinessConceptVersion.bulk_update_changeset(business_concept_version, attrs)
     Map.put(attrs, :changeset, changeset)
   end
 

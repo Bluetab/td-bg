@@ -89,7 +89,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> validate_length(:mod_comments, max: 500)
   end
 
-  def update_bulk_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def bulk_update_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
     |> cast(attrs, [
       :content,
