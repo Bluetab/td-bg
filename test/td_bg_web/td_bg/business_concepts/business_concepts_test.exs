@@ -822,7 +822,7 @@ defmodule TdBg.BusinessConceptsTests do
     changeset
   end
 
-  defp random_name() do
+  defp random_name do
     id = :rand.uniform(100_000_000)
     "Concept #{id}"
   end
