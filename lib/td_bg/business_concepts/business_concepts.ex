@@ -20,7 +20,7 @@ defmodule TdBg.BusinessConcepts do
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   @doc """
-    check business concept name availability
+  check business concept name availability
   """
   def check_business_concept_name_availability(type, name, exclude_concept_id \\ nil)
 

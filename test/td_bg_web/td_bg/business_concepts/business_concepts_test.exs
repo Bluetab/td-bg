@@ -430,9 +430,12 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "check_business_concept_name_availability/2 check not available" do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      name = random_name()
+
+      business_concept_version =
+        insert(:business_concept_version, name: name, last_change_by: user.id)
+
       type = business_concept_version.business_concept.type
-      name = business_concept_version.name
 
       assert {:name_not_available} ==
                BusinessConcepts.check_business_concept_name_availability(type, name)
@@ -440,10 +443,13 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "check_business_concept_name_availability/2 check available" do
       user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      name = random_name()
+
+      business_concept_version =
+        insert(:business_concept_version, name: name, last_change_by: user.id)
+
       exclude_concept_id = business_concept_version.business_concept.id
       type = business_concept_version.business_concept.type
-      name = business_concept_version.name
 
       assert {:name_available} ==
                BusinessConcepts.check_business_concept_name_availability(
@@ -454,6 +460,8 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "check_business_concept_name_availability/3 check not available" do
+      [name1, name2] = 1..10 |> Enum.map(fn _ -> random_name() end) |> Enum.uniq() |> Enum.take(2)
+
       user = build(:user)
       domain = insert(:domain)
       bc1 = insert(:business_concept, domain: domain)
@@ -463,7 +471,7 @@ defmodule TdBg.BusinessConceptsTests do
         insert(
           :business_concept_version,
           last_change_by: user.id,
-          name: "first",
+          name: name1,
           business_concept: bc1
         )
 
@@ -471,14 +479,14 @@ defmodule TdBg.BusinessConceptsTests do
         insert(
           :business_concept_version,
           last_change_by: user.id,
-          name: "second",
+          name: name2,
           business_concept: bc2
         )
 
       assert {:name_not_available} ==
                BusinessConcepts.check_business_concept_name_availability(
                  second.business_concept.type,
-                 "first",
+                 name1,
                  second.id
                )
     end
@@ -812,5 +820,10 @@ defmodule TdBg.BusinessConceptsTests do
 
     assert current_validation == expected_validation
     changeset
+  end
+
+  defp random_name do
+    id = :rand.uniform(100_000_000)
+    "Concept #{id}"
   end
 end
