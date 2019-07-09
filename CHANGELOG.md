@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- [TD-1480] Reindex business concept in index_worker background process
+
 ## [3.1.0] 2019-07-08
 
 ### Added

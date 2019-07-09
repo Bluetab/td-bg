@@ -3,13 +3,14 @@ defmodule TdBgWeb.SearchController do
   import Canada, only: [can?: 2]
   use PhoenixSwagger
   alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.Search.Indexer
   alias TdBgWeb.ErrorView
+
+  @index_worker Application.get_env(:td_bg, :index_worker)
 
   swagger_path :reindex_all do
     description("Reindex all ES indexes with DB content")
     produces("application/json")
-    response(200, "OK")
+    response(202, "Accepted")
     response(403, "Unauthorized")
     response(500, "Client Error")
   end
@@ -18,8 +19,8 @@ defmodule TdBgWeb.SearchController do
     user = conn.assigns[:current_user]
 
     with true <- can?(user, reindex_all(BusinessConcept)) do
-      {:ok, _response} = Indexer.reindex(:business_concept)
-      send_resp(conn, :ok, "")
+      @index_worker.reindex(:all)
+      send_resp(conn, :accepted, "")
     else
       false ->
         conn
