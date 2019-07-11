@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 
+
+### Fixed
+
+- [TD-1951] Swagger with phoenix version 1.4.9
+
 ## [3.1.0] 2019-07-08
 
 ### Added
