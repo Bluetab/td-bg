@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## [Unreleased] 
+
+### Fixed
+
+- [TD-1951] Swagger with phoenix version 1.4.9
+- [TD-1687] Delete business concept from Concept Cache on bc first draft deletion and version deprecation
 
 ### Changed
 
