@@ -5,6 +5,11 @@
 ### Fixed
 
 - [TD-1951] Swagger with phoenix version 1.4.9
+- [TD-1687] Delete business concept from Concept Cache on bc first draft deletion and version deprecation
+
+### Changed
+
+- [TD-1480] Reindex business concept in index_worker background process
 
 ## [3.1.0] 2019-07-08
 
@@ -15,7 +20,6 @@
 ### Fixed
 
 - [TD-1946] Fixed error indexing concepts pertaining to soft-deleted domains
-- [TD-1687] Delete business concept from Concept Cache on bc first draft deletion and version deprecation
 
 ### Changed
 
