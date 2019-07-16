@@ -303,6 +303,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       business_concept_version =
         business_concept_version
         |> add_completeness_to_bc_version(template)
+        |> add_counts()
 
       render(
         conn,
@@ -326,6 +327,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  defp add_counts(%BusinessConceptVersion{} = business_concept_version) do
+    counts = BusinessConcepts.get_concept_counts(business_concept_version.business_concept_id)
+    Map.merge(business_concept_version, counts)
+  end
+
   swagger_path :delete do
     description("Delete a business concept version")
     produces("application/json")
@@ -337,6 +343,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(204, "No Content")
     response(400, "Client Error")
   end
+  
 
   def delete(conn, %{"id" => id}) do
     user = conn.assigns[:current_user]
