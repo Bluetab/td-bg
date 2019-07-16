@@ -53,7 +53,8 @@ defmodule TdBg.Mixfile do
       {:canada, "~> 1.0.1"},
       {:ex_machina, "~> 2.2.2", only: [:test]},
       {:corsica, "~> 1.0"},
-      {:phoenix_swagger, "~> 0.8.0"},
+      # TODO: Update when released
+      {:phoenix_swagger, git: "https://github.com/xerions/phoenix_swagger", ref: "6869934eb0838b9f249226628eabeaedbdef8ea3"},
       {:ex_json_schema, "~> 0.5"},
       {:json_diff, "~> 0.1.0"},
       {:csv, "~> 2.0.0"},

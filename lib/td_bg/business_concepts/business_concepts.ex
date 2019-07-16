@@ -31,13 +31,15 @@ defmodule TdBg.BusinessConcepts do
   def check_business_concept_name_availability(type, name, exclude_concept_id) do
     status = [BusinessConcept.status().versioned, BusinessConcept.status().deprecated]
 
-    count =
-      BusinessConcept
-      |> join(:left, [c], _ in assoc(c, :versions))
-      |> where([c, v], c.type == ^type and v.status not in ^status)
-      |> include_name_where(name, exclude_concept_id)
-      |> select([c, v], count(c.id))
-      |> Repo.one!()
+    {:ok, count} =
+      Repo.transaction(fn ->
+        BusinessConcept
+        |> join(:left, [c], _ in assoc(c, :versions))
+        |> where([c, v], c.type == ^type and v.status not in ^status)
+        |> include_name_where(name, exclude_concept_id)
+        |> select([c, v], count(c.id))
+        |> Repo.one!()
+      end)
 
     if count == 0, do: {:name_available}, else: {:name_not_available}
   end
@@ -338,9 +340,25 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def update_business_concept_version_status(
+    %BusinessConceptVersion{} = business_concept_version,
+    %{status: "deprecated"} = attrs
+  ) do
+    result = do_update_business_concept_version_status(business_concept_version, attrs)
+    ConceptCache.delete(business_concept_version.business_concept_id)
+    result
+  end
+
+  def update_business_concept_version_status(
         %BusinessConceptVersion{} = business_concept_version,
         attrs
       ) do
+    do_update_business_concept_version_status(business_concept_version, attrs)
+  end
+
+  defp do_update_business_concept_version_status(
+         %BusinessConceptVersion{} = business_concept_version,
+         attrs
+       ) do
     result =
       business_concept_version
       |> BusinessConceptVersion.update_status_changeset(attrs)
@@ -603,7 +621,7 @@ defmodule TdBg.BusinessConcepts do
             },
             "business_concept:events"
           )
-
+          ConceptCache.delete(business_concept_id)
           # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
           @search_service.delete_search(business_concept_version)
           {:ok, version}
