@@ -1,11 +1,12 @@
 # Changelog
 
-## [Unreleased] 
+## [Unreleased]
 
 ### Fixed
 
 - [TD-1951] Swagger with phoenix version 1.4.9
 - [TD-1687] Delete business concept from Concept Cache on bc first draft deletion and version deprecation
+- [TD-1664] Recover link_count and rule_count in concpet
 
 ### Changed
 
@@ -70,7 +71,7 @@
 
 ### Added
 
-- [TD-1085] Support filtering on empty values in fields with cardinality `+` or `*`  
+- [TD-1085] Support filtering on empty values in fields with cardinality `+` or `*`
 - [TD-1422] Support for removing stale business concept relations (td_perms 2.14.0)
 
 ### Changed
@@ -86,9 +87,9 @@
 ### Changed
 
 - Revised CSV Upload process:
- - It now uses entity helpers to create new concepts instead of hardcoded SQL statments
- - Added structural validations before trying to parse and insert values
- - Refactor messages for specific internationalization instead of general errors
+- It now uses entity helpers to create new concepts instead of hardcoded SQL statments
+- Added structural validations before trying to parse and insert values
+- Refactor messages for specific internationalization instead of general errors
 
 ## [2.12.4] 2019-02-01
 
