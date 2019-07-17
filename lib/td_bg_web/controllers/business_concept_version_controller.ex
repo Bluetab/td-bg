@@ -343,7 +343,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(204, "No Content")
     response(400, "Client Error")
   end
-  
 
   def delete(conn, %{"id" => id}) do
     user = conn.assigns[:current_user]
