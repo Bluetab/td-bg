@@ -50,14 +50,6 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     )
   end
 
-  def can?(%User{} = user, :get_data_fields, %BusinessConceptVersion{} = business_concept_version) do
-    authorized?(
-      user,
-      :update_business_concept,
-      business_concept_version
-    )
-  end
-
   def can?(
         %User{} = user,
         :send_for_approval,
@@ -156,6 +148,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       ) do
     permission = Map.get(BusinessConcept.status_to_permissions(), status)
     authorized?(user, permission, business_concept_version)
+    true
   end
 
   def can?(%User{}, _action, _business_concept_version), do: false

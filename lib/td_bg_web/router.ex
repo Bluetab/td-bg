@@ -53,13 +53,9 @@ defmodule TdBgWeb.Router do
       post("/redraft", BusinessConceptVersionController, :undo_rejection)
       get("/data_structures", BusinessConceptVersionController, :get_data_structures)
 
-      get(
-        "/data_structures/:data_structure_id/data_fields",
-        BusinessConceptVersionController,
-        :get_data_fields
-      )
-
       get("/versions", BusinessConceptVersionController, :versions)
+      resources("/links", BusinessConceptLinkController, only: [:delete])
+      post("/links", BusinessConceptLinkController, :create_link)
     end
 
     post("/business_concept_versions/search", BusinessConceptVersionController, :search)

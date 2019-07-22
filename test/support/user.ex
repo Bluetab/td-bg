@@ -1,7 +1,7 @@
 defmodule TdBgWeb.User do
   @moduledoc false
 
-  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   def get_role_by_name(role_name) do
     # Use hash to map name to role id for tests
@@ -25,6 +25,6 @@ defmodule TdBgWeb.User do
   end
 
   def get_group_by_name(group_name) do
-    @td_auth_api.get_group_by_name(group_name)
+    MockTdAuthService.get_group_by_name(group_name)
   end
 end

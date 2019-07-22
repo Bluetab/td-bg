@@ -34,4 +34,11 @@ defmodule TdBg.Canada.TaxonomyAbilities do
     Permissions.authorized?(user, :delete_domain, domain_id)
   end
 
+  def can?(%User{} = user, :delete_link, %Domain{id: domain_id}) do
+    Permissions.authorized?(user, :manage_business_concept_links, domain_id)
+  end
+
+  def can?(%User{} = user, :create_link, %Domain{id: domain_id}) do
+    Permissions.authorized?(user, :manage_business_concept_links, domain_id)
+  end
 end

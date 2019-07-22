@@ -1,7 +1,7 @@
 defmodule TdBgWeb.DomainView do
   use TdBgWeb, :view
   alias TdBgWeb.DomainView
-  use TdBg.Hypermedia, :view
+  use TdHypermedia, :view
 
   def render("index.json", %{domains: domains, hypermedia: hypermedia}) do
     render_many_hypermedia(domains, hypermedia, DomainView, "domain.json")
@@ -40,5 +40,4 @@ defmodule TdBgWeb.DomainView do
   def render("domain_tiny.json", %{domain: domain}) do
     %{id: domain.id, name: domain.name}
   end
-
 end
