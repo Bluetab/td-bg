@@ -5,8 +5,10 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canada.BusinessConceptAbilities
+  alias TdBg.Canada.LinkAbilities
   alias TdBg.Canada.TaxonomyAbilities
   alias TdBg.Taxonomies.Domain
+  alias TdCache.Link
 
   defimpl Canada.Can, for: User do
     # administrator is superpowerful for Domain
@@ -24,6 +26,14 @@ defmodule TdBg.Canada.Abilities do
 
     def can?(%User{is_admin: true}, _action, %Domain{}) do
       true
+    end
+
+    def can?(%User{} = user, action, %Link{} = link) do
+      LinkAbilities.can?(user, action, link)
+    end
+
+    def can?(%User{} = user, action, %{hint: :link} = resource) do
+      LinkAbilities.can?(user, action, resource)
     end
 
     def can?(%User{} = user, :list, Domain) do
@@ -68,14 +78,6 @@ defmodule TdBg.Canada.Abilities do
           %BusinessConceptVersion{} = business_concept_version
         ) do
       BusinessConceptAbilities.can?(user, :get_data_structures, business_concept_version)
-    end
-
-    def can?(
-          %User{} = user,
-          :get_data_fields,
-          %BusinessConceptVersion{} = business_concept_version
-        ) do
-      BusinessConceptAbilities.can?(user, :get_data_fields, business_concept_version)
     end
 
     def can?(

@@ -2,15 +2,19 @@
 
 ## [Unreleased] 
 
+### Added
+
+- [TD-1532] Improved linking with data structures, removing integration with td-dd
+
 ### Fixed
 
 - [TD-1951] Swagger with phoenix version 1.4.9
-- [TD-1687] Delete business concept from Concept Cache on bc first draft deletion and version deprecation
+- [TD-1687] Delete concept from cache on deprecation and first draft deletion
 
 ### Changed
 
-- [TD-1480] Reindex business concept in index_worker background process
-- [TD-2002] Update td-cache and delete permissions list from config
+- [TD-1480] Reindex business concept using a background process
+- [TD-2002] Update td-cache and remove permissions list from config
 
 ## [3.1.0] 2019-07-08
 

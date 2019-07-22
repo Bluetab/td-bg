@@ -2,20 +2,17 @@ defmodule TdBg.Metrics.BusinessConcepts do
   @moduledoc false
 
   use GenServer
-  require Logger
+
   alias TdBg.Metrics.Instrumenter
   alias TdBg.Utils.CollectionUtils
   alias TdCache.TemplateCache
 
-  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
+  require Logger
 
-  @fixed_concepts_count_dimensions [:status, :parent_domains, :has_quality, :has_link]
   @fixed_completness_dimensions [:id, :group, :field, :status, :parent_domains]
-
-  @metrics_publication_frequency Application.get_env(
-                                   :td_bg,
-                                   :metrics_publication_frequency
-                                 )
+  @fixed_concepts_count_dimensions [:status, :parent_domains, :has_quality, :has_link]
+  @metrics_publication_frequency Application.get_env(:td_bg, :metrics_publication_frequency)
+  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   def start_link(opts \\ %{}) do
     GenServer.start_link(__MODULE__, opts)
@@ -58,13 +55,13 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def get_template_map do
-    TemplateCache.list!()
+    TemplateCache.list_by_scope!("bg")
     |> Enum.map(&{&1.name, get_template_dimensions(&1)})
     |> Map.new()
   end
 
   def get_content_map do
-    TemplateCache.list!()
+    TemplateCache.list_by_scope!("bg")
     |> Enum.map(&{&1.name, &1.content})
     |> Map.new()
   end
@@ -309,7 +306,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   end
 
   def get_dimensions_from_templates do
-    TemplateCache.list!()
+    TemplateCache.list_by_scope!("bg")
     |> Enum.map(fn template ->
       %{
         name: template.name,

@@ -7,9 +7,11 @@ defmodule TdBgWeb.Authentication do
   alias TdBg.Accounts.User
   alias TdBg.Auth.Guardian
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBgWeb.ApiServices.MockTdAuthService
+
   import Plug.Conn
+
   @headers {"Content-type", "application/json"}
-  @td_auth_api Application.get_env(:td_bg, :auth_service)[:api_service]
 
   def put_auth_headers(conn, jwt) do
     conn
@@ -44,7 +46,7 @@ defmodule TdBgWeb.Authentication do
     groups = Keyword.get(opts, :groups, [])
 
     user =
-      @td_auth_api.create_user(%{
+      MockTdAuthService.create_user(%{
         "user" => %{
           "user_name" => user_name,
           "full_name" => user_name,
@@ -67,7 +69,7 @@ defmodule TdBgWeb.Authentication do
           email = Keyword.get(opts, :email, "some@email.com")
           groups = Keyword.get(opts, :groups, [])
 
-          @td_auth_api.create_user(%{
+          MockTdAuthService.create_user(%{
             "user" => %{
               "user_name" => user_name,
               "full_name" => user_name,
@@ -86,11 +88,11 @@ defmodule TdBgWeb.Authentication do
   end
 
   def get_user_by_name(user_name) do
-    @td_auth_api.get_user_by_name(user_name)
+    MockTdAuthService.get_user_by_name(user_name)
   end
 
   def get_users do
-    @td_auth_api.index()
+    MockTdAuthService.index()
   end
 
   def build_user_token(%User{} = user) do
@@ -107,8 +109,8 @@ defmodule TdBgWeb.Authentication do
 
   def get_user_token(user_name) do
     user_name
-      |> build_user_token(is_admin: user_name == "app-admin")
-      |> register_token
+    |> build_user_token(is_admin: user_name == "app-admin")
+    |> register_token
   end
 
   defp register_token(token) do
@@ -116,6 +118,7 @@ defmodule TdBgWeb.Authentication do
       {:ok, resource} -> MockPermissionResolver.register_token(resource)
       _ -> raise "Problems decoding and verifying token"
     end
+
     token
   end
 end

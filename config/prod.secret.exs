@@ -26,22 +26,6 @@ config :td_bg, TdBg.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "${GUARDIAN_SECRET_KEY}"
 
-config :td_bg, :api_services_login,
-  api_username: "${API_USER}",
-  api_password: "${API_PASSWORD}"
-
-config :td_bg, :auth_service,
-  api_service: TdBgWeb.ApiServices.HttpTdAuthService,
-  auth_host: "${API_AUTH_HOST}",
-  auth_port: "${API_AUTH_PORT}",
-  auth_domain: ""
-
-config :td_bg, :dd_service,
-  api_service: TdBgWeb.ApiServices.HttpTdDdService,
-  dd_host: "${API_DD_HOST}",
-  dd_port: "${API_DD_PORT}",
-  dd_domain: ""
-
 config :td_bg, :elasticsearch,
   search_service: TdBg.Search,
   es_host: "${ES_HOST}",

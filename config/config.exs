@@ -46,18 +46,6 @@ config :td_bg, TdBg.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "SuperSecretTruedat"
 
-config :td_bg, :auth_service,
-  protocol: "http",
-  users_path: "/api/users/",
-  sessions_path: "/api/sessions/",
-  groups_path: "/api/groups"
-
-config :td_bg, :dd_service,
-  protocol: "http",
-  data_structures_path: "/api/data_structures",
-  data_fields_path: "/api/data_fields",
-  groups_path: "/api/groups"
-
 config :td_bg, :phoenix_swagger,
   swagger_files: %{
     "priv/static/swagger.json" => [router: TdBgWeb.Router]

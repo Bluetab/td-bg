@@ -340,9 +340,9 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def update_business_concept_version_status(
-    %BusinessConceptVersion{} = business_concept_version,
-    %{status: "deprecated"} = attrs
-  ) do
+        %BusinessConceptVersion{} = business_concept_version,
+        %{status: "deprecated"} = attrs
+      ) do
     result = do_update_business_concept_version_status(business_concept_version, attrs)
     ConceptCache.delete(business_concept_version.business_concept_id)
     result
@@ -621,6 +621,7 @@ defmodule TdBg.BusinessConcepts do
             },
             "business_concept:events"
           )
+
           ConceptCache.delete(business_concept_id)
           # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
           @search_service.delete_search(business_concept_version)
