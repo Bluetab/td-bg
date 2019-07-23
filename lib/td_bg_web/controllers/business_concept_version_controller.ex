@@ -299,6 +299,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       business_concept_version =
         business_concept_version
         |> add_completeness_to_bc_version(template)
+        |> add_counts()
 
       links = Links.get_links(business_concept_version)
 
@@ -324,6 +325,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_view(ErrorView)
         |> render("422.json")
     end
+  end
+
+  defp add_counts(%BusinessConceptVersion{} = business_concept_version) do
+    counts = BusinessConcepts.get_concept_counts(business_concept_version.business_concept_id)
+    Map.merge(business_concept_version, counts)
   end
 
   defp links_hypermedia(conn, links, business_concept_version) do
