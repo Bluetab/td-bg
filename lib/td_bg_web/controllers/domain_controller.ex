@@ -1,6 +1,6 @@
 defmodule TdBgWeb.DomainController do
   use TdBgWeb, :controller
-  use TdBg.Hypermedia, :controller
+  use TdHypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]

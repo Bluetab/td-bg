@@ -1,6 +1,6 @@
 defmodule TdBgWeb.BusinessConceptView do
   use TdBgWeb, :view
-  use TdBg.Hypermedia, :view
+  use TdHypermedia, :view
   alias Ecto
   alias TdBgWeb.BusinessConceptView
 

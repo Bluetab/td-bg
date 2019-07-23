@@ -1,8 +1,9 @@
 defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
-  use TdBg.Hypermedia, :view
+  use TdHypermedia, :view
 
   alias TdBgWeb.BusinessConceptVersionView
+  alias TdBgWeb.LinkView
   alias TdCache.UserCache
 
   def render("index.json", %{
@@ -26,6 +27,27 @@ defmodule TdBgWeb.BusinessConceptVersionView do
           "business_concept_version.json"
         )
     }
+  end
+
+  def render(
+        "show.json",
+        %{
+          business_concept_version: business_concept_version,
+          links: links,
+          links_hypermedia: links_hypermedia
+        } = assigns
+      ) do
+    %{"data" => links} =
+      render_many_hypermedia(links, links_hypermedia, LinkView, "embedded.json")
+
+    render_one(
+      business_concept_version,
+      BusinessConceptVersionView,
+      "show.json",
+      assigns
+      |> Map.delete(:links_hypermedia)
+      |> Map.put("_embedded", %{links: links})
+    )
   end
 
   def render(
@@ -103,9 +125,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   # TODO: update swagger with embedded
   def render(
         "business_concept_version.json",
-        %{
-          business_concept_version: business_concept_version
-        } = assigns
+        %{business_concept_version: business_concept_version} = assigns
       ) do
     {:ok, user} = UserCache.get(business_concept_version.last_change_by)
 
@@ -138,6 +158,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       business_concept_version.version
     )
     |> add_template(assigns)
+    |> add_embedded_resources(assigns)
   end
 
   def render("versions.json", %{

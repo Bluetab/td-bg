@@ -9,13 +9,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias TdBgWeb.ApiServices.MockTdDdService
   alias TdCache.TemplateCache
 
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
-    start_supervised(MockTdDdService)
     start_supervised(MockPermissionResolver)
     :ok
   end
@@ -341,97 +339,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         &assert updated_business_concept_version |> Map.get(Atom.to_string(elem(&1, 0))) ==
                   elem(&1, 1)
       )
-    end
-  end
-
-  describe "data_structures" do
-    @tag :admin_authenticated
-    test "list data structures", %{conn: conn, swagger_schema: schema} do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
-      business_concept_version_id = business_concept_version.id
-
-      data_structure_1 = %{
-        "id" => 1,
-        "ou" => "ou 1",
-        "system" => "system 1",
-        "group" => "group 1",
-        "name" => "name 1",
-        "description" => to_rich_text("description 1")
-      }
-
-      data_structure_2 = %{
-        "id" => 12,
-        "ou" => "ou 1",
-        "system" => "system 2",
-        "group" => "group 2",
-        "name" => "name 2",
-        "description" => to_rich_text("description 2")
-      }
-
-      MockTdDdService.set_data_structure(data_structure_1)
-      MockTdDdService.set_data_structure(data_structure_2)
-
-      conn =
-        get(
-          conn,
-          Routes.business_concept_version_business_concept_version_path(
-            conn,
-            :get_data_structures,
-            business_concept_version_id
-          )
-        )
-
-      validate_resp_schema(conn, schema, "DataStructuresResponse")
-      response = json_response(conn, 200)["data"]
-      response = Enum.sort_by(response, & &1["system"])
-
-      assert Enum.at(response, 0)["system"] == data_structure_1["system"]
-      assert Enum.at(response, 1)["system"] == data_structure_2["system"]
-    end
-  end
-
-  describe "data_fielsd" do
-    @tag :admin_authenticated
-    test "list data structures", %{conn: conn, swagger_schema: schema} do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
-      business_concept_version_id = business_concept_version.id
-
-      data_field_1 = %{
-        "id" => 1,
-        "name" => "name 1"
-      }
-
-      data_field_2 = %{
-        "id" => 2,
-        "name" => "name 2"
-      }
-
-      data_structure = %{
-        "ou" => business_concept_version.business_concept.domain.name,
-        "data_fields" => [data_field_1, data_field_2]
-      }
-
-      MockTdDdService.set_data_field(data_structure)
-
-      conn =
-        get(
-          conn,
-          Routes.business_concept_version_business_concept_version_path(
-            conn,
-            :get_data_fields,
-            business_concept_version_id,
-            1234
-          )
-        )
-
-      validate_resp_schema(conn, schema, "DataFieldsResponse")
-      response = json_response(conn, 200)["data"]
-      response = Enum.sort_by(response, & &1["system"])
-
-      assert Enum.at(response, 0)["name"] == data_field_1["name"]
-      assert Enum.at(response, 1)["name"] == data_field_2["name"]
     end
   end
 

@@ -1,6 +1,6 @@
 defmodule TdBgWeb.BusinessConceptVersionController do
   use TdBgWeb, :controller
-  use TdBg.Hypermedia, :controller
+  use TdHypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -14,18 +14,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Events
+  alias TdBg.BusinessConcepts.Links
   alias TdBg.Taxonomies
-  alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.BusinessConceptSupport
-  alias TdBgWeb.DataFieldView
-  alias TdBgWeb.DataStructureView
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdCache.TemplateCache
 
   require Logger
-
-  @td_dd_api Application.get_env(:td_bg, :dd_service)[:api_service]
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -305,10 +301,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> add_completeness_to_bc_version(template)
         |> add_counts()
 
+      links = Links.get_links(business_concept_version)
+
       render(
         conn,
         "show.json",
         business_concept_version: business_concept_version,
+        links: links,
+        links_hypermedia: links_hypermedia(conn, links, business_concept_version),
         hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
         template: template
       )
@@ -330,6 +330,25 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp add_counts(%BusinessConceptVersion{} = business_concept_version) do
     counts = BusinessConcepts.get_concept_counts(business_concept_version.business_concept_id)
     Map.merge(business_concept_version, counts)
+  end
+
+  defp links_hypermedia(conn, links, business_concept_version) do
+    collection_hypermedia(
+      "business_concept_version_business_concept_link",
+      conn,
+      Enum.map(links, &annotate(&1, business_concept_version)),
+      Link
+    )
+  end
+
+  defp annotate(link, %BusinessConceptVersion{
+         id: business_concept_version_id,
+         business_concept: %{domain_id: domain_id}
+       }) do
+    link
+    |> Map.put(:business_concept_version_id, business_concept_version_id)
+    |> Map.put(:domain_id, domain_id)
+    |> Map.put(:hint, :link)
   end
 
   swagger_path :delete do
@@ -854,115 +873,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_view(ErrorView)
         |> render("422.json")
     end
-  end
-
-  swagger_path :get_data_structures do
-    description("Get business concept version associated data structures")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:DataStructuresResponse))
-    response(400, "Client Error")
-  end
-
-  def get_data_structures(conn, %{"business_concept_version_id" => id}) do
-    user = conn.assigns[:current_user]
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-
-    with true <- can?(user, get_data_structures(business_concept_version)) do
-      ous = BusinessConceptSupport.get_concept_ous(business_concept_version, user)
-      Logger.info("Retrieved ous #{inspect(ous)}")
-      data_structures = @td_dd_api.get_data_structures(%{ou: Enum.join(ous, "§")})
-      cooked_data_structures = cooked_data_structures(data_structures)
-
-      conn
-      |> put_view(DataStructureView)
-      |> render(
-        "data_structures.json",
-        data_structures: cooked_data_structures
-      )
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      error ->
-        Logger.error("While getting data structures... #{inspect(error)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
-    end
-  end
-
-  swagger_path :get_data_fields do
-    description("Get business concept version associated data structure data fields")
-    produces("application/json")
-
-    parameters do
-      business_concept_id(:path, :integer, "Business Concept Version ID", required: true)
-      data_structure_id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:ConceptFieldsResponse))
-    response(400, "Client Error")
-  end
-
-  def get_data_fields(conn, %{
-        "business_concept_version_id" => id,
-        "data_structure_id" => data_structure_id
-      }) do
-    user = conn.assigns[:current_user]
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-
-    with true <- can?(user, get_data_fields(business_concept_version)) do
-      ous = BusinessConceptSupport.get_concept_ous(business_concept_version, user)
-      data_structure = @td_dd_api.get_data_fields(%{data_structure_id: data_structure_id})
-
-      data_fields =
-        case Enum.member?(ous, data_structure["ou"]) do
-          true -> Map.get(data_structure, "data_fields")
-          _ -> []
-        end
-
-      cooked_data_fields = cooked_data_fields(data_fields)
-
-      conn
-      |> put_view(DataFieldView)
-      |> render("data_fields.json", data_fields: cooked_data_fields)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      error ->
-        Logger.error("While getting data structures... #{inspect(error)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
-    end
-  end
-
-  defp cooked_data_structures(data_structures) do
-    data_structures
-    |> Enum.map(&CollectionUtils.atomize_keys(&1))
-    |> Enum.map(&Map.take(&1, [:id, :ou, :system, :group, :name]))
-  end
-
-  defp cooked_data_fields(data_fields) do
-    data_fields
-    |> Enum.map(&CollectionUtils.atomize_keys(&1))
-    |> Enum.map(&Map.take(&1, [:id, :name]))
   end
 
   defp get_template(%BusinessConceptVersion{} = version) do

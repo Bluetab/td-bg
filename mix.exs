@@ -53,8 +53,10 @@ defmodule TdBg.Mixfile do
       {:canada, "~> 1.0.1"},
       {:ex_machina, "~> 2.2.2", only: [:test]},
       {:corsica, "~> 1.0"},
-      # TODO: Update when released
-      {:phoenix_swagger, git: "https://github.com/xerions/phoenix_swagger", ref: "6869934eb0838b9f249226628eabeaedbdef8ea3"},
+      # TODO: Update when released, see https://github.com/xerions/phoenix_swagger/issues/232
+      {:phoenix_swagger,
+       git: "https://github.com/xerions/phoenix_swagger",
+       ref: "6869934eb0838b9f249226628eabeaedbdef8ea3"},
       {:ex_json_schema, "~> 0.5"},
       {:json_diff, "~> 0.1.0"},
       {:csv, "~> 2.0.0"},
@@ -63,7 +65,8 @@ defmodule TdBg.Mixfile do
       {:prometheus_ex, "~> 3.0"},
       {:prometheus_plugs, "~> 1.0"},
       {:grafana, git: "https://github.com/BoringButGreat/grafana.git"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.0.5"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.2.3"},
+      {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.2.0"},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.0.1"}
     ]
   end
