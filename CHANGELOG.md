@@ -10,7 +10,6 @@
 
 - [TD-1951] Swagger with phoenix version 1.4.9
 - [TD-1687] Delete concept from cache on deprecation and first draft deletion
-- [TD-1687] Delete business concept from Concept Cache on bc first draft deletion and version deprecation
 - [TD-1664] Recover link_count and rule_count in concpet
 
 ### Changed
