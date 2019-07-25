@@ -128,6 +128,19 @@ defmodule TdBg.BusinessConcepts do
     )
   end
 
+  def get_confidential_ids do
+    confidential = %{"_confidential" => "Si"}
+
+    Repo.all(
+      from(v in "business_concept_versions",
+        where: v.current,
+        where: v.status != "deprecated",
+        where: fragment("(?) @> ?::jsonb", field(v, :content), ^confidential),
+        select: v.business_concept_id
+      )
+    )
+  end
+
   @doc """
   Gets a single business_concept.
 
@@ -333,10 +346,18 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  # TODO: put in utils file, this func is used in business_concept_bulk_update too
   defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
     ConceptLoader.refresh(business_concept_id)
+
+    Publisher.publish(
+      %{
+        event: "concept_updated",
+        resource_type: "business_concept",
+        resource_id: business_concept_id
+      },
+      "business_concept:events"
+    )
   end
 
   def update_business_concept_version_status(
@@ -615,7 +636,7 @@ defmodule TdBg.BusinessConcepts do
          }} ->
           Publisher.publish(
             %{
-              event: "delete_concept",
+              event: "concept_deleted",
               resource_type: "business_concept",
               resource_id: business_concept_id
             },

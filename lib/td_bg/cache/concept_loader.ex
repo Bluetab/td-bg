@@ -43,7 +43,7 @@ defmodule TdBg.Cache.ConceptLoader do
   @impl true
   def init(state) do
     unless Application.get_env(:td_bg, :env) == :test do
-      Process.send_after(self(), :put_active_ids, 200)
+      Process.send_after(self(), :put_ids, 200)
     end
 
     name = String.replace_prefix("#{__MODULE__}", "Elixir.", "")
@@ -52,8 +52,9 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   @impl true
-  def handle_info(:put_active_ids, state) do
+  def handle_info(:put_ids, state) do
     put_active_ids()
+    put_confidential_ids()
     {:noreply, state}
   end
 
@@ -78,7 +79,7 @@ defmodule TdBg.Cache.ConceptLoader do
   ## Private functions
 
   @concept_props [:id, :domain_id, :type]
-  @version_props [:id, :name, :status, :version]
+  @version_props [:id, :content, :name, :status, :version]
 
   defp read_concept_ids(%{event: "add_link", source: source, target: target}) do
     [source, target]
@@ -150,6 +151,13 @@ defmodule TdBg.Cache.ConceptLoader do
     case BusinessConcepts.get_active_ids() do
       [] -> {:ok, []}
       ids -> ConceptCache.put_active_ids(ids)
+    end
+  end
+
+  defp put_confidential_ids do
+    case BusinessConcepts.get_confidential_ids() do
+      [] -> {:ok, []}
+      ids -> ConceptCache.put_confidential_ids(ids)
     end
   end
 end
