@@ -27,7 +27,6 @@ defmodule TdBg.Search.Aggregations do
 
     dynamic_keywords =
       TemplateCache.list_by_scope!("bg")
-      |> Enum.filter(fn %{id: id} -> id == 0 end)
       |> Enum.flat_map(&template_terms/1)
 
     (static_keywords ++ dynamic_keywords)
