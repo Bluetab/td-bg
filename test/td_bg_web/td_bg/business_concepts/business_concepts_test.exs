@@ -756,6 +756,28 @@ defmodule TdBg.BusinessConceptsTests do
                BusinessConcepts.change_business_concept_version(business_concept_version)
     end
 
+    test "get_confidential_ids returns all business concept ids which are confidential" do
+      bc1 = insert(:business_concept)
+      bc2 = insert(:business_concept)
+      bc3 = insert(:business_concept)
+
+      insert(:business_concept_version,
+        name: "bcv1",
+        content: %{"_confidential" => "Si"},
+        business_concept: bc1
+      )
+
+      insert(:business_concept_version,
+        name: "bcv2",
+        content: %{"_confidential" => "No"},
+        business_concept: bc2
+      )
+
+      insert(:business_concept_version, name: "bcv3", business_concept: bc3)
+
+      assert BusinessConcepts.get_confidential_ids() == [bc1.id]
+    end
+
     test "search_fields/1 returns a business_concept_version with default values in its content" do
       user = build(:user)
       template_label = "search_fields"

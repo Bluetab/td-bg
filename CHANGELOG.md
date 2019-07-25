@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- [TD-1776] Publish and inform confidential related envents
+
 ## [3.2.0] 2019-07-24
 
 ### Added
