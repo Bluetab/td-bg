@@ -2,7 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+
 - [TD-1776] Publish and inform confidential related envents
+
+### Changed
+
+- [TD-1985] Type of template field user with an aggregation size of 50
 
 ## [3.2.0] 2019-07-24
 
