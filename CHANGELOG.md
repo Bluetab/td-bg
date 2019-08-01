@@ -4,7 +4,8 @@
 
 ### Added
 
-- [TD-1776] Publish and inform confidential related envents
+- [TD-1776] Publish and inform confidential related events
+- [TD-1560] Enriched description field in template content
 
 ### Changed
 
