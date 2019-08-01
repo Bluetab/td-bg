@@ -74,6 +74,10 @@ defmodule TdBg.Search.Mappings do
     |> Enum.map(&field_mapping/1)
   end
 
+  defp field_mapping(%{"name" => name, "type" => "enriched_text"}) do
+    {name, mapping_type("enriched_text")}
+  end
+
   defp field_mapping(%{"name" => name, "values" => values}) do
     {name, mapping_type(values)}
   end

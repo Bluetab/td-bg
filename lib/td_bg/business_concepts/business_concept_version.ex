@@ -205,10 +205,13 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     counts = BusinessConcepts.get_concept_counts(business_concept_id)
     bcv = Map.merge(bcv, counts)
 
+    template_content = Map.get(template, :content)
+
     content =
       bcv
       |> Map.get(:content)
-      |> Format.apply_template(Map.get(template, :content))
+      |> Format.apply_template(template_content)
+      |> Format.search_values(template_content)
 
     content = update_in(content["_confidential"], &if(&1 == "Si", do: &1, else: "No"))
 
