@@ -205,15 +205,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     counts = BusinessConcepts.get_concept_counts(business_concept_id)
     bcv = Map.merge(bcv, counts)
 
-    template_content = Map.get(template, :content)
-
     content =
       bcv
       |> Map.get(:content)
-      |> Format.apply_template(template_content)
-      |> Format.search_values(template_content)
+      |> Format.search_values(template)
 
-    content = update_in(content["_confidential"], &if(&1 == "Si", do: &1, else: "No"))
+    content = confidential(content)
 
     bcv
     |> Map.take([
@@ -277,4 +274,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     valid_statuses = [BusinessConcept.status().draft, BusinessConcept.status().rejected]
     current && Enum.member?(valid_statuses, status)
   end
+
+  defp confidential(nil), do: %{}
+
+  defp confidential(content),
+    do: update_in(content["_confidential"], &if(&1 == "Si", do: &1, else: "No"))
 end
