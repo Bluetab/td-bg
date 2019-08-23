@@ -11,6 +11,8 @@ defmodule TdBg.Canada.LinkAbilities do
 
   require Logger
 
+  def can?(%User{is_admin: true}, :create_link, _resource), do: true
+
   def can?(%User{is_admin: true}, _action, %Link{}), do: true
 
   def can?(%User{} = user, :delete, %Link{source: "business_concept:" <> business_concept_id}) do

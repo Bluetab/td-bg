@@ -32,6 +32,10 @@ defmodule TdBg.Canada.Abilities do
       LinkAbilities.can?(user, action, link)
     end
 
+    def can?(%User{} = user, :create_link, %{business_concept: business_concept}) do
+      LinkAbilities.can?(user, :create_link, business_concept)
+    end
+
     def can?(%User{} = user, action, %{hint: :link} = resource) do
       LinkAbilities.can?(user, action, resource)
     end

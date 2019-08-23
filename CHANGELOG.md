@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2059] Return link related actions on hypermedia
+
 ## [3.3.0] 2019-08-05
 
 ### Added

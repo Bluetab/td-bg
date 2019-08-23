@@ -126,4 +126,9 @@ defmodule TdBg.Permissions.MockPermissionResolver do
     end)
     |> Enum.map(&Map.take(&1, [:resource_type, :resource_id, :permissions, :role_name]))
   end
+
+  def clean do
+     Agent.update(:MockPermissions, fn _ -> [] end)
+     Agent.update(:MockSessions, fn _ -> Map.new end)
+  end
 end

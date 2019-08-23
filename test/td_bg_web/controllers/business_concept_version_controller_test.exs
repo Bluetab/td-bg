@@ -49,6 +49,39 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
       assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
     end
+
+    @tag authenticated_user: @user_name
+    test "show with actions",
+         %{conn: conn} do
+      user = create_user(@user_name)
+      domain_create = insert(:domain, id: :rand.uniform(100_000_000))
+      role_create = get_role_by_name("create")
+
+      MockPermissionResolver.create_acl_entry(%{
+        principal_id: user.id,
+        principal_type: "user",
+        resource_id: domain_create.id,
+        resource_type: "domain",
+        role_id: role_create.id,
+        role_name: role_create.name
+      })
+
+      business_concept = insert(:business_concept, domain: domain_create)
+
+      version = insert(
+        :business_concept_version,
+        business_concept: business_concept,
+        name: "name"
+      )
+
+      conn =
+        get(conn, Routes.business_concept_version_path(conn, :show, version.id))
+      data = json_response(conn, 200)["_actions"]
+
+      assert Map.has_key?(data, "create_link")
+
+      MockPermissionResolver.clean()
+    end
   end
 
   describe "index" do
