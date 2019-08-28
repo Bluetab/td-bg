@@ -235,11 +235,59 @@ defmodule TdBg.BusinessConcepts do
     attrs
     |> attrs_keys_to_atoms
     |> raise_error_if_no_content_schema
+    |> format_content
     |> set_content_defaults
     |> validate_new_concept
     |> validate_description
     |> validate_concept_content
     |> insert_concept
+  end
+
+  def format_content(%{content: content} = attrs) when not is_nil(content) do
+    content =
+      attrs
+      |> Map.get(:content_schema)
+      |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
+        schema_type == "url" or (schema_type == "string" and cardinality in ["*", "+"])
+      end)
+      |> Enum.filter(fn %{"name" => name} ->
+        field_content = Map.get(content, name)
+        not is_nil(field_content) and is_binary(field_content) and field_content != ""
+      end)
+      |> Enum.into(
+        content,
+        &format_field(%{
+          "content_name" => Map.get(&1, "name"),
+          "content" => Map.get(content, Map.get(&1, "name")),
+          "type" => Map.get(&1, "type"),
+          "cardinality" => Map.get(&1, "cardinality")
+        })
+      )
+
+    Map.put(attrs, :content, content)
+  end
+
+  def format_content(attrs), do: attrs
+
+  defp format_field(%{"content_name" => content_name, "content" => content, "type" => "url"})
+       when not is_nil(content) do
+    link_value = [
+      %{
+        "url_name" => content,
+        "url_value" => content
+      }
+    ]
+
+    {content_name, link_value}
+  end
+
+  defp format_field(%{
+         "content_name" => content_name,
+         "content" => content,
+         "type" => "string"
+       })
+       when not is_nil(content) do
+    {content_name, [content]}
   end
 
   @doc """

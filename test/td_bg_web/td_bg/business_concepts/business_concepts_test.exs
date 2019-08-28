@@ -129,7 +129,7 @@ defmodule TdBg.BusinessConceptsTests do
 
       content_schema = [
         %{"name" => "Field1", "type" => "string", "cardinality" => "?"},
-        %{"name" => "Field2", "type" => "string", "values" => %{"fixed" => ["Hello", "World"]}},
+        %{"name" => "Field2", "type" => "string", "cardinality" => "?", "values" => %{"fixed" => ["Hello", "World"]}},
         %{"name" => "Field3", "type" => "string", "cardinality" => "?"}
       ]
 
@@ -295,10 +295,10 @@ defmodule TdBg.BusinessConceptsTests do
       domain = insert(:domain)
 
       content_schema = [
-        %{"name" => "Field1", "type" => "string", "cardinality" => "*"}
+        %{"name" => "Field1", "type" => "string", "cardinality" => "1"}
       ]
 
-      content = %{"Field1" => "World"}
+      content = %{"Field1" => ["World", "World2"]}
 
       concept_attrs = %{
         type: "some_type",
@@ -323,7 +323,7 @@ defmodule TdBg.BusinessConceptsTests do
       assert {:ok, %BusinessConceptVersion{} = object} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert object.content == version_attrs.content
+      assert object.content == %{"Field1" => ["World", "World2"]}
       assert object.name == version_attrs.name
       assert object.description == version_attrs.description
       assert object.last_change_by == version_attrs.last_change_by

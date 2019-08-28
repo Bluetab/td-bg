@@ -5,6 +5,7 @@
 ### Fixed
 
 - [TD-2059] Return link related actions on hypermedia
+- [TD-1428] Format links and multiple fields in bg content
 
 ## [3.3.0] 2019-08-05
 
