@@ -4,6 +4,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdCache.TemplateCache
+  alias TdDfLib.RichText
 
   def create_template(template) do
     TemplateCache.put(template)
@@ -71,5 +72,99 @@ defmodule TdBg.BusinessConceptsTest do
       assert changed == %{change: new.content.change}
       assert removed == %{remove: old.content.remove}
     end
+  end
+
+  test "create_business_concept/1 with invalid content: required" do
+    user = build(:user)
+    domain = insert(:domain)
+
+    content_schema = [
+      %{
+        "name" => "data_owner",
+        "type" => "user",
+        "group" => "New Group 1",
+        "label" => "data_owner",
+        "values" => %{"role_users" => "data_owner", "processed_users" => []},
+        "widget" => "dropdown",
+        "cardinality" => "1"
+      },
+      %{
+        "name" => "texto_libre",
+        "type" => "enriched_text",
+        "group" => "New Group 1",
+        "label" => "texto libre",
+        "widget" => "enriched_text",
+        "cardinality" => "1"
+      },
+      %{
+        "name" => "link",
+        "type" => "url",
+        "group" => "New Group 1",
+        "label" => "link",
+        "widget" => "pair_list",
+        "cardinality" => "+"
+      },
+      %{
+        "name" => "lista",
+        "type" => "string",
+        "group" => "New Group 1",
+        "label" => "lista",
+        "values" => %{"fixed_tuple" => [%{"text" => "valor1", "value" => "codigo1"}]},
+        "widget" => "dropdown",
+        "cardinality" => "+"
+      }
+    ]
+
+    content = %{
+      "data_owner" => "domain",
+      "link" => "https://google.es",
+      "lista" => "valor1",
+      "texto_libre" => "free text"
+    }
+
+    concept_attrs = %{
+      type: "some_type",
+      domain_id: domain.id,
+      last_change_by: user.id,
+      last_change_at: DateTime.utc_now()
+    }
+
+    version_attrs = %{
+      business_concept: concept_attrs,
+      content: content,
+      related_to: [],
+      name: "some name",
+      description: RichText.to_rich_text("some description"),
+      last_change_by: user.id,
+      last_change_at: DateTime.utc_now(),
+      version: 1
+    }
+
+    creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
+
+    assert {:ok, %BusinessConceptVersion{} = object} =
+             BusinessConcepts.create_business_concept(creation_attrs)
+
+    assert object.content == %{
+             "data_owner" => "domain",
+             "link" => [
+               %{
+                 "url_name" => "https://google.es",
+                 "url_value" => "https://google.es"
+               }
+             ],
+             "lista" => ["codigo1"],
+             "texto_libre" => RichText.to_rich_text("free text")
+           }
+
+    assert object.name == version_attrs.name
+    assert object.description == version_attrs.description
+    assert object.last_change_by == version_attrs.last_change_by
+    assert object.current == true
+    assert object.in_progress == false
+    assert object.version == version_attrs.version
+    assert object.business_concept.type == concept_attrs.type
+    assert object.business_concept.domain_id == concept_attrs.domain_id
+    assert object.business_concept.last_change_by == concept_attrs.last_change_by
   end
 end

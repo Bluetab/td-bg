@@ -136,13 +136,21 @@ defmodule TdBg.BusinessConcept.Upload do
          {:ok} <- validate_name(data),
          {:ok, %{id: domain_id}} <- validate_domain(data),
          {:ok} <- validate_description(data) do
+
+      empty_fields =
+        Enum.filter(Map.keys(data), fn field_name ->
+          Map.get(data, field_name) == nil or Map.get(data, field_name) == ""
+        end)
+
       content =
-        Map.drop(data, [
+        data
+        |> Map.drop([
           "name",
           "domain",
           "description",
           "template"
         ])
+        |> Map.drop(empty_fields)
 
       business_concept_attrs =
         %{}

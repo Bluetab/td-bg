@@ -235,11 +235,44 @@ defmodule TdBg.BusinessConcepts do
     attrs
     |> attrs_keys_to_atoms
     |> raise_error_if_no_content_schema
+    |> format_content
     |> set_content_defaults
     |> validate_new_concept
     |> validate_description
     |> validate_concept_content
     |> insert_concept
+  end
+
+  defp format_content(%{content: content} = attrs) when not is_nil(content) do
+    content =
+      attrs
+      |> Map.get(:content_schema)
+      |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
+        schema_type in ["url", "enriched_text"] or
+          (schema_type == "string" and cardinality in ["*", "+"])
+      end)
+      |> Enum.filter(fn %{"name" => name} ->
+        field_content = Map.get(content, name)
+        not is_nil(field_content) and is_binary(field_content) and field_content != ""
+      end)
+      |> Enum.into(
+        content,
+        &format_field(&1, content)
+      )
+
+    Map.put(attrs, :content, content)
+  end
+
+  defp format_content(attrs), do: attrs
+
+  defp format_field(schema, content) do
+    {Map.get(schema, "name"),
+     Format.format_field(%{
+       "content" => Map.get(content, Map.get(schema, "name")),
+       "type" => Map.get(schema, "type"),
+       "cardinality" => Map.get(schema, "cardinality"),
+       "values" => Map.get(schema, "values")
+     })}
   end
 
   @doc """
