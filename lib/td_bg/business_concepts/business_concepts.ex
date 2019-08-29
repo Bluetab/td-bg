@@ -243,12 +243,13 @@ defmodule TdBg.BusinessConcepts do
     |> insert_concept
   end
 
-  def format_content(%{content: content} = attrs) when not is_nil(content) do
+  defp format_content(%{content: content} = attrs) when not is_nil(content) do
     content =
       attrs
       |> Map.get(:content_schema)
       |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
-        schema_type == "url" or (schema_type == "string" and cardinality in ["*", "+"])
+        schema_type in ["url", "enriched_text"] or
+          (schema_type == "string" and cardinality in ["*", "+"])
       end)
       |> Enum.filter(fn %{"name" => name} ->
         field_content = Map.get(content, name)
@@ -256,38 +257,22 @@ defmodule TdBg.BusinessConcepts do
       end)
       |> Enum.into(
         content,
-        &format_field(%{
-          "content_name" => Map.get(&1, "name"),
-          "content" => Map.get(content, Map.get(&1, "name")),
-          "type" => Map.get(&1, "type"),
-          "cardinality" => Map.get(&1, "cardinality")
-        })
+        &format_field(&1, content)
       )
 
     Map.put(attrs, :content, content)
   end
 
-  def format_content(attrs), do: attrs
+  defp format_content(attrs), do: attrs
 
-  defp format_field(%{"content_name" => content_name, "content" => content, "type" => "url"})
-       when not is_nil(content) do
-    link_value = [
-      %{
-        "url_name" => content,
-        "url_value" => content
-      }
-    ]
-
-    {content_name, link_value}
-  end
-
-  defp format_field(%{
-         "content_name" => content_name,
-         "content" => content,
-         "type" => "string"
-       })
-       when not is_nil(content) do
-    {content_name, [content]}
+  defp format_field(schema, content) do
+    {Map.get(schema, "name"),
+     Format.format_field(%{
+       "content" => Map.get(content, Map.get(schema, "name")),
+       "type" => Map.get(schema, "type"),
+       "cardinality" => Map.get(schema, "cardinality"),
+       "values" => Map.get(schema, "values")
+     })}
   end
 
   @doc """
