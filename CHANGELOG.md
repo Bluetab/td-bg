@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2074] Link count was not calculated correctly
+- [TD-2075] Rule count was not reindexed correctly
+
 ## [3.5.0] 2019-09-02
 
 ### Fixed
