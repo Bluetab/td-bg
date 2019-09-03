@@ -6,6 +6,7 @@
 
 - [TD-2074] Link count was not calculated correctly
 - [TD-2075] Rule count was not reindexed correctly
+- [TD-2081] Event stream consumer did not respect redis_host and port config options
 
 ## [3.5.0] 2019-09-02
 
