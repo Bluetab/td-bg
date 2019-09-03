@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [3.5.1] 2019-09-03
 
 ### Fixed
 
