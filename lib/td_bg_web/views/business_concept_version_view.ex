@@ -82,7 +82,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         business_concept_versions: business_concept_versions,
         hypermedia: hypermedia
       }) do
-    render_many_hypermedia(
+    render_many_hypermedia_resources(
       business_concept_versions,
       hypermedia,
       BusinessConceptVersionView,
