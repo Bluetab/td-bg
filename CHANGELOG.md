@@ -6,6 +6,10 @@
 
 - [TD-2078] Default order of Business Concept table by name
 
+### Changed
+
+- [TD-2067] Added sortable normalizer to mappings of business concept domain name
+
 ## [3.5.1] 2019-09-03
 
 ### Fixed
