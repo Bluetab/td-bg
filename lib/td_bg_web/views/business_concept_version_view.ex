@@ -6,12 +6,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   alias TdBgWeb.LinkView
   alias TdCache.UserCache
 
-  def render("index.json", %{
-        business_concept_versions: business_concept_versions,
-        hypermedia: hypermedia
-      }) do
+  def render("index.json", %{hypermedia: hypermedia}) do
     render_many_hypermedia(
-      business_concept_versions,
       hypermedia,
       BusinessConceptVersionView,
       "business_concept_version.json"
@@ -31,14 +27,10 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   def render(
         "show.json",
-        %{
-          business_concept_version: business_concept_version,
-          links: links,
-          links_hypermedia: links_hypermedia
-        } = assigns
+        %{business_concept_version: business_concept_version, links_hypermedia: links_hypermedia} =
+          assigns
       ) do
-    %{"data" => links} =
-      render_many_hypermedia(links, links_hypermedia, LinkView, "embedded.json")
+    %{"data" => links} = render_many_hypermedia(links_hypermedia, LinkView, "embedded.json")
 
     render_one(
       business_concept_version,
@@ -78,16 +70,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     }
   end
 
-  def render("list.json", %{
-        business_concept_versions: business_concept_versions,
-        hypermedia: hypermedia
-      }) do
-    render_many_hypermedia_resources(
-      business_concept_versions,
-      hypermedia,
-      BusinessConceptVersionView,
-      "list_item.json"
-    )
+  def render("list.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, BusinessConceptVersionView, "list_item.json")
   end
 
   def render("list.json", %{business_concept_versions: business_concept_versions}) do
@@ -161,16 +145,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_embedded_resources(assigns)
   end
 
-  def render("versions.json", %{
-        business_concept_versions: business_concept_versions,
-        hypermedia: hypermedia
-      }) do
-    render_many_hypermedia(
-      business_concept_versions,
-      hypermedia,
-      BusinessConceptVersionView,
-      "version.json"
-    )
+  def render("versions.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, BusinessConceptVersionView, "version.json")
   end
 
   def render("version.json", %{business_concept_version: business_concept_version}) do
