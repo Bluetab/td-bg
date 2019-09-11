@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- [TD-2067] added sortable normalizer to mappings of business concept domain name
+
 ## [3.5.1] 2019-09-03
 
 ### Fixed

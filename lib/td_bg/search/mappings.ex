@@ -27,7 +27,7 @@ defmodule TdBg.Search.Mappings do
       domain: %{
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}}
         }
       },
       last_change_by: %{
