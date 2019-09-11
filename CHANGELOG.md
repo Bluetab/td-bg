@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2078] Default order of Business Concept table by name
+
 ## [3.5.1] 2019-09-03
 
 ### Fixed

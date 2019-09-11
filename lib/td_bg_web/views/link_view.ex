@@ -4,13 +4,8 @@ defmodule TdBgWeb.LinkView do
 
   alias TdBgWeb.LinkView
 
-  def render("index.json", %{links: links, hypermedia: hypermedia}) do
-    render_many_hypermedia(
-      links,
-      hypermedia,
-      LinkView,
-      "show.json"
-    )
+  def render("index.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, LinkView, "show.json")
   end
 
   def render("embedded.json", %{link: link, hypermedia: hypermedia} = assigns) do

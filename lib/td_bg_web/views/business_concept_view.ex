@@ -4,13 +4,8 @@ defmodule TdBgWeb.BusinessConceptView do
   alias Ecto
   alias TdBgWeb.BusinessConceptView
 
-  def render("index.json", %{business_concepts: business_concept_versions, hypermedia: hypermedia}) do
-    render_many_hypermedia(
-      business_concept_versions,
-      hypermedia,
-      BusinessConceptView,
-      "business_concept.json"
-    )
+  def render("index.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, BusinessConceptView, "business_concept.json")
   end
 
   def render("index.json", %{business_concepts: business_concept_versions}) do
