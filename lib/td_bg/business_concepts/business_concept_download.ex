@@ -104,6 +104,8 @@ defmodule TdBg.BusinessConcept.Download do
     |> Enum.join(", ")
   end
 
+  defp get_content_field(%{"type" => "table"}, _content), do: ""
+
   defp get_content_field(%{"name" => name}, content) do
     Map.get(content, name, "")
   end

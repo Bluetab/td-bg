@@ -142,6 +142,13 @@ defmodule TdBg.BusinessConcept.Upload do
           Map.get(data, field_name) == nil or Map.get(data, field_name) == ""
         end)
 
+      table_fields =
+        content_schema
+        |> Enum.filter(fn field ->
+          Map.get(field, "type") == "table"
+        end)
+        |> Enum.map(&Map.get(&1, "name"))
+
       content =
         data
         |> Map.drop([
@@ -151,6 +158,7 @@ defmodule TdBg.BusinessConcept.Upload do
           "template"
         ])
         |> Map.drop(empty_fields)
+        |> Map.drop(table_fields)
 
       business_concept_attrs =
         %{}
