@@ -67,7 +67,7 @@ defmodule TdBg.Mixfile do
       {:grafana, git: "https://github.com/BoringButGreat/grafana.git"},
       {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.5.1"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.5.0"}
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.7.0"}
     ]
   end
 

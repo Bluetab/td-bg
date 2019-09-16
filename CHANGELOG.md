@@ -1,10 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-1625] Support for df `table` type 
+
 ## [3.6.0] 2019-09-16
 
 ### Fixed
 
 - [TD-2078] Default order of Business Concept table by name
+- [TD-1625] Omit table field type in bulk upload
 
 ### Changed
 
