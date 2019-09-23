@@ -95,6 +95,10 @@ defmodule TdBg.Cache.ConceptLoader do
     # TODO: TD-1618
   end
 
+  defp read_concept_ids(%{event: "remove_rule", concept: concept}) do
+    [read_concept_id(concept)]
+  end
+
   # unsupported events...
   defp read_concept_ids(_), do: []
 
