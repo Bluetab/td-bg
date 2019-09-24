@@ -2,9 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [TD-2084] Update `rule_count` when a rule is removed
+
 ### Added
 
 - [TD-1625] Support for df `table` type 
+- [TD-2084] Reindex concept on rule removal
 
 ## [3.6.0] 2019-09-16
 
