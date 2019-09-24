@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [TD-2084] Update `rule_count` when a rule is removed
+
 ### Added
 
 - [TD-1625] Support for df `table` type 
