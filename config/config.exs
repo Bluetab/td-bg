@@ -63,7 +63,8 @@ config :td_cache, :event_stream,
   consumer_id: "default",
   consumer_group: "bg",
   streams: [
-    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader]
+    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader],
+    [key: "template:events", consumer: TdBg.Cache.TemplateLoader]
   ]
 
 # Import environment specific config. This must remain at the bottom

@@ -52,6 +52,10 @@ defmodule TdBg.ESClientApi do
     post("_bulk", json_bulk_data <> "\n")
   end
 
+  def reindex(old_index, new_index) do
+    post("_reindex", JSON.encode!(%{source: %{index: old_index}, dest: %{index: new_index}}))
+  end
+
   defp build_bulk_doc(item, :index) do
     search_fields = item.__struct__.search_fields(item)
     "#{search_fields |> JSON.encode!()}"

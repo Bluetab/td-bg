@@ -44,5 +44,6 @@ config :td_cache, :event_stream,
   consumer_id: "${HOSTNAME}",
   consumer_group: "bg",
   streams: [
-    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader]
+    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader],
+    [key: "template:events", consumer: TdBg.Cache.TemplateLoader]
   ]
