@@ -1,9 +1,9 @@
 defmodule TdBg.Search do
+  alias Elasticsearch.Index.Bulk
   alias Jason, as: JSON
-  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.ESClientApi
-  alias TdBg.Taxonomies
+  alias TdBg.Search.Cluster
   alias TdBg.Taxonomies.Domain
 
   require Logger
@@ -12,31 +12,17 @@ defmodule TdBg.Search do
   Search Engine calls
   """
 
-  def put_bulk_search(:domain) do
-    domains = Taxonomies.list_domains()
-    {:ok, %HTTPoison.Response{body: response}} = ESClientApi.bulk_index_content(domains)
-
-    cond do
-      response["errors"] == true ->
-        {:error, response["errors"]}
-
-      response["error"] == true ->
-        {:error, response["error"]}
-
-      true ->
-        {:ok, response}
-    end
-  end
-
   def put_bulk_search(:business_concept) do
-    BusinessConcepts.list_all_business_concept_versions()
-    |> put_bulk_search(:business_concept)
+    Elasticsearch.Index.hot_swap(Cluster, "concepts")
   end
 
   def put_bulk_search(business_concepts, :business_concept) do
-    business_concepts
-    |> Enum.chunk_every(100)
-    |> Enum.map(&ESClientApi.bulk_index_content/1)
+    # TODO: stream, chunk
+    bulk = business_concepts
+    |> Enum.map(&Bulk.encode!(Cluster, &1, "concepts", [type: "_doc", action: "index"]))
+    |> Enum.join("")
+
+    Elasticsearch.post(Cluster, "_bulk", bulk)
   end
 
   # CREATE AND UPDATE

@@ -51,6 +51,7 @@ defmodule TdBg.Search.Mappings do
     }
 
     settings = %{
+      number_of_shards: 1,
       analysis: %{
         normalizer: %{
           sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}
@@ -58,7 +59,7 @@ defmodule TdBg.Search.Mappings do
       }
     }
 
-    %{mappings: %{doc: %{properties: mapping_type}}, settings: settings}
+    %{mappings: %{_doc: %{properties: mapping_type}}, settings: settings}
   end
 
   def get_dynamic_mappings do

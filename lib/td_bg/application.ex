@@ -20,13 +20,14 @@ defmodule TdBg.Application do
       supervisor(TdBg.Repo, []),
       # Start the endpoint when the application starts
       supervisor(TdBgWeb.Endpoint, []),
+      # Elasticsearch worker
+      TdBg.Search.Cluster,
       # Worker for background indexing
       worker(TdBg.Search.IndexWorker, [TdBg.Search.IndexWorker]),
       # Cache workers
       worker(TdBg.Cache.ConceptLoader, []),
       worker(TdBg.Cache.DomainLoader, [TdBg.Cache.DomainLoader]),
       worker(TdBg.Cache.TemplateLoader, []),
-      TdBg.Search.Cluster,
       # Metrics worker
       %{
         id: TdBg.CustomSupervisor,

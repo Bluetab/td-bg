@@ -65,7 +65,7 @@ defmodule TdBg.Mixfile do
       {:prometheus_ex, "~> 3.0"},
       {:prometheus_plugs, "~> 1.0"},
       {:grafana, git: "https://github.com/BoringButGreat/grafana.git"},
-      {:elasticsearch, "~> 1.0.0"},
+      {:elasticsearch, git: "https://github.com/Bluetab/elasticsearch-elixir.git", branch: "feature/encoding-opts"},
       {:td_cache, path: "../td-cache"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.7.0"}
