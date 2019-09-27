@@ -517,7 +517,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [v, c], _ in assoc(c, :domain))
     |> preload([_, c, d], business_concept: {c, domain: d})
     |> order_by(asc: :version)
-    |> Repo.all()
+    #|> Repo.all()
   end
 
   @doc """
