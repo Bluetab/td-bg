@@ -98,10 +98,6 @@ defmodule TdBg.Taxonomies do
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
-  def get_raw_domain(id) do
-    Repo.one(from(r in Domain, where: r.id == ^id))
-  end
-
   def get_domain_by_name(name) do
     Repo.one(from(r in Domain, where: r.name == ^name and is_nil(r.deleted_at)))
   end

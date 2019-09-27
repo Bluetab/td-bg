@@ -6,11 +6,18 @@ defmodule TdBg.Search.Store do
 
   import Ecto.Query
 
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.Indexable
   alias TdBg.Repo
 
   @impl true
-  def stream(schema) do
-    Repo.stream(schema)
+  def stream(Indexable) do
+    from(bcv in BusinessConceptVersion,
+      join: bc in assoc(bcv, :business_concept),
+      join: d in assoc(bc, :domain),
+      select: %Indexable{business_concept_version: bcv, type: bc.type, domain: d}
+    )
+    |> Repo.stream()
   end
 
   @impl true

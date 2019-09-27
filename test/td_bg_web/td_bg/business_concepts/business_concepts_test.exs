@@ -129,7 +129,12 @@ defmodule TdBg.BusinessConceptsTests do
 
       content_schema = [
         %{"name" => "Field1", "type" => "string", "cardinality" => "?"},
-        %{"name" => "Field2", "type" => "string", "cardinality" => "?", "values" => %{"fixed" => ["Hello", "World"]}},
+        %{
+          "name" => "Field2",
+          "type" => "string",
+          "cardinality" => "?",
+          "values" => %{"fixed" => ["Hello", "World"]}
+        },
         %{"name" => "Field3", "type" => "string", "cardinality" => "?"}
       ]
 
@@ -779,6 +784,7 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "search_fields/1 returns a business_concept_version with default values in its content" do
+      alias Elasticsearch.Document
       user = build(:user)
       template_label = "search_fields"
       template_name = "search_fields_template"
@@ -813,8 +819,7 @@ defmodule TdBg.BusinessConceptsTests do
           last_change_by: user.id
         )
 
-      %{template: template, content: content} =
-        BusinessConceptVersion.search_fields(business_concept_version)
+      %{template: template, content: content} = Document.encode(business_concept_version)
 
       assert Map.get(template, :label) == template_label
       assert Map.get(template, :name) == template_name

@@ -1,6 +1,7 @@
 defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
+  alias TdBg.Repo
   alias TdBg.Taxonomies
 
   describe "domains" do
@@ -137,10 +138,11 @@ defmodule TdBg.TaxonomiesTest do
       assert Map.fetch!(domain, :deleted_at) == nil
     end
 
-    test "delete_domain/1 deletes the domain" do
+    test "delete_domain/1 soft-deletes the domain" do
       domain = domain_fixture()
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      assert Map.fetch!(Taxonomies.get_raw_domain(domain.id), :deleted_at) != nil
+      assert %{deleted_at: deleted_at} = Repo.get(Domain, domain.id)
+      assert deleted_at
     end
 
     test "delete_domain/1 with existing deprecated business concepts is deleted" do
@@ -159,7 +161,8 @@ defmodule TdBg.TaxonomiesTest do
       )
 
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
-      assert Map.fetch!(Taxonomies.get_raw_domain(domain.id), :deleted_at) != nil
+      assert %{deleted_at: deleted_at} = Repo.get(Domain, domain.id)
+      assert deleted_at
     end
 
     test "delete_domain/1 with existing deprecated and draft business concepts can not be deleted" do
@@ -226,15 +229,6 @@ defmodule TdBg.TaxonomiesTest do
       ancestors_without_self = Taxonomies.get_domain_ancestors(d4, false)
       assert ancestors_with_self |> Enum.map(& &1.id) == [d4, d3, d2, d1] |> Enum.map(& &1.id)
       assert ancestors_without_self |> Enum.map(& &1.id) == [d3, d2, d1] |> Enum.map(& &1.id)
-    end
-
-    test "search_fields/1 includes the list of parent_ids" do
-      d1 = domain_fixture(%{name: "d1"})
-      d2 = domain_fixture(%{parent_id: d1.id, name: "d2"})
-      d3 = domain_fixture(%{parent_id: d2.id, name: "d3"})
-      d4 = domain_fixture(%{parent_id: d3.id, name: "d4"})
-      search_fields = Domain.search_fields(d4)
-      assert search_fields.parent_ids == [d3.id, d2.id, d1.id]
     end
 
     test "get_ancestors_for_domain_id/2 returns the list of a domain's ancestors" do

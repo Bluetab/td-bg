@@ -40,25 +40,6 @@ defmodule TdBg.Search do
   end
 
   # CREATE AND UPDATE
-  def put_search(%Domain{} = domain) do
-    search_fields = domain.__struct__.search_fields(domain)
-
-    response =
-      ESClientApi.index_content(
-        domain.__struct__.index_name(),
-        domain.id,
-        search_fields |> JSON.encode!()
-      )
-
-    case response do
-      {:ok, %HTTPoison.Response{status_code: status}} ->
-        Logger.info("Domain #{domain.name} created/updated status #{status}")
-
-      {:error, _error} ->
-        Logger.error("ES: Error creating/updating domain #{domain.name}")
-    end
-  end
-
   def put_search(%BusinessConceptVersion{} = concept) do
     search_fields = concept.__struct__.search_fields(concept)
 

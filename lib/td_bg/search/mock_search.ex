@@ -1,9 +1,9 @@
 defmodule TdBg.Search.MockSearch do
   @moduledoc false
 
+  alias Elasticsearch.Document
   alias Jason, as: JSON
   alias TdBg.BusinessConcepts
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
 
   def put_search(_something) do
   end
@@ -40,7 +40,7 @@ defmodule TdBg.Search.MockSearch do
         }
       }) do
     BusinessConcepts.list_all_business_concept_versions()
-    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(&Document.encode/1)
     |> Enum.filter(fn bcv ->
       domain_id ==
         bcv
@@ -57,7 +57,7 @@ defmodule TdBg.Search.MockSearch do
         query: %{bool: %{filter: [%{terms: %{"status" => status_list}}], must: %{match_all: %{}}}}
       }) do
     BusinessConcepts.list_all_business_concept_versions()
-    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(&Document.encode/1)
     |> Enum.filter(&Enum.member?(status_list, &1.status))
     |> Enum.map(&%{_source: &1})
     |> JSON.encode!()
@@ -67,7 +67,7 @@ defmodule TdBg.Search.MockSearch do
 
   def search("business_concept", %{query: %{bool: %{must: %{match_all: %{}}}}}) do
     BusinessConcepts.list_all_business_concept_versions()
-    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(&Document.encode/1)
     |> Enum.map(&%{_source: &1})
     |> JSON.encode!()
     |> JSON.decode!()
@@ -77,7 +77,7 @@ defmodule TdBg.Search.MockSearch do
   def search("business_concept", %{query: %{term: %{business_concept_id: business_concept_id}}}) do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.filter(&(&1.business_concept_id == business_concept_id))
-    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(&Document.encode/1)
     |> Enum.map(&%{_source: &1})
     |> JSON.encode!()
     |> JSON.decode!()
@@ -88,7 +88,7 @@ defmodule TdBg.Search.MockSearch do
         query: %{bool: %{must: %{simple_query_string: %{query: query}}}}
       }) do
     BusinessConcepts.list_all_business_concept_versions()
-    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(&Document.encode/1)
     |> Enum.filter(&matches(&1, query))
     |> Enum.map(&%{_source: &1})
     |> JSON.encode!()
@@ -104,7 +104,7 @@ defmodule TdBg.Search.MockSearch do
     default_params_map = %{:link_count => 0, :rule_count => 0}
 
     BusinessConcepts.list_all_business_concept_versions()
-    |> Enum.map(&BusinessConceptVersion.search_fields(&1))
+    |> Enum.map(&Document.encode/1)
     |> Enum.map(fn bv -> Map.merge(bv, default_params_map, fn _k, v1, v2 -> v1 || v2 end) end)
     |> search_results
   end

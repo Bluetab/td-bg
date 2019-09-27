@@ -32,6 +32,8 @@ config :td_bg, :elasticsearch,
   es_port: "${ES_PORT}",
   type_name: "doc"
 
+config :td_bg, TdBg.Search.Cluster, url: "${ES_HOST}:${ES_PORT}"
+
 config :td_bg, :audit_service,
   api_service: TdBgWeb.ApiServices.HttpTdAuditService,
   audit_host: "${API_AUDIT_HOST}",
