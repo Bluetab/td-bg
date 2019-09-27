@@ -1,7 +1,8 @@
 defmodule TdBg.Search.Store do
   @moduledoc """
-
+  Elasticsearch store implementation for Business Glossary
   """
+
   @behaviour Elasticsearch.Store
 
   import Ecto.Query
@@ -12,12 +13,13 @@ defmodule TdBg.Search.Store do
 
   @impl true
   def stream(Indexable) do
-    from(bcv in BusinessConceptVersion,
-      join: bc in assoc(bcv, :business_concept),
-      join: d in assoc(bc, :domain),
-      select: %Indexable{business_concept_version: bcv, type: bc.type, domain: d}
+    Repo.stream(
+      from(bcv in BusinessConceptVersion,
+        join: bc in assoc(bcv, :business_concept),
+        join: d in assoc(bc, :domain),
+        select: %Indexable{business_concept_version: bcv, type: bc.type, domain: d}
+      )
     )
-    |> Repo.stream()
   end
 
   @impl true

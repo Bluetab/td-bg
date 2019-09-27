@@ -37,10 +37,12 @@ defmodule TdBg.Cache.TemplateLoader do
       |> Enum.filter(&reindex_event?/1)
       |> Enum.count()
       |> case do
-        0 -> :ok
-        _ -> 
-            IndexWorker.reindex(:all)
-            :ok
+        0 ->
+          :ok
+
+        _ ->
+          IndexWorker.reindex(:all)
+          :ok
       end
 
     {:reply, reply, state}
