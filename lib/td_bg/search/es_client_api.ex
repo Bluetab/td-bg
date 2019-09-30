@@ -7,75 +7,8 @@ defmodule TdBg.ESClientApi do
 
   @moduledoc false
 
-  @doc """
-  Loads all index configuration into elasticsearch
-  """
-  def create_indexes do
-    json = File.read!(Path.join(:code.priv_dir(:td_bg), "static/indexes.json"))
-    json_decode = json |> JSON.decode!()
-
-    Enum.map(json_decode, fn x ->
-      index_name = x |> Map.keys() |> List.first()
-      mapping = x[index_name] |> JSON.encode!()
-      %HTTPoison.Response{body: _response, status_code: status} = put!(index_name, mapping)
-      Logger.info("Create index #{index_name} status #{status}")
-    end)
-  end
-
-  def bulk_index_content(items) do
-    json_bulk_data =
-      items
-      |> Enum.map(fn item ->
-        [
-          build_bulk_metadata(item.__struct__.index_name, item, :index),
-          build_bulk_doc(item, :index)
-        ]
-      end)
-      |> List.flatten()
-      |> Enum.join("\n")
-
-    post("_bulk", json_bulk_data <> "\n")
-  end
-
-  def bulk_update_content(items) do
-    json_bulk_data =
-      items
-      |> Enum.map(fn item ->
-        [
-          build_bulk_metadata(item.__struct__.index_name, item, :update),
-          build_bulk_doc(item, :update)
-        ]
-      end)
-      |> List.flatten()
-      |> Enum.join("\n")
-
-    post("_bulk", json_bulk_data <> "\n")
-  end
-
   def reindex(old_index, new_index) do
     post("_reindex", JSON.encode!(%{source: %{index: old_index}, dest: %{index: new_index}}))
-  end
-
-  defp build_bulk_doc(item, :index) do
-    search_fields = item.__struct__.search_fields(item)
-    "#{search_fields |> JSON.encode!()}"
-  end
-
-  defp build_bulk_doc(item, :update) do
-    search_fields = item.__struct__.search_fields(item)
-    ~s({"doc": #{search_fields |> JSON.encode!()}})
-  end
-
-  defp build_bulk_metadata(index_name, item, :index) do
-    ~s({"index": {"_id": #{item.id}, "_type": "#{get_type_name()}", "_index": "#{index_name}"}})
-  end
-
-  defp build_bulk_metadata(index_name, item, :update) do
-    ~s({"update": {"_id": #{item.id}, "_type": "#{get_type_name()}", "_index": "#{index_name}"}})
-  end
-
-  def index_content(index_name, id, body) do
-    put(get_search_path(index_name, id), body)
   end
 
   def delete_content(index_name, id) do

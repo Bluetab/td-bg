@@ -4,19 +4,21 @@ defmodule TdBg.Search.Indexer do
   """
   alias Jason, as: JSON
   alias TdBg.BusinessConcepts
-  alias TdBg.ESClientApi
   alias TdBg.Search.Cluster
   alias TdBg.Search.Mappings
 
   @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   def reindex(:business_concept) do
-    template = Mappings.get_mappings()
-    |> Map.put(:index_patterns, "concepts-*")
-    |> JSON.encode!()
+    template =
+      Mappings.get_mappings()
+      |> Map.put(:index_patterns, "concepts-*")
+      |> JSON.encode!()
+
     {:ok, _} = Elasticsearch.put(Cluster, "/_template/concepts", template)
 
-    @search_service.put_bulk_search(:business_concept) # TODO tidy up...
+    # TODO tidy up...
+    @search_service.put_bulk_search(:business_concept)
   end
 
   def reindex(business_concept_ids, :business_concept) do
