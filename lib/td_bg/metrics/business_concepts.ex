@@ -81,7 +81,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
     templates_by_name = get_template_map()
 
-    @search_service.search("business_concept", search)
+    @search_service.search(search)
     |> Map.get(:results)
     |> atomize_concept_map()
     |> Enum.map(
@@ -165,7 +165,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
     templates_by_name = get_template_map()
     content_by_name = get_content_map()
 
-    @search_service.search("business_concept", search)
+    @search_service.search(search)
     |> Map.get(:results)
     |> atomize_concept_map()
     |> Enum.map(

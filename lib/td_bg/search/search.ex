@@ -5,7 +5,6 @@ defmodule TdBg.Search do
 
   alias Elasticsearch.Index.Bulk
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.ESClientApi
   alias TdBg.Search.Cluster
 
   require Logger
@@ -30,29 +29,31 @@ defmodule TdBg.Search do
     Elasticsearch.delete_document(Cluster, concept, @index)
   end
 
-  def search(index_name, query) do
+  def search(query) do
     Logger.debug(fn -> "Query: #{inspect(query)}" end)
-    response = ESClientApi.search_es(index_name, query)
+    response = Elasticsearch.post(Cluster, @index, query)
 
     case response do
-      {:ok, %HTTPoison.Response{body: %{"hits" => %{"hits" => results, "total" => total}}}} ->
+      {:ok, %{"hits" => %{"hits" => results, "total" => total}}} ->
         %{results: results, total: total}
 
-      {:ok, %HTTPoison.Response{body: error}} ->
+      {:error, %Elasticsearch.Exception{message: message} = error} ->
+        Logger.warn("Error response from Elasticsearch: #{message}")
         error
     end
   end
 
   def get_filters(query) do
-    response = ESClientApi.search_es("business_concept", query)
+    response = Elasticsearch.post(Cluster, @index, query)
 
     case response do
-      {:ok, %HTTPoison.Response{body: %{"aggregations" => aggregations}}} ->
+      {:ok, %{"aggregations" => aggregations}} ->
         aggregations
         |> Map.to_list()
         |> Enum.into(%{}, &filter_values/1)
 
-      {:ok, %HTTPoison.Response{body: error}} ->
+      {:error, %Elasticsearch.Exception{message: message} = error} ->
+        Logger.warn("Error response from Elasticsearch: #{message}")
         error
     end
   end

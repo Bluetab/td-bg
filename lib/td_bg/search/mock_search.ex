@@ -17,7 +17,7 @@ defmodule TdBg.Search.MockSearch do
   def put_bulk_search(_something, _something_else) do
   end
 
-  def search("business_concept", %{
+  def search(%{
         query: %{
           bool: %{
             filter: %{
@@ -53,7 +53,7 @@ defmodule TdBg.Search.MockSearch do
     |> search_results
   end
 
-  def search("business_concept", %{
+  def search(%{
         query: %{bool: %{filter: [%{terms: %{"status" => status_list}}], must: %{match_all: %{}}}}
       }) do
     BusinessConcepts.list_all_business_concept_versions()
@@ -65,7 +65,7 @@ defmodule TdBg.Search.MockSearch do
     |> search_results
   end
 
-  def search("business_concept", %{query: %{bool: %{must: %{match_all: %{}}}}}) do
+  def search(%{query: %{bool: %{must: %{match_all: %{}}}}}) do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.map(&Document.encode/1)
     |> Enum.map(&%{_source: &1})
@@ -74,7 +74,7 @@ defmodule TdBg.Search.MockSearch do
     |> search_results
   end
 
-  def search("business_concept", %{query: %{term: %{business_concept_id: business_concept_id}}}) do
+  def search(%{query: %{term: %{business_concept_id: business_concept_id}}}) do
     BusinessConcepts.list_all_business_concept_versions()
     |> Enum.filter(&(&1.business_concept_id == business_concept_id))
     |> Enum.map(&Document.encode/1)
@@ -84,7 +84,7 @@ defmodule TdBg.Search.MockSearch do
     |> search_results
   end
 
-  def search("business_concept", %{
+  def search(%{
         query: %{bool: %{must: %{simple_query_string: %{query: query}}}}
       }) do
     BusinessConcepts.list_all_business_concept_versions()
@@ -96,7 +96,7 @@ defmodule TdBg.Search.MockSearch do
     |> search_results
   end
 
-  def search("business_concept", %{
+  def search(%{
         query: _query,
         sort: _sort,
         size: _size
@@ -109,7 +109,7 @@ defmodule TdBg.Search.MockSearch do
     |> search_results
   end
 
-  def search("business_concept", %{
+  def search(%{
         query: %{
           bool: %{
             must_not: %{

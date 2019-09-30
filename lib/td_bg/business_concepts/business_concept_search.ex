@@ -253,7 +253,7 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   defp do_search(search) do
-    %{results: results, total: total} = @search_service.search("business_concept", search)
+    %{results: results, total: total} = @search_service.search(search)
     results = results |> Enum.map(&Map.get(&1, "_source"))
     %{results: results, total: total}
   end
