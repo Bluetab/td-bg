@@ -14,15 +14,15 @@ defmodule TdBg.Search.IndexWorker do
   end
 
   def ping do
-    GenServer.call(TdBg.Search.IndexWorker, :ping)
+    GenServer.call(__MODULE__, :ping)
   end
 
   def reindex(:all) do
-    GenServer.cast(TdBg.Search.IndexWorker, {:reindex, :all})
+    GenServer.cast(__MODULE__, {:reindex, :all})
   end
 
   def reindex(ids) when is_list(ids) do
-    GenServer.call(TdBg.Search.IndexWorker, {:reindex, ids})
+    GenServer.call(__MODULE__, {:reindex, ids})
   end
 
   def reindex(id) do

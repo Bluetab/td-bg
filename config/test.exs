@@ -21,12 +21,6 @@ config :td_bg, TdBg.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_bg, :elasticsearch,
-  search_service: TdBg.Search.MockSearch,
-  es_host: "elastic",
-  es_port: 9200,
-  type_name: "doc"
-
 config :td_bg, :audit_service,
   api_service: TdBgWeb.ApiServices.MockTdAuditService,
   audit_host: "localhost",
@@ -38,3 +32,5 @@ config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
 config :td_bg, metrics_publication_frequency: 1000
 
 config :td_cache, redis_host: "redis"
+
+config :td_bg, TdBg.Search.Cluster, api: TdBg.ElasticsearchMock

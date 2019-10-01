@@ -26,12 +26,6 @@ config :td_bg, TdBg.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "${GUARDIAN_SECRET_KEY}"
 
-config :td_bg, :elasticsearch,
-  search_service: TdBg.Search,
-  es_host: "${ES_HOST}",
-  es_port: "${ES_PORT}",
-  type_name: "doc"
-
 config :td_bg, TdBg.Search.Cluster, url: "${ES_HOST}:${ES_PORT}"
 
 config :td_bg, :audit_service,

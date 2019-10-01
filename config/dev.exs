@@ -46,12 +46,6 @@ config :td_bg, TdBg.Repo,
   hostname: "localhost",
   pool_size: 10
 
-config :td_bg, :elasticsearch,
-  search_service: TdBg.Search,
-  es_host: "localhost",
-  es_port: 9200,
-  type_name: "doc"
-
 config :td_bg, :audit_service,
   api_service: TdBgWeb.ApiServices.HttpTdAuditService,
   audit_host: "localhost",

@@ -40,8 +40,8 @@ defmodule TdBg.BusinessConceptSteps do
     domain = get_domain_by_name(token_admin, domain_name)
     business_concept_version = business_concept_version_by_name(token, business_concept_name)
 
-    {_, http_status_code, %{"data" => business_concept_version}} =
-      business_concept_version_show(token, business_concept_version["id"])
+    assert {_, http_status_code, %{"data" => business_concept_version}} =
+             business_concept_version_show(token, business_concept_version["id"])
 
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept_version["name"] == business_concept_name

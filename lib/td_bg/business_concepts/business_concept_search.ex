@@ -6,9 +6,9 @@ defmodule TdBg.BusinessConcept.Search do
   alias TdBg.BusinessConcept.Query
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Permissions
+  alias TdBg.Search
   alias TdBg.Search.Aggregations
 
-  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
   @map_field_to_condition %{
     "rule_terms" => %{gt: 0},
     "linked_terms" => %{gt: 0},
@@ -20,7 +20,7 @@ defmodule TdBg.BusinessConcept.Search do
     filter_clause = create_filters(params)
     query = %{} |> create_query(filter_clause)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
-    @search_service.get_filters(search)
+    Search.get_filters(search)
   end
 
   def get_filter_values(%User{} = user, params) do
@@ -35,7 +35,7 @@ defmodule TdBg.BusinessConcept.Search do
     filter = permissions |> create_filter_clause(filter_clause)
     query = %{} |> create_query(filter)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
-    @search_service.get_filters(search)
+    Search.get_filters(search)
   end
 
   def search_business_concept_versions(params, user, page \\ 0, size \\ 50)
@@ -68,7 +68,7 @@ defmodule TdBg.BusinessConcept.Search do
     filter_business_concept_versions(params, permissions, page, size)
   end
 
-  defp get_permissions(%{"only_linkable" => true}, user) do
+  def get_permissions(%{"only_linkable" => true}, user) do
     user
     |> Permissions.get_domain_permissions()
     |> Enum.filter(
@@ -78,7 +78,7 @@ defmodule TdBg.BusinessConcept.Search do
     )
   end
 
-  defp get_permissions(_, user), do: Permissions.get_domain_permissions(user)
+  def get_permissions(_, user), do: Permissions.get_domain_permissions(user)
 
   def list_business_concept_versions(business_concept_id, %User{is_admin: true}) do
     query = %{business_concept_id: business_concept_id} |> create_query
@@ -253,7 +253,7 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   defp do_search(search) do
-    %{results: results, total: total} = @search_service.search(search)
+    %{results: results, total: total} = Search.search(search)
     results = results |> Enum.map(&Map.get(&1, "_source"))
     %{results: results, total: total}
   end

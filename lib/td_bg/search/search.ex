@@ -19,10 +19,10 @@ defmodule TdBg.Search do
     # TODO: stream, chunk
     bulk =
       business_concepts
-      |> Enum.map(&Bulk.encode!(Cluster, &1, @index, action: "index"))
+      |> Enum.map(&Bulk.encode!(Cluster, &1, @index, "index"))
       |> Enum.join("")
 
-    Elasticsearch.post(Cluster, @index <> "/_doc/_bulk", bulk)
+    Elasticsearch.post(Cluster, "/#{@index}/_doc/_bulk", bulk)
   end
 
   def delete_search(%BusinessConceptVersion{} = concept) do
@@ -31,7 +31,7 @@ defmodule TdBg.Search do
 
   def search(query) do
     Logger.debug(fn -> "Query: #{inspect(query)}" end)
-    response = Elasticsearch.post(Cluster, @index, query)
+    response = Elasticsearch.post(Cluster, "/#{@index}/_search", query)
 
     case response do
       {:ok, %{"hits" => %{"hits" => results, "total" => total}}} ->
@@ -44,7 +44,7 @@ defmodule TdBg.Search do
   end
 
   def get_filters(query) do
-    response = Elasticsearch.post(Cluster, @index, query)
+    response = Elasticsearch.post(Cluster, "/#{@index}/_search", query)
 
     case response do
       {:ok, %{"aggregations" => aggregations}} ->
