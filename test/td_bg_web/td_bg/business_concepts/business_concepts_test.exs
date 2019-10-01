@@ -21,8 +21,7 @@ defmodule TdBg.BusinessConceptsTests do
     alias TdBg.BusinessConcepts.BusinessConceptVersion
 
     test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      business_concept_version = insert(:business_concept_version)
 
       object =
         BusinessConcepts.get_current_version_by_business_concept_id!(
@@ -33,12 +32,9 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "get_currently_published_version!/1 returns the published business_concept with given id" do
-      user = build(:user)
-
       bcv_published =
         insert(
           :business_concept_version,
-          last_change_by: user.id,
           status: BusinessConcept.status().published
         )
 
@@ -51,14 +47,7 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "get_currently_published_version!/1 returns the last when there are no published" do
-      user = build(:user)
-
-      bcv_draft =
-        insert(
-          :business_concept_version,
-          last_change_by: user.id,
-          status: BusinessConcept.status().draft
-        )
+      bcv_draft = insert(:business_concept_version, status: BusinessConcept.status().draft)
 
       bcv_current =
         BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
@@ -250,51 +239,6 @@ defmodule TdBg.BusinessConceptsTests do
       assert business_concept_version.content["Field2"] == "World"
     end
 
-    # Must revise inclusion test on Td-Df-Lib
-    # test "create_business_concept/1 with invalid content: not in list" do
-    #   user = build(:user)
-    #   domain = insert(:domain)
-
-    #   content_schema = [
-    #     %{"name" => "Field1", "type" => "string", "values" => %{"fixed" => ["Hello"]}, "cardinality" => "?"}
-    #   ]
-
-    #   content = %{"Field1" => "World"}
-
-    #   concept_attrs = %{
-    #     type: "some_type",
-    #     domain_id: domain.id,
-    #     last_change_by: user.id,
-    #     last_change_at: DateTime.utc_now()
-    #   }
-
-    #   version_attrs = %{
-    #     business_concept: concept_attrs,
-    #     content: content,
-    #     related_to: [],
-    #     name: "some name",
-    #     description: to_rich_text("some description"),
-    #     last_change_by: user.id,
-    #     last_change_at: DateTime.utc_now(),
-    #     version: 1
-    #   }
-
-    #   creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-    #   assert {:ok, %BusinessConceptVersion{} = object} =
-    #   BusinessConcepts.create_business_concept(creation_attrs)
-
-    #   assert object.content == version_attrs.content
-    #   assert object.name == version_attrs.name
-    #   assert object.description == version_attrs.description
-    #   assert object.last_change_by == version_attrs.last_change_by
-    #   assert object.current == true
-    #   assert object.in_progress == true
-    #   assert object.version == version_attrs.version
-    #   assert object.business_concept.type == concept_attrs.type
-    #   assert object.business_concept.domain_id == concept_attrs.domain_id
-    #   assert object.business_concept.last_change_by == concept_attrs.last_change_by
-    # end
-
     test "create_business_concept/1 with invalid content: invalid variable list" do
       user = build(:user)
       domain = insert(:domain)
@@ -434,11 +378,9 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "check_business_concept_name_availability/2 check not available" do
-      user = build(:user)
       name = random_name()
 
-      business_concept_version =
-        insert(:business_concept_version, name: name, last_change_by: user.id)
+      business_concept_version = insert(:business_concept_version, name: name)
 
       type = business_concept_version.business_concept.type
 
@@ -447,11 +389,9 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "check_business_concept_name_availability/2 check available" do
-      user = build(:user)
       name = random_name()
 
-      business_concept_version =
-        insert(:business_concept_version, name: name, last_change_by: user.id)
+      business_concept_version = insert(:business_concept_version, name: name)
 
       exclude_concept_id = business_concept_version.business_concept.id
       type = business_concept_version.business_concept.type
@@ -465,46 +405,20 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "check_business_concept_name_availability/3 check not available" do
-      [name1, name2] = 1..10 |> Enum.map(fn _ -> random_name() end) |> Enum.uniq() |> Enum.take(2)
-
-      user = build(:user)
-      domain = insert(:domain)
-      bc1 = insert(:business_concept, domain: domain)
-      bc2 = insert(:business_concept, domain: domain)
-
-      _first =
-        insert(
-          :business_concept_version,
-          last_change_by: user.id,
-          name: name1,
-          business_concept: bc1
-        )
-
-      second =
-        insert(
-          :business_concept_version,
-          last_change_by: user.id,
-          name: name2,
-          business_concept: bc2
-        )
+      assert [%{name: name}, %{business_concept: %{id: exclude_id, type: type}}] =
+               1..10
+               |> Enum.map(fn _ -> random_name() end)
+               |> Enum.uniq()
+               |> Enum.take(2)
+               |> Enum.map(&insert(:business_concept_version, name: &1))
 
       assert {:name_not_available} ==
-               BusinessConcepts.check_business_concept_name_availability(
-                 second.business_concept.type,
-                 name1,
-                 second.id
-               )
+               BusinessConcepts.check_business_concept_name_availability(type, name, exclude_id)
     end
 
     test "count_published_business_concepts/2 check count" do
-      user = build(:user)
-
       business_concept_version =
-        insert(
-          :business_concept_version,
-          last_change_by: user.id,
-          status: BusinessConcept.status().published
-        )
+        insert(:business_concept_version, status: BusinessConcept.status().published)
 
       type = business_concept_version.business_concept.type
       ids = [business_concept_version.business_concept.id]
@@ -632,14 +546,8 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "version_business_concept/2 creates a new version" do
-      user = build(:user)
-
       business_concept_version =
-        insert(
-          :business_concept_version,
-          last_change_by: user.id,
-          status: BusinessConcept.status().published
-        )
+        insert(:business_concept_version, status: BusinessConcept.status().published)
 
       assert {:ok, %{current: new_version}} =
                BusinessConcepts.version_business_concept(
@@ -656,8 +564,7 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "change_business_concept/1 returns a business_concept changeset" do
-      user = build(:user)
-      business_concept = insert(:business_concept, last_change_by: user.id)
+      business_concept = insert(:business_concept)
       assert %Ecto.Changeset{} = BusinessConcepts.change_business_concept(business_concept)
     end
   end
@@ -721,8 +628,7 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "update_business_concept_version_status/2 with valid status data updates the business_concept" do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      business_concept_version = insert(:business_concept_version)
       attrs = %{status: BusinessConcept.status().published}
 
       assert {:ok, business_concept_version} =
@@ -735,14 +641,8 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "reject_business_concept_version/2 rejects business_concept" do
-      user = build(:user)
-
       business_concept_version =
-        insert(
-          :business_concept_version,
-          status: BusinessConcept.status().pending_approval,
-          last_change_by: user.id
-        )
+        insert(:business_concept_version, status: BusinessConcept.status().pending_approval)
 
       attrs = %{reject_reason: "Because I want to"}
 
@@ -754,8 +654,7 @@ defmodule TdBg.BusinessConceptsTests do
     end
 
     test "change_business_concept_version/1 returns a business_concept_version changeset" do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      business_concept_version = insert(:business_concept_version)
 
       assert %Ecto.Changeset{} =
                BusinessConcepts.change_business_concept_version(business_concept_version)
@@ -785,7 +684,7 @@ defmodule TdBg.BusinessConceptsTests do
 
     test "search_fields/1 returns a business_concept_version with default values in its content" do
       alias Elasticsearch.Document
-      user = build(:user)
+
       template_label = "search_fields"
       template_name = "search_fields_template"
       field_name = "multiple_1"
@@ -813,11 +712,7 @@ defmodule TdBg.BusinessConceptsTests do
       business_concept = insert(:business_concept, type: template_name)
 
       business_concept_version =
-        insert(
-          :business_concept_version,
-          business_concept: business_concept,
-          last_change_by: user.id
-        )
+        insert(:business_concept_version, business_concept: business_concept)
 
       %{template: template, content: content} = Document.encode(business_concept_version)
 

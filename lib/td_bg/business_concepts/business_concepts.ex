@@ -30,17 +30,16 @@ defmodule TdBg.BusinessConcepts do
   def check_business_concept_name_availability(type, name, exclude_concept_id) do
     status = [BusinessConcept.status().versioned, BusinessConcept.status().deprecated]
 
-    {:ok, count} =
-      Repo.transaction(fn ->
-        BusinessConcept
-        |> join(:left, [c], _ in assoc(c, :versions))
-        |> where([c, v], c.type == ^type and v.status not in ^status)
-        |> include_name_where(name, exclude_concept_id)
-        |> select([c, v], count(c.id))
-        |> Repo.one!()
-      end)
-
-    if count == 0, do: {:name_available}, else: {:name_not_available}
+    BusinessConcept
+    |> join(:left, [c], _ in assoc(c, :versions))
+    |> where([c, v], c.type == ^type and v.status not in ^status)
+    |> include_name_where(name, exclude_concept_id)
+    |> select([c, v], count(c.id))
+    |> Repo.one!()
+    |> case do
+      0 -> {:name_available}
+      _ -> {:name_not_available}
+    end
   end
 
   defp include_name_where(query, name, nil) do
