@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-1721] Reindex automatically when a template changes
+
 ## [3.7.0] 2019-09-30
 
 ### Fixed
