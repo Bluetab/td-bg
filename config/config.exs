@@ -64,7 +64,7 @@ config :td_cache, :event_stream,
   consumer_group: "bg",
   streams: [
     [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader],
-    [key: "template:events", consumer: TdBg.Cache.TemplateLoader]
+    [key: "template:events", consumer: TdBg.Search.IndexWorker]
   ]
 
 # Import Elasticsearch config

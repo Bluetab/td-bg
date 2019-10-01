@@ -27,7 +27,6 @@ defmodule TdBg.Application do
       # Cache workers
       worker(TdBg.Cache.ConceptLoader, []),
       worker(TdBg.Cache.DomainLoader, [TdBg.Cache.DomainLoader]),
-      worker(TdBg.Cache.TemplateLoader, []),
       # Metrics worker
       %{
         id: TdBg.CustomSupervisor,

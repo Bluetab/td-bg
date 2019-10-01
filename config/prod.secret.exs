@@ -26,7 +26,8 @@ config :td_bg, TdBg.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "${GUARDIAN_SECRET_KEY}"
 
-config :td_bg, TdBg.Search.Cluster, url: "${ES_HOST}:${ES_PORT}"
+config :td_bg, TdBg.Search.Cluster,
+  url: "${ES_URL}"
 
 config :td_bg, :audit_service,
   api_service: TdBgWeb.ApiServices.HttpTdAuditService,
@@ -41,5 +42,5 @@ config :td_cache, :event_stream,
   consumer_group: "bg",
   streams: [
     [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader],
-    [key: "template:events", consumer: TdBg.Cache.TemplateLoader]
+    [key: "template:events", consumer: TdBg.Search.IndexWorker]
   ]
