@@ -8,7 +8,6 @@ use Mix.Config
 # with brunch.io to recompile .js and .css sources.
 config :td_bg, TdBgWeb.Endpoint,
   http: [port: 4002],
-  url: [host: "localhost", port: 4002],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -29,10 +28,6 @@ config :td_bg, TdBgWeb.Endpoint,
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
 # different ports.
-
-# Do not include metadata nor timestamps in development logs
-config :logger, :console,
-  format: (System.get_env("EX_LOGGER_FORMAT") || "[$level] $message") <> "\n"
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
