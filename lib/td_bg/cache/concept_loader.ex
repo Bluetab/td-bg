@@ -95,21 +95,38 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp read_concept_ids(%{event: "add_rule", concept: concept}) do
-    [read_concept_id(concept)]
-  end
-
-  defp read_concept_ids(%{event: "add_comment"}) do
-    # TODO: TD-1618
+    do_read_concept_ids(concept)
   end
 
   defp read_concept_ids(%{event: "remove_rule", concept: concept}) do
-    [read_concept_id(concept)]
+    do_read_concept_ids(concept)
+  end
+
+  defp read_concept_ids(%{event: "add_comment"}) do
+    # TODO: Do we need to do anything with this event?
+    []
   end
 
   # unsupported events...
   defp read_concept_ids(_), do: []
 
-  defp read_concept_id("business_concept:" <> id), do: String.to_integer(id)
+  defp do_read_concept_ids(value) do
+    case read_concept_id(value) do
+      {:ok, id} ->
+        [id]
+
+      _ ->
+        Logger.warn("Invalid format #{value}")
+        []
+    end
+  end
+
+  defp read_concept_id(value) do
+    case Regex.run(~r/^business_concept:(\d+)$/, value, capture: :all_but_first) do
+      [id] -> {:ok, String.to_integer(id)}
+      _ -> {:error, :invalid_format}
+    end
+  end
 
   defp cache_concepts(business_concept_ids) do
     business_concept_ids

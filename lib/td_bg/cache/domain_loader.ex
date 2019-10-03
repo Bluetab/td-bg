@@ -10,8 +10,8 @@ defmodule TdBg.Cache.DomainLoader do
 
   require Logger
 
-  def start_link(name \\ nil) do
-    GenServer.start_link(__MODULE__, nil, name: name)
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def refresh(domain_id) do

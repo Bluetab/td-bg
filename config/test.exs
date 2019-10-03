@@ -34,3 +34,5 @@ config :td_bg, metrics_publication_frequency: 1000
 config :td_cache, redis_host: "redis"
 
 config :td_bg, TdBg.Search.Cluster, api: TdBg.ElasticsearchMock
+
+config :td_cache, :event_stream, streams: []
