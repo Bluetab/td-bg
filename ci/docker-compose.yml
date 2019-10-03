@@ -7,6 +7,7 @@ services:
     environment:
       - cluster.name=truedat
       - bootstrap.memory_lock=true
+      - discovery.type=single-node
     ulimits:
       memlock:
         soft: -1
@@ -82,6 +83,12 @@ services:
     depends_on:
       - postgres
       - redis
+      - elastic
+
+  wait_for_elastic:
+    image: bluetab/wait-for:20190507133127
+    command: elastic:9200 -t 30 -- curl --silent elastic:9200
+    depends_on:
       - elastic
 
   acceptance:
