@@ -17,8 +17,8 @@ defmodule TdBg.Search.IndexWorker do
     GenServer.start_link(__MODULE__, nil, name: name)
   end
 
-  def ping do
-    GenServer.call(__MODULE__, :ping)
+  def ping(timeout \\ 5000) do
+    GenServer.call(__MODULE__, :ping, timeout)
   end
 
   def reindex(:all) do
@@ -26,7 +26,7 @@ defmodule TdBg.Search.IndexWorker do
   end
 
   def reindex(ids) when is_list(ids) do
-    GenServer.call(__MODULE__, {:reindex, ids})
+    GenServer.call(__MODULE__, {:reindex, ids}, 30_000)
   end
 
   def reindex(id) do
@@ -93,5 +93,4 @@ defmodule TdBg.Search.IndexWorker do
   defp reindex_event?(%{event: "add_template", scope: "bg"}), do: true
 
   defp reindex_event?(_), do: false
-
 end

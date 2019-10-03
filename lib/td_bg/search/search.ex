@@ -3,39 +3,22 @@ defmodule TdBg.Search do
   Search Engine calls
   """
 
-  alias Elasticsearch.Index.Bulk
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Search.Cluster
 
   require Logger
 
   @index "concepts"
 
-  def put_bulk_search(:business_concept) do
-    Elasticsearch.Index.hot_swap(Cluster, @index)
-  end
-
-  def put_bulk_search(business_concepts, :business_concept) do
-    # TODO: stream, chunk
-    bulk =
-      business_concepts
-      |> Enum.map(&Bulk.encode!(Cluster, &1, @index, "index"))
-      |> Enum.join("")
-
-    Elasticsearch.post(Cluster, "/#{@index}/_doc/_bulk", bulk)
-  end
-
-  def delete_search(%BusinessConceptVersion{} = concept) do
-    Elasticsearch.delete_document(Cluster, concept, @index)
-  end
-
   def search(query) do
     Logger.debug(fn -> "Query: #{inspect(query)}" end)
     response = Elasticsearch.post(Cluster, "/#{@index}/_search", query)
 
     case response do
+      {:ok, %{"aggregations" => aggregations, "hits" => %{"hits" => results, "total" => total}}} ->
+        %{results: results, total: total, aggregations: aggregations}
+
       {:ok, %{"hits" => %{"hits" => results, "total" => total}}} ->
-        %{results: results, total: total}
+        %{results: results, total: total, aggregations: %{}}
 
       {:error, %Elasticsearch.Exception{message: message} = error} ->
         Logger.warn("Error response from Elasticsearch: #{message}")

@@ -14,6 +14,11 @@ defmodule TdBg.ElasticsearchMock do
   require Logger
 
   @impl true
+  def request(_config, :head, "/_alias/concepts", _data, _opts) do
+    {:ok, %Response{status_code: 200, body: []}}
+  end
+
+  @impl true
   def request(_config, :get, "/_cat/indices?format=json", _data, _opts) do
     {:ok, %Response{status_code: 200, body: []}}
   end

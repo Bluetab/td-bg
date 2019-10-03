@@ -41,15 +41,16 @@ defmodule TdBgWeb.ConnCase do
       Sandbox.mode(TdBg.Repo, {:shared, self()})
       parent = self()
 
-      case Process.whereis(TdBg.Cache.ConceptLoader) do
-        nil -> nil
-        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
-      end
+      Enum.each([TdBg.Cache.ConceptLoader, TdBg.Search.IndexWorker], fn worker ->
+        case Process.whereis(worker) do
+          nil ->
+            nil
 
-      case Process.whereis(TdBg.Search.IndexWorker) do
-        nil -> nil
-        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
-      end
+          pid ->
+            on_exit(fn -> worker.ping(20_000) end)
+            Sandbox.allow(TdBg.Repo, parent, pid)
+        end
+      end)
     end
 
     cond do

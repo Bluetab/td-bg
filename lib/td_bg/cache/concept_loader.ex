@@ -21,14 +21,9 @@ defmodule TdBg.Cache.ConceptLoader do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
-  ## EventStream.Consumer Callbacks
-
-  @impl true
-  def consume(events) do
-    GenServer.call(__MODULE__, {:consume, events})
+  def ping(timeout \\ 5000) do
+    GenServer.call(__MODULE__, :ping, timeout)
   end
-
-  ## Public API
 
   def refresh(business_concept_ids) when is_list(business_concept_ids) do
     GenServer.call(__MODULE__, {:refresh, business_concept_ids})
@@ -36,6 +31,13 @@ defmodule TdBg.Cache.ConceptLoader do
 
   def refresh(business_concept_id) do
     refresh([business_concept_id])
+  end
+
+  ## EventStream.Consumer Callbacks
+
+  @impl true
+  def consume(events) do
+    GenServer.call(__MODULE__, {:consume, events}, 20_000)
   end
 
   ## GenServer Callbacks
@@ -56,6 +58,11 @@ defmodule TdBg.Cache.ConceptLoader do
     put_active_ids()
     put_confidential_ids()
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_call(:ping, _from, state) do
+    {:reply, :pong, state}
   end
 
   @impl true

@@ -24,7 +24,7 @@ config :td_bg, TdBg.Search.Cluster,
       # This file describes the mappings and settings for your index. It will
       # be posted as-is to Elasticsearch when you create your index, and
       # therefore allows all the settings you could post directly.
-      settings: "priv/elasticsearch/business_concepts.json",
+      settings: "priv/elasticsearch/concepts.json",
 
       # This store module must implement a store behaviour. It will be used to
       # fetch data for each source in each indexes' `sources` list, below:
@@ -36,16 +36,18 @@ config :td_bg, TdBg.Search.Cluster,
       #
       # Each piece of data that is returned by the store must implement the
       # Elasticsearch.Document protocol.
-      sources: [TdBg.BusinessConcepts.Indexable],
+      sources: [TdBg.BusinessConcepts.BusinessConceptVersion],
 
       # When indexing data using the `mix elasticsearch.build` task,
       # control the data ingestion rate by raising or lowering the number
       # of items to send in each bulk request.
-      bulk_page_size: 1_000,
+      bulk_page_size: 1000,
 
       # Likewise, wait a given period between posting pages to give
       # Elasticsearch time to catch up.
-      # 1 second
-      bulk_wait_interval: 1_000
+      bulk_wait_interval: 0,
+
+      # Support create or replace
+      bulk_action: "index"
     }
   }
