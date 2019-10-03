@@ -35,14 +35,14 @@ defmodule TdBg.Search.IndexWorker do
 
   ## EventStream.Consumer Callbacks
 
-  @impl true
+  @impl TdCache.EventStream.Consumer
   def consume(events) do
     GenServer.cast(__MODULE__, {:consume, events})
   end
 
   ## GenServer Callbacks
 
-  @impl true
+  @impl GenServer
   def init(state) do
     name = String.replace_prefix("#{__MODULE__}", "Elixir.", "")
     Logger.info("Running #{name}")
@@ -60,25 +60,25 @@ defmodule TdBg.Search.IndexWorker do
     {:noreply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call(:ping, _from, state) do
     {:reply, :pong, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:reindex, ids}, _from, state) do
     reply = do_reindex(ids)
     {:reply, reply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_cast({:reindex, :all}, state) do
     do_reindex(:all)
 
     {:noreply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_cast({:consume, events}, state) do
     case Enum.any?(events, &reindex_event?/1) do
       true -> do_reindex(:all)
@@ -87,6 +87,8 @@ defmodule TdBg.Search.IndexWorker do
 
     {:noreply, state}
   end
+
+  ## Private functions
 
   defp do_reindex(ids) do
     Timer.time(
