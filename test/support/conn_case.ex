@@ -40,17 +40,7 @@ defmodule TdBgWeb.ConnCase do
     unless tags[:async] do
       Sandbox.mode(TdBg.Repo, {:shared, self()})
       parent = self()
-
-      Enum.each([TdBg.Cache.ConceptLoader, TdBg.Search.IndexWorker], fn worker ->
-        case Process.whereis(worker) do
-          nil ->
-            nil
-
-          pid ->
-            on_exit(fn -> worker.ping(20_000) end)
-            Sandbox.allow(TdBg.Repo, parent, pid)
-        end
-      end)
+      allow(parent, [TdBg.Cache.ConceptLoader, TdBg.Search.IndexWorker])
     end
 
     cond do
@@ -65,5 +55,14 @@ defmodule TdBgWeb.ConnCase do
       true ->
         {:ok, conn: ConnTest.build_conn()}
     end
+  end
+
+  defp allow(parent, workers) do
+    Enum.each(workers, fn worker ->
+      case Process.whereis(worker) do
+        nil -> nil
+        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
+      end
+    end)
   end
 end

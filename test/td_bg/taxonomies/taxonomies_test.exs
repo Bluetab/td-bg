@@ -1,8 +1,16 @@
 defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Repo
+  alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
+
+  setup_all do
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
+    :ok
+  end
 
   describe "domains" do
     alias TdBg.BusinessConcepts.BusinessConcept

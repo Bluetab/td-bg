@@ -1,14 +1,17 @@
 defmodule TdBg.BusinessConceptRelationsTest do
   use Cabbage.Feature, file: "business_concept/business_concept_relations.feature"
   use TdBgWeb.FeatureCase
-  import TdBgWeb.BusinessConcept
 
+  import TdBgWeb.Authentication, only: :functions
+  import TdBgWeb.BusinessConcept
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy, only: :functions
-  import TdBgWeb.Authentication, only: :functions
 
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.IndexWorker
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -21,6 +24,9 @@ defmodule TdBg.BusinessConceptRelationsTest do
   import TdBg.ResultSteps
 
   setup_all do
+    start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)

@@ -21,10 +21,6 @@ defmodule TdBg.Cache.ConceptLoader do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
-  def ping(timeout \\ 5000) do
-    GenServer.call(__MODULE__, :ping, timeout)
-  end
-
   def refresh(business_concept_ids) when is_list(business_concept_ids) do
     GenServer.call(__MODULE__, {:refresh, business_concept_ids})
   end
@@ -35,14 +31,14 @@ defmodule TdBg.Cache.ConceptLoader do
 
   ## EventStream.Consumer Callbacks
 
-  @impl true
+  @impl EventStream.Consumer
   def consume(events) do
     GenServer.call(__MODULE__, {:consume, events}, 20_000)
   end
 
   ## GenServer Callbacks
 
-  @impl true
+  @impl GenServer
   def init(state) do
     unless Application.get_env(:td_bg, :env) == :test do
       Process.send_after(self(), :put_ids, 200)
@@ -53,26 +49,21 @@ defmodule TdBg.Cache.ConceptLoader do
     {:ok, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_info(:put_ids, state) do
     put_active_ids()
     put_confidential_ids()
     {:noreply, state}
   end
 
-  @impl true
-  def handle_call(:ping, _from, state) do
-    {:reply, :pong, state}
-  end
-
-  @impl true
+  @impl GenServer
   def handle_call({:refresh, ids}, _from, state) do
     reply = cache_concepts(ids)
     IndexWorker.reindex(ids)
     {:reply, reply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:consume, events}, _from, state) do
     concept_ids =
       events

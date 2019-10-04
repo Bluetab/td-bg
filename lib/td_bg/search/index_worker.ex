@@ -17,10 +17,6 @@ defmodule TdBg.Search.IndexWorker do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  def ping(timeout \\ 5000) do
-    GenServer.call(__MODULE__, :ping, timeout)
-  end
-
   def reindex(:all) do
     GenServer.cast(__MODULE__, {:reindex, :all})
   end
@@ -58,11 +54,6 @@ defmodule TdBg.Search.IndexWorker do
   def handle_info(:migrate, state) do
     Indexer.migrate()
     {:noreply, state}
-  end
-
-  @impl GenServer
-  def handle_call(:ping, _from, state) do
-    {:reply, :pong, state}
   end
 
   @impl GenServer
