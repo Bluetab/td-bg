@@ -14,6 +14,7 @@ defmodule TdBg.Search.Indexer do
   require Logger
 
   @index :concepts
+  @action "index"
 
   def reindex(:all) do
     {:ok, _} =
@@ -33,6 +34,7 @@ defmodule TdBg.Search.Indexer do
       |> Stream.chunk_every(bulk_page_size(@index))
       |> Stream.map(&Enum.join(&1, ""))
       |> Stream.map(&Elasticsearch.post(Cluster, "/#{@index}/_doc/_bulk", &1))
+      |> Stream.map(&log(&1, @action))
       |> Stream.run()
     end)
   end
@@ -52,7 +54,7 @@ defmodule TdBg.Search.Indexer do
 
         Timer.time(
           fn -> reindex(:all) end,
-          fn millis, _ -> Logger.info("Migrated index #{@index} in #{millis}ms") end
+          fn millis, _ -> Logger.info("Created index #{@index} in #{millis}ms") end
         )
       else
         Logger.warn("Another process is migrating")
@@ -95,5 +97,22 @@ defmodule TdBg.Search.Indexer do
   # Ensure only one instance of dq is reindexing by creating a lock in Redis
   defp can_migrate? do
     Redix.command!(["SET", "TdBg.Search.Indexer:LOCK", node(), "NX", "EX", 3600]) == "OK"
+  end
+
+  defp log({:ok, %{"errors" => false, "items" => items, "took" => took}}, _action) do
+    Logger.info("Indexed #{Enum.count(items)} documents (took=#{took})")
+  end
+
+  defp log({:ok, %{"errors" => true} = response}, action) do
+    first_error = response["items"] |> Enum.find(& &1[action]["error"])
+    Logger.warn("Bulk indexing encountered errors #{inspect(first_error)}")
+  end
+
+  defp log({:error, error}, _action) do
+    Logger.warn("Bulk indexing encountered errors #{inspect(error)}")
+  end
+
+  defp log(error, _action) do
+    Logger.warn("Bulk indexing encountered errors #{inspect(error)}")
   end
 end

@@ -83,10 +83,21 @@ defmodule TdBg.Search.IndexWorker do
 
   defp do_reindex([]), do: :ok
 
-  defp do_reindex(ids) do
+  defp do_reindex(:all) do
+    Logger.info("Reindexing all concepts")
+
+    Timer.time(
+      fn -> Indexer.reindex(:all) end,
+      fn ms, _ -> Logger.info("Reindexed all concepts in #{ms}ms") end
+    )
+  end
+
+  defp do_reindex(ids) when is_list(ids) do
+    count = Enum.count(ids)
+
     Timer.time(
       fn -> Indexer.reindex(ids) end,
-      fn millis, _ -> Logger.info("Business concepts indexed in #{millis}ms") end
+      fn ms, _ -> Logger.info("Reindexed #{count} concepts in #{ms}ms") end
     )
   end
 

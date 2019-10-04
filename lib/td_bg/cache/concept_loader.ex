@@ -31,7 +31,7 @@ defmodule TdBg.Cache.ConceptLoader do
 
   ## EventStream.Consumer Callbacks
 
-  @impl EventStream.Consumer
+  @impl true
   def consume(events) do
     GenServer.call(__MODULE__, {:consume, events}, 20_000)
   end
