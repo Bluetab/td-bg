@@ -21,15 +21,6 @@ defmodule TdBg.Cache.ConceptLoader do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
-  ## EventStream.Consumer Callbacks
-
-  @impl true
-  def consume(events) do
-    GenServer.call(__MODULE__, {:consume, events})
-  end
-
-  ## Public API
-
   def refresh(business_concept_ids) when is_list(business_concept_ids) do
     GenServer.call(__MODULE__, {:refresh, business_concept_ids})
   end
@@ -38,9 +29,16 @@ defmodule TdBg.Cache.ConceptLoader do
     refresh([business_concept_id])
   end
 
-  ## GenServer Callbacks
+  ## EventStream.Consumer Callbacks
 
   @impl true
+  def consume(events) do
+    GenServer.call(__MODULE__, {:consume, events}, 20_000)
+  end
+
+  ## GenServer Callbacks
+
+  @impl GenServer
   def init(state) do
     unless Application.get_env(:td_bg, :env) == :test do
       Process.send_after(self(), :put_ids, 200)
@@ -51,21 +49,21 @@ defmodule TdBg.Cache.ConceptLoader do
     {:ok, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_info(:put_ids, state) do
     put_active_ids()
     put_confidential_ids()
     {:noreply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:refresh, ids}, _from, state) do
     reply = cache_concepts(ids)
     IndexWorker.reindex(ids)
     {:reply, reply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:consume, events}, _from, state) do
     concept_ids =
       events
@@ -88,21 +86,38 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp read_concept_ids(%{event: "add_rule", concept: concept}) do
-    [read_concept_id(concept)]
-  end
-
-  defp read_concept_ids(%{event: "add_comment"}) do
-    # TODO: TD-1618
+    do_read_concept_ids(concept)
   end
 
   defp read_concept_ids(%{event: "remove_rule", concept: concept}) do
-    [read_concept_id(concept)]
+    do_read_concept_ids(concept)
+  end
+
+  defp read_concept_ids(%{event: "add_comment"}) do
+    # TODO: Do we need to do anything with this event?
+    []
   end
 
   # unsupported events...
   defp read_concept_ids(_), do: []
 
-  defp read_concept_id("business_concept:" <> id), do: String.to_integer(id)
+  defp do_read_concept_ids(value) do
+    case read_concept_id(value) do
+      {:ok, id} ->
+        [id]
+
+      _ ->
+        Logger.warn("Invalid format #{value}")
+        []
+    end
+  end
+
+  defp read_concept_id(value) do
+    case Regex.run(~r/^business_concept:(\d+)$/, value, capture: :all_but_first) do
+      [id] -> {:ok, String.to_integer(id)}
+      _ -> {:error, :invalid_format}
+    end
+  end
 
   defp cache_concepts(business_concept_ids) do
     business_concept_ids

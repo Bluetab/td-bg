@@ -7,17 +7,12 @@ defmodule TdBg.Search.Aggregations do
 
   def aggregation_terms do
     static_keywords = [
-      {"domain", %{terms: %{field: "domain.name.raw", size: 50}}},
-      {"domain_id", %{terms: %{field: "domain.id"}}},
-      {"business_concept_id", %{terms: %{field: "business_concept_id"}}},
       {"domain_parents",
        %{
          nested: %{path: "domain_parents"},
          aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}
        }},
       {"status", %{terms: %{field: "status"}}},
-      {"current", %{terms: %{field: "current"}}},
-      {"in_progress", %{terms: %{field: "in_progress"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
       {"rule_count",
        %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},

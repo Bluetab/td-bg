@@ -1,14 +1,18 @@
 defmodule TdBg.TaxonomyTest do
   use Cabbage.Feature, async: false, file: "taxonomies/taxonomy.feature"
   use TdBgWeb.FeatureCase
+
+  import TdBgWeb.AclEntry, only: :functions
+  import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.BusinessConcept
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy
   import TdBgWeb.User, only: :functions
-  import TdBgWeb.Authentication, only: :functions
-  import TdBgWeb.AclEntry, only: :functions
 
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.IndexWorker
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
@@ -21,9 +25,12 @@ defmodule TdBg.TaxonomyTest do
   import TdBg.BusinessConceptSteps
 
   setup_all do
-    start_supervised(MockTdAuthService)
-    start_supervised(MockTdAuditService)
+    start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
+    start_supervised(MockTdAuditService)
+    start_supervised(MockTdAuthService)
     :ok
   end
 

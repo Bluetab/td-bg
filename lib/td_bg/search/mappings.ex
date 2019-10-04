@@ -5,6 +5,9 @@ defmodule TdBg.Search.Mappings do
 
   alias TdCache.TemplateCache
 
+  @raw %{raw: %{type: "keyword"}}
+  @raw_sort %{raw: %{type: "keyword"}, sort: %{type: "keyword", normalizer: "sortable"}}
+
   def get_mappings do
     content_mappings = %{properties: get_dynamic_mappings()}
 
@@ -16,7 +19,7 @@ defmodule TdBg.Search.Mappings do
       template: %{
         properties: %{
           name: %{type: "text"},
-          label: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          label: %{type: "text", fields: @raw}
         }
       },
       status: %{type: "keyword"},
@@ -27,14 +30,14 @@ defmodule TdBg.Search.Mappings do
       domain: %{
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}}
+          name: %{type: "text", fields: @raw_sort}
         }
       },
       last_change_by: %{
         properties: %{
           id: %{type: "long"},
-          user_name: %{type: "text", fields: %{raw: %{type: "keyword"}}},
-          full_name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          user_name: %{type: "text", fields: @raw},
+          full_name: %{type: "text", fields: @raw}
         }
       },
       domain_ids: %{type: "long"},
@@ -42,7 +45,7 @@ defmodule TdBg.Search.Mappings do
         type: "nested",
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          name: %{type: "text", fields: @raw}
         }
       },
       link_count: %{type: "short"},
@@ -51,6 +54,7 @@ defmodule TdBg.Search.Mappings do
     }
 
     settings = %{
+      number_of_shards: 1,
       analysis: %{
         normalizer: %{
           sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}
@@ -58,19 +62,19 @@ defmodule TdBg.Search.Mappings do
       }
     }
 
-    %{mappings: %{doc: %{properties: mapping_type}}, settings: settings}
+    %{mappings: %{_doc: %{properties: mapping_type}}, settings: settings}
   end
 
   def get_dynamic_mappings do
     TemplateCache.list_by_scope!("bg")
     |> Enum.flat_map(&get_mappings/1)
     |> Enum.into(%{})
-    |> Map.put("_confidential", %{type: "text", fields: %{raw: %{type: "keyword"}}})
+    |> Map.put("_confidential", %{type: "text", fields: @raw})
   end
 
   defp get_mappings(%{content: content}) do
     content
-    |> Enum.filter(&(Map.get(&1, "type") != "url"))
+    |> Enum.filter(&(Map.get(&1, "type") not in ["url", "table"]))
     |> Enum.map(&field_mapping/1)
   end
 
@@ -87,7 +91,7 @@ defmodule TdBg.Search.Mappings do
   end
 
   defp mapping_type(values) when is_map(values) do
-    %{type: "text", fields: %{raw: %{type: "keyword"}}}
+    %{type: "text", fields: @raw}
   end
 
   defp mapping_type(_default), do: %{type: "text"}

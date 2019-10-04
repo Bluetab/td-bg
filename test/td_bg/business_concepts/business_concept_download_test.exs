@@ -3,11 +3,6 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
   alias TdCache.TemplateCache
 
-  def create_template(template) do
-    TemplateCache.put(template)
-    template
-  end
-
   describe "business_concept_download" do
     alias TdBg.BusinessConcept.Download
 
@@ -165,5 +160,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
                  url_fields
                };#{key_value_fields}"
     end
+  end
+
+  def create_template(template) do
+    TemplateCache.put(template)
+    template
   end
 end

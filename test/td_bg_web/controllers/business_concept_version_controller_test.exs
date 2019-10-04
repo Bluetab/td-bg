@@ -6,15 +6,21 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   import TdBgWeb.User, only: :functions
 
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.IndexWorker
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdCache.TemplateCache
 
   setup_all do
-    start_supervised(MockTdAuthService)
-    start_supervised(MockTdAuditService)
+    start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
+    start_supervised(MockTdAuditService)
+    start_supervised(MockTdAuthService)
     :ok
   end
 
@@ -67,15 +73,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       })
 
       business_concept = insert(:business_concept, domain: domain_create)
+      bcv = insert(:business_concept_version, business_concept: business_concept, name: "name")
 
-      version = insert(
-        :business_concept_version,
-        business_concept: business_concept,
-        name: "name"
-      )
-
-      conn =
-        get(conn, Routes.business_concept_version_path(conn, :show, version.id))
+      conn = get(conn, Routes.business_concept_version_path(conn, :show, bcv.id))
       data = json_response(conn, 200)["_actions"]
 
       assert Map.has_key?(data, "create_link")

@@ -11,13 +11,12 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
+  alias TdBg.Search.Indexer
   alias TdCache.ConceptCache
   alias TdCache.EventStream.Publisher
   alias TdDfLib.Format
   alias TdDfLib.Validation
   alias ValidationError
-
-  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   @doc """
   check business concept name availability
@@ -31,17 +30,16 @@ defmodule TdBg.BusinessConcepts do
   def check_business_concept_name_availability(type, name, exclude_concept_id) do
     status = [BusinessConcept.status().versioned, BusinessConcept.status().deprecated]
 
-    {:ok, count} =
-      Repo.transaction(fn ->
-        BusinessConcept
-        |> join(:left, [c], _ in assoc(c, :versions))
-        |> where([c, v], c.type == ^type and v.status not in ^status)
-        |> include_name_where(name, exclude_concept_id)
-        |> select([c, v], count(c.id))
-        |> Repo.one!()
-      end)
-
-    if count == 0, do: {:name_available}, else: {:name_not_available}
+    BusinessConcept
+    |> join(:left, [c], _ in assoc(c, :versions))
+    |> where([c, v], c.type == ^type and v.status not in ^status)
+    |> include_name_where(name, exclude_concept_id)
+    |> select([c, v], count(c.id))
+    |> Repo.one!()
+    |> case do
+      0 -> {:name_available}
+      _ -> {:name_not_available}
+    end
   end
 
   defp include_name_where(query, name, nil) do
@@ -462,11 +460,11 @@ defmodule TdBg.BusinessConcepts do
 
   def get_concept_counts(business_concept_id) do
     case ConceptCache.get(business_concept_id) do
-      {:ok, %{rule_count: rule_count, link_count: link_count}} ->
-        %{rule_count: rule_count, link_count: link_count}
+      {:ok, %{rule_count: rule_count, rules: rules, link_count: link_count}} ->
+        %{rule_count: rule_count, rules: rules, link_count: link_count}
 
       _ ->
-        %{rule_count: 0, link_count: 0}
+        %{rule_count: 0, rules: [], link_count: 0}
     end
   end
 
@@ -678,7 +676,7 @@ defmodule TdBg.BusinessConcepts do
 
           ConceptCache.delete(business_concept_id)
           # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
-          @search_service.delete_search(business_concept_version)
+          Indexer.delete(business_concept_version)
           {:ok, version}
       end
     else
@@ -695,7 +693,7 @@ defmodule TdBg.BusinessConcepts do
            business_concept_version: %BusinessConceptVersion{} = deleted_version,
            current: %BusinessConceptVersion{} = current_version
          }} ->
-          @search_service.delete_search(deleted_version)
+          Indexer.delete(deleted_version)
           {:ok, current_version}
       end
     end

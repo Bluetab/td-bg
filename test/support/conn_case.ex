@@ -14,9 +14,11 @@ defmodule TdBgWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
+
+  import TdBgWeb.Authentication, only: :functions
+
   alias Ecto.Adapters.SQL.Sandbox
   alias Phoenix.ConnTest
-  import TdBgWeb.Authentication, only: :functions
 
   using do
     quote do
@@ -38,11 +40,7 @@ defmodule TdBgWeb.ConnCase do
     unless tags[:async] do
       Sandbox.mode(TdBg.Repo, {:shared, self()})
       parent = self()
-
-      case Process.whereis(TdBg.Cache.ConceptLoader) do
-        nil -> nil
-        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
-      end
+      allow(parent, [TdBg.Cache.ConceptLoader, TdBg.Search.IndexWorker])
     end
 
     cond do
@@ -57,5 +55,14 @@ defmodule TdBgWeb.ConnCase do
       true ->
         {:ok, conn: ConnTest.build_conn()}
     end
+  end
+
+  defp allow(parent, workers) do
+    Enum.each(workers, fn worker ->
+      case Process.whereis(worker) do
+        nil -> nil
+        pid -> Sandbox.allow(TdBg.Repo, parent, pid)
+      end
+    end)
   end
 end

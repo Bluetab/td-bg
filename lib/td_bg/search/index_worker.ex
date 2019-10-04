@@ -3,61 +3,105 @@ defmodule TdBg.Search.IndexWorker do
   GenServer to reindex business concepts
   """
 
+  @behaviour TdCache.EventStream.Consumer
+
   use GenServer
 
   alias TdBg.Search.Indexer
 
   require Logger
 
-  def start_link(name \\ nil) do
-    GenServer.start_link(__MODULE__, nil, name: name)
-  end
+  ## Client API
 
-  def ping do
-    GenServer.call(TdBg.Search.IndexWorker, :ping)
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def reindex(:all) do
-    GenServer.cast(TdBg.Search.IndexWorker, {:reindex, :all})
+    GenServer.cast(__MODULE__, {:reindex, :all})
   end
 
   def reindex(ids) when is_list(ids) do
-    GenServer.call(TdBg.Search.IndexWorker, {:reindex, ids})
+    GenServer.call(__MODULE__, {:reindex, ids}, 30_000)
   end
 
   def reindex(id) do
     reindex([id])
   end
 
-  @impl true
+  ## EventStream.Consumer Callbacks
+
+  @impl TdCache.EventStream.Consumer
+  def consume(events) do
+    GenServer.cast(__MODULE__, {:consume, events})
+  end
+
+  ## GenServer Callbacks
+
+  @impl GenServer
   def init(state) do
+    name = String.replace_prefix("#{__MODULE__}", "Elixir.", "")
+    Logger.info("Running #{name}")
+
+    unless Application.get_env(:td_bg, :env) == :test do
+      Process.send_after(self(), :migrate, 0)
+    end
+
     {:ok, state}
   end
 
-  @impl true
-  def handle_call(:ping, _from, state) do
-    {:reply, :pong, state}
+  @impl GenServer
+  def handle_info(:migrate, state) do
+    Indexer.migrate()
+    {:noreply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_call({:reindex, ids}, _from, state) do
-    Logger.info("Reindexing #{Enum.count(ids)} business concepts")
-    start_time = DateTime.utc_now()
-    reply = Indexer.reindex(ids, :business_concept)
-    millis = DateTime.utc_now() |> DateTime.diff(start_time, :millisecond)
-    Logger.info("Business concepts indexed in #{millis}ms")
-
+    reply = do_reindex(ids)
     {:reply, reply, state}
   end
 
-  @impl true
+  @impl GenServer
   def handle_cast({:reindex, :all}, state) do
-    Logger.info("Reindexing all business concepts")
-    start_time = DateTime.utc_now()
-    Indexer.reindex(:business_concept)
-    millis = DateTime.utc_now() |> DateTime.diff(start_time, :millisecond)
-    Logger.info("Business concepts indexed in #{millis}ms")
+    do_reindex(:all)
 
     {:noreply, state}
   end
+
+  @impl GenServer
+  def handle_cast({:consume, events}, state) do
+    case Enum.any?(events, &reindex_event?/1) do
+      true -> do_reindex(:all)
+      _ -> :ok
+    end
+
+    {:noreply, state}
+  end
+
+  ## Private functions
+
+  defp do_reindex([]), do: :ok
+
+  defp do_reindex(:all) do
+    Logger.info("Reindexing all concepts")
+
+    Timer.time(
+      fn -> Indexer.reindex(:all) end,
+      fn ms, _ -> Logger.info("Reindexed all concepts in #{ms}ms") end
+    )
+  end
+
+  defp do_reindex(ids) when is_list(ids) do
+    count = Enum.count(ids)
+
+    Timer.time(
+      fn -> Indexer.reindex(ids) end,
+      fn ms, _ -> Logger.info("Reindexed #{count} concepts in #{ms}ms") end
+    )
+  end
+
+  defp reindex_event?(%{event: "add_template", scope: "bg"}), do: true
+
+  defp reindex_event?(_), do: false
 end

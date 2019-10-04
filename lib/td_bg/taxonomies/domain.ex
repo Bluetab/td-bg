@@ -3,12 +3,9 @@ defmodule TdBg.Taxonomies.Domain do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.ErrorConstantsSupport
-  alias TdBg.Searchable
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdCache.TaxonomyCache
 
-  @behaviour Searchable
   @errors ErrorConstantsSupport.taxonomy_support_errors()
 
   schema "domains" do
@@ -96,20 +93,5 @@ defmodule TdBg.Taxonomies.Domain do
       false ->
         changeset
     end
-  end
-
-  def search_fields(%Domain{id: domain_id} = domain) do
-    parent_ids = TaxonomyCache.get_parent_ids(domain_id, false)
-
-    %{
-      name: domain.name,
-      description: domain.description,
-      parent_id: domain.parent_id,
-      parent_ids: parent_ids
-    }
-  end
-
-  def index_name do
-    "domain"
   end
 end

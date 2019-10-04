@@ -33,8 +33,10 @@ config :td_bg, TdBgWeb.Endpoint,
 # (without the 'end of line' character)
 # EX_LOGGER_FORMAT='$date $time [$level] $message'
 config :logger, :console,
-  format: (System.get_env("EX_LOGGER_FORMAT") || "$time $metadata[$level] $message") <> "\n",
-  metadata: [:request_id]
+  format: (System.get_env("EX_LOGGER_FORMAT") || "$date\T$time\Z [$level]$levelpad $metadata$message") <> "\n",
+  level: :info,
+  metadata: [:pid, :module],
+  utc_log: true
 
 # Configuration for Phoenix
 config :phoenix, :json_library, Jason
@@ -63,8 +65,12 @@ config :td_cache, :event_stream,
   consumer_id: "default",
   consumer_group: "bg",
   streams: [
-    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader]
+    [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader],
+    [key: "template:events", consumer: TdBg.Search.IndexWorker]
   ]
+
+# Import Elasticsearch config
+import_config "elastic.exs"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

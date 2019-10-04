@@ -1,13 +1,11 @@
 defmodule TdBg.SuperAdminTaxonomyTest do
   use Cabbage.Feature, async: false, file: "taxonomies/super_admin_taxonomy.feature"
   use TdBgWeb.FeatureCase
+
   import TdBgWeb.Taxonomy, only: :functions
   import TdBgWeb.BusinessConcept, only: :functions
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.ResponseCode, only: :functions
-  alias TdBg.Permissions.MockPermissionResolver
-  alias TdBgWeb.ApiServices.MockTdAuditService
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
   import_steps(TdBg.DomainSteps)
@@ -16,7 +14,17 @@ defmodule TdBg.SuperAdminTaxonomyTest do
   import TdBg.ResultSteps
   import TdBg.BusinessConceptSteps
 
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
+  alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.IndexWorker
+  alias TdBgWeb.ApiServices.MockTdAuditService
+  alias TdBgWeb.ApiServices.MockTdAuthService
+
   setup_all do
+    start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)

@@ -3,7 +3,7 @@ use Mix.Config
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :td_bg, TdBgWeb.Endpoint,
-  http: [port: 3001],
+  http: [port: 4002],
   server: true
 
 # Hashing algorithm just for testing porpouses
@@ -21,12 +21,6 @@ config :td_bg, TdBg.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_bg, :elasticsearch,
-  search_service: TdBg.Search.MockSearch,
-  es_host: "elastic",
-  es_port: 9200,
-  type_name: "doc"
-
 config :td_bg, :audit_service,
   api_service: TdBgWeb.ApiServices.MockTdAuditService,
   audit_host: "localhost",
@@ -38,3 +32,7 @@ config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
 config :td_bg, metrics_publication_frequency: 1000
 
 config :td_cache, redis_host: "redis"
+
+config :td_bg, TdBg.Search.Cluster, api: TdBg.ElasticsearchMock
+
+config :td_cache, :event_stream, streams: []

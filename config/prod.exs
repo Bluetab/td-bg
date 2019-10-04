@@ -15,13 +15,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :td_bg, TdBgWeb.Endpoint,
   http: [port: 4002],
-  url: [host: "truedat.bluetab.net", port: 8001],
   server: true
-
-# Do not print debug messages in production
-config :logger, :console,
-  format: (System.get_env("EX_LOGGER_FORMAT") || "[$level] $message") <> "\n",
-  level: :info
 
 # ## SSL Support
 #

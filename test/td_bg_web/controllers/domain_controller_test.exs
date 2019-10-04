@@ -5,7 +5,10 @@ defmodule TdBgWeb.DomainControllerTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.User, only: :functions
 
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBgWeb.ApiServices.MockTdAuditService
@@ -23,9 +26,12 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   setup_all do
-    start_supervised(MockTdAuthService)
-    start_supervised(MockTdAuditService)
+    start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
+    start_supervised(MockTdAuditService)
+    start_supervised(MockTdAuthService)
     :ok
   end
 

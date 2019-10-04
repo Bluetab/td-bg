@@ -9,7 +9,10 @@ defmodule TdBg.TaxonomyErrorsTest do
 
   alias Jason, as: JSON
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.IndexWorker
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
@@ -21,6 +24,9 @@ defmodule TdBg.TaxonomyErrorsTest do
   import TdBg.BusinessConceptSteps
 
   setup_all do
+    start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)

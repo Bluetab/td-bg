@@ -3,7 +3,6 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TdBg.Permissions.MockPermissionResolver
-  alias TdBg.Search.MockSearch
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
@@ -15,6 +14,8 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   end
 
   setup %{conn: conn} do
+    insert(:business_concept_version, content: %{"foo" => "bar"}, name: "Concept Name")
+
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
@@ -23,7 +24,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
     @tag :admin_authenticated
     test "lists all filters (admin user)", %{conn: conn} do
       conn = get(conn, Routes.business_concept_filter_path(conn, :index))
-      assert json_response(conn, 200)["data"] == MockSearch.get_filters(%{})
+      assert json_response(conn, 200)["data"] == %{}
     end
 
     @tag authenticated_user: @user_name
@@ -32,4 +33,5 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
       assert json_response(conn, 200)["data"] == %{}
     end
   end
+
 end

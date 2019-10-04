@@ -4,16 +4,15 @@ defmodule TdBg.Taxonomies do
   """
 
   import Ecto.Query, warn: false
+
   alias TdBg.BusinessConcept.Search
-  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.DomainLoader
   alias TdBg.Repo
+  alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies.Domain
   alias TdCache.TaxonomyCache
-
-  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   @doc """
   Returns the list of domains.
@@ -98,10 +97,6 @@ defmodule TdBg.Taxonomies do
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
-  def get_raw_domain(id) do
-    Repo.one(from(r in Domain, where: r.id == ^id))
-  end
-
   def get_domain_by_name(name) do
     Repo.one(from(r in Domain, where: r.name == ^name and is_nil(r.deleted_at)))
   end
@@ -176,30 +171,21 @@ defmodule TdBg.Taxonomies do
     domain
     |> Domain.changeset(attrs)
     |> Repo.update()
-    |> update_related_business_concept_versions_cache()
-    |> update_related_business_concept_versions_search()
+    |> refresh_cache()
   end
 
-  defp update_related_business_concept_versions_cache({:ok, %Domain{id: id}} = response) do
+  defp refresh_cache({:ok, %Domain{id: id}} = response) do
+    business_concept_ids =
+      id
+      |> get_parent_ids()
+      |> get_domain_concept_ids()
+
     DomainLoader.refresh(id)
+    IndexWorker.reindex(business_concept_ids)
     response
   end
 
-  defp update_related_business_concept_versions_cache(error), do: error
-
-  defp update_related_business_concept_versions_search({:ok, %Domain{id: id}} = response) do
-    %{resource_id: id}
-    |> Search.get_business_concepts_from_domain(0, 10_000)
-    |> Map.get(:results, [])
-    |> Enum.map(&Map.get(&1, "id"))
-    |> Enum.filter(&(!is_nil(&1)))
-    |> BusinessConcepts.business_concept_versions_by_ids(nil)
-    |> @search_service.put_bulk_search(:business_concept)
-
-    response
-  end
-
-  defp update_related_business_concept_versions_search(error), do: error
+  defp refresh_cache(error), do: error
 
   @doc """
   Soft deletion of a domain.
@@ -296,8 +282,19 @@ defmodule TdBg.Taxonomies do
     {:count, :business_concept, count}
   end
 
+  defp get_domain_concept_ids([]), do: []
+
+  defp get_domain_concept_ids(domain_ids) do
+    Repo.all(
+      from(b in BusinessConcept,
+        where: b.domain_id in ^domain_ids,
+        select: b.id
+      )
+    )
+  end
+
   @doc """
-    Returns map of taxonomy tree structure
+  Returns map of taxonomy tree structure
   """
   def tree do
     d_list = list_root_domains() |> Enum.sort(&(&1.name < &2.name))

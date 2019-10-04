@@ -10,7 +10,10 @@ defmodule TdBg.BusinessConceptDeprecationTest do
   import TdBgWeb.Authentication, only: :functions
 
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
+  alias TdBg.Search.IndexWorker
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -24,6 +27,9 @@ defmodule TdBg.BusinessConceptDeprecationTest do
   import TdBg.ResultSteps
 
   setup_all do
+    start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)

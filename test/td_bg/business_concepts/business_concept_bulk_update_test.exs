@@ -4,11 +4,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Search.IndexWorker
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdCache.TemplateCache
 
   setup_all do
+    start_supervised(ConceptLoader)
+    start_supervised(IndexWorker)
     start_supervised(MockTdAuthService)
     :ok
   end

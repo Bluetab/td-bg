@@ -4,6 +4,7 @@ defmodule TdBg.Metrics.BusinessConcepts do
   use GenServer
 
   alias TdBg.Metrics.Instrumenter
+  alias TdBg.Search
   alias TdBg.Utils.CollectionUtils
   alias TdCache.TemplateCache
 
@@ -12,7 +13,6 @@ defmodule TdBg.Metrics.BusinessConcepts do
   @fixed_completness_dimensions [:id, :group, :field, :status, :parent_domains]
   @fixed_concepts_count_dimensions [:status, :parent_domains, :has_quality, :has_link]
   @metrics_publication_frequency Application.get_env(:td_bg, :metrics_publication_frequency)
-  @search_service Application.get_env(:td_bg, :elasticsearch)[:search_service]
 
   def start_link(opts \\ %{}) do
     GenServer.start_link(__MODULE__, opts)
@@ -81,7 +81,8 @@ defmodule TdBg.Metrics.BusinessConcepts do
 
     templates_by_name = get_template_map()
 
-    @search_service.search("business_concept", search)
+    search
+    |> Search.search()
     |> Map.get(:results)
     |> atomize_concept_map()
     |> Enum.map(
@@ -165,7 +166,8 @@ defmodule TdBg.Metrics.BusinessConcepts do
     templates_by_name = get_template_map()
     content_by_name = get_content_map()
 
-    @search_service.search("business_concept", search)
+    search
+    |> Search.search()
     |> Map.get(:results)
     |> atomize_concept_map()
     |> Enum.map(
