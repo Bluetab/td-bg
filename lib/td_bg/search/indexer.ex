@@ -5,47 +5,36 @@ defmodule TdBg.Search.Indexer do
   alias Elasticsearch.Index
   alias Elasticsearch.Index.Bulk
   alias Jason, as: JSON
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Search.Cluster
   alias TdBg.Search.Mappings
   alias TdBg.Search.Store
   alias TdCache.Redix
 
-  @index "concepts"
-  @index_config Application.get_env(:td_bg, TdBg.Search.Cluster, :indexes)
-
   require Logger
 
+  @index :concepts
+
   def reindex(:all) do
-    template =
+    {:ok, _} =
       Mappings.get_mappings()
       |> Map.put(:index_patterns, "#{@index}-*")
       |> JSON.encode!()
-
-    {:ok, _} = Elasticsearch.put(Cluster, "/_template/#{@index}", template)
+      |> put_template(@index)
 
     Index.hot_swap(Cluster, @index)
   end
 
   def reindex(ids) do
-    %{bulk_page_size: bulk_page_size} =
-      @index_config
-      |> Keyword.get(:indexes)
-      |> Map.get(:concepts)
-
-    ids
-    |> Stream.chunk_every(bulk_page_size)
-    |> Stream.map(&Store.list(&1))
-    |> Stream.map(fn chunk ->
-      time(bulk_page_size, fn ->
-        bulk =
-          chunk
-          |> Enum.map(&Bulk.encode!(Cluster, &1, @index, "index"))
-          |> Enum.join("")
-
-        Elasticsearch.post(Cluster, "/#{@index}/_doc/_bulk", bulk)
-      end)
+    Store.transaction(fn ->
+      BusinessConceptVersion
+      |> Store.stream(ids)
+      |> Stream.map(&Bulk.encode!(Cluster, &1, @index, "index"))
+      |> Stream.chunk_every(bulk_page_size(@index))
+      |> Stream.map(&Enum.join(&1, ""))
+      |> Stream.map(&Elasticsearch.post(Cluster, "/#{@index}/_doc/_bulk", &1))
+      |> Stream.run()
     end)
-    |> Stream.run()
   end
 
   def delete(business_concept_versions) when is_list(business_concept_versions) do
@@ -53,13 +42,13 @@ defmodule TdBg.Search.Indexer do
   end
 
   def delete(business_concept_version) do
-    Elasticsearch.delete_document(Cluster, business_concept_version, @index)
+    Elasticsearch.delete_document(Cluster, business_concept_version, "#{@index}")
   end
 
   def migrate do
     unless alias_exists?(@index) do
       if can_migrate?() do
-        delete_existing_index(@index)
+        delete_existing_index("business_concept")
 
         Timer.time(
           fn -> reindex(:all) end,
@@ -71,20 +60,16 @@ defmodule TdBg.Search.Indexer do
     end
   end
 
-  defp time(bulk_page_size, fun) do
-    Timer.time(
-      fun,
-      fn millis, _ ->
-        case millis do
-          0 ->
-            Logger.info("Indexing rate :infinity items/s")
+  defp bulk_page_size(index) do
+    :td_bg
+    |> Application.get_env(Cluster)
+    |> Keyword.get(:indexes)
+    |> Map.get(index)
+    |> Map.get(:bulk_page_size)
+  end
 
-          millis ->
-            rate = div(1_000 * bulk_page_size, millis)
-            Logger.info("Indexing rate #{rate} items/s")
-        end
-      end
-    )
+  defp put_template(template, name) do
+    Elasticsearch.put(Cluster, "/_template/#{name}", template)
   end
 
   defp alias_exists?(name) do

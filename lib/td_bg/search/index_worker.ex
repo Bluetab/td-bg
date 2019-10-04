@@ -90,6 +90,8 @@ defmodule TdBg.Search.IndexWorker do
 
   ## Private functions
 
+  defp do_reindex([]), do: :ok
+
   defp do_reindex(ids) do
     Timer.time(
       fn -> Indexer.reindex(ids) end,

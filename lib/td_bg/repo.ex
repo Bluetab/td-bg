@@ -3,6 +3,8 @@ defmodule TdBg.Repo do
     otp_app: :td_bg,
     adapter: Ecto.Adapters.Postgres
 
+  alias TdBg.Repo
+
   @doc """
   Dynamically loads the repository url from the
   DATABASE_URL environment variable.
@@ -11,20 +13,12 @@ defmodule TdBg.Repo do
     {:ok, Keyword.put(opts, :url, System.get_env("DATABASE_URL"))}
   end
 
-  def whereis(opts \\ []) do
-    case Process.whereis(TdBg.Repo) do
-      nil ->
-        case Keyword.get(opts, :timeout, 1_000) do
-          x when x < 0 ->
-            {:error, :timeout}
-
-          millis ->
-            Process.sleep(100)
-            whereis(timeout: millis - 100)
-        end
-
-      pid ->
-        {:ok, pid}
-    end
+  @doc """
+  Perform preloading on chunks of a stream.
+  """
+  def stream_preload(stream, size, preloads, opts \\ []) do
+    stream
+    |> Stream.chunk_every(size)
+    |> Stream.flat_map(&Repo.preload(&1, preloads, opts))
   end
 end
