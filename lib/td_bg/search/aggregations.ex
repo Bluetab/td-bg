@@ -7,6 +7,7 @@ defmodule TdBg.Search.Aggregations do
 
   def aggregation_terms do
     static_keywords = [
+      {"current", %{terms: %{field: "current"}}},
       {"domain_parents",
        %{
          nested: %{path: "domain_parents"},
