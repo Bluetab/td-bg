@@ -12,6 +12,8 @@ defmodule TdBg.Cache.ConceptLoader do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Search.IndexWorker
   alias TdCache.ConceptCache
+  alias TdCache.Redix
+  alias TdCache.TemplateCache
 
   require Logger
 
@@ -41,12 +43,25 @@ defmodule TdBg.Cache.ConceptLoader do
   @impl GenServer
   def init(state) do
     unless Application.get_env(:td_bg, :env) == :test do
+      Process.send_after(self(), :refresh_user_info, 200)
+    end
+
+    unless Application.get_env(:td_bg, :env) == :test do
       Process.send_after(self(), :put_ids, 200)
     end
 
     name = String.replace_prefix("#{__MODULE__}", "Elixir.", "")
     Logger.info("Running #{name}")
     {:ok, state}
+  end
+
+  @impl GenServer
+  def handle_info(:refresh_user_info, state) do
+    if Redix.command!(["SET", "TdBg:USER_INFO:UPDATED", node(), "NX"]) do
+      cache_concepts_with_user_info
+    end
+
+    {:noreply, state}
   end
 
   @impl GenServer
@@ -77,7 +92,7 @@ defmodule TdBg.Cache.ConceptLoader do
   ## Private functions
 
   @concept_props [:id, :domain_id, :type]
-  @version_props [:id, :content, :name, :status, :version]
+  @version_props [:id, :content, :name, :status, :version, :content]
 
   defp read_concept_ids(%{event: "add_link", source: source, target: target}) do
     [source, target]
@@ -178,5 +193,25 @@ defmodule TdBg.Cache.ConceptLoader do
       [] -> {:ok, []}
       ids -> ConceptCache.put_confidential_ids(ids)
     end
+  end
+
+  defp cache_concepts_with_user_info do
+    concepts_to_refresh =
+      Enum.filter(BusinessConcepts.list_all_business_concepts(), fn concept ->
+        case concept
+             |> Map.get(:type)
+             |> TemplateCache.get_by_name!() do
+          %{content: template_content} ->
+            template_content
+            |> Enum.any?(&(Map.get(&1, "type") == "user"))
+
+          _ ->
+            false
+        end
+      end)
+
+    concepts_to_refresh
+    |> Enum.map(&Map.get(&1, :id))
+    |> cache_concepts()
   end
 end
