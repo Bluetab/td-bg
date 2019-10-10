@@ -1,8 +1,6 @@
 defmodule TdBg.BusinessConceptDownloadTests do
   use TdBg.DataCase
 
-  alias TdCache.TemplateCache
-
   describe "business_concept_download" do
     alias TdBg.BusinessConcept.Download
 
@@ -11,7 +9,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_name = "field_name"
       field_label = "field_label"
 
-      create_template(%{
+      Templates.create_template(%{
         id: 0,
         name: template,
         label: "label",
@@ -94,7 +92,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       key_value_field = "key_value"
       key_value_label = "Key And Value"
 
-      create_template(%{
+      Templates.create_template(%{
         id: 0,
         name: template,
         label: "label",
@@ -160,10 +158,5 @@ defmodule TdBg.BusinessConceptDownloadTests do
                  url_fields
                };#{key_value_fields}"
     end
-  end
-
-  def create_template(template) do
-    TemplateCache.put(template)
-    template
   end
 end

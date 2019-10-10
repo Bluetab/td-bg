@@ -12,7 +12,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias TdBg.Search.IndexWorker
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias TdCache.TemplateCache
 
   setup_all do
     start_supervised(ConceptLoader)
@@ -34,7 +33,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
-      create_template()
+      Templates.create_template()
 
       business_concept_version =
         insert(
@@ -97,7 +96,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "find business_concepts by status", %{conn: conn} do
       published = BusinessConcept.status().published
       draft = BusinessConcept.status().draft
-      create_template()
+      Templates.create_template()
       domain = insert(:domain)
       create_version(domain, "one", draft).business_concept_id
       create_version(domain, "two", published).business_concept_id
@@ -160,7 +159,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :admin_authenticated
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
-      create_template()
+      Templates.create_template()
 
       creation_attrs = %{
         content: %{},
@@ -210,7 +209,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
-      create_template(%{id: 0, name: "some_type", content: [], label: "label", scope: "test"})
+      Templates.create_template(%{
+        id: 0,
+        name: "some_type",
+        content: [],
+        label: "label",
+        scope: "test"
+      })
 
       creation_attrs = %{
         content: %{},
@@ -238,7 +243,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "find business concept by name", %{conn: conn} do
       published = BusinessConcept.status().published
       draft = BusinessConcept.status().draft
-      create_template()
+      Templates.create_template()
       domain = insert(:domain)
       id = [create_version(domain, "one", draft).business_concept.id]
       id = [create_version(domain, "two", published).business_concept.id | id]
@@ -256,7 +261,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "versions" do
     @tag :admin_authenticated
     test "lists business_concept_versions", %{conn: conn} do
-      create_template()
+      Templates.create_template()
       business_concept_version = insert(:business_concept_version)
 
       conn =
@@ -282,7 +287,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       template_content = [%{"name" => "fieldname", "type" => "string", "cardinality" => "?"}]
 
       template =
-        create_template(%{
+        Templates.create_template(%{
           id: 0,
           name: "onefield",
           content: template_content,
@@ -313,8 +318,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           [Map.put(field, "cardinality", "1") | acc]
         end)
 
-      update_attrs = Map.put(template, :content, updated_content)
-      TemplateCache.put(update_attrs)
+      template
+      |> Map.put(:content, updated_content)
+      |> Templates.create_template()
 
       conn =
         post(
@@ -336,7 +342,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      create_template()
+      Templates.create_template()
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
@@ -382,7 +388,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       domain_new = insert(:domain, name: "domain_new")
       business_concept = insert(:business_concept, domain: domain, type: "template_test")
 
-      TemplateCache.put(%{
+      Templates.create_template(%{
         name: "template_test",
         content: [
           %{
@@ -439,7 +445,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       domain = insert(:domain, name: "domain1")
       business_concept = insert(:business_concept, domain: domain, type: "template_test")
 
-      TemplateCache.put(%{
+      Templates.create_template(%{
         name: "template_test",
         content: [
           %{
@@ -504,23 +510,5 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   defp to_rich_text(plain) do
     %{"document" => plain}
-  end
-
-  def create_template do
-    attrs =
-      %{}
-      |> Map.put(:id, 0)
-      |> Map.put(:label, "some type")
-      |> Map.put(:name, "some_type")
-      |> Map.put(:scope, "test")
-      |> Map.put(:content, [])
-
-    TemplateCache.put(attrs)
-    :ok
-  end
-
-  def create_template(template) do
-    TemplateCache.put(template)
-    template
   end
 end

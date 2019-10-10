@@ -5,7 +5,6 @@ defmodule TdBgWeb.BusinessConcept do
 
   alias Jason, as: JSON
   alias TdBgWeb.Router.Helpers, as: Routes
-  alias TdCache.TemplateCache
 
   @endpoint TdBgWeb.Endpoint
   @headers {"Content-type", "application/json"}
@@ -25,20 +24,6 @@ defmodule TdBgWeb.BusinessConcept do
       "Related To" => "related_to",
       "In Progress" => "in_progress"
     }
-
-  def create_template(type, definition) do
-    attrs =
-      %{}
-      |> Map.put(:id, 0)
-      |> Map.put(:label, type)
-      |> Map.put(:name, type)
-      |> Map.put(:scope, "test")
-      |> Map.put(:content, definition)
-
-    TemplateCache.put(attrs)
-
-    {:ok, nil, attrs}
-  end
 
   def business_concept_field_values_to_api_attrs(table) do
     table

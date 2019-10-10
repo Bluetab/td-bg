@@ -9,7 +9,7 @@ defmodule TdBg.BusinessConceptSteps do
   defand ~r/^an existing Business Concept type called "(?<business_concept_type>[^"]+)" with empty definition$/,
          %{business_concept_type: business_concept_type},
          state do
-    create_template(business_concept_type, [])
+    Templates.create_template(business_concept_type, [])
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
@@ -60,7 +60,7 @@ defmodule TdBg.BusinessConceptSteps do
         add_all_schema_fields(row)
       end)
 
-    create_template(business_concept_type, schema)
+    Templates.create_template(business_concept_type, schema)
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 

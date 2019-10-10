@@ -101,7 +101,7 @@ defmodule TdBg.Search.IndexWorker do
     )
   end
 
-  defp reindex_event?(%{event: "add_template", scope: "bg"}), do: true
+  defp reindex_event?(%{event: "template_updated", scope: "bg"}), do: true
 
   defp reindex_event?(_), do: false
 end

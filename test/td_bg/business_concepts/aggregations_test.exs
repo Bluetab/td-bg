@@ -1,12 +1,7 @@
 defmodule TdBg.Search.AggregationsTest do
   use TdBg.DataCase
-  alias TdBg.Search.Aggregations
-  alias TdCache.TemplateCache
 
-  def create_template(template) do
-    TemplateCache.put(template)
-    template
-  end
+  alias TdBg.Search.Aggregations
 
   describe "aggregation_terms" do
     test "aggregation_terms/0 returns aggregation terms of type user with size 50" do
@@ -15,7 +10,7 @@ defmodule TdBg.Search.AggregationsTest do
         %{name: "userfield", type: "user", cardinality: "?", values: %{}}
       ]
 
-      create_template(%{
+      Templates.create_template(%{
         id: 0,
         name: "onefield",
         content: template_content,
