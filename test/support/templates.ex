@@ -1,4 +1,8 @@
 defmodule Templates do
+  @moduledoc """
+  Template support for Business Glossary tests
+  """
+
   alias TdCache.TemplateCache
 
   def create_template(type, content) do
