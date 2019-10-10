@@ -9,7 +9,6 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias TdCache.TemplateCache
   alias TdDfLib.RichText
 
   setup_all do
@@ -24,7 +23,7 @@ defmodule TdBg.BusinessConceptsTest do
       template_content = [%{name: "fieldname", type: "string", cardinality: "?"}]
 
       template =
-        create_template(%{
+        Templates.create_template(%{
           id: 0,
           name: "onefield",
           content: template_content,
@@ -714,7 +713,7 @@ defmodule TdBg.BusinessConceptsTest do
       template_name = "search_fields_template"
       field_name = "multiple_1"
 
-      TemplateCache.put(%{
+      Templates.create_template(%{
         name: template_name,
         content: [
           %{
@@ -872,11 +871,6 @@ defmodule TdBg.BusinessConceptsTest do
     assert object.business_concept.type == concept_attrs.type
     assert object.business_concept.domain_id == concept_attrs.domain_id
     assert object.business_concept.last_change_by == concept_attrs.last_change_by
-  end
-
-  defp create_template(template) do
-    TemplateCache.put(template)
-    template
   end
 
   defp to_rich_text(plain) do

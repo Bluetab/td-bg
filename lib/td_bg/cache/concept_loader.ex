@@ -17,6 +17,10 @@ defmodule TdBg.Cache.ConceptLoader do
 
   require Logger
 
+  @seconds_in_day 60 * 60 * 24
+  @concept_props [:id, :domain_id, :type]
+  @version_props [:id, :name, :status, :version]
+
   ## Client API
 
   def start_link(config \\ []) do
@@ -43,7 +47,7 @@ defmodule TdBg.Cache.ConceptLoader do
   @impl GenServer
   def init(state) do
     unless Application.get_env(:td_bg, :env) == :test do
-      Process.send_after(self(), :refresh_user_info, 200)
+      Process.send_after(self(), :refresh_all, 200)
     end
 
     unless Application.get_env(:td_bg, :env) == :test do
@@ -56,9 +60,18 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   @impl GenServer
-  def handle_info(:refresh_user_info, state) do
-    if Redix.command!(["SET", "TdBg:USER_INFO:UPDATED", node(), "NX"]) do
-      cache_concepts_with_user_info
+  def handle_info(:refresh_all, state) do
+    # Full refresh on startup, only if last full refresh was more than one day ago
+    if acquire_lock?("TdBg.Cache.ConceptLoader:REFRESH", @seconds_in_day) do
+      Timer.time(
+        fn ->
+          BusinessConcepts.get_active_ids()
+          |> cache_concepts()
+        end,
+        fn ms, _ ->
+          Logger.info("Full refresh completed in #{ms}ms")
+        end
+      )
     end
 
     {:noreply, state}
@@ -80,19 +93,13 @@ defmodule TdBg.Cache.ConceptLoader do
 
   @impl GenServer
   def handle_call({:consume, events}, _from, state) do
-    concept_ids =
-      events
-      |> Enum.flat_map(&read_concept_ids/1)
-
+    concept_ids = Enum.flat_map(events, &read_concept_ids/1)
     reply = cache_concepts(concept_ids)
     IndexWorker.reindex(concept_ids)
     {:reply, reply, state}
   end
 
   ## Private functions
-
-  @concept_props [:id, :domain_id, :type]
-  @version_props [:id, :content, :name, :status, :version, :content]
 
   defp read_concept_ids(%{event: "add_link", source: source, target: target}) do
     [source, target]
@@ -135,9 +142,13 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp cache_concepts(business_concept_ids) do
+    content_fields = TemplateCache.fields_by_type!("bg", "user")
+
     business_concept_ids
-    |> get_published_or_current_versions
-    |> Enum.map(&to_cache_entry/1)
+    |> get_published_or_current_versions()
+    |> Enum.group_by(& &1.business_concept.type)
+    |> Enum.map(fn {type, concepts} -> {Map.get(content_fields, type, []), concepts} end)
+    |> Enum.flat_map(fn {fields, concepts} -> Enum.map(concepts, &to_cache_entry(&1, fields)) end)
     |> Enum.map(&put_cache/1)
   end
 
@@ -159,13 +170,26 @@ defmodule TdBg.Cache.ConceptLoader do
   defp is_published_or_current?(%BusinessConceptVersion{current: true}), do: true
   defp is_published_or_current?(_), do: false
 
-  defp to_cache_entry(
-         %BusinessConceptVersion{business_concept: business_concept} = business_concept_version
-       ) do
-    business_concept_version
-    |> version_props
-    |> Map.merge(concept_props(business_concept))
+  defp to_cache_entry(%BusinessConceptVersion{business_concept: c} = bcv, content_fields) do
+    bcv
+    |> version_props()
+    |> Map.merge(concept_props(c))
+    |> Map.put(:content, get_content(bcv, content_fields))
   end
+
+  defp get_content(%BusinessConceptVersion{} = bcv, fields) do
+    bcv
+    |> Map.get(:content, %{})
+    |> Map.take(fields)
+    |> Enum.filter(&valid_value?/1)
+    |> Map.new()
+  end
+
+  defp valid_value?({_key, value}) when is_binary(value) do
+    String.trim(value) != ""
+  end
+
+  defp valid_value?(_), do: false
 
   defp concept_props(%BusinessConcept{} = business_concept) do
     Map.take(business_concept, @concept_props)
@@ -195,23 +219,7 @@ defmodule TdBg.Cache.ConceptLoader do
     end
   end
 
-  defp cache_concepts_with_user_info do
-    concepts_to_refresh =
-      Enum.filter(BusinessConcepts.list_all_business_concepts(), fn concept ->
-        case concept
-             |> Map.get(:type)
-             |> TemplateCache.get_by_name!() do
-          %{content: template_content} ->
-            template_content
-            |> Enum.any?(&(Map.get(&1, "type") == "user"))
-
-          _ ->
-            false
-        end
-      end)
-
-    concepts_to_refresh
-    |> Enum.map(&Map.get(&1, :id))
-    |> cache_concepts()
+  defp acquire_lock?(key, expiry_seconds) do
+    Redix.command!(["SET", key, node(), "NX", "EX", expiry_seconds])
   end
 end

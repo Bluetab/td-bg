@@ -53,6 +53,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :in_progress
     ])
     |> put_change(:status, BusinessConcept.status().draft)
+    |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
@@ -79,33 +80,15 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :last_change_at,
       :in_progress
     ])
+    |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
 
   def bulk_update_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
     business_concept_version
-    |> cast(attrs, [
-      :content,
-      :related_to,
-      :name,
-      :description,
-      :last_change_by,
-      :last_change_at,
-      :mod_comments,
-      :in_progress
-    ])
-    |> cast_assoc(:business_concept)
-    |> validate_required([
-      :content,
-      :related_to,
-      :name,
-      :last_change_by,
-      :last_change_at,
-      :in_progress
-    ])
-    |> validate_length(:name, max: 255)
-    |> validate_length(:mod_comments, max: 500)
+    |> update_changeset(attrs)
+    |> delete_change(:status)
   end
 
   @doc false
@@ -167,6 +150,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :mod_comments,
       :in_progress
     ])
+    |> trim([:name])
   end
 
   def has_any_status?(%BusinessConceptVersion{status: status}, statuses),
@@ -203,6 +187,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def is_deletable?(%BusinessConceptVersion{current: current, status: status}) do
     valid_statuses = [BusinessConcept.status().draft, BusinessConcept.status().rejected]
     current && Enum.member?(valid_statuses, status)
+  end
+
+  defp trim(changeset, fields) do
+    Enum.reduce(fields, changeset, fn field, changeset ->
+      update_change(changeset, field, &String.trim/1)
+    end)
   end
 
   defimpl Elasticsearch.Document do

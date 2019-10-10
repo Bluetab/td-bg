@@ -8,7 +8,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
   alias TdBg.Search.IndexWorker
   alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuthService
-  alias TdCache.TemplateCache
 
   setup_all do
     start_supervised(ConceptLoader)
@@ -25,7 +24,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d2 = insert(:domain, name: "d2")
       d3 = insert(:domain, name: "d3")
 
-      TemplateCache.put(%{
+      Templates.create_template(%{
         name: "template_test",
         content: [
           %{
@@ -139,7 +138,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d2 = insert(:domain, name: "d2")
       d3 = insert(:domain, name: "d3")
 
-      TemplateCache.put(%{
+      Templates.create_template(%{
         name: "template_test",
         content: [
           %{
@@ -203,7 +202,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       d1 = insert(:domain, name: "d1")
       d3 = insert(:domain, name: "d3")
 
-      TemplateCache.put(%{
+      Templates.create_template(%{
         name: "template_test",
         content: [
           %{
