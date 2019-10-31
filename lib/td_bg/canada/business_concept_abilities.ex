@@ -29,7 +29,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     Permissions.authorized?(user, :create_ingest, domain_id)
   end
 
-  def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :update, %{} = business_concept_version) do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
@@ -41,7 +41,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   def can?(
         %User{} = user,
         :get_data_structures,
-        %BusinessConceptVersion{} = business_concept_version
+        %{} = business_concept_version
       ) do
     authorized?(
       user,
@@ -53,7 +53,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   def can?(
         %User{} = user,
         :send_for_approval,
-        %BusinessConceptVersion{} = business_concept_version
+        %{} = business_concept_version
       ) do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
@@ -63,7 +63,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :reject, %{} = business_concept_version) do
     BusinessConceptVersion.is_rejectable?(business_concept_version) &&
       authorized?(
         user,
@@ -72,7 +72,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{} = user, :undo_rejection, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :undo_rejection, %{} = business_concept_version) do
     BusinessConceptVersion.is_undo_rejectable?(business_concept_version) &&
       authorized?(
         user,
@@ -81,7 +81,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :publish, %{} = business_concept_version) do
     BusinessConceptVersion.is_publishable?(business_concept_version) &&
       authorized?(
         user,
@@ -90,7 +90,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{} = user, :version, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :version, %{} = business_concept_version) do
     BusinessConceptVersion.is_versionable?(business_concept_version) &&
       authorized?(
         user,
@@ -99,7 +99,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{} = user, :deprecate, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :deprecate, %{} = business_concept_version) do
     BusinessConceptVersion.is_deprecatable?(business_concept_version) &&
       authorized?(
         user,
@@ -108,7 +108,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :delete, %{} = business_concept_version) do
     BusinessConceptVersion.is_deletable?(business_concept_version) &&
       authorized?(
         user,
@@ -118,9 +118,9 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   # TODO: Check status is versioned??
-  def can?(%User{is_admin: true}, :view_versions, %BusinessConceptVersion{}), do: true
+  def can?(%User{is_admin: true}, :view_versions, %{}), do: true
 
-  def can?(%User{} = user, :view_versions, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%User{} = user, :view_versions, %{} = business_concept_version) do
     valid_statuses = [
       BusinessConcept.status().draft,
       BusinessConcept.status().pending_approval,
@@ -139,12 +139,12 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%User{is_admin: true}, :view_business_concept, %BusinessConceptVersion{}), do: true
+  def can?(%User{is_admin: true}, :view_business_concept, %{}), do: true
 
   def can?(
         %User{} = user,
         :view_business_concept,
-        %BusinessConceptVersion{status: status} = business_concept_version
+        %{status: status} = business_concept_version
       ) do
     permission = Map.get(BusinessConcept.status_to_permissions(), status)
     authorized?(user, permission, business_concept_version)
@@ -155,12 +155,23 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
 
   defp authorized?(%User{is_admin: true}, _permission, _), do: true
 
-  defp authorized?(%User{} = user, permission, %BusinessConceptVersion{
+  defp authorized?(%User{} = user, permission, %{
+         content: content,
+         domain: domain
+       }) do
+    domain_id = Map.get(domain, "id")
+    authorized?(user, permission, domain_id, content)
+  end
+
+  defp authorized?(%User{} = user, permission, %{
          content: content,
          business_concept: business_concept
        }) do
     domain_id = business_concept.domain_id
+    authorized?(user, permission, domain_id, content)
+  end
 
+  defp authorized?(%User{} = user, permission, domain_id, content) do
     case is_confidential?(content) do
       true ->
         Permissions.authorized?(user, :manage_confidential_business_concepts, domain_id) &&

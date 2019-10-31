@@ -3,9 +3,9 @@ defmodule TdBg.Taxonomies.Domain do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.ErrorConstantsSupport
-  alias TdBg.Utils.CollectionUtils
-  alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Taxonomies
+  alias TdBg.Utils.CollectionUtils
 
   @errors ErrorConstantsSupport.taxonomy_support_errors()
 
@@ -36,7 +36,7 @@ defmodule TdBg.Taxonomies.Domain do
 
   def to_struct(map) do
     map
-    |> CollectionUtils.to_atom_pairs(Domain.__schema__(:fields))
+    |> CollectionUtils.to_atom_pairs()
     |> Enum.reduce(%Domain{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
   end
 

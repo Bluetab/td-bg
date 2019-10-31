@@ -17,10 +17,8 @@ defmodule TdBg.Utils.CollectionUtils do
     |> Enum.into(%{}, fn {k, v} -> {stringify_key(k), v} end)
   end
 
-  def to_atom_pairs(%{} = map, fields) do
-    map
-    |> Map.take(fields)
-    |> Enum.map(&atomify_pairs/1)
+  def to_atom_pairs(%{} = map) do
+    Enum.map(map, &atomify_pairs/1)
   end
 
   defp stringify_key(key) when is_atom(key), do: Atom.to_string(key)

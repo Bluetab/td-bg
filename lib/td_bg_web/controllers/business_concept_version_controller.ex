@@ -293,7 +293,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       links = Links.get_links(business_concept_version)
 
-      # TODO Review this fonctionnality
       conn
       |> put_hypermedia("business_concept_versions",
         business_concept_version: business_concept_version

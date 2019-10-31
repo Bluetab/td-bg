@@ -154,7 +154,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> trim([:name])
   end
 
-  def has_any_status?(%BusinessConceptVersion{status: status}, statuses),
+  def has_any_status?(%{status: status}, statuses),
     do: has_any_status?(status, statuses)
 
   def has_any_status?(_status, []), do: false
@@ -163,36 +163,36 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     status == h || has_any_status?(status, t)
   end
 
-  def is_updatable?(%BusinessConceptVersion{current: current, status: status}) do
+  def is_updatable?(%{current: current, status: status}) do
     current && status == BusinessConcept.status().draft
   end
 
-  def is_publishable?(%BusinessConceptVersion{current: current, status: status}) do
+  def is_publishable?(%{current: current, status: status}) do
     current && status == BusinessConcept.status().pending_approval
   end
 
-  def is_rejectable?(%BusinessConceptVersion{} = business_concept_version),
+  def is_rejectable?(%{} = business_concept_version),
     do: is_publishable?(business_concept_version)
 
-  def is_versionable?(%BusinessConceptVersion{current: current, status: status}) do
+  def is_versionable?(%{current: current, status: status}) do
     current && status == BusinessConcept.status().published
   end
 
-  def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version),
+  def is_deprecatable?(%{} = business_concept_version),
     do: is_versionable?(business_concept_version)
 
-  def is_undo_rejectable?(%BusinessConceptVersion{current: current, status: status}) do
+  def is_undo_rejectable?(%{current: current, status: status}) do
     current && status == BusinessConcept.status().rejected
   end
 
-  def is_deletable?(%BusinessConceptVersion{current: current, status: status}) do
+  def is_deletable?(%{current: current, status: status}) do
     valid_statuses = [BusinessConcept.status().draft, BusinessConcept.status().rejected]
     current && Enum.member?(valid_statuses, status)
   end
 
   def to_struct(map) do
     map
-    |> CollectionUtils.to_atom_pairs(BusinessConceptVersion.__schema__(:fields))
+    |> CollectionUtils.to_atom_pairs()
     |> Enum.reduce(%BusinessConceptVersion{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
   end
 
