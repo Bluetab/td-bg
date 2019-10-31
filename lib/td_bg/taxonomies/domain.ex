@@ -3,6 +3,7 @@ defmodule TdBg.Taxonomies.Domain do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.ErrorConstantsSupport
+  alias TdBg.Utils.CollectionUtils
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
 
@@ -31,6 +32,12 @@ defmodule TdBg.Taxonomies.Domain do
     |> change(deleted_at: DateTime.utc_now())
     |> validate_domain_children()
     |> validate_existing_bc_children()
+  end
+
+  def to_struct(map) do
+    map
+    |> CollectionUtils.to_atom_pairs(Domain.__schema__(:fields))
+    |> Enum.reduce(%Domain{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
   end
 
   defp validate_domain_children(changeset) do

@@ -1,6 +1,5 @@
-defmodule TdBgWeb.BusinessConceptLinkController do
+defmodule TdBgWeb.LinkController do
   use TdBgWeb, :controller
-  use TdHypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]

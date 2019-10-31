@@ -1,6 +1,5 @@
 defmodule TdBgWeb.CommentController do
   use TdBgWeb, :controller
-  use TdHypermedia, :controller
   use PhoenixSwagger
 
   alias TdBg.Comments

@@ -1,26 +1,17 @@
 defmodule TdBgWeb.DomainView do
   use TdBgWeb, :view
   alias TdBgWeb.DomainView
-  use TdHypermedia, :view
 
-  def render("index.json", %{hypermedia: hypermedia}) do
-    render_many_hypermedia(hypermedia, DomainView, "domain.json")
-  end
-
-  def render("index.json", %{domains: domains}) do
-    %{data: render_many(domains, DomainView, "domain.json")}
+  def render("index.json", %{domains: domains} = assigns) do
+    with_actions(%{data: render_many(domains, DomainView, "domain.json")}, assigns)
   end
 
   def render("index_tiny.json", %{domains: domains}) do
     %{data: render_many(domains, DomainView, "domain_tiny.json")}
   end
 
-  def render("show.json", %{domain: domain, hypermedia: hypermedia}) do
-    render_one_hypermedia(domain, hypermedia, DomainView, "domain.json")
-  end
-
   def render("show.json", %{domain: domain}) do
-    %{data: render_one(domain, DomainView, "domain.json")}
+    with_actions(%{data: render_one(domain, DomainView, "domain.json")}, domain)
   end
 
   def render("domain.json", %{domain: domain}) do
@@ -30,7 +21,7 @@ defmodule TdBgWeb.DomainView do
       name: domain.name,
       type: domain.type,
       description: domain.description
-    }
+    } |> with_actions(domain)
   end
 
   def render("domain_bc_count.json", %{counter: counter}) do
@@ -39,5 +30,10 @@ defmodule TdBgWeb.DomainView do
 
   def render("domain_tiny.json", %{domain: domain}) do
     %{id: domain.id, name: domain.name}
+  end
+
+  defp with_actions(struct, assigns) do
+    actions = Map.take(assigns, [:_actions])
+    Map.merge(struct, actions)
   end
 end

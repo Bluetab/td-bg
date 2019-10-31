@@ -1,6 +1,5 @@
 defmodule TdBgWeb.DomainController do
   use TdBgWeb, :controller
-  use TdHypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -58,14 +57,11 @@ defmodule TdBgWeb.DomainController do
 
     case params |> get_actions do
       [] ->
-        domains = domains |> Enum.filter(&can?(user, show(&1)))
+        domains = Enum.filter(domains, &can?(user, show(&1)))
 
-        render(
-          conn,
-          "index.json",
-          domains: domains,
-          hypermedia: hypermedia("domain", conn, domains)
-        )
+        conn
+        |> put_hypermedia("domains", domains: domains)
+        |> render("index.json")
 
       actions ->
         filtered_domains = Enum.filter(domains, &can_any?(actions, user, &1))
@@ -188,10 +184,9 @@ defmodule TdBgWeb.DomainController do
   end
 
   defp do_show(conn, domain) do
-    render(conn, "show.json",
-      domain: domain,
-      hypermedia: hypermedia("domain", conn, domain)
-    )
+    conn
+    |> put_hypermedia("domains", domain: domain)
+    |> render("show.json")
   end
 
   swagger_path :update do

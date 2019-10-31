@@ -1,18 +1,10 @@
 defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
-  use TdHypermedia, :view
 
   alias TdBgWeb.BusinessConceptVersionView
   alias TdBgWeb.LinkView
   alias TdCache.UserCache
-
-  def render("index.json", %{hypermedia: hypermedia}) do
-    render_many_hypermedia(
-      hypermedia,
-      BusinessConceptVersionView,
-      "business_concept_version.json"
-    )
-  end
+  alias TdHypermedia.View
 
   def render("index.json", %{business_concept_versions: business_concept_versions}) do
     %{
@@ -27,55 +19,43 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   def render(
         "show.json",
-        %{business_concept_version: business_concept_version, links_hypermedia: links_hypermedia} =
-          assigns
+        %{business_concept_version: business_concept_version, links: links} = assigns
       ) do
-    %{"data" => links} = render_many_hypermedia(links_hypermedia, LinkView, "embedded.json")
+
+    links = render_many(links, LinkView, "embedded.json")
 
     render_one(
       business_concept_version,
       BusinessConceptVersionView,
       "show.json",
-      assigns
-      |> Map.delete(:links_hypermedia)
-      |> Map.put("_embedded", %{links: links})
+      assigns |> Map.put(:_embedded, links) |> Map.delete(:links)
     )
   end
 
   def render(
         "show.json",
         %{
-          business_concept_version: business_concept_version,
-          hypermedia: hypermedia
+          business_concept_version: business_concept_version
         } = assigns
       ) do
-    render_one_hypermedia(
-      business_concept_version,
-      hypermedia,
-      BusinessConceptVersionView,
-      "business_concept_version.json",
-      Map.drop(assigns, [:business_concept_version, :hypermedia])
-    )
-  end
-
-  def render("show.json", %{business_concept_version: business_concept_version} = assigns) do
     %{
       data:
         render_one(
           business_concept_version,
           BusinessConceptVersionView,
           "business_concept_version.json",
-          Map.drop(assigns, [:business_concept_version])
+          assigns
         )
-    }
+    } |> View.with_actions(business_concept_version)
   end
 
-  def render("list.json", %{hypermedia: hypermedia}) do
-    render_many_hypermedia(hypermedia, BusinessConceptVersionView, "list_item.json")
-  end
-
-  def render("list.json", %{business_concept_versions: business_concept_versions}) do
-    %{data: render_many(business_concept_versions, BusinessConceptVersionView, "list_item.json")}
+  def render("list.json", %{business_concept_versions: business_concept_versions} = assigns) do
+    View.with_actions(
+      %{
+        data: render_many(business_concept_versions, BusinessConceptVersionView, "list_item.json")
+      },
+      assigns
+    )
   end
 
   def render("list_item.json", %{business_concept_version: business_concept_version}) do
@@ -104,6 +84,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> Map.take(view_fields ++ test_fields)
     |> Map.put("type", type)
     |> Map.put("type_label", type_label)
+    |> View.with_actions(business_concept_version)
   end
 
   # TODO: update swagger with embedded
@@ -112,7 +93,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         %{business_concept_version: business_concept_version} = assigns
       ) do
     {:ok, user} = UserCache.get(business_concept_version.last_change_by)
-
     %{
       id: business_concept_version.id,
       business_concept_id: business_concept_version.business_concept.id,
@@ -142,11 +122,11 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       business_concept_version.version
     )
     |> add_template(assigns)
-    |> add_embedded_resources(assigns)
+    |> View.add_embedded_resources(assigns)
   end
 
-  def render("versions.json", %{hypermedia: hypermedia}) do
-    render_many_hypermedia(hypermedia, BusinessConceptVersionView, "version.json")
+  def render("versions.json", %{business_concept_versions: business_concept_versions}) do
+    %{data: render_many(business_concept_versions, BusinessConceptVersionView, "list_item.json")}
   end
 
   def render("version.json", %{business_concept_version: business_concept_version}) do

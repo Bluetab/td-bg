@@ -8,6 +8,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Utils.CollectionUtils
 
   schema "business_concept_versions" do
     field(:content, :map)
@@ -187,6 +188,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def is_deletable?(%BusinessConceptVersion{current: current, status: status}) do
     valid_statuses = [BusinessConcept.status().draft, BusinessConcept.status().rejected]
     current && Enum.member?(valid_statuses, status)
+  end
+
+  def to_struct(map) do
+    map
+    |> CollectionUtils.to_atom_pairs(BusinessConceptVersion.__schema__(:fields))
+    |> Enum.reduce(%BusinessConceptVersion{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
   end
 
   defp trim(changeset, fields) do

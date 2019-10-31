@@ -1,6 +1,5 @@
 defmodule TdBgWeb.BusinessConceptVersionController do
   use TdBgWeb, :controller
-  use TdHypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -77,21 +76,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp render_search_results(%{results: business_concept_versions, total: total}, conn) do
-    hypermedia =
-      collection_hypermedia(
-        "business_concept_version",
-        conn,
-        business_concept_versions,
-        BusinessConceptVersion
-      )
-
     conn
     |> put_resp_header("x-total-count", "#{total}")
-    |> render(
-      "list.json",
+    |> put_hypermedia("business_concept_versions",
       business_concept_versions: business_concept_versions,
-      hypermedia: hypermedia
+      resource_type: BusinessConceptVersion
     )
+    |> render("list.json")
   end
 
   def csv(conn, params) do
@@ -262,12 +253,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     case Search.list_business_concept_versions(business_concept_version.business_concept_id, user) do
       %{results: business_concept_versions} ->
-        render(
-          conn,
-          "versions.json",
-          business_concept_versions: business_concept_versions,
-          hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
+        conn
+        |> put_hypermedia("business_concept_versions",
+          business_concept_versions: business_concept_versions
         )
+        |> render("versions.json")
 
       _ ->
         conn
@@ -303,15 +293,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
       links = Links.get_links(business_concept_version)
 
-      render(
-        conn,
-        "show.json",
-        business_concept_version: business_concept_version,
-        links: links,
-        links_hypermedia: links_hypermedia(conn, links, business_concept_version),
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-        template: template
+      # TODO Review this fonctionnality
+      conn
+      |> put_hypermedia("business_concept_versions",
+        business_concept_version: business_concept_version
       )
+      |> put_hypermedia("links",
+        links: links_hypermedia(links, business_concept_version),
+        resource_type: Link
+      )
+      |> render("show.json", template: template)
     else
       false ->
         conn
@@ -332,13 +323,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     Map.merge(business_concept_version, counts)
   end
 
-  defp links_hypermedia(conn, links, business_concept_version) do
-    collection_hypermedia(
-      "business_concept_version_business_concept_link",
-      conn,
-      Enum.map(links, &annotate(&1, business_concept_version)),
-      Link
-    )
+  defp links_hypermedia(links, business_concept_version) do
+    Enum.map(links, &annotate(&1, business_concept_version))
   end
 
   defp annotate(link, %BusinessConceptVersion{
@@ -739,13 +725,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       concept
       |> add_completeness_to_bc_version(template)
 
-    render(
-      conn,
-      "show.json",
-      business_concept_version: business_concept_version,
-      hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-      template: template
+    conn
+    |> put_hypermedia("business_concept_versions",
+      business_concept_version: business_concept_version
     )
+    |> render("show.json", template: template)
   end
 
   swagger_path :update do
@@ -806,13 +790,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            ) do
       Events.business_concept_updated(business_concept_version, concept_version)
 
-      render(
-        conn,
-        "show.json",
-        business_concept_version: concept_version,
-        hypermedia: hypermedia("business_concept_version", conn, concept_version),
-        template: template
-      )
+      conn
+      |> put_hypermedia("business_concept_versions", business_concept_version: concept_version)
+      |> render("show.json", template: template)
     else
       error ->
         BusinessConceptSupport.handle_bc_errors(conn, error)

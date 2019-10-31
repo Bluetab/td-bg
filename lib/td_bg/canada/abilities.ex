@@ -132,9 +132,19 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :view_business_concept, business_concept_version)
     end
 
-    def can?(%User{is_admin: true}, _action, %{}) do
-      true
+    def can?(%User{} = user, permission, %{hint: :business_concept_versions} = resource) do
+      can?(user, permission, BusinessConceptVersion.to_struct(Map.delete(resource, :hint)))
     end
+
+    def can?(%User{} = user, permission, %{hint: :domains} = resource) do
+      can?(user, permission, Domain.to_struct(Map.delete(resource, :hint)))
+    end
+
+    def can?(%User{is_admin: true}, _action, BusinessConceptVersion), do: true
+
+    def can?(%User{is_admin: true}, _action, %BusinessConceptVersion{}), do: true
+
+    def can?(%User{is_admin: true}, _action, %{}), do: true
 
     def can?(%User{}, _action, _domain), do: false
   end

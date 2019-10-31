@@ -22,6 +22,7 @@ defmodule TdBgWeb do
       use Phoenix.Controller, namespace: TdBgWeb
       import Plug.Conn
       import TdBgWeb.Gettext
+      import Plug.TdHypermedia
       alias TdBgWeb.Router.Helpers, as: Routes
     end
   end

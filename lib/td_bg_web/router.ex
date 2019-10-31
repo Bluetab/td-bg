@@ -54,8 +54,8 @@ defmodule TdBgWeb.Router do
       get("/data_structures", BusinessConceptVersionController, :get_data_structures)
 
       get("/versions", BusinessConceptVersionController, :versions)
-      resources("/links", BusinessConceptLinkController, only: [:delete])
-      post("/links", BusinessConceptLinkController, :create_link)
+      resources("/links", LinkController, only: [:delete])
+      post("/links", LinkController, :create_link)
     end
 
     post("/business_concept_versions/search", BusinessConceptVersionController, :search)
