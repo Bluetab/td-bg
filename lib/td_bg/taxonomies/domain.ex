@@ -3,8 +3,8 @@ defmodule TdBg.Taxonomies.Domain do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdBg.ErrorConstantsSupport
-  alias TdBg.Taxonomies.Domain
   alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
   alias TdBg.Utils.CollectionUtils
 
   @errors ErrorConstantsSupport.taxonomy_support_errors()
