@@ -126,7 +126,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   end
 
   def render("versions.json", %{business_concept_versions: business_concept_versions}) do
-    %{data: render_many(business_concept_versions, BusinessConceptVersionView, "list_item.json")}
+    %{data: render_many(business_concept_versions, BusinessConceptVersionView, "version.json")}
   end
 
   def render("version.json", %{business_concept_version: business_concept_version}) do
