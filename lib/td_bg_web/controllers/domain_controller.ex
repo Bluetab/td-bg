@@ -60,7 +60,7 @@ defmodule TdBgWeb.DomainController do
         domains = Enum.filter(domains, &can?(user, show(&1)))
 
         conn
-        |> put_hypermedia("domains", domains: domains)
+        |> put_hypermedia("domains", domains: domains, resource_type: Domain)
         |> render("index.json")
 
       actions ->
@@ -69,7 +69,8 @@ defmodule TdBgWeb.DomainController do
         render(
           conn,
           "index_tiny.json",
-          domains: filtered_domains
+          domains: filtered_domains, 
+          resource_type: Domain
         )
     end
   end

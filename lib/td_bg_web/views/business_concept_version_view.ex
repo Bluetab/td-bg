@@ -28,7 +28,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       business_concept_version,
       BusinessConceptVersionView,
       "show.json",
-      assigns |> Map.put(:_embedded, links) |> Map.delete(:links)
+      assigns |> Map.put(:_embedded, %{links: links}) |> Map.delete(:links)
     )
   end
 
