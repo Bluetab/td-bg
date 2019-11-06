@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2164] Put port in swagger url
+
 ## [3.8.0] 2019-10-14
 
 ### Changed
