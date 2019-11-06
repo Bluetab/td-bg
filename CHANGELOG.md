@@ -6,6 +6,10 @@
 
 - [TD-2164] Put port in swagger url
 
+### Changed
+
+- [TD-606] Use new hypermedia implementation
+
 ## [3.8.0] 2019-10-14
 
 ### Changed
