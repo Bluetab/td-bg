@@ -69,7 +69,7 @@ defmodule TdBgWeb.DomainController do
         render(
           conn,
           "index_tiny.json",
-          domains: filtered_domains, 
+          domains: filtered_domains,
           resource_type: Domain
         )
     end

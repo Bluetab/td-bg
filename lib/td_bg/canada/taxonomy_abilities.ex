@@ -19,7 +19,7 @@ defmodule TdBg.Canada.TaxonomyAbilities do
   end
 
   def can?(%User{} = user, :create, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :create_domain, domain_id) 
+    Permissions.authorized?(user, :create_domain, domain_id)
   end
 
   def can?(%User{} = user, :update, %Domain{id: domain_id}) do
