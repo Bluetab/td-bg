@@ -26,24 +26,27 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       Templates.create_template(%{
         name: "template_test",
-        content: [
-          %{
-            "name" => "Field1",
-            "type" => "string",
-            "group" => "Multiple Group",
-            "label" => "Multiple 1",
-            "values" => nil,
-            "cardinality" => "1"
-          },
-          %{
-            "name" => "Field2",
-            "type" => "string",
-            "group" => "Multiple Group",
-            "label" => "Multiple 1",
-            "values" => nil,
-            "cardinality" => "1"
-          }
-        ],
+        content: [%{
+          "name" => "group",
+          "fields" => [
+            %{
+              "name" => "Field1",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Multiple 1",
+              "values" => nil,
+              "cardinality" => "1"
+            },
+            %{
+              "name" => "Field2",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Multiple 1",
+              "values" => nil,
+              "cardinality" => "1"
+            }
+          ]
+        }],
         scope: "test",
         label: "template_label",
         id: "999"
@@ -140,24 +143,27 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       Templates.create_template(%{
         name: "template_test",
-        content: [
-          %{
-            "name" => "Field1",
-            "type" => "string",
-            "group" => "Multiple Group",
-            "label" => "Multiple 1",
-            "values" => nil,
-            "cardinality" => "1"
-          },
-          %{
-            "name" => "Field2",
-            "type" => "string",
-            "group" => "Multiple Group",
-            "label" => "Multiple 1",
-            "values" => nil,
-            "cardinality" => "1"
-          }
-        ],
+        content: [%{
+          "name" => "group",
+          "fields" => [
+            %{
+              "name" => "Field1",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Multiple 1",
+              "values" => nil,
+              "cardinality" => "1"
+            },
+            %{
+              "name" => "Field2",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Multiple 1",
+              "values" => nil,
+              "cardinality" => "1"
+            }
+          ]
+        }],
         scope: "test",
         label: "template_label",
         id: "999"
@@ -204,24 +210,27 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       Templates.create_template(%{
         name: "template_test",
-        content: [
-          %{
-            "name" => "Field1",
-            "type" => "string",
-            "group" => "Multiple Group",
-            "label" => "Multiple 1",
-            "values" => nil,
-            "cardinality" => "1"
-          },
-          %{
-            "name" => "Field2",
-            "type" => "string",
-            "group" => "Multiple Group",
-            "label" => "Multiple 1",
-            "values" => nil,
-            "cardinality" => "1"
-          }
-        ],
+        content: [%{
+          "name" => "group",
+          "fields" => [
+            %{
+              "name" => "Field1",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Multiple 1",
+              "values" => nil,
+              "cardinality" => "1"
+            },
+            %{
+              "name" => "Field2",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Multiple 1",
+              "values" => nil,
+              "cardinality" => "1"
+            }
+          ]
+        }],
         scope: "test",
         label: "template_label",
         id: "999"

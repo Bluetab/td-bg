@@ -5,10 +5,13 @@ defmodule TdBg.Search.AggregationsTest do
 
   describe "aggregation_terms" do
     test "aggregation_terms/0 returns aggregation terms of type user with size 50" do
-      template_content = [
-        %{name: "fieldname", type: "string", cardinality: "?", values: %{}},
-        %{name: "userfield", type: "user", cardinality: "?", values: %{}}
-      ]
+      template_content = [%{
+        "name" => "group",
+        "fields" => [
+          %{name: "fieldname", type: "string", cardinality: "?", values: %{}},
+          %{name: "userfield", type: "user", cardinality: "?", values: %{}}
+        ]
+      }]
 
       Templates.create_template(%{
         id: 0,

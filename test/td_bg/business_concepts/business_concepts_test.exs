@@ -20,7 +20,10 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "business_concepts" do
     defp fixture do
-      template_content = [%{name: "fieldname", type: "string", cardinality: "?"}]
+      template_content = [%{
+        "name" => "group",
+        "fields" => [%{name: "fieldname", type: "string", cardinality: "?"}]
+      }]
 
       template =
         Templates.create_template(%{
@@ -715,19 +718,22 @@ defmodule TdBg.BusinessConceptsTest do
 
       Templates.create_template(%{
         name: template_name,
-        content: [
-          %{
-            "name" => field_name,
-            "type" => "string",
-            "group" => "Multiple Group",
-            "label" => "Multiple 1",
-            "values" => %{
-              "fixed" => ["1", "2", "3", "4", "5"]
-            },
-            "widget" => "dropdown",
-            "cardinality" => "*"
-          }
-        ],
+        content: [%{
+          "name" => "group",
+          "fields" => [
+            %{
+              "name" => field_name,
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Multiple 1",
+              "values" => %{
+                "fixed" => ["1", "2", "3", "4", "5"]
+              },
+              "widget" => "dropdown",
+              "cardinality" => "*"
+            }
+          ]
+        }],
         scope: "test",
         label: template_label,
         id: "999"
