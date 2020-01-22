@@ -78,15 +78,17 @@ defmodule TdBg.BusinessConcept.Download do
     |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
   end
 
+  defp get_url_value(%{"url_value" => url_value}), do: url_value
+  defp get_url_value(_), do: nil
+
   defp get_content_field(%{"type" => "url", "name" => name}, content) do
     content
     |> Map.get(name, [])
     |> content_to_list()
-    |> Enum.map(&Map.get(&1, "url_value"))
-    |> Enum.filter(&(not is_nil(&1)))
+    |> Enum.map(&get_url_value/1)
+    |> Enum.reject(&is_nil/1)
     |> Enum.join(", ")
   end
-
   defp get_content_field(
          %{
            "type" => "string",
@@ -101,6 +103,7 @@ defmodule TdBg.BusinessConcept.Download do
     |> Enum.map(fn map_value ->
       Enum.find(values, fn %{"value" => value} -> value == map_value end)
     end)
+    |> Enum.reject(&is_nil/1)
     |> Enum.map(&Map.get(&1, "text", ""))
     |> Enum.join(", ")
   end
