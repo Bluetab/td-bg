@@ -20,6 +20,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdCache.TemplateCache
+  alias TdDfLib.Format
 
   require Logger
 
@@ -166,6 +167,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(400, "Client Error")
   end
 
+  defp get_flat_template_content(%{content: content}) do
+    Format.flatten_content_fields(content)
+  end
+  defp get_flat_template_content(_), do: []
+
   def create(conn, %{"business_concept_version" => business_concept_params}) do
     user = conn.assigns[:current_user]
 
@@ -174,7 +180,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     concept_type = Map.get(business_concept_params, "type")
     template = TemplateCache.get_by_name!(concept_type)
-    content_schema = Map.get(template, :content)
+    content_schema = get_flat_template_content(template)
     concept_name = Map.get(business_concept_params, "name")
 
     domain_id = Map.get(business_concept_params, "domain_id")
@@ -772,7 +778,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     concept_name = Map.get(business_concept_version_params, "name")
     template = get_template(business_concept_version)
-    content_schema = Map.get(template, :content)
+    content_schema = get_flat_template_content(template)
 
     business_concept_attrs =
       %{}

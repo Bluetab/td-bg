@@ -14,6 +14,7 @@ defmodule TdBg.BusinessConcept.Upload do
   alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdCache.TemplateCache
+  alias TdDfLib.Format
 
   require Logger
 
@@ -141,6 +142,8 @@ defmodule TdBg.BusinessConcept.Upload do
         Enum.filter(Map.keys(data), fn field_name ->
           Map.get(data, field_name) == nil or Map.get(data, field_name) == ""
         end)
+
+      content_schema = Format.flatten_content_fields(content_schema)
 
       table_fields =
         content_schema

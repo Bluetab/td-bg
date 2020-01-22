@@ -8,6 +8,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdCache.TemplateCache
+  alias TdDfLib.Format
 
   def update_all(user, business_concept_versions, params) do
     business_concept_versions =
@@ -91,7 +92,9 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
         {:error, :template_not_found}
 
       _ ->
-        content_schema = Map.get(template, :content)
+        content_schema = template
+          |> Map.get(:content)
+          |> Format.flatten_content_fields
         domain_id = Map.get(params, "domain_id", nil)
 
         case domain_id && Taxonomies.get_domain(domain_id) do

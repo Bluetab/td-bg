@@ -4,6 +4,7 @@ defmodule TdBg.Search.Mappings do
   """
 
   alias TdCache.TemplateCache
+  alias TdDfLib.Format
 
   @raw %{raw: %{type: "keyword"}}
   @raw_sort %{raw: %{type: "keyword"}, sort: %{type: "keyword", normalizer: "sortable"}}
@@ -73,7 +74,9 @@ defmodule TdBg.Search.Mappings do
   end
 
   defp get_mappings(%{content: content}) do
-    Enum.map(content, &field_mapping/1)
+    content
+    |> Format.flatten_content_fields
+    |> Enum.map(&field_mapping/1)
   end
 
   defp field_mapping(%{"name" => name, "type" => "table"}) do

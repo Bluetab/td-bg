@@ -14,13 +14,14 @@ defmodule TdBg.BusinessConceptDownloadTests do
         name: template,
         label: "label",
         scope: "test",
-        content: [
-          %{
+        content: [%{
+          "name" => "group",
+          "fields" => [%{
             "name" => field_name,
             "type" => "list",
             "label" => field_label
-          }
-        ]
+          }]
+        }]
       })
 
       name = "concept_name"
@@ -97,24 +98,27 @@ defmodule TdBg.BusinessConceptDownloadTests do
         name: template,
         label: "label",
         scope: "test",
-        content: [
-          %{
-            "name" => url_field,
-            "type" => "url",
-            "label" => url_label
-          },
-          %{
-            "name" => key_value_field,
-            "type" => "string",
-            "label" => key_value_label,
-            "values" => %{
-              "fixed_tuple" => [
-                %{"text" => "First Element", "value" => "1"},
-                %{"text" => "Second Element", "value" => "2"}
-              ]
+        content: [%{
+          "name" => "group",
+          "fields" => [
+            %{
+              "name" => url_field,
+              "type" => "url",
+              "label" => url_label
+            },
+            %{
+              "name" => key_value_field,
+              "type" => "string",
+              "label" => key_value_label,
+              "values" => %{
+                "fixed_tuple" => [
+                  %{"text" => "First Element", "value" => "1"},
+                  %{"text" => "Second Element", "value" => "2"}
+                ]
+              }
             }
-          }
-        ]
+          ]
+        }]
       })
 
       name = "concept_name"

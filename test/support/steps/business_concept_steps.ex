@@ -60,7 +60,7 @@ defmodule TdBg.BusinessConceptSteps do
         add_all_schema_fields(row)
       end)
 
-    Templates.create_template(business_concept_type, schema)
+    Templates.create_template(business_concept_type, [%{"name" => "gruop", "fields" => schema}])
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 

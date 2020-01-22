@@ -53,11 +53,8 @@ defmodule TdBg.Mixfile do
       {:canada, "~> 1.0.1"},
       {:ex_machina, "~> 2.2.2", only: [:test]},
       {:corsica, "~> 1.0"},
-      # TODO: Update when released, see https://github.com/xerions/phoenix_swagger/issues/232
-      {:phoenix_swagger,
-       git: "https://github.com/xerions/phoenix_swagger",
-       ref: "6869934eb0838b9f249226628eabeaedbdef8ea3"},
-      {:ex_json_schema, "~> 0.5"},
+      {:phoenix_swagger, "~> 0.8.2"},
+      {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
       {:csv, "~> 2.0.0"},
       {:nimble_csv, "~> 0.3"},
@@ -70,7 +67,7 @@ defmodule TdBg.Mixfile do
        branch: "feature/bulk-index-action"},
       {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.8.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.7.0"}
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.14.0"}
     ]
   end
 
