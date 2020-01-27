@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [3.14.0] 2020-01-27
 
 ### Changed
 
-- [TD-2269] Update elasticsearch mapping for dynamic field using new content model
+- [TD-2269] Update elasticsearch mappings for dynamic content
 
 ## [3.10.0] 2019-11-11
 
