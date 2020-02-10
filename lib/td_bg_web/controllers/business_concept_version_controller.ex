@@ -300,11 +300,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     with true <- can?(user, view_business_concept(business_concept_version)) do
-      template = get_template(business_concept_version)
+      template = BusinessConcepts.get_template(business_concept_version)
 
       business_concept_version =
         business_concept_version
-        |> add_completeness_to_bc_version(template)
+        |> add_completeness()
         |> add_counts()
 
       links = Links.get_links(business_concept_version)
@@ -574,47 +574,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp add_completeness_to_bc_version(business_concept_version, nil) do
-    Map.put(business_concept_version, :completeness, 0.0)
+  defp add_completeness(business_concept_version) do
+    case BusinessConcepts.get_completeness(business_concept_version) do
+      c -> Map.put(business_concept_version, :completeness, c)
+    end
   end
-
-  defp add_completeness_to_bc_version(business_concept_version, template) do
-    bc_completeness =
-      business_concept_version
-      |> Map.get(:content)
-      |> calculate_completeness(
-        template
-        |> Map.fetch!(:content)
-        |> Enum.filter(&(!Map.get(&1, "required", false)))
-      )
-
-    Map.put(business_concept_version, :completeness, bc_completeness)
-  end
-
-  defp calculate_completeness(_, []), do: 100.00
-
-  defp calculate_completeness(%{} = business_concept_content, _)
-       when business_concept_content == %{},
-       do: 0.00
-
-  defp calculate_completeness(business_concept_content, template_optional_fields) do
-    valid_keys_length =
-      business_concept_content
-      |> Map.keys()
-      |> Enum.filter(&verify_value_type(Map.fetch!(business_concept_content, &1)))
-      |> Enum.filter(
-        &Enum.any?(template_optional_fields, fn x -> Map.fetch!(x, "name") == &1 end)
-      )
-      |> length()
-
-    Float.round(valid_keys_length / length(template_optional_fields) * 100, 2)
-  end
-
-  defp verify_value_type([]), do: false
-  defp verify_value_type(%{} = value) when value == %{}, do: false
-  defp verify_value_type(value) when is_binary(value), do: String.length(String.trim(value)) !== 0
-  # Otherwise, we will assume that the type is correct for now
-  defp verify_value_type(_), do: true
 
   defp send_for_approval(conn, user, business_concept_version) do
     update_status(
@@ -739,11 +703,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp render_concept(conn, concept) do
-    template = get_template(concept)
+    template = BusinessConcepts.get_template(concept)
 
     business_concept_version =
       concept
-      |> add_completeness_to_bc_version(template)
+      |> add_completeness()
 
     render(
       conn,
@@ -777,7 +741,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     concept_name = Map.get(business_concept_version_params, "name")
-    template = get_template(business_concept_version)
+    template = BusinessConcepts.get_template(business_concept_version)
     content_schema = get_flat_template_content(template)
 
     business_concept_attrs =
@@ -879,13 +843,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_view(ErrorView)
         |> render("422.json")
     end
-  end
-
-  defp get_template(%BusinessConceptVersion{} = version) do
-    version
-    |> Map.get(:business_concept)
-    |> Map.get(:type)
-    |> TemplateCache.get_by_name!()
   end
 
   defp search_all_business_concept_versions(user, params) do

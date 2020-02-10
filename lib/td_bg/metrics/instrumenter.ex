@@ -9,18 +9,17 @@ defmodule TdBg.Metrics.Instrumenter do
   def setup do
     clean_registry()
 
-    BusinessConcepts.get_dimensions_from_templates()
-    |> Enum.each(fn(template) ->
-
+    BusinessConcepts.get_normalized_template_names()
+    |> Enum.each(fn normalized_name ->
       Gauge.declare([
-        name: String.to_atom("bg_concepts_count_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),
+        name: String.to_atom("bg_concepts_count_" <> "#{normalized_name}"),
         help: "Business Concepts Versions Counter",
-        labels: Enum.sort([:status, :parent_domains, :has_quality, :has_link] ++ template.dimensions)
+        labels: Enum.sort([:status, :parent_domains, :has_quality, :has_link])
       ])
       Gauge.declare([
-        name: String.to_atom("bg_concept_completness_" <> "#{template.name |> BusinessConcepts.normalize_template_name()}"),
-        help: "Business Concepts Versions Completness",
-        labels: Enum.sort([:id, :field, :group, :status, :parent_domains] ++ template.dimensions)
+        name: String.to_atom("bg_concept_completness_" <> "#{normalized_name}"),
+        help: "Business Concepts Versions Completeness",
+        labels: Enum.sort([:id, :field, :group, :status, :parent_domains])
       ])
     end)
   end
@@ -30,7 +29,7 @@ defmodule TdBg.Metrics.Instrumenter do
     Gauge.set([name: String.to_atom("bg_concepts_count_" <> "#{template_name}"), labels: dimensions], count)
   end
 
-  def set_concept_fields_completness(%{count: count, dimensions: dimensions, template_name: template_name}) do
+  def set_concept_fields_completeness(%{count: count, dimensions: dimensions, template_name: template_name}) do
     dimensions = format_domain_parents_field(dimensions)
     Gauge.set([name: String.to_atom("bg_concept_completness_" <> "#{template_name}"), labels: dimensions], count)
   end
