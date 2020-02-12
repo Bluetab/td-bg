@@ -26,27 +26,29 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       Templates.create_template(%{
         name: "template_test",
-        content: [%{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => "Field1",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field2",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            }
-          ]
-        }],
+        content: [
+          %{
+            "name" => "group",
+            "fields" => [
+              %{
+                "name" => "Field1",
+                "type" => "string",
+                "group" => "Multiple Group",
+                "label" => "Multiple 1",
+                "values" => nil,
+                "cardinality" => "1"
+              },
+              %{
+                "name" => "Field2",
+                "type" => "string",
+                "group" => "Multiple Group",
+                "label" => "Multiple 1",
+                "values" => nil,
+                "cardinality" => "1"
+              }
+            ]
+          }
+        ],
         scope: "test",
         label: "template_label",
         id: "999"
@@ -71,7 +73,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc_versions =
         [bc_version1, bc_version2]
         |> Enum.map(&Map.take(&1, [:id]))
-        |> Enum.map(&CollectionUtils.stringify_keys(&1))
+        |> Enum.map(&CollectionUtils.stringify_keys/1)
 
       params = %{
         "domain_id" => d3.id,
@@ -124,7 +126,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc_versions =
         [bc_version1, bc_version2]
         |> Enum.map(&Map.take(&1, [:id]))
-        |> Enum.map(&CollectionUtils.stringify_keys(&1))
+        |> Enum.map(&CollectionUtils.stringify_keys/1)
 
       params = %{
         "domain_id" => d3.id,
@@ -143,27 +145,29 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       Templates.create_template(%{
         name: "template_test",
-        content: [%{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => "Field1",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field2",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            }
-          ]
-        }],
+        content: [
+          %{
+            "name" => "group",
+            "fields" => [
+              %{
+                "name" => "Field1",
+                "type" => "string",
+                "group" => "Multiple Group",
+                "label" => "Multiple 1",
+                "values" => nil,
+                "cardinality" => "1"
+              },
+              %{
+                "name" => "Field2",
+                "type" => "string",
+                "group" => "Multiple Group",
+                "label" => "Multiple 1",
+                "values" => nil,
+                "cardinality" => "1"
+              }
+            ]
+          }
+        ],
         scope: "test",
         label: "template_label",
         id: "999"
@@ -188,7 +192,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc_versions =
         [bc_version1, bc_version2]
         |> Enum.map(&Map.take(&1, [:id]))
-        |> Enum.map(&CollectionUtils.stringify_keys(&1))
+        |> Enum.map(&CollectionUtils.stringify_keys/1)
 
       d3 =
         d3
@@ -210,27 +214,29 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       Templates.create_template(%{
         name: "template_test",
-        content: [%{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => "Field1",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field2",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            }
-          ]
-        }],
+        content: [
+          %{
+            "name" => "group",
+            "fields" => [
+              %{
+                "name" => "Field1",
+                "type" => "string",
+                "group" => "Multiple Group",
+                "label" => "Multiple 1",
+                "values" => nil,
+                "cardinality" => "1"
+              },
+              %{
+                "name" => "Field2",
+                "type" => "string",
+                "group" => "Multiple Group",
+                "label" => "Multiple 1",
+                "values" => nil,
+                "cardinality" => "1"
+              }
+            ]
+          }
+        ],
         scope: "test",
         label: "template_label",
         id: "999"
@@ -260,7 +266,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc_versions =
         [bc_version_draft, bc_version_published]
         |> Enum.map(&Map.take(&1, [:id]))
-        |> Enum.map(&CollectionUtils.stringify_keys(&1))
+        |> Enum.map(&CollectionUtils.stringify_keys/1)
 
       update_content = %{
         "Field1" => "First udpate",

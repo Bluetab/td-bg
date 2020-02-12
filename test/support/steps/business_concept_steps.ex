@@ -386,6 +386,7 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = state do
+    alias TdBg.BusinessConcepts.BusinessConcept
     business_concept = business_concept_version_by_name(token_admin, business_concept_name)
     assert business_concept_type == business_concept["type"]
 
@@ -666,16 +667,13 @@ defmodule TdBg.BusinessConceptSteps do
   defthen ~r/^user "(?<user_name>[^"]+)" is able to see following list of Business Concept Type Fields$/,
           %{user_name: user_name, table: expected_fields},
           state do
+    alias TdBg.Utils.CollectionUtils
     assert user_name == state[:user_name]
 
-    expected_fields =
-      expected_fields
-      |> Enum.map(fn row ->
-        add_all_schema_fields(row)
-      end)
+    expected_fields = Enum.map(expected_fields, &add_all_schema_fields/1)
 
     expected_fields =
-      Enum.map(expected_fields, fn field -> CollectionUtils.stringify_keys(field) end)
+      Enum.map(expected_fields, &CollectionUtils.stringify_keys/1)
 
     Enum.each(expected_fields, fn expected_field ->
       actual_field =
@@ -786,7 +784,7 @@ defmodule TdBg.BusinessConceptSteps do
     diff_values =
       values
       |> String.split(",")
-      |> Enum.map(&String.trim(&1))
+      |> Enum.map(&String.trim/1)
 
     Map.put(map, "values", %{"fixed" => diff_values})
   end
@@ -794,7 +792,7 @@ defmodule TdBg.BusinessConceptSteps do
   def add_schema_field(map, name, value), do: Map.put(map, name, value)
 
   def update_business_concept_version_map(field_map),
-    do: update_in(field_map[:version], &String.to_integer(&1))
+    do: update_in(field_map[:version], &String.to_integer/1)
 
   def add_all_schema_fields(field_data) do
     Map.new()

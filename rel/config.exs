@@ -4,7 +4,7 @@
 # `MyPlugin` is the name of the plugin module.
 Path.join(["rel", "plugins", "*.exs"])
 |> Path.wildcard()
-|> Enum.map(&Code.eval_file(&1))
+|> Enum.map(&Code.eval_file/1)
 
 use Mix.Releases.Config,
   # This sets the default release built by `mix release`

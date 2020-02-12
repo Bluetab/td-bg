@@ -1,34 +1,101 @@
 defmodule TdBg.Metrics do
   @moduledoc """
-  Business Glossary Metrics support functions
+  Business Glossary Metrics support. Provides a GenServer for publishing metrics
+  periodically.
   """
 
-  def missing_dimension, do: "MISSING"
+  use GenServer
 
-  def normalize_template_name(template_name) do
-    template_name
-    |> String.replace(~r/[^A-z\s]/u, "")
-    |> String.replace(~r/\s+/, "_")
+  alias TdBg.Metrics.Completeness
+  alias TdBg.Metrics.Count
+  alias TdBg.Metrics.Instrumenter
+  alias TdBg.Search
+
+  require Logger
+
+  @metrics_publication_frequency Application.get_env(:td_bg, :metrics_publication_frequency)
+
+  ## Client API
+
+  def start_link(opts \\ %{}) do
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def add_dimensions(%{"_source" => source}, [_ | _] = dimensions) do
-    Enum.reduce(dimensions, source, &Map.put(&2, &1, get_dimension(&1, &2)))
+  def count do
+    GenServer.call(__MODULE__, :count)
   end
 
-  defp get_dimension("parent_domains", %{"domain_parents" => domain_parents} = _source) do
-    domain_parents
-    |> Enum.map(&Map.get(&1, "name"))
-    |> Enum.join(";")
+  def completeness do
+    GenServer.call(__MODULE__, :completeness)
   end
 
-  defp get_dimension("template_name", %{"template" => %{"name" => template_name}}),
-    do: template_name
+  ## GenServer Callbacks
 
-  defp get_dimension("template_name", _source), do: missing_dimension()
+  @impl true
+  def init(state) do
+    if Application.get_env(:td_bg, :env) == :prod do
+      schedule_work()
+    end
 
-  defp get_dimension("has_rule", %{"rule_count" => n} = _source) when n > 0, do: true
-  defp get_dimension("has_rule", _source), do: false
+    {:ok, state}
+  end
 
-  defp get_dimension("has_link", %{"link_count" => n} = _source) when n > 0, do: true
-  defp get_dimension("has_link", _source), do: false
+  @impl true
+  def handle_info(:work, state) do
+    Instrumenter.reset()
+
+    concepts = search_all_concepts()
+
+    Timer.time(
+      fn -> Count.transform(concepts) end,
+      &Logger.info("Calculated #{Enum.count(&2)} concept count metrics in #{&1}ms")
+    )
+    |> Enum.each(&Instrumenter.set_count/1)
+
+    Timer.time(
+      fn -> Completeness.transform(concepts) end,
+      &Logger.info("Calculated #{Enum.count(&2)} completeness metrics in #{&1}ms")
+    )
+    |> Enum.each(&Instrumenter.set_completeness/1)
+
+    # Reschedule once more
+    schedule_work()
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_call(:count, _from, state) do
+    reply =
+      search_all_concepts()
+      |> Count.transform()
+
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call(:completeness, _from, state) do
+    reply =
+      search_all_concepts()
+      |> Completeness.transform()
+
+    {:reply, reply, state}
+  end
+
+  ## Private Functions
+
+  defp search_all_concepts do
+    Timer.time(
+      fn ->
+        Search.search(%{
+          query: %{bool: %{must: %{match_all: %{}}}},
+          size: 10_000
+        })
+      end,
+      fn ms, _ -> Logger.info("Search all concepts completed in #{ms}ms") end
+    )
+  end
+
+  defp schedule_work do
+    Process.send_after(self(), :work, @metrics_publication_frequency)
+  end
 end

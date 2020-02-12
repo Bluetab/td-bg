@@ -87,7 +87,7 @@ defmodule TdBg.BusinessConcept.Upload do
       true ->
         parsed_list =
           tail
-          |> Enum.map(&parse_uncoded_rows(&1))
+          |> Enum.map(&parse_uncoded_rows/1)
           |> Enum.map(&row_list_to_map(headers, &1))
 
         {:ok, parsed_list}
@@ -137,7 +137,6 @@ defmodule TdBg.BusinessConcept.Upload do
          {:ok} <- validate_name(data),
          {:ok, %{id: domain_id}} <- validate_domain(data),
          {:ok} <- validate_description(data) do
-
       empty_fields =
         Enum.filter(Map.keys(data), fn field_name ->
           Map.get(data, field_name) == nil or Map.get(data, field_name) == ""

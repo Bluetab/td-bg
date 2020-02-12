@@ -77,7 +77,7 @@ defmodule TdBg.Cache.DomainLoader do
       domains
       |> Enum.map(&Map.take(&1, [:id, :name]))
       |> Enum.map(&Map.put(&1, :parent_ids, load_parent_ids(&1.id)))
-      |> Enum.map(&TaxonomyCache.put_domain(&1))
+      |> Enum.map(&TaxonomyCache.put_domain/1)
       |> Enum.map(fn {res, _} -> res end)
 
     if Enum.any?(results, &(&1 != :ok)) do

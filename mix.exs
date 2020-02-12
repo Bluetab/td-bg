@@ -45,7 +45,7 @@ defmodule TdBg.Mixfile do
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
-      {:cabbage, only: [:test], git: "https://github.com/Bluetab/cabbage", tag: "v0.3.7-alpha"},
+      {:cabbage, only: [:test], git: "https://github.com/Bluetab/cabbage", tag: "v0.3.8-alpha"},
       {:httpoison, "~> 1.0"},
       {:distillery, "~> 2.0", runtime: false},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
@@ -67,8 +67,7 @@ defmodule TdBg.Mixfile do
        branch: "feature/bulk-index-action"},
       {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.8.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"},
-      #{:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.14.0"},
-      {:td_df_lib, path: "../td-df-lib"}
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.15.0"}
     ]
   end
 

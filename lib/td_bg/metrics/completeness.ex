@@ -3,12 +3,12 @@ defmodule TdBg.Metrics.Completeness do
   Business Glossary Completeness Metrics calculation
   """
 
-  alias TdBg.Metrics
+  alias TdBg.Metrics.Dimensions
   alias TdDfLib.Templates
 
   def transform(%{results: results}) do
     results
-    |> Enum.map(&Metrics.add_dimensions(&1, ["parent_domains", "template_name"]))
+    |> Enum.map(&Dimensions.add_dimensions(&1, ["parent_domains", "template_name"]))
     |> Enum.group_by(& &1["template_name"])
     |> Map.delete(nil)
     |> Enum.flat_map(&template_metrics/1)
@@ -16,15 +16,14 @@ defmodule TdBg.Metrics.Completeness do
 
   defp template_metrics({template_name, concepts}) do
     fields = Templates.optional_fields(template_name)
-    template_name = Metrics.normalize_template_name(template_name)
 
     concepts
     |> Enum.flat_map(&concept_metrics(&1, template_name, fields))
     |> Enum.group_by(&Map.take(&1, [:dimensions, :template_name]), &Map.get(&1, :count))
     |> Enum.map(fn {dimensions, counts} ->
       dimensions
-      |> Map.put(:total_count, Enum.count(counts))
-      |> Map.put(:complete_count, Enum.count(counts, &(&1 == 0)))
+      |> Map.put(:total, Enum.count(counts))
+      |> Map.put(:completed, Enum.count(counts, &(&1 == 0)))
     end)
   end
 

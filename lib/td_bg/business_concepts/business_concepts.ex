@@ -932,6 +932,14 @@ defmodule TdBg.BusinessConcepts do
     TemplateCache.get_by_name!(type)
   end
 
+  def get_content_schema(%BusinessConceptVersion{business_concept: business_concept}) do
+    get_content_schema(business_concept)
+  end
+
+  def get_content_schema(%BusinessConcept{type: type}) do
+    Templates.content_schema(type)
+  end
+
   def get_completeness(%BusinessConceptVersion{content: content} = bcv) do
     case get_template(bcv) do
       template -> Templates.completeness(content, template)

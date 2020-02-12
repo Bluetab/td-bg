@@ -86,7 +86,7 @@ defmodule TdBgWeb.DomainController do
     params
     |> Map.get("actions", "")
     |> String.split(",")
-    |> Enum.map(&String.trim(&1))
+    |> Enum.map(&String.trim/1)
     |> Enum.filter(&(&1 !== ""))
   end
 

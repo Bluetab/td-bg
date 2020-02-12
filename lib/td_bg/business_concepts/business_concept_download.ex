@@ -89,6 +89,7 @@ defmodule TdBg.BusinessConcept.Download do
     |> Enum.reject(&is_nil/1)
     |> Enum.join(", ")
   end
+
   defp get_content_field(
          %{
            "type" => "string",

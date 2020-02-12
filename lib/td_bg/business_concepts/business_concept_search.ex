@@ -232,7 +232,7 @@ defmodule TdBg.BusinessConcept.Search do
     status =
       permissions
       |> Enum.map(&Map.get(BusinessConcept.permissions_to_status(), &1))
-      |> Enum.filter(&(!is_nil(&1)))
+      |> Enum.reject(&is_nil/1)
 
     status_clause = %{terms: %{status: status}}
 
