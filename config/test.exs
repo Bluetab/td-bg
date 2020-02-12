@@ -21,11 +21,7 @@ config :td_bg, TdBg.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_bg, :audit_service,
-  api_service: TdBgWeb.ApiServices.MockTdAuditService,
-  audit_host: "localhost",
-  audit_port: "4007",
-  audit_domain: ""
+config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.MockTdAuditService
 
 config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
 

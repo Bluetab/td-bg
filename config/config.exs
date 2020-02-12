@@ -57,8 +57,12 @@ config :td_bg, :phoenix_swagger,
   }
 
 config :td_bg, :audit_service,
-  protocol: "http",
-  audits_path: "/api/audits/"
+  api_service: TdBgWeb.ApiServices.HttpTdAuditService,
+  audit_domain: "",
+  audit_host: "localhost",
+  audit_port: "4007",
+  audits_path: "/api/audits/",
+  protocol: "http"
 
 config :td_bg, metrics_publication_frequency: 60_000
 

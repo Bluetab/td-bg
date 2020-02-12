@@ -41,12 +41,6 @@ config :td_bg, TdBg.Repo,
   hostname: "localhost",
   pool_size: 10
 
-config :td_bg, :audit_service,
-  api_service: TdBgWeb.ApiServices.HttpTdAuditService,
-  audit_host: "localhost",
-  audit_port: "4007",
-  audit_domain: ""
-
 config :td_cache, redis_host: "localhost"
 
-config :td_bg, metrics_publication_frequency: 1000
+config :td_bg, metrics_publication_frequency: 10_000

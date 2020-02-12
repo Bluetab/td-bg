@@ -17,7 +17,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     with {:ok, update_attributes} <-
            update_attributes_from_params(user, params, business_concept_versions),
          {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
-      bcv_list |> Enum.each(&refresh_cache_and_elastic(&1))
+      Enum.each(bcv_list, &refresh_cache_and_elastic/1)
 
       {:ok, bcv_list |> Enum.map(& &1.id)}
     else
