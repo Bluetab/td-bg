@@ -60,7 +60,7 @@ defmodule TdBg.BusinessConceptSteps do
         add_all_schema_fields(row)
       end)
 
-    Templates.create_template(business_concept_type, [%{"name" => "gruop", "fields" => schema}])
+    Templates.create_template(business_concept_type, [%{"name" => "group", "fields" => schema}])
     {:ok, Map.merge(state, %{bc_type: business_concept_type})}
   end
 
@@ -672,8 +672,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     expected_fields = Enum.map(expected_fields, &add_all_schema_fields/1)
 
-    expected_fields =
-      Enum.map(expected_fields, &CollectionUtils.stringify_keys/1)
+    expected_fields = Enum.map(expected_fields, &CollectionUtils.stringify_keys/1)
 
     Enum.each(expected_fields, fn expected_field ->
       actual_field =

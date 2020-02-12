@@ -37,9 +37,7 @@ defmodule TdBg.CommentsTest do
   end
 
   setup do
-    on_exit(fn ->
-      MockTdAuthService.set_users([])
-    end)
+    on_exit(fn -> MockTdAuthService.set_users([]) end)
   end
 
   defwhen ~r/^"(?<admin_name>[^"]+)" tries to create a new comment "(?<comment>[^"]+)" on the business concept "(?<bc_name>[^"]+)"$/,
