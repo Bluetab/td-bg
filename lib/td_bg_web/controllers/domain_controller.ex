@@ -254,11 +254,9 @@ defmodule TdBgWeb.DomainController do
   end
 
   defp do_delete(conn, domain) do
-    with {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
-      send_resp(conn, :no_content, "")
-    else
-      error ->
-        TaxonomySupport.handle_taxonomy_errors_on_delete(conn, error)
+    case Taxonomies.delete_domain(domain) do
+      {:ok, %Domain{}} -> send_resp(conn, :no_content, "")
+      error -> TaxonomySupport.handle_taxonomy_errors_on_delete(conn, error)
     end
   end
 

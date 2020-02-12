@@ -170,6 +170,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp get_flat_template_content(%{content: content}) do
     Format.flatten_content_fields(content)
   end
+
   defp get_flat_template_content(_), do: []
 
   def create(conn, %{"business_concept_version" => business_concept_params}) do
@@ -299,7 +300,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    with true <- can?(user, view_business_concept(business_concept_version)) do
+    if can?(user, view_business_concept(business_concept_version)) do
       template = BusinessConcepts.get_template(business_concept_version)
 
       business_concept_version =
@@ -319,17 +320,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         template: template
       )
     else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
+      conn
+      |> put_status(:forbidden)
+      |> put_view(ErrorView)
+      |> render("403.json")
     end
   end
 
