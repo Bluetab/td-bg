@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :td_bg, TdBg.Repo,
   username: System.fetch_env!("DB_USER"),
