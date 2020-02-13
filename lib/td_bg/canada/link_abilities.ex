@@ -16,10 +16,10 @@ defmodule TdBg.Canada.LinkAbilities do
   def can?(%User{is_admin: true}, _action, %Link{}), do: true
 
   def can?(%User{} = user, :delete, %Link{source: "business_concept:" <> business_concept_id}) do
-    with %{domain_id: domain_id} <-
-           BusinessConcepts.get_business_concept!(String.to_integer(business_concept_id)) do
-      TaxonomyAbilities.can?(user, :delete_link, %Domain{id: domain_id})
-    else
+    case BusinessConcepts.get_business_concept!(String.to_integer(business_concept_id)) do
+      %{domain_id: domain_id} ->
+        TaxonomyAbilities.can?(user, :delete_link, %Domain{id: domain_id})
+
       error ->
         Logger.error("In LinkAbilities.can?/2... #{inspect(error)}")
     end

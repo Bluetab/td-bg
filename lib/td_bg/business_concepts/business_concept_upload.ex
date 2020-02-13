@@ -72,7 +72,7 @@ defmodule TdBg.BusinessConcept.Upload do
   defp parse_file(file) do
     parsed_file =
       file
-      |> ParserCSVUpload.parse_stream(headers: false)
+      |> ParserCSVUpload.parse_stream(skip_headers: false)
       |> Enum.to_list()
 
     {:ok, parsed_file}
@@ -87,7 +87,7 @@ defmodule TdBg.BusinessConcept.Upload do
       true ->
         parsed_list =
           tail
-          |> Enum.map(&parse_uncoded_rows(&1))
+          |> Enum.map(&decode_rows/1)
           |> Enum.map(&row_list_to_map(headers, &1))
 
         {:ok, parsed_list}
@@ -97,21 +97,16 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp parse_uncoded_rows(fiel_row_list) do
-    fiel_row_list
-    |> Enum.map(fn row ->
-      case String.valid?(row) do
-        true ->
-          row
+  defp decode_rows(rows) do
+    Enum.map(rows, &decode_row/1)
+  end
 
-        false ->
-          Codepagex.to_string!(
-            row,
-            "VENDORS/MICSFT/WINDOWS/CP1252",
-            Codepagex.use_utf_replacement()
-          )
-      end
-    end)
+  defp decode_row(row) do
+    if String.valid?(row) do
+      row
+    else
+      Codepagex.to_string!(row, "VENDORS/MICSFT/WINDOWS/CP1252", Codepagex.use_utf_replacement())
+    end
   end
 
   defp row_list_to_map(headers, row) do
@@ -137,29 +132,21 @@ defmodule TdBg.BusinessConcept.Upload do
          {:ok} <- validate_name(data),
          {:ok, %{id: domain_id}} <- validate_domain(data),
          {:ok} <- validate_description(data) do
-
       empty_fields =
-        Enum.filter(Map.keys(data), fn field_name ->
-          Map.get(data, field_name) == nil or Map.get(data, field_name) == ""
-        end)
+        data
+        |> Enum.filter(fn {_field_name, value} -> is_empty?(value) end)
+        |> Enum.map(&elem(&1, 0))
 
       content_schema = Format.flatten_content_fields(content_schema)
 
       table_fields =
         content_schema
-        |> Enum.filter(fn field ->
-          Map.get(field, "type") == "table"
-        end)
+        |> Enum.filter(&(Map.get(&1, "type") == "table"))
         |> Enum.map(&Map.get(&1, "name"))
 
       content =
         data
-        |> Map.drop([
-          "name",
-          "domain",
-          "description",
-          "template"
-        ])
+        |> Map.drop(["name", "domain", "description", "template"])
         |> Map.drop(empty_fields)
         |> Map.drop(table_fields)
 
@@ -189,16 +176,17 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
+  defp is_empty?(nil), do: true
+  defp is_empty?(""), do: true
+  defp is_empty?(_), do: false
+
   defp validate_template(%{"template" => ""}),
     do: {:error, %{error: :missing_value, field: "template"}}
 
   defp validate_template(%{"template" => template}) do
     case TemplateCache.get_by_name!(template) do
-      nil ->
-        {:error, %{error: :invalid_template, template: template}}
-
-      template ->
-        {:ok, template}
+      nil -> {:error, %{error: :invalid_template, template: template}}
+      template -> {:ok, template}
     end
   end
 

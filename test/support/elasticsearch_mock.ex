@@ -114,7 +114,7 @@ defmodule TdBg.ElasticsearchMock do
 
     fn _acc ->
       list_all_concepts()
-      |> Enum.filter(&f.(&1))
+      |> Enum.filter(f)
     end
   end
 

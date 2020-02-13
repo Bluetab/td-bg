@@ -46,7 +46,7 @@ defmodule TdBg.Application do
       TdBg.Cache.ConceptLoader,
       TdBg.Cache.DomainLoader,
       # Metrics worker
-      TdBg.Metrics.BusinessConcepts
+      TdBg.Metrics
     ]
   end
 end

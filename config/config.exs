@@ -33,13 +33,16 @@ config :td_bg, TdBgWeb.Endpoint,
 # (without the 'end of line' character)
 # EX_LOGGER_FORMAT='$date $time [$level] $message'
 config :logger, :console,
-  format: (System.get_env("EX_LOGGER_FORMAT") || "$date\T$time\Z [$level]$levelpad $metadata$message") <> "\n",
+  format:
+    (System.get_env("EX_LOGGER_FORMAT") || "$date\T$time\Z [$level]$levelpad $metadata$message") <>
+      "\n",
   level: :info,
   metadata: [:pid, :module],
   utc_log: true
 
 # Configuration for Phoenix
 config :phoenix, :json_library, Jason
+config :phoenix_swagger, json_library: Jason
 
 config :td_bg, TdBg.Auth.Guardian,
   # optional
@@ -54,8 +57,12 @@ config :td_bg, :phoenix_swagger,
   }
 
 config :td_bg, :audit_service,
-  protocol: "http",
-  audits_path: "/api/audits/"
+  api_service: TdBgWeb.ApiServices.HttpTdAuditService,
+  audit_domain: "",
+  audit_host: "localhost",
+  audit_port: "4007",
+  audits_path: "/api/audits/",
+  protocol: "http"
 
 config :td_bg, metrics_publication_frequency: 60_000
 

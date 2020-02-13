@@ -11,6 +11,8 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdDfLib.RichText
 
+  @template_name "TestTemplate1234"
+
   setup_all do
     start_supervised(ConceptLoader)
     start_supervised(IndexWorker)
@@ -18,26 +20,36 @@ defmodule TdBg.BusinessConceptsTest do
     :ok
   end
 
-  describe "business_concepts" do
-    defp fixture do
-      template_content = [%{
-        "name" => "group",
-        "fields" => [%{name: "fieldname", type: "string", cardinality: "?"}]
-      }]
+  setup context do
+    case context[:template] do
+      nil ->
+        :ok
 
-      template =
+      content ->
         Templates.create_template(%{
           id: 0,
-          name: "onefield",
-          content: template_content,
+          name: @template_name,
           label: "label",
-          scope: "test"
+          scope: "test",
+          content: content
         })
+    end
 
+    :ok
+  end
+
+  describe "business_concepts" do
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [%{name: "fieldname", type: "string", cardinality: "?"}]
+           }
+         ]
+    defp fixture do
       parent_domain = insert(:domain)
       child_domain = insert(:child_domain, parent: parent_domain)
-      insert(:business_concept, type: template.name, domain: child_domain)
-      insert(:business_concept, type: template.name, domain: parent_domain)
+      insert(:business_concept, type: @template_name, domain: child_domain)
+      insert(:business_concept, type: @template_name, domain: parent_domain)
     end
 
     test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
@@ -709,46 +721,36 @@ defmodule TdBg.BusinessConceptsTest do
       assert BusinessConcepts.get_confidential_ids() == [bc1.id]
     end
 
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "name" => "multiple_1",
+                 "type" => "string",
+                 "group" => "Multiple Group",
+                 "label" => "Multiple 1",
+                 "values" => %{
+                   "fixed" => ["1", "2", "3", "4", "5"]
+                 },
+                 "widget" => "dropdown",
+                 "cardinality" => "*"
+               }
+             ]
+           }
+         ]
     test "search_fields/1 returns a business_concept_version with default values in its content" do
       alias Elasticsearch.Document
 
-      template_label = "search_fields"
-      template_name = "search_fields_template"
-      field_name = "multiple_1"
-
-      Templates.create_template(%{
-        name: template_name,
-        content: [%{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => field_name,
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => %{
-                "fixed" => ["1", "2", "3", "4", "5"]
-              },
-              "widget" => "dropdown",
-              "cardinality" => "*"
-            }
-          ]
-        }],
-        scope: "test",
-        label: template_label,
-        id: "999"
-      })
-
-      business_concept = insert(:business_concept, type: template_name)
+      business_concept = insert(:business_concept, type: @template_name)
 
       business_concept_version =
         insert(:business_concept_version, business_concept: business_concept)
 
       %{template: template, content: content} = Document.encode(business_concept_version)
 
-      assert Map.get(template, :label) == template_label
-      assert Map.get(template, :name) == template_name
-      assert Map.get(content, field_name) == [""]
+      assert Map.get(template, :name) == @template_name
+      assert Map.get(content, "multiple_1") == [""]
     end
   end
 

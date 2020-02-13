@@ -24,17 +24,34 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   @user_name "user"
+  @template_name "foo_template"
 
-  setup %{conn: conn} do
+  setup %{conn: conn} = context do
+    case context[:template] do
+      nil ->
+        :ok
+
+      true ->
+        Templates.create_template()
+
+      content ->
+        Templates.create_template(%{
+          id: 0,
+          name: @template_name,
+          label: "label",
+          scope: "test",
+          content: content
+        })
+    end
+
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
   describe "show" do
     @tag :admin_authenticated
+    @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
-      Templates.create_template()
-
       business_concept_version =
         insert(
           :business_concept_version,
@@ -56,6 +73,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag authenticated_user: @user_name
+    @tag :template
     test "show with actions",
          %{conn: conn} do
       user = create_user(@user_name)
@@ -96,7 +114,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "find business_concepts by status", %{conn: conn} do
       published = BusinessConcept.status().published
       draft = BusinessConcept.status().draft
-      Templates.create_template()
       domain = insert(:domain)
       create_version(domain, "one", draft).business_concept_id
       create_version(domain, "two", published).business_concept_id
@@ -157,9 +174,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "create business_concept" do
     @tag :admin_authenticated
+    @tag :template
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
-      Templates.create_template()
 
       creation_attrs = %{
         content: %{},
@@ -209,14 +226,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
-      Templates.create_template(%{
-        id: 0,
-        name: "some_type",
-        content: [],
-        label: "label",
-        scope: "test"
-      })
-
       creation_attrs = %{
         content: %{},
         type: "some_type",
@@ -243,7 +252,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "find business concept by name", %{conn: conn} do
       published = BusinessConcept.status().published
       draft = BusinessConcept.status().draft
-      Templates.create_template()
       domain = insert(:domain)
       id = [create_version(domain, "one", draft).business_concept.id]
       id = [create_version(domain, "two", published).business_concept.id | id]
@@ -261,7 +269,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "versions" do
     @tag :admin_authenticated
     test "lists business_concept_versions", %{conn: conn} do
-      Templates.create_template()
       business_concept_version = insert(:business_concept_version)
 
       conn =
@@ -284,9 +291,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "create new version with modified template", %{
       conn: conn
     } do
-      template_content = [%{"name" => "group",
-        "fields" => [%{"name" => "fieldname", "type" => "string", "cardinality" => "?"}]
-      }]
+      template_content = [
+        %{
+          "name" => "group",
+          "fields" => [%{"name" => "fieldname", "type" => "string", "cardinality" => "?"}]
+        }
+      ]
 
       template =
         Templates.create_template(%{
@@ -340,11 +350,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "update business_concept_version" do
     @tag :admin_authenticated
+    @tag :template
     test "renders business_concept_version when data is valid", %{
       conn: conn,
       swagger_schema: schema
     } do
-      Templates.create_template()
       user = build(:user)
       business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
@@ -385,38 +395,33 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "bulk_update" do
     @tag :admin_authenticated
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "name" => "Field1",
+                 "type" => "string",
+                 "group" => "Multiple Group",
+                 "label" => "Multiple 1",
+                 "values" => nil,
+                 "cardinality" => "1"
+               },
+               %{
+                 "name" => "Field2",
+                 "type" => "string",
+                 "group" => "Multiple Group",
+                 "label" => "Multiple 1",
+                 "values" => nil,
+                 "cardinality" => "1"
+               }
+             ]
+           }
+         ]
     test "bulk update of business concept", %{conn: conn} do
       domain = insert(:domain, name: "domain1")
       domain_new = insert(:domain, name: "domain_new")
-      business_concept = insert(:business_concept, domain: domain, type: "template_test")
-
-      Templates.create_template(%{
-        name: "template_test",
-        content: [%{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => "Field1",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field2",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            }
-          ]
-        }],
-        scope: "test",
-        label: "template_label",
-        id: "999"
-      })
+      business_concept = insert(:business_concept, domain: domain, type: @template_name)
 
       insert(
         :business_concept_version,
@@ -446,37 +451,32 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag :admin_authenticated
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "name" => "Field1",
+                 "type" => "string",
+                 "group" => "Multiple Group",
+                 "label" => "Multiple 1",
+                 "values" => nil,
+                 "cardinality" => "1"
+               },
+               %{
+                 "name" => "Field2",
+                 "type" => "string",
+                 "group" => "Multiple Group",
+                 "label" => "Multiple 1",
+                 "values" => nil,
+                 "cardinality" => "1"
+               }
+             ]
+           }
+         ]
     test "bulk update of business concept with no domain", %{conn: conn} do
       domain = insert(:domain, name: "domain1")
-      business_concept = insert(:business_concept, domain: domain, type: "template_test")
-
-      Templates.create_template(%{
-        name: "template_test",
-        content: [%{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => "Field1",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field2",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Multiple 1",
-              "values" => nil,
-              "cardinality" => "1"
-            }
-          ]
-        }],
-        scope: "test",
-        label: "template_label",
-        id: "999"
-      })
+      business_concept = insert(:business_concept, domain: domain, type: @template_name)
 
       insert(
         :business_concept_version,

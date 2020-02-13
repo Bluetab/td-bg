@@ -7,8 +7,6 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies
-  alias TdCache.TemplateCache
-  alias TdDfLib.Format
 
   def update_all(user, business_concept_versions, params) do
     business_concept_versions =
@@ -19,7 +17,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     with {:ok, update_attributes} <-
            update_attributes_from_params(user, params, business_concept_versions),
          {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
-      bcv_list |> Enum.each(&refresh_cache_and_elastic(&1))
+      Enum.each(bcv_list, &refresh_cache_and_elastic/1)
 
       {:ok, bcv_list |> Enum.map(& &1.id)}
     else
@@ -85,16 +83,11 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   defp update_attributes_from_params(user, params, business_concept_versions) do
     business_concept_version = Enum.at(business_concept_versions, 0)
 
-    template = get_template(business_concept_version)
+    case BusinessConcepts.get_content_schema(business_concept_version) do
+      {:error, _} = e ->
+        e
 
-    case template do
-      nil ->
-        {:error, :template_not_found}
-
-      _ ->
-        content_schema = template
-          |> Map.get(:content)
-          |> Format.flatten_content_fields
+      content_schema ->
         domain_id = Map.get(params, "domain_id", nil)
 
         case domain_id && Taxonomies.get_domain(domain_id) do
@@ -119,12 +112,5 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
             {:ok, update_attributes}
         end
     end
-  end
-
-  defp get_template(%BusinessConceptVersion{} = version) do
-    version
-    |> Map.get(:business_concept)
-    |> Map.get(:type)
-    |> TemplateCache.get_by_name!()
   end
 end

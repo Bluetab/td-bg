@@ -15,7 +15,6 @@ defmodule TdBg.CommentsTest do
   alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
-  alias TdBg.Utils.CollectionUtils
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
@@ -38,9 +37,7 @@ defmodule TdBg.CommentsTest do
   end
 
   setup do
-    on_exit(fn ->
-      MockTdAuthService.set_users([])
-    end)
+    on_exit(fn -> MockTdAuthService.set_users([]) end)
   end
 
   defwhen ~r/^"(?<admin_name>[^"]+)" tries to create a new comment "(?<comment>[^"]+)" on the business concept "(?<bc_name>[^"]+)"$/,

@@ -1,28 +1,39 @@
 defmodule TdBg.BusinessConceptDownloadTests do
   use TdBg.DataCase
 
+  @template_name "download_template"
+
+  setup context do
+    case context[:template] do
+      nil ->
+        :ok
+
+      content ->
+        Templates.create_template(%{
+          id: 0,
+          name: @template_name,
+          label: "label",
+          scope: "test",
+          content: content
+        })
+    end
+
+    :ok
+  end
+
   describe "business_concept_download" do
     alias TdBg.BusinessConcept.Download
 
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [%{"name" => "field_name", "type" => "list", "label" => "field_label"}]
+           }
+         ]
     test "to_csv/1 return cvs content to download" do
-      template = "template_name"
+      template = @template_name
       field_name = "field_name"
       field_label = "field_label"
-
-      Templates.create_template(%{
-        id: 0,
-        name: template,
-        label: "label",
-        scope: "test",
-        content: [%{
-          "name" => "group",
-          "fields" => [%{
-            "name" => field_name,
-            "type" => "list",
-            "label" => field_label
-          }]
-        }]
-      })
 
       name = "concept_name"
       description = "concept_description"
@@ -53,7 +64,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
     end
 
     test "to_csv/1 return business concepts non-dynamic content when related template does not exist" do
-      template = "template_name_delete"
+      template = @template_name
       field_name = "field_name"
 
       name = "concept_name"
@@ -84,42 +95,33 @@ defmodule TdBg.BusinessConceptDownloadTests do
              """
     end
 
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "url_field", "type" => "url", "label" => "Url"},
+               %{
+                 "name" => "key_value",
+                 "type" => "string",
+                 "label" => "Key And Value",
+                 "values" => %{
+                   "fixed_tuple" => [
+                     %{"text" => "First Element", "value" => "1"},
+                     %{"text" => "Second Element", "value" => "2"}
+                   ]
+                 }
+               }
+             ]
+           }
+         ]
     test "to_csv/1 return formatted fields in concepts with dynamic content" do
-      template = "template_formatted_fields"
+      template = @template_name
 
       url_field = "url_field"
       url_label = "Url"
 
       key_value_field = "key_value"
       key_value_label = "Key And Value"
-
-      Templates.create_template(%{
-        id: 0,
-        name: template,
-        label: "label",
-        scope: "test",
-        content: [%{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => url_field,
-              "type" => "url",
-              "label" => url_label
-            },
-            %{
-              "name" => key_value_field,
-              "type" => "string",
-              "label" => key_value_label,
-              "values" => %{
-                "fixed_tuple" => [
-                  %{"text" => "First Element", "value" => "1"},
-                  %{"text" => "Second Element", "value" => "2"}
-                ]
-              }
-            }
-          ]
-        }]
-      })
 
       name = "concept_name"
       description = "concept_description"

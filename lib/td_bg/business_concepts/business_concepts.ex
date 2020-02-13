@@ -14,7 +14,9 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.Search.Indexer
   alias TdCache.ConceptCache
   alias TdCache.EventStream.Publisher
+  alias TdCache.TemplateCache
   alias TdDfLib.Format
+  alias TdDfLib.Templates
   alias TdDfLib.Validation
   alias ValidationError
 
@@ -920,5 +922,27 @@ defmodule TdBg.BusinessConcepts do
       |> Map.new()
 
     %{added: added, changed: changed, removed: removed}
+  end
+
+  def get_template(%BusinessConceptVersion{business_concept: business_concept}) do
+    get_template(business_concept)
+  end
+
+  def get_template(%BusinessConcept{type: type}) do
+    TemplateCache.get_by_name!(type)
+  end
+
+  def get_content_schema(%BusinessConceptVersion{business_concept: business_concept}) do
+    get_content_schema(business_concept)
+  end
+
+  def get_content_schema(%BusinessConcept{type: type}) do
+    Templates.content_schema(type)
+  end
+
+  def get_completeness(%BusinessConceptVersion{content: content} = bcv) do
+    case get_template(bcv) do
+      template -> Templates.completeness(content, template)
+    end
   end
 end

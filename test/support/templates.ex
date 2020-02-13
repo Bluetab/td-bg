@@ -3,6 +3,7 @@ defmodule Templates do
   Template support for Business Glossary tests
   """
 
+  alias ExUnit.Callbacks
   alias TdCache.TemplateCache
 
   def create_template(type, content) do
@@ -33,8 +34,11 @@ defmodule Templates do
     put_template(attrs)
   end
 
-  defp put_template(%{updated_at: _updated_at} = attrs) do
-    TemplateCache.put(attrs)
+  defp put_template(%{id: id, updated_at: _updated_at} = attrs) do
+    case TemplateCache.put(attrs, publish: false) do
+      {:ok, _} -> Callbacks.on_exit(fn -> TemplateCache.delete(id) end)
+    end
+
     Map.delete(attrs, :updated_at)
   end
 
