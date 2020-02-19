@@ -14,6 +14,7 @@ defmodule TdBg.Search.Store do
     schema
     |> Repo.stream()
     |> Repo.stream_preload(1000, business_concept: :domain)
+    |> Stream.reject(&domain_deleted?/1)
   end
 
   @impl true
@@ -29,5 +30,12 @@ defmodule TdBg.Search.Store do
     )
     |> Repo.stream()
     |> Repo.stream_preload(1000, business_concept: :domain)
+    |> Stream.reject(&domain_deleted?/1)
   end
+
+  defp domain_deleted?(%{business_concept: %{domain: %{deleted_at: deleted_at}}})
+       when not is_nil(deleted_at),
+       do: true
+
+  defp domain_deleted?(_), do: false
 end

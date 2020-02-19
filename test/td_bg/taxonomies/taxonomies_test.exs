@@ -14,10 +14,20 @@ defmodule TdBg.TaxonomiesTest do
 
   describe "domains" do
     alias TdBg.BusinessConcepts.BusinessConcept
+    alias TdBg.ErrorConstantsSupport
     alias TdBg.Taxonomies.Domain
 
-    @valid_attrs %{description: "some description", name: "some name"}
-    @update_attrs %{description: "some updated description", name: "some updated name"}
+    @errors ErrorConstantsSupport.taxonomy_support_errors()
+    @valid_attrs %{
+      description: "some description",
+      name: "some name",
+      external_id: "some external id"
+    }
+    @update_attrs %{
+      description: "some updated description",
+      name: "some updated name",
+      external_id: "updated external id"
+    }
     @invalid_attrs %{description: nil, name: nil}
 
     @child_attrs %{description: "child of some name description", name: "child of some name"}
@@ -49,7 +59,11 @@ defmodule TdBg.TaxonomiesTest do
       parent = insert(:domain)
 
       children =
-        Enum.reduce([0, 1, 2], [], &[insert(:child_domain, name: "d#{&1}", parent: parent) | &2])
+        Enum.reduce(
+          [0, 1, 2],
+          [],
+          &[insert(:child_domain, name: "d#{&1}", parent: parent, external_id: "e_id#{&1}") | &2]
+        )
 
       domains = Taxonomies.get_children_domains(parent)
       sodocd_domains = Enum.reverse(Enum.sort_by(domains, & &1.id))
@@ -82,8 +96,19 @@ defmodule TdBg.TaxonomiesTest do
       [{:domain, {error_message, code}} | _] = changeset.errors
       [{:code, id} | _] = code
       assert !changeset.valid?
-      assert error_message == "existing.domain.name"
-      assert id == "ETD003"
+      assert error_message == @errors[:uniqueness][:name].name
+      assert id == @errors[:uniqueness][:name].code
+    end
+
+    test "create_domain/1 with an existing external_id should return an error" do
+      domain_fixture()
+      attrs = Map.merge(@valid_attrs, %{name: "new name"})
+      assert {:error, %Ecto.Changeset{} = changeset} = Taxonomies.create_domain(attrs)
+      [{:domain, {error_message, code}} | _] = changeset.errors
+      [{:code, id} | _] = code
+      assert !changeset.valid?
+      assert error_message == @errors[:uniqueness][:external_id].name
+      assert id == @errors[:uniqueness][:external_id].code
     end
 
     test "create_domain/1 with an existing name in a deleted domain should create the domain" do
@@ -91,6 +116,13 @@ defmodule TdBg.TaxonomiesTest do
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
       assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
       assert domain.name == @valid_attrs.name
+    end
+
+    test "create_domain/1 with an existing external_id in a deleted domain should create the domain" do
+      domain_to_delete = domain_fixture()
+      assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
+      assert {:ok, %Domain{} = domain} = Taxonomies.create_domain(@valid_attrs)
+      assert domain.external_id == @valid_attrs.external_id
     end
 
     test "create_domain/1 with invalid data returns error changeset" do
@@ -113,22 +145,36 @@ defmodule TdBg.TaxonomiesTest do
 
     test "update_domain/2 with an existing domain name should return an error" do
       domain_fixture()
-      domain_to_update = domain_fixture(%{name: "name to update"})
+      domain = domain_fixture(%{name: "unexisting", external_id: "unexisting"})
 
       assert {:error, %Ecto.Changeset{} = changeset} =
-               Taxonomies.update_domain(domain_to_update, Map.take(@valid_attrs, [:name]))
+               Taxonomies.update_domain(domain, Map.take(@valid_attrs, [:name]))
 
       [{:domain, {error_message, code}} | _] = changeset.errors
       [{:code, id} | _] = code
       assert !changeset.valid?
-      assert error_message == "existing.domain.name"
-      assert id == "ETD003"
+      assert error_message == @errors[:uniqueness][:name].name
+      assert id == @errors[:uniqueness][:name].code
+    end
+
+    test "update_domain/2 with an existing external_id should return an error" do
+      domain_fixture()
+      domain = domain_fixture(%{name: "unexisting", external_id: "unexisting"})
+
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Taxonomies.update_domain(domain, Map.take(@valid_attrs, [:external_id]))
+
+      [{:domain, {error_message, code}} | _] = changeset.errors
+      [{:code, id} | _] = code
+      assert !changeset.valid?
+      assert error_message == @errors[:uniqueness][:external_id].name
+      assert id == @errors[:uniqueness][:external_id].code
     end
 
     test "update_domain/2 with an existing domain name should be updated when the domain is deleted" do
       domain_to_update = domain_fixture(%{name: "name to update"})
+      domain_to_delete = domain_fixture(%{external_id: "e_id"})
 
-      domain_to_delete = domain_fixture()
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
 
       assert {:ok, domain} =
@@ -205,7 +251,11 @@ defmodule TdBg.TaxonomiesTest do
 
     test "delete_domain/1 with existing child domains can not be deleted" do
       parent_domain = domain_fixture()
-      domain_fixture(Map.put(@child_attrs, :parent_id, parent_domain.id))
+
+      child_attrs =
+        @child_attrs |> Map.put(:parent_id, parent_domain.id) |> Map.put(:external_id, "eid_d1")
+
+      domain_fixture(child_attrs)
 
       assert {:error, %Ecto.Changeset{} = changeset} = Taxonomies.delete_domain(parent_domain)
       [{:domain, {error_message, code}} | _] = changeset.errors
@@ -230,9 +280,9 @@ defmodule TdBg.TaxonomiesTest do
 
     test "get_domain_ancestors/2 returns the list of a domain's ancestors" do
       d1 = domain_fixture(%{name: "d1"})
-      d2 = domain_fixture(%{parent_id: d1.id, name: "d2"})
-      d3 = domain_fixture(%{parent_id: d2.id, name: "d3"})
-      d4 = domain_fixture(%{parent_id: d3.id, name: "d4"})
+      d2 = domain_fixture(%{parent_id: d1.id, name: "d2", external_id: "eid_d2"})
+      d3 = domain_fixture(%{parent_id: d2.id, name: "d3", external_id: "eid_d3"})
+      d4 = domain_fixture(%{parent_id: d3.id, name: "d4", external_id: "eid_d4"})
       ancestors_with_self = Taxonomies.get_domain_ancestors(d4, true)
       ancestors_without_self = Taxonomies.get_domain_ancestors(d4, false)
       assert ancestors_with_self |> Enum.map(& &1.id) == [d4, d3, d2, d1] |> Enum.map(& &1.id)
@@ -241,9 +291,10 @@ defmodule TdBg.TaxonomiesTest do
 
     test "get_ancestors_for_domain_id/2 returns the list of a domain's ancestors" do
       d1 = domain_fixture(%{name: "d1"})
-      d2 = domain_fixture(%{parent_id: d1.id, name: "d2"})
-      d3 = domain_fixture(%{parent_id: d2.id, name: "d3"})
-      d4 = domain_fixture(%{parent_id: d3.id, name: "d4"})
+      d2 = domain_fixture(%{parent_id: d1.id, name: "d2", external_id: "eid_d2"})
+      d3 = domain_fixture(%{parent_id: d2.id, name: "d3", external_id: "eid_d3"})
+      d4 = domain_fixture(%{parent_id: d3.id, name: "d4", external_id: "eid_d4"})
+
       ancestors_with_self = Taxonomies.get_ancestors_for_domain_id(d4.id, true)
       ancestors_without_self = Taxonomies.get_ancestors_for_domain_id(d4.id, false)
       assert ancestors_with_self |> Enum.map(& &1.id) == [d4, d3, d2, d1] |> Enum.map(& &1.id)

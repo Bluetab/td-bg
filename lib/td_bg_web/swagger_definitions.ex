@@ -14,6 +14,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           properties do
             id(:integer, "Unique identifier", required: true)
             name(:string, "Domain name", required: true)
+            external_id([:string, :null], "Domain external id")
             type(:string, "type")
             description(:string, "description")
             parent_id([:integer, :null], "Domain id")
@@ -24,6 +25,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             id: 12,
             name: "Domain name",
             type: "Domain type",
+            external_id: "external id",
             description: "domain description",
             parent_id: 1,
             _actions: %{}
@@ -37,6 +39,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
           properties do
             id(:integer, "Unique identifier", required: true)
             name(:string, "Domain name", required: true)
+            external_id([:string, :null], "Domain external id")
             type([:string, :null], "type")
             description(:string, "description")
             parent_id([:integer, :null], "Domain id")
@@ -46,6 +49,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             id: 12,
             name: "Domain name",
             type: "Domain type",
+            external_id: "external id",
             description: "domain description",
             parent_id: 1
           })
@@ -83,6 +87,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                 properties do
                   name(:string, "domain name", required: true)
                   type(:string, "domain type")
+                  external_id([:string, :null], "Domain external id")
                   description(:string, "domain description")
                   parent_id(:integer, "parent domain id")
                 end
@@ -97,6 +102,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
               Schema.new do
                 properties do
                   name(:string, "domain name", required: true)
+                  external_id([:string, :null], "Domain external id")
                   type(:string, "domain type")
                   description(:string, "domain description")
                 end

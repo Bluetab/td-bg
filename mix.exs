@@ -51,7 +51,6 @@ defmodule TdBg.Mixfile do
     [
       {:phoenix, "~> 1.4.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:plug, "~> 1.7"},
       {:phoenix_ecto, "~> 4.0", override: true},
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.0"},
@@ -76,9 +75,9 @@ defmodule TdBg.Mixfile do
       {:elasticsearch,
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.16.0"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.16.1"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.15.0"}
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.16.0"}
     ]
   end
 

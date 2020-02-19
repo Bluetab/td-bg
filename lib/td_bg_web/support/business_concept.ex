@@ -24,7 +24,7 @@ defmodule TdBgWeb.BusinessConceptSupport do
       {:name_not_available} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{errors: [@errors.existing_concept]})
+        |> json(%{errors: [@errors[:integrity_constraint][:business_concept]]})
 
       {:not_valid_related_to} ->
         # TODO: change this error to standard format

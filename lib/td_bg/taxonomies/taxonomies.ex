@@ -54,22 +54,19 @@ defmodule TdBg.Taxonomies do
   Returns a count of the existing domains with the same name and which
   haven't been deleted
   """
-  def count_domain_by_name(name, domain_id) do
-    count =
-      Domain
-      |> count_domain_by_name_where_clause(name, domain_id)
-      |> select([r], count(r.id))
-      |> Repo.one()
-
-    {:count, :domain, count}
+  def count_by(field, value, domain_id) do
+    Domain
+    |> count_by_field(field, value, domain_id)
+    |> select([r], count(r.id))
+    |> Repo.one()
   end
 
-  defp count_domain_by_name_where_clause(query, name, nil) do
-    query |> where([r], r.name == ^name and is_nil(r.deleted_at))
+  defp count_by_field(query, field, value, nil) do
+    where(query, [r], field(r, ^field) == ^value and is_nil(r.deleted_at))
   end
 
-  defp count_domain_by_name_where_clause(query, name, domain_id) do
-    query |> where([r], r.name == ^name and is_nil(r.deleted_at) and r.id != ^domain_id)
+  defp count_by_field(query, field, value, domain_id) do
+    where(query, [r], field(r, ^field) == ^value and is_nil(r.deleted_at) and r.id != ^domain_id)
   end
 
   @doc """

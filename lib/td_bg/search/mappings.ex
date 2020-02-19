@@ -31,7 +31,8 @@ defmodule TdBg.Search.Mappings do
       domain: %{
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text", fields: @raw_sort}
+          name: %{type: "text", fields: @raw_sort},
+          external_id: %{type: "text", fields: @raw}
         }
       },
       last_change_by: %{
@@ -46,7 +47,8 @@ defmodule TdBg.Search.Mappings do
         type: "nested",
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text", fields: @raw}
+          name: %{type: "text", fields: @raw},
+          external_id: %{type: "text", fields: @raw}
         }
       },
       link_count: %{type: "short"},

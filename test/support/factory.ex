@@ -18,7 +18,8 @@ defmodule TdBg.Factory do
   def domain_factory do
     %TdBg.Taxonomies.Domain{
       name: "My domain",
-      description: "My domain description"
+      description: "My domain description",
+      external_id: "My external id"
     }
   end
 
@@ -26,6 +27,7 @@ defmodule TdBg.Factory do
     %TdBg.Taxonomies.Domain{
       name: "My child domain",
       description: "My child domain description",
+      external_id: "My child external id",
       parent: build(:domain)
     }
   end

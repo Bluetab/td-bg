@@ -809,7 +809,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with true <- user.is_admin,
          %{results: results} <- search_all_business_concept_versions(user, search_params),
          {:ok, response} <- BulkUpdate.update_all(user, results, update_attributes) do
-      body = Poison.encode!(%{data: %{message: response}})
+      body = JSON.encode!(%{data: %{message: response}})
 
       conn
       |> put_resp_content_type("application/json", "utf-8")
@@ -827,7 +827,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         conn
         |> put_status(:unprocessable_entity)
         |> put_resp_content_type("application/json", "utf-8")
-        |> send_resp(422, Poison.encode!(%{error: error}))
+        |> send_resp(422, JSON.encode!(%{error: error}))
 
       error ->
         Logger.info("Unexpected error while updating business concepts... #{inspect(error)}")

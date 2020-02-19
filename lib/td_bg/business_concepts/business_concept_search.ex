@@ -1,6 +1,6 @@
 defmodule TdBg.BusinessConcept.Search do
   @moduledoc """
-    Helper module to construct business concept search queries.
+  Helper module to construct business concept search queries.
   """
   alias TdBg.Accounts.User
   alias TdBg.BusinessConcept.Query

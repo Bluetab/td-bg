@@ -214,7 +214,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       %{type: type, domain: domain} = business_concept
       template = TemplateCache.get_by_name!(type) || %{content: []}
       domain_ids = Taxonomies.get_parent_ids(domain.id)
-      domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
+      domain_parents = Enum.map(domain_ids, &get_domain/1)
 
       content =
         bcv
@@ -239,11 +239,18 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       |> Map.merge(BusinessConcepts.get_concept_counts(bcv.business_concept_id))
       |> Map.put(:content, content)
       |> Map.put(:description, RichText.to_plain_text(bcv.description))
-      |> Map.put(:domain, Map.take(domain, [:id, :name]))
+      |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
       |> Map.put(:domain_parents, domain_parents)
       |> Map.put(:last_change_by, get_last_change_by(bcv))
       |> Map.put(:template, Map.take(template, [:name, :label]))
+    end
+
+    defp get_domain(id) do
+      case TaxonomyCache.get_domain(id) do
+        %{} = domain -> Map.take(domain, [:id, :external_id, :name])
+        nil -> %{id: id}
+      end
     end
 
     defp get_last_change_by(%BusinessConceptVersion{last_change_by: last_change_by}) do

@@ -1,7 +1,13 @@
 defmodule TdBg.Taxonomies.Domain do
-  @moduledoc false
+  @moduledoc """
+  Ecto schema representing a domain in the business glossary.
+  """
+
   use Ecto.Schema
+
   import Ecto.Changeset
+
+  alias Ecto.Changeset
   alias TdBg.ErrorConstantsSupport
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
@@ -12,6 +18,7 @@ defmodule TdBg.Taxonomies.Domain do
     field(:description, :string)
     field(:type, :string)
     field(:name, :string)
+    field(:external_id, :string)
     field(:deleted_at, :utc_datetime_usec)
     belongs_to(:parent, Domain)
 
@@ -21,9 +28,9 @@ defmodule TdBg.Taxonomies.Domain do
   @doc false
   def changeset(%Domain{} = domain, attrs) do
     domain
-    |> cast(attrs, [:name, :type, :description, :parent_id])
+    |> cast(attrs, [:name, :type, :description, :parent_id, :external_id])
     |> validate_required([:name])
-    |> validate_unique_name(domain)
+    |> validate_unique(domain, [:name, :external_id])
   end
 
   def delete_changeset(%Domain{} = domain) do
@@ -41,7 +48,7 @@ defmodule TdBg.Taxonomies.Domain do
 
         case count > 0 do
           true ->
-            domain_error = @errors.existing_child_domain
+            domain_error = @errors[:integrity_constraint][:domain]
             add_error(changeset, :domain, domain_error.name, code: domain_error.code)
 
           false ->
@@ -63,7 +70,7 @@ defmodule TdBg.Taxonomies.Domain do
 
         case count > 0 do
           true ->
-            domain_error = @errors.existing_child_business_concept
+            domain_error = @errors[:integrity_constraint][:business_concept]
             add_error(changeset, :domain, domain_error.name, code: domain_error.code)
 
           false ->
@@ -75,23 +82,29 @@ defmodule TdBg.Taxonomies.Domain do
     end
   end
 
-  defp validate_unique_name(changeset, %Domain{id: domain_id}) do
-    case changeset.valid? do
+  defp validate_unique(%Changeset{valid?: false} = changeset, _domain, _fields), do: changeset
+
+  defp validate_unique(%Changeset{valid?: true} = changeset, domain, fields) do
+    field_uniqueness(changeset, domain, fields)
+  end
+
+  defp field_uniqueness(changeset, _domain, []), do: changeset
+
+  defp field_uniqueness(changeset, %Domain{id: domain_id} = domain, [field | tail]) do
+    value = get_field(changeset, field)
+
+    case not unique_field?(field, value, domain_id) do
       true ->
-        domain_name = changeset |> get_field(:name)
-        {:count, :domain, count} = Taxonomies.count_domain_by_name(domain_name, domain_id)
-
-        case count > 0 do
-          true ->
-            domain_error = @errors.existing_domain_with_same_name
-            add_error(changeset, :domain, domain_error.name, code: domain_error.code)
-
-          false ->
-            changeset
-        end
+        error = @errors[:uniqueness][field]
+        add_error(changeset, :domain, error.name, code: error.code)
 
       false ->
-        changeset
+        field_uniqueness(changeset, domain, tail)
     end
   end
+
+  defp unique_field?(_field, nil, _domain_id), do: true
+
+  defp unique_field?(field, value, domain_id),
+    do: Taxonomies.count_by(field, value, domain_id) == 0
 end
