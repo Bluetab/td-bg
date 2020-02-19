@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 
+
+### Added
+
+- [TD-2328] External id in domain
+
 ## [3.14.0] 2020-01-27
 
 ### Changed

@@ -14,8 +14,8 @@ defmodule TdBgWeb.DomainControllerTest do
   alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
-  @create_attrs %{description: "some description", name: "some name"}
-  @update_attrs %{description: "some updated description", name: "some updated name"}
+  @create_attrs %{description: "some description", name: "some name", external_id: "domain external id"}
+  @update_attrs %{description: "some updated description", name: "some updated name", external_id: "domain external id"}
   @invalid_attrs %{description: nil, name: nil}
 
   @user_name "user"
@@ -98,6 +98,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert json_response_data["id"] == id
       assert json_response_data["description"] == "some description"
       assert json_response_data["name"] == "some name"
+      assert json_response_data["external_id"] == "domain external id"
       assert json_response_data["parent_id"] == nil
     end
 
@@ -127,6 +128,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert json_response(conn, 200)["data"]["description"] == "some updated description"
       assert json_response(conn, 200)["data"]["name"] == "some updated name"
       assert json_response(conn, 200)["data"]["parent_id"] == nil
+      assert json_response(conn, 200)["data"]["external_id"] == "domain external id"
     end
 
     @tag :admin_authenticated
