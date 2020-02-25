@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased] 
+## [3.16.0] 2020-02-25
 
 ### Added
 
-- [TD-2328] External id in domain
+- [TD-2328] Include `external_id` in domain model and API
 
 ## [3.14.0] 2020-01-27
 
