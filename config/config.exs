@@ -12,8 +12,6 @@ config :td_bg, :env, Mix.env()
 config :td_bg,
   ecto_repos: [TdBg.Repo]
 
-# Hashing algorithm
-config :td_bg, hashing_module: Comeonin.Bcrypt
 config :td_bg, index_worker: TdBg.Search.IndexWorker
 
 config :codepagex, :encodings, [

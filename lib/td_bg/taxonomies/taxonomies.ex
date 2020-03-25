@@ -172,13 +172,8 @@ defmodule TdBg.Taxonomies do
   end
 
   defp refresh_cache({:ok, %Domain{id: id}} = response) do
-    business_concept_ids =
-      id
-      |> get_parent_ids()
-      |> get_domain_concept_ids()
-
     DomainLoader.refresh(id)
-    IndexWorker.reindex(business_concept_ids)
+    IndexWorker.reindex(:all)
     response
   end
 
@@ -277,39 +272,5 @@ defmodule TdBg.Taxonomies do
 
     count = query |> Repo.one()
     {:count, :business_concept, count}
-  end
-
-  defp get_domain_concept_ids([]), do: []
-
-  defp get_domain_concept_ids(domain_ids) do
-    Repo.all(
-      from(b in BusinessConcept,
-        where: b.domain_id in ^domain_ids,
-        select: b.id
-      )
-    )
-  end
-
-  @doc """
-  Returns map of taxonomy tree structure
-  """
-  def tree do
-    d_list = list_root_domains() |> Enum.sort(&(&1.name < &2.name))
-    d_all = list_domains() |> Enum.sort(&(&1.name < &2.name))
-    Enum.map(d_list, fn d -> build_node(d, d_all) end)
-  end
-
-  defp build_node(%Domain{} = d, d_all) do
-    Map.merge(d, %{children: list_children(d, d_all)})
-  end
-
-  defp list_children(%Domain{} = node, d_all) do
-    d_children = Enum.filter(d_all, fn d -> node.id == d.parent_id end)
-
-    if d_children do
-      Enum.map(d_children, fn d -> build_node(d, d_all) end)
-    else
-      []
-    end
   end
 end

@@ -8,7 +8,6 @@ defmodule TdBg.Accounts.User do
             is_admin: false,
             email: nil,
             full_name: nil,
-            gids: [],
             groups: [],
             jti: nil
 

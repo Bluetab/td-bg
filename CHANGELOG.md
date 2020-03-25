@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unrelesed] 2020-02-25
+
+### Changed
+
+- [TD-2364]:
+  - Cache only updated domains
+  - Reindex all concepts on domain update
+  - Get domain information from database on reindex
+
 ## [3.16.0] 2020-02-25
 
 ### Added
