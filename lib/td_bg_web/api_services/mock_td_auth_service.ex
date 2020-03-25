@@ -35,7 +35,6 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
       password: password,
       is_admin: is_admin,
       email: email,
-      gids: created_groups |> Enum.map(& &1.id),
       groups: created_groups |> Enum.map(& &1.name)
     }
 

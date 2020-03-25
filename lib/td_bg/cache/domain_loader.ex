@@ -75,7 +75,7 @@ defmodule TdBg.Cache.DomainLoader do
   def load_domain_data(domains) do
     results =
       domains
-      |> Enum.map(&Map.take(&1, [:id, :name, :external_id]))
+      |> Enum.map(&Map.take(&1, [:id, :name, :external_id, :updated_at]))
       |> Enum.map(&Map.put(&1, :parent_ids, load_parent_ids(&1.id)))
       |> Enum.map(&TaxonomyCache.put_domain/1)
       |> Enum.map(fn {res, _} -> res end)
@@ -92,4 +92,5 @@ defmodule TdBg.Cache.DomainLoader do
     |> Taxonomies.get_ancestors_for_domain_id(false)
     |> Enum.map(& &1.id)
   end
+
 end

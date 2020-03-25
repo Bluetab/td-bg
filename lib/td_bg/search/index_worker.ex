@@ -39,11 +39,13 @@ defmodule TdBg.Search.IndexWorker do
   ## GenServer Callbacks
 
   @impl GenServer
-  def init(state) do
+  def init(_init_arg) do
     name = String.replace_prefix("#{__MODULE__}", "Elixir.", "")
     Logger.info("Running #{name}")
 
-    unless Application.get_env(:td_bg, :env) == :test do
+    state = %{env: Application.get_env(:td_bg, :env)}
+
+    unless state.env == :test do
       Process.send_after(self(), :migrate, 0)
     end
 
@@ -63,8 +65,10 @@ defmodule TdBg.Search.IndexWorker do
   end
 
   @impl GenServer
-  def handle_cast({:reindex, :all}, state) do
-    do_reindex(:all)
+  def handle_cast({:reindex, :all}, %{env: env} = state) do
+    unless env == :test do
+      do_reindex(:all)
+    end
 
     {:noreply, state}
   end
