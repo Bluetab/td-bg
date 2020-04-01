@@ -114,7 +114,7 @@ defmodule TdBg.Cache.ConceptLoader do
       events
       |> Enum.filter(&(&1.event == "add_rule"))
       |> Enum.flat_map(&read_concept_ids/1)
-    
+
     IndexWorker.reindex(:all)
 
     ids
