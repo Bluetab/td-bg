@@ -37,9 +37,9 @@ defmodule TdBg.Cache.ConceptLoader do
 
   ## EventStream.Consumer Callbacks
 
-  @impl true
+  @impl TdCache.EventStream.Consumer
   def consume(events) do
-    GenServer.call(__MODULE__, {:consume, events}, 20_000)
+    GenServer.call(__MODULE__, {:consume, events})
   end
 
   ## GenServer Callbacks
@@ -93,10 +93,31 @@ defmodule TdBg.Cache.ConceptLoader do
 
   @impl GenServer
   def handle_call({:consume, events}, _from, state) do
-    concept_ids = Enum.flat_map(events, &read_concept_ids/1)
+    concept_ids = reindex(events) ++ reindex_all(events)
     reply = cache_concepts(concept_ids)
-    IndexWorker.reindex(concept_ids)
     {:reply, reply, state}
+  end
+
+  defp reindex(events) do
+    ids =
+      events
+      |> Enum.filter(&(&1.event != "add_rule"))
+      |> Enum.flat_map(&read_concept_ids/1)
+
+    IndexWorker.reindex(ids)
+
+    ids
+  end
+
+  defp reindex_all(events) do
+    ids =
+      events
+      |> Enum.filter(&(&1.event == "add_rule"))
+      |> Enum.flat_map(&read_concept_ids/1)
+
+    IndexWorker.reindex(:all)
+
+    ids
   end
 
   ## Private functions

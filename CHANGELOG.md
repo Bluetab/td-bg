@@ -9,6 +9,8 @@
   - Reindex all concepts on domain update
   - Get domain information from database on reindex
 
+- [TD-1691] Reindex all concepts on event `add_rule`
+
 ## [3.16.0] 2020-02-25
 
 ### Added
