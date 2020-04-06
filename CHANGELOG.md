@@ -1,14 +1,10 @@
 # Changelog
 
-## [Unrelesed] 2020-02-25
+## [3.19.0] 2020-04-06
 
 ### Changed
 
-- [TD-2364]:
-  - Cache only updated domains
-  - Reindex all concepts on domain update
-  - Get domain information from database on reindex
-
+- [TD-2364] Generate event and reindex concepts when a domain is updated
 - [TD-1691] Reindex all concepts on event `add_rule`
 
 ## [3.16.0] 2020-02-25
@@ -44,7 +40,7 @@
 
 ### Added
 
-- [TD-1625] Support for df `table` type 
+- [TD-1625] Support for df `table` type
 - [TD-2084] Reindex concept on rule removal
 
 ## [3.6.0] 2019-09-16
