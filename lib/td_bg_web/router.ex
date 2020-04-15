@@ -1,10 +1,6 @@
 defmodule TdBgWeb.Router do
   use TdBgWeb, :router
 
-  @endpoint_url "#{Application.get_env(:td_bg, TdBgWeb.Endpoint)[:url][:host]}:#{
-                  Application.get_env(:td_bg, TdBgWeb.Endpoint)[:http][:port]
-                }"
-
   pipeline :api do
     plug(TdBg.Auth.Pipeline.Unsecure)
     plug(TdBgWeb.Locale)
@@ -70,13 +66,11 @@ defmodule TdBgWeb.Router do
 
   def swagger_info do
     %{
-      schemes: ["http"],
+      schemes: ["http", "https"],
       info: %{
-        version: "1.0",
-        title: "TdBg"
+        version: "3.10",
+        title: "Truedat Business Glossary Service"
       },
-      host: @endpoint_url,
-      # basePath: "/api",
       securityDefinitions: %{
         bearer: %{
           type: "apiKey",

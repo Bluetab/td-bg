@@ -22,8 +22,8 @@ config :codepagex, :encodings, [
 
 # Configures the endpoint
 config :td_bg, TdBgWeb.Endpoint,
+  http: [port: 4002],
   url: [host: "localhost"],
-  secret_key_base: "tOxTkbz1LLqsEmoRRhSorwFZm35yQbVPP/gdU3cFUYV5IdcoIRNroCeADl4ysBBg",
   render_errors: [view: TdBgWeb.ErrorView, accepts: ~w(json)]
 
 # Configures Elixir's Logger

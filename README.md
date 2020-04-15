@@ -1,6 +1,6 @@
 # Truedat Business Glossary
 
-TdBG is a back-end service developed as part of True Dat project that supports the genearation of a Business Glossary
+TdBG is a back-end service developed as part of the Truedat project that supports the generation of a Business Glossary
 
 ## Getting Started
 
@@ -14,15 +14,14 @@ To start your Phoenix server:
 
 ### Installing
 
-  * Create and migrate your database with `mix ecto.create && mix ecto.migrate`
-  * Start Phoenix endpoint with `mix phx.server`
+- Create and migrate your database with `mix ecto.create && mix ecto.migrate`
+- Start Phoenix endpoint with `mix phx.server`
 
-  * Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+- Now you can visit [`localhost:4002`](http://localhost:4002) from your browser.
 
 ## Running the tests
 
 Run all aplication tests with `mix test`
-
 
 ## Deployment
 
@@ -30,30 +29,26 @@ Ready to run in production? Please [check our deployment guides](http://www.phoe
 
 ## Built With
 
-* [Phoenix](http://www.phoenixframework.org/) - Web framework
-* [Ecto](http://www.phoenixframework.org/) - Phoenix and Ecto integration
-* [Postgrex](http://hexdocs.pm/postgrex/) - PostgreSQL driver for Elixir
-* [Gettext](https://hexdocs.pm/gettext) - Internationalization and localization support for Elixir
-* [Cowboy](https://ninenines.eu) - HTTP server for Erlang/OTP
-* [Cabbage](https://github.com/cabbage-ex/cabbage) - Story BDD tool
-* [httpoison](https://hex.pm/packages/httpoison) - HTTP client for Elixir
-* [edeliver](https://github.com/edeliver/edeliver) - Deployment for Elixir and Erlang
-* [distillery](https://github.com/bitwalker/distillery) - Release packaging for the Erlang VM
-* [credo](http://credo-ci.org/) - Static code analysis tool for the Elixir language
-* [guardian](https://github.com/ueberauth/guardian) - Authentication library
-* [canary](https://github.com/cpjk/canary) - Elixir authorization and resource-loading library
-* [canada](https://github.com/jarednorman/canada) - Permission definitions in Elixir apps
-* [ex_machina](https://hex.pm/packages/ex_machina) - Create test data for Elixir applications
-* [cors_plug](https://hex.pm/packages/cors_plug) - Elixir Plug to add CORS
-* [phoenix_swagger](https://github.com/xerions/phoenix_swagger) - Swagger integration to Phoenix framework
-* [ex_json_schema](https://github.com/jonasschmidt/ex_json_schema) - Elixir JSON Schema validator
-* [json_diff](https://github.com/jonasschmidt/ex_json_schema) - Elixir JSON Schema validator
-
-
+- [Phoenix](http://www.phoenixframework.org/) - Web framework
+- [Ecto](http://www.phoenixframework.org/) - Phoenix and Ecto integration
+- [Postgrex](http://hexdocs.pm/postgrex/) - PostgreSQL driver for Elixir
+- [Gettext](https://hexdocs.pm/gettext) - Internationalization and localization support for Elixir
+- [Cowboy](https://ninenines.eu) - HTTP server for Erlang/OTP
+- [Cabbage](https://github.com/cabbage-ex/cabbage) - Story BDD tool
+- [httpoison](https://hex.pm/packages/httpoison) - HTTP client for Elixir
+- [credo](http://credo-ci.org/) - Static code analysis tool for the Elixir language
+- [guardian](https://github.com/ueberauth/guardian) - Authentication library
+- [canary](https://github.com/cpjk/canary) - Elixir authorization and resource-loading library
+- [canada](https://github.com/jarednorman/canada) - Permission definitions in Elixir apps
+- [ex_machina](https://hex.pm/packages/ex_machina) - Create test data for Elixir applications
+- [corsica](https://hex.pm/packages/corsica) - Elixir Plug to add CORS
+- [phoenix_swagger](https://github.com/xerions/phoenix_swagger) - Swagger integration to Phoenix framework
+- [ex_json_schema](https://github.com/jonasschmidt/ex_json_schema) - Elixir JSON Schema validator
+- [json_diff](https://github.com/jonasschmidt/ex_json_schema) - Elixir JSON Schema validator
 
 ## Authors
 
-* **Bluetab Solutions Group, SL** - *Initial work* - [Bluetab](http://www.bluetab.net)
+- **Bluetab Solutions Group, SL** - _Initial work_ - [Bluetab](http://www.bluetab.net)
 
 See also the list of [contributors](https://github.com/bluetab/td-bg) who participated in this project.
 
@@ -66,6 +61,3 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 In order to use this software, it is necessary that, depending on the type of functionality that you want to obtain, it is assembled with other software whose license may be governed by other terms different than the GNU General Public License version 3 or later. In that case, it will be absolutely necessary that, in order to make a correct use of the software to be assembled, you give compliance with the rules of the concrete license (of Free Software or Open Source Software) of use in each case, as well as, where appropriate, obtaining of the permits that are necessary for these appropriate purposes.
-
-
-
