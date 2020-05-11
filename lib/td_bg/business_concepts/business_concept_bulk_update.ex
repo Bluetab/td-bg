@@ -113,7 +113,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     end
   end
 
-  defp content_fields(content = %{}) do
+  defp content_fields(%{} = content) do
     Enum.reduce(content, Map.new(), &non_empty/2)
   end
 
