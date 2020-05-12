@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2490] Permission checks for changing a domain's parent, include
+  `parentable_ids` in `/api/domains/:id` response if user can change parent.
+- Database pool size is now configurable by using the environment variable
+  `DB_POOL_SIZE`. The default value has changed from 10 to 5.
+
+### Removed
+
+- Removed deprecated `related_to` property on business concept versions
+
 ## [3.20.0] 2020-04-20
 
 ### Fixed
@@ -36,7 +49,8 @@
 ### Changed
 
 - [TD-1721] Reindex automatically when a template changes
-  - Breaking change: New environment variable ES_URL replaces existing ES_HOST/ES_PORT
+  - Breaking change: New environment variable `ES_URL` replaces existing
+    `ES_HOST`/`ES_PORT`
 
 ## [3.7.0] 2019-09-30
 
@@ -58,7 +72,8 @@
 
 ### Changed
 
-- [TD-2067] Added sortable normalizer to mappings of business concept domain name
+- [TD-2067] Added sortable normalizer to mappings of business concept domain
+  name
 
 ## [3.5.1] 2019-09-03
 
@@ -66,7 +81,8 @@
 
 - [TD-2074] Link count was not calculated correctly
 - [TD-2075] Rule count was not reindexed correctly
-- [TD-2081] Event stream consumer did not respect redis_host and port config options
+- [TD-2081] Event stream consumer did not respect redis_host and port config
+  options
 
 ## [3.5.0] 2019-09-02
 
@@ -91,7 +107,8 @@
 
 ### Added
 
-- [TD-1532] Improved linking with data structures, removing integration with td-dd
+- [TD-1532] Improved linking with data structures, removing integration with
+  td-dd
 
 ### Fixed
 
@@ -121,7 +138,8 @@
 
 ### Removed
 
-- [TD-1917] Remove unused functionality for business concept parent/children and aliases
+- [TD-1917] Remove unused functionality for business concept parent/children and
+  aliases
 
 ## [3.0.0] 2019-06-25
 
@@ -133,12 +151,14 @@
 
 ### Fixed
 
-- [TD-1701] Return business concepts non-dynamic content when related template does not exist on csv download
+- [TD-1701] Return business concepts non-dynamic content when related template
+  does not exist on csv download
 - [TD-1774] Newline is missing in logger format
 
 ### Added
 
-- [TD-1519] Initial Redis Loader will write business_concepts parents for migration
+- [TD-1519] Initial Redis Loader will write business_concepts parents for
+  migration
 
 ## [2.17.1] 2019-04-22
 
@@ -150,21 +170,26 @@
 
 ### Changed
 
-- [TD-1529] Search business concept versions now do not return deprecated or different versions of same bc
-- [TD-71] Additional functionality for searching concepts filtering by user apability of managing links
+- [TD-1529] Search business concept versions now do not return deprecated or
+  different versions of same bc
+- [TD-71] Additional functionality for searching concepts filtering by user
+  apability of managing links
 
 ## [2.16.0] 2019-04-01
 
 ### Added
 
-- [TD-1571] Elixir's Logger config will check for EX_LOGGER_FORMAT variable to override format
+- [TD-1571] Elixir's Logger config will check for `EX_LOGGER_FORMAT` variable to
+  override format
 
 ## [2.14.0] 2019-03-04
 
 ### Added
 
-- [TD-1085] Support filtering on empty values in fields with cardinality `+` or `*`
-- [TD-1422] Support for removing stale business concept relations (td_perms 2.14.0)
+- [TD-1085] Support filtering on empty values in fields with cardinality `+` or
+  `*`
+- [TD-1422] Support for removing stale business concept relations (td_perms
+  2.14.0)
 
 ### Changed
 
@@ -179,7 +204,8 @@
 ### Changed
 
 - Revised CSV Upload process:
-- It now uses entity helpers to create new concepts instead of hardcoded SQL statments
+- It now uses entity helpers to create new concepts instead of hardcoded SQL
+  statements
 - Added structural validations before trying to parse and insert values
 - Refactor messages for specific internationalization instead of general errors
 
@@ -187,7 +213,8 @@
 
 ### Removed
 
-- Deleted deprecated API endpoints and controller methods (refactored tests that used them)
+- Deleted deprecated API endpoints and controller methods (refactored tests that
+  used them)
 
 ## [2.12.3] 2019-01-31
 
@@ -224,7 +251,8 @@
 
 ### Fixed
 
-- [TD-1358] The search of the concept chidren of a role in a given domain should be performed over the full string of the field "Full Name"
+- [TD-1358] The search of the concept chidren of a role in a given domain should
+  be performed over the full string of the field "Full Name"
 
 ## [2.11.5] 2019-01-09
 
@@ -273,7 +301,8 @@
 
 ### Changed
 
-- New endpoint to query the count of business concepts in a domain filtering by a user name
+- New endpoint to query the count of business concepts in a domain filtering by
+  a user name
 - Update domain's name in Redis and Elastic when it recieves and update
 
 ## [2.10.0] 2018-12-12
@@ -292,7 +321,8 @@
 
 ### Changed
 
-- Added new aggregation to filter the nested list field "domain_parents" in elasticsearch
+- Added new aggregation to filter the nested list field `domain_parents` in
+  elasticsearch
 
 ## [2.8.4] 2018-11-22
 
@@ -304,14 +334,16 @@
 
 ### Changed
 
-- [TD-1076] Write published Business Concept Version parent and children to Redis
+- [TD-1076] Write published Business Concept Version parent and children to
+  Redis
 - Fault tolerant reindex_all when template no longer exists
 
 ## [2.8.2] 2018-11-15
 
 ### Changed
 
-- Fix error on reindex while trying to index a deprecated business concept with a deleted parent domain
+- Fix error on reindex while trying to index a deprecated business concept with
+  a deleted parent domain
 
 ## [2.8.1] 2018-11-15
 
@@ -347,19 +379,22 @@
 
 ### Changed
 
-- Use TdPerms.MockDynamicFormCache instead of TdBg.MockDfCache for DfCache testing
+- Use `TdPerms.MockDynamicFormCache` instead of `TdBg.MockDfCache` for DfCache
+  testing
 
 ## [2.7.3] 2018-11-06
 
 ### Added
 
-- Delete /api/templates endpoint
-- /api/domains/#id/templates endpoint now reads from Redis Cache written by Td-Df
+- Delete `/api/templates` endpoint
+- `/api/domains/:id/templates` endpoint now reads from Redis Cache written by
+  td-df
 
 ## [2.7.1] 2018-10-29
 
 ### Added
 
 - Deleting unused endpoints on search controller
-- Modify endpoint from /api/search/reindex_all to /api/business_concepts/search/reindex_all
+- Modify endpoint from `/api/search/reindex_all` to
+  `/api/business_concepts/search/reindex_all`
 - Verify if the user is admin while calling reindex_all

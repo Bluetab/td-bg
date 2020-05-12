@@ -60,6 +60,10 @@ defmodule TdBg.Canada.Abilities do
       TaxonomyAbilities.can?(user, :delete, domain)
     end
 
+    def can?(%User{} = user, :move, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :move, domain)
+    end
+
     def can?(%User{} = user, :create_business_concept, %Domain{} = domain) do
       BusinessConceptAbilities.can?(user, :create_business_concept, domain)
     end

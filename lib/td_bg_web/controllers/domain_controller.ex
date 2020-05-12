@@ -5,13 +5,9 @@ defmodule TdBgWeb.DomainController do
 
   import Canada, only: [can?: 2]
 
-  alias Canada.Can
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBg.Utils.CollectionUtils
-  alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
-  alias TdBgWeb.TaxonomySupport
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -19,32 +15,11 @@ defmodule TdBgWeb.DomainController do
     SwaggerDefinitions.domain_swagger_definitions()
   end
 
-  def options(conn, _params) do
-    current_user = conn.assigns.current_user
-
-    allowed_methods =
-      [
-        ["OPTIONS", true],
-        ["GET", can?(current_user, list(Domain))],
-        ["POST", can?(current_user, create(Domain))]
-      ]
-      |> Enum.filter(fn [_k, v] -> v end)
-      |> Enum.map(fn [k, _v] -> k end)
-      |> Enum.join(", ")
-
-    conn
-    |> put_resp_header("allow", allowed_methods)
-    |> send_resp(:no_content, "")
-  end
-
   swagger_path :index do
     description("List Domains")
 
     parameters do
-      actions(
-        :query,
-        :string,
-        "List of actions the user must be able to run over the domains",
+      actions(:query, :string, "List of actions the user must be able to run over the domains",
         required: false
       )
     end
@@ -56,30 +31,27 @@ defmodule TdBgWeb.DomainController do
     user = conn.assigns[:current_user]
     domains = Taxonomies.list_domains()
 
-    case params |> get_actions do
+    case get_actions(params) do
       [] ->
-        domains = domains |> Enum.filter(&can?(user, show(&1)))
+        domains = Enum.filter(domains, &can?(user, show(&1)))
 
-        render(
-          conn,
-          "index.json",
+        render(conn, "index.json",
           domains: domains,
           hypermedia: hypermedia("domain", conn, domains)
         )
 
       actions ->
         filtered_domains = Enum.filter(domains, &can_any?(actions, user, &1))
-
-        render(
-          conn,
-          "index_tiny.json",
-          domains: filtered_domains
-        )
+        render(conn, "index_tiny.json", domains: filtered_domains)
     end
   end
 
   defp can_any?(actions, user, domain) do
-    Enum.find(actions, nil, &Can.can?(user, String.to_atom(&1), domain)) != nil
+    alias Canada.Can
+
+    actions
+    |> Enum.map(&String.to_atom/1)
+    |> Enum.any?(&Can.can?(user, &1, domain))
   end
 
   defp get_actions(params) do
@@ -87,7 +59,7 @@ defmodule TdBgWeb.DomainController do
     |> Map.get("actions", "")
     |> String.split(",")
     |> Enum.map(&String.trim/1)
-    |> Enum.filter(&(&1 !== ""))
+    |> Enum.reject(&(&1 == ""))
   end
 
   swagger_path :create do
@@ -104,60 +76,14 @@ defmodule TdBgWeb.DomainController do
 
   def create(conn, %{"domain" => domain_params}) do
     current_user = conn.assigns[:current_user]
-    domain = %Domain{} |> Map.merge(CollectionUtils.to_struct(Domain, domain_params))
 
-    domain_parent =
-      case Map.has_key?(domain_params, "parent_id") do
-        false -> domain
-        true -> Taxonomies.get_domain!(domain_params["parent_id"])
-      end
-
-    if can?(current_user, create(domain_parent)) do
-      do_create(conn, domain_params)
-    else
+    with %Domain{} = domain <- Taxonomies.apply_changes(Domain, domain_params),
+         {:can, true} <- {:can, can?(current_user, create(domain))},
+         {:ok, %Domain{} = domain} <- Taxonomies.create_domain(domain_params) do
       conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
-    end
-  end
-
-  defp do_create(conn, domain_params) do
-    parent_id = Taxonomies.get_parent_id(domain_params)
-
-    status =
-      case parent_id do
-        {:ok, _parent} -> Taxonomies.create_domain(domain_params)
-        {:error, _} -> {:error, nil}
-      end
-
-    case status do
-      {:ok, %Domain{} = domain} ->
-        conn =
-          conn
-          |> put_status(:created)
-          |> put_resp_header("location", Routes.domain_path(conn, :show, domain))
-          |> render("show.json", domain: domain)
-
-        conn
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(TdBgWeb.ChangesetView)
-        |> render("error.json", changeset: changeset)
-
-      {:error, nil} ->
-        conn
-        |> put_status(:not_found)
-        |> put_view(ErrorView)
-        |> render("404.json")
-
-      _ ->
-        conn
-        |> put_status(:internal_server_error)
-        |> put_view(ErrorView)
-        |> render("500.json")
+      |> put_status(:created)
+      |> put_resp_header("location", Routes.domain_path(conn, :show, domain))
+      |> render("show.json", domain: domain)
     end
   end
 
@@ -175,23 +101,16 @@ defmodule TdBgWeb.DomainController do
 
   def show(conn, %{"id" => id}) do
     current_user = conn.assigns[:current_user]
-    domain = Taxonomies.get_domain!(id)
 
-    if can?(current_user, show(domain)) do
-      do_show(conn, domain)
-    else
-      conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
+    with domain <- Taxonomies.get_domain!(id),
+         {:can, true} <- {:can, can?(current_user, show(domain))},
+         parentable_ids <- Taxonomies.get_parentable_ids(current_user, domain) do
+      render(conn, "show.json",
+        domain: domain,
+        parentable_ids: parentable_ids,
+        hypermedia: hypermedia("domain", conn, domain)
+      )
     end
-  end
-
-  defp do_show(conn, domain) do
-    render(conn, "show.json",
-      domain: domain,
-      hypermedia: hypermedia("domain", conn, domain)
-    )
   end
 
   swagger_path :update do
@@ -209,22 +128,30 @@ defmodule TdBgWeb.DomainController do
 
   def update(conn, %{"id" => id, "domain" => domain_params}) do
     current_user = conn.assigns[:current_user]
-    domain = Taxonomies.get_domain!(id)
 
-    if can?(current_user, update(domain)) do
-      do_update(conn, domain, domain_params)
-    else
-      conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
+    with {:ok, domain} <- Taxonomies.get_domain(id),
+         {:can, true} <- {:can, can_update?(current_user, domain, domain_params)},
+         {:ok, %Domain{} = updated_domain} <- Taxonomies.update_domain(domain, domain_params) do
+      render(conn, "show.json", domain: updated_domain)
     end
   end
 
-  defp do_update(conn, domain, domain_params) do
-    with {:ok, %Domain{} = updated_domain} <- Taxonomies.update_domain(domain, domain_params) do
-      render(conn, "show.json", domain: updated_domain)
-    end
+  defp can_update?(current_user, %{parent_id: id} = domain, %{parent_id: id} = _new_domain) do
+    can?(current_user, update(domain))
+  end
+
+  defp can_update?(current_user, %{parent_id: _} = domain, %{parent_id: _} = new_domain) do
+    # Changing parent_id requires delete/update permission on existing domain
+    # and create permission on new domain
+    Enum.all?([
+      can?(current_user, move(domain)),
+      can?(current_user, create(new_domain))
+    ])
+  end
+
+  defp can_update?(current_user, %Domain{} = domain, %{} = params) do
+    new_domain = Taxonomies.apply_changes(domain, params)
+    can_update?(current_user, domain, new_domain)
   end
 
   swagger_path :delete do
@@ -241,22 +168,11 @@ defmodule TdBgWeb.DomainController do
 
   def delete(conn, %{"id" => id}) do
     current_user = conn.assigns[:current_user]
-    domain = Taxonomies.get_domain!(id)
 
-    if can?(current_user, delete(domain)) do
-      do_delete(conn, domain)
-    else
-      conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
-    end
-  end
-
-  defp do_delete(conn, domain) do
-    case Taxonomies.delete_domain(domain) do
-      {:ok, %Domain{}} -> send_resp(conn, :no_content, "")
-      error -> TaxonomySupport.handle_taxonomy_errors_on_delete(conn, error)
+    with {:ok, domain} <- Taxonomies.get_domain(id),
+         {:can, true} <- {:can, can?(current_user, delete(domain))},
+         {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
+      send_resp(conn, :no_content, "")
     end
   end
 
@@ -278,16 +194,11 @@ defmodule TdBgWeb.DomainController do
 
   def count_bc_in_domain_for_user(conn, %{"domain_id" => id, "user_name" => user_name}) do
     current_user = conn.assigns[:current_user]
-    domain = Taxonomies.get_domain!(id)
 
-    if can?(current_user, show(domain)) do
-      counter = id |> Taxonomies.count_existing_users_with_roles(user_name)
+    with {:ok, domain} <- Taxonomies.get_domain(id),
+         {:can, true} <- {:can, can?(current_user, show(domain))} do
+      counter = Taxonomies.count_existing_users_with_roles(id, user_name)
       render(conn, "domain_bc_count.json", counter: counter)
-    else
-      conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
     end
   end
 end

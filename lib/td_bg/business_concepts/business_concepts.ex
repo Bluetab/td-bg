@@ -27,7 +27,7 @@ defmodule TdBg.BusinessConcepts do
 
   def check_business_concept_name_availability(type, name, _exclude_concept_id)
       when is_nil(name) or is_nil(type),
-      do: {:name_available}
+      do: :ok
 
   def check_business_concept_name_availability(type, name, exclude_concept_id) do
     status = [BusinessConcept.status().versioned, BusinessConcept.status().deprecated]
@@ -39,19 +39,18 @@ defmodule TdBg.BusinessConcepts do
     |> select([c, v], count(c.id))
     |> Repo.one!()
     |> case do
-      0 -> {:name_available}
-      _ -> {:name_not_available}
+      0 -> :ok
+      _ -> {:error, :name_not_available}
     end
   end
 
   defp include_name_where(query, name, nil) do
-    query
-    |> where([_, v], fragment("lower(?)", v.name) == ^String.downcase(name))
+    where(query, [_, v], fragment("lower(?)", v.name) == ^String.downcase(name))
   end
 
   defp include_name_where(query, name, exclude_concept_id) do
-    query
-    |> where(
+    where(
+      query,
       [c, v],
       c.id != ^exclude_concept_id and fragment("lower(?)", v.name) == ^String.downcase(name)
     )
@@ -205,33 +204,19 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Creates a business_concept.
+  Creates a business_concept. If the `:index` option is set to `true`, the
+  concept will be reindexed on successful creation.
 
   ## Examples
 
-      iex> create_business_concept(%{field: value})
+      iex> create_business_concept(%{field: value}, index: true)
       {:ok, %BusinessConceptVersion{}}
 
       iex> create_business_concept(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_business_concept_and_index(attrs \\ %{}) do
-    result = create_business_concept(attrs)
-
-    case result do
-      {:ok, business_concept_version} ->
-        new_version = get_business_concept_version!(business_concept_version.id)
-        business_concept_id = new_version.business_concept_id
-        ConceptLoader.refresh(business_concept_id)
-        {:ok, new_version}
-
-      _ ->
-        result
-    end
-  end
-
-  def create_business_concept(attrs \\ %{}) do
+  def create_business_concept(attrs, opts \\ []) do
     attrs
     |> attrs_keys_to_atoms
     |> raise_error_if_no_content_schema
@@ -241,7 +226,16 @@ defmodule TdBg.BusinessConcepts do
     |> validate_description
     |> validate_concept_content
     |> insert_concept
+    |> index_on_success(opts[:index])
   end
+
+  defp index_on_success({:ok, %{id: id} = _business_concept_version}, true) do
+    %{business_concept_id: business_concept_id} = bcv = get_business_concept_version!(id)
+    ConceptLoader.refresh(business_concept_id)
+    {:ok, bcv}
+  end
+
+  defp index_on_success(result, _), do: result
 
   defp format_content(%{content: content} = attrs) when not is_nil(content) do
     content =
@@ -461,7 +455,7 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def get_concept_counts(business_concept_id) do
-    case ConceptCache.get(business_concept_id, [refresh: true]) do
+    case ConceptCache.get(business_concept_id, refresh: true) do
       {:ok, %{rule_count: rule_count, link_count: link_count}} ->
         %{rule_count: rule_count, link_count: link_count}
 
@@ -889,14 +883,6 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
-  def check_valid_related_to(_type, []), do: {:valid_related_to}
-
-  def check_valid_related_to(type, ids) do
-    input_count = length(ids)
-    actual_count = count_published_business_concepts(type, ids)
-    if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
-  end
-
   def diff(%BusinessConceptVersion{} = old, %BusinessConceptVersion{} = new) do
     old_content = Map.get(old, :content, %{})
     new_content = Map.get(new, :content, %{})
@@ -944,5 +930,23 @@ defmodule TdBg.BusinessConcepts do
     case get_template(bcv) do
       template -> Templates.completeness(content, template)
     end
+  end
+
+  @doc """
+  Returns count of business concepts applying clauses dynamically
+  """
+  def count(clauses) do
+    clauses
+    |> Enum.reduce(BusinessConcept, fn
+      {:domain_id, domain_id}, q ->
+        where(q, [d], d.domain_id == ^domain_id)
+
+      {:deprecated, false}, q ->
+        q
+        |> join(:inner, [c], bcv in assoc(c, :versions))
+        |> where([c, bcv], bcv.current == true and bcv.status != "deprecated")
+    end)
+    |> select([_], count())
+    |> Repo.one!()
   end
 end

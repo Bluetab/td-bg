@@ -20,7 +20,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     attrs =
       fields
-      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> field_value_to_api_attrs(fixed_values())
       |> Map.put("in_progress", false)
 
     domain = get_domain_by_name(token_admin, domain_name)
@@ -46,7 +46,7 @@ defmodule TdBg.BusinessConceptSteps do
     assert rc_ok() == to_response_code(http_status_code)
     assert business_concept_version["name"] == business_concept_name
     assert business_concept_version["domain"]["id"] == domain["id"]
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs = field_value_to_api_attrs(fields, fixed_values())
     assert_attrs(attrs, business_concept_version)
     {:ok, state}
   end
@@ -77,7 +77,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     attrs =
       fields
-      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> field_value_to_api_attrs(fixed_values())
       |> Map.put("in_progress", false)
 
     business_concept_version_create(token_admin, domain["id"], attrs)
@@ -112,7 +112,7 @@ defmodule TdBg.BusinessConceptSteps do
          %{token_admin: token_admin} = state do
     attrs =
       fields
-      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> field_value_to_api_attrs(fixed_values())
       |> Map.put("in_progress", false)
 
     domain = get_domain_by_name(token_admin, domain_name)
@@ -141,7 +141,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     attrs =
       fields
-      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> field_value_to_api_attrs(fixed_values())
       |> Map.put("in_progress", false)
 
     {_, status_code, json_resp} =
@@ -171,7 +171,7 @@ defmodule TdBg.BusinessConceptSteps do
         business_concept_version_show(token, business_concept_tmp["id"])
 
       assert rc_ok() == to_response_code(http_status_code)
-      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+      attrs = field_value_to_api_attrs(fields, fixed_values())
       assert_attrs(attrs, business_concept_version)
       {:ok, Map.merge(state, %{business_concept_version: business_concept_version})}
     else
@@ -371,7 +371,7 @@ defmodule TdBg.BusinessConceptSteps do
         business_concept_version_show(token, business_concept_version["id"])
 
       assert rc_ok() == to_response_code(http_status_code)
-      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+      attrs = field_value_to_api_attrs(fields, fixed_values())
       assert_attrs(attrs, business_concept_version)
       {:ok, Map.merge(state, %{business_concept_version: business_concept_version})}
     else
@@ -392,7 +392,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     attrs =
       fields
-      |> field_value_to_api_attrs(token_admin, fixed_values())
+      |> field_value_to_api_attrs(fixed_values())
       |> Map.put("in_progress", false)
 
     published = BusinessConcept.status().published
@@ -492,7 +492,7 @@ defmodule TdBg.BusinessConceptSteps do
         business_concept_version_show(token, business_concept_version["id"])
 
       assert rc_ok() == to_response_code(http_status_code)
-      attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+      attrs = field_value_to_api_attrs(fields, fixed_values())
       assert_attrs(attrs, business_concept_version)
       {:ok, state}
     else
@@ -527,7 +527,7 @@ defmodule TdBg.BusinessConceptSteps do
       business_concept_version_show(token, business_concept_version["id"])
 
     assert rc_ok() == to_response_code(http_status_code)
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs = field_value_to_api_attrs(fields, fixed_values())
     assert_attrs(attrs, business_concept_version)
     {:ok, state}
   end
@@ -651,7 +651,7 @@ defmodule TdBg.BusinessConceptSteps do
       business_concept_version_show(token, business_concept_version["id"])
 
     assert rc_ok() == to_response_code(http_status_code)
-    attrs = field_value_to_api_attrs(fields, token_admin, fixed_values())
+    attrs = field_value_to_api_attrs(fields, fixed_values())
     assert_attrs(attrs, business_concept_version)
   end
 
@@ -807,14 +807,13 @@ defmodule TdBg.BusinessConceptSteps do
   def map_keys_to_atoms(version),
     do: Map.new(version, &{String.to_atom(elem(&1, 0)), elem(&1, 1)})
 
-  def field_value_to_api_attrs(table, token, fixed_values) do
+  def field_value_to_api_attrs(table, fixed_values) do
     table
     |> Enum.reduce(%{}, fn x, acc ->
       Map.put(acc, Map.get(fixed_values, x."Field", x."Field"), x."Value")
     end)
     |> Map.split(Map.values(fixed_values))
     |> (fn {f, v} -> Map.put(f, "content", v) end).()
-    |> load_related_to_ids(token)
   end
 
   def business_concept_with_state_create(table, token, domain) do
@@ -830,7 +829,7 @@ defmodule TdBg.BusinessConceptSteps do
           business_concept_version
           |> Map.delete(:Status)
           |> Enum.map(fn {k, v} -> %{Field: Atom.to_string(k), Value: v} end)
-          |> field_value_to_api_attrs(token, fixed_values())
+          |> field_value_to_api_attrs(fixed_values())
 
         {_, 201, _} = business_concept_version_create(token, domain["id"], attrs)
 
@@ -839,7 +838,7 @@ defmodule TdBg.BusinessConceptSteps do
           business_concept_version
           |> Map.delete(:Status)
           |> Enum.map(fn {k, v} -> %{Field: Atom.to_string(k), Value: v} end)
-          |> field_value_to_api_attrs(token, fixed_values())
+          |> field_value_to_api_attrs(fixed_values())
 
         {_, 201, %{"data" => business_concept_version}} =
           business_concept_version_create(token, domain["id"], attrs)
@@ -858,29 +857,6 @@ defmodule TdBg.BusinessConceptSteps do
 
       "deprecated" ->
         nil
-    end
-  end
-
-  def load_related_to_ids(attrs, token) do
-    related_to =
-      case Map.has_key?(attrs, "related_to") do
-        true -> Map.get(attrs, "related_to")
-        _ -> ""
-      end
-
-    case related_to do
-      "" ->
-        attrs
-
-      _ ->
-        related_to_ids =
-          related_to
-          |> String.split(",")
-          |> Enum.map(
-            &business_concept_version_by_name(token, String.trim(&1))["business_concept_id"]
-          )
-
-        Map.put(attrs, "related_to", related_to_ids)
     end
   end
 end
