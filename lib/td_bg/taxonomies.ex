@@ -5,9 +5,8 @@ defmodule TdBg.Taxonomies do
 
   import Ecto.Query, warn: false
 
+  alias Ecto.Changeset
   alias TdBg.BusinessConcept.Search
-  alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.DomainLoader
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
@@ -39,34 +38,16 @@ defmodule TdBg.Taxonomies do
   end
 
   @doc """
-  Returns children of domain id passed as argument
+  Returns count of domains applying clauses dynamically
   """
-  def count_domain_children(id) do
-    count =
-      Repo.one(
-        from(r in Domain, select: count(r.id), where: r.parent_id == ^id and is_nil(r.deleted_at))
-      )
-
-    {:count, :domain, count}
-  end
-
-  @doc """
-  Returns a count of the existing domains with the same name and which
-  haven't been deleted
-  """
-  def count_by(field, value, domain_id) do
-    Domain
-    |> count_by_field(field, value, domain_id)
-    |> select([r], count(r.id))
-    |> Repo.one()
-  end
-
-  defp count_by_field(query, field, value, nil) do
-    where(query, [r], field(r, ^field) == ^value and is_nil(r.deleted_at))
-  end
-
-  defp count_by_field(query, field, value, domain_id) do
-    where(query, [r], field(r, ^field) == ^value and is_nil(r.deleted_at) and r.id != ^domain_id)
+  def count(clauses) do
+    clauses
+    |> Enum.reduce(Domain, fn
+      {:deleted_at, nil}, q -> where(q, [d], is_nil(d.deleted_at))
+      {:parent_id, parent_id}, q -> where(q, [d], d.parent_id == ^parent_id)
+    end)
+    |> select([_], count())
+    |> Repo.one!()
   end
 
   @doc """
@@ -88,7 +69,13 @@ defmodule TdBg.Taxonomies do
   end
 
   def get_domain(id) do
-    Repo.one(from(r in Domain, where: r.id == ^id and is_nil(r.deleted_at)))
+    Domain
+    |> where([d], d.id == ^id and is_nil(d.deleted_at))
+    |> Repo.one()
+    |> case do
+      nil -> {:error, :not_found}
+      domain -> {:ok, domain}
+    end
   end
 
   def get_parent_ids(nil), do: []
@@ -145,7 +132,7 @@ defmodule TdBg.Taxonomies do
     case result do
       {:ok, domain} ->
         DomainLoader.refresh(domain.id)
-        {:ok, get_domain!(domain.id)}
+        get_domain(domain.id)
 
       _ ->
         result
@@ -171,8 +158,8 @@ defmodule TdBg.Taxonomies do
     |> refresh_cache()
   end
 
-  defp refresh_cache({:ok, %Domain{id: id}} = response) do
-    DomainLoader.refresh(id)
+  defp refresh_cache({:ok, %Domain{}} = response) do
+    DomainLoader.refresh(:all)
     IndexWorker.reindex(:all)
     response
   end
@@ -192,85 +179,69 @@ defmodule TdBg.Taxonomies do
 
   """
   def delete_domain(%Domain{id: id} = domain) do
-    updated_domain =
-      domain
-      |> Domain.delete_changeset()
-      |> Repo.update()
+    changeset = Domain.delete_changeset(domain)
 
-    case updated_domain do
-      {:ok, struct} ->
-        DomainLoader.delete(id)
-        {:ok, struct}
+    with {:domains, 0} <- {:domains, count(parent_id: id, deleted_at: nil)},
+         {:concepts, 0} <- {:concepts, current_concept_count(domain)},
+         {:ok, domain} <- Repo.update(changeset) do
+      DomainLoader.delete(id)
+      {:ok, domain}
+    else
+      {:domains, _} ->
+        {:error, Changeset.add_error(changeset, :domain, "existing.domain", code: "ETD001")}
 
-      error ->
-        error
+      {:concepts, _} ->
+        {:error,
+         Changeset.add_error(changeset, :domain, "existing.business.concept", code: "ETD002")}
+    end
+  end
+
+  defp current_concept_count(%Domain{id: id}) do
+    TdBg.BusinessConcepts.count(domain_id: id, deprecated: false)
+  end
+
+  @doc """
+  Returns a domain with changes applied, ignoring validations. Note that changes
+  are not persisted to the Repo. See `Changeset.apply_changes/1`.
+  """
+  def apply_changes(%Domain{} = domain, %{} = params) do
+    domain
+    |> Domain.changeset(params)
+    |> Changeset.apply_changes()
+  end
+
+  def apply_changes(Domain, %{} = params) do
+    params
+    |> Domain.changeset()
+    |> Changeset.apply_changes()
+  end
+
+  @doc """
+  Returns the list of domain ids to which a user can move a domain. Note that a
+  domain's parent cannot be itself or any descendent domain.
+
+  In order to move a domain, the user must have permissions `:delete_domain` and
+  `:update_domain` on the domain to move, and `:create_domain` on the new parent
+  domain.
+  """
+  def get_parentable_ids(user, %Domain{id: id} = domain) do
+    import Canada, only: [can?: 2]
+
+    if can?(user, move(domain)) do
+      descendent_ids = descendent_ids(id)
+
+      list_domains()
+      |> Enum.reject(&Enum.member?(descendent_ids, &1.id))
+      |> Enum.filter(&can?(user, create(&1)))
+      |> Enum.map(& &1.id)
+    else
+      []
     end
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking domain changes.
-
-  ## Examples
-
-      iex> change_domain(domain)
-      %Ecto.Changeset{source: %Domain{}}
-
+  Returns the list of domain ids which are descendents of a given `domain_id`,
+  including itself.
   """
-  def change_domain(%Domain{} = domain) do
-    Domain.changeset(domain, %{})
-  end
-
-  @doc """
-  Obtain the ancestors of a given domain. If the second parameter is true,
-  the domain itself will be included in the list of ancestors.
-  """
-  def get_domain_ancestors(nil, _), do: []
-
-  def get_domain_ancestors(domain, false) do
-    get_ancestors_for_domain_id(domain.parent_id, true)
-  end
-
-  def get_domain_ancestors(domain, true) do
-    [domain | get_ancestors_for_domain_id(domain.parent_id, true)]
-  end
-
-  def get_ancestors_for_domain_id(domain_id, with_self \\ true)
-  def get_ancestors_for_domain_id(nil, _), do: []
-
-  def get_ancestors_for_domain_id(domain_id, with_self) do
-    domain = get_domain(domain_id)
-    get_domain_ancestors(domain, with_self)
-  end
-
-  def get_parent_id(nil) do
-    {:error, nil}
-  end
-
-  def get_parent_id(%{parent_id: nil}) do
-    {:ok, nil}
-  end
-
-  def get_parent_id(%{parent_id: parent_id}) do
-    get_parent_id(get_domain(parent_id))
-  end
-
-  def get_parent_id(parent_id) do
-    {:ok, parent_id}
-  end
-
-  def count_domain_business_concept_children(id) do
-    query =
-      from(b in BusinessConcept,
-        where: b.domain_id == ^id,
-        join: bv in BusinessConceptVersion,
-        where:
-          b.id == bv.business_concept_id and
-            bv.status != "deprecated" and
-            bv.current == true,
-        select: count(b.id)
-      )
-
-    count = query |> Repo.one()
-    {:count, :business_concept, count}
-  end
+  defdelegate descendent_ids(domain_id), to: __MODULE__.Tree
 end

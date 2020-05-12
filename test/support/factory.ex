@@ -17,18 +17,9 @@ defmodule TdBg.Factory do
 
   def domain_factory do
     %TdBg.Taxonomies.Domain{
-      name: "My domain",
-      description: "My domain description",
-      external_id: "My external id"
-    }
-  end
-
-  def child_domain_factory do
-    %TdBg.Taxonomies.Domain{
-      name: "My child domain",
-      description: "My child domain description",
-      external_id: "My child external id",
-      parent: build(:domain)
+      name: sequence("domain_name"),
+      description: sequence("domain_description"),
+      external_id: sequence("domain_external_id")
     }
   end
 
@@ -45,7 +36,6 @@ defmodule TdBg.Factory do
     %BusinessConceptVersion{
       business_concept: build(:business_concept),
       content: %{},
-      related_to: [],
       name: "My business term",
       description: %{"document" => "My business term description"},
       last_change_by: 1,

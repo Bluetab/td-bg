@@ -164,7 +164,6 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Map.put("content", content)
         |> Map.put("business_concept", business_concept_attrs)
         |> Map.put("content_schema", content_schema)
-        |> Map.update("related_to", [], & &1)
         |> Map.put("last_change_by", user.id)
         |> Map.put("last_change_at", DateTime.utc_now())
         |> Map.put("status", BusinessConcept.status().draft)
@@ -196,8 +195,8 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp validate_name(%{"name" => name, "template" => template}) do
     case BusinessConcepts.check_business_concept_name_availability(template, name) do
-      {:name_available} -> {:ok}
-      _ -> {:error, %{error: :name_not_available, name: name}}
+      :ok -> {:ok}
+      {:error, error} -> {:error, %{error: error, name: name}}
     end
   end
 

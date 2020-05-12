@@ -52,7 +52,6 @@ business_concept = Repo.insert!(%BusinessConcept{
 
 Repo.insert!(%BusinessConceptVersion{
   content: %{},
-  related_to: [],
   description: %{document: %{object: "block", type: "paragraph", nodes: [%{object: "text", leaves: [%{text: "Description"}]}]}},
   last_change_at: DateTime.utc_now(),
   mod_comments: "Mod comments",

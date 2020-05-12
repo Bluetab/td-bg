@@ -21,8 +21,7 @@ config :td_bg, TdBg.Repo,
   username: "postgres",
   password: "postgres",
   database: "td_bg_dev",
-  hostname: "localhost",
-  pool_size: 10
+  hostname: "localhost"
 
 config :td_cache, redis_host: "localhost"
 

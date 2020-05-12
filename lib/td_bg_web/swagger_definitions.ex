@@ -31,6 +31,13 @@ defmodule TdBgWeb.SwaggerDefinitions do
             _actions: %{}
           })
         end,
+      DomainIds:
+        swagger_schema do
+          title("Domain Ids")
+          description("An array of Domain Ids")
+          type(:array)
+          items(%{type: :integer})
+        end,
       Domain:
         swagger_schema do
           title("Domain")
@@ -43,6 +50,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             type([:string, :null], "type")
             description(:string, "description")
             parent_id([:integer, :null], "Domain id")
+            parentable_ids(Schema.ref(:DomainIds))
           end
 
           example(%{
@@ -193,14 +201,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
             business_concept_id(:integer, "Business Concept unique id", required: true)
             type(:string, "Business Concept type", required: true)
             content(:object, "Business Concept Version content", required: true)
-
-            related_to(
-              :array,
-              "Related Business Concepts",
-              items: %{type: :integer},
-              required: true
-            )
-
             name(:string, "Business Concept Version name", required: true)
             description(:object, "Business Concept Version description", required: true)
             last_change_by(:integer, "Business Concept Version last change by", required: true)

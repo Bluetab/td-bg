@@ -19,7 +19,6 @@ defmodule TdBg.BusinessConcepts.Events do
       :last_change_at,
       :last_change_by,
       :name,
-      :related_to,
       :status,
       :version,
       :business_concept_id,

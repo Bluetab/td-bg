@@ -6,7 +6,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
 
   @create_attrs %{
     content: %{},
-    related_to: [],
     name: "some name",
     last_change_by: 1,
     last_change_at: DateTime.utc_now(),

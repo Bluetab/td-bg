@@ -11,7 +11,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   schema "business_concept_versions" do
     field(:content, :map)
-    field(:related_to, {:array, :integer})
     field(:description, :map)
     field(:last_change_at, :utc_datetime_usec)
     field(:mod_comments, :string)
@@ -32,7 +31,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(attrs, [
       :content,
-      :related_to,
       :name,
       :description,
       :last_change_by,
@@ -44,7 +42,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> put_assoc(:business_concept, attrs.business_concept)
     |> validate_required([
       :content,
-      :related_to,
       :name,
       :last_change_by,
       :last_change_at,
@@ -62,7 +59,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(attrs, [
       :content,
-      :related_to,
       :name,
       :description,
       :last_change_by,
@@ -74,7 +70,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> put_change(:status, BusinessConcept.status().draft)
     |> validate_required([
       :content,
-      :related_to,
       :name,
       :last_change_by,
       :last_change_at,

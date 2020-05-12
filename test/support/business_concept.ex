@@ -21,7 +21,6 @@ defmodule TdBgWeb.BusinessConcept do
       "Version" => "version",
       "Reject Reason" => "reject_reason",
       "Modification Comments" => "mod_comments",
-      "Related To" => "related_to",
       "In Progress" => "in_progress"
     }
 

@@ -7,12 +7,7 @@ defmodule TdBg.Taxonomies.Domain do
 
   import Ecto.Changeset
 
-  alias Ecto.Changeset
-  alias TdBg.ErrorConstantsSupport
   alias TdBg.Taxonomies
-  alias TdBg.Taxonomies.Domain
-
-  @errors ErrorConstantsSupport.taxonomy_support_errors()
 
   schema "domains" do
     field(:description, :string)
@@ -20,91 +15,40 @@ defmodule TdBg.Taxonomies.Domain do
     field(:name, :string)
     field(:external_id, :string)
     field(:deleted_at, :utc_datetime_usec)
-    belongs_to(:parent, Domain)
+    belongs_to(:parent, __MODULE__)
 
     timestamps(type: :utc_datetime_usec)
   end
 
-  @doc false
-  def changeset(%Domain{} = domain, attrs) do
+  def changeset(%{} = params) do
+    changeset(%__MODULE__{}, params)
+  end
+
+  def changeset(%__MODULE__{} = domain, attrs) do
     domain
     |> cast(attrs, [:name, :type, :description, :parent_id, :external_id])
     |> validate_required([:name])
-    |> validate_unique(domain, [:name, :external_id])
+    |> unique_constraint(:external_id)
+    |> unique_constraint(:name)
+    |> validate_parent_id(domain)
+    |> foreign_key_constraint(:parent_id, name: :domains_parent_id_fkey)
   end
 
-  def delete_changeset(%Domain{} = domain) do
-    domain
-    |> change(deleted_at: DateTime.utc_now())
-    |> validate_domain_children()
-    |> validate_existing_bc_children()
+  def delete_changeset(%__MODULE__{} = domain) do
+    change(domain, deleted_at: DateTime.utc_now())
   end
 
-  defp validate_domain_children(changeset) do
-    case changeset.valid? do
-      true ->
-        domain_id = changeset |> get_field(:id)
-        {:count, :domain, count} = Taxonomies.count_domain_children(domain_id)
+  defp validate_parent_id(%Ecto.Changeset{valid?: false} = changeset, _domain), do: changeset
+  defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{id: nil}), do: changeset
 
-        case count > 0 do
-          true ->
-            domain_error = @errors[:integrity_constraint][:domain]
-            add_error(changeset, :domain, domain_error.name, code: domain_error.code)
-
-          false ->
-            changeset
-        end
-
-      _ ->
-        changeset
-    end
+  defp validate_parent_id(
+         %Ecto.Changeset{changes: %{parent_id: parent_id}} = changeset,
+         %__MODULE__{id: id}
+       )
+       when not is_nil(parent_id) do
+    descendent_ids = Taxonomies.descendent_ids(id)
+    validate_exclusion(changeset, :parent_id, descendent_ids)
   end
 
-  defp validate_existing_bc_children(changeset) do
-    case changeset.valid? do
-      true ->
-        domain_id = changeset |> get_field(:id)
-
-        {:count, :business_concept, count} =
-          Taxonomies.count_domain_business_concept_children(domain_id)
-
-        case count > 0 do
-          true ->
-            domain_error = @errors[:integrity_constraint][:business_concept]
-            add_error(changeset, :domain, domain_error.name, code: domain_error.code)
-
-          false ->
-            changeset
-        end
-
-      false ->
-        changeset
-    end
-  end
-
-  defp validate_unique(%Changeset{valid?: false} = changeset, _domain, _fields), do: changeset
-
-  defp validate_unique(%Changeset{valid?: true} = changeset, domain, fields) do
-    field_uniqueness(changeset, domain, fields)
-  end
-
-  defp field_uniqueness(changeset, _domain, []), do: changeset
-
-  defp field_uniqueness(changeset, %Domain{id: domain_id} = domain, [field | tail]) do
-    value = get_field(changeset, field)
-
-    case not unique_field?(field, value, domain_id) do
-      true ->
-        error = @errors[:uniqueness][field]
-        add_error(changeset, :domain, error.name, code: error.code)
-
-      false ->
-        field_uniqueness(changeset, domain, tail)
-    end
-  end
-
-  defp unique_field?(_field, nil, _domain_id), do: true
-
-  defp unique_field?(field, value, domain_id),
-    do: Taxonomies.count_by(field, value, domain_id) == 0
+  defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{}), do: changeset
 end

@@ -15,6 +15,19 @@ defmodule TdBgWeb.DomainView do
     %{data: render_many(domains, DomainView, "domain_tiny.json")}
   end
 
+  def render("show.json", %{
+        domain: domain,
+        parentable_ids: parentable_ids,
+        hypermedia: hypermedia
+      }) do
+    parentable_ids
+    |> case do
+      [] -> domain
+      ids -> Map.put(domain, :parentable_ids, ids)
+    end
+    |> render_one_hypermedia(hypermedia, DomainView, "domain.json")
+  end
+
   def render("show.json", %{domain: domain, hypermedia: hypermedia}) do
     render_one_hypermedia(domain, hypermedia, DomainView, "domain.json")
   end
@@ -24,14 +37,7 @@ defmodule TdBgWeb.DomainView do
   end
 
   def render("domain.json", %{domain: domain}) do
-    %{
-      id: domain.id,
-      parent_id: domain.parent_id,
-      name: domain.name,
-      type: domain.type,
-      external_id: domain.external_id,
-      description: domain.description
-    }
+    Map.take(domain, [:id, :parent_id, :name, :type, :external_id, :description, :parentable_ids])
   end
 
   def render("domain_bc_count.json", %{counter: counter}) do

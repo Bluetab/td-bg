@@ -16,7 +16,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.Events
   alias TdBg.BusinessConcepts.Links
   alias TdBg.Taxonomies
-  alias TdBgWeb.BusinessConceptSupport
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdCache.TemplateCache
@@ -68,8 +67,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def search(conn, params) do
     user = conn.assigns[:current_user]
-    page = params |> Map.get("page", 0)
-    size = params |> Map.get("size", 50)
+    page = Map.get(params, "page", 0)
+    size = Map.get(params, "size", 50)
 
     params
     |> Map.drop(["page", "size"])
@@ -98,13 +97,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def csv(conn, params) do
     user = conn.assigns[:current_user]
 
-    header_labels =
-      params
-      |> Map.get("header_labels", %{})
-
-    params =
-      params
-      |> Map.drop(["header_labels"])
+    {header_labels, params} = Map.pop(params, "header_labels", %{})
 
     %{results: business_concept_versions} =
       Search.search_business_concept_versions(params, user, 0, 10_000)
@@ -112,43 +105,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     conn
     |> put_resp_content_type("text/csv", "utf-8")
     |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
-    |> send_resp(200, Download.to_csv(business_concept_versions, header_labels))
+    |> send_resp(:ok, Download.to_csv(business_concept_versions, header_labels))
   end
 
   def upload(conn, params) do
     user = conn.assigns[:current_user]
     business_concepts_upload = Map.get(params, "business_concepts")
 
-    with true <- user.is_admin,
-         {:ok, response} <- Upload.from_csv(business_concepts_upload, user) do
-      body = JSON.encode!(%{data: %{message: response}})
-      send_resp(conn, 200, body)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      {:error, error} ->
-        Logger.error("While uploading business concepts... #{inspect(error)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> send_resp(422, JSON.encode!(error))
-
-      error ->
-        Logger.error("While uploading business concepts... #{inspect(error)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
+    with {:can, true} <- {:can, user.is_admin},
+         {:ok, response} <- Upload.from_csv(business_concepts_upload, user),
+         body <- JSON.encode!(%{data: %{message: response}}) do
+      send_resp(conn, :ok, body)
     end
-  rescue
-    e in RuntimeError ->
-      Logger.error("While uploading business concepts... #{e.message}")
-      send_resp(conn, :unprocessable_entity, JSON.encode!(%{error: e.message}))
   end
 
   swagger_path :create do
@@ -199,38 +167,30 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> Map.put("business_concept", business_concept_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", conn.assigns.current_user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
       |> Map.put("status", BusinessConcept.status().draft)
       |> Map.put("version", 1)
 
-    related_to = Map.get(creation_attrs, "related_to")
-
-    with true <- can?(user, create_business_concept(domain)),
-         {:name_available} <-
+    with {:can, true} <- {:can, can?(user, create_business_concept(domain))},
+         :ok <-
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
-         {:valid_related_to} <- check_valid_related_to(concept_type, related_to),
-         {:ok, %BusinessConceptVersion{} = version} <-
-           BusinessConcepts.create_business_concept_and_index(creation_attrs) do
+         {:ok, %BusinessConceptVersion{id: id} = version} <-
+           BusinessConcepts.create_business_concept(creation_attrs, index: true) do
       Events.business_concept_created(version)
 
       conn
       |> put_status(:created)
-      |> put_resp_header(
-        "location",
-        Routes.business_concept_version_path(conn, :show, version.id)
-      )
+      |> put_resp_header("location", Routes.business_concept_version_path(conn, :show, id))
       |> render("show.json", business_concept_version: version, template: template)
     else
-      error ->
-        BusinessConceptSupport.handle_bc_errors(conn, error)
+      error -> handle_bc_errors(conn, error)
     end
   rescue
     validation_error in ValidationError ->
       conn
       |> put_status(:unprocessable_entity)
-      |> json(%{errors: %{"#{validation_error.field}": [validation_error.error]}})
+      |> json(%{errors: %{validation_error.field => [validation_error.error]}})
   end
 
   defp validate_required_bc_fields(attrs) do
@@ -241,14 +201,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     if not Map.has_key?(attrs, "type") do
       raise ValidationError, field: "type", error: "blank"
     end
-  end
-
-  defp check_valid_related_to(_type, []), do: {:valid_related_to}
-
-  defp check_valid_related_to(type, ids) do
-    input_count = length(ids)
-    actual_count = BusinessConcepts.count_published_business_concepts(type, ids)
-    if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
 
   swagger_path :versions do
@@ -300,9 +252,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    if can?(user, view_business_concept(business_concept_version)) do
-      template = BusinessConcepts.get_template(business_concept_version)
-
+    with %{id: _} <- BusinessConcepts.get_business_concept_version!(id),
+         {:can, true} <- {:can, can?(user, view_business_concept(business_concept_version))},
+         template <- BusinessConcepts.get_template(business_concept_version) do
       business_concept_version =
         business_concept_version
         |> add_completeness()
@@ -319,11 +271,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
         template: template
       )
-    else
-      conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
     end
   end
 
@@ -367,23 +314,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    with true <- can?(user, delete(business_concept_version)),
+    with {:can, true} <- {:can, can?(user, delete(business_concept_version))},
          {:ok, %BusinessConceptVersion{}} <-
            BusinessConcepts.delete_business_concept_version(business_concept_version) do
       Events.business_concept_deleted(business_concept_version, user.id)
       send_resp(conn, :no_content, "")
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
     end
   end
 
@@ -605,53 +540,29 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp publish(conn, user, business_concept_version) do
-    with true <- can?(user, publish(business_concept_version)),
+    with {:can, true} <- {:can, can?(user, publish(business_concept_version))},
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            BusinessConcepts.publish_business_concept_version(business_concept_version, user) do
       Events.business_concept_published(concept)
       render_concept(conn, concept)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
     end
   end
 
   defp reject(conn, user, business_concept_version, reason) do
     attrs = %{reject_reason: reason}
 
-    with true <- can?(user, reject(business_concept_version)),
+    with {:can, true} <- {:can, can?(user, reject(business_concept_version))},
          {:ok, %BusinessConceptVersion{} = version} <-
            BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
       Events.business_concept_rejected(version)
       render_concept(conn, version)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
     end
   end
 
   defp update_status(conn, business_concept_version, status, audit_fn, authorized) do
     attrs = %{status: status}
 
-    with true <- authorized,
+    with {:can, true} <- {:can, authorized},
          {:ok, %BusinessConceptVersion{} = concept} <-
            BusinessConcepts.update_business_concept_version_status(
              business_concept_version,
@@ -659,49 +570,23 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            ) do
       audit_fn.(concept)
       render_concept(conn, concept)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
     end
   end
 
   defp do_version(conn, user, business_concept_version) do
-    with true <- can?(user, version(business_concept_version)),
+    with {:can, true} <- {:can, can?(user, version(business_concept_version))},
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
            BusinessConcepts.version_business_concept(user, business_concept_version) do
       conn = put_status(conn, :created)
       Events.business_concept_versioned(new_version)
       render_concept(conn, new_version)
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
     end
   end
 
   defp render_concept(conn, concept) do
     template = BusinessConcepts.get_template(concept)
 
-    business_concept_version =
-      concept
-      |> add_completeness()
+    business_concept_version = add_completeness(concept)
 
     render(
       conn,
@@ -748,21 +633,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> Map.put("business_concept", business_concept_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
-    related_to = Map.get(update_params, "related_to")
-
-    with true <- can?(user, update(business_concept_version)),
-         {:name_available} <-
+    with {:can, true} <- {:can, can?(user, update(business_concept_version))},
+         :ok <-
            BusinessConcepts.check_business_concept_name_availability(
              template.name,
              concept_name,
              business_concept_version.business_concept.id
            ),
-         {:valid_related_to} <-
-           BusinessConcepts.check_valid_related_to(template.name, related_to),
          {:ok, %BusinessConceptVersion{} = concept_version} <-
            BusinessConcepts.update_business_concept_version(
              business_concept_version,
@@ -778,8 +658,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         template: template
       )
     else
-      error ->
-        BusinessConceptSupport.handle_bc_errors(conn, error)
+      error -> handle_bc_errors(conn, error)
     end
   end
 
@@ -843,5 +722,49 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     params
     |> Map.drop(["page", "size"])
     |> Search.search_business_concept_versions(user, 0, 10_000)
+  end
+
+  defp handle_bc_errors(conn, error) do
+    case error do
+      {:can, false} ->
+        conn
+        |> put_status(:forbidden)
+        |> put_view(ErrorView)
+        |> render("403.json")
+
+      {:error, :name_not_available} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: [%{code: "EBG001", name: "concept.error.existing.business.concept"}]})
+
+      {:error, %Ecto.Changeset{data: data} = changeset} ->
+        case data do
+          %BusinessConceptVersion{} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> put_view(TdBgWeb.ChangesetView)
+            |> render("error.json",
+              changeset: changeset,
+              prefix: "concept.error"
+            )
+
+          _ ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> put_view(TdBgWeb.ChangesetView)
+            |> render("error.json",
+              changeset: changeset,
+              prefix: "concept.content.error"
+            )
+        end
+
+      error ->
+        Logger.error("Business concept... #{inspect(error)}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(ErrorView)
+        |> render("422.json")
+    end
   end
 end

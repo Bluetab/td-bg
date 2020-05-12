@@ -18,6 +18,10 @@ defmodule TdBg.Canada.TaxonomyAbilities do
     Permissions.has_any_permission_on_resource_type?(user, permissions, Domain)
   end
 
+  def can?(%User{} = user, :create, %Domain{parent_id: parent_id}) when not is_nil(parent_id) do
+    Permissions.authorized?(user, :create_domain, parent_id)
+  end
+
   def can?(%User{} = user, :create, %Domain{id: domain_id}) do
     Permissions.authorized?(user, :create_domain, domain_id)
   end
@@ -40,5 +44,9 @@ defmodule TdBg.Canada.TaxonomyAbilities do
 
   def can?(%User{} = user, :create_link, %Domain{id: domain_id}) do
     Permissions.authorized?(user, :manage_business_concept_links, domain_id)
+  end
+
+  def can?(%User{} = user, :move, %Domain{} = domain) do
+    can?(user, :delete, domain) and can?(user, :update, domain)
   end
 end

@@ -6,6 +6,7 @@ defmodule TdBg.Cache.DomainLoader do
   use GenServer
 
   alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Tree
   alias TdCache.TaxonomyCache
 
   require Logger
@@ -73,10 +74,12 @@ defmodule TdBg.Cache.DomainLoader do
   end
 
   def load_domain_data(domains) do
+    tree = Tree.graph()
+
     results =
       domains
       |> Enum.map(&Map.take(&1, [:id, :name, :external_id, :updated_at]))
-      |> Enum.map(&Map.put(&1, :parent_ids, load_parent_ids(&1.id)))
+      |> Enum.map(&Map.put(&1, :parent_ids, get_ancestor_ids(tree, &1.id)))
       |> Enum.map(&TaxonomyCache.put_domain/1)
       |> Enum.map(fn {res, _} -> res end)
 
@@ -87,10 +90,9 @@ defmodule TdBg.Cache.DomainLoader do
     end
   end
 
-  defp load_parent_ids(domain_id) do
-    domain_id
-    |> Taxonomies.get_ancestors_for_domain_id(false)
-    |> Enum.map(& &1.id)
+  defp get_ancestor_ids(tree, domain_id) do
+    tree
+    |> Tree.ancestor_ids(domain_id)
+    |> tl()
   end
-
 end

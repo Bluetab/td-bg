@@ -148,7 +148,6 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       ) do
     permission = Map.get(BusinessConcept.status_to_permissions(), status)
     authorized?(user, permission, business_concept_version)
-    true
   end
 
   def can?(%User{}, _action, _business_concept_version), do: false
