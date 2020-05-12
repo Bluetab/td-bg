@@ -12,6 +12,7 @@
 ### Removed
 
 - Removed deprecated `related_to` property on business concept versions
+- [TD-2608] Empty content fields on concepts bulk update
 
 ## [3.20.0] 2020-04-20
 

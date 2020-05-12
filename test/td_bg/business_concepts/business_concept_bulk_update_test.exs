@@ -27,7 +27,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
               "name" => "Field1",
               "type" => "string",
               "group" => "Multiple Group",
-              "label" => "Multiple 1",
+              "label" => "Field 1",
               "values" => nil,
               "cardinality" => "1"
             },
@@ -35,9 +35,33 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
               "name" => "Field2",
               "type" => "string",
               "group" => "Multiple Group",
-              "label" => "Multiple 1",
+              "label" => "Field 2",
               "values" => nil,
               "cardinality" => "1"
+            },
+            %{
+              "name" => "Field3",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Field 3",
+              "default" => 1,
+              "values" => %{"fixed" => [1, 2, 3]},
+              "cardinality" => "1"
+            },
+            %{
+              "name" => "Field4",
+              "type" => "string",
+              "group" => "Multiple Group",
+              "label" => "Field 4",
+              "values" => %{"fixed" => [1, 2, 3]},
+              "cardinality" => "*"
+            },
+            %{
+              "name" => "Field5",
+              "type" => "enriched_text",
+              "group" => "Multiple Group",
+              "label" => "Field 5",
+              "cardinality" => "*"
             }
           ]
         }
@@ -63,12 +87,18 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       content = %{
         "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => 3,
+        "Field4" => [1, 2],
+        "Field5" => %{"foo" => "bar"}
       }
 
       update_content = %{
         "Field1" => "First udpate",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => "",
+        "Field4" => [],
+        "Field5" => %{}
       }
 
       bc_version1 = insert(:business_concept_version, business_concept: bc1, content: content)
@@ -92,7 +122,10 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field"
+               "Field2" => "Second field",
+               "Field3" => 3,
+               "Field4" => [1, 2],
+               "Field5" => %{"foo" => "bar"}
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
@@ -100,7 +133,10 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field"
+               "Field2" => "Second field",
+               "Field3" => 3,
+               "Field4" => [1, 2],
+               "Field5" => %{"foo" => "bar"}
              }
     end
 
@@ -230,7 +266,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field"
+               "Field2" => "Second field",
+               "Field3" => 1,
+               "Field4" => [""]
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
@@ -238,7 +276,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field"
+               "Field2" => "Second field",
+               "Field3" => 1,
+               "Field4" => [""]
              }
     end
   end

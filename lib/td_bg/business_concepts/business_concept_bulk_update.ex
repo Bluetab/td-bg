@@ -28,7 +28,6 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
 
   defp update(business_concept_versions, update_attributes) do
     Logger.info("Updating business concept versions...")
-
     start_time = DateTime.utc_now()
 
     transaction_result =
@@ -102,7 +101,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
               params
               |> Map.put("business_concept", business_concept_attrs)
               |> Map.put("content_schema", content_schema)
-              |> Map.update("content", %{}, & &1)
+              |> Map.update("content", %{}, &content_fields/1)
               |> Map.put("last_change_by", user.id)
               |> Map.put("last_change_at", DateTime.utc_now())
 
@@ -113,4 +112,20 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
         end
     end
   end
+
+  defp content_fields(%{} = content) do
+    Enum.reduce(content, Map.new(), &non_empty/2)
+  end
+
+  defp content_fields(content), do: content
+
+  defp non_empty({_k, nil}, acc), do: acc
+
+  defp non_empty({_k, ""}, acc), do: acc
+
+  defp non_empty({_k, []}, acc), do: acc
+
+  defp non_empty({_k, value}, acc) when value == %{}, do: acc
+
+  defp non_empty({key, value}, acc), do: Map.put(acc, key, value)
 end
