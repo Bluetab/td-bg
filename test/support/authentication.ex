@@ -45,19 +45,16 @@ defmodule TdBgWeb.Authentication do
     email = Keyword.get(opts, :email, "some@email.com")
     groups = Keyword.get(opts, :groups, [])
 
-    user =
-      MockTdAuthService.create_user(%{
-        "user" => %{
-          "user_name" => user_name,
-          "full_name" => user_name,
-          "is_admin" => is_admin,
-          "password" => password,
-          "email" => email,
-          "groups" => groups
-        }
-      })
-
-    user
+    MockTdAuthService.create_user(%{
+      "user" => %{
+        "user_name" => user_name,
+        "full_name" => user_name,
+        "is_admin" => is_admin,
+        "password" => password,
+        "email" => email,
+        "groups" => groups
+      }
+    })
   end
 
   def find_or_create_user(user_name, opts \\ []) do

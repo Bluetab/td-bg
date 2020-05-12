@@ -10,12 +10,9 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
     """
     {
-      "errors": [
-        {
-          "code": "undefined",
-          "name": "domain.error.name.required"
-        }
-      ]
+      "errors": {
+        "name": ["blank"]
+      }
     }
     """
 
@@ -30,12 +27,9 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
     """
     {
-      "errors": [
-        {
-          "code": "undefined",
-          "name": "domain.error.name.required"
-        }
-      ]
+      "errors": {
+        "name": ["blank"]
+      }
     }
     """
 
@@ -47,12 +41,9 @@ Feature: taxonomy creation/edition errors
     And the system returns a response with following data:
     """
     {
-      "errors": [
-        {
-          "code": "undefined",
-          "name": "domain.error.name.required"
-        }
-      ]
+      "errors": {
+        "name": ["blank"]
+      }
     }
     """
 
@@ -83,34 +74,6 @@ Feature: taxonomy creation/edition errors
     }
     """
 
-
-  Scenario: Can not create a relation between not published business concepts
-    Given an existing Domain called "My Parent Domain"
-    And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
-    And an existing Business Concept type called "Business_Term" with empty definition
-    And an existing Business Concept of type "Business_Term" in the Domain "My Child Domain" with following data:
-      | Field             | Value                                             |
-      | Type              | Business_Term                                     |
-      | Name              | My Target Term                                    |
-      | Description       | This is my Target Term                            |
-    When "app-admin" tries to create a business concept in the Domain "My Child Domain" with following data:
-      | Field             | Value                                             |
-      | Type              | Business_Term                                     |
-      | Name              | My Origin Term                                    |
-      | Description       | This is my origin term                            |
-      | Related To        | My Target Term                                    |
-    Then the system returns a result with code "Unprocessable Entity"
-    And the system returns a response with following data:
-    """
-    {
-      "errors": {
-        "related_to": [
-          "invalid"
-        ]
-      }
-    }
-    """
-
   Scenario: Creating a Business Concept without type
     Given an existing Domain called "My Parent Domain"
     And an existing Domain called "My Child Domain" child of Domain "My Parent Domain"
@@ -123,9 +86,7 @@ Feature: taxonomy creation/edition errors
     """
     {
       "errors": {
-        "type": [
-          "blank"
-        ]
+        "type": ["blank"]
       }
     }
     """

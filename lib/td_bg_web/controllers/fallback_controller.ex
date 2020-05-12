@@ -6,6 +6,8 @@ defmodule TdBgWeb.FallbackController do
   """
   use TdBgWeb, :controller
 
+  alias Jason, as: JSON
+
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
@@ -18,5 +20,16 @@ defmodule TdBgWeb.FallbackController do
     |> put_status(:not_found)
     |> put_view(TdBgWeb.ErrorView)
     |> render("404.json")
+  end
+
+  def call(conn, {:error, error}) do
+    send_resp(conn, :unprocessable_entity, JSON.encode!(error))
+  end
+
+  def call(conn, {:can, false}) do
+    conn
+    |> put_status(:forbidden)
+    |> put_view(TdBgWeb.ErrorView)
+    |> render("403.json")
   end
 end

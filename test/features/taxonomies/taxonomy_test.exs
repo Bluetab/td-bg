@@ -309,10 +309,14 @@ defmodule TdBg.TaxonomyTest do
     end
   end
 
-  defand ~r/^a error message with key "(?<key_error>[^"]+)" and alias "(?<alias_error>[^"]+)" is retrieved$/,
-         %{key_error: key_error, alias_error: alias_error},
+  defand ~r/^a error message with key "(?<key>[^"]+)" and value "(?<value>[^"]+)" is returned$/,
+         %{key: key, value: value},
          state do
-    errors_array = state[:json_resp]["errors"]
-    assert alias_error == Enum.find(errors_array, fn x -> x["code"] == key_error end)["name"]
+    state
+    |> Map.get(:json_resp, %{})
+    |> Map.get("errors", %{})
+    |> Map.get(key, [])
+    |> Enum.member?(value)
+    |> assert()
   end
 end

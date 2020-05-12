@@ -47,7 +47,7 @@ defmodule TdBg.BusinessConceptsTest do
          ]
     defp fixture do
       parent_domain = insert(:domain)
-      child_domain = insert(:child_domain, parent: parent_domain)
+      child_domain = insert(:domain, parent: parent_domain)
       insert(:business_concept, type: @template_name, domain: child_domain)
       insert(:business_concept, type: @template_name, domain: parent_domain)
     end
@@ -101,7 +101,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         content: %{},
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -130,7 +129,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: nil,
         content: %{},
-        related_to: [],
         name: nil,
         description: nil,
         last_change_by: nil,
@@ -171,7 +169,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -208,7 +205,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -254,7 +250,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -291,7 +286,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -366,7 +360,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         content: nil,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -396,7 +389,6 @@ defmodule TdBg.BusinessConceptsTest do
       creation_attrs = %{
         business_concept: concept_attrs,
         content: %{},
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -416,7 +408,7 @@ defmodule TdBg.BusinessConceptsTest do
 
       type = business_concept_version.business_concept.type
 
-      assert {:name_not_available} ==
+      assert {:error, :name_not_available} ==
                BusinessConcepts.check_business_concept_name_availability(type, name)
     end
 
@@ -428,12 +420,11 @@ defmodule TdBg.BusinessConceptsTest do
       exclude_concept_id = business_concept_version.business_concept.id
       type = business_concept_version.business_concept.type
 
-      assert {:name_available} ==
-               BusinessConcepts.check_business_concept_name_availability(
-                 type,
-                 name,
-                 exclude_concept_id
-               )
+      assert BusinessConcepts.check_business_concept_name_availability(
+               type,
+               name,
+               exclude_concept_id
+             ) == :ok
     end
 
     test "check_business_concept_name_availability/3 check not available" do
@@ -444,7 +435,7 @@ defmodule TdBg.BusinessConceptsTest do
                |> Enum.take(2)
                |> Enum.map(&insert(:business_concept_version, name: &1))
 
-      assert {:name_not_available} ==
+      assert {:error, :name_not_available} ==
                BusinessConcepts.check_business_concept_name_availability(type, name, exclude_id)
     end
 
@@ -470,7 +461,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         business_concept_id: business_concept_version.business_concept.id,
         content: %{},
-        related_to: [],
         name: "updated name",
         description: to_rich_text("updated description"),
         last_change_by: user.id,
@@ -526,7 +516,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         business_concept_id: business_concept_version.business_concept.id,
         content: update_content,
-        related_to: [],
         name: "updated name",
         description: to_rich_text("updated description"),
         last_change_by: user.id,
@@ -553,7 +542,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: nil,
         content: %{},
-        related_to: [],
         name: nil,
         description: nil,
         last_change_by: nil,
@@ -845,7 +833,6 @@ defmodule TdBg.BusinessConceptsTest do
     version_attrs = %{
       business_concept: concept_attrs,
       content: content,
-      related_to: [],
       name: "some name",
       description: RichText.to_rich_text("some description"),
       last_change_by: user.id,
@@ -879,6 +866,21 @@ defmodule TdBg.BusinessConceptsTest do
     assert object.business_concept.type == concept_attrs.type
     assert object.business_concept.domain_id == concept_attrs.domain_id
     assert object.business_concept.last_change_by == concept_attrs.last_change_by
+  end
+
+  test "count/1 returns business concept count for a domain" do
+    %{domain_id: domain_id} = concept = insert(:business_concept, domain: build(:domain))
+    insert(:business_concept_version, business_concept: concept, current: true)
+
+    insert(:business_concept_version,
+      business_concept: concept,
+      current: true,
+      status: "deprecated"
+    )
+
+    insert(:business_concept_version, business_concept: concept, current: false)
+
+    assert BusinessConcepts.count(domain_id: domain_id, deprecated: false) == 1
   end
 
   defp to_rich_text(plain) do

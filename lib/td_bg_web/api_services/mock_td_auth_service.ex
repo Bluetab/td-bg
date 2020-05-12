@@ -24,9 +24,7 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
           "groups" => groups
         }
       }) do
-    created_groups =
-      groups
-      |> Enum.map(&create_group(%{"group" => &1}))
+    created_groups = Enum.map(groups, &create_group(%{"group" => &1}))
 
     new_user = %User{
       id: User.gen_id_from_user_name(user_name),
@@ -35,7 +33,7 @@ defmodule TdBgWeb.ApiServices.MockTdAuthService do
       password: password,
       is_admin: is_admin,
       email: email,
-      groups: created_groups |> Enum.map(& &1.name)
+      groups: Enum.map(created_groups, & &1.name)
     }
 
     users = index()

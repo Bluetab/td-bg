@@ -9,8 +9,8 @@ use Mix.Config
 config :td_bg, :env, Mix.env()
 
 # General application configuration
-config :td_bg,
-  ecto_repos: [TdBg.Repo]
+config :td_bg, ecto_repos: [TdBg.Repo]
+config :td_bg, TdBg.Repo, pool_size: 5
 
 config :td_bg, index_worker: TdBg.Search.IndexWorker
 

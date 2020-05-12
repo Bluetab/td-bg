@@ -89,11 +89,8 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
       content_schema ->
         domain_id = Map.get(params, "domain_id", nil)
 
-        case domain_id && Taxonomies.get_domain(domain_id) do
-          nil ->
-            {:error, :missing_domain}
-
-          _ ->
+        case Taxonomies.get_domain(domain_id) do
+          {:ok, _domain} ->
             business_concept_attrs =
               %{}
               |> Map.put("domain_id", domain_id)
@@ -109,6 +106,9 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
               |> Map.put("last_change_at", DateTime.utc_now())
 
             {:ok, update_attributes}
+
+          _error ->
+            {:error, :missing_domain}
         end
     end
   end
