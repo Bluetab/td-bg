@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2677] Concept id format on `add_link` event
+
 ## [3.22.0] 2020-05-18
 
 ### Added
