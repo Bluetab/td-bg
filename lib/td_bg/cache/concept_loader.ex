@@ -115,7 +115,9 @@ defmodule TdBg.Cache.ConceptLoader do
       |> Enum.filter(&(&1.event == "add_rule"))
       |> Enum.flat_map(&read_concept_ids/1)
 
-    IndexWorker.reindex(:all)
+    unless ids == [] do
+      IndexWorker.reindex(:all)
+    end
 
     ids
   end
@@ -125,7 +127,7 @@ defmodule TdBg.Cache.ConceptLoader do
   defp read_concept_ids(%{event: "add_link", source: source, target: target}) do
     [source, target]
     |> Enum.filter(&String.starts_with?(&1, "business_concept:"))
-    |> Enum.map(&read_concept_id/1)
+    |> Enum.flat_map(&do_read_concept_ids/1)
   end
 
   defp read_concept_ids(%{event: "add_rule", concept: concept}) do
@@ -157,8 +159,11 @@ defmodule TdBg.Cache.ConceptLoader do
 
   defp read_concept_id(value) do
     case Regex.run(~r/^business_concept:(\d+)$/, value, capture: :all_but_first) do
-      [id] -> {:ok, String.to_integer(id)}
-      _ -> {:error, :invalid_format}
+      [id] ->
+        {:ok, String.to_integer(id)}
+
+      _ ->
+        {:error, :invalid_format}
     end
   end
 
