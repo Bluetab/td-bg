@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [TD-2629] Update td-df-lib to omit template fields of type `image` on indexing
+
 ### Fixed
 
 - [TD-2677] Concept id format on `add_link` event
