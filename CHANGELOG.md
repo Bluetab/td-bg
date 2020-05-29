@@ -6,6 +6,7 @@
 
 - [TD-2629] Update td-df-lib to omit template fields of type `image` on indexing
 - [TD-2492] Update td-df-lib to include new numeric template types 
+- [TD-2261] Update cache to retrieve new attribute `deleted_at` from structures 
 
 ### Fixed
 
