@@ -224,7 +224,7 @@ defmodule TdBg.BusinessConcepts do
     |> set_content_defaults
     |> validate_new_concept
     |> validate_description
-    |> validate_concept_content
+    |> validate_concept_content(opts[:in_progress])
     |> insert_concept
     |> index_on_success(opts[:index])
   end
@@ -779,29 +779,26 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp validate_concept_content(attrs) do
+  defp validate_concept_content(attrs, in_progress \\ nil)
+
+  defp validate_concept_content(attrs, in_progress) do
     changeset = Map.get(attrs, :changeset)
 
     if changeset.valid? do
-      do_validate_concept_content(attrs)
+      do_validate_concept_content(attrs, in_progress)
     else
       attrs
     end
   end
 
-  defp do_validate_concept_content(attrs) do
+  defp do_validate_concept_content(attrs, in_progress) do
     content = Map.get(attrs, :content)
     content_schema = Map.get(attrs, :content_schema)
     changeset = Validation.build_changeset(content, content_schema)
 
-    if changeset.valid? do
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
-      |> Map.put(:in_progress, false)
-    else
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
+    case in_progress do
+      false -> validate_content(changeset, attrs)
+      _ -> put_in_progress(changeset, attrs)
     end
   end
 
@@ -823,6 +820,25 @@ defmodule TdBg.BusinessConcepts do
       attrs
       |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
       |> Map.put(:in_progress, false)
+    end
+  end
+
+  defp put_in_progress(changeset, attrs) do
+    if changeset.valid? do
+      attrs
+      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
+      |> Map.put(:in_progress, false)
+    else
+      attrs
+      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
+      |> Map.put(:in_progress, true)
+    end
+  end
+
+  defp validate_content(changeset, attrs) do
+    case changeset.valid? do
+      false -> Map.put(attrs, :changeset, changeset)
+      _ -> attrs
     end
   end
 
