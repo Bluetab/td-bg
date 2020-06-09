@@ -4,8 +4,8 @@ defmodule TdBg.UploadTest do
   alias TdBg.BusinessConcept.Upload
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuthService
   alias TdBgWeb.ApiServices.MockTdAuditService
+  alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised(ConceptLoader)
@@ -16,30 +16,31 @@ defmodule TdBg.UploadTest do
   end
 
   setup _context do
-    %{id: template_id} = Templates.create_template(%{
-      name: "term",
-      content: [
-        %{
-          "name" => "group",
-          "fields" => [
-            %{
-              "cardinality" => "1",
-              "default" => "",
-              "description" => "description",
-              "label" => "critical term",
-              "name" => "critical",
-              "type" => "string",
-              "values" => %{
-                "fixed" => ["Yes", "No"]
+    %{id: template_id} =
+      Templates.create_template(%{
+        name: "term",
+        content: [
+          %{
+            "name" => "group",
+            "fields" => [
+              %{
+                "cardinality" => "1",
+                "default" => "",
+                "description" => "description",
+                "label" => "critical term",
+                "name" => "critical",
+                "type" => "string",
+                "values" => %{
+                  "fixed" => ["Yes", "No"]
+                }
               }
-            }
-          ]
-        }
-      ],
-      scope: "test",
-      label: "term",
-      id: "999"
-    })
+            ]
+          }
+        ],
+        scope: "test",
+        label: "term",
+        id: "999"
+      })
 
     on_exit(fn ->
       Templates.delete(template_id)
@@ -61,12 +62,14 @@ defmodule TdBg.UploadTest do
       insert(:domain, name: "domain")
       business_concept_upload = %{path: "test/fixtures/incorrect_upload.csv"}
       assert {:error, changeset} = Upload.from_csv(business_concept_upload, user)
-      message = changeset 
-        |> Map.get(:errors) 
-        |> Keyword.get(:critical) 
+
+      message =
+        changeset
+        |> Map.get(:errors)
+        |> Keyword.get(:critical)
         |> elem(0)
 
-      assert message == "is invalid" 
+      assert message == "is invalid"
     end
   end
 end
