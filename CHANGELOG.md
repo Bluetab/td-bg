@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2684] check permission `send_business_concept_for_approval` instead of `update_concept`
+
 ## [3.23.0] 2020-06-01
 
 ### Changed
