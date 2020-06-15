@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-2705] In progress is not applied on concepts upload
+
 ## [3.23.0] 2020-06-01
 
 ### Changed

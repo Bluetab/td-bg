@@ -698,6 +698,20 @@ defmodule TdBg.BusinessConceptSteps do
       :Values
     ]
 
+    [%{template: template} | _] = to_upload
+
+    schema = [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{name: "Formula", type: "string", cardinality: "?", values: %{}},
+          %{name: "Values", type: "string", cardinality: "?", values: %{}}
+        ]
+      }
+    ]
+
+    Templates.create_template(template, schema)
+
     business_concepts =
       to_upload
       |> Enum.reduce([], fn item, acc ->

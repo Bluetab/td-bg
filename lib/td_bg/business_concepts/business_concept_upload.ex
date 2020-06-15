@@ -61,7 +61,7 @@ defmodule TdBg.BusinessConcept.Upload do
       |> File.stream!()
 
     with {:ok, parsed_file} <- parse_file(file),
-         {:ok, parsed_list} <- parse_data_list(parsed_file),
+         {:ok, parsed_list} <- parse_data_list(parsed_file) ,
          {:ok, uploaded_ids} <- upload_data(parsed_list, user, [], 2) do
       uploaded_ids
     else
@@ -169,7 +169,7 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Map.put("status", BusinessConcept.status().draft)
         |> Map.put("version", 1)
 
-      BusinessConcepts.create_business_concept(creation_attrs)
+      BusinessConcepts.create_business_concept(creation_attrs, [in_progress: false])
     else
       error -> error
     end
