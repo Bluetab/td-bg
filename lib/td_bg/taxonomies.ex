@@ -3,7 +3,7 @@ defmodule TdBg.Taxonomies do
   The Taxonomies context.
   """
 
-  import Ecto.Query, warn: false
+  import Ecto.Query
 
   alias Ecto.Changeset
   alias TdBg.BusinessConcept.Search

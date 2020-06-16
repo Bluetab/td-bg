@@ -1,26 +1,27 @@
 defmodule TdBg.BusinessConceptsTest do
   use TdBg.DataCase
 
-  alias TdBg.Accounts.User
   alias TdBg.BusinessConcepts
-  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuthService
+  alias TdCache.Redix
   alias TdDfLib.RichText
 
+  @stream TdCache.Audit.stream()
   @template_name "TestTemplate1234"
 
   setup_all do
+    Redix.del!(@stream)
     start_supervised(ConceptLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockTdAuthService)
     :ok
   end
 
   setup context do
+    on_exit(fn -> Redix.del!(@stream) end)
+
     case context[:template] do
       nil ->
         :ok
@@ -38,56 +39,8 @@ defmodule TdBg.BusinessConceptsTest do
     :ok
   end
 
-  describe "business_concepts" do
-    @tag template: [
-           %{
-             "name" => "group",
-             "fields" => [%{name: "fieldname", type: "string", cardinality: "?"}]
-           }
-         ]
-    defp fixture do
-      parent_domain = insert(:domain)
-      child_domain = insert(:domain, parent: parent_domain)
-      insert(:business_concept, type: @template_name, domain: child_domain)
-      insert(:business_concept, type: @template_name, domain: parent_domain)
-    end
-
-    test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
-      business_concept_version = insert(:business_concept_version)
-
-      object =
-        BusinessConcepts.get_current_version_by_business_concept_id!(
-          business_concept_version.business_concept.id
-        )
-
-      assert object |> business_concept_version_preload() == business_concept_version
-    end
-
-    test "get_currently_published_version!/1 returns the published business_concept with given id" do
-      bcv_published =
-        insert(
-          :business_concept_version,
-          status: BusinessConcept.status().published
-        )
-
-      assert {:ok, _} = BusinessConcepts.version_business_concept(%User{id: 1234}, bcv_published)
-
-      bcv_current =
-        BusinessConcepts.get_currently_published_version!(bcv_published.business_concept.id)
-
-      assert bcv_current.id == bcv_published.id
-    end
-
-    test "get_currently_published_version!/1 returns the last when there are no published" do
-      bcv_draft = insert(:business_concept_version, status: BusinessConcept.status().draft)
-
-      bcv_current =
-        BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
-
-      assert bcv_current.id == bcv_draft.id
-    end
-
-    test "create_business_concept/1 with valid data creates a business_concept" do
+  describe "create_business_concept/1" do
+    test "with valid data creates a business_concept" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -110,22 +63,24 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
 
-      assert {:ok, %BusinessConceptVersion{} = object} =
+      assert {:ok, %{business_concept_version: business_concept_version}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert object.content == version_attrs.content
-      assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
-      assert object.last_change_by == version_attrs.last_change_by
-      assert object.current == true
-      assert object.version == version_attrs.version
-      assert object.in_progress == false
-      assert object.business_concept.type == concept_attrs.type
-      assert object.business_concept.domain_id == concept_attrs.domain_id
-      assert object.business_concept.last_change_by == concept_attrs.last_change_by
+      assert business_concept_version.content == version_attrs.content
+      assert business_concept_version.name == version_attrs.name
+      assert business_concept_version.description == version_attrs.description
+      assert business_concept_version.last_change_by == version_attrs.last_change_by
+      assert business_concept_version.current == true
+      assert business_concept_version.version == version_attrs.version
+      assert business_concept_version.in_progress == false
+      assert business_concept_version.business_concept.type == concept_attrs.type
+      assert business_concept_version.business_concept.domain_id == concept_attrs.domain_id
+
+      assert business_concept_version.business_concept.last_change_by ==
+               concept_attrs.last_change_by
     end
 
-    test "create_business_concept/1 with invalid data returns error changeset" do
+    test "with invalid data returns error changeset" do
       version_attrs = %{
         business_concept: nil,
         content: %{},
@@ -138,11 +93,11 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
 
-      assert {:error, %Ecto.Changeset{}} =
+      assert {:error, :business_concept_version, %Ecto.Changeset{}, _} =
                BusinessConcepts.create_business_concept(creation_attrs)
     end
 
-    test "create_business_concept/1 with content" do
+    test "with content" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -178,13 +133,13 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %BusinessConceptVersion{} = object} =
+      assert {:ok, %{business_concept_version: business_concept_version}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert object.content == content
+      assert %{content: ^content} = business_concept_version
     end
 
-    test "create_business_concept/1 with invalid content: required" do
+    test "with invalid content: required" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -214,22 +169,24 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %BusinessConceptVersion{} = object} =
+      assert {:ok, %{business_concept_version: business_concept_version}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert object.content == version_attrs.content
-      assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
-      assert object.last_change_by == version_attrs.last_change_by
-      assert object.current == true
-      assert object.in_progress == true
-      assert object.version == version_attrs.version
-      assert object.business_concept.type == concept_attrs.type
-      assert object.business_concept.domain_id == concept_attrs.domain_id
-      assert object.business_concept.last_change_by == concept_attrs.last_change_by
+      assert business_concept_version.content == version_attrs.content
+      assert business_concept_version.name == version_attrs.name
+      assert business_concept_version.description == version_attrs.description
+      assert business_concept_version.last_change_by == version_attrs.last_change_by
+      assert business_concept_version.current == true
+      assert business_concept_version.in_progress == true
+      assert business_concept_version.version == version_attrs.version
+      assert business_concept_version.business_concept.type == concept_attrs.type
+      assert business_concept_version.business_concept.domain_id == concept_attrs.domain_id
+
+      assert business_concept_version.business_concept.last_change_by ==
+               concept_attrs.last_change_by
     end
 
-    test "create_business_concept/1 with content: default values" do
+    test "with content: default values" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -259,21 +216,18 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %BusinessConceptVersion{} = business_concept_version} =
+      assert {:ok, %{business_concept_version: business_concept_version}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert business_concept_version.content["Field1"] == "Hello"
-      assert business_concept_version.content["Field2"] == "World"
+      assert %{content: content} = business_concept_version
+      assert %{"Field1" => "Hello", "Field2" => "World"} = content
     end
 
-    test "create_business_concept/1 with invalid content: invalid variable list" do
+    test "with invalid content: invalid variable list" do
       user = build(:user)
       domain = insert(:domain)
 
-      content_schema = [
-        %{"name" => "Field1", "type" => "string", "cardinality" => "1"}
-      ]
-
+      content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "1"}]
       content = %{"Field1" => ["World", "World2"]}
 
       concept_attrs = %{
@@ -295,28 +249,28 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %BusinessConceptVersion{} = object} =
+      assert {:ok, %{business_concept_version: business_concept_version}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert object.content == %{"Field1" => ["World", "World2"]}
-      assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
-      assert object.last_change_by == version_attrs.last_change_by
-      assert object.current == true
-      assert object.in_progress == true
-      assert object.version == version_attrs.version
-      assert object.business_concept.type == concept_attrs.type
-      assert object.business_concept.domain_id == concept_attrs.domain_id
-      assert object.business_concept.last_change_by == concept_attrs.last_change_by
+      assert business_concept_version.content == %{"Field1" => ["World", "World2"]}
+      assert business_concept_version.name == version_attrs.name
+      assert business_concept_version.description == version_attrs.description
+      assert business_concept_version.last_change_by == version_attrs.last_change_by
+      assert business_concept_version.current == true
+      assert business_concept_version.in_progress == true
+      assert business_concept_version.version == version_attrs.version
+      assert business_concept_version.business_concept.type == concept_attrs.type
+      assert business_concept_version.business_concept.domain_id == concept_attrs.domain_id
+
+      assert business_concept_version.business_concept.last_change_by ==
+               concept_attrs.last_change_by
     end
 
-    test "create_business_concept/1 with no content" do
+    test "with no content" do
       user = build(:user)
       domain = insert(:domain)
 
-      content_schema = [
-        %{"name" => "Field1", "type" => "string", "cardinality" => "?"}
-      ]
+      content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "?"}]
 
       concept_attrs = %{
         type: "some_type",
@@ -336,19 +290,17 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:error, %Ecto.Changeset{} = changeset} =
+      assert {:error, :business_concept_version, %Ecto.Changeset{} = changeset, _} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "create_business_concept/1 with nil content" do
+    test "with nil content" do
       user = build(:user)
       domain = insert(:domain)
 
-      content_schema = [
-        %{"name" => "Field1", "type" => "string", "cardinality" => "?"}
-      ]
+      content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "?"}]
 
       concept_attrs = %{
         type: "some_type",
@@ -369,13 +321,13 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:error, %Ecto.Changeset{} = changeset} =
+      assert {:error, :business_concept_version, %Ecto.Changeset{} = changeset, _} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "create_business_concept/1 with no content schema" do
+    test "with no content schema" do
       user = build(:user)
       domain = insert(:domain)
 
@@ -400,55 +352,10 @@ defmodule TdBg.BusinessConceptsTest do
         BusinessConcepts.create_business_concept(creation_attrs)
       end
     end
+  end
 
-    test "check_business_concept_name_availability/2 check not available" do
-      name = random_name()
-
-      business_concept_version = insert(:business_concept_version, name: name)
-
-      type = business_concept_version.business_concept.type
-
-      assert {:error, :name_not_available} ==
-               BusinessConcepts.check_business_concept_name_availability(type, name)
-    end
-
-    test "check_business_concept_name_availability/2 check available" do
-      name = random_name()
-
-      business_concept_version = insert(:business_concept_version, name: name)
-
-      exclude_concept_id = business_concept_version.business_concept.id
-      type = business_concept_version.business_concept.type
-
-      assert BusinessConcepts.check_business_concept_name_availability(
-               type,
-               name,
-               exclude_concept_id
-             ) == :ok
-    end
-
-    test "check_business_concept_name_availability/3 check not available" do
-      assert [%{name: name}, %{business_concept: %{id: exclude_id, type: type}}] =
-               1..10
-               |> Enum.map(fn _ -> random_name() end)
-               |> Enum.uniq()
-               |> Enum.take(2)
-               |> Enum.map(&insert(:business_concept_version, name: &1))
-
-      assert {:error, :name_not_available} ==
-               BusinessConcepts.check_business_concept_name_availability(type, name, exclude_id)
-    end
-
-    test "count_published_business_concepts/2 check count" do
-      business_concept_version =
-        insert(:business_concept_version, status: BusinessConcept.status().published)
-
-      type = business_concept_version.business_concept.type
-      ids = [business_concept_version.business_concept.id]
-      assert 1 == BusinessConcepts.count_published_business_concepts(type, ids)
-    end
-
-    test "update_business_concept_version/2 with valid data updates the business_concept_version" do
+  describe "update_business_concept_version/2" do
+    test "updates the business_concept_version if data is valid" do
       user = build(:user)
       business_concept_version = insert(:business_concept_version)
 
@@ -487,7 +394,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert object.business_concept.last_change_by == 1000
     end
 
-    test "update_business_concept_version/2 with valid content data updates the business_concept" do
+    test "updates the content with valid content data" do
       content_schema = [
         %{"name" => "Field1", "type" => "string", "cardinality" => "1"},
         %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
@@ -536,7 +443,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert business_concept_version.content["Field2"] == "Second field"
     end
 
-    test "update_business_concept_version/2 with invalid data returns error changeset" do
+    test "returns error and changeset if validation fails" do
       business_concept_version = insert(:business_concept_version)
 
       version_attrs = %{
@@ -551,7 +458,7 @@ defmodule TdBg.BusinessConceptsTest do
 
       update_attrs = Map.put(version_attrs, :content_schema, [])
 
-      assert {:error, %Ecto.Changeset{}} =
+      assert {:error, :updated, %Ecto.Changeset{}, _} =
                BusinessConcepts.update_business_concept_version(
                  business_concept_version,
                  update_attrs
@@ -564,28 +471,94 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert object |> business_concept_version_preload() == business_concept_version
     end
+  end
 
-    test "version_business_concept/2 creates a new version" do
-      business_concept_version =
-        insert(:business_concept_version, status: BusinessConcept.status().published)
-
-      assert {:ok, %{current: new_version}} =
-               BusinessConcepts.version_business_concept(
-                 %User{id: 1234},
-                 business_concept_version
-               )
-
-      assert %BusinessConceptVersion{} = new_version
-
-      assert BusinessConcepts.get_business_concept_version!(business_concept_version.id).current ==
-               false
-
-      assert BusinessConcepts.get_business_concept_version!(new_version.id).current == true
+  describe "business_concepts" do
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [%{name: "fieldname", type: "string", cardinality: "?"}]
+           }
+         ]
+    defp fixture do
+      parent_domain = insert(:domain)
+      child_domain = insert(:domain, parent: parent_domain)
+      insert(:business_concept, type: @template_name, domain: child_domain)
+      insert(:business_concept, type: @template_name, domain: parent_domain)
     end
 
-    test "change_business_concept/1 returns a business_concept changeset" do
-      business_concept = insert(:business_concept)
-      assert %Ecto.Changeset{} = BusinessConcepts.change_business_concept(business_concept)
+    test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
+      business_concept_version = insert(:business_concept_version)
+
+      object =
+        BusinessConcepts.get_current_version_by_business_concept_id!(
+          business_concept_version.business_concept.id
+        )
+
+      assert object |> business_concept_version_preload() == business_concept_version
+    end
+
+    test "get_currently_published_version!/1 returns the published business_concept with given id" do
+      %{id: business_concept_id} = insert(:business_concept)
+
+      [_, _, published_id, _] =
+        ["draft", "versioned", "published", "deprecated"]
+        |> Enum.map(
+          &insert(:business_concept_version, business_concept_id: business_concept_id, status: &1)
+        )
+        |> Enum.map(& &1.id)
+
+      assert %{id: ^published_id} =
+               BusinessConcepts.get_currently_published_version!(business_concept_id)
+    end
+
+    test "get_currently_published_version!/1 returns the last when there are no published" do
+      bcv_draft = insert(:business_concept_version, status: "draft")
+
+      bcv_current =
+        BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
+
+      assert bcv_current.id == bcv_draft.id
+    end
+
+    test "check_business_concept_name_availability/2 check not available" do
+      name = random_name()
+      %{business_concept: %{type: type}} = insert(:business_concept_version, name: name)
+
+      assert {:error, :name_not_available} ==
+               BusinessConcepts.check_business_concept_name_availability(type, name)
+    end
+
+    test "check_business_concept_name_availability/2 check available" do
+      name = random_name()
+
+      %{business_concept: %{id: exclude_concept_id, type: type}} =
+        insert(:business_concept_version, name: name)
+
+      assert BusinessConcepts.check_business_concept_name_availability(
+               type,
+               name,
+               exclude_concept_id
+             ) == :ok
+    end
+
+    test "check_business_concept_name_availability/3 check not available" do
+      assert [%{name: name}, %{business_concept: %{id: exclude_id, type: type}}] =
+               1..10
+               |> Enum.map(fn _ -> random_name() end)
+               |> Enum.uniq()
+               |> Enum.take(2)
+               |> Enum.map(&insert(:business_concept_version, name: &1))
+
+      assert {:error, :name_not_available} ==
+               BusinessConcepts.check_business_concept_name_availability(type, name, exclude_id)
+    end
+
+    test "count_published_business_concepts/2 check count" do
+      %{business_concept: %{id: id, type: type}} =
+        insert(:business_concept_version, status: "published")
+
+      assert 1 == BusinessConcepts.count_published_business_concepts(type, [id])
     end
 
     test "list_all_business_concepts/0 return all business_concetps" do
@@ -610,8 +583,8 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "find_business_concept_versions/1 returns filtered business_concept_versions" do
-      published = BusinessConcept.status().published
-      draft = BusinessConcept.status().draft
+      published = "published"
+      draft = "draft"
       domain = insert(:domain)
       id = [create_version(domain, "one", draft).business_concept.id]
       id = [create_version(domain, "two", published).business_concept.id | id]
@@ -640,7 +613,7 @@ defmodule TdBg.BusinessConceptsTest do
 
       business_concept_versions =
         BusinessConcepts.list_business_concept_versions(business_concept_id, [
-          BusinessConcept.status().draft
+          "draft"
         ])
 
       assert business_concept_versions
@@ -652,39 +625,6 @@ defmodule TdBg.BusinessConceptsTest do
       business_concept_version = insert(:business_concept_version)
       object = BusinessConcepts.get_business_concept_version!(business_concept_version.id)
       assert object |> business_concept_version_preload() == business_concept_version
-    end
-
-    test "update_business_concept_version_status/2 with valid status data updates the business_concept" do
-      business_concept_version = insert(:business_concept_version)
-      attrs = %{status: BusinessConcept.status().published}
-
-      assert {:ok, business_concept_version} =
-               BusinessConcepts.update_business_concept_version_status(
-                 business_concept_version,
-                 attrs
-               )
-
-      assert business_concept_version.status == BusinessConcept.status().published
-    end
-
-    test "reject_business_concept_version/2 rejects business_concept" do
-      business_concept_version =
-        insert(:business_concept_version, status: BusinessConcept.status().pending_approval)
-
-      attrs = %{reject_reason: "Because I want to"}
-
-      assert {:ok, business_concept_version} =
-               BusinessConcepts.reject_business_concept_version(business_concept_version, attrs)
-
-      assert business_concept_version.status == BusinessConcept.status().rejected
-      assert business_concept_version.reject_reason == attrs.reject_reason
-    end
-
-    test "change_business_concept_version/1 returns a business_concept_version changeset" do
-      business_concept_version = insert(:business_concept_version)
-
-      assert %Ecto.Changeset{} =
-               BusinessConcepts.change_business_concept_version(business_concept_version)
     end
 
     test "get_confidential_ids returns all business concept ids which are confidential" do
@@ -742,40 +682,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
   end
 
-  describe "business_concept diff" do
-    defp diff_fixture do
-      old = %BusinessConceptVersion{
-        name: "name1",
-        description: %{foo: "bar"},
-        content: %{change: "will change", remove: "will remove", keep: "keep"}
-      }
-
-      new = %BusinessConceptVersion{
-        name: "name2",
-        description: %{bar: "foo"},
-        content: %{change: "was changed", keep: "keep", add: "was added"}
-      }
-
-      {old, new}
-    end
-
-    test "diff/2 returns the difference between two business concept versions" do
-      {old, new} = diff_fixture()
-
-      %{name: name, description: description, content: content} = BusinessConcepts.diff(old, new)
-
-      assert name == new.name
-      assert description == new.description
-
-      %{added: added, changed: changed, removed: removed} = content
-
-      assert added == %{add: new.content.add}
-      assert changed == %{change: new.content.change}
-      assert removed == %{remove: old.content.remove}
-    end
-  end
-
-  test "create_business_concept/1 with invalid content: required" do
+  test "with invalid content: required" do
     user = build(:user)
     domain = insert(:domain)
 
@@ -842,10 +749,10 @@ defmodule TdBg.BusinessConceptsTest do
 
     creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-    assert {:ok, %BusinessConceptVersion{} = object} =
+    assert {:ok, %{business_concept_version: business_concept_version}} =
              BusinessConcepts.create_business_concept(creation_attrs)
 
-    assert object.content == %{
+    assert business_concept_version.content == %{
              "data_owner" => "domain",
              "link" => [
                %{
@@ -857,15 +764,17 @@ defmodule TdBg.BusinessConceptsTest do
              "texto_libre" => RichText.to_rich_text("free text")
            }
 
-    assert object.name == version_attrs.name
-    assert object.description == version_attrs.description
-    assert object.last_change_by == version_attrs.last_change_by
-    assert object.current == true
-    assert object.in_progress == false
-    assert object.version == version_attrs.version
-    assert object.business_concept.type == concept_attrs.type
-    assert object.business_concept.domain_id == concept_attrs.domain_id
-    assert object.business_concept.last_change_by == concept_attrs.last_change_by
+    assert business_concept_version.name == version_attrs.name
+    assert business_concept_version.description == version_attrs.description
+    assert business_concept_version.last_change_by == version_attrs.last_change_by
+    assert business_concept_version.current == true
+    assert business_concept_version.in_progress == false
+    assert business_concept_version.version == version_attrs.version
+    assert business_concept_version.business_concept.type == concept_attrs.type
+    assert business_concept_version.business_concept.domain_id == concept_attrs.domain_id
+
+    assert business_concept_version.business_concept.last_change_by ==
+             concept_attrs.last_change_by
   end
 
   test "count/1 returns business concept count for a domain" do

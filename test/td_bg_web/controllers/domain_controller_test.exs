@@ -12,7 +12,6 @@ defmodule TdBgWeb.DomainControllerTest do
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{
@@ -39,7 +38,6 @@ defmodule TdBgWeb.DomainControllerTest do
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
-    start_supervised(MockTdAuditService)
     start_supervised(MockTdAuthService)
     :ok
   end
@@ -107,7 +105,8 @@ defmodule TdBgWeb.DomainControllerTest do
       %{id: domain_id} = domain = insert(:domain, parent_id: parent_id)
       %{id: role_id, name: role_name} = get_role_by_name("admin")
 
-      [parent_id, domain_id] |> Enum.each(fn id ->
+      [parent_id, domain_id]
+      |> Enum.each(fn id ->
         MockPermissionResolver.create_acl_entry(%{
           principal_id: user.id,
           principal_type: "user",

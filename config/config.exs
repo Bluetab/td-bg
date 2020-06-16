@@ -54,17 +54,13 @@ config :td_bg, :phoenix_swagger,
     "priv/static/swagger.json" => [router: TdBgWeb.Router]
   }
 
-config :td_bg, :audit_service,
-  api_service: TdBgWeb.ApiServices.HttpTdAuditService,
-  audit_domain: "",
-  audit_host: "localhost",
-  audit_port: "4007",
-  audits_path: "/api/audits/",
-  protocol: "http"
-
 config :td_bg, metrics_publication_frequency: 60_000
 
 config :td_bg, permission_resolver: TdCache.Permissions
+
+config :td_cache, :audit,
+  service: "td_bg",
+  stream: "audit:events"
 
 config :td_cache, :event_stream,
   consumer_id: "default",

@@ -386,7 +386,6 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = state do
-    alias TdBg.BusinessConcepts.BusinessConcept
     business_concept = business_concept_version_by_name(token_admin, business_concept_name)
     assert business_concept_type == business_concept["type"]
 
@@ -395,17 +394,14 @@ defmodule TdBg.BusinessConceptSteps do
       |> field_value_to_api_attrs(fixed_values())
       |> Map.put("in_progress", false)
 
-    published = BusinessConcept.status().published
-    draft = BusinessConcept.status().draft
-
     case business_concept["status"] do
-      ^published ->
+      "published" ->
         {:ok, _, %{"data" => %{"id" => business_concept_version_id}}} =
           business_concept_new_version(token_admin, business_concept["id"])
 
         business_concept_version_update(token_admin, business_concept_version_id, attrs)
 
-      ^draft ->
+      "draft" ->
         business_concept_version_update(token_admin, business_concept["id"], attrs)
 
       _ ->

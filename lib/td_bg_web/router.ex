@@ -58,7 +58,9 @@ defmodule TdBgWeb.Router do
     get("/business_concept_filters", BusinessConceptFilterController, :index)
     post("/business_concept_filters/search", BusinessConceptFilterController, :search)
 
-    resources("/business_concepts/comments", CommentController, except: [:new, :edit])
+    resources("/business_concepts/comments", CommentController,
+      only: [:index, :create, :delete, :show]
+    )
 
     get("/business_concepts/search/reindex_all", SearchController, :reindex_all)
   end

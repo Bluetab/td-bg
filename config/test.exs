@@ -16,14 +16,14 @@ config :td_bg, TdBg.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_bg, :audit_service, api_service: TdBgWeb.ApiServices.MockTdAuditService
-
 config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
 
 config :td_bg, metrics_publication_frequency: 1000
 
-config :td_cache, redis_host: "redis"
-
 config :td_bg, TdBg.Search.Cluster, api: TdBg.ElasticsearchMock
+
+config :td_cache, :audit, stream: "audit:events:test"
+
+config :td_cache, redis_host: "redis"
 
 config :td_cache, :event_stream, streams: []

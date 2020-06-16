@@ -8,8 +8,7 @@ defmodule TdBg.BusinessConcept.Upload do
   alias Codepagex
   alias NimbleCSV
   alias TdBg.BusinessConcepts
-  alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.Events
+  alias TdBg.BusinessConcepts.Audit
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies
@@ -27,7 +26,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
     case create_concepts(path, user) do
       {:ok, concept_ids} ->
-        Events.business_concepts_created(concept_ids)
+        Audit.business_concepts_created(concept_ids)
         ConceptLoader.refresh(concept_ids)
         {:ok, concept_ids}
 
@@ -38,20 +37,11 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp create_concepts(path, user) do
     Logger.info("Inserting business concepts...")
-    start_time = DateTime.utc_now()
 
-    transaction_result =
-      Repo.transaction(fn ->
-        upload_in_transaction(path, user)
-      end)
-
-    end_time = DateTime.utc_now()
-
-    Logger.info(
-      "Business concepts inserted. Elapsed seconds: #{DateTime.diff(end_time, start_time)}"
+    Timer.time(
+      fn -> Repo.transaction(fn -> upload_in_transaction(path, user) end) end,
+      fn ms, _ -> Logger.info("Business concepts inserted in #{ms}ms") end
     )
-
-    transaction_result
   end
 
   defp upload_in_transaction(path, user) do
@@ -117,10 +107,10 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp upload_data([head | tail], user, acc, row_count) do
     case insert_business_concept(head, user) do
-      {:ok, %{business_concept_id: concept_id}} ->
+      {:ok, %{business_concept_version: %{business_concept_id: concept_id}}} ->
         upload_data(tail, user, [concept_id | acc], row_count + 1)
 
-      {:error, error} ->
+      {:error, :business_concept_version, error, _} ->
         {:error, Map.put(error, :row, row_count)}
     end
   end
@@ -166,7 +156,7 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Map.put("content_schema", content_schema)
         |> Map.put("last_change_by", user.id)
         |> Map.put("last_change_at", DateTime.utc_now())
-        |> Map.put("status", BusinessConcept.status().draft)
+        |> Map.put("status", "draft")
         |> Map.put("version", 1)
 
       BusinessConcepts.create_business_concept(creation_attrs, [in_progress: false])
