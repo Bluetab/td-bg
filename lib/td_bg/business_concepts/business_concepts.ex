@@ -3,10 +3,10 @@ defmodule TdBg.BusinessConcepts do
   The BusinessConcepts context.
   """
 
-  import Ecto.Query, warn: false
-  import Ecto.Changeset
+  import Ecto.Query
 
   alias Ecto.Multi
+  alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
@@ -30,7 +30,7 @@ defmodule TdBg.BusinessConcepts do
       do: :ok
 
   def check_business_concept_name_availability(type, name, exclude_concept_id) do
-    status = [BusinessConcept.status().versioned, BusinessConcept.status().deprecated]
+    status = ["versioned", "deprecated"]
 
     BusinessConcept
     |> join(:left, [c], _ in assoc(c, :versions))
@@ -72,27 +72,23 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-    Fetch an exsisting business_concept by its id
+  Fetch an exsisting business_concept by its id
   """
   def get_business_concept!(business_concept_id) do
-    Repo.one!(
-      from(c in BusinessConcept,
-        where: c.id == ^business_concept_id
-      )
-    )
+    BusinessConcept
+    |> where([c], c.id == ^business_concept_id)
+    |> Repo.one!()
   end
 
   @doc """
-    count published business concepts
-    business concept must be of indicated type
-    business concept are resticted to indicated id list
+  count published business concepts
+  business concept must be of indicated type
+  business concept are resticted to indicated id list
   """
   def count_published_business_concepts(type, ids) do
-    published = BusinessConcept.status().published
-
     BusinessConcept
     |> join(:left, [c], _ in assoc(c, :versions))
-    |> where([c, v], c.type == ^type and c.id in ^ids and v.status == ^published)
+    |> where([c, v], c.type == ^type and c.id in ^ids and v.status == "published")
     |> select([c, _v], count(c.id))
     |> Repo.one!()
   end
@@ -118,26 +114,22 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def get_active_ids do
-    Repo.all(
-      from(v in "business_concept_versions",
-        where: v.current,
-        where: v.status != "deprecated",
-        select: v.business_concept_id
-      )
-    )
+    BusinessConceptVersion
+    |> where([v], v.current == true)
+    |> where([v], v.status != "deprecated")
+    |> select([v], v.business_concept_id)
+    |> Repo.all()
   end
 
   def get_confidential_ids do
     confidential = %{"_confidential" => "Si"}
 
-    Repo.all(
-      from(v in "business_concept_versions",
-        where: v.current,
-        where: v.status != "deprecated",
-        where: fragment("(?) @> ?::jsonb", field(v, :content), ^confidential),
-        select: v.business_concept_id
-      )
-    )
+    BusinessConceptVersion
+    |> where([v], v.current == true)
+    |> where([v], v.status != "deprecated")
+    |> where([v], fragment("(?) @> ?::jsonb", v.content, ^confidential))
+    |> select([v], v.business_concept_id)
+    |> Repo.all()
   end
 
   @doc """
@@ -188,12 +180,10 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def get_currently_published_version!(business_concept_id) do
-    published = BusinessConcept.status().published
-
     version =
       BusinessConceptVersion
       |> where([v], v.business_concept_id == ^business_concept_id)
-      |> where([v], v.status == ^published)
+      |> where([v], v.status == "published")
       |> preload(business_concept: [:domain])
       |> Repo.one()
 
@@ -204,8 +194,9 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Creates a business_concept. If the `:index` option is set to `true`, the
-  concept will be reindexed on successful creation.
+  Creates a business_concept and publishes the corresponding audit event. If the
+  `:index` option is set to `true`, the concept will be reindexed on successful
+  creation.
 
   ## Examples
 
@@ -213,33 +204,35 @@ defmodule TdBg.BusinessConcepts do
       {:ok, %BusinessConceptVersion{}}
 
       iex> create_business_concept(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      {:error, %Changeset{}}
 
   """
-  def create_business_concept(attrs, opts \\ []) do
-    attrs
-    |> attrs_keys_to_atoms
-    |> raise_error_if_no_content_schema
-    |> format_content
-    |> set_content_defaults
-    |> validate_new_concept
-    |> validate_description
+  def create_business_concept(params, opts \\ []) do
+    params
+    |> attrs_keys_to_atoms()
+    |> raise_error_if_no_content_schema()
+    |> format_content()
+    |> set_content_defaults()
+    |> validate_new_concept()
+    |> validate_description()
     |> validate_concept_content(opts[:in_progress])
-    |> insert_concept
+    |> insert_concept()
     |> index_on_success(opts[:index])
   end
 
-  defp index_on_success({:ok, %{id: id} = _business_concept_version}, true) do
-    %{business_concept_id: business_concept_id} = bcv = get_business_concept_version!(id)
-    ConceptLoader.refresh(business_concept_id)
-    {:ok, bcv}
+  defp index_on_success({:ok, %{} = res}, true) do
+    with %{business_concept_version: %{id: id}} <- res do
+      %{business_concept_id: business_concept_id} = bcv = get_business_concept_version!(id)
+      ConceptLoader.refresh(business_concept_id)
+      {:ok, bcv}
+    end
   end
 
   defp index_on_success(result, _), do: result
 
-  defp format_content(%{content: content} = attrs) when not is_nil(content) do
+  defp format_content(%{content: content} = params) when not is_nil(content) do
     content =
-      attrs
+      params
       |> Map.get(:content_schema)
       |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
         schema_type in ["url", "enriched_text"] or
@@ -254,10 +247,10 @@ defmodule TdBg.BusinessConcepts do
         &format_field(&1, content)
       )
 
-    Map.put(attrs, :content, content)
+    Map.put(params, :content, content)
   end
 
-  defp format_content(attrs), do: attrs
+  defp format_content(params), do: params
 
   defp format_field(schema, content) do
     {Map.get(schema, "name"),
@@ -270,45 +263,6 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Creates a new business_concept version.
-
-  """
-  def version_business_concept(user, %BusinessConceptVersion{} = business_concept_version) do
-    business_concept = business_concept_version.business_concept
-
-    business_concept =
-      business_concept
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-
-    draft_attrs = Map.from_struct(business_concept_version)
-
-    draft_attrs =
-      draft_attrs
-      |> Map.put("business_concept", business_concept)
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-      |> Map.put("status", BusinessConcept.status().draft)
-      |> Map.put("version", business_concept_version.version + 1)
-
-    result =
-      draft_attrs
-      |> attrs_keys_to_atoms
-      |> validate_new_concept
-      |> version_concept(business_concept_version)
-
-    case result do
-      {:ok, %{current: new_version}} ->
-        business_concept_id = new_version.business_concept_id
-        ConceptLoader.refresh(business_concept_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
-  @doc """
   Updates a business_concept.
 
   ## Examples
@@ -317,24 +271,24 @@ defmodule TdBg.BusinessConcepts do
       {:ok, %BusinessConceptVersion{}}
 
       iex> update_business_concept_version(business_concept_version, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      {:error, %Changeset{}}
 
   """
   def update_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        attrs
+        params
       ) do
     result =
-      attrs
-      |> attrs_keys_to_atoms
-      |> raise_error_if_no_content_schema
-      |> add_content_if_not_exist
+      params
+      |> attrs_keys_to_atoms()
+      |> raise_error_if_no_content_schema()
+      |> add_content_if_not_exist()
       |> merge_content_with_concept(business_concept_version)
-      |> set_content_defaults
+      |> set_content_defaults()
       |> validate_concept(business_concept_version)
-      |> validate_concept_content
-      |> validate_description
-      |> update_concept
+      |> validate_concept_content()
+      |> validate_description()
+      |> update_concept()
 
     case result do
       {:ok, _} ->
@@ -349,19 +303,19 @@ defmodule TdBg.BusinessConcepts do
 
   def bulk_update_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        attrs
+        params
       ) do
     result =
-      attrs
-      |> attrs_keys_to_atoms
-      |> raise_error_if_no_content_schema
-      |> add_content_if_not_exist
+      params
+      |> attrs_keys_to_atoms()
+      |> raise_error_if_no_content_schema()
+      |> add_content_if_not_exist()
       |> merge_content_with_concept(business_concept_version)
-      |> set_content_defaults
+      |> set_content_defaults()
       |> bulk_validate_concept(business_concept_version)
-      |> validate_concept_content
-      |> validate_description
-      |> update_concept
+      |> validate_concept_content()
+      |> validate_description()
+      |> update_concept()
 
     case result do
       {:ok, _} ->
@@ -387,73 +341,6 @@ defmodule TdBg.BusinessConcepts do
     )
   end
 
-  def update_business_concept_version_status(
-        %BusinessConceptVersion{} = business_concept_version,
-        %{status: "deprecated"} = attrs
-      ) do
-    result = do_update_business_concept_version_status(business_concept_version, attrs)
-    ConceptCache.delete(business_concept_version.business_concept_id)
-    result
-  end
-
-  def update_business_concept_version_status(
-        %BusinessConceptVersion{} = business_concept_version,
-        attrs
-      ) do
-    do_update_business_concept_version_status(business_concept_version, attrs)
-  end
-
-  defp do_update_business_concept_version_status(
-         %BusinessConceptVersion{} = business_concept_version,
-         attrs
-       ) do
-    result =
-      business_concept_version
-      |> BusinessConceptVersion.update_status_changeset(attrs)
-      |> Repo.update()
-
-    case result do
-      {:ok, updated_version} ->
-        business_concept_id = updated_version.business_concept_id
-        ConceptLoader.refresh(business_concept_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
-  def publish_business_concept_version(business_concept_version, %{id: id} = _user) do
-    status_published = BusinessConcept.status().published
-    attrs = %{status: status_published, last_change_at: DateTime.utc_now(), last_change_by: id}
-
-    business_concept_id = business_concept_version.business_concept.id
-
-    query =
-      from(
-        c in BusinessConceptVersion,
-        where: c.business_concept_id == ^business_concept_id and c.status == ^status_published
-      )
-
-    result =
-      Multi.new()
-      |> Multi.update_all(:versioned, query, set: [status: BusinessConcept.status().versioned])
-      |> Multi.update(
-        :published,
-        BusinessConceptVersion.update_status_changeset(business_concept_version, attrs)
-      )
-      |> Repo.transaction()
-
-    case result do
-      {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
-        ConceptLoader.refresh(business_concept_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
   def get_concept_counts(business_concept_id) do
     case ConceptCache.get(business_concept_id, refresh: true) do
       {:ok, %{rule_count: rule_count, link_count: link_count}} ->
@@ -463,38 +350,6 @@ defmodule TdBg.BusinessConcepts do
         %{rule_count: 0, link_count: 0}
     end
   end
-
-  def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
-    result =
-      business_concept_version
-      |> BusinessConceptVersion.reject_changeset(attrs)
-      |> Repo.update()
-
-    case result do
-      {:ok, updated_version} ->
-        business_concept_id = updated_version.business_concept_id
-        ConceptLoader.refresh(business_concept_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking business_concept changes.
-
-  ## Examples
-
-      iex> change_business_concept(business_concept)
-      %Ecto.Changeset{source: %BusinessConcept{}}
-
-  """
-  def change_business_concept(%BusinessConcept{} = business_concept) do
-    BusinessConcept.changeset(business_concept, %{})
-  end
-
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
 
   @doc """
   Returns the list of business_concept_versions.
@@ -643,10 +498,12 @@ defmodule TdBg.BusinessConcepts do
       {:ok, %BusinessCocneptVersion{}}
 
       iex> delete_business_concept_version(data_structure)
-      {:error, %Ecto.Changeset{}}
+      {:error, %Changeset{}}
 
   """
-  def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
+  def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version, %{
+        id: user_id
+      }) do
     if business_concept_version.version == 1 do
       business_concept = business_concept_version.business_concept
       business_concept_id = business_concept.id
@@ -654,6 +511,7 @@ defmodule TdBg.BusinessConcepts do
       Multi.new()
       |> Multi.delete(:business_concept_version, business_concept_version)
       |> Multi.delete(:business_concept, business_concept)
+      |> Multi.run(:audit, Audit, :business_concept_deleted, [user_id])
       |> Repo.transaction()
       |> case do
         {:ok,
@@ -682,6 +540,7 @@ defmodule TdBg.BusinessConcepts do
         :current,
         BusinessConceptVersion.current_changeset(business_concept_version)
       )
+      |> Multi.run(:audit, Audit, :business_concept_deleted, [user_id])
       |> Repo.transaction()
       |> case do
         {:ok,
@@ -695,29 +554,14 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking business_concept_version changes.
-
-  ## Examples
-
-      iex> change_business_concept_version(business_concept_version)
-      %Ecto.Changeset{source: %BusinessConceptVersion{}}
-
-  """
-  def change_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.changeset(business_concept_version, %{})
-  end
-
   defp map_keys_to_atoms(key_values) do
-    Map.new(
-      Enum.map(key_values, fn
-        {key, value} when is_binary(key) -> {String.to_existing_atom(key), value}
-        {key, value} when is_atom(key) -> {key, value}
-      end)
-    )
+    Map.new(key_values, fn
+      {key, value} when is_binary(key) -> {String.to_existing_atom(key), value}
+      {key, value} when is_atom(key) -> {key, value}
+    end)
   end
 
-  defp attrs_keys_to_atoms(key_values) do
+  def attrs_keys_to_atoms(key_values) do
     map = map_keys_to_atoms(key_values)
 
     case map.business_concept do
@@ -727,159 +571,140 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp raise_error_if_no_content_schema(attrs) do
-    if not Map.has_key?(attrs, :content_schema) do
+  defp raise_error_if_no_content_schema(params) do
+    if not Map.has_key?(params, :content_schema) do
       raise "Content Schema is not defined for Business Concept"
     end
 
-    attrs
+    params
   end
 
-  defp add_content_if_not_exist(attrs) do
-    if Map.has_key?(attrs, :content) do
-      attrs
+  defp add_content_if_not_exist(params) do
+    if Map.has_key?(params, :content) do
+      params
     else
-      Map.put(attrs, :content, %{})
+      Map.put(params, :content, %{})
     end
   end
 
-  defp validate_new_concept(attrs) do
-    changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, attrs)
-    Map.put(attrs, :changeset, changeset)
+  def validate_new_concept(params) do
+    changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
+    Map.put(params, :changeset, changeset)
   end
 
-  defp validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
-    changeset = BusinessConceptVersion.update_changeset(business_concept_version, attrs)
-    Map.put(attrs, :changeset, changeset)
+  defp validate_concept(params, %BusinessConceptVersion{} = business_concept_version) do
+    changeset = BusinessConceptVersion.update_changeset(business_concept_version, params)
+    Map.put(params, :changeset, changeset)
   end
 
-  defp bulk_validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
-    changeset = BusinessConceptVersion.bulk_update_changeset(business_concept_version, attrs)
-    Map.put(attrs, :changeset, changeset)
+  defp bulk_validate_concept(params, %BusinessConceptVersion{} = business_concept_version) do
+    changeset = BusinessConceptVersion.bulk_update_changeset(business_concept_version, params)
+    Map.put(params, :changeset, changeset)
   end
 
-  defp merge_content_with_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
-    content = Map.get(attrs, :content)
+  defp merge_content_with_concept(params, %BusinessConceptVersion{} = business_concept_version) do
+    content = Map.get(params, :content)
     concept_content = Map.get(business_concept_version, :content, %{})
     new_content = Map.merge(concept_content, content)
-    Map.put(attrs, :content, new_content)
+    Map.put(params, :content, new_content)
   end
 
-  defp set_content_defaults(attrs) do
-    content = Map.get(attrs, :content)
-    content_schema = Map.get(attrs, :content_schema)
+  defp set_content_defaults(params) do
+    content = Map.get(params, :content)
+    content_schema = Map.get(params, :content_schema)
 
     case content do
       nil ->
-        attrs
+        params
 
       _ ->
         content = Format.apply_template(content, content_schema)
-        Map.put(attrs, :content, content)
+        Map.put(params, :content, content)
     end
   end
 
-  defp validate_concept_content(attrs, in_progress \\ nil)
+  defp validate_concept_content(params, in_progress \\ nil)
 
-  defp validate_concept_content(attrs, in_progress) do
-    changeset = Map.get(attrs, :changeset)
+  defp validate_concept_content(params, in_progress) do
+    changeset = Map.get(params, :changeset)
 
     if changeset.valid? do
-      do_validate_concept_content(attrs, in_progress)
+      do_validate_concept_content(params, in_progress)
     else
-      attrs
+      params
     end
   end
 
-  defp do_validate_concept_content(attrs, in_progress) do
-    content = Map.get(attrs, :content)
-    content_schema = Map.get(attrs, :content_schema)
+  defp do_validate_concept_content(params, in_progress) do
+    content = Map.get(params, :content)
+    content_schema = Map.get(params, :content_schema)
     changeset = Validation.build_changeset(content, content_schema)
 
     case in_progress do
-      false -> validate_content(changeset, attrs)
-      _ -> put_in_progress(changeset, attrs)
+      false -> validate_content(changeset, params)
+      _ -> put_in_progress(changeset, params)
     end
   end
 
-  defp validate_description(attrs) do
-    if Map.has_key?(attrs, :description) && Map.has_key?(attrs, :in_progress) &&
-         !attrs.in_progress do
-      do_validate_description(attrs)
+  defp validate_description(params) do
+    if Map.has_key?(params, :description) && Map.has_key?(params, :in_progress) &&
+         !params.in_progress do
+      do_validate_description(params)
     else
-      attrs
+      params
     end
   end
 
-  defp do_validate_description(attrs) do
-    if !attrs.description == %{} do
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
+  defp do_validate_description(params) do
+    import Ecto.Changeset, only: [put_change: 3]
+
+    if !params.description == %{} do
+      params
+      |> Map.put(:changeset, put_change(params.changeset, :in_progress, true))
       |> Map.put(:in_progress, true)
     else
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
+      params
+      |> Map.put(:changeset, put_change(params.changeset, :in_progress, false))
       |> Map.put(:in_progress, false)
     end
   end
 
-  defp put_in_progress(changeset, attrs) do
+  defp put_in_progress(changeset, params) do
+    import Ecto.Changeset, only: [put_change: 3]
+
     if changeset.valid? do
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
+      params
+      |> Map.put(:changeset, put_change(params.changeset, :in_progress, false))
       |> Map.put(:in_progress, false)
     else
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
+      params
+      |> Map.put(:changeset, put_change(params.changeset, :in_progress, true))
       |> Map.put(:in_progress, true)
     end
   end
 
-  defp validate_content(changeset, attrs) do
+  defp update_concept(%{changeset: changeset}) do
+    Multi.new()
+    |> Multi.update(:updated, changeset)
+    |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
+    |> Repo.transaction()
+  end
+
+  defp validate_content(changeset, params) do
     case changeset.valid? do
-      false -> Map.put(attrs, :changeset, changeset)
-      _ -> attrs
+      false -> Map.put(params, :changeset, changeset)
+      _ -> params
     end
   end
 
-  defp update_concept(attrs) do
-    changeset = Map.get(attrs, :changeset)
-
-    if changeset.valid? do
-      Repo.update(changeset)
-    else
-      {:error, changeset}
-    end
-  end
-
-  defp insert_concept(attrs) do
-    changeset = Map.get(attrs, :changeset)
-
-    if changeset.valid? do
-      Repo.insert(changeset)
-    else
-      {:error, changeset}
-    end
-  end
-
-  defp version_concept(attrs, business_concept_version) do
-    changeset = Map.get(attrs, :changeset)
-
-    if changeset.valid? do
-      Multi.new()
-      |> Multi.update(
-        :not_current,
-        BusinessConceptVersion.not_anymore_current_changeset(business_concept_version)
-      )
-      |> Multi.insert(:current, changeset)
-      |> Repo.transaction()
-    else
-      {:error, %{current: changeset}}
-    end
+  defp insert_concept(%{changeset: changeset}) do
+    Multi.new()
+    |> Multi.insert(:business_concept_version, changeset)
+    |> Multi.run(:audit, Audit, :business_concept_created, [])
+    |> Repo.transaction()
   end
 
   def get_business_concept_by_name(name) do
-    # Repo.all from r in BusinessConceptVersion, where:
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [v, c], _ in assoc(c, :domain))
@@ -897,33 +722,6 @@ defmodule TdBg.BusinessConcepts do
     |> preload([_, c, d], business_concept: {c, domain: d})
     |> order_by(asc: :version)
     |> Repo.all()
-  end
-
-  def diff(%BusinessConceptVersion{} = old, %BusinessConceptVersion{} = new) do
-    old_content = Map.get(old, :content, %{})
-    new_content = Map.get(new, :content, %{})
-    content_diff = diff_content(old_content, new_content)
-
-    [:name, :description]
-    |> Enum.map(fn field -> {field, Map.get(old, field), Map.get(new, field)} end)
-    |> Enum.reject(fn {_, old, new} -> old == new end)
-    |> Enum.map(fn {field, _, new} -> {field, new} end)
-    |> Map.new()
-    |> Map.put(:content, content_diff)
-  end
-
-  defp diff_content(old, new) do
-    added = Map.drop(new, Map.keys(old))
-    removed = Map.drop(old, Map.keys(new))
-
-    changed =
-      new
-      |> Map.drop(Map.keys(added))
-      |> Map.drop(Map.keys(removed))
-      |> Enum.reject(fn {key, val} -> Map.get(old, key) == val end)
-      |> Map.new()
-
-    %{added: added, changed: changed, removed: removed}
   end
 
   def get_template(%BusinessConceptVersion{business_concept: business_concept}) do

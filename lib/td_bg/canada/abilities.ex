@@ -124,10 +124,6 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :delete, business_concept_version)
     end
 
-    def can?(%User{} = user, :view_versions, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :view_versions, business_concept_version)
-    end
-
     def can?(
           %User{} = user,
           :view_business_concept,

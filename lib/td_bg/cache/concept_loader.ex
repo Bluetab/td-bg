@@ -139,7 +139,6 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp read_concept_ids(%{event: "add_comment"}) do
-    # TODO: Do we need to do anything with this event?
     []
   end
 

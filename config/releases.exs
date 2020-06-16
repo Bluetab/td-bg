@@ -11,10 +11,6 @@ config :td_bg, TdBg.Auth.Guardian, secret_key: System.fetch_env!("GUARDIAN_SECRE
 
 config :td_bg, TdBg.Search.Cluster, url: System.fetch_env!("ES_URL")
 
-config :td_bg, :audit_service,
-  audit_host: System.fetch_env!("API_AUDIT_HOST"),
-  audit_port: System.fetch_env!("API_AUDIT_PORT")
-
 config :td_cache, redis_host: System.fetch_env!("REDIS_HOST")
 
 config :td_cache, :event_stream, consumer_id: System.fetch_env!("HOSTNAME")

@@ -3,7 +3,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcepts
-  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Search.IndexWorker
   alias TdBg.Utils.CollectionUtils
@@ -233,14 +232,10 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         insert(:business_concept_version, business_concept: concept, content: content)
 
       bc_version_published =
-        insert(:business_concept_version, business_concept: concept, content: content)
-
-      attrs = %{status: BusinessConcept.status().published}
-
-      {:ok, bc_version_published} =
-        BusinessConcepts.update_business_concept_version_status(
-          bc_version_published,
-          attrs
+        insert(:business_concept_version,
+          business_concept: concept,
+          content: content,
+          status: "published"
         )
 
       bc_versions =

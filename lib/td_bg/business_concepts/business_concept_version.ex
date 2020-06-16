@@ -9,6 +9,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
 
+  @valid_status ["draft", "pending_approval", "rejected", "published", "versioned", "deprecated"]
+
   schema "business_concept_versions" do
     field(:content, :map)
     field(:description, :map)
@@ -26,10 +28,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     timestamps(type: :utc_datetime_usec)
   end
 
-  @doc false
-  def create_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def create_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
     business_concept_version
-    |> cast(attrs, [
+    |> cast(params, [
       :content,
       :name,
       :description,
@@ -39,7 +40,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :mod_comments,
       :in_progress
     ])
-    |> put_assoc(:business_concept, attrs.business_concept)
+    |> put_assoc(:business_concept, params.business_concept)
     |> validate_required([
       :content,
       :name,
@@ -49,15 +50,15 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :business_concept,
       :in_progress
     ])
-    |> put_change(:status, BusinessConcept.status().draft)
+    |> put_change(:status, "draft")
     |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
 
-  def update_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def update_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
     business_concept_version
-    |> cast(attrs, [
+    |> cast(params, [
       :content,
       :name,
       :description,
@@ -67,7 +68,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :in_progress
     ])
     |> cast_assoc(:business_concept)
-    |> put_change(:status, BusinessConcept.status().draft)
+    |> put_change(:status, "draft")
     |> validate_required([
       :content,
       :name,
@@ -80,48 +81,42 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> validate_length(:mod_comments, max: 500)
   end
 
-  def bulk_update_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def bulk_update_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
     business_concept_version
-    |> update_changeset(attrs)
+    |> update_changeset(params)
     |> delete_change(:status)
   end
 
-  @doc false
-  def update_status_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def status_changeset(%BusinessConceptVersion{} = business_concept_version, status, user_id) do
     business_concept_version
-    |> cast(attrs, [:status, :last_change_by, :last_change_at])
+    |> cast(%{status: status}, [:status])
     |> validate_required([:status])
-    |> validate_inclusion(:status, Map.values(BusinessConcept.status()))
+    |> validate_inclusion(:status, @valid_status)
+    |> put_audit(user_id)
   end
 
-  @doc false
-  def not_anymore_current_changeset(%BusinessConceptVersion{} = business_concept_version) do
-    business_concept_version
-    |> cast(%{}, [])
-    |> put_change(:current, false)
-  end
-
-  @doc false
   def current_changeset(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_version
     |> Map.get(:business_concept_id)
     |> BusinessConcepts.get_current_version_by_business_concept_id!(%{current: false})
-    |> cast(%{}, [])
-    |> put_change(:current, true)
+    |> change(current: true)
   end
 
-  @doc false
-  def reject_changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def reject_changeset(
+        %BusinessConceptVersion{} = business_concept_version,
+        %{} = params,
+        user_id
+      ) do
     business_concept_version
-    |> cast(attrs, [:reject_reason])
+    |> cast(params, [:reject_reason])
     |> validate_length(:reject_reason, max: 500)
-    |> put_change(:status, BusinessConcept.status().rejected)
+    |> put_change(:status, "rejected")
+    |> put_audit(user_id)
   end
 
-  @doc false
-  def changeset(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def changeset(%BusinessConceptVersion{} = business_concept_version, params) do
     business_concept_version
-    |> cast(attrs, [
+    |> cast(params, [
       :name,
       :description,
       :content,
@@ -146,6 +141,14 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :in_progress
     ])
     |> trim([:name])
+  end
+
+  defp put_audit(%{changes: changes} = changeset, _user_id) when changes == %{}, do: changeset
+
+  defp put_audit(%{} = changeset, user_id) do
+    changeset
+    |> put_change(:last_change_by, user_id)
+    |> put_change(:last_change_at, DateTime.utc_now())
   end
 
   def has_any_status?(%BusinessConceptVersion{status: status}, statuses),
@@ -158,29 +161,29 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def is_updatable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == BusinessConcept.status().draft
+    current && status == "draft"
   end
 
   def is_publishable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == BusinessConcept.status().pending_approval
+    current && status == "pending_approval"
   end
 
   def is_rejectable?(%BusinessConceptVersion{} = business_concept_version),
     do: is_publishable?(business_concept_version)
 
   def is_versionable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == BusinessConcept.status().published
+    current && status == "published"
   end
 
   def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version),
     do: is_versionable?(business_concept_version)
 
   def is_undo_rejectable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == BusinessConcept.status().rejected
+    current && status == "rejected"
   end
 
   def is_deletable?(%BusinessConceptVersion{current: current, status: status}) do
-    valid_statuses = [BusinessConcept.status().draft, BusinessConcept.status().rejected]
+    valid_statuses = ["draft", "rejected"]
     current && Enum.member?(valid_statuses, status)
   end
 

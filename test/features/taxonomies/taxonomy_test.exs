@@ -13,7 +13,6 @@ defmodule TdBg.TaxonomyTest do
   alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
@@ -29,7 +28,6 @@ defmodule TdBg.TaxonomyTest do
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
-    start_supervised(MockTdAuditService)
     start_supervised(MockTdAuthService)
     :ok
   end

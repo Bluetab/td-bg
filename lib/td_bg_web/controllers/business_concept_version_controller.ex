@@ -11,10 +11,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
-  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.BusinessConcepts.Events
   alias TdBg.BusinessConcepts.Links
+  alias TdBg.BusinessConcepts.Workflow
   alias TdBg.Taxonomies
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
@@ -169,7 +168,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> Map.update("content", %{}, & &1)
       |> Map.put("last_change_by", conn.assigns.current_user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
-      |> Map.put("status", BusinessConcept.status().draft)
+      |> Map.put("status", "draft")
       |> Map.put("version", 1)
 
     with {:can, true} <- {:can, can?(user, create_business_concept(domain))},
@@ -177,8 +176,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
          {:ok, %BusinessConceptVersion{id: id} = version} <-
            BusinessConcepts.create_business_concept(creation_attrs, index: true) do
-      Events.business_concept_created(version)
-
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.business_concept_version_path(conn, :show, id))
@@ -316,8 +313,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     with {:can, true} <- {:can, can?(user, delete(business_concept_version))},
          {:ok, %BusinessConceptVersion{}} <-
-           BusinessConcepts.delete_business_concept_version(business_concept_version) do
-      Events.business_concept_deleted(business_concept_version, user.id)
+           BusinessConcepts.delete_business_concept_version(business_concept_version, user) do
       send_resp(conn, :no_content, "")
     end
   end
@@ -338,10 +334,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def send_for_approval(conn, %{"business_concept_version_id" => id}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    draft = BusinessConcept.status().draft
 
     case {business_concept_version.status, business_concept_version.current} do
-      {^draft, true} ->
+      {"draft", true} ->
         send_for_approval(conn, user, business_concept_version)
 
       _ ->
@@ -368,11 +363,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def publish(conn, %{"business_concept_version_id" => id}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    pending_approval = BusinessConcept.status().pending_approval
 
     case {business_concept_version.status, business_concept_version.current} do
-      {^pending_approval, true} ->
-        publish(conn, user, business_concept_version)
+      {"pending_approval", true} ->
+        do_publish(conn, user, business_concept_version)
 
       _ ->
         conn
@@ -399,11 +393,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def reject(conn, %{"business_concept_version_id" => id} = params) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    pending_approval = BusinessConcept.status().pending_approval
 
     case {business_concept_version.status, business_concept_version.current} do
-      {^pending_approval, true} ->
-        reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
+      {"pending_approval", true} ->
+        do_reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
 
       _ ->
         conn
@@ -429,10 +422,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def undo_rejection(conn, %{"business_concept_version_id" => id}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    rejected = BusinessConcept.status().rejected
 
     case {business_concept_version.status, business_concept_version.current} do
-      {^rejected, true} ->
+      {"rejected", true} ->
         undo_rejection(conn, user, business_concept_version)
 
       _ ->
@@ -459,10 +451,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def version(conn, %{"business_concept_version_id" => id}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    published = BusinessConcept.status().published
 
     case {business_concept_version.status, business_concept_version.current} do
-      {^published, true} ->
+      {"published", true} ->
         do_version(conn, user, business_concept_version)
 
       _ ->
@@ -489,10 +480,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def deprecate(conn, %{"business_concept_version_id" => id}) do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    published = BusinessConcept.status().published
 
     case {business_concept_version.status, business_concept_version.current} do
-      {^published, true} ->
+      {"published", true} ->
         deprecate(conn, user, business_concept_version)
 
       _ ->
@@ -510,75 +500,50 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp send_for_approval(conn, user, business_concept_version) do
-    update_status(
-      conn,
-      business_concept_version,
-      BusinessConcept.status().pending_approval,
-      &Events.business_concept_submitted/1,
-      can?(user, send_for_approval(business_concept_version))
-    )
+    with {:can, true} <- {:can, can?(user, send_for_approval(business_concept_version))},
+         {:ok, %{updated: business_concept_version}} <-
+           Workflow.submit_business_concept_version(business_concept_version, user) do
+      render_concept(conn, business_concept_version)
+    end
   end
 
   defp undo_rejection(conn, user, business_concept_version) do
-    update_status(
-      conn,
-      business_concept_version,
-      BusinessConcept.status().draft,
-      &Events.business_concept_redrafted/1,
-      can?(user, undo_rejection(business_concept_version))
-    )
+    with {:can, true} <- {:can, can?(user, undo_rejection(business_concept_version))},
+         {:ok, %{updated: business_concept_version}} <-
+           Workflow.undo_rejected_business_concept_version(business_concept_version, user) do
+      render_concept(conn, business_concept_version)
+    end
   end
 
   defp deprecate(conn, user, business_concept_version) do
-    update_status(
-      conn,
-      business_concept_version,
-      BusinessConcept.status().deprecated,
-      &Events.business_concept_deprecated/1,
-      can?(user, deprecate(business_concept_version))
-    )
+    with {:can, true} <- {:can, can?(user, deprecate(business_concept_version))},
+         {:ok, %{updated: business_concept_version}} <-
+           Workflow.deprecate_business_concept_version(business_concept_version, user) do
+      render_concept(conn, business_concept_version)
+    end
   end
 
-  defp publish(conn, user, business_concept_version) do
+  defp do_publish(conn, user, business_concept_version) do
     with {:can, true} <- {:can, can?(user, publish(business_concept_version))},
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
-           BusinessConcepts.publish_business_concept_version(business_concept_version, user) do
-      Events.business_concept_published(concept)
+           Workflow.publish(business_concept_version, user) do
       render_concept(conn, concept)
     end
   end
 
-  defp reject(conn, user, business_concept_version, reason) do
-    attrs = %{reject_reason: reason}
-
+  defp do_reject(conn, user, business_concept_version, reason) do
     with {:can, true} <- {:can, can?(user, reject(business_concept_version))},
-         {:ok, %BusinessConceptVersion{} = version} <-
-           BusinessConcepts.reject_business_concept_version(business_concept_version, attrs) do
-      Events.business_concept_rejected(version)
+         {:ok, %{rejected: %BusinessConceptVersion{} = version}} <-
+           Workflow.reject(business_concept_version, reason, user) do
       render_concept(conn, version)
-    end
-  end
-
-  defp update_status(conn, business_concept_version, status, audit_fn, authorized) do
-    attrs = %{status: status}
-
-    with {:can, true} <- {:can, authorized},
-         {:ok, %BusinessConceptVersion{} = concept} <-
-           BusinessConcepts.update_business_concept_version_status(
-             business_concept_version,
-             attrs
-           ) do
-      audit_fn.(concept)
-      render_concept(conn, concept)
     end
   end
 
   defp do_version(conn, user, business_concept_version) do
     with {:can, true} <- {:can, can?(user, version(business_concept_version))},
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
-           BusinessConcepts.version_business_concept(user, business_concept_version) do
+           Workflow.new_version(business_concept_version, user) do
       conn = put_status(conn, :created)
-      Events.business_concept_versioned(new_version)
       render_concept(conn, new_version)
     end
   end
@@ -648,8 +613,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
              business_concept_version,
              update_params
            ) do
-      Events.business_concept_updated(business_concept_version, concept_version)
-
       render(
         conn,
         "show.json",
@@ -725,6 +688,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp handle_bc_errors(conn, error) do
+    error =
+      case error do
+        {:error, _field, changeset, _changes_so_far} -> {:error, changeset}
+        _ -> error
+      end
+
     case error do
       {:can, false} ->
         conn
