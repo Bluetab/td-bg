@@ -22,6 +22,10 @@ defmodule Templates do
     put_template(attrs)
   end
 
+  def delete(template_id) do
+    TemplateCache.delete(template_id)
+  end
+
   def create_template do
     attrs = %{
       id: 0,

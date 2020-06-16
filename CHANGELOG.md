@@ -6,6 +6,12 @@
 
 - [TD-2684] check permission `send_business_concept_for_approval` instead of `update_concept`
 
+## [3.24.0] 2020-06-15
+
+### Changed
+
+- [TD-2705] In progress is not applied on concepts upload
+
 ## [3.23.0] 2020-06-01
 
 ### Changed
