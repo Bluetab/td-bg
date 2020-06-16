@@ -1,0 +1,159 @@
+defmodule TdBg.BusinessConcepts.Workflow do
+  @moduledoc """
+  The Business Concept Workflow context.
+  """
+
+  import Ecto.Query
+
+  alias Ecto.Changeset
+  alias Ecto.Multi
+  alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.Audit
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Repo
+  alias TdCache.ConceptCache
+
+  def deprecate_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        user
+      ) do
+    result = update_business_concept_version_status(business_concept_version, "deprecated", user)
+    ConceptCache.delete(business_concept_version.business_concept_id)
+    result
+  end
+
+  def submit_business_concept_version(%BusinessConceptVersion{} = business_concept_version, user) do
+    update_business_concept_version_status(business_concept_version, "pending_approval", user)
+  end
+
+  def undo_rejected_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        user
+      ) do
+    update_business_concept_version_status(business_concept_version, "draft", user)
+  end
+
+  defp update_business_concept_version_status(
+         %BusinessConceptVersion{} = business_concept_version,
+         status,
+         %{id: user_id}
+       ) do
+    changeset = BusinessConceptVersion.status_changeset(business_concept_version, status, user_id)
+
+    Multi.new()
+    |> Multi.update(:updated, changeset)
+    |> Multi.run(:audit, Audit, :status_updated, [changeset])
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{updated: updated}} = result ->
+        business_concept_id = updated.business_concept_id
+        ConceptLoader.refresh(business_concept_id)
+        result
+
+      error ->
+        error
+    end
+  end
+
+  def publish(business_concept_version, %{id: user_id} = _user) do
+    business_concept_id = business_concept_version.business_concept.id
+
+    query =
+      from(
+        c in BusinessConceptVersion,
+        where: c.business_concept_id == ^business_concept_id and c.status == "published"
+      )
+
+    changeset =
+      BusinessConceptVersion.status_changeset(
+        business_concept_version,
+        "published",
+        user_id
+      )
+
+    result =
+      Multi.new()
+      |> Multi.update_all(:versioned, query, set: [status: "versioned"])
+      |> Multi.update(:published, changeset)
+      |> Multi.run(:audit, Audit, :business_concept_published, [])
+      |> Repo.transaction()
+
+    case result do
+      {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
+        ConceptLoader.refresh(business_concept_id)
+        result
+
+      _ ->
+        result
+    end
+  end
+
+  def reject(
+        %BusinessConceptVersion{} = business_concept_version,
+        reason,
+        %{id: user_id}
+      ) do
+    params = %{reject_reason: reason}
+    changeset = BusinessConceptVersion.reject_changeset(business_concept_version, params, user_id)
+
+    Multi.new()
+    |> Multi.update(:rejected, changeset)
+    |> Multi.run(:audit, Audit, :business_concept_rejected, [])
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{rejected: %{business_concept_id: id}}} = result ->
+        ConceptLoader.refresh(id)
+        result
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Creates a new business_concept version.
+  """
+  def new_version(%BusinessConceptVersion{} = business_concept_version, %{} = user) do
+    business_concept = business_concept_version.business_concept
+
+    business_concept =
+      business_concept
+      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_at", DateTime.utc_now())
+
+    draft_attrs = Map.from_struct(business_concept_version)
+
+    draft_attrs =
+      draft_attrs
+      |> Map.put("business_concept", business_concept)
+      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("status", "draft")
+      |> Map.put("version", business_concept_version.version + 1)
+
+    result =
+      draft_attrs
+      |> BusinessConcepts.attrs_keys_to_atoms()
+      |> BusinessConcepts.validate_new_concept()
+      |> do_new_version(business_concept_version)
+
+    case result do
+      {:ok, %{current: new_version}} ->
+        business_concept_id = new_version.business_concept_id
+        ConceptLoader.refresh(business_concept_id)
+        result
+
+      _ ->
+        result
+    end
+  end
+
+  defp do_new_version(%{changeset: changeset}, business_concept_version) do
+    Multi.new()
+    |> Multi.update(:previous, Changeset.change(business_concept_version, current: false))
+    |> Multi.insert(:current, changeset)
+    |> Multi.run(:audit, Audit, :business_concept_versioned, [])
+    |> Repo.transaction()
+  end
+end

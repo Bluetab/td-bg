@@ -2,10 +2,18 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
 
   alias TdBg.Accounts.User
-  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
+
+  @status_to_permission %{
+    "pending_approval" => :view_approval_pending_business_concepts,
+    "deprecated" => :view_deprecated_business_concepts,
+    "draft" => :view_draft_business_concepts,
+    "published" => :view_published_business_concepts,
+    "rejected" => :view_rejected_business_concepts,
+    "versioned" => :view_versioned_business_concepts
+  }
 
   def can?(%User{is_admin: true}, :create_business_concept), do: true
 
@@ -117,28 +125,6 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  # TODO: Check status is versioned??
-  def can?(%User{is_admin: true}, :view_versions, %BusinessConceptVersion{}), do: true
-
-  def can?(%User{} = user, :view_versions, %BusinessConceptVersion{} = business_concept_version) do
-    valid_statuses = [
-      BusinessConcept.status().draft,
-      BusinessConcept.status().pending_approval,
-      BusinessConcept.status().rejected,
-      BusinessConcept.status().published,
-      BusinessConcept.status().versioned,
-      BusinessConcept.status().deprecated
-    ]
-
-    # TODO: Should be only BusinessConcept.status().versioned??
-    BusinessConceptVersion.has_any_status?(business_concept_version, valid_statuses) &&
-      authorized?(
-        user,
-        :view_versioned_business_concepts,
-        business_concept_version
-      )
-  end
-
   def can?(%User{is_admin: true}, :view_business_concept, %BusinessConceptVersion{}), do: true
 
   def can?(
@@ -146,7 +132,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
         :view_business_concept,
         %BusinessConceptVersion{status: status} = business_concept_version
       ) do
-    permission = Map.get(BusinessConcept.status_to_permissions(), status)
+    permission = Map.get(@status_to_permission, status)
     authorized?(user, permission, business_concept_version)
   end
 

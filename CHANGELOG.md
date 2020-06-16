@@ -6,6 +6,10 @@
 
 - [TD-2684] check permission `send_business_concept_for_approval` instead of `update_concept`
 
+### Changed
+
+- [TD-2637] Audit events are now published to a Redis stream
+
 ## [3.24.0] 2020-06-15
 
 ### Changed

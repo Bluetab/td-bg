@@ -1,6 +1,10 @@
 defmodule TdBg.Comments.Comment do
-  @moduledoc false
+  @moduledoc """
+  Ecto Schema module for comments.
+  """
+
   use Ecto.Schema
+
   import Ecto.Changeset
 
   schema "comments" do
@@ -8,17 +12,17 @@ defmodule TdBg.Comments.Comment do
     field(:resource_id, :integer)
     field(:resource_type, :string)
     field(:user, :map)
-    field(:created_at, :utc_datetime_usec)
 
-    timestamps(type: :utc_datetime_usec)
+    timestamps(type: :utc_datetime_usec, updated_at: false)
   end
 
-  @doc """
-  Builds a changeset based on the `struct` and `params`.
-  """
-  def changeset(struct, params \\ %{}) do
+  def changeset(%{} = params) do
+    changeset(%__MODULE__{}, params)
+  end
+
+  def changeset(%__MODULE__{} = struct, %{} = params) do
     struct
-    |> cast(params, [:content, :resource_id, :resource_type, :user, :created_at])
-    |> validate_required([:content, :resource_id, :resource_type, :user, :created_at])
+    |> cast(params, [:content, :resource_id, :resource_type, :user])
+    |> validate_required([:content, :resource_id, :resource_type, :user])
   end
 end

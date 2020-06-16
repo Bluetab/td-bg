@@ -3,8 +3,6 @@ defmodule TdBg.Permissions do
   The Permissions context.
   """
 
-  import Ecto.Query, warn: false
-
   alias TdBg.Accounts.User
   alias TdBg.Taxonomies.Domain
 
@@ -16,10 +14,10 @@ defmodule TdBg.Permissions do
 
   def has_any_permission_on_resource_type?(%User{} = user, permissions, Domain) do
     user
-      |> get_domain_permissions
-      |> Enum.flat_map(&(&1.permissions))
-      |> Enum.uniq
-      |> Enum.any?(&(Enum.member?(permissions, &1)))
+    |> get_domain_permissions()
+    |> Enum.flat_map(& &1.permissions)
+    |> Enum.uniq()
+    |> Enum.any?(&Enum.member?(permissions, &1))
   end
 
   @doc """
@@ -34,5 +32,4 @@ defmodule TdBg.Permissions do
   def authorized?(%User{jti: jti}, permission, domain_id) do
     @permission_resolver.has_permission?(jti, permission, "domain", domain_id)
   end
-
 end

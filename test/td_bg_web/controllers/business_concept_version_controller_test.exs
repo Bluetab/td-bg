@@ -5,12 +5,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.User, only: :functions
 
-  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
@@ -18,7 +16,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
-    start_supervised(MockTdAuditService)
     start_supervised(MockTdAuthService)
     :ok
   end
@@ -112,12 +109,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "search" do
     @tag :admin_authenticated
     test "find business_concepts by status", %{conn: conn} do
-      published = BusinessConcept.status().published
-      draft = BusinessConcept.status().draft
       domain = insert(:domain)
-      create_version(domain, "one", draft).business_concept_id
-      create_version(domain, "two", published).business_concept_id
-      create_version(domain, "three", published).business_concept_id
+      create_version(domain, "one", "draft").business_concept_id
+      create_version(domain, "two", "published").business_concept_id
+      create_version(domain, "three", "published").business_concept_id
 
       conn =
         post(conn, Routes.business_concept_version_path(conn, :search), %{
@@ -153,9 +148,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         role_name: role_create.name
       })
 
-      draft = BusinessConcept.status().draft
-      create_version(domain_watch, "bc_watch", draft).business_concept_id
-      bc_create_id = create_version(domain_create, "bc_create", draft).business_concept_id
+      create_version(domain_watch, "bc_watch", "draft").business_concept_id
+      bc_create_id = create_version(domain_create, "bc_create", "draft").business_concept_id
 
       conn =
         post(conn, Routes.business_concept_version_path(conn, :search), %{
@@ -250,12 +244,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "index_by_name" do
     @tag :admin_authenticated
     test "find business concept by name", %{conn: conn} do
-      published = BusinessConcept.status().published
-      draft = BusinessConcept.status().draft
       domain = insert(:domain)
-      id = [create_version(domain, "one", draft).business_concept.id]
-      id = [create_version(domain, "two", published).business_concept.id | id]
-      [create_version(domain, "two", published).business_concept.id | id]
+      id = [create_version(domain, "one", "draft").business_concept.id]
+      id = [create_version(domain, "two", "published").business_concept.id | id]
+      [create_version(domain, "two", "published").business_concept.id | id]
 
       conn = get(conn, Routes.business_concept_version_path(conn, :index), %{query: "two"})
       assert 2 == length(json_response(conn, 200)["data"])
@@ -320,7 +312,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           :business_concept_version,
           business_concept: business_concept,
           last_change_by: user.id,
-          status: BusinessConcept.status().published
+          status: "published"
         )
 
       updated_content =
@@ -427,7 +419,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         :business_concept_version,
         business_concept: business_concept,
         name: "version_draft",
-        status: BusinessConcept.status().draft
+        status: "draft"
       )
 
       version_published =
@@ -435,7 +427,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           :business_concept_version,
           business_concept: business_concept,
           name: "version_published",
-          status: BusinessConcept.status().published
+          status: "published"
         )
 
       conn =
@@ -482,14 +474,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         :business_concept_version,
         business_concept: business_concept,
         name: "version_draft",
-        status: BusinessConcept.status().draft
+        status: "draft"
       )
 
       insert(
         :business_concept_version,
         business_concept: business_concept,
         name: "version_published",
-        status: BusinessConcept.status().published
+        status: "published"
       )
 
       conn =

@@ -364,15 +364,19 @@ defmodule TdBgWeb.SwaggerDefinitions do
             id(:integer, "Comment unique identifier", required: true)
             resource_id(:integer, "Resource identifier", required: true)
             resource_type(:string, "Resource type", required: true)
-            user_id(:integer, "User identifier", required: true)
             content(:string, "Comment content", required: true)
+            user(:object, "Comment user", required: true)
           end
 
           example(%{
             resource_id: 123,
             resource_type: "Field",
-            user_id: 1,
-            content: "This is a comment"
+            content: "This is a comment",
+            user: %{
+              user_id: 123,
+              user_name: "user123",
+              full_name: "Joe Bloggs"
+            }
           })
         end,
       CommentCreate:
@@ -384,18 +388,6 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   resource_id(:integer, "Resource identifier", required: true)
                   resource_type(:string, "Resource type", required: true)
                   content(:string, "Comment content", required: true)
-                end
-              end
-            )
-          end
-        end,
-      CommentUpdate:
-        swagger_schema do
-          properties do
-            comment(
-              Schema.new do
-                properties do
-                  content(:string, "Comment content")
                 end
               end
             )

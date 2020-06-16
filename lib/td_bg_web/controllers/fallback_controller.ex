@@ -15,6 +15,10 @@ defmodule TdBgWeb.FallbackController do
     |> render("error.json", changeset: changeset)
   end
 
+  def call(conn, {:error, _field, %Ecto.Changeset{} = changeset, _changes_so_far}) do
+    call(conn, {:error, changeset})
+  end
+
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)

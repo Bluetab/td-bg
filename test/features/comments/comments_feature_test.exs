@@ -1,8 +1,8 @@
-defmodule TdBg.CommentsTest do
+defmodule TdBg.CommentsFeatureTest do
   use Cabbage.Feature, async: false, file: "comments/comments.feature"
   use TdBgWeb.FeatureCase
-  import TdBgWeb.BusinessConcept
 
+  import TdBgWeb.BusinessConcept
   import TdBgWeb.ResponseCode
   import TdBgWeb.User, only: :functions
   import TdBgWeb.Taxonomy, only: :functions
@@ -10,12 +10,10 @@ defmodule TdBg.CommentsTest do
   import TdBgWeb.Authentication, only: :functions
 
   alias Jason, as: JSON
-  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuditService
   alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
@@ -31,7 +29,6 @@ defmodule TdBg.CommentsTest do
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
     start_supervised(MockTdAuthService)
-    start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
     :ok
   end
