@@ -2,6 +2,7 @@ defmodule TdBg.UploadTest do
   use TdBg.DataCase
 
   alias TdBg.BusinessConcept.Upload
+  alias TdBg.BusinessConcepts
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Search.IndexWorker
   alias TdBgWeb.ApiServices.MockTdAuthService
@@ -52,7 +53,11 @@ defmodule TdBg.UploadTest do
       user = build(:user)
       insert(:domain, name: "domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
-      assert {:ok, [_ | _]} = Upload.from_csv(business_concept_upload, user)
+      assert {:ok, [concept_id | _]} = Upload.from_csv(business_concept_upload, user)
+
+      assert concept_id
+             |> BusinessConcepts.get_business_concept!()
+             |> Map.get(:confidential)
     end
 
     test "from_csv/2 returns error on invalid content" do

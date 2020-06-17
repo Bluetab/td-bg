@@ -33,5 +33,4 @@ defmodule TdBgWeb.BusinessConceptFilterController do
     filters = Search.get_filter_values(user, params)
     render(conn, "show.json", filters: filters)
   end
-
 end

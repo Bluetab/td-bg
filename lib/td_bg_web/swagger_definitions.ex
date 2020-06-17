@@ -237,6 +237,12 @@ defmodule TdBgWeb.SwaggerDefinitions do
             )
           end
         end,
+      BusinessConceptVersionConfidentialUpdate:
+        swagger_schema do
+          properties do
+            confidential(:boolean, "true for confidential or false for public")
+          end
+        end,
       BulkUpdateRequest:
         swagger_schema do
           properties do

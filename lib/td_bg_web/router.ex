@@ -46,6 +46,7 @@ defmodule TdBgWeb.Router do
       post("/deprecate", BusinessConceptVersionController, :deprecate)
       post("/version", BusinessConceptVersionController, :version)
       post("/redraft", BusinessConceptVersionController, :undo_rejection)
+      post("/set_confidential", BusinessConceptVersionController, :set_confidential)
       get("/data_structures", BusinessConceptVersionController, :get_data_structures)
 
       get("/versions", BusinessConceptVersionController, :versions)

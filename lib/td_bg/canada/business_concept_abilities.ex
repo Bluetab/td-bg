@@ -2,6 +2,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
 
   alias TdBg.Accounts.User
+  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
@@ -44,6 +45,14 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
         :update_business_concept,
         business_concept_version
       )
+  end
+
+  def can?(%User{} = user, :update, %BusinessConcept{} = business_concept) do
+    authorized?(
+      user,
+      :update_business_concept,
+      business_concept
+    )
   end
 
   def can?(
@@ -136,30 +145,42 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     authorized?(user, permission, business_concept_version)
   end
 
+  def can?(
+        %User{} = user,
+        :manage_confidential_business_concepts,
+        %BusinessConceptVersion{} = business_concept_version
+      ) do
+    authorized?(user, :manage_confidential_business_concepts, business_concept_version)
+  end
+
   def can?(%User{}, _action, _business_concept_version), do: false
 
   defp authorized?(%User{is_admin: true}, _permission, _), do: true
 
   defp authorized?(%User{} = user, permission, %BusinessConceptVersion{
-         content: content,
          business_concept: business_concept
        }) do
+    authorized_business_concept(user, permission, business_concept)
+  end
+
+  defp authorized?(%User{} = user, permission, %BusinessConcept{} = business_concept) do
+    authorized_business_concept(user, permission, business_concept)
+  end
+
+  defp authorized_business_concept(
+         %User{} = user,
+         permission,
+         %BusinessConcept{} = business_concept
+       ) do
     domain_id = business_concept.domain_id
 
-    case is_confidential?(content) do
+    case business_concept.confidential do
       true ->
         Permissions.authorized?(user, :manage_confidential_business_concepts, domain_id) &&
           Permissions.authorized?(user, permission, domain_id)
 
       false ->
         Permissions.authorized?(user, permission, domain_id)
-    end
-  end
-
-  defp is_confidential?(content) do
-    case Map.get(content, "_confidential", "No") do
-      "Si" -> true
-      _ -> false
     end
   end
 end

@@ -12,6 +12,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
 
   schema "business_concepts" do
     belongs_to(:domain, Domain)
+    field(:confidential, :boolean)
     field(:type, :string)
     field(:last_change_by, :integer)
     field(:last_change_at, :utc_datetime_usec)
@@ -23,7 +24,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
 
   def changeset(%__MODULE__{} = business_concept, attrs) do
     business_concept
-    |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at])
+    |> cast(attrs, [:confidential, :domain_id, :type, :last_change_by, :last_change_at])
     |> validate_required([:domain_id, :type, :last_change_by, :last_change_at])
   end
 end

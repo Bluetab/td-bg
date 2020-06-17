@@ -27,6 +27,7 @@ defmodule TdBg.Search.Mappings do
       last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
       inserted_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
       current: %{type: "boolean"},
+      confidential: %{type: "boolean", fields: @raw},
       in_progress: %{type: "boolean"},
       domain: %{
         properties: %{
@@ -72,7 +73,6 @@ defmodule TdBg.Search.Mappings do
     TemplateCache.list_by_scope!("bg")
     |> Enum.flat_map(&get_mappings/1)
     |> Enum.into(%{})
-    |> Map.put("_confidential", %{type: "text", fields: @raw})
   end
 
   defp get_mappings(%{content: content}) do

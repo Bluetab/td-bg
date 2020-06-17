@@ -87,6 +87,12 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> delete_change(:status)
   end
 
+  def confidential_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
+    business_concept_version
+    |> update_changeset(params)
+    |> delete_change(:status)
+  end
+
   def status_changeset(%BusinessConceptVersion{} = business_concept_version, status, user_id) do
     business_concept_version
     |> cast(%{status: status}, [:status])
@@ -209,7 +215,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
     @impl Elasticsearch.Document
     def encode(%BusinessConceptVersion{business_concept: business_concept} = bcv) do
-      %{type: type, domain: domain} = business_concept
+      %{type: type, domain: domain, confidential: confidential} = business_concept
       template = TemplateCache.get_by_name!(type) || %{content: []}
       domain_ids = Taxonomies.get_parent_ids(domain.id)
       domain_parents = Enum.map(domain_ids, &get_domain/1)
@@ -218,7 +224,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         bcv
         |> Map.get(:content)
         |> Format.search_values(template)
-        |> confidential()
 
       bcv
       |> Map.take([
@@ -242,6 +247,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       |> Map.put(:domain_parents, domain_parents)
       |> Map.put(:last_change_by, get_last_change_by(bcv))
       |> Map.put(:template, Map.take(template, [:name, :label]))
+      |> Map.put(:confidential, confidential)
     end
 
     defp get_domain(id) do
@@ -261,10 +267,5 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         {:ok, user} -> user
       end
     end
-
-    defp confidential(nil), do: %{}
-
-    defp confidential(content),
-      do: update_in(content["_confidential"], &if(&1 == "Si", do: &1, else: "No"))
   end
 end

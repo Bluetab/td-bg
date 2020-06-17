@@ -625,6 +625,62 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
+  swagger_path :set_confidential do
+    description("Sets Business Concept Version related concept as confidential")
+    produces("application/json")
+
+    parameters do
+      confidential(
+        :body,
+        Schema.ref(:BusinessConceptVersionConfidentialUpdate),
+        "Business Concept Version update attrs"
+      )
+
+      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
+    end
+
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
+    response(400, "Client Error")
+  end
+
+  def set_confidential(conn, %{
+        "business_concept_version_id" => id,
+        "confidential" => confidential
+      }) do
+    user = conn.assigns[:current_user]
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept = business_concept_version.business_concept
+    template = BusinessConcepts.get_template(business_concept_version)
+
+    business_concept_attrs =
+      %{}
+      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("confidential", confidential)
+
+    update_params =
+      %{}
+      |> Map.put("business_concept", business_concept_attrs)
+
+    with {:can, true} <-
+           {:can,
+            can?(user, update(business_concept)) &&
+              can?(user, set_confidential(business_concept_version))},
+         {:ok, %BusinessConceptVersion{} = concept_version} <-
+           BusinessConcepts.update_business_concept(
+             business_concept_version,
+             update_params
+           ) do
+      render(
+        conn,
+        "show.json",
+        business_concept_version: concept_version,
+        hypermedia: hypermedia("business_concept_version", conn, concept_version),
+        template: template
+      )
+    end
+  end
+
   swagger_path :bulk_update do
     description("Bulk Update of Business Concept Versions")
     produces("application/json")
