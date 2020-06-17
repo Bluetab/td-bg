@@ -628,19 +628,17 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "get_confidential_ids returns all business concept ids which are confidential" do
-      bc1 = insert(:business_concept)
+      bc1 = insert(:business_concept, confidential: true)
       bc2 = insert(:business_concept)
       bc3 = insert(:business_concept)
 
       insert(:business_concept_version,
         name: "bcv1",
-        content: %{"_confidential" => "Si"},
         business_concept: bc1
       )
 
       insert(:business_concept_version,
         name: "bcv2",
-        content: %{"_confidential" => "No"},
         business_concept: bc2
       )
 

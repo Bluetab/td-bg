@@ -385,6 +385,82 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
+  describe "set business_concept_version confidential" do
+    @tag :admin_authenticated
+    @tag :template
+    test "updates business concept confidential and renders version", %{
+      conn: conn,
+      swagger_schema: schema
+    } do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      business_concept_version_id = business_concept_version.id
+
+      conn =
+        post(
+          conn,
+          Routes.business_concept_version_business_concept_version_path(
+            conn,
+            :set_confidential,
+            business_concept_version
+          ),
+          confidential: true
+        )
+
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+      assert %{"id" => ^business_concept_version_id} = json_response(conn, 200)["data"]
+
+      conn = recycle_and_put_headers(conn)
+
+      conn =
+        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version_id))
+
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+
+      updated_business_concept_version = json_response(conn, 200)["data"]
+
+      assert updated_business_concept_version["confidential"] == true
+    end
+
+    @tag :admin_authenticated
+    @tag :template
+    test "renders error if invalid value for confidential", %{
+      conn: conn,
+      swagger_schema: schema
+    } do
+      user = build(:user)
+      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      business_concept_version_id = business_concept_version.id
+
+      conn =
+        post(
+          conn,
+          Routes.business_concept_version_business_concept_version_path(
+            conn,
+            :set_confidential,
+            business_concept_version
+          ),
+          confidential: "SI"
+        )
+
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+
+      assert %{"business_concept" => %{"confidential" => ["is invalid"]}} ==
+               json_response(conn, 422)["errors"]
+
+      conn = recycle_and_put_headers(conn)
+
+      conn =
+        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version_id))
+
+      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
+
+      updated_business_concept_version = json_response(conn, 200)["data"]
+
+      assert updated_business_concept_version["confidential"] == false
+    end
+  end
+
   describe "bulk_update" do
     @tag :admin_authenticated
     @tag template: [

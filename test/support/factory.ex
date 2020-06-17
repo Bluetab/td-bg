@@ -29,7 +29,8 @@ defmodule TdBg.Factory do
       domain: build(:domain),
       type: "some_type",
       last_change_by: 1,
-      last_change_at: DateTime.utc_now()
+      last_change_at: DateTime.utc_now(),
+      confidential: false
     }
   end
 

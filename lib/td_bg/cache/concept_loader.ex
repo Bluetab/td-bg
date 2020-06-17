@@ -18,7 +18,7 @@ defmodule TdBg.Cache.ConceptLoader do
   require Logger
 
   @seconds_in_day 60 * 60 * 24
-  @concept_props [:id, :domain_id, :type]
+  @concept_props [:id, :domain_id, :type, :confidential]
   @version_props [:id, :name, :status, :version]
 
   ## Client API

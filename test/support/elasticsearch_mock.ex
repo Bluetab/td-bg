@@ -188,12 +188,11 @@ defmodule TdBg.ElasticsearchMock do
     fn c -> Enum.member?(statuses, c.status) end
   end
 
-  def create_terms_filter(%{:"content._confidential.raw" => values}) do
+  def create_terms_filter(%{:"confidential.raw" => values}) do
     fn c ->
       value =
         c
-        |> Map.get(:content, %{})
-        |> Map.get("_confidential", "No")
+        |> Map.get("confidential", false)
 
       Enum.member?(values, value)
     end

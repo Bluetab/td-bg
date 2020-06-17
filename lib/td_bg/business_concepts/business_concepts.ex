@@ -122,13 +122,12 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def get_confidential_ids do
-    confidential = %{"_confidential" => "Si"}
-
     BusinessConceptVersion
-    |> where([v], v.current == true)
-    |> where([v], v.status != "deprecated")
-    |> where([v], fragment("(?) @> ?::jsonb", v.content, ^confidential))
-    |> select([v], v.business_concept_id)
+    |> join(:inner, [v, c], c in BusinessConcept, on: v.business_concept_id == c.id)
+    |> where([v, _], v.current == true)
+    |> where([v, _], v.status != "deprecated")
+    |> where([_, c], c.confidential == true)
+    |> select([v, _], v.business_concept_id)
     |> Repo.all()
   end
 
@@ -263,7 +262,32 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Updates a business_concept.
+    Updates business_concept attributes
+  """
+
+  def update_business_concept(
+        %BusinessConceptVersion{} = business_concept_version,
+        params
+      ) do
+    result =
+      params
+      |> attrs_keys_to_atoms()
+      |> confidential_changeset(business_concept_version)
+      |> update_concept()
+
+    case result do
+      {:ok, _} ->
+        updated_version = get_business_concept_version!(business_concept_version.id)
+        refresh_cache_and_elastic(updated_version)
+        {:ok, updated_version}
+
+      _ ->
+        result
+    end
+  end
+
+  @doc """
+  Updates a business_concept_version.
 
   ## Examples
 
@@ -599,6 +623,11 @@ defmodule TdBg.BusinessConcepts do
 
   defp bulk_validate_concept(params, %BusinessConceptVersion{} = business_concept_version) do
     changeset = BusinessConceptVersion.bulk_update_changeset(business_concept_version, params)
+    Map.put(params, :changeset, changeset)
+  end
+
+  defp confidential_changeset(params, %BusinessConceptVersion{} = business_concept_version) do
+    changeset = BusinessConceptVersion.confidential_changeset(business_concept_version, params)
     Map.put(params, :changeset, changeset)
   end
 
