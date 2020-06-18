@@ -15,6 +15,7 @@ defmodule TdBg.Search.Aggregations do
          aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}
        }},
       {"status", %{terms: %{field: "status"}}},
+      {"confidential.raw", %{terms: %{field: "confidential.raw"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
       {"rule_count",
        %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},

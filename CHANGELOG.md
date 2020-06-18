@@ -9,6 +9,9 @@
 ### Changed
 
 - [TD-2637] Audit events are now published to a Redis stream
+- [TD-2672] Confidential attribute at Concept level instead 
+            of being set at business concept version template content
+            
 
 ## [3.24.0] 2020-06-15
 

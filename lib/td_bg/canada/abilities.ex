@@ -80,6 +80,10 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :update, business_concept_version)
     end
 
+    def can?(%User{} = user, :update, %BusinessConcept{} = business_concept) do
+      BusinessConceptAbilities.can?(user, :update, business_concept)
+    end
+
     def can?(
           %User{} = user,
           :get_data_structures,
@@ -122,6 +126,18 @@ defmodule TdBg.Canada.Abilities do
 
     def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_version) do
       BusinessConceptAbilities.can?(user, :delete, business_concept_version)
+    end
+
+    def can?(
+          %User{} = user,
+          :set_confidential,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
+      BusinessConceptAbilities.can?(
+        user,
+        :manage_confidential_business_concepts,
+        business_concept_version
+      )
     end
 
     def can?(

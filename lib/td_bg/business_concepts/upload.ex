@@ -146,6 +146,7 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Map.put("type", concept_type)
         |> Map.put("last_change_by", user.id)
         |> Map.put("last_change_at", DateTime.utc_now())
+        |> Map.put("confidential", convert_confidential(data))
 
       creation_attrs =
         data
@@ -208,6 +209,20 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp validate_description(%{"description" => _}), do: {:ok}
   defp validate_description(_), do: {:error, %{error: :missing_value, field: "description"}}
+
+  defp convert_confidential(%{"confidential" => confidential_value}) do
+    confidential_value = String.downcase(confidential_value)
+    case confidential_value do
+      "si" -> true
+      "yes" -> true
+      "true" -> true
+      _ -> false
+    end
+  end
+
+  defp convert_confidential(_data) do
+    false
+  end
 
   defp convert_description(description) do
     %{
