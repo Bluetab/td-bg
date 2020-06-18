@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [TD-2679] Upload of multiple user type fields
+
 ### Changed
 
 - [TD-2637] Audit events are now published to a Redis stream

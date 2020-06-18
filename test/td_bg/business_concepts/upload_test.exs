@@ -32,6 +32,13 @@ defmodule TdBg.UploadTest do
                 "values" => %{
                   "fixed" => ["Yes", "No"]
                 }
+              },
+              %{
+                "cardinality" => "+",
+                "description" => "description",
+                "label" => "Role",
+                "name" => "role",
+                "type" => "user"
               }
             ]
           }
@@ -54,10 +61,10 @@ defmodule TdBg.UploadTest do
       insert(:domain, name: "domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
       assert {:ok, [concept_id | _]} = Upload.from_csv(business_concept_upload, user)
-
-      assert concept_id
-             |> BusinessConcepts.get_business_concept!()
-             |> Map.get(:confidential)
+      version = BusinessConcepts.get_current_version_by_business_concept_id!(concept_id)
+      concept = Map.get(version, :business_concept)
+      assert Map.get(concept, :confidential)
+      assert version |> Map.get(:content) |> Map.get("role") == ["Role"] 
     end
 
     test "from_csv/2 returns error on invalid content" do

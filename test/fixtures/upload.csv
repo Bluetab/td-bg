@@ -1,2 +1,2 @@
-template;name;domain;description;critical;confidential
-term;name;domain;Test;Yes;Si
+template;name;domain;description;critical;confidential;role
+term;name;domain;Test;Yes;Si;Role
