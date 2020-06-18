@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- [TD-2684] check permission `send_business_concept_for_approval` instead of `update_concept`
 - [TD-2679] Upload of multiple user type fields
 
 ### Changed
@@ -12,7 +13,6 @@
 - [TD-2672] Confidential attribute at Concept level instead 
             of being set at business concept version template content
             
-
 ## [3.24.0] 2020-06-15
 
 ### Changed

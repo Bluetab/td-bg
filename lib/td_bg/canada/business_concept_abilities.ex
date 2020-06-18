@@ -75,7 +75,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
         user,
-        :update_business_concept,
+        :send_business_concept_for_approval,
         business_concept_version
       )
   end
