@@ -64,7 +64,7 @@ defmodule TdBg.UploadTest do
       version = BusinessConcepts.get_current_version_by_business_concept_id!(concept_id)
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
-      assert version |> Map.get(:content) |> Map.get("role") == ["Role"] 
+      assert version |> Map.get(:content) |> Map.get("role") == ["Role"]
     end
 
     test "from_csv/2 returns error on invalid content" do
