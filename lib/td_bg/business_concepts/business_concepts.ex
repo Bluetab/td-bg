@@ -235,7 +235,7 @@ defmodule TdBg.BusinessConcepts do
       |> Map.get(:content_schema)
       |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
         schema_type in ["url", "enriched_text"] or
-          (schema_type == "string" and cardinality in ["*", "+"])
+          (schema_type in ["string", "user"] and cardinality in ["*", "+"])
       end)
       |> Enum.filter(fn %{"name" => name} ->
         field_content = Map.get(content, name)
