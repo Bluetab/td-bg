@@ -18,12 +18,10 @@ config :td_bg, TdBg.Repo,
 
 config :td_bg, permission_resolver: TdBg.Permissions.MockPermissionResolver
 
-config :td_bg, metrics_publication_frequency: 1000
-
 config :td_bg, TdBg.Search.Cluster, api: TdBg.ElasticsearchMock
 
 config :td_cache, :audit, stream: "audit:events:test"
 
-config :td_cache, redis_host: "redis"
+config :td_cache, redis_host: "redis", port: 6380
 
 config :td_cache, :event_stream, streams: []

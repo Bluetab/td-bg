@@ -30,7 +30,10 @@ defmodule TdBgWeb.CommentControllerTest do
   describe "POST /api/business_concepts/comments" do
     @tag :admin_authenticated
     test "returns created and json if comment was created", %{conn: conn, swagger_schema: schema} do
-      %{"content" => content, "resource_id" => resource_id} = params = string_params_for(:comment)
+      %{id: resource_id} = insert(:business_concept)
+
+      %{"content" => content, "resource_id" => resource_id} =
+        params = string_params_for(:comment, resource_id: resource_id)
 
       assert %{"data" => data} =
                conn

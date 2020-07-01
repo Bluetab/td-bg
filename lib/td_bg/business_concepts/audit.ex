@@ -9,6 +9,7 @@ defmodule TdBg.BusinessConcepts.Audit do
   alias Ecto.Changeset
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
+  alias TdCache.TaxonomyCache
 
   def business_concepts_created(concept_ids) do
     audit_fields = [
@@ -60,24 +61,24 @@ defmodule TdBg.BusinessConcepts.Audit do
 
   def business_concept_published(_repo, %{published: business_concept_version}) do
     case business_concept_version do
-      %{version: version, business_concept_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{business_concept_id: id, last_change_by: user_id} ->
+        payload = status_payload(business_concept_version)
         publish("concept_published", "concept", id, user_id, payload)
     end
   end
 
   def business_concept_rejected(_repo, %{rejected: business_concept_version}) do
     case business_concept_version do
-      %{version: version, business_concept_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{business_concept_id: id, last_change_by: user_id} ->
+        payload = status_payload(business_concept_version)
         publish("concept_rejected", "concept", id, user_id, payload)
     end
   end
 
   def business_concept_versioned(_repo, %{current: current}) do
     case current do
-      %{business_concept_id: id, last_change_by: user_id, version: version} ->
-        payload = %{version: version}
+      %{business_concept_id: id, last_change_by: user_id} ->
+        payload = status_payload(current)
         publish("new_concept_draft", "concept", id, user_id, payload)
     end
   end
@@ -88,8 +89,8 @@ defmodule TdBg.BusinessConcepts.Audit do
         user_id
       ) do
     case business_concept_version do
-      %{version: version, business_concept_id: id} ->
-        payload = %{version: version}
+      %{business_concept_id: id} ->
+        payload = status_payload(business_concept_version)
         publish("delete_concept_draft", "concept", id, user_id, payload)
     end
   end
@@ -102,25 +103,41 @@ defmodule TdBg.BusinessConcepts.Audit do
 
   defp do_status_updated("pending_approval", business_concept_version) do
     case business_concept_version do
-      %{version: version, business_concept_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{business_concept_id: id, last_change_by: user_id} ->
+        payload = status_payload(business_concept_version)
         publish("concept_submitted", "concept", id, user_id, payload)
     end
   end
 
   defp do_status_updated("deprecated", business_concept_version) do
     case business_concept_version do
-      %{version: version, business_concept_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{business_concept_id: id, last_change_by: user_id} ->
+        payload = status_payload(business_concept_version)
         publish("concept_deprecated", "concept", id, user_id, payload)
     end
   end
 
   defp do_status_updated("draft", business_concept_version) do
     case business_concept_version do
-      %{version: version, business_concept_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{business_concept_id: id, last_change_by: user_id} ->
+        payload = status_payload(business_concept_version)
         publish("concept_rejection_canceled", "concept", id, user_id, payload)
     end
   end
+
+  defp status_payload(business_concept_version) do
+    business_concept_version
+    |> Map.take([:version, :id, :name])
+    |> Map.put(:domain_ids, get_domain_ids(business_concept_version))
+  end
+
+  defp get_domain_ids(%{business_concept: business_concept}) do
+    get_domain_ids(business_concept)
+  end
+
+  defp get_domain_ids(%{domain_id: domain_id}) do
+    TaxonomyCache.get_parent_ids(domain_id)
+  end
+
+  defp get_domain_ids(_), do: []
 end

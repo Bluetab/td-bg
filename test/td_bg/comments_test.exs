@@ -2,6 +2,8 @@ defmodule TdBg.CommentsTest do
   use TdBg.DataCase
 
   alias TdBg.Comments
+  alias TdCache.ConceptCache
+  alias TdCache.DomainCache
   alias TdCache.Redix
   alias TdCache.Redix.Stream
 
@@ -13,17 +15,37 @@ defmodule TdBg.CommentsTest do
   end
 
   setup do
-    on_exit(fn -> Redix.del!(@stream) end)
+    %{id: domain_id} = domain = insert(:domain)
+    %{id: business_concept_id} = concept = insert(:business_concept, domain: domain)
+    insert(:business_concept_version, business_concept_id: business_concept_id)
+
+    DomainCache.put(domain)
+    ConceptCache.put(concept)
+
+    on_exit(fn ->
+      ConceptCache.delete(business_concept_id)
+      DomainCache.delete(domain_id)
+      Redix.del!(@stream)
+    end)
 
     user = build(:user, is_admin: true)
-    [user: user]
+    [user: user, resource_id: business_concept_id]
   end
 
   describe "create_comment/2" do
-    test "creates a comment and publishes an event to the audit stream", %{user: user} do
-      params = string_params_for(:comment)
-      assert {:ok, %{comment: comment, audit: event_id}} = Comments.create_comment(params, user)
-      assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
+    test "creates a comment and publishes an event including domain_ids to the audit stream", %{
+      user: user,
+      resource_id: resource_id
+    } do
+      params = string_params_for(:comment, resource_id: resource_id)
+
+      assert {:ok, %{resource: _, comment: _, audit: event_id}} =
+               Comments.create_comment(params, user)
+
+      assert {:ok, [%{id: ^event_id, payload: payload}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
     end
   end
 

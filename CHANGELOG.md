@@ -1,18 +1,25 @@
 # Changelog
 
-## [Unreleased]
+## [4.0.0] 2020-07-01
 
 ### Fixed
 
-- [TD-2684] check permission `send_business_concept_for_approval` instead of `update_concept`
+- [TD-2684] check permission `send_business_concept_for_approval` instead of
+  `update_concept`
 - [TD-2679] Upload of multiple user type fields
 
 ### Changed
 
 - [TD-2637] Audit events are now published to a Redis stream
-- [TD-2672] Confidential attribute at Concept level instead 
-            of being set at business concept version template content
-            
+- [TD-2585] Include `domain_ids` in payload of audit events
+- [TD-2672] Confidential attribute at Concept level instead of being set at
+  business concept version template content
+- Update to Phoenix 1.5
+
+### Removed
+
+- Deprecated metrics published for prometheus & grafana
+
 ## [3.24.0] 2020-06-15
 
 ### Changed
@@ -24,8 +31,8 @@
 ### Changed
 
 - [TD-2629] Update td-df-lib to omit template fields of type `image` on indexing
-- [TD-2492] Update td-df-lib to include new numeric template types 
-- [TD-2261] Update cache to retrieve new attribute `deleted_at` from structures 
+- [TD-2492] Update td-df-lib to include new numeric template types
+- [TD-2261] Update cache to retrieve new attribute `deleted_at` from structures
 
 ### Fixed
 

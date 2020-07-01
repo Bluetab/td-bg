@@ -6,7 +6,7 @@ defmodule TdBg.Mixfile do
       app: :td_bg,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "3.24.0-local"
+          nil -> "4.0.0-local"
           v -> v
         end,
       elixir: "~> 1.10",
@@ -49,7 +49,7 @@ defmodule TdBg.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.4.0"},
+      {:phoenix, "~> 1.5.0"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0", override: true},
       {:ecto_sql, "~> 3.0"},
@@ -69,14 +69,11 @@ defmodule TdBg.Mixfile do
       {:csv, "~> 2.3"},
       {:nimble_csv, "~> 0.3"},
       {:codepagex, "~> 0.1.4"},
-      {:prometheus_ex, "~> 3.0"},
-      {:prometheus_plugs, "~> 1.0"},
-      {:grafana, git: "https://github.com/BoringButGreat/grafana.git"},
       {:elasticsearch,
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.25.0", override: true},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.25.1"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.0.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.0.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"},
       {:graph, git: "https://github.com/Bluetab/graph.git", tag: "0.1.1"}
     ]
