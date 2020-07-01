@@ -5,6 +5,22 @@ defmodule TdBg.Comments.Audit do
 
   import TdBg.Audit.AuditSupport, only: [publish: 4, publish: 5]
 
+  alias Ecto.Changeset
+  alias TdCache.TaxonomyCache
+
+  @doc """
+  Publishes a `:comment_created` event. Should be called using `Ecto.Multi.run/5`.
+  """
+  def comment_created(repo, %{resource: resource} = multi, changeset, user_id) do
+    changeset =
+      changeset
+      |> Changeset.put_change(:domain_ids, domain_ids(resource))
+      |> Changeset.put_change(:version_id, version_id(resource))
+      |> Changeset.put_change(:resource_name, resource_name(resource))
+
+    comment_created(repo, Map.delete(multi, :resource), changeset, user_id)
+  end
+
   @doc """
   Publishes a `:comment_created` event. Should be called using `Ecto.Multi.run/5`.
   """
@@ -18,4 +34,23 @@ defmodule TdBg.Comments.Audit do
   def comment_deleted(_repo, %{comment: %{id: id}}, user_id) do
     publish("comment_deleted", "comment", id, user_id)
   end
+
+  defp domain_ids(%{domain_id: domain_id}) when is_binary(domain_id) do
+    domain_id
+    |> String.to_integer()
+    |> domain_ids()
+  end
+
+  defp domain_ids(domain_id) when is_integer(domain_id) do
+    TaxonomyCache.get_parent_ids(domain_id)
+  end
+
+  defp domain_ids(_), do: nil
+
+  defp version_id(%{ingest_version_id: id}), do: id
+  defp version_id(%{business_concept_version_id: id}), do: id
+  defp version_id(_), do: nil
+
+  defp resource_name(%{name: name}), do: name
+  defp resource_name(_), do: nil
 end

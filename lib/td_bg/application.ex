@@ -3,7 +3,6 @@ defmodule TdBg.Application do
 
   use Application
 
-  alias TdBg.Metrics.PrometheusExporter
   alias TdBgWeb.Endpoint
 
   # See https://hexdocs.pm/elixir/Application.html
@@ -22,7 +21,6 @@ defmodule TdBg.Application do
         TdBg.Search.Cluster
       ] ++ workers(env)
 
-    PrometheusExporter.setup()
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TdBg.Supervisor]
@@ -44,9 +42,7 @@ defmodule TdBg.Application do
       TdBg.Search.IndexWorker,
       # Cache workers
       TdBg.Cache.ConceptLoader,
-      TdBg.Cache.DomainLoader,
-      # Metrics worker
-      TdBg.Metrics
+      TdBg.Cache.DomainLoader
     ]
   end
 end

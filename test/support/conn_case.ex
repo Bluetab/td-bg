@@ -23,9 +23,11 @@ defmodule TdBgWeb.ConnCase do
   using do
     quote do
       # Import conveniences for testing with connections
-      use Phoenix.ConnTest
-      alias TdBgWeb.Router.Helpers, as: Routes
+      import Plug.Conn
+      import Phoenix.ConnTest
       import TdBg.Factory
+
+      alias TdBgWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
       @endpoint TdBgWeb.Endpoint

@@ -52,7 +52,7 @@ defmodule TdBg.Factory do
 
   def comment_factory do
     %Comment{
-      resource_type: "resource_type",
+      resource_type: "business_concept",
       resource_id: sequence(:resource_id, & &1),
       user: build(:comment_user),
       content: sequence("comment_content")

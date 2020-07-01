@@ -24,5 +24,3 @@ config :td_bg, TdBg.Repo,
   hostname: "localhost"
 
 config :td_cache, redis_host: "localhost"
-
-config :td_bg, metrics_publication_frequency: 10_000

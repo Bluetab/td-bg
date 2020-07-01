@@ -54,8 +54,6 @@ config :td_bg, :phoenix_swagger,
     "priv/static/swagger.json" => [router: TdBgWeb.Router]
   }
 
-config :td_bg, metrics_publication_frequency: 60_000
-
 config :td_bg, permission_resolver: TdCache.Permissions
 
 config :td_cache, :audit,

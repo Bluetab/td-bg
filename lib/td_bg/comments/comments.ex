@@ -9,6 +9,8 @@ defmodule TdBg.Comments do
   alias TdBg.Comments.Audit
   alias TdBg.Comments.Comment
   alias TdBg.Repo
+  alias TdCache.ConceptCache
+  alias TdCache.IngestCache
 
   @doc """
   Returns the list of comments.
@@ -91,8 +93,22 @@ defmodule TdBg.Comments do
 
     Multi.new()
     |> Multi.insert(:comment, changeset)
+    |> Multi.run(:resource, &get_resource/2)
     |> Multi.run(:audit, Audit, :comment_created, [changeset, user_id])
     |> Repo.transaction()
+  end
+
+  defp get_resource(_repo, %{comment: comment}) do
+    case comment do
+      %{resource_type: "business_concept", resource_id: id} ->
+        ConceptCache.get(id)
+
+      %{resource_type: "ingest", resource_id: id} ->
+        IngestCache.get(id)
+
+      _ ->
+        {:error, :not_found}
+    end
   end
 
   @doc """

@@ -12,6 +12,9 @@ defmodule TdBg.Comments.Comment do
     field(:resource_id, :integer)
     field(:resource_type, :string)
     field(:user, :map)
+    field(:domain_ids, {:array, :integer}, virtual: true)
+    field(:version_id, :integer, virtual: true)
+    field(:resource_name, :string, virtual: true)
 
     timestamps(type: :utc_datetime_usec, updated_at: false)
   end
