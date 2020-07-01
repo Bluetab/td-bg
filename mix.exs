@@ -50,17 +50,17 @@ defmodule TdBg.Mixfile do
   defp deps do
     [
       {:phoenix, "~> 1.5.0"},
-      {:plug_cowboy, "~> 2.0"},
-      {:phoenix_ecto, "~> 4.0", override: true},
+      {:plug_cowboy, "~> 2.1"},
+      {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.0"},
       {:postgrex, "~> 0.15.0"},
       {:gettext, "~> 0.11"},
       {:cabbage, only: [:test], git: "https://github.com/Bluetab/cabbage", tag: "v0.3.8-alpha"},
       {:httpoison, "~> 1.0"},
-      {:credo, "~> 1.2", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
       {:guardian, "~> 2.0"},
-      {:canada, "~> 2.0", override: true},
+      {:canada, "~> 2.0"},
       {:ex_machina, "~> 2.3", only: [:test]},
       {:corsica, "~> 1.0"},
       {:phoenix_swagger, "~> 0.8.2"},
@@ -74,7 +74,7 @@ defmodule TdBg.Mixfile do
        branch: "feature/bulk-index-action"},
       {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.0.0"},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.0.0"},
-      {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"},
+      {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.0.0"},
       {:graph, git: "https://github.com/Bluetab/graph.git", tag: "0.1.1"}
     ]
   end
