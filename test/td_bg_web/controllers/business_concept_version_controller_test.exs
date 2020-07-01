@@ -173,47 +173,39 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       domain = insert(:domain)
 
       creation_attrs = %{
-        content: %{},
-        type: "some_type",
-        name: "Some name",
-        description: to_rich_text("Some description"),
-        domain_id: domain.id,
-        in_progress: false
+        "content" => %{},
+        "type" => "some_type",
+        "name" => "Some name",
+        "description" => to_rich_text("Some description"),
+        "domain_id" => domain.id,
+        "in_progress" => false
       }
 
-      conn =
-        post(
-          conn,
-          Routes.business_concept_version_path(conn, :create),
-          business_concept_version: creation_attrs
-        )
+      assert %{"data" => data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_path(conn, :create),
+                 business_concept_version: creation_attrs
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:created)
 
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+      assert %{"id" => id} = data
 
-      conn = recycle_and_put_headers(conn)
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :show, id))
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
 
-      conn = get(conn, Routes.business_concept_version_path(conn, :show, id))
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      business_concept = json_response(conn, 200)["data"]
-
-      %{
-        id: id,
-        last_change_by: Integer.mod(:binary.decode_unsigned("app-admin"), 100_000),
-        version: 1
-      }
-      |> Enum.each(
-        &assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
-      )
+      assert %{"id" => ^id, "last_change_by" => _, "version" => 1} = data
 
       creation_attrs
-      |> Map.drop([:domain_id])
-      |> Enum.each(
-        &assert business_concept |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
-      )
+      |> Map.delete("domain_id")
+      |> Enum.each(fn {k, v} -> assert data[k] == v end)
 
-      assert business_concept["domain"]["id"] == domain.id
-      assert business_concept["domain"]["name"] == domain.name
+      assert data["domain"]["id"] == domain.id
+      assert data["domain"]["name"] == domain.name
     end
 
     @tag :admin_authenticated
@@ -249,12 +241,19 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       id = [create_version(domain, "two", "published").business_concept.id | id]
       [create_version(domain, "two", "published").business_concept.id | id]
 
-      conn = get(conn, Routes.business_concept_version_path(conn, :index), %{query: "two"})
-      assert 2 == length(json_response(conn, 200)["data"])
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :index), %{query: "two"})
+               |> json_response(:ok)
 
-      conn = recycle_and_put_headers(conn)
-      conn = get(conn, Routes.business_concept_version_path(conn, :index), %{query: "one"})
-      assert 1 == length(json_response(conn, 200)["data"])
+      assert length(data) == 2
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :index), %{query: "one"})
+               |> json_response(:ok)
+
+      assert length(data) == 1
     end
   end
 
@@ -352,36 +351,32 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version_id = business_concept_version.id
 
       update_attrs = %{
-        content: %{},
-        name: "The new name",
-        description: to_rich_text("The new description"),
-        in_progress: false
+        "content" => %{},
+        "name" => "The new name",
+        "description" => to_rich_text("The new description"),
+        "in_progress" => false
       }
 
-      conn =
-        put(
-          conn,
-          Routes.business_concept_version_path(conn, :update, business_concept_version),
-          business_concept_version: update_attrs
-        )
+      assert %{"data" => data} =
+               conn
+               |> put(
+                 Routes.business_concept_version_path(conn, :update, business_concept_version),
+                 business_concept_version: update_attrs
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
 
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert %{"id" => ^business_concept_version_id} = json_response(conn, 200)["data"]
+      assert %{"id" => ^business_concept_version_id} = data
 
-      conn = recycle_and_put_headers(conn)
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_version_path(conn, :show, business_concept_version_id)
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
 
-      conn =
-        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version_id))
-
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-
-      updated_business_concept_version = json_response(conn, 200)["data"]
-
-      update_attrs
-      |> Enum.each(
-        &assert updated_business_concept_version |> Map.get(Atom.to_string(elem(&1, 0))) ==
-                  elem(&1, 1)
-      )
+      Enum.each(update_attrs, fn {k, v} -> assert data[k] == v end)
     end
   end
 
@@ -396,68 +391,50 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version = insert(:business_concept_version, last_change_by: user.id)
       business_concept_version_id = business_concept_version.id
 
-      conn =
-        post(
-          conn,
-          Routes.business_concept_version_business_concept_version_path(
-            conn,
-            :set_confidential,
-            business_concept_version
-          ),
-          confidential: true
-        )
+      assert %{"data" => data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :set_confidential,
+                   business_concept_version
+                 ),
+                 confidential: true
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
 
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert %{"id" => ^business_concept_version_id} = json_response(conn, 200)["data"]
+      assert %{"id" => ^business_concept_version_id} = data
 
-      conn = recycle_and_put_headers(conn)
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_version_path(conn, :show, business_concept_version_id)
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
 
-      conn =
-        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version_id))
-
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-
-      updated_business_concept_version = json_response(conn, 200)["data"]
-
-      assert updated_business_concept_version["confidential"] == true
+      assert %{"confidential" => true} = data
     end
 
     @tag :admin_authenticated
     @tag :template
-    test "renders error if invalid value for confidential", %{
-      conn: conn,
-      swagger_schema: schema
-    } do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
-      business_concept_version_id = business_concept_version.id
+    test "renders error if invalid value for confidential", %{conn: conn} do
+      business_concept_version = insert(:business_concept_version)
 
-      conn =
-        post(
-          conn,
-          Routes.business_concept_version_business_concept_version_path(
-            conn,
-            :set_confidential,
-            business_concept_version
-          ),
-          confidential: "SI"
-        )
+      assert %{"errors" => errors} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :set_confidential,
+                   business_concept_version
+                 ),
+                 confidential: "SI"
+               )
+               |> json_response(:unprocessable_entity)
 
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-
-      assert %{"business_concept" => %{"confidential" => ["is invalid"]}} ==
-               json_response(conn, 422)["errors"]
-
-      conn = recycle_and_put_headers(conn)
-
-      conn =
-        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version_id))
-
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-
-      updated_business_concept_version = json_response(conn, 200)["data"]
-
-      assert updated_business_concept_version["confidential"] == false
+      assert %{"business_concept" => %{"confidential" => ["is invalid"]}} == errors
     end
   end
 

@@ -35,10 +35,6 @@ services:
   redis:
     image: library/redis:5.0-alpine
     command: redis-server --port 6380 --appendonly yes
-    ports:
-      - "6380:6380/tcp"
-    volumes:
-      - "/data"
     healthcheck:
       test: redis-cli -h localhost -p 6380 ping | grep -q PONG || exit 1
       interval: 60s

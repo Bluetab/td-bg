@@ -245,12 +245,11 @@ defmodule TdBgWeb.DomainControllerTest do
 
     @tag :admin_authenticated
     test "deletes chosen domain", %{conn: conn, domain: domain} do
-      conn = delete(conn, Routes.domain_path(conn, :delete, domain))
+      assert conn
+             |> delete(Routes.domain_path(conn, :delete, domain))
+             |> response(:no_content)
 
-      assert response(conn, 204)
-      conn = recycle_and_put_headers(conn)
-
-      assert_error_sent 404, fn ->
+      assert_error_sent :not_found, fn ->
         get(conn, Routes.domain_path(conn, :show, domain))
       end
     end
