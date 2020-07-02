@@ -72,6 +72,25 @@ defmodule TdBg.TaxonomiesTest do
       assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
     end
 
+    test "create_domain/1 with an existing name on same group should return an error" do
+      group = insert(:domain_group)
+      %{name: name} = insert(:domain, domain_group: group)
+
+      assert {:error, changeset} =
+               Taxonomies.create_domain(%{name: name, domain_group_id: group.id})
+
+      assert %{errors: [name: error], valid?: false} = changeset
+      assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
+    end
+
+    test "create_domain/1 with an existing name on different group" do
+      group = insert(:domain_group)
+      %{name: name} = insert(:domain, domain_group: group)
+      group = insert(:domain_group)
+
+      assert {:ok, %Domain{}} = Taxonomies.create_domain(%{name: name, domain_group_id: group.id})
+    end
+
     test "create_domain/1 with an existing external_id should return an error" do
       %{external_id: external_id} = insert(:domain)
 
@@ -122,6 +141,28 @@ defmodule TdBg.TaxonomiesTest do
       assert {:error, changeset} = Taxonomies.update_domain(domain, %{name: name})
       assert %{errors: [name: error], valid?: false} = changeset
       assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
+    end
+
+    test "update_domain/2 with an existing name on same group should return an error" do
+      group = insert(:domain_group)
+      %{name: name} = insert(:domain, domain_group: group)
+      domain = insert(:domain)
+
+      assert {:error, changeset} =
+               Taxonomies.update_domain(domain, %{name: name, domain_group_id: group.id})
+
+      assert %{errors: [name: error], valid?: false} = changeset
+      assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
+    end
+
+    test "update_domain/2 with an existing name on different group" do
+      group = insert(:domain_group)
+      %{name: name} = insert(:domain, domain_group: group)
+      domain = insert(:domain)
+      group = insert(:domain_group)
+
+      assert {:ok, %Domain{name: ^name}} =
+               Taxonomies.update_domain(domain, %{name: name, domain_group_id: group.id})
     end
 
     test "update_domain/2 with an existing external_id should return an error" do

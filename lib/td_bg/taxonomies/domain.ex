@@ -7,6 +7,7 @@ defmodule TdBg.Taxonomies.Domain do
 
   import Ecto.Changeset
 
+  alias TdBg.Groups.DomainGroup
   alias TdBg.Taxonomies
 
   schema "domains" do
@@ -16,6 +17,7 @@ defmodule TdBg.Taxonomies.Domain do
     field(:external_id, :string)
     field(:deleted_at, :utc_datetime_usec)
     belongs_to(:parent, __MODULE__)
+    belongs_to(:domain_group, DomainGroup)
 
     timestamps(type: :utc_datetime_usec)
   end
@@ -26,12 +28,14 @@ defmodule TdBg.Taxonomies.Domain do
 
   def changeset(%__MODULE__{} = domain, attrs) do
     domain
-    |> cast(attrs, [:name, :type, :description, :parent_id, :external_id])
+    |> cast(attrs, [:name, :type, :description, :parent_id, :external_id, :domain_group_id])
     |> validate_required([:name])
     |> unique_constraint(:external_id)
-    |> unique_constraint(:name)
+    |> unique_constraint(:name, name: :domains_name_index)
+    |> unique_constraint([:name, :domain_group_id], name: :domains_domain_group_id_name_index)
     |> validate_parent_id(domain)
     |> foreign_key_constraint(:parent_id, name: :domains_parent_id_fkey)
+    |> foreign_key_constraint(:domain_group_id, name: :domains_domain_group_id_fkey)
   end
 
   def delete_changeset(%__MODULE__{} = domain) do

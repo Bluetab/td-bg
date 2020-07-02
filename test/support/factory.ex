@@ -6,6 +6,7 @@ defmodule TdBg.Factory do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Comments.Comment
+  alias TdBg.Groups.DomainGroup
 
   def user_factory do
     %TdBg.Accounts.User{
@@ -64,6 +65,12 @@ defmodule TdBg.Factory do
       id: sequence(:user_id, & &1),
       user_name: sequence("user_name"),
       full_name: sequence("full_name")
+    }
+  end
+
+  def domain_group_factory do
+    %DomainGroup{
+      name: sequence("group_name")
     }
   end
 
