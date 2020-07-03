@@ -7,6 +7,7 @@ defmodule TdBg.Taxonomies.Domain do
 
   import Ecto.Changeset
 
+  alias Ecto.Changeset
   alias TdBg.Groups.DomainGroup
   alias TdBg.Taxonomies
 
@@ -41,6 +42,12 @@ defmodule TdBg.Taxonomies.Domain do
   def delete_changeset(%__MODULE__{} = domain) do
     change(domain, deleted_at: DateTime.utc_now())
   end
+
+  def put_group(%Changeset{valid?: true} = changeset, %{group: group}) when not is_nil(group) do
+    put_assoc(changeset, :domain_group, group)
+  end
+
+  def put_group(%Changeset{} = changeset, _), do: changeset
 
   defp validate_parent_id(%Ecto.Changeset{valid?: false} = changeset, _domain), do: changeset
   defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{id: nil}), do: changeset

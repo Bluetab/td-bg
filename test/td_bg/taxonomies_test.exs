@@ -2,6 +2,7 @@ defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
   alias TdBg.Cache.DomainLoader
+  alias TdBg.Groups
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
@@ -62,6 +63,55 @@ defmodule TdBg.TaxonomiesTest do
                name: ^name,
                description: ^description,
                external_id: ^external_id
+             } = domain
+    end
+
+    test "create_domain/1 child of a parent domain will inherit its parent group" do
+      group = insert(:domain_group)
+      %{id: domain_group_id} = Map.take(group, [:id])
+      %{id: parent_id} = insert(:domain, domain_group: group)
+
+      %{name: name, description: description, external_id: external_id, parent_id: ^parent_id} =
+        params =
+        build(:domain, parent_id: parent_id)
+        |> Map.take([:name, :description, :external_id, :parent_id])
+
+      assert {:ok, domain} = Taxonomies.create_domain(params)
+
+      assert %Domain{
+               parent_id: ^parent_id,
+               name: ^name,
+               description: ^description,
+               external_id: ^external_id,
+               domain_group_id: ^domain_group_id
+             } = domain
+    end
+
+    test "create_domain/1 will create the group if provided and does not exist" do
+      group = insert(:domain_group)
+      %{id: parent_id} = insert(:domain, domain_group: group)
+
+      %{
+        name: name,
+        description: description,
+        external_id: external_id,
+        parent_id: ^parent_id,
+        group: group
+      } =
+        params =
+        build(:domain, parent_id: parent_id)
+        |> Map.put(:group, "foo")
+        |> Map.take([:name, :description, :external_id, :parent_id, :group])
+
+      assert {:ok, domain} = Taxonomies.create_domain(params)
+      assert %{id: domain_group_id} = Groups.get_by(name: group)
+
+      assert %Domain{
+               parent_id: ^parent_id,
+               name: ^name,
+               description: ^description,
+               external_id: ^external_id,
+               domain_group_id: ^domain_group_id
              } = domain
     end
 

@@ -6,8 +6,10 @@ defmodule TdBg.Taxonomies do
   import Ecto.Query
 
   alias Ecto.Changeset
+  alias Ecto.Multi
   alias TdBg.BusinessConcept.Search
   alias TdBg.Cache.DomainLoader
+  alias TdBg.Groups
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies.Domain
@@ -124,18 +126,21 @@ defmodule TdBg.Taxonomies do
 
   """
   def create_domain(attrs \\ %{}) do
+    changeset = Domain.changeset(%Domain{}, attrs)
+
     result =
-      %Domain{}
-      |> Domain.changeset(attrs)
-      |> Repo.insert()
+      Multi.new()
+      |> Multi.run(:group, fn _, _ -> create_group(changeset, attrs) end)
+      |> Multi.insert(:domain, &Domain.put_group(changeset, &1))
+      |> Repo.transaction()
 
     case result do
-      {:ok, domain} ->
+      {:ok, %{domain: domain}} ->
         DomainLoader.refresh(domain.id)
         get_domain(domain.id)
 
-      _ ->
-        result
+      {:error, _, changeset, _} ->
+        {:error, changeset}
     end
   end
 
@@ -236,6 +241,36 @@ defmodule TdBg.Taxonomies do
       |> Enum.map(& &1.id)
     else
       []
+    end
+  end
+
+  defp create_group(_changeset, %{group: group}) when not is_nil(group) do
+    create_group(group)
+  end
+
+  defp create_group(_changeset, %{"group" => group}) when not is_nil(group) do
+    create_group(group)
+  end
+
+  defp create_group(%{changes: %{parent_id: parent_id}}, _attrs) when not is_nil(parent_id) do
+    case get_domain(parent_id) do
+      {:ok, %Domain{domain_group_id: nil}} ->
+        {:ok, nil}
+
+      {:ok, %Domain{domain_group_id: domain_group_id}} ->
+        {:ok, Groups.get_domain_group(domain_group_id)}
+
+      _ ->
+        {:ok, nil}
+    end
+  end
+
+  defp create_group(_changeset, _attrs), do: {:ok, nil}
+
+  defp create_group(name) do
+    case Groups.get_by(name: name) do
+      nil -> Groups.create_domain_group(%{name: name})
+      domain_group -> {:ok, domain_group}
     end
   end
 

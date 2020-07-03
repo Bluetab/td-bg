@@ -38,6 +38,20 @@ defmodule TdBg.Groups do
   def get_domain_group!(id), do: Repo.get!(DomainGroup, id)
 
   @doc """
+  Gets a single domain_group.
+
+  ## Examples
+
+      iex> get_domain_group!(123)
+      %DomainGroup{}
+
+      iex> get_domain_group!(456)
+      ** nil
+
+  """
+  def get_domain_group(id), do: Repo.get(DomainGroup, id)
+
+  @doc """
   Creates a domain_group.
 
   ## Examples
@@ -100,5 +114,22 @@ defmodule TdBg.Groups do
   """
   def change_domain_group(%DomainGroup{} = domain_group, attrs \\ %{}) do
     DomainGroup.changeset(domain_group, attrs)
+  end
+
+  @doc """
+  Fetches a single domain group matching the specified clauses.
+  See `Repo.get_by/2`.
+
+  ## Examples
+
+      iex> get_by(name: name)
+      %DomainGroup{}
+
+      iex> get_by(name: name)
+      nil
+
+  """
+  def get_by(clauses) do
+    Repo.get_by(DomainGroup, clauses)
   end
 end
