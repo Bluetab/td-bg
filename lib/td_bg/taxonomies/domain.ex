@@ -8,6 +8,7 @@ defmodule TdBg.Taxonomies.Domain do
   import Ecto.Changeset
 
   alias Ecto.Changeset
+  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Groups.DomainGroup
   alias TdBg.Taxonomies
 
@@ -18,7 +19,8 @@ defmodule TdBg.Taxonomies.Domain do
     field(:external_id, :string)
     field(:deleted_at, :utc_datetime_usec)
     belongs_to(:parent, __MODULE__)
-    belongs_to(:domain_group, DomainGroup)
+    belongs_to(:domain_group, DomainGroup, on_replace: :nilify)
+    has_many(:business_concepts, BusinessConcept)
 
     timestamps(type: :utc_datetime_usec)
   end
@@ -43,11 +45,13 @@ defmodule TdBg.Taxonomies.Domain do
     change(domain, deleted_at: DateTime.utc_now())
   end
 
-  def put_group(%Changeset{valid?: true} = changeset, %{group: group}) when not is_nil(group) do
+  def put_group(%Changeset{changes: %{domain_group_id: _domain_group_id}} = changeset, _), do: changeset
+
+  def put_group(%Changeset{valid?: true} = changeset, %{group: group}) do
     put_assoc(changeset, :domain_group, group)
   end
 
-  def put_group(%Changeset{} = changeset, _), do: changeset
+  def put_group(%Changeset{} = changeset, _changes), do: changeset
 
   defp validate_parent_id(%Ecto.Changeset{valid?: false} = changeset, _domain), do: changeset
   defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{id: nil}), do: changeset

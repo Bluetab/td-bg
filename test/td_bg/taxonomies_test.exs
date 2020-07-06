@@ -115,6 +115,34 @@ defmodule TdBg.TaxonomiesTest do
              } = domain
     end
 
+    test "create_domain/1 take the provided group if exists" do
+      group = insert(:domain_group)
+      %{id: parent_id} = insert(:domain)
+
+      %{
+        name: name,
+        description: description,
+        external_id: external_id,
+        parent_id: ^parent_id,
+        group: group
+      } =
+        params =
+        build(:domain, parent_id: parent_id)
+        |> Map.put(:group, group.name)
+        |> Map.take([:name, :description, :external_id, :parent_id, :group])
+
+      assert {:ok, domain} = Taxonomies.create_domain(params)
+      assert %{id: domain_group_id} = Groups.get_by(name: group)
+
+      assert %Domain{
+               parent_id: ^parent_id,
+               name: ^name,
+               description: ^description,
+               external_id: ^external_id,
+               domain_group_id: ^domain_group_id
+             } = domain
+    end
+
     test "create_domain/1 with an existing name should return an error" do
       %{name: name} = insert(:domain)
       assert {:error, changeset} = Taxonomies.create_domain(%{name: name})
@@ -232,6 +260,115 @@ defmodule TdBg.TaxonomiesTest do
 
       assert {:ok, %Domain{name: ^name}} =
                Taxonomies.update_domain(domain_to_update, %{name: name})
+    end
+
+    test "update_domain/2 updates the domain group and its children's when its informed and they are linked to some group" do
+      group_name = "foo"
+      root_group = insert(:domain_group)
+      root_children_group = insert(:domain_group)
+      root = insert(:domain, id: 0, domain_group: root_group)
+
+      root_children =
+        Enum.map(1..5, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: root_group)
+        end)
+
+      children =
+        Enum.map(6..10, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
+        end)
+
+      assert {:ok, %Domain{domain_group: %{name: ^group_name}}} =
+               Taxonomies.update_domain(root, %{group: group_name})
+
+      assert %{id: domain_group_id} = Groups.get_by(name: group_name)
+
+      assert Enum.all?(
+               root_children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
+
+      assert %{id: domain_group_id} = Groups.get_by(name: root_children_group.name)
+
+      assert Enum.all?(
+               children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
+    end
+
+    test "update_domain/2 updates the domain group and its children's when its informed and they are not linked to some group" do
+      group_name = "foo"
+      root_children_group = insert(:domain_group)
+      root = insert(:domain, id: 0)
+
+      root_children =
+        Enum.map(1..5, fn level -> insert(:domain, id: level, parent_id: level - 1) end)
+
+      children =
+        Enum.map(6..10, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
+        end)
+
+      assert {:ok, %Domain{domain_group: %{name: ^group_name}}} =
+               Taxonomies.update_domain(root, %{group: group_name})
+
+      assert %{id: domain_group_id} = Groups.get_by(name: group_name)
+
+      assert Enum.all?(
+               root_children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
+
+      assert %{id: domain_group_id} = Groups.get_by(name: root_children_group.name)
+
+      assert Enum.all?(
+               children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
+    end
+
+    test "update_domain/2 deletes the group when specified" do
+      root_group = insert(:domain_group)
+      root_children_group = insert(:domain_group)
+      root = insert(:domain, id: 0, domain_group: root_group)
+
+      root_children =
+        Enum.map(1..5, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: root_group)
+        end)
+
+      children =
+        Enum.map(6..10, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
+        end)
+
+      assert {:ok, %Domain{domain_group: nil}} = Taxonomies.update_domain(root, %{group: nil})
+      assert %{id: domain_group_id} = Groups.get_by(name: root_group.name)
+
+      assert Enum.all?(
+               root_children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
+
+      assert %{id: domain_group_id} = Groups.get_by(name: root_children_group.name)
+
+      assert Enum.all?(
+               children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
+    end
+
+    test "update_domain/2 fails when moving domain to group having domains with the same name" do
+      group = insert(:domain_group)
+      insert(:domain, domain_group: group, name: "name")
+      d2 = insert(:domain, name: "name1")
+      d3 = insert(:domain, name: "name", parent_id: d2.id)
+
+      assert {:error, changeset} = Taxonomies.update_domain(d2, %{group: group.name})
+      assert %{errors: [name: error], valid?: false} = changeset
+      assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
+      assert is_nil(d2.domain_group_id)
+      assert is_nil(d3.domain_group_id)
     end
 
     test "delete_domain/1 soft-deletes the domain" do
