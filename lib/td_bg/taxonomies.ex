@@ -321,7 +321,7 @@ defmodule TdBg.Taxonomies do
 
   defp update_children_groups(%{group: nil}, _), do: {:ok, []}
 
-  defp update_children_groups(%{domain: %{id: domain_id}, group: %{id: domain_group_id}}, %Domain{
+  defp update_children_groups(%{domain: %{id: domain_id, domain_group_id: domain_group_id}}, %Domain{
          domain_group: domain_group
        }) do
     prev_domain_group_id = Map.get(domain_group || %{}, :id)
