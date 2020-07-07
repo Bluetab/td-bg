@@ -371,6 +371,74 @@ defmodule TdBg.TaxonomiesTest do
       assert is_nil(d3.domain_group_id)
     end
 
+    test "update_domain/2 changes parent and updates children group from it" do
+      group = insert(:domain_group)
+      to_change = insert(:domain_group)
+      parent = insert(:domain, domain_group: group, name: "parent")
+      child = insert(:domain, domain_group: group, name: "child", parent_id: parent.id)
+
+      d2 = insert(:domain, name: "name1", domain_group: to_change)
+      d3 = insert(:domain, name: "name2", parent_id: d2.id, domain_group: to_change)
+      d4 = insert(:domain, name: "name3", parent_id: d3.id, domain_group: to_change)
+
+      assert {:ok, %Domain{parent_id: parent_id, domain_group_id: domain_group_id}} =
+               Taxonomies.update_domain(d3, %{parent_id: child.id})
+
+      assert domain_group_id == group.id
+      assert parent_id == child.id
+
+      assert %Domain{parent_id: parent_id, domain_group_id: domain_group_id} =
+               Taxonomies.get_domain!(d4.id)
+
+      assert domain_group_id == group.id
+      assert parent_id == d3.id
+    end
+
+    test "update_domain/2 changes parent and leaves children groups unchanged when they are their own group" do
+      group = insert(:domain_group)
+      group1 = insert(:domain_group)
+
+      parent = insert(:domain, domain_group: group, name: "parent")
+      child = insert(:domain, domain_group: group, name: "child", parent_id: parent.id)
+
+      d2 = insert(:domain, name: "name1", domain_group: group1)
+      d3 = insert(:domain, name: "name2")
+      d4 = insert(:domain, name: "name3", parent_id: d3.id, domain_group: group1)
+      d5 = insert(:domain, name: "name4", parent_id: d4.id, domain_group: group1)
+
+      assert {:ok, %Domain{parent_id: parent_id, domain_group_id: domain_group_id}} =
+               Taxonomies.update_domain(d2, %{parent_id: child.id})
+
+      assert domain_group_id == group1.id
+      assert parent_id == child.id
+
+      assert {:ok, %Domain{parent_id: parent_id, domain_group_id: domain_group_id}} =
+               Taxonomies.update_domain(d4, %{parent_id: child.id})
+
+      assert domain_group_id == group1.id
+      assert parent_id == child.id
+
+      assert %Domain{parent_id: parent_id, domain_group_id: domain_group_id} =
+               Taxonomies.get_domain!(d5.id)
+
+      assert domain_group_id == group1.id
+      assert parent_id == d4.id
+    end
+
+    test "update_domain/2 when updates parent and group at the same time group prevails" do
+      group = insert(:domain_group)
+      group1 = insert(:domain_group)
+
+      parent = insert(:domain, domain_group: group, name: "parent")
+      child = insert(:domain, domain_group: group, name: "child", parent_id: parent.id)
+
+      d1 = insert(:domain, name: "name1")
+      d2 = insert(:domain, name: "name2", parent_id: d1.id)
+
+      assert {:ok, %Domain{parent_id: parent_id, domain_group_id: domain_group_id}} =
+               Taxonomies.update_domain(d2, %{parent_id: child.id, group: group1.name})
+    end
+
     test "delete_domain/1 soft-deletes the domain" do
       domain = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
