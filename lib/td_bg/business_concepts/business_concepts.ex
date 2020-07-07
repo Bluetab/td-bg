@@ -56,6 +56,36 @@ defmodule TdBg.BusinessConcepts do
     )
   end
 
+  def get_active_concepts_in_group(group_id) do
+    BusinessConcept
+    |> join(:left, [c], _ in assoc(c, :versions))
+    |> join(:left, [c, _v], _ in assoc(c, :domain))
+    |> with_group_clause(group_id)
+    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> select([_c, v, _d], v)
+    |> Repo.all()
+  end
+
+  def get_active_concepts_by_domain_ids([]), do: []
+
+  def get_active_concepts_by_domain_ids(domain_ids) do
+    BusinessConcept
+    |> join(:left, [c], _ in assoc(c, :versions))
+    |> join(:left, [c, _v], _ in assoc(c, :domain))
+    |> where([_c, _v, d], d.id in ^domain_ids)
+    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> select([_c, v, _d], v)
+    |> Repo.all()
+  end
+
+  defp with_group_clause(query, nil) do
+    where(query, [_c, _v, d], is_nil(d.domain_group_id))
+  end
+
+  defp with_group_clause(query, group_id) do
+    where(query, [_c, _v, d], d.domain_group_id == ^group_id)
+  end
+
   @doc """
   list all business concepts
   """

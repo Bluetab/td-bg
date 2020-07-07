@@ -10,6 +10,7 @@ defmodule TdBg.Taxonomies do
   alias TdBg.BusinessConcept.Search
   alias TdBg.Cache.DomainLoader
   alias TdBg.Groups
+  alias TdBg.Groups.DomainGroup
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies.Domain
@@ -164,8 +165,9 @@ defmodule TdBg.Taxonomies do
 
     Multi.new()
     |> Multi.run(:group, fn _, _ -> group_on_update(domain, changeset, attrs) end)
-    |> Multi.update(:domain, &Domain.put_group(changeset, &1))
-    |> Multi.run(:children, fn _, changes -> update_children_groups(changes, domain) end)
+    |> Multi.run(:descendents, fn _, changes -> valid_descendents(changes, domain) end)
+    |> Multi.update(:domain, &put_group(domain, changeset, &1))
+    |> Multi.run(:children, fn _, changes -> update_children_groups(changes) end)
     |> Repo.transaction()
     |> refresh_cache()
   end
@@ -279,11 +281,15 @@ defmodule TdBg.Taxonomies do
   defp group_on_create(_changeset, _attrs), do: {:ok, nil}
 
   defp group_on_update(_domain, _changeset, %{group: group}) do
-    create_group(group)
+    case create_group(group) do
+      {:ok, nil} -> {:ok, %{group: group, status: :deleted}}
+      {:ok, %DomainGroup{} = group} -> {:ok, %{group: group, status: :updated}}
+      error -> error
+    end
   end
 
   defp group_on_update(%Domain{domain_group_id: nil}, %{changes: %{parent_id: parent_id}}, _attrs) do
-    get_domain_group(parent_id)
+    {:ok, %{group: get_domain_group(parent_id), status: :inherited}}
   end
 
   defp group_on_update(
@@ -292,13 +298,13 @@ defmodule TdBg.Taxonomies do
          _attrs
        )
        when domain_group_id == parent_group_id do
-    get_domain_group(parent_id)
+    {:ok, %{group: get_domain_group(parent_id), status: :inherited}}
   end
 
   defp group_on_update(%Domain{domain_group: domain_group}, _changeset, _attrs),
-    do: {:ok, domain_group}
+    do: {:ok, %{group: domain_group, status: :unchanged}}
 
-  defp get_domain_group(nil), do: {:ok, nil}
+  defp get_domain_group(nil), do: nil
 
   defp get_domain_group(domain_id) do
     domain_group =
@@ -307,7 +313,7 @@ defmodule TdBg.Taxonomies do
       |> Repo.preload(:domain_group)
       |> Map.get(:domain_group)
 
-    {:ok, domain_group}
+    domain_group
   end
 
   defp create_group(nil), do: {:ok, nil}
@@ -319,17 +325,35 @@ defmodule TdBg.Taxonomies do
     end
   end
 
-  defp update_children_groups(%{group: nil}, _), do: {:ok, []}
+  defp valid_descendents(%{group: %{status: status}}, _domain)
+       when status in [:unchanged, :deleted] do
+    {:ok, []}
+  end
 
-  defp update_children_groups(%{domain: %{id: domain_id, domain_group_id: domain_group_id}}, %Domain{
-         domain_group: domain_group
-       }) do
+  defp valid_descendents(_changes, %Domain{id: domain_id, domain_group: domain_group}) do
     prev_domain_group_id = Map.get(domain_group || %{}, :id)
 
-    updated =
+    descendants =
       domain_id
       |> descendent_ids()
+      |> Enum.reject(&(&1 == domain_id))
       |> children_by_group(prev_domain_group_id)
+
+    {:ok, descendants}
+  end
+
+  defp put_group(_domain, changeset, %{group: %{status: :unchanged}}), do: changeset
+
+  defp put_group(domain, changeset, %{group: group, descendents: descendents}) do
+    Domain.put_group(domain, changeset, Map.merge(group, %{descendents: descendents}))
+  end
+
+  defp update_children_groups(%{
+         domain: %{domain_group_id: domain_group_id},
+         descendents: descendents
+       }) do
+    updated =
+      descendents
       |> Enum.map(&Domain.changeset(&1, %{domain_group_id: domain_group_id}))
       |> Enum.map(&Repo.update/1)
 

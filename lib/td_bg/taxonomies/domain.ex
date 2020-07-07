@@ -8,6 +8,7 @@ defmodule TdBg.Taxonomies.Domain do
   import Ecto.Changeset
 
   alias Ecto.Changeset
+  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Groups.DomainGroup
   alias TdBg.Taxonomies
@@ -45,7 +46,20 @@ defmodule TdBg.Taxonomies.Domain do
     change(domain, deleted_at: DateTime.utc_now())
   end
 
-  def put_group(%Changeset{changes: %{domain_group_id: _domain_group_id}} = changeset, _), do: changeset
+  def put_group(%__MODULE__{id: id}, %Changeset{valid?: true} = changeset, %{
+        group: group,
+        descendents: descendents
+      }) do
+    group_id = Map.get(group || %{}, :id)
+    domain_ids = [id | Enum.map(descendents, & &1.id)]
+    changeset = validate_concept_names(changeset, group_id, domain_ids)
+    put_group(changeset, %{group: group})
+  end
+
+  def put_group(_domain, %Changeset{} = changeset, _changes), do: changeset
+
+  def put_group(%Changeset{changes: %{domain_group_id: _domain_group_id}} = changeset, _),
+    do: changeset
 
   def put_group(%Changeset{valid?: true} = changeset, %{group: group}) do
     put_assoc(changeset, :domain_group, group)
@@ -66,4 +80,26 @@ defmodule TdBg.Taxonomies.Domain do
   end
 
   defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{}), do: changeset
+
+  defp validate_concept_names(changeset, group_id, domain_ids) do
+    group_concept_names =
+      group_id
+      |> BusinessConcepts.get_active_concepts_in_group()
+      |> Enum.map(& &1.name)
+      |> MapSet.new()
+
+    domain_concept_names =
+      domain_ids
+      |> BusinessConcepts.get_active_concepts_by_domain_ids()
+      |> Enum.map(& &1.name)
+      |> MapSet.new()
+
+    group_concept_names
+    |> MapSet.intersection(domain_concept_names)
+    |> MapSet.to_list()
+    |> case do
+      [] -> changeset
+      _ -> add_error(changeset, :business_concept, "concept.error.existing.business_concept.name")
+    end
+  end
 end
