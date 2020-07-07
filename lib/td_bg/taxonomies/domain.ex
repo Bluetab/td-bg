@@ -85,13 +85,13 @@ defmodule TdBg.Taxonomies.Domain do
     group_concept_names =
       group_id
       |> BusinessConcepts.get_active_concepts_in_group()
-      |> Enum.map(& &1.name)
+      |> Enum.map(&String.downcase(&1.name))
       |> MapSet.new()
 
     domain_concept_names =
       domain_ids
       |> BusinessConcepts.get_active_concepts_by_domain_ids()
-      |> Enum.map(& &1.name)
+      |> Enum.map(&String.downcase(&1.name))
       |> MapSet.new()
 
     group_concept_names
