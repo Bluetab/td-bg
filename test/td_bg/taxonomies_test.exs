@@ -439,6 +439,76 @@ defmodule TdBg.TaxonomiesTest do
                Taxonomies.update_domain(d2, %{parent_id: child.id, group: group1.name})
     end
 
+    test "update_domain/2 when updates parent without group and existing business concept fails" do
+      group = insert(:domain_group)
+
+      parent = insert(:domain, name: "parent")
+      child = insert(:domain, name: "child", parent_id: parent.id)
+      concept = insert(:business_concept, domain: child)
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      d1 = insert(:domain, name: "name1", domain_group: group)
+      d2 = insert(:domain, name: "name2", parent_id: d1.id, domain_group: group)
+      concept = insert(:business_concept, domain: d2)
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      assert {:error, changeset} = Taxonomies.update_domain(d2, %{parent_id: parent.id})
+      assert %{errors: [business_concept: error], valid?: false} = changeset
+      assert {"domain.error.existing.business_concept.name", []} = error
+    end
+
+    test "update_domain/2 when updates group with an existing business concept fails" do
+      group = insert(:domain_group)
+      group1 = insert(:domain_group)
+
+      parent = insert(:domain, name: "parent", domain_group: group)
+      child1 = insert(:domain, name: "child1", domain_group: group, parent_id: parent.id)
+      concept = insert(:business_concept, domain: child1)
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      child2 = insert(:domain, name: "child2", domain_group: group1, parent_id: parent.id)
+      concept = insert(:business_concept, domain: child2)
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      assert {:error, changeset} = Taxonomies.update_domain(child2, %{group: group.name})
+      assert %{errors: [business_concept: error], valid?: false} = changeset
+      assert {"domain.error.existing.business_concept.name", []} = error
+    end
+
+    test "update_domain/2 updates group with an inactive business concept" do
+      group = insert(:domain_group)
+      group1 = insert(:domain_group)
+      group_id = Map.get(group, :id)
+
+      parent = insert(:domain, name: "parent", domain_group: group)
+      child1 = insert(:domain, name: "child1", domain_group: group, parent_id: parent.id)
+      concept = insert(:business_concept, domain: child1)
+      insert(:business_concept_version, name: "name", business_concept: concept, status: "versioned")
+
+      child2 = insert(:domain, name: "child2", domain_group: group1, parent_id: parent.id)
+      concept = insert(:business_concept, domain: child2)
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{group: group.name})
+    end
+
+    test "update_domain/2 updates group with different business concepts" do
+      group = insert(:domain_group)
+      group1 = insert(:domain_group)
+      group_id = Map.get(group, :id)
+
+      parent = insert(:domain, name: "parent", domain_group: group)
+      child1 = insert(:domain, name: "child1", domain_group: group, parent_id: parent.id)
+      concept = insert(:business_concept, domain: child1)
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      child2 = insert(:domain, name: "child2", domain_group: group1, parent_id: parent.id)
+      concept = insert(:business_concept, domain: child2)
+      insert(:business_concept_version, name: "name1", business_concept: concept)
+
+      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{group: group.name})
+    end
+
     test "delete_domain/1 soft-deletes the domain" do
       domain = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)

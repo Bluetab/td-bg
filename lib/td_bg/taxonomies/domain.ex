@@ -85,21 +85,25 @@ defmodule TdBg.Taxonomies.Domain do
     group_concept_names =
       group_id
       |> BusinessConcepts.get_active_concepts_in_group()
-      |> Enum.map(&String.downcase(&1.name))
-      |> MapSet.new()
+      |> to_map_set()
 
     domain_concept_names =
       domain_ids
       |> BusinessConcepts.get_active_concepts_by_domain_ids()
-      |> Enum.map(&String.downcase(&1.name))
-      |> MapSet.new()
+      |> to_map_set()
 
     group_concept_names
     |> MapSet.intersection(domain_concept_names)
     |> MapSet.to_list()
     |> case do
       [] -> changeset
-      _ -> add_error(changeset, :business_concept, "concept.error.existing.business_concept.name")
+      _ -> add_error(changeset, :business_concept, "domain.error.existing.business_concept.name")
     end
+  end
+
+  defp to_map_set(collection) do
+    collection
+    |> Enum.map(&String.downcase(&1.name))
+    |> MapSet.new()
   end
 end
