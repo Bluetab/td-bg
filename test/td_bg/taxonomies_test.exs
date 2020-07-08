@@ -96,12 +96,12 @@ defmodule TdBg.TaxonomiesTest do
         description: description,
         external_id: external_id,
         parent_id: ^parent_id,
-        group: group
+        domain_group: group
       } =
         params =
         build(:domain, parent_id: parent_id)
-        |> Map.put(:group, "foo")
-        |> Map.take([:name, :description, :external_id, :parent_id, :group])
+        |> Map.put(:domain_group, "foo")
+        |> Map.take([:name, :description, :external_id, :parent_id, :domain_group])
 
       assert {:ok, domain} = Taxonomies.create_domain(params)
       assert %{id: domain_group_id} = Groups.get_by(name: group)
@@ -124,15 +124,15 @@ defmodule TdBg.TaxonomiesTest do
         description: description,
         external_id: external_id,
         parent_id: ^parent_id,
-        group: group
+        domain_group: domain_group
       } =
         params =
         build(:domain, parent_id: parent_id)
-        |> Map.put(:group, group.name)
-        |> Map.take([:name, :description, :external_id, :parent_id, :group])
+        |> Map.put(:domain_group, group.name)
+        |> Map.take([:name, :description, :external_id, :parent_id, :domain_group])
 
       assert {:ok, domain} = Taxonomies.create_domain(params)
-      assert %{id: domain_group_id} = Groups.get_by(name: group)
+      assert %{id: domain_group_id} = Groups.get_by(name: domain_group)
 
       assert %Domain{
                parent_id: ^parent_id,
@@ -279,7 +279,7 @@ defmodule TdBg.TaxonomiesTest do
         end)
 
       assert {:ok, %Domain{domain_group: %{name: ^group_name}}} =
-               Taxonomies.update_domain(root, %{group: group_name})
+               Taxonomies.update_domain(root, %{domain_group: group_name})
 
       assert %{id: domain_group_id} = Groups.get_by(name: group_name)
 
@@ -310,7 +310,7 @@ defmodule TdBg.TaxonomiesTest do
         end)
 
       assert {:ok, %Domain{domain_group: %{name: ^group_name}}} =
-               Taxonomies.update_domain(root, %{group: group_name})
+               Taxonomies.update_domain(root, %{domain_group: group_name})
 
       assert %{id: domain_group_id} = Groups.get_by(name: group_name)
 
@@ -342,7 +342,7 @@ defmodule TdBg.TaxonomiesTest do
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
         end)
 
-      assert {:ok, %Domain{domain_group: nil}} = Taxonomies.update_domain(root, %{group: nil})
+      assert {:ok, %Domain{domain_group: nil}} = Taxonomies.update_domain(root, %{domain_group: nil})
       assert %{id: domain_group_id} = Groups.get_by(name: root_group.name)
 
       assert Enum.all?(
@@ -364,7 +364,7 @@ defmodule TdBg.TaxonomiesTest do
       d2 = insert(:domain, name: "name1")
       d3 = insert(:domain, name: "name", parent_id: d2.id)
 
-      assert {:error, changeset} = Taxonomies.update_domain(d2, %{group: group.name})
+      assert {:error, changeset} = Taxonomies.update_domain(d2, %{domain_group: group.name})
       assert %{errors: [name: error], valid?: false} = changeset
       assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
       assert is_nil(d2.domain_group_id)
@@ -436,7 +436,7 @@ defmodule TdBg.TaxonomiesTest do
       d2 = insert(:domain, name: "name2", parent_id: d1.id)
 
       assert {:ok, %Domain{parent_id: parent_id, domain_group_id: domain_group_id}} =
-               Taxonomies.update_domain(d2, %{parent_id: child.id, group: group1.name})
+               Taxonomies.update_domain(d2, %{parent_id: child.id, domain_group: group1.name})
     end
 
     test "update_domain/2 when updates parent without group and existing business concept fails" do
@@ -470,7 +470,7 @@ defmodule TdBg.TaxonomiesTest do
       concept = insert(:business_concept, domain: child2)
       insert(:business_concept_version, name: "name", business_concept: concept)
 
-      assert {:error, changeset} = Taxonomies.update_domain(child2, %{group: group.name})
+      assert {:error, changeset} = Taxonomies.update_domain(child2, %{domain_group: group.name})
       assert %{errors: [business_concept: error], valid?: false} = changeset
       assert {"domain.error.existing.business_concept.name", []} = error
     end
@@ -489,7 +489,7 @@ defmodule TdBg.TaxonomiesTest do
       concept = insert(:business_concept, domain: child2)
       insert(:business_concept_version, name: "name", business_concept: concept)
 
-      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{group: group.name})
+      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{domain_group: group.name})
     end
 
     test "update_domain/2 updates group with different business concepts" do
@@ -506,7 +506,7 @@ defmodule TdBg.TaxonomiesTest do
       concept = insert(:business_concept, domain: child2)
       insert(:business_concept_version, name: "name1", business_concept: concept)
 
-      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{group: group.name})
+      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{domain_group: group.name})
     end
 
     test "delete_domain/1 soft-deletes the domain" do

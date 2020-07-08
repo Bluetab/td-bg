@@ -47,13 +47,13 @@ defmodule TdBg.Taxonomies.Domain do
   end
 
   def put_group(%__MODULE__{id: id}, %Changeset{valid?: true} = changeset, %{
-        group: group,
+        domain_group: domain_group,
         descendents: descendents
       }) do
-    group_id = Map.get(group || %{}, :id)
+    group_id = Map.get(domain_group || %{}, :id)
     domain_ids = [id | Enum.map(descendents, & &1.id)]
     changeset = validate_concept_names(changeset, group_id, domain_ids)
-    put_group(changeset, %{group: group})
+    put_group(changeset, %{domain_group: domain_group})
   end
 
   def put_group(_domain, %Changeset{} = changeset, _changes), do: changeset
@@ -61,8 +61,8 @@ defmodule TdBg.Taxonomies.Domain do
   def put_group(%Changeset{changes: %{domain_group_id: _domain_group_id}} = changeset, _),
     do: changeset
 
-  def put_group(%Changeset{valid?: true} = changeset, %{group: group}) do
-    put_assoc(changeset, :domain_group, group)
+  def put_group(%Changeset{valid?: true} = changeset, %{domain_group: domain_group}) do
+    put_assoc(changeset, :domain_group, domain_group)
   end
 
   def put_group(%Changeset{} = changeset, _changes), do: changeset
