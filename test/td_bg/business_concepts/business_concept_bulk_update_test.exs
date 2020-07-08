@@ -100,8 +100,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "Field5" => %{}
       }
 
-      bc_version1 = insert(:business_concept_version, business_concept: bc1, content: content)
-      bc_version2 = insert(:business_concept_version, business_concept: bc2, content: content)
+      bc_version1 = insert(:business_concept_version, business_concept: bc1, content: content, name: "bc_version1")
+      bc_version2 = insert(:business_concept_version, business_concept: bc2, content: content, name: "bc_version2")
 
       bc_versions =
         [bc_version1, bc_version2]
@@ -213,6 +213,46 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       }
 
       assert {:error, :missing_domain} = BulkUpdate.update_all(user, bc_versions, params)
+    end
+
+    test "update_all/3 update all business concept versions with invalid data: name exiting on target domain group" do
+      user = build(:user)
+      group = insert(:domain_group)
+
+      d1 = insert(:domain, name: "d1")
+      d2 = insert(:domain, name: "d2")
+      d3 = insert(:domain, name: "d3", domain_group: group)
+
+      bc1 = insert(:business_concept, domain: d1, type: "template_test")
+      bc2 = insert(:business_concept, domain: d2, type: "template_test")
+      bc3 = insert(:business_concept, domain: d3, type: "template_test")
+
+      content = %{
+        "Field1" => "First field",
+        "Field2" => "Second field"
+      }
+
+      update_content = %{
+        "Field1" => "First update",
+        "Field2" => "Second field"
+      }
+
+      bc_version1 = insert(:business_concept_version, business_concept: bc1, name: "name", content: content)
+      bc_version2 = insert(:business_concept_version, business_concept: bc2, content: content)
+      insert(:business_concept_version, business_concept: bc3, name: "name", content: content)
+
+      bc_versions =
+        [bc_version1, bc_version2]
+        |> Enum.map(&Map.take(&1, [:id]))
+        |> Enum.map(&CollectionUtils.stringify_keys/1)
+
+      params = %{
+        "domain_id" => d3.id,
+        "content" => update_content
+      }
+
+      assert {:error, %{errors: [name: error]}} = BulkUpdate.update_all(user, bc_versions, params)
+      assert {"error.existing.business_concept.name", []} = error
     end
 
     test "update_all/3 two versions of the same concept" do
