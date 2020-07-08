@@ -51,7 +51,7 @@ defmodule TdBg.BusinessConcept.Upload do
       |> File.stream!()
 
     with {:ok, parsed_file} <- parse_file(file),
-         {:ok, parsed_list} <- parse_data_list(parsed_file) ,
+         {:ok, parsed_list} <- parse_data_list(parsed_file),
          {:ok, uploaded_ids} <- upload_data(parsed_list, user, [], 2) do
       uploaded_ids
     else
@@ -119,8 +119,8 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp insert_business_concept(data, user) do
     with {:ok, %{name: concept_type, content: content_schema}} <- validate_template(data),
-         {:ok} <- validate_name(data),
-         {:ok, %{id: domain_id}} <- validate_domain(data),
+         {:ok, %{id: domain_id} = domain} <- validate_domain(data),
+         {:ok} <- validate_name(data, domain),
          {:ok} <- validate_description(data) do
       empty_fields =
         data
@@ -160,7 +160,7 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Map.put("status", "draft")
         |> Map.put("version", 1)
 
-      BusinessConcepts.create_business_concept(creation_attrs, [in_progress: false])
+      BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
     else
       error -> error
     end
@@ -182,21 +182,26 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp validate_template(_), do: {:error, %{error: :missing_value, field: "template"}}
 
-  defp validate_name(%{"name" => ""}), do: {:error, %{error: :missing_value, field: "name"}}
+  defp validate_name(%{"name" => ""}, _domain),
+    do: {:error, %{error: :missing_value, field: "name"}}
 
-  defp validate_name(%{"name" => name, "template" => template}) do
-    case BusinessConcepts.check_business_concept_name_availability(template, name) do
+  defp validate_name(%{"name" => name, "template" => template}, domain) do
+    domain_group_id = get_domain_group_id(domain)
+
+    case BusinessConcepts.check_business_concept_name_availability(template, name,
+           domain_group_id: domain_group_id
+         ) do
       :ok -> {:ok}
       {:error, error} -> {:error, %{error: error, name: name}}
     end
   end
 
-  defp validate_name(_), do: {:error, %{error: :missing_value, field: "name"}}
+  defp validate_name(_, _), do: {:error, %{error: :missing_value, field: "name"}}
 
   defp validate_domain(%{"domain" => ""}), do: {:error, %{error: :missing_value, field: "domain"}}
 
   defp validate_domain(%{"domain" => domain}) do
-    case Taxonomies.get_domain_by_name(domain) do
+    case Taxonomies.get_domain_by_name(domain, [:domain_group]) do
       nil -> {:error, %{error: :invalid_domain, domain: domain}}
       domain -> {:ok, domain}
     end
@@ -212,6 +217,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp convert_confidential(%{"confidential" => confidential_value}) do
     confidential_value = String.downcase(confidential_value)
+
     case confidential_value do
       "si" -> true
       "yes" -> true
@@ -237,4 +243,8 @@ defmodule TdBg.BusinessConcept.Upload do
       }
     }
   end
+
+  defp get_domain_group_id(%{domain_group: nil}), do: nil
+
+  defp get_domain_group_id(%{domain_group: domain_group}), do: Map.get(domain_group, :id)
 end

@@ -23,19 +23,21 @@ defmodule TdBg.BusinessConcepts do
   @doc """
   check business concept name availability
   """
-  def check_business_concept_name_availability(type, name, exclude_concept_id \\ nil)
+  def check_business_concept_name_availability(type, name, opts \\ [])
 
-  def check_business_concept_name_availability(type, name, _exclude_concept_id)
+  def check_business_concept_name_availability(type, name, _opts)
       when is_nil(name) or is_nil(type),
       do: :ok
 
-  def check_business_concept_name_availability(type, name, exclude_concept_id) do
+  def check_business_concept_name_availability(type, name, opts) do
     status = ["versioned", "deprecated"]
 
     BusinessConcept
     |> join(:left, [c], _ in assoc(c, :versions))
-    |> where([c, v], c.type == ^type and v.status not in ^status)
-    |> include_name_where(name, exclude_concept_id)
+    |> join(:left, [c, _v], _ in assoc(c, :domain))
+    |> where([c, v, _d], c.type == ^type and v.status not in ^status)
+    |> include_name_where(name, Keyword.get(opts, :business_concept_id))
+    |> with_group_clause(Keyword.get(opts, :domain_group_id))
     |> select([c, v], count(c.id))
     |> Repo.one!()
     |> case do
@@ -45,13 +47,13 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp include_name_where(query, name, nil) do
-    where(query, [_, v], fragment("lower(?)", v.name) == ^String.downcase(name))
+    where(query, [_, v, _d], fragment("lower(?)", v.name) == ^String.downcase(name))
   end
 
   defp include_name_where(query, name, exclude_concept_id) do
     where(
       query,
-      [c, v],
+      [c, v, _d],
       c.id != ^exclude_concept_id and fragment("lower(?)", v.name) == ^String.downcase(name)
     )
   end
@@ -538,7 +540,8 @@ defmodule TdBg.BusinessConcepts do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [_, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+    |> join(:left, [_, _, d], _ in assoc(d, :domain_group))
+    |> preload([_, c, d, g], business_concept: [domain: :domain_group])
     |> where([v, _], v.id == ^id)
     |> Repo.one!()
   end

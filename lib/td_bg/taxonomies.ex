@@ -67,8 +67,11 @@ defmodule TdBg.Taxonomies do
       ** (Ecto.NoResultsError)
 
   """
-  def get_domain!(id) do
-    Repo.one!(from(r in Domain, where: r.id == ^id and is_nil(r.deleted_at)))
+  def get_domain!(id, preload \\ []) do
+    Domain
+    |> where([d], d.id == ^id and is_nil(d.deleted_at))
+    |> Repo.one!()
+    |> with_preloads(preload)
   end
 
   def get_domain(id) do
@@ -84,9 +87,19 @@ defmodule TdBg.Taxonomies do
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
-  def get_domain_by_name(name) do
-    Repo.one(from(r in Domain, where: r.name == ^name and is_nil(r.deleted_at)))
+  def get_domain_by_name(name, preload \\ []) do
+    Domain
+    |> where([d], d.name == ^name)
+    |> where([d], is_nil(d.deleted_at))
+    |> Repo.one()
+    |> with_preloads(preload)
   end
+
+  defp with_preloads(%Domain{} = domain, []), do: domain
+
+  defp with_preloads(%Domain{} = domain, preload), do: Repo.preload(domain, preload)
+
+  defp with_preloads(result, _preload), do: result
 
   def get_children_domains(%Domain{} = domain) do
     id = domain.id
