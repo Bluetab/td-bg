@@ -50,6 +50,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             type([:string, :null], "type")
             description(:string, "description")
             parent_id([:integer, :null], "Domain id")
+            domain_group([:object, :null], "Domain group")
             parentable_ids(Schema.ref(:DomainIds))
           end
 
@@ -98,6 +99,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   external_id([:string, :null], "Domain external id")
                   description(:string, "domain description")
                   parent_id(:integer, "parent domain id")
+                  domain_group(:string, "domain group")
                 end
               end
             )
@@ -113,6 +115,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
                   external_id([:string, :null], "Domain external id")
                   type(:string, "domain type")
                   description(:string, "domain description")
+                  domain_group(:string, "domain group")
                 end
               end
             )
