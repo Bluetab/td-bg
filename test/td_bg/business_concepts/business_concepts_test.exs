@@ -538,7 +538,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert BusinessConcepts.check_business_concept_name_availability(
                type,
                name,
-               [business_concept_id: exclude_concept_id]
+               business_concept_id: exclude_concept_id
              ) == :ok
     end
 
@@ -551,7 +551,9 @@ defmodule TdBg.BusinessConceptsTest do
                |> Enum.map(&insert(:business_concept_version, name: &1))
 
       assert {:error, :name_not_available} ==
-               BusinessConcepts.check_business_concept_name_availability(type, name, [business_concept_id: exclude_id])
+               BusinessConcepts.check_business_concept_name_availability(type, name,
+                 business_concept_id: exclude_id
+               )
     end
 
     test "count_published_business_concepts/2 check count" do

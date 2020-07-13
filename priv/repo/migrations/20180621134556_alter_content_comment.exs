@@ -3,7 +3,7 @@ defmodule TdBg.Repo.Migrations.AlterContentComment do
 
   def change do
     alter table(:comments) do
-      modify :content, :text
+      modify(:content, :text)
     end
   end
 end

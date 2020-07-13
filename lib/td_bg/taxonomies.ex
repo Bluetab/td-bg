@@ -268,6 +268,11 @@ defmodule TdBg.Taxonomies do
     end
   end
 
+  defp group_on_create(%{domain_group: domain_group} = attrs)
+       when is_nil(domain_group) or domain_group == "" do
+    group_on_create(Map.delete(attrs, :domain_group))
+  end
+
   defp group_on_create(%{domain_group: domain_group}) do
     get_or_create_group(domain_group)
   end
@@ -372,7 +377,7 @@ defmodule TdBg.Taxonomies do
   end
 
   defp domain_changeset(%{domain_group: %{status: :unchanged}}, domain, attrs) do
-    Domain.changeset(domain, attrs)
+    Domain.changeset(domain, Map.delete(attrs, :domain_group))
   end
 
   defp domain_changeset(%{domain_group: domain_group, descendents: descendents}, domain, attrs) do

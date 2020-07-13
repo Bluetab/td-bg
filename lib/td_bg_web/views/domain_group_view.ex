@@ -11,7 +11,6 @@ defmodule TdBgWeb.DomainGroupView do
   end
 
   def render("domain_group.json", %{domain_group: domain_group}) do
-    %{id: domain_group.id,
-      name: domain_group.name}
+    %{id: domain_group.id, name: domain_group.name}
   end
 end

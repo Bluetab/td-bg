@@ -2,7 +2,7 @@ defmodule TdBg.Repo.Migrations.ChangeDomainsNameConstraint do
   use Ecto.Migration
 
   def up do
-    drop unique_index(:domains, [:name], name: :domains_name_index)
+    drop(unique_index(:domains, [:name], name: :domains_name_index))
 
     create(
       unique_index(:domains, [:domain_group_id, :name],
@@ -16,9 +16,9 @@ defmodule TdBg.Repo.Migrations.ChangeDomainsNameConstraint do
   end
 
   def down do
-    drop unique_index(:domains, [:name])
-    drop unique_index(:domains, [:domain_group_id, :name])
-    
+    drop(unique_index(:domains, [:name]))
+    drop(unique_index(:domains, [:domain_group_id, :name]))
+
     create(unique_index(:domains, [:name], where: "deleted_at is null"))
   end
 end

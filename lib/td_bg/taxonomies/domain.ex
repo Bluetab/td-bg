@@ -51,21 +51,41 @@ defmodule TdBg.Taxonomies.Domain do
   defp put_group(
          %Changeset{valid?: true} = changeset,
          %{
-           domain_group: domain_group,
+           domain_group: nil,
            descendents: descendents
          },
          %__MODULE__{id: id}
        ) do
-    group_id = Map.get(domain_group || %{}, :id)
-    domain_ids = [id | Enum.map(descendents, & &1.id)]
-    changeset = validate_concept_names(changeset, group_id, domain_ids)
+    changeset = valid_group(changeset, id, nil, descendents)
+    put_group(changeset, %{domain_group: nil})
+  end
+
+  defp put_group(
+         %Changeset{valid?: true} = changeset,
+         %{
+           domain_group: %DomainGroup{} = domain_group,
+           descendents: descendents
+         },
+         %__MODULE__{id: id}
+       ) do
+    changeset = valid_group(changeset, id, domain_group, descendents)
     put_group(changeset, %{domain_group: domain_group})
   end
 
   defp put_group(
          %Changeset{valid?: true} = changeset,
          %{
-           domain_group: domain_group
+           domain_group: nil
+         },
+         _domain
+       ) do
+    put_group(changeset, %{domain_group: nil})
+  end
+
+  defp put_group(
+         %Changeset{valid?: true} = changeset,
+         %{
+           domain_group: %DomainGroup{} = domain_group
          },
          _domain
        ) do
@@ -79,6 +99,12 @@ defmodule TdBg.Taxonomies.Domain do
   end
 
   defp put_group(%Changeset{} = changeset, _changes), do: changeset
+
+  defp valid_group(changeset, domain_id, domain_group, descendents) do
+    group_id = Map.get(domain_group || %{}, :id)
+    domain_ids = [domain_id | Enum.map(descendents, & &1.id)]
+    validate_concept_names(changeset, group_id, domain_ids)
+  end
 
   defp validate_parent_id(%Ecto.Changeset{valid?: false} = changeset, _domain), do: changeset
   defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{id: nil}), do: changeset

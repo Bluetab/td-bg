@@ -3,7 +3,7 @@ defmodule TdBg.Repo.Migrations.DropDomainsTemplates do
 
   def change do
     execute("delete from domains_templates")
-    drop unique_index(:domains_templates, [:domain_id, :template_id])
-    drop table("domains_templates")
+    drop(unique_index(:domains_templates, [:domain_id, :template_id]))
+    drop(table("domains_templates"))
   end
 end

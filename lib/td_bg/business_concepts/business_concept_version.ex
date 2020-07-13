@@ -96,7 +96,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
        ) do
     %{name: name, business_concept: business_concept} =
       Map.take(business_concept_version, [:name, :business_concept])
+
     type = Map.get(business_concept, :type)
+
     domain_group =
       domain_id
       |> Taxonomies.get_domain!([:domain_group])

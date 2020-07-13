@@ -40,13 +40,19 @@ defmodule TdBg.GroupsTest do
 
     test "update_domain_group/2 with valid data updates the domain_group" do
       domain_group = domain_group_fixture()
-      assert {:ok, %DomainGroup{} = domain_group} = Groups.update_domain_group(domain_group, @update_attrs)
+
+      assert {:ok, %DomainGroup{} = domain_group} =
+               Groups.update_domain_group(domain_group, @update_attrs)
+
       assert domain_group.name == "some updated name"
     end
 
     test "update_domain_group/2 with invalid data returns error changeset" do
       domain_group = domain_group_fixture()
-      assert {:error, %Ecto.Changeset{}} = Groups.update_domain_group(domain_group, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Groups.update_domain_group(domain_group, @invalid_attrs)
+
       assert domain_group == Groups.get_domain_group!(domain_group.id)
     end
 

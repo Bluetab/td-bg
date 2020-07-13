@@ -6,12 +6,14 @@ defmodule TdBg.ChangesetSupportTest do
     alias TdBgWeb.ChangesetSupport
 
     test "translate_errors/1 when no errors" do
-      data  = %{}
+      data = %{}
       types = %{first_name: :string}
-      errors = {data, types}
-      |> Changeset.cast(%{first_name: "Bob"}, Map.keys(types))
-      |> validate_required([:first_name])
-      |> ChangesetSupport.translate_errors
+
+      errors =
+        {data, types}
+        |> Changeset.cast(%{first_name: "Bob"}, Map.keys(types))
+        |> validate_required([:first_name])
+        |> ChangesetSupport.translate_errors()
 
       expected_errors = []
 
@@ -19,12 +21,14 @@ defmodule TdBg.ChangesetSupportTest do
     end
 
     test "translate_errors/1 translate one required error" do
-      data  = %{}
+      data = %{}
       types = %{first_name: :string}
-      errors = {data, types}
-      |> Changeset.cast(%{}, Map.keys(types))
-      |> validate_required([:first_name])
-      |> ChangesetSupport.translate_errors
+
+      errors =
+        {data, types}
+        |> Changeset.cast(%{}, Map.keys(types))
+        |> validate_required([:first_name])
+        |> ChangesetSupport.translate_errors()
 
       expected_errors = [
         %{
@@ -37,12 +41,14 @@ defmodule TdBg.ChangesetSupportTest do
     end
 
     test "translate_errors/1 translate one required error with prefix" do
-      data  = %{}
+      data = %{}
       types = %{first_name: :string}
-      errors = {data, types}
-      |> Changeset.cast(%{}, Map.keys(types))
-      |> validate_required([:first_name])
-      |> ChangesetSupport.translate_errors("blah.blah.error")
+
+      errors =
+        {data, types}
+        |> Changeset.cast(%{}, Map.keys(types))
+        |> validate_required([:first_name])
+        |> ChangesetSupport.translate_errors("blah.blah.error")
 
       expected_errors = [
         %{
@@ -55,12 +61,14 @@ defmodule TdBg.ChangesetSupportTest do
     end
 
     test "translate_errors/1 translate two required error" do
-      data  = %{}
+      data = %{}
       types = %{first_name: :string, second_name: :string}
-      errors = {data, types}
-      |> Changeset.cast(%{}, Map.keys(types))
-      |> validate_required([:first_name, :second_name])
-      |> ChangesetSupport.translate_errors
+
+      errors =
+        {data, types}
+        |> Changeset.cast(%{}, Map.keys(types))
+        |> validate_required([:first_name, :second_name])
+        |> ChangesetSupport.translate_errors()
 
       expected_errors = [
         %{
@@ -77,12 +85,14 @@ defmodule TdBg.ChangesetSupportTest do
     end
 
     test "translate_errors/1 translate cast error" do
-      data  = %{}
+      data = %{}
       types = %{first_name: :string}
-      errors = {data, types}
-      |> Changeset.cast(%{first_name: 1}, Map.keys(types))
-      |> validate_required([:first_name])
-      |> ChangesetSupport.translate_errors
+
+      errors =
+        {data, types}
+        |> Changeset.cast(%{first_name: 1}, Map.keys(types))
+        |> validate_required([:first_name])
+        |> ChangesetSupport.translate_errors()
 
       expected_errors = [
         %{
@@ -93,7 +103,5 @@ defmodule TdBg.ChangesetSupportTest do
 
       assert errors == expected_errors
     end
-
   end
-
 end

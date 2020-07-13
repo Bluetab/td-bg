@@ -29,5 +29,4 @@ defmodule TdBgWeb.ResponseCode do
       _ -> "Unknown: #{http_status_code}"
     end
   end
-
 end

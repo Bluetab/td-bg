@@ -100,8 +100,19 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "Field5" => %{}
       }
 
-      bc_version1 = insert(:business_concept_version, business_concept: bc1, content: content, name: "bc_version1")
-      bc_version2 = insert(:business_concept_version, business_concept: bc2, content: content, name: "bc_version2")
+      bc_version1 =
+        insert(:business_concept_version,
+          business_concept: bc1,
+          content: content,
+          name: "bc_version1"
+        )
+
+      bc_version2 =
+        insert(:business_concept_version,
+          business_concept: bc2,
+          content: content,
+          name: "bc_version2"
+        )
 
       bc_versions =
         [bc_version1, bc_version2]
@@ -237,7 +248,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "Field2" => "Second field"
       }
 
-      bc_version1 = insert(:business_concept_version, business_concept: bc1, name: "name", content: content)
+      bc_version1 =
+        insert(:business_concept_version, business_concept: bc1, name: "name", content: content)
+
       bc_version2 = insert(:business_concept_version, business_concept: bc2, content: content)
       insert(:business_concept_version, business_concept: bc3, name: "name", content: content)
 

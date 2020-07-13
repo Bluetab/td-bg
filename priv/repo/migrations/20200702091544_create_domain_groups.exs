@@ -3,15 +3,15 @@ defmodule TdBg.Repo.Migrations.CreateDomainGroups do
 
   def up do
     create table(:domain_groups) do
-      add :name, :string
+      add(:name, :string)
 
       timestamps()
     end
 
-    create unique_index(:domain_groups, [:name], name: :index_domain_group_name)
+    create(unique_index(:domain_groups, [:name], name: :index_domain_group_name))
   end
 
   def down do
-    drop table(:domain_groups)
+    drop(table(:domain_groups))
   end
 end

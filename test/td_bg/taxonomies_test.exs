@@ -323,7 +323,9 @@ defmodule TdBg.TaxonomiesTest do
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
         end)
 
-      assert {:ok, %Domain{domain_group: nil}} = Taxonomies.update_domain(root, %{domain_group: nil})
+      assert {:ok, %Domain{domain_group: nil}} =
+               Taxonomies.update_domain(root, %{domain_group: nil})
+
       assert %{id: domain_group_id} = Groups.get_by(name: root_group.name)
 
       assert Enum.all?(
@@ -464,13 +466,19 @@ defmodule TdBg.TaxonomiesTest do
       parent = insert(:domain, name: "parent", domain_group: group)
       child1 = insert(:domain, name: "child1", domain_group: group, parent_id: parent.id)
       concept = insert(:business_concept, domain: child1)
-      insert(:business_concept_version, name: "name", business_concept: concept, status: "versioned")
+
+      insert(:business_concept_version,
+        name: "name",
+        business_concept: concept,
+        status: "versioned"
+      )
 
       child2 = insert(:domain, name: "child2", domain_group: group1, parent_id: parent.id)
       concept = insert(:business_concept, domain: child2)
       insert(:business_concept_version, name: "name", business_concept: concept)
 
-      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{domain_group: group.name})
+      assert {:ok, %Domain{domain_group_id: ^group_id}} =
+               Taxonomies.update_domain(child2, %{domain_group: group.name})
     end
 
     test "update_domain/2 updates group with different business concepts" do
@@ -487,7 +495,8 @@ defmodule TdBg.TaxonomiesTest do
       concept = insert(:business_concept, domain: child2)
       insert(:business_concept_version, name: "name1", business_concept: concept)
 
-      assert {:ok, %Domain{domain_group_id: ^group_id}} = Taxonomies.update_domain(child2, %{domain_group: group.name})
+      assert {:ok, %Domain{domain_group_id: ^group_id}} =
+               Taxonomies.update_domain(child2, %{domain_group: group.name})
     end
 
     test "delete_domain/1 soft-deletes the domain" do
