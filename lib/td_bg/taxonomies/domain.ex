@@ -59,9 +59,6 @@ defmodule TdBg.Taxonomies.Domain do
 
   def put_group(_domain, %Changeset{} = changeset, _changes), do: changeset
 
-  def put_group(%Changeset{changes: %{domain_group_id: _domain_group_id}} = changeset, _),
-    do: changeset
-
   def put_group(%Changeset{valid?: true} = changeset, %{domain_group: domain_group}) do
     put_assoc(changeset, :domain_group, domain_group)
   end
