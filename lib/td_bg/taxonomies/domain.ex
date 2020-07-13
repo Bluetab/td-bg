@@ -12,6 +12,7 @@ defmodule TdBg.Taxonomies.Domain do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Groups.DomainGroup
   alias TdBg.Taxonomies
+  alias TdBg.Utils.CollectionUtils
 
   schema "domains" do
     field(:description, :string)
@@ -93,7 +94,7 @@ defmodule TdBg.Taxonomies.Domain do
       |> grouped_by_type()
 
     grouped_from_group
-    |> merge_common(grouped_from_domain)
+    |> CollectionUtils.map_intersection(grouped_from_domain)
     |> Enum.map(fn {k, v} -> {k, MapSet.to_list(v)} end)
     |> Enum.find(fn {_k, v} -> v != [] end)
     |> case do
@@ -102,35 +103,16 @@ defmodule TdBg.Taxonomies.Domain do
     end
   end
 
-  defp merge_common(%{} = map1, %{} = map2) do
-    keys1 = Map.keys(map1)
-    keys2 = Map.keys(map2)
-
-    keys = MapSet.intersection(MapSet.new(keys1), MapSet.new(keys2))
-    map1 = Map.take(map1, MapSet.to_list(keys))
-    map2 = Map.take(map2, MapSet.to_list(keys))
-
-    Map.merge(map1, map2, fn _k, v1, v2 -> intersection(v1, v2) end)
-  end
-
   defp grouped_by_type(collection) do
     collection
     |> Enum.group_by(&Map.get(&1, :type))
-    |> Enum.map(fn {k, v} -> {k, to_map_set(v)} end)
+    |> Enum.map(fn {k, v} -> {k, to_names_map_set(v)} end)
     |> Enum.into(%{})
   end
 
-  defp to_map_set(collection) do
+  defp to_names_map_set(collection) do
     collection
     |> Enum.map(&String.downcase(&1.name))
     |> MapSet.new()
-  end
-
-  defp intersection(%MapSet{} = v1, %MapSet{} = v2) do
-    MapSet.intersection(v1, v2)
-  end
-
-  defp intersection(_, _) do
-    MapSet.new()
   end
 end
