@@ -37,7 +37,9 @@ defmodule TdBgWeb.DomainView do
   end
 
   def render("domain.json", %{domain: domain}) do
-    Map.take(domain, [:id, :parent_id, :name, :type, :external_id, :description, :parentable_ids])
+    domain
+    |> Map.take([:id, :parent_id, :name, :type, :external_id, :description, :parentable_ids, :domain_group])
+    |> with_group()
   end
 
   def render("domain_bc_count.json", %{counter: counter}) do
@@ -47,4 +49,10 @@ defmodule TdBgWeb.DomainView do
   def render("domain_tiny.json", %{domain: domain}) do
     %{id: domain.id, name: domain.name}
   end
+
+  defp with_group(%{domain_group: domain_group} = domain) when not is_nil(domain_group) do
+    Map.put(domain, :domain_group, Map.take(domain_group, [:id, :name]))
+  end
+
+  defp with_group(domain), do: domain
 end
