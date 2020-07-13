@@ -29,7 +29,7 @@ defmodule TdBgWeb.DomainController do
 
   def index(conn, params) do
     user = conn.assigns[:current_user]
-    domains = Taxonomies.list_domains()
+    domains = Taxonomies.list_domains([:domain_group])
 
     case get_actions(params) do
       [] ->

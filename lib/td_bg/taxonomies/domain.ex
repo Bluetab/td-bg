@@ -35,6 +35,7 @@ defmodule TdBg.Taxonomies.Domain do
     domain
     |> cast(attrs, [:name, :type, :description, :parent_id, :external_id, :domain_group_id])
     |> validate_required([:name])
+    |> put_group(attrs, domain)
     |> unique_constraint(:external_id)
     |> unique_constraint(:name, name: :domains_name_index)
     |> unique_constraint([:name, :domain_group_id], name: :domains_domain_group_id_name_index)
@@ -47,23 +48,37 @@ defmodule TdBg.Taxonomies.Domain do
     change(domain, deleted_at: DateTime.utc_now())
   end
 
-  def put_group(%__MODULE__{id: id}, %Changeset{valid?: true} = changeset, %{
-        domain_group: domain_group,
-        descendents: descendents
-      }) do
+  defp put_group(
+         %Changeset{valid?: true} = changeset,
+         %{
+           domain_group: domain_group,
+           descendents: descendents
+         },
+         %__MODULE__{id: id}
+       ) do
     group_id = Map.get(domain_group || %{}, :id)
     domain_ids = [id | Enum.map(descendents, & &1.id)]
     changeset = validate_concept_names(changeset, group_id, domain_ids)
     put_group(changeset, %{domain_group: domain_group})
   end
 
-  def put_group(_domain, %Changeset{} = changeset, _changes), do: changeset
+  defp put_group(
+         %Changeset{valid?: true} = changeset,
+         %{
+           domain_group: domain_group
+         },
+         _domain
+       ) do
+    put_group(changeset, %{domain_group: domain_group})
+  end
 
-  def put_group(%Changeset{valid?: true} = changeset, %{domain_group: domain_group}) do
+  defp put_group(%Changeset{} = changeset, _domain, _changes), do: changeset
+
+  defp put_group(%Changeset{valid?: true} = changeset, %{domain_group: domain_group}) do
     put_assoc(changeset, :domain_group, domain_group)
   end
 
-  def put_group(%Changeset{} = changeset, _changes), do: changeset
+  defp put_group(%Changeset{} = changeset, _changes), do: changeset
 
   defp validate_parent_id(%Ecto.Changeset{valid?: false} = changeset, _domain), do: changeset
   defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{id: nil}), do: changeset
