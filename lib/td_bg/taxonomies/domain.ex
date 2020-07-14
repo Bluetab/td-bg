@@ -126,13 +126,13 @@ defmodule TdBg.Taxonomies.Domain do
       |> BusinessConcepts.get_active_concepts_in_group()
       |> grouped_by_type()
 
-    grouped_from_domain =
+    grouped_from_domains =
       domain_ids
       |> BusinessConcepts.get_active_concepts_by_domain_ids()
       |> grouped_by_type()
 
     grouped_from_group
-    |> CollectionUtils.map_intersection(grouped_from_domain)
+    |> CollectionUtils.map_intersection(grouped_from_domains)
     |> Enum.map(fn {k, v} -> {k, MapSet.to_list(v)} end)
     |> Enum.find(fn {_k, v} -> v != [] end)
     |> case do
