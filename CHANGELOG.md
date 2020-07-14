@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2280] Domain group as independent entity 
+
 ## [4.0.0] 2020-07-01
 
 ### Fixed
