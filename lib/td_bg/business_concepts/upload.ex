@@ -112,6 +112,9 @@ defmodule TdBg.BusinessConcept.Upload do
 
       {:error, :business_concept_version, error, _} ->
         {:error, Map.put(error, :row, row_count)}
+
+      {:error, error} ->
+        {:error, Map.put(error, :row, row_count)}
     end
   end
 

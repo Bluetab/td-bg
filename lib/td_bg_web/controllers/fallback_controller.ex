@@ -27,7 +27,9 @@ defmodule TdBgWeb.FallbackController do
   end
 
   def call(conn, {:error, error}) do
-    send_resp(conn, :unprocessable_entity, JSON.encode!(error))
+    conn
+    |> put_resp_content_type("application/json", "utf-8")
+    |> send_resp(:unprocessable_entity, JSON.encode!(%{error: error}))
   end
 
   def call(conn, {:can, false}) do

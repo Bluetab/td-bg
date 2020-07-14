@@ -734,18 +734,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       {:error, error} ->
         Logger.info("While updating business concepts... #{inspect(error)}")
 
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_resp_content_type("application/json", "utf-8")
-        |> send_resp(422, JSON.encode!(%{error: error}))
+        {:error, error}
 
       error ->
         Logger.info("Unexpected error while updating business concepts... #{inspect(error)}")
 
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
+        error
     end
   end
 
