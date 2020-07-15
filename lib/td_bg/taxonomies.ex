@@ -338,6 +338,8 @@ defmodule TdBg.Taxonomies do
 
   defp get_domain_group(nil), do: nil
 
+  defp get_domain_group(""), do: nil
+
   defp get_domain_group(domain_id) do
     domain_group =
       domain_id
