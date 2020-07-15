@@ -143,7 +143,7 @@ defmodule TdBg.Taxonomies.Domain do
 
   defp grouped_by_type(collection) do
     collection
-    |> Enum.group_by(&Map.get(&1, :type))
+    |> Enum.group_by(& &1 |> Map.get(:business_concept) |> Map.get(:type))
     |> Enum.map(fn {k, v} -> {k, to_names_map_set(v)} end)
     |> Enum.into(%{})
   end

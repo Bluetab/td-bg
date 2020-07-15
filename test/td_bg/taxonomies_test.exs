@@ -499,6 +499,23 @@ defmodule TdBg.TaxonomiesTest do
                Taxonomies.update_domain(child2, %{domain_group: group.name})
     end
 
+    test "update_domain/2 updates group with same business concepts with different type" do
+      group = insert(:domain_group)
+      group1 = insert(:domain_group)
+      group_id = Map.get(group, :id)
+
+      domain = insert(:domain, name: "domain", domain_group: group)
+      concept = insert(:business_concept, domain: domain, type: "type")
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      domain = insert(:domain, name: "domain1", domain_group: group1, type: "type1")
+      concept = insert(:business_concept, domain: domain)
+      insert(:business_concept_version, name: "name", business_concept: concept)
+
+      assert {:ok, %Domain{domain_group_id: ^group_id}} =
+               Taxonomies.update_domain(domain, %{domain_group: group.name})
+    end
+
     test "delete_domain/1 soft-deletes the domain" do
       domain = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
