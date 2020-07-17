@@ -204,7 +204,7 @@ defmodule TdBg.BusinessConcept.Upload do
   defp validate_domain(%{"domain" => ""}), do: {:error, %{error: :missing_value, field: "domain"}}
 
   defp validate_domain(%{"domain" => domain}) do
-    case Taxonomies.get_domain_by_name(domain, [:domain_group]) do
+    case Taxonomies.get_domain_by_external_id(domain, [:domain_group]) do
       nil -> {:error, %{error: :invalid_domain, domain: domain}}
       domain -> {:ok, domain}
     end

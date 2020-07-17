@@ -89,9 +89,9 @@ defmodule TdBg.Taxonomies do
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
-  def get_domain_by_name(name, preload \\ []) do
+  def get_domain_by_external_id(external_id, preload \\ []) do
     Domain
-    |> where([d], d.name == ^name)
+    |> where([d], d.external_id == ^external_id)
     |> where([d], is_nil(d.deleted_at))
     |> Repo.one()
     |> with_preloads(preload)
