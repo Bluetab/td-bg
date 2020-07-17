@@ -35,7 +35,7 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     token = get_user_token("app-admin")
 
     {_, status_code, _json_resp} =
-      domain_create(token, %{name: name, description: description, type: type})
+      domain_create(token, %{name: name, external_id: name, description: description, type: type})
 
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
@@ -55,6 +55,7 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     {_, status_code, _json_resp} =
       domain_create(token, %{
         name: name,
+        external_id: name,
         parent_id: parent["id"],
         description: description,
         type: type
@@ -138,6 +139,7 @@ defmodule TdBg.SuperAdminTaxonomyTest do
     {_, http_status_code, _json_resp} =
       domain_create(token, %{
         name: child_name,
+        external_id: child_name,
         parent_id: parent["id"],
         description: description,
         type: type

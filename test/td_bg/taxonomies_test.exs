@@ -145,7 +145,7 @@ defmodule TdBg.TaxonomiesTest do
 
     test "create_domain/1 with an existing name should return an error" do
       %{name: name} = insert(:domain)
-      assert {:error, changeset} = Taxonomies.create_domain(%{name: name})
+      assert {:error, changeset} = Taxonomies.create_domain(%{name: name, external_id: "External id: #{:rand.uniform(100_000_000)}"})
       assert %{errors: [name: error], valid?: false} = changeset
       assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
     end
@@ -160,10 +160,18 @@ defmodule TdBg.TaxonomiesTest do
       assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
     end
 
+    test "create_domain/1 with no external_id should return an error" do
+      assert {:error, changeset} =
+               Taxonomies.create_domain(%{name: "new name"})
+
+      assert %{errors: [external_id: error], valid?: false} = changeset
+      assert {"can't be blank", [validation: :required]} = error
+    end
+
     test "create_domain/1 with an existing name in a deleted domain should create the domain" do
       %{name: name} = domain_to_delete = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
-      assert {:ok, %Domain{name: ^name} = domain} = Taxonomies.create_domain(%{name: name})
+      assert {:ok, %Domain{name: ^name} = domain} = Taxonomies.create_domain(%{name: name, external_id: "External id: #{:rand.uniform(100_000_000)}"})
     end
 
     test "create_domain/1 with an existing external_id in a deleted domain should create the domain" do

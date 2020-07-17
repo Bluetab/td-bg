@@ -12,7 +12,7 @@ defmodule TdBg.DomainSteps do
         _ -> state[:token_admin]
       end
 
-    {_, status_code, _json_resp} = domain_create(token_admin, %{name: domain_name})
+    {_, status_code, _json_resp} = domain_create(token_admin, %{name: domain_name, external_id: domain_name})
     assert rc_created() == to_response_code(status_code)
     {:ok, Map.merge(state, %{token_admin: token_admin})}
   end
@@ -24,7 +24,7 @@ defmodule TdBg.DomainSteps do
     state = Map.merge(state, %{token_admin: token_admin})
 
     {:ok, status_code, json_resp} =
-      domain_create(token_admin, %{name: name, description: description})
+      domain_create(token_admin, %{name: name, external_id: name, description: description})
 
     assert rc_created() == to_response_code(status_code)
     domain = json_resp["data"]
@@ -38,7 +38,7 @@ defmodule TdBg.DomainSteps do
     parent = get_domain_by_name(token_admin, domain_name)
 
     {_, _status_code, _json_resp} =
-      domain_create(token_admin, %{name: child_domain_name, parent_id: parent["id"]})
+      domain_create(token_admin, %{name: child_domain_name, external_id: child_domain_name, parent_id: parent["id"]})
   end
 
   defgiven ~r/^an existing Domain called "(?<name>[^"]+)" child of Domain "(?<domain_name>[^"]+)" with following data:$/,
@@ -49,6 +49,7 @@ defmodule TdBg.DomainSteps do
     {:ok, status_code, json_resp} =
       domain_create(state[:token_admin], %{
         name: name,
+        external_id: name,
         description: description,
         parent_id: domain_info["id"]
       })

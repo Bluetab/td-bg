@@ -34,7 +34,7 @@ defmodule TdBg.Taxonomies.Domain do
   def changeset(%__MODULE__{} = domain, attrs) do
     domain
     |> cast(attrs, [:name, :type, :description, :parent_id, :external_id, :domain_group_id])
-    |> validate_required([:name])
+    |> validate_required([:name, :external_id])
     |> put_group(attrs, domain)
     |> unique_constraint(:external_id)
     |> unique_constraint(:name, name: :domains_name_index)
