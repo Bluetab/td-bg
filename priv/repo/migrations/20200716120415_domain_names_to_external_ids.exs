@@ -14,9 +14,11 @@ defmodule TdBg.Repo.Migrations.DomainNamesToExternalIds do
   end
 
   defp update_domain(%{id: id, name: name}) do
+    now = DateTime.utc_now()
+
     from(d in "domains")
     |> where([d], d.id == ^id)
-    |> update(set: [external_id: ^name])
+    |> update(set: [external_id: ^name, updated_at: ^now])
     |> Repo.update_all([])
   end
 end
