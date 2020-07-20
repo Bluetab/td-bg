@@ -6,6 +6,10 @@
 
 - [TD-2280] Domain group as independent entity 
 
+### Changed
+
+- [TD-2280] Reference concepts by external id on domain upload
+
 ## [4.0.0] 2020-07-01
 
 ### Fixed
