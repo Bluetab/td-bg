@@ -3,7 +3,7 @@ defmodule TdBg.Repo.Migrations.AlterDescriptionBusinessConcept do
 
   def change do
     alter table(:business_concept_versions) do
-      modify :description, :text
+      modify(:description, :text)
     end
   end
 end

@@ -29,7 +29,7 @@ defmodule TdBgWeb.DomainController do
 
   def index(conn, params) do
     user = conn.assigns[:current_user]
-    domains = Taxonomies.list_domains()
+    domains = Taxonomies.list_domains([:domain_group])
 
     case get_actions(params) do
       [] ->
@@ -102,7 +102,7 @@ defmodule TdBgWeb.DomainController do
   def show(conn, %{"id" => id}) do
     current_user = conn.assigns[:current_user]
 
-    with domain <- Taxonomies.get_domain!(id),
+    with domain <- Taxonomies.get_domain!(id, [:domain_group]),
          {:can, true} <- {:can, can?(current_user, show(domain))},
          parentable_ids <- Taxonomies.get_parentable_ids(current_user, domain) do
       render(conn, "show.json",

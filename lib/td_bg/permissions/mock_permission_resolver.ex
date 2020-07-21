@@ -128,7 +128,7 @@ defmodule TdBg.Permissions.MockPermissionResolver do
   end
 
   def clean do
-     Agent.update(:MockPermissions, fn _ -> [] end)
-     Agent.update(:MockSessions, fn _ -> Map.new end)
+    Agent.update(:MockPermissions, fn _ -> [] end)
+    Agent.update(:MockSessions, fn _ -> Map.new() end)
   end
 end

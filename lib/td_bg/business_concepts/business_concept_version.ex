@@ -8,6 +8,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Taxonomies
 
   @valid_status ["draft", "pending_approval", "rejected", "published", "versioned", "deprecated"]
 
@@ -85,7 +86,39 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> update_changeset(params)
     |> delete_change(:status)
+    |> validate_name(business_concept_version)
   end
+
+  defp validate_name(
+         %{changes: %{business_concept: %{changes: %{domain_id: domain_id}}}, valid?: true} =
+           changeset,
+         business_concept_version
+       ) do
+    %{name: name, business_concept: business_concept} =
+      Map.take(business_concept_version, [:name, :business_concept])
+
+    type = Map.get(business_concept, :type)
+
+    domain_group =
+      domain_id
+      |> Taxonomies.get_domain!([:domain_group])
+      |> Map.get(:domain_group)
+
+    domain_group_id = Map.get(domain_group || %{}, :id)
+
+    case BusinessConcepts.check_business_concept_name_availability(type, name,
+           business_concept_id: business_concept.id,
+           domain_group_id: domain_group_id
+         ) do
+      :ok ->
+        changeset
+
+      {:error, :name_not_available} ->
+        add_error(changeset, :name, "error.existing.business_concept.name")
+    end
+  end
+
+  defp validate_name(changeset, _business_concept_version), do: changeset
 
   def confidential_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
     business_concept_version

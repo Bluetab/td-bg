@@ -19,5 +19,4 @@ defmodule TdBgWeb.BCStatusCode do
       _ -> "Unknown Status"
     end
   end
-
 end

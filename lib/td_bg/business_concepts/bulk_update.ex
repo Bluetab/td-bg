@@ -51,6 +51,9 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
 
       {:error, err} ->
         Repo.rollback(err)
+
+      {:error, _action, err, _} ->
+        Repo.rollback(err)
     end
   end
 

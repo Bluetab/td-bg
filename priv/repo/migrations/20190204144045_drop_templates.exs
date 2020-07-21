@@ -3,7 +3,7 @@ defmodule TdBg.Repo.Migrations.DropTemplates do
 
   def change do
     execute("delete from templates")
-    drop unique_index(:templates, [:name])
-    drop table("templates")
+    drop(unique_index(:templates, [:name]))
+    drop(table("templates"))
   end
 end

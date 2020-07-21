@@ -23,19 +23,21 @@ defmodule TdBg.BusinessConcepts do
   @doc """
   check business concept name availability
   """
-  def check_business_concept_name_availability(type, name, exclude_concept_id \\ nil)
+  def check_business_concept_name_availability(type, name, opts \\ [])
 
-  def check_business_concept_name_availability(type, name, _exclude_concept_id)
+  def check_business_concept_name_availability(type, name, _opts)
       when is_nil(name) or is_nil(type),
       do: :ok
 
-  def check_business_concept_name_availability(type, name, exclude_concept_id) do
+  def check_business_concept_name_availability(type, name, opts) do
     status = ["versioned", "deprecated"]
 
     BusinessConcept
     |> join(:left, [c], _ in assoc(c, :versions))
-    |> where([c, v], c.type == ^type and v.status not in ^status)
-    |> include_name_where(name, exclude_concept_id)
+    |> join(:left, [c, _v], _ in assoc(c, :domain))
+    |> where([c, v, _d], c.type == ^type and v.status not in ^status)
+    |> include_name_where(name, Keyword.get(opts, :business_concept_id))
+    |> with_group_clause(Keyword.get(opts, :domain_group_id))
     |> select([c, v], count(c.id))
     |> Repo.one!()
     |> case do
@@ -45,15 +47,45 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp include_name_where(query, name, nil) do
-    where(query, [_, v], fragment("lower(?)", v.name) == ^String.downcase(name))
+    where(query, [_, v, _d], fragment("lower(?)", v.name) == ^String.downcase(name))
   end
 
   defp include_name_where(query, name, exclude_concept_id) do
     where(
       query,
-      [c, v],
+      [c, v, _d],
       c.id != ^exclude_concept_id and fragment("lower(?)", v.name) == ^String.downcase(name)
     )
+  end
+
+  def get_active_concepts_in_group(group_id) do
+    BusinessConcept
+    |> join(:left, [c], _ in assoc(c, :versions))
+    |> join(:left, [c, _v], _ in assoc(c, :domain))
+    |> with_group_clause(group_id)
+    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> select([c, v, _d], %{v | business_concept: c})
+    |> Repo.all()
+  end
+
+  def get_active_concepts_by_domain_ids([]), do: []
+
+  def get_active_concepts_by_domain_ids(domain_ids) do
+    BusinessConcept
+    |> join(:left, [c], _ in assoc(c, :versions))
+    |> join(:left, [c, _v], _ in assoc(c, :domain))
+    |> where([_c, _v, d], d.id in ^domain_ids)
+    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> select([c, v, _d], %{v | business_concept: c})
+    |> Repo.all()
+  end
+
+  defp with_group_clause(query, nil) do
+    where(query, [_c, _v, d], is_nil(d.domain_group_id))
+  end
+
+  defp with_group_clause(query, group_id) do
+    where(query, [_c, _v, d], d.domain_group_id == ^group_id)
   end
 
   @doc """
@@ -508,7 +540,8 @@ defmodule TdBg.BusinessConcepts do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [_, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+    |> join(:left, [_, _, d], _ in assoc(d, :domain_group))
+    |> preload([_, c, d, g], business_concept: [domain: :domain_group])
     |> where([v, _], v.id == ^id)
     |> Repo.one!()
   end

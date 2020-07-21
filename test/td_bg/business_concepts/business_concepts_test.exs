@@ -538,7 +538,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert BusinessConcepts.check_business_concept_name_availability(
                type,
                name,
-               exclude_concept_id
+               business_concept_id: exclude_concept_id
              ) == :ok
     end
 
@@ -551,7 +551,9 @@ defmodule TdBg.BusinessConceptsTest do
                |> Enum.map(&insert(:business_concept_version, name: &1))
 
       assert {:error, :name_not_available} ==
-               BusinessConcepts.check_business_concept_name_availability(type, name, exclude_id)
+               BusinessConcepts.check_business_concept_name_availability(type, name,
+                 business_concept_id: exclude_id
+               )
     end
 
     test "count_published_business_concepts/2 check count" do
@@ -622,9 +624,8 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "get_business_concept_version!/1 returns the business_concept_version with given id" do
-      business_concept_version = insert(:business_concept_version)
-      object = BusinessConcepts.get_business_concept_version!(business_concept_version.id)
-      assert object |> business_concept_version_preload() == business_concept_version
+      %{id: id} = insert(:business_concept_version)
+      assert %BusinessConceptVersion{id: ^id} = BusinessConcepts.get_business_concept_version!(id)
     end
 
     test "get_confidential_ids returns all business concept ids which are confidential" do

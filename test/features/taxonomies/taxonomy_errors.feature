@@ -1,6 +1,6 @@
 Feature: taxonomy creation/edition errors
 
-  Scenario: Creating a Domain without name
+  Scenario: Creating a Domain without name nor External Id
     Given an existing Domain called "Domain 1"
     When user "app-admin" tries to create a Domain as child of Domain "Domain 1" with following data:
       | name | description |
@@ -11,7 +11,8 @@ Feature: taxonomy creation/edition errors
     """
     {
       "errors": {
-        "name": ["blank"]
+        "name": ["blank"],
+        "external_id": ["blank"]
       }
     }
     """
@@ -33,7 +34,7 @@ Feature: taxonomy creation/edition errors
     }
     """
 
-  Scenario: Creating a Domain without name
+  Scenario: Creating a Domain without name nor External Id
     When user "app-admin" tries to create a Domain with following data:
       | name  | description |
       |       |             |
@@ -42,7 +43,8 @@ Feature: taxonomy creation/edition errors
     """
     {
       "errors": {
-        "name": ["blank"]
+        "name": ["blank"],
+        "external_id": ["blank"]
       }
     }
     """

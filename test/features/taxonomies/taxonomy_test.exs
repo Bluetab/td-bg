@@ -110,10 +110,10 @@ defmodule TdBg.TaxonomyTest do
         nil -> build_user_token(user_name)
         t -> t
       end
-
     {_, status_code, _json_resp} =
       domain_create(token, %{
         name: new_domain_group_name,
+        external_id: new_domain_group_name,
         description: description,
         parent_id: parent["id"]
       })

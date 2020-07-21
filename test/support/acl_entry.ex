@@ -7,5 +7,4 @@ defmodule TdBgWeb.AclEntry do
     MockPermissionResolver.create_acl_entry(acl_entry_params)
     {:ok, 200, %{}}
   end
-
 end

@@ -3,7 +3,7 @@ defmodule TdBg.Repo.Migrations.AddDomainExternalId do
 
   def change do
     alter table(:domains) do
-      add :external_id, :string, null: true
+      add(:external_id, :string, null: true)
     end
   end
 end

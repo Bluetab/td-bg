@@ -5,6 +5,6 @@ defmodule TdBg.Repo.Migrations.RemoveDomainNameUniqueConstraint do
   use Ecto.Migration
 
   def change do
-    drop unique_index(:domains, [:name], name: :index_domain_by_name)
+    drop(unique_index(:domains, [:name], name: :index_domain_by_name))
   end
 end

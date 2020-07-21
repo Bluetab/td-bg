@@ -6,11 +6,15 @@ defmodule TdBg.Taxonomies do
   import Ecto.Query
 
   alias Ecto.Changeset
+  alias Ecto.Multi
   alias TdBg.BusinessConcept.Search
   alias TdBg.Cache.DomainLoader
+  alias TdBg.Groups
+  alias TdBg.Groups.DomainGroup
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Utils.CollectionUtils
   alias TdCache.TaxonomyCache
 
   @doc """
@@ -22,12 +26,13 @@ defmodule TdBg.Taxonomies do
       [%Domain{}, ...]
 
   """
-  def list_domains do
+  def list_domains(preload \\ []) do
     query = from(d in Domain)
 
     query
     |> where([d], is_nil(d.deleted_at))
     |> Repo.all()
+    |> with_preloads(preload)
   end
 
   @doc """
@@ -64,8 +69,11 @@ defmodule TdBg.Taxonomies do
       ** (Ecto.NoResultsError)
 
   """
-  def get_domain!(id) do
-    Repo.one!(from(r in Domain, where: r.id == ^id and is_nil(r.deleted_at)))
+  def get_domain!(id, preload \\ []) do
+    Domain
+    |> where([d], d.id == ^id and is_nil(d.deleted_at))
+    |> Repo.one!()
+    |> with_preloads(preload)
   end
 
   def get_domain(id) do
@@ -81,9 +89,21 @@ defmodule TdBg.Taxonomies do
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
-  def get_domain_by_name(name) do
-    Repo.one(from(r in Domain, where: r.name == ^name and is_nil(r.deleted_at)))
+  def get_domain_by_external_id(external_id, preload \\ []) do
+    Domain
+    |> where([d], d.external_id == ^external_id)
+    |> where([d], is_nil(d.deleted_at))
+    |> Repo.one()
+    |> with_preloads(preload)
   end
+
+  defp with_preloads(%Domain{} = domain, []), do: domain
+
+  defp with_preloads(%Domain{} = domain, preload), do: Repo.preload(domain, preload)
+
+  defp with_preloads([_ | _] = collection, preload), do: Repo.preload(collection, preload)
+
+  defp with_preloads(result, _preload), do: result
 
   def get_children_domains(%Domain{} = domain) do
     id = domain.id
@@ -124,18 +144,21 @@ defmodule TdBg.Taxonomies do
 
   """
   def create_domain(attrs \\ %{}) do
+    attrs = CollectionUtils.atomize_keys(attrs)
+
     result =
-      %Domain{}
-      |> Domain.changeset(attrs)
-      |> Repo.insert()
+      Multi.new()
+      |> Multi.run(:domain_group, fn _, _ -> group_on_create(attrs) end)
+      |> Multi.insert(:domain, &domain_changeset(&1, %Domain{}, attrs))
+      |> Repo.transaction()
 
     case result do
-      {:ok, domain} ->
+      {:ok, %{domain: domain}} ->
         DomainLoader.refresh(domain.id)
         get_domain(domain.id)
 
-      _ ->
-        result
+      {:error, _, changeset, _} ->
+        {:error, changeset}
     end
   end
 
@@ -152,19 +175,25 @@ defmodule TdBg.Taxonomies do
 
   """
   def update_domain(%Domain{} = domain, attrs) do
-    domain
-    |> Domain.changeset(attrs)
-    |> Repo.update()
+    attrs = CollectionUtils.atomize_keys(attrs)
+    domain = Repo.preload(domain, [:domain_group, :parent])
+
+    Multi.new()
+    |> Multi.run(:domain_group, fn _, _ -> group_on_update(domain, attrs) end)
+    |> Multi.run(:descendents, fn _, changes -> valid_descendents(changes, domain) end)
+    |> Multi.update(:domain, &domain_changeset(&1, domain, attrs))
+    |> Multi.run(:children, fn _, changes -> update_children_groups(changes) end)
+    |> Repo.transaction()
     |> refresh_cache()
   end
 
-  defp refresh_cache({:ok, %Domain{}} = response) do
+  defp refresh_cache({:ok, %{domain: %Domain{} = domain}}) do
     DomainLoader.refresh(:all)
     IndexWorker.reindex(:all)
-    response
+    {:ok, domain}
   end
 
-  defp refresh_cache(error), do: error
+  defp refresh_cache({:error, _, changeset, _}), do: {:error, changeset}
 
   @doc """
   Soft deletion of a domain.
@@ -237,6 +266,171 @@ defmodule TdBg.Taxonomies do
     else
       []
     end
+  end
+
+  defp group_on_create(%{domain_group: domain_group} = attrs)
+       when is_nil(domain_group) or domain_group == "" do
+    group_on_create(Map.delete(attrs, :domain_group))
+  end
+
+  defp group_on_create(%{domain_group: domain_group}) do
+    get_or_create_group(domain_group)
+  end
+
+  defp group_on_create(%{parent_id: parent_id}) when not is_nil(parent_id) do
+    case get_domain(parent_id) do
+      {:ok, %Domain{domain_group_id: nil}} ->
+        {:ok, nil}
+
+      {:ok, %Domain{domain_group_id: domain_group_id}} ->
+        {:ok, Groups.get_domain_group(domain_group_id)}
+
+      _ ->
+        {:ok, nil}
+    end
+  end
+
+  defp group_on_create(_attrs), do: {:ok, nil}
+
+  defp group_on_update(
+         %Domain{domain_group: nil} = domain,
+         %{domain_group: domain_group} = attrs
+       )
+       when is_nil(domain_group) or domain_group == "" do
+    group_on_update(domain, Map.delete(attrs, :domain_group))
+  end
+
+  defp group_on_update(
+         %Domain{domain_group: %{name: name}} = domain,
+         %{domain_group: domain_group} = attrs
+       )
+       when domain_group == name do
+    group_on_update(domain, Map.delete(attrs, :domain_group))
+  end
+
+  defp group_on_update(_domain, %{domain_group: domain_group}) do
+    case get_or_create_group(domain_group) do
+      {:ok, nil} ->
+        {:ok, %{domain_group: nil, status: :deleted}}
+
+      {:ok, %DomainGroup{} = domain_group} ->
+        {:ok, %{domain_group: domain_group, status: :updated}}
+
+      error ->
+        error
+    end
+  end
+
+  defp group_on_update(%Domain{domain_group_id: nil}, %{parent_id: parent_id}) do
+    {:ok, %{domain_group: get_domain_group(parent_id), status: :inherited}}
+  end
+
+  defp group_on_update(
+         %Domain{domain_group_id: domain_group_id, parent: %{domain_group_id: parent_group_id}},
+         %{parent_id: parent_id}
+       )
+       when domain_group_id == parent_group_id do
+    {:ok, %{domain_group: get_domain_group(parent_id), status: :inherited}}
+  end
+
+  defp group_on_update(%Domain{domain_group: domain_group}, _attrs),
+    do: {:ok, %{domain_group: domain_group, status: :unchanged}}
+
+  defp get_domain_group(nil), do: nil
+
+  defp get_domain_group(""), do: nil
+
+  defp get_domain_group(domain_id) do
+    domain_group =
+      domain_id
+      |> get_domain!()
+      |> Repo.preload(:domain_group)
+      |> Map.get(:domain_group)
+
+    domain_group
+  end
+
+  defp get_or_create_group(nil), do: {:ok, nil}
+
+  defp get_or_create_group(""), do: {:ok, nil}
+
+  defp get_or_create_group(name) do
+    case Groups.get_by(name: name) do
+      nil -> Groups.create_domain_group(%{name: name})
+      domain_group -> {:ok, domain_group}
+    end
+  end
+
+  defp valid_descendents(%{domain_group: %{status: status}}, _domain)
+       when status in [:unchanged, :deleted] do
+    {:ok, []}
+  end
+
+  defp valid_descendents(_changes, %Domain{id: domain_id, domain_group: domain_group}) do
+    prev_domain_group_id = Map.get(domain_group || %{}, :id)
+
+    descendants =
+      domain_id
+      |> descendent_ids()
+      |> Enum.reject(&(&1 == domain_id))
+      |> children_by_group(prev_domain_group_id)
+
+    {:ok, descendants}
+  end
+
+  defp domain_changeset(%{domain_group: %{status: :unchanged}}, domain, attrs) do
+    Domain.changeset(domain, Map.delete(attrs, :domain_group))
+  end
+
+  defp domain_changeset(%{domain_group: domain_group, descendents: descendents}, domain, attrs) do
+    attrs =
+      attrs
+      |> Map.put(:domain_group, Map.get(domain_group, :domain_group))
+      |> Map.put(:descendents, descendents)
+
+    Domain.changeset(domain, attrs)
+  end
+
+  defp domain_changeset(%{domain_group: domain_group}, domain, attrs) do
+    attrs = Map.put(attrs, :domain_group, domain_group)
+    Domain.changeset(domain, attrs)
+  end
+
+  defp domain_changeset(_changes, domain, attrs) do
+    Domain.changeset(domain, attrs)
+  end
+
+  defp update_children_groups(%{
+         domain: %{domain_group_id: domain_group_id},
+         descendents: descendents
+       }) do
+    updated =
+      descendents
+      |> Enum.map(&Domain.changeset(&1, %{domain_group_id: domain_group_id}))
+      |> Enum.map(&Repo.update/1)
+
+    case Enum.find(updated, &(elem(&1, 0) == :error)) do
+      nil -> {:ok, updated}
+      error -> error
+    end
+  end
+
+  defp children_by_group([], _), do: []
+
+  defp children_by_group(descendents, domain_group_id) do
+    Domain
+    |> where([d], is_nil(d.deleted_at))
+    |> where([d], d.id in ^descendents)
+    |> group_id_condition(domain_group_id)
+    |> Repo.all()
+  end
+
+  defp group_id_condition(query, nil) do
+    where(query, [d], is_nil(d.domain_group_id))
+  end
+
+  defp group_id_condition(query, domain_group_id) do
+    where(query, [d], is_nil(d.domain_group_id) or d.domain_group_id == ^domain_group_id)
   end
 
   @doc """

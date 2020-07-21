@@ -77,7 +77,7 @@ defmodule TdBg.Search.Mappings do
 
   defp get_mappings(%{content: content}) do
     content
-    |> Format.flatten_content_fields
+    |> Format.flatten_content_fields()
     |> Enum.map(&field_mapping/1)
   end
 

@@ -7,14 +7,15 @@ defmodule TdBg.Taxonomies.DomainTest do
 
   describe "changeset/2" do
     test "validates required fields" do
-      assert %{errors: [name: error]} = Domain.changeset(%{})
-      assert {_msg, [validation: :required]} = error
+      assert %{errors: [name: name_error, external_id: external_id_error]} = Domain.changeset(%{})
+      assert {_msg, [validation: :required]} = name_error
+      assert {_msg, [validation: :required]} = external_id_error
     end
 
     test "validates unique constraint on name" do
       insert(:domain, name: "foo")
 
-      assert {:error, changeset} = %{name: "foo"} |> Domain.changeset() |> Repo.insert()
+      assert {:error, changeset} = %{name: "foo", external_id: "Eid#{:rand.uniform(100_000_000)}"} |> Domain.changeset() |> Repo.insert()
       assert %{errors: [name: error]} = changeset
       assert {_msg, [constraint: :unique, constraint_name: "domains_name_index"]} = error
     end

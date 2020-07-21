@@ -152,7 +152,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     concept_name = Map.get(business_concept_params, "name")
 
     domain_id = Map.get(business_concept_params, "domain_id")
-    domain = Taxonomies.get_domain!(domain_id)
+    domain = Taxonomies.get_domain!(domain_id, [:domain_group])
+    domain_group_id = get_domain_group_id(domain)
 
     business_concept_attrs =
       %{}
@@ -173,7 +174,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     with {:can, true} <- {:can, can?(user, create_business_concept(domain))},
          :ok <-
-           BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name),
+           BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name,
+             domain_group_id: domain_group_id
+           ),
          {:ok, %BusinessConceptVersion{id: id} = version} <-
            BusinessConcepts.create_business_concept(creation_attrs, index: true) do
       conn
@@ -584,8 +587,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
 
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+
+    domain_group_id =
+      business_concept_version
+      |> Map.get(:business_concept)
+      |> Map.get(:domain)
+      |> get_domain_group_id()
+
     concept_name = Map.get(business_concept_version_params, "name")
     template = BusinessConcepts.get_template(business_concept_version)
+
     content_schema = get_flat_template_content(template)
 
     business_concept_attrs =
@@ -606,7 +617,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            BusinessConcepts.check_business_concept_name_availability(
              template.name,
              concept_name,
-             business_concept_version.business_concept.id
+             business_concept_id: business_concept_version.business_concept.id,
+             domain_group_id: domain_group_id
            ),
          {:ok, %BusinessConceptVersion{} = concept_version} <-
            BusinessConcepts.update_business_concept_version(
@@ -722,18 +734,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       {:error, error} ->
         Logger.info("While updating business concepts... #{inspect(error)}")
 
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_resp_content_type("application/json", "utf-8")
-        |> send_resp(422, JSON.encode!(%{error: error}))
+        {:error, error}
 
       error ->
         Logger.info("Unexpected error while updating business concepts... #{inspect(error)}")
 
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
+        error
     end
   end
 
@@ -792,4 +798,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> render("422.json")
     end
   end
+
+  defp get_domain_group_id(%{domain_group: nil}), do: nil
+
+  defp get_domain_group_id(%{domain_group: domain_group}), do: Map.get(domain_group, :id)
 end

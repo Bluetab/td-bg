@@ -3,7 +3,7 @@ defmodule TdBg.Repo.Migrations.AddRejectReason do
 
   def change do
     alter table(:business_concepts) do
-      add :reject_reason, :string, size: 500, null: true
+      add(:reject_reason, :string, size: 500, null: true)
     end
   end
 end

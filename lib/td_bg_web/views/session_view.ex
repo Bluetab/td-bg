@@ -4,5 +4,4 @@ defmodule TdBgWeb.SessionView do
   def render("show.json", %{token: token}) do
     %{token: token}
   end
-
 end
