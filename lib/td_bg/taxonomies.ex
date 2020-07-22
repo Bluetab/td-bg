@@ -321,6 +321,10 @@ defmodule TdBg.Taxonomies do
     end
   end
 
+  defp group_on_update(%Domain{domain_group_id: nil}, %{parent_id: parent_id}) when parent_id == "" or is_nil(parent_id) do
+    {:ok, %{domain_group: nil, status: :unchanged}}
+  end
+
   defp group_on_update(%Domain{domain_group_id: nil}, %{parent_id: parent_id}) do
     {:ok, %{domain_group: get_domain_group(parent_id), status: :inherited}}
   end
