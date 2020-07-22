@@ -14,7 +14,7 @@ defmodule TdBg.Utils.CollectionUtils do
     end)
   end
 
-  def map_intersection(%{} = map1, %{} = map2) do
+  def merge_common(%{} = map1, %{} = map2) do
     keys1 = Map.keys(map1)
     keys2 = Map.keys(map2)
 
@@ -22,7 +22,7 @@ defmodule TdBg.Utils.CollectionUtils do
     map1 = Map.take(map1, MapSet.to_list(keys))
     map2 = Map.take(map2, MapSet.to_list(keys))
 
-    Map.merge(map1, map2, fn _k, v1, v2 -> intersection(v1, v2) end)
+    Map.merge(map1, map2, fn _k, v1, v2 -> v1 ++ v2 end)
   end
 
   def stringify_keys(%{} = map) do
@@ -38,12 +38,4 @@ defmodule TdBg.Utils.CollectionUtils do
 
   defp atomize_key(key) when is_binary(key), do: String.to_atom(key)
   defp atomize_key(key), do: key
-
-  defp intersection(%MapSet{} = v1, %MapSet{} = v2) do
-    MapSet.intersection(v1, v2)
-  end
-
-  defp intersection(_, _) do
-    MapSet.new()
-  end
 end

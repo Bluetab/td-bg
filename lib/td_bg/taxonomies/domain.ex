@@ -102,8 +102,8 @@ defmodule TdBg.Taxonomies.Domain do
 
   defp valid_group(changeset, domain_id, domain_group, descendents) do
     group_id = Map.get(domain_group || %{}, :id)
-    domain_ids = [domain_id | Enum.map(descendents, & &1.id)]
-    validate_concept_names(changeset, group_id, domain_ids)
+    descendant_ids = [domain_id | Enum.map(descendents, & &1.id)]
+    validate_concept_names(changeset, group_id, descendant_ids)
   end
 
   defp validate_parent_id(%Ecto.Changeset{valid?: false} = changeset, _domain), do: changeset
@@ -121,36 +121,40 @@ defmodule TdBg.Taxonomies.Domain do
   defp validate_parent_id(%Ecto.Changeset{} = changeset, %__MODULE__{}), do: changeset
 
   defp validate_concept_names(changeset, group_id, domain_ids) do
-    grouped_from_group =
+    from_group =
       group_id
       |> BusinessConcepts.get_active_concepts_in_group()
       |> grouped_by_type()
 
-    grouped_from_domains =
+    from_descendants =
       domain_ids
       |> BusinessConcepts.get_active_concepts_by_domain_ids()
       |> grouped_by_type()
 
-    grouped_from_group
-    |> CollectionUtils.map_intersection(grouped_from_domains)
-    |> Enum.map(fn {k, v} -> {k, MapSet.to_list(v)} end)
-    |> Enum.find(fn {_k, v} -> v != [] end)
-    |> case do
-      nil -> changeset
-      _ -> add_error(changeset, :business_concept, "domain.error.existing.business_concept.name")
-    end
+    changeset
+    |> validate_intersection(from_descendants)
+    |> validate_intersection(CollectionUtils.merge_common(from_group, from_descendants))
   end
 
   defp grouped_by_type(collection) do
     collection
-    |> Enum.group_by(& &1 |> Map.get(:business_concept) |> Map.get(:type))
-    |> Enum.map(fn {k, v} -> {k, to_names_map_set(v)} end)
+    |> Enum.group_by(&(&1 |> Map.get(:business_concept) |> Map.get(:type)))
+    |> Enum.map(fn {k, v} -> {k, Enum.map(v, &String.downcase(&1.name))} end)
     |> Enum.into(%{})
   end
 
-  defp to_names_map_set(collection) do
-    collection
-    |> Enum.map(&String.downcase(&1.name))
-    |> MapSet.new()
+  defp validate_intersection(%Ecto.Changeset{valid?: false} = changeset, _names_by_type),
+    do: changeset
+
+  defp validate_intersection(changeset, names_by_type) do
+    names_by_type
+    |> Enum.map(fn {_k, names} -> Enum.frequencies_by(names, &String.downcase/1) end)
+    |> Enum.map(&Enum.to_list/1)
+    |> List.flatten()
+    |> Enum.find(fn {_name, count} -> count > 1 end)
+    |> case do
+      nil -> changeset
+      _ -> add_error(changeset, :business_concept, "domain.error.existing.business_concept.name")
+    end
   end
 end
