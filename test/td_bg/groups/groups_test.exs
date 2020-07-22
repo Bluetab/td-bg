@@ -38,6 +38,11 @@ defmodule TdBg.GroupsTest do
       assert {:error, %Ecto.Changeset{}} = Groups.create_domain_group(@invalid_attrs)
     end
 
+    test "create_domain_group/1 with duplicated name gives an error" do
+      domain_group = domain_group_fixture()
+      assert {:error, %Ecto.Changeset{}} = Groups.create_domain_group(%{name: domain_group.name})
+    end
+
     test "update_domain_group/2 with valid data updates the domain_group" do
       domain_group = domain_group_fixture()
 
