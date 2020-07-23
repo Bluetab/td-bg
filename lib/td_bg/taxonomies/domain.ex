@@ -3,6 +3,8 @@ defmodule TdBg.Taxonomies.Domain do
   Ecto schema representing a domain in the business glossary.
   """
 
+  require Logger
+
   use Ecto.Schema
 
   import Ecto.Changeset
@@ -153,8 +155,12 @@ defmodule TdBg.Taxonomies.Domain do
     |> List.flatten()
     |> Enum.find(fn {_name, count} -> count > 1 end)
     |> case do
-      nil -> changeset
-      _ -> add_error(changeset, :business_concept, "domain.error.existing.business_concept.name")
+      nil ->
+        changeset
+
+      {name, _count} ->
+        Logger.info("Concept #{name} duplicated")
+        add_error(changeset, :business_concept, "domain.error.existing.business_concept.name")
     end
   end
 end

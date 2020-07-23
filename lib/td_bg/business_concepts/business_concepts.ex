@@ -64,6 +64,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [c, _v], _ in assoc(c, :domain))
     |> with_group_clause(group_id)
     |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> distinct([_c, v, d], [v.name, d.id])
     |> select([c, v, _d], %{v | business_concept: c})
     |> Repo.all()
   end
@@ -76,6 +77,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [c, _v], _ in assoc(c, :domain))
     |> where([_c, _v, d], d.id in ^domain_ids)
     |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> distinct([_c, v, d], [v.name, d.id])
     |> select([c, v, _d], %{v | business_concept: c})
     |> Repo.all()
   end
