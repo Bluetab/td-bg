@@ -111,7 +111,7 @@ defmodule TdBg.BusinessConcept.Upload do
         upload_data(tail, user, [concept_id | acc], row_count + 1)
 
       {:error, :business_concept_version, error, _} ->
-        {:error, Map.put(error, :row, row_count)}
+        {:error, Map.put(error, :row, row_count)} 
 
       {:error, error} ->
         {:error, Map.put(error, :row, row_count)}
