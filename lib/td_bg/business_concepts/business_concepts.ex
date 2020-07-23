@@ -35,7 +35,7 @@ defmodule TdBg.BusinessConcepts do
     BusinessConcept
     |> join(:left, [c], _ in assoc(c, :versions))
     |> join(:left, [c, _v], _ in assoc(c, :domain))
-    |> where([c, v, _d], c.type == ^type and v.status not in ^status)
+    |> where([c, v, _d], c.type == ^type and v.status not in ^status and v.current)
     |> include_name_where(name, Keyword.get(opts, :business_concept_id))
     |> with_group_clause(Keyword.get(opts, :domain_group_id))
     |> select([c, v], count(c.id))
@@ -63,7 +63,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [c], _ in assoc(c, :versions))
     |> join(:left, [c, _v], _ in assoc(c, :domain))
     |> with_group_clause(group_id)
-    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"] and v.current)
     |> select([c, v, _d], %{v | business_concept: c})
     |> Repo.all()
   end
@@ -75,7 +75,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [c], _ in assoc(c, :versions))
     |> join(:left, [c, _v], _ in assoc(c, :domain))
     |> where([_c, _v, d], d.id in ^domain_ids)
-    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"])
+    |> where([_c, v, _d], v.status not in ^["versioned", "deprecated"] and v.current)
     |> select([c, v, _d], %{v | business_concept: c})
     |> Repo.all()
   end
