@@ -314,9 +314,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field",
-               "Field3" => 1,
-               "Field4" => [""]
+               "Field2" => "Second field"
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
@@ -324,9 +322,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field",
-               "Field3" => 1,
-               "Field4" => [""]
+               "Field2" => "Second field"
              }
     end
   end
