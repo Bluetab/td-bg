@@ -372,7 +372,7 @@ defmodule TdBg.BusinessConcepts do
       |> merge_content_with_concept(business_concept_version)
       |> update_content_schema(params)
       |> bulk_validate_concept(business_concept_version)
-      |> validate_concept_content(Map.get(business_concept_version, :status) != "publised")
+      |> validate_concept_content(Map.get(business_concept_version, :status) != "published")
       |> validate_description()
       |> update_concept()
 
