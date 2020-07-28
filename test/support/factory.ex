@@ -7,6 +7,7 @@ defmodule TdBg.Factory do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Comments.Comment
   alias TdBg.Groups.DomainGroup
+  alias TdBg.UserSearchFilters.UserSearchFilter
 
   def user_factory do
     %TdBg.Accounts.User{
@@ -71,6 +72,15 @@ defmodule TdBg.Factory do
   def domain_group_factory do
     %DomainGroup{
       name: sequence("group_name")
+    }
+  end
+
+  def user_search_filter_factory do
+    %UserSearchFilter{
+      id: sequence(:user_search_filter, & &1),
+      name:  sequence("filter_name"),
+      filters: %{country: ["Sp"]},
+      user_id: sequence(:user_id, & &1)
     }
   end
 
