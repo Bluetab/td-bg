@@ -145,7 +145,13 @@ defmodule TdBg.TaxonomiesTest do
 
     test "create_domain/1 with an existing name should return an error" do
       %{name: name} = insert(:domain)
-      assert {:error, changeset} = Taxonomies.create_domain(%{name: name, external_id: "External id: #{:rand.uniform(100_000_000)}"})
+
+      assert {:error, changeset} =
+               Taxonomies.create_domain(%{
+                 name: name,
+                 external_id: "External id: #{:rand.uniform(100_000_000)}"
+               })
+
       assert %{errors: [name: error], valid?: false} = changeset
       assert {"has already been taken", [constraint: :unique, constraint_name: _]} = error
     end
@@ -161,8 +167,7 @@ defmodule TdBg.TaxonomiesTest do
     end
 
     test "create_domain/1 with no external_id should return an error" do
-      assert {:error, changeset} =
-               Taxonomies.create_domain(%{name: "new name"})
+      assert {:error, changeset} = Taxonomies.create_domain(%{name: "new name"})
 
       assert %{errors: [external_id: error], valid?: false} = changeset
       assert {"can't be blank", [validation: :required]} = error
@@ -171,7 +176,12 @@ defmodule TdBg.TaxonomiesTest do
     test "create_domain/1 with an existing name in a deleted domain should create the domain" do
       %{name: name} = domain_to_delete = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
-      assert {:ok, %Domain{name: ^name} = domain} = Taxonomies.create_domain(%{name: name, external_id: "External id: #{:rand.uniform(100_000_000)}"})
+
+      assert {:ok, %Domain{name: ^name} = domain} =
+               Taxonomies.create_domain(%{
+                 name: name,
+                 external_id: "External id: #{:rand.uniform(100_000_000)}"
+               })
     end
 
     test "create_domain/1 with an existing external_id in a deleted domain should create the domain" do
@@ -338,13 +348,41 @@ defmodule TdBg.TaxonomiesTest do
 
       assert Enum.all?(
                root_children,
-               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+               &is_nil(Taxonomies.get_domain!(&1.id).domain_group_id)
              )
 
       assert %{id: domain_group_id} = Groups.get_by(name: root_children_group.name)
 
       assert Enum.all?(
                children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
+    end
+
+    test "update_domain/2 inherits parent group on deletion" do
+      root_group = insert(:domain_group)
+      root_children_group = insert(:domain_group)
+      insert(:domain, id: 0, domain_group: root_group)
+
+      root_children =
+        Enum.map(1..5, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: root_group)
+        end)
+
+      root = insert(:domain, id: 6, domain_group: root_children_group, parent_id: 5)
+
+      children =
+        Enum.map(7..10, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
+        end)
+
+      assert %{id: domain_group_id} = Groups.get_by(name: root_group.name)
+
+      assert {:ok, %Domain{domain_group_id: ^domain_group_id}} =
+               Taxonomies.update_domain(root, %{domain_group: nil})
+
+      assert Enum.all?(
+               root_children ++ children,
                &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
              )
     end
@@ -522,6 +560,39 @@ defmodule TdBg.TaxonomiesTest do
 
       assert {:ok, %Domain{domain_group_id: ^group_id}} =
                Taxonomies.update_domain(domain, %{domain_group: group.name})
+    end
+
+    test "update_domain/2 manage only direct descendents" do
+      g1 = insert(:domain_group)
+      g2 = insert(:domain_group)
+      root = insert(:domain, id: 0, domain_group: g1)
+
+      root_children =
+        Enum.map(1..5, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: g1)
+        end)
+
+      insert(:domain, id: 6, domain_group: g2, parent_id: 5)
+
+      children =
+        Enum.map(7..10, fn level ->
+          insert(:domain, id: level, parent_id: level - 1, domain_group: g1)
+        end)
+
+      assert %{id: domain_group_id} = Groups.get_by(name: g1.name)
+
+      assert {:ok, %Domain{domain_group_id: nil}} =
+               Taxonomies.update_domain(root, %{domain_group: nil})
+
+      assert Enum.all?(
+               root_children,
+               &is_nil(Taxonomies.get_domain!(&1.id).domain_group_id)
+             )
+
+      assert Enum.all?(
+               children,
+               &(Taxonomies.get_domain!(&1.id).domain_group_id == domain_group_id)
+             )
     end
 
     test "delete_domain/1 soft-deletes the domain" do

@@ -60,7 +60,7 @@ defmodule TdBgWeb.DomainView do
   end
 
   defp with_group(%{domain_group: domain_group} = domain) when not is_nil(domain_group) do
-    Map.put(domain, :domain_group, Map.take(domain_group, [:id, :name]))
+    Map.put(domain, :domain_group, Map.take(domain_group, [:id, :name, :status]))
   end
 
   defp with_group(domain), do: domain

@@ -102,11 +102,11 @@ defmodule TdBgWeb.DomainController do
   def show(conn, %{"id" => id}) do
     current_user = conn.assigns[:current_user]
 
-    with domain <- Taxonomies.get_domain!(id, [:domain_group]),
+    with domain <- Taxonomies.get_domain!(id, [:parent, :domain_group]),
          {:can, true} <- {:can, can?(current_user, show(domain))},
          parentable_ids <- Taxonomies.get_parentable_ids(current_user, domain) do
       render(conn, "show.json",
-        domain: domain,
+        domain: enrich_group(domain),
         parentable_ids: parentable_ids,
         hypermedia: hypermedia("domain", conn, domain)
       )
@@ -200,5 +200,29 @@ defmodule TdBgWeb.DomainController do
       counter = Taxonomies.count_existing_users_with_roles(id, user_name)
       render(conn, "domain_bc_count.json", counter: counter)
     end
+  end
+
+  defp enrich_group(%Domain{domain_group: nil} = domain), do: domain
+
+  defp enrich_group(
+         %Domain{domain_group: %{id: id}, parent: %{domain_group_id: domain_group_id}} = domain
+       )
+       when domain_group_id != id do
+    with_group_status(domain)
+  end
+
+  defp enrich_group(%Domain{domain_group: %{}, parent: nil} = domain) do
+    with_group_status(domain)
+  end
+
+  defp enrich_group(domain), do: domain
+
+  defp with_group_status(domain) do
+    domain_group =
+      domain
+      |> Map.get(:domain_group)
+      |> Map.put(:status, :root)
+
+    Map.put(domain, :domain_group, domain_group)
   end
 end
