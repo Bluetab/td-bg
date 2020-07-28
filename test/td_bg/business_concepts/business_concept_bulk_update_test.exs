@@ -325,5 +325,87 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                "Field2" => "Second field"
              }
     end
+
+    test "update_all/3 validates only updated fields and gives an error when they arec incorrect" do
+      user = build(:user)
+
+      d1 = insert(:domain, name: "d1")
+      c1 = insert(:business_concept, domain: d1, type: "template_test")
+      c2 = insert(:business_concept, domain: d1, type: "template_test")
+
+      content = %{
+        "Field1" => "First field",
+        "Field2" => "Second field"
+      }
+
+      v1 =
+        insert(:business_concept_version,
+          business_concept: c1,
+          content: content,
+          status: "published"
+        )
+
+      v2 =
+        insert(:business_concept_version,
+          business_concept: c2,
+          content: content,
+          status: "draft"
+        )
+
+      bc_versions =
+        [v1, v2]
+        |> Enum.map(&Map.take(&1, [:id]))
+        |> Enum.map(&CollectionUtils.stringify_keys/1)
+
+      update_content = %{
+        "Field1" => "First udpate",
+        "Field2" => "Second field"
+      }
+
+      params = %{
+        "domain_id" => d1.id,
+        "content" => update_content
+      }
+
+      assert {:ok, bcv_ids} = BulkUpdate.update_all(user, bc_versions, params)
+      assert length(bcv_ids) == 2
+
+      assert Enum.all?(
+               bcv_ids,
+               &(BusinessConcepts.get_business_concept_version!(&1).business_concept.domain_id ==
+                   d1.id)
+             )
+
+      assert Enum.all?(
+               bcv_ids,
+               &(BusinessConcepts.get_business_concept_version!(&1).content == %{
+                   "Field1" => "First udpate",
+                   "Field2" => "Second field"
+                 })
+             )
+
+      update_content = %{
+        "Field1" => "First udpate",
+        "Field2" => "Second field",
+        "Field3" => "Wrong"
+      }
+
+      params = %{
+        "domain_id" => d1.id,
+        "content" => update_content
+      }
+
+      assert {:error, changeset} = BulkUpdate.update_all(user, [Enum.at(bc_versions, 0)], params)
+      assert %{errors: [Field3: error], valid?: false} = changeset
+      assert {"is invalid", [{:validation, :inclusion}, _]} = error
+
+      assert {:ok, bcv_ids} = BulkUpdate.update_all(user, [Enum.at(bc_versions, 1)], params)
+      assert length(bcv_ids) == 1
+
+      assert Enum.all?(
+               bcv_ids,
+               &BusinessConcepts.get_business_concept_version!(&1).in_progress
+             )
+    end
   end
 end
