@@ -9,6 +9,7 @@
 ### Changed
 
 - [TD-2280] Reference concepts by external id on domain upload
+- [TD-2816] Bulk Update: Validate only specified fields in concept content
 
 ## [4.0.0] 2020-07-01
 
