@@ -363,15 +363,16 @@ defmodule TdBg.BusinessConcepts do
         %BusinessConceptVersion{} = business_concept_version,
         params
       ) do
+    params = attrs_keys_to_atoms(params)
+
     result =
       params
-      |> attrs_keys_to_atoms()
       |> raise_error_if_no_content_schema()
       |> add_content_if_not_exist()
       |> merge_content_with_concept(business_concept_version)
-      |> set_content_defaults()
+      |> update_content_schema(params, business_concept_version)
       |> bulk_validate_concept(business_concept_version)
-      |> validate_concept_content()
+      |> validate_concept_content(Map.get(business_concept_version, :status) != "published")
       |> validate_description()
       |> update_concept()
 
@@ -745,6 +746,22 @@ defmodule TdBg.BusinessConcepts do
       |> Map.put(:changeset, put_change(params.changeset, :in_progress, true))
       |> Map.put(:in_progress, true)
     end
+  end
+
+  defp update_content_schema(changes, _params, %BusinessConceptVersion{status: "draft"}), do: changes
+
+  defp update_content_schema(changes, params, _bcv) do
+    updated =
+      params
+      |> Map.get(:content)
+      |> Map.keys()
+
+    schema =
+      changes
+      |> Map.get(:content_schema)
+      |> Enum.filter(&(Map.get(&1, "name") in updated))
+
+    Map.put(changes, :content_schema, schema)
   end
 
   defp update_concept(%{changeset: changeset}) do
