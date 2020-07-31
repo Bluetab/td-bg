@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-2280] Domain group as independent entity 
+- [TD-2790] User search filters entity and management
 
 ### Changed
 

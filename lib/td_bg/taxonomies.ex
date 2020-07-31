@@ -293,11 +293,23 @@ defmodule TdBg.Taxonomies do
   defp group_on_create(_attrs), do: {:ok, nil}
 
   defp group_on_update(
-         %Domain{domain_group: nil} = domain,
-         %{domain_group: domain_group} = attrs
+         %Domain{domain_group_id: domain_group_id, parent: parent} = domain,
+         %{domain_group: updated_group} = attrs
        )
-       when is_nil(domain_group) or domain_group == "" do
-    group_on_update(domain, Map.delete(attrs, :domain_group))
+       when is_nil(updated_group) or updated_group == "" do
+    cond do
+      is_nil(domain_group_id) ->
+        group_on_update(domain, Map.delete(attrs, :domain_group))
+
+      is_nil(parent) ->
+        {:ok, %{domain_group: nil, status: :deleted}}
+
+      Map.get(parent, :domain_group_id) != domain_group_id ->
+        delete_group(domain, attrs)
+
+      true ->
+        group_on_update(domain, Map.delete(attrs, :domain_group))
+    end
   end
 
   defp group_on_update(
@@ -305,7 +317,7 @@ defmodule TdBg.Taxonomies do
          %{domain_group: domain_group} = attrs
        )
        when domain_group == name do
-    group_on_update(domain, Map.delete(attrs, :domain_group))
+      group_on_update(domain, Map.delete(attrs, :domain_group))
   end
 
   defp group_on_update(_domain, %{domain_group: domain_group}) do
@@ -321,7 +333,8 @@ defmodule TdBg.Taxonomies do
     end
   end
 
-  defp group_on_update(%Domain{domain_group_id: nil}, %{parent_id: parent_id}) when parent_id == "" or is_nil(parent_id) do
+  defp group_on_update(%Domain{domain_group_id: nil}, %{parent_id: parent_id})
+       when parent_id == "" or is_nil(parent_id) do
     {:ok, %{domain_group: nil, status: :unchanged}}
   end
 
@@ -339,6 +352,14 @@ defmodule TdBg.Taxonomies do
 
   defp group_on_update(%Domain{domain_group: domain_group}, _attrs),
     do: {:ok, %{domain_group: domain_group, status: :unchanged}}
+
+  defp delete_group(%Domain{parent: %{id: id}}, %{parent_id: parent_id}) when parent_id != id do
+    {:ok, %{domain_group: get_domain_group(parent_id), status: :inherited}}
+  end
+
+  defp delete_group(%Domain{parent: %{id: id}}, _attrs) do
+    {:ok, %{domain_group: get_domain_group(id), status: :inherited}}
+  end
 
   defp get_domain_group(nil), do: nil
 
@@ -365,19 +386,20 @@ defmodule TdBg.Taxonomies do
     end
   end
 
-  defp valid_descendents(%{domain_group: %{status: status}}, _domain)
-       when status in [:unchanged, :deleted] do
+  defp valid_descendents(%{domain_group: %{status: :unchanged}}, _domain) do
     {:ok, []}
   end
 
   defp valid_descendents(_changes, %Domain{id: domain_id, domain_group: domain_group}) do
     prev_domain_group_id = Map.get(domain_group || %{}, :id)
 
-    descendants =
+    descendant_ids =
       domain_id
       |> descendent_ids()
       |> Enum.reject(&(&1 == domain_id))
-      |> children_by_group(prev_domain_group_id)
+
+    updatable = children_by_group(descendant_ids, prev_domain_group_id)
+    descendants = exclude_indirect(updatable, descendant_ids)
 
     {:ok, descendants}
   end
@@ -427,6 +449,18 @@ defmodule TdBg.Taxonomies do
     |> where([d], d.id in ^descendents)
     |> group_id_condition(domain_group_id)
     |> Repo.all()
+  end
+
+  defp exclude_indirect(domains, descendent_ids) do
+    ids = Enum.map(domains, &Map.get(&1, :id))
+    unupdatables = descendent_ids -- ids
+
+    excluded =
+      unupdatables
+      |> Enum.reduce([], fn unupdatable, acc -> acc ++ descendent_ids(unupdatable) end)
+      |> Enum.uniq()
+
+    Enum.filter(domains, &(Map.get(&1, :id) not in excluded))
   end
 
   defp group_id_condition(query, nil) do
