@@ -370,7 +370,7 @@ defmodule TdBg.BusinessConcepts do
       |> raise_error_if_no_content_schema()
       |> add_content_if_not_exist()
       |> merge_content_with_concept(business_concept_version)
-      |> update_content_schema(params)
+      |> update_content_schema(params, business_concept_version)
       |> bulk_validate_concept(business_concept_version)
       |> validate_concept_content(Map.get(business_concept_version, :status) != "published")
       |> validate_description()
@@ -748,7 +748,9 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp update_content_schema(changes, params) do
+  defp update_content_schema(changes, _params, %BusinessConceptVersion{status: "draft"}), do: changes
+
+  defp update_content_schema(changes, params, _bcv) do
     updated =
       params
       |> Map.get(:content)
