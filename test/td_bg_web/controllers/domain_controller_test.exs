@@ -105,7 +105,7 @@ defmodule TdBgWeb.DomainControllerTest do
       %{id: domain_id} = domain = insert(:domain, parent_id: parent_id)
       %{id: role_id, name: role_name} = get_role_by_name("admin")
 
-      [parent_id, domain_id]
+      [parent_id, domain_id, sibling_id]
       |> Enum.each(fn id ->
         MockPermissionResolver.create_acl_entry(%{
           principal_id: user.id,

@@ -78,13 +78,27 @@ defmodule TdBgWeb.DomainController do
     current_user = conn.assigns[:current_user]
 
     with %Domain{} = domain <- Taxonomies.apply_changes(Domain, domain_params),
-         {:can, true} <- {:can, can?(current_user, create(domain))},
+         {:can, true} <- {:can, can_create_domain(current_user, domain)},
          {:ok, %Domain{} = domain} <- Taxonomies.create_domain(domain_params) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.domain_path(conn, :show, domain))
       |> render("show.json", domain: domain)
     end
+  end
+
+  defp can_create_domain(current_user, %{parent_id: parent_id}) when not is_nil(parent_id) do
+    case Taxonomies.get_domain(parent_id) do
+      {:ok, parent_domain} ->
+        can?(current_user, create(parent_domain))
+
+      {:error, :not_found} ->
+        true
+    end
+  end
+
+  defp can_create_domain(current_user, domain) do
+    can?(current_user, create(domain))
   end
 
   swagger_path :show do

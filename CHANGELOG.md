@@ -12,6 +12,11 @@
 - [TD-2280] Reference concepts by external id on domain upload
 - [TD-2816] Bulk Update: Validate only specified fields in concept content
 
+### Fixed
+
+- [TD-2737] Create domain permission ability was checking permissions on parent domain 
+making that hypermedia actions did not contain create domain action
+
 ## [4.0.0] 2020-07-01
 
 ### Fixed
