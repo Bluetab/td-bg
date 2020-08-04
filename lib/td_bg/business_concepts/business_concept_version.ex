@@ -134,13 +134,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> put_audit(user_id)
   end
 
-  def current_changeset(%BusinessConceptVersion{} = business_concept_version) do
-    business_concept_version
-    |> Map.get(:business_concept_id)
-    |> BusinessConcepts.get_current_version_by_business_concept_id!(%{current: false})
-    |> change(current: true)
-  end
-
   def reject_changeset(
         %BusinessConceptVersion{} = business_concept_version,
         %{} = params,
@@ -199,31 +192,31 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     status == h || has_any_status?(status, t)
   end
 
-  def is_updatable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == "draft"
+  def is_updatable?(%BusinessConceptVersion{status: status} = bcv) do
+    BusinessConcepts.current?(bcv) && status == "draft"
   end
 
-  def is_publishable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == "pending_approval"
+  def is_publishable?(%BusinessConceptVersion{status: status} = bcv) do
+    BusinessConcepts.current?(bcv) && status == "pending_approval"
   end
 
   def is_rejectable?(%BusinessConceptVersion{} = business_concept_version),
     do: is_publishable?(business_concept_version)
 
-  def is_versionable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == "published"
+  def is_versionable?(%BusinessConceptVersion{status: status} = bcv) do
+    BusinessConcepts.current?(bcv) && status == "published"
   end
 
   def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version),
     do: is_versionable?(business_concept_version)
 
-  def is_undo_rejectable?(%BusinessConceptVersion{current: current, status: status}) do
-    current && status == "rejected"
+  def is_undo_rejectable?(%BusinessConceptVersion{status: status} = bcv) do
+    BusinessConcepts.current?(bcv) && status == "rejected"
   end
 
-  def is_deletable?(%BusinessConceptVersion{current: current, status: status}) do
+  def is_deletable?(%BusinessConceptVersion{status: status} = bcv) do
     valid_statuses = ["draft", "rejected"]
-    current && Enum.member?(valid_statuses, status)
+    BusinessConcepts.current?(bcv) && Enum.member?(valid_statuses, status)
   end
 
   defp trim(changeset, fields) do

@@ -61,7 +61,7 @@ defmodule TdBg.UploadTest do
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
       assert {:ok, [concept_id | _]} = Upload.from_csv(business_concept_upload, user)
-      version = BusinessConcepts.get_current_version_by_business_concept_id!(concept_id)
+      version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
       assert version |> Map.get(:content) |> Map.get("role") == ["Role"]
