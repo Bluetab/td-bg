@@ -171,11 +171,11 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_version_by_name(token, business_concept_name) do
     {:ok, _status_code, json_resp} = business_concept_version_list(token)
-    
+
     json_resp
     |> Map.get("data")
     |> Enum.filter(fn business_concept ->
-        business_concept["name"] == business_concept_name
+      business_concept["name"] == business_concept_name
     end)
     |> Enum.sort_by(&Map.get(&1, "version"))
     |> List.last()
@@ -183,7 +183,7 @@ defmodule TdBgWeb.BusinessConcept do
 
   def business_concept_version_by_name_and_type(token, name, type) do
     {:ok, _status_code, json_resp} = business_concept_version_list(token)
-    
+
     json_resp
     |> Map.get("data")
     |> Enum.filter(fn business_concept_version ->

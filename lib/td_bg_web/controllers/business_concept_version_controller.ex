@@ -336,7 +336,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def send_for_approval(conn, %{"business_concept_version_id" => id}) do
     user = conn.assigns[:current_user]
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id) 
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"draft", true} ->
