@@ -11,6 +11,9 @@
 
 - [TD-2280] Reference concepts by external id on domain upload
 - [TD-2816] Bulk Update: Validate only specified fields in concept content
+- [TD-2849] Current version:
+  - Version in `published` status
+  - When a concept has not been `published` the last available version
 
 ### Fixed
 
