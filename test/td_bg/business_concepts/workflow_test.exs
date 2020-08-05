@@ -24,11 +24,28 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
 
   describe "new_version/2" do
     test "creates a new published version and the previous version remains the current" do
-      business_concept_version = insert(:business_concept_version, status: "published", current: true)
+      business_concept_version =
+        insert(:business_concept_version, status: "published", current: true)
 
       assert {:ok, res} = Workflow.new_version(business_concept_version, %User{id: 1234})
       assert %{current: %{current: false}} = res
       assert BusinessConcepts.get_business_concept_version!(business_concept_version.id).current
+    end
+
+    test "creates a new published version and advance to a publish state will make it current" do
+      business_concept_version =
+        insert(:business_concept_version, status: "published", current: true)
+
+      assert {:ok, res} = Workflow.new_version(business_concept_version, %User{id: 1234})
+      assert %{current: %{current: false}} = res
+      assert BusinessConcepts.get_business_concept_version!(business_concept_version.id).current
+
+      assert {:ok, res} = Workflow.submit_business_concept_version(res.current, %User{id: 1234})
+      assert BusinessConcepts.get_business_concept_version!(business_concept_version.id).current
+
+      assert {:ok, res} = Workflow.publish(res.updated, %User{id: 1234})
+      refute BusinessConcepts.get_business_concept_version!(business_concept_version.id).current
+      assert BusinessConcepts.get_business_concept_version!(res.published.id).current
     end
 
     test "publishes an event to the audit stream" do
