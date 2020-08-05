@@ -233,7 +233,7 @@
       | Description       | This is the first description of my business term |
       | Last Modification | Some timestamp                                    |
       | Last User         | app-admin                                         |
-      | Current           | false                                             |
+      | Current           | true                                              |
       | Version           | 1                                                 |
       | Status            | published                                         |
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business_Term" and version "2" with following data:
@@ -244,7 +244,7 @@
       | Modification Comments | Modification on the Business Term description      |
       | Last Modification     | Some timestamp                                     |
       | Last User             | app-admin                                          |
-      | Current               | true                                               |
+      | Current               | false                                              |
       | Version               | 2                                                  |
       | Status                | draft                                              |
 

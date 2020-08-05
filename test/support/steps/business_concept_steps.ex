@@ -302,7 +302,6 @@ defmodule TdBg.BusinessConceptSteps do
           },
           %{token_admin: token_admin} = state do
     token = get_user_token(user_name)
-
     business_concept =
       business_concept_version_by_name_and_type(
         token_admin,
@@ -388,7 +387,6 @@ defmodule TdBg.BusinessConceptSteps do
          %{token_admin: token_admin} = state do
     business_concept = business_concept_version_by_name(token_admin, business_concept_name)
     assert business_concept_type == business_concept["type"]
-
     attrs =
       fields
       |> field_value_to_api_attrs(fixed_values())

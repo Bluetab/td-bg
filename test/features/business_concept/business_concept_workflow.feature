@@ -193,7 +193,7 @@
       | Description       | This is the first description of my business term |
       | Last Modification | Some timestamp                                    |
       | Last User         | app-admin                                         |
-      | Current           | false                                             |
+      | Current           | true                                             |
       | Version           | 1                                                 |
       | Status            | published                                         |
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business_Term" and version "2" with following data:
@@ -203,7 +203,7 @@
       | Description       | This is the first description of my business term |
       | Last Modification | Some timestamp                                    |
       | Last User         | app-admin                                         |
-      | Current           | true                                              |
+      | Current           | false                                              |
       | Version           | 2                                                 |
       | Status            | pending_approval                                  |
 
@@ -243,7 +243,7 @@
       | Description       | This is the first description of my business term |
       | Last Modification | Some timestamp                                    |
       | Last User         | app-admin                                         |
-      | Current           | false                                             |
+      | Current           | true                                             |
       | Version           | 1                                                 |
       | Status            | published                                         |
     And if result <result> is "Ok", user <user> is able to view business concept "My Business Term" of type "Business_Term" and version "2" with following data:
@@ -253,7 +253,7 @@
       | Description       | This is the first description of my business term |
       | Last Modification | Some timestamp                                    |
       | Last User         | app-admin                                         |
-      | Current           | true                                              |
+      | Current           | false                                              |
       | Version           | 2                                                 |
       | Status            | rejected                                          |
       | Reject Reason     | Description is not accurate                       |

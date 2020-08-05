@@ -584,17 +584,6 @@ defmodule TdBg.BusinessConceptsTest do
                [business_concept_version]
     end
 
-    defp create_version(domain, name, status) do
-      business_concept = insert(:business_concept, domain: domain)
-
-      insert(
-        :business_concept_version,
-        business_concept: business_concept,
-        name: name,
-        status: status
-      )
-    end
-
     test "list_business_concept_versions/1 returns all business_concept_versions of a business_concept_version" do
       business_concept_version = insert(:business_concept_version)
       business_concept_id = business_concept_version.business_concept.id

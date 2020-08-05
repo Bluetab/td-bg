@@ -131,7 +131,7 @@
       | Description       | This is the first description of my business term |
       | Last Modification | Some timestamp                                    |
       | Last User         | app-admin                                         |
-      | Current           | false                                             |
+      | Current           | true                                             |
       | Version           | 1                                                 |
       | Status            | published                                         |
     And if result <result> is "No Content",  business concept "My Business Term" of type "Business_Term" and version "2" does not exist
