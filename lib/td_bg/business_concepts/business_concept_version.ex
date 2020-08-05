@@ -193,30 +193,30 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def is_updatable?(%BusinessConceptVersion{status: status} = bcv) do
-    BusinessConcepts.current?(bcv) && status == "draft"
+    BusinessConcepts.last?(bcv) && status == "draft"
   end
 
   def is_publishable?(%BusinessConceptVersion{status: status} = bcv) do
-    BusinessConcepts.current?(bcv) && status == "pending_approval"
+    BusinessConcepts.last?(bcv) && status == "pending_approval"
   end
 
   def is_rejectable?(%BusinessConceptVersion{} = business_concept_version),
     do: is_publishable?(business_concept_version)
 
-  def is_versionable?(%BusinessConceptVersion{status: status} = bcv) do
-    BusinessConcepts.current?(bcv) && status == "published"
+  def is_versionable?(%BusinessConceptVersion{status: status, current: current}) do
+    current && status == "published"
   end
 
   def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version),
     do: is_versionable?(business_concept_version)
 
   def is_undo_rejectable?(%BusinessConceptVersion{status: status} = bcv) do
-    BusinessConcepts.current?(bcv) && status == "rejected"
+    BusinessConcepts.last?(bcv) && status == "rejected"
   end
 
   def is_deletable?(%BusinessConceptVersion{status: status} = bcv) do
     valid_statuses = ["draft", "rejected"]
-    BusinessConcepts.current?(bcv) && Enum.member?(valid_statuses, status)
+    BusinessConcepts.last?(bcv) && Enum.member?(valid_statuses, status)
   end
 
   defp trim(changeset, fields) do

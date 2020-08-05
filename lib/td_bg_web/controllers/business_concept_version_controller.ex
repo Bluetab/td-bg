@@ -336,9 +336,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def send_for_approval(conn, %{"business_concept_version_id" => id}) do
     user = conn.assigns[:current_user]
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id) 
 
-    case {business_concept_version.status, BusinessConcepts.current?(business_concept_version)} do
+    case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"draft", true} ->
         send_for_approval(conn, user, business_concept_version)
 
@@ -367,7 +367,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    case {business_concept_version.status, BusinessConcepts.current?(business_concept_version)} do
+    case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"pending_approval", true} ->
         do_publish(conn, user, business_concept_version)
 
@@ -397,7 +397,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    case {business_concept_version.status, BusinessConcepts.current?(business_concept_version)} do
+    case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"pending_approval", true} ->
         do_reject(conn, user, business_concept_version, Map.get(params, "reject_reason"))
 
@@ -426,7 +426,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    case {business_concept_version.status, BusinessConcepts.current?(business_concept_version)} do
+    case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"rejected", true} ->
         undo_rejection(conn, user, business_concept_version)
 

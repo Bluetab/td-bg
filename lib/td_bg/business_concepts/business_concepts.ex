@@ -191,7 +191,7 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.one!()
   end
 
-  def current?(%BusinessConceptVersion{id: id, business_concept_id: business_concept_id}) do
+  def last?(%BusinessConceptVersion{id: id, business_concept_id: business_concept_id}) do
     get_last_version_by_business_concept_id!(business_concept_id).id == id
   end
 
