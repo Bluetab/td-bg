@@ -455,7 +455,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     user = conn.assigns[:current_user]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    case {business_concept_version.status, business_concept_version.current} do
+    case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"published", true} ->
         do_version(conn, user, business_concept_version)
 
