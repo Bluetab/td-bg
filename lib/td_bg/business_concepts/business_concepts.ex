@@ -98,13 +98,6 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
-  def list_current_business_concept_versions do
-    BusinessConceptVersion
-    |> where([v], v.current == true)
-    |> preload(:business_concept)
-    |> Repo.all()
-  end
-
   @doc """
   Fetch an exsisting business_concept by its id
   """
@@ -166,20 +159,20 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Gets a single business_concept.
+  Gets a single business concept version.
 
   Raises `Ecto.NoResultsError` if the Business concept does not exist.
 
   ## Examples
 
-      iex> get_current_version_by_business_concept_id!(123)
-      %BusinessConcept{}
+      iex> get_last_version_by_business_concept_id!(123)
+      %BusinessConceptVersion{}
 
-      iex> get_current_version_by_business_concept_id!(456)
+      iex> get_last_version_by_business_concept_id!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_current_version_by_business_concept_id!(business_concept_id) do
+  def get_last_version_by_business_concept_id!(business_concept_id) do
     BusinessConceptVersion
     |> where([v], v.business_concept_id == ^business_concept_id)
     |> order_by(desc: :version)
@@ -188,7 +181,7 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.one!()
   end
 
-  def get_current_version_by_business_concept_id!(business_concept_id, %{current: current}) do
+  def get_last_version_by_business_concept_id!(business_concept_id, %{current: current}) do
     BusinessConceptVersion
     |> where([v], v.business_concept_id == ^business_concept_id)
     |> where([v], v.current == ^current)
@@ -196,6 +189,10 @@ defmodule TdBg.BusinessConcepts do
     |> limit(1)
     |> preload(business_concept: :domain)
     |> Repo.one!()
+  end
+
+  def last?(%BusinessConceptVersion{id: id, business_concept_id: business_concept_id}) do
+    get_last_version_by_business_concept_id!(business_concept_id).id == id
   end
 
   @doc """
@@ -221,7 +218,7 @@ defmodule TdBg.BusinessConcepts do
       |> Repo.one()
 
     case version do
-      nil -> get_current_version_by_business_concept_id!(business_concept_id)
+      nil -> get_last_version_by_business_concept_id!(business_concept_id)
       _ -> version
     end
   end
@@ -429,45 +426,6 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Returns the list of business_concept_versions.
-
-  ## Examples
-
-      iex> list_all_business_concept_versions()
-      [%BusinessConceptVersion{}, ...]
-
-  """
-  def find_business_concept_versions(filter) do
-    query =
-      BusinessConceptVersion
-      |> join(:left, [v], _ in assoc(v, :business_concept))
-      |> preload([_, c], business_concept: c)
-      |> order_by(asc: :version)
-
-    query =
-      case Map.has_key?(filter, :id) && length(filter.id) > 0 do
-        true ->
-          id = Map.get(filter, :id)
-          query |> where([_v, c], c.id in ^id)
-
-        _ ->
-          query
-      end
-
-    query =
-      case Map.has_key?(filter, :status) && length(filter.status) > 0 do
-        true ->
-          status = Map.get(filter, :status)
-          query |> where([v, _c], v.status in ^status)
-
-        _ ->
-          query
-      end
-
-    query |> Repo.all()
-  end
-
-  @doc """
   Returns the list of business_concept_versions of a
   business_concept
 
@@ -564,10 +522,10 @@ defmodule TdBg.BusinessConcepts do
   def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version, %{
         id: user_id
       }) do
-    if business_concept_version.version == 1 do
-      business_concept = business_concept_version.business_concept
-      business_concept_id = business_concept.id
+    business_concept = business_concept_version.business_concept
+    business_concept_id = business_concept.id
 
+    if business_concept_version.version == 1 do
       Multi.new()
       |> Multi.delete(:business_concept_version, business_concept_version)
       |> Multi.delete(:business_concept, business_concept)
@@ -596,20 +554,15 @@ defmodule TdBg.BusinessConcepts do
     else
       Multi.new()
       |> Multi.delete(:business_concept_version, business_concept_version)
-      |> Multi.update(
-        :current,
-        BusinessConceptVersion.current_changeset(business_concept_version)
-      )
       |> Multi.run(:audit, Audit, :business_concept_deleted, [user_id])
       |> Repo.transaction()
       |> case do
         {:ok,
          %{
-           business_concept_version: %BusinessConceptVersion{} = deleted_version,
-           current: %BusinessConceptVersion{} = current_version
+           business_concept_version: %BusinessConceptVersion{} = deleted_version
          }} ->
           Indexer.delete(deleted_version)
-          {:ok, current_version}
+          {:ok, get_last_version_by_business_concept_id!(business_concept_id)}
       end
     end
   end

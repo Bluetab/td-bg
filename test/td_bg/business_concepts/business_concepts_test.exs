@@ -465,7 +465,7 @@ defmodule TdBg.BusinessConceptsTest do
                )
 
       object =
-        BusinessConcepts.get_current_version_by_business_concept_id!(
+        BusinessConcepts.get_last_version_by_business_concept_id!(
           business_concept_version.business_concept.id
         )
 
@@ -487,11 +487,11 @@ defmodule TdBg.BusinessConceptsTest do
       insert(:business_concept, type: @template_name, domain: parent_domain)
     end
 
-    test "get_current_version_by_business_concept_id!/1 returns the business_concept with given id" do
+    test "get_last_version_by_business_concept_id!/1 returns the business_concept with given id" do
       business_concept_version = insert(:business_concept_version)
 
       object =
-        BusinessConcepts.get_current_version_by_business_concept_id!(
+        BusinessConcepts.get_last_version_by_business_concept_id!(
           business_concept_version.business_concept.id
         )
 
@@ -582,31 +582,6 @@ defmodule TdBg.BusinessConceptsTest do
       assert business_concept_versions
              |> Enum.map(fn b -> business_concept_version_preload(b) end) ==
                [business_concept_version]
-    end
-
-    test "find_business_concept_versions/1 returns filtered business_concept_versions" do
-      published = "published"
-      draft = "draft"
-      domain = insert(:domain)
-      id = [create_version(domain, "one", draft).business_concept.id]
-      id = [create_version(domain, "two", published).business_concept.id | id]
-      id = [create_version(domain, "three", published).business_concept.id | id]
-
-      business_concept_versions =
-        BusinessConcepts.find_business_concept_versions(%{id: id, status: [published]})
-
-      assert 2 == length(business_concept_versions)
-    end
-
-    defp create_version(domain, name, status) do
-      business_concept = insert(:business_concept, domain: domain)
-
-      insert(
-        :business_concept_version,
-        business_concept: business_concept,
-        name: name,
-        status: status
-      )
     end
 
     test "list_business_concept_versions/1 returns all business_concept_versions of a business_concept_version" do

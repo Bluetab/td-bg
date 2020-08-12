@@ -66,15 +66,16 @@ defmodule TdBg.BusinessConcepts.Workflow do
       )
 
     changeset =
-      BusinessConceptVersion.status_changeset(
-        business_concept_version,
-        "published",
-        user_id
-      )
+      business_concept_version
+      |> BusinessConceptVersion.status_changeset(
+          "published",
+          user_id
+        )
+      |> Changeset.change(current: true)
 
     result =
       Multi.new()
-      |> Multi.update_all(:versioned, query, set: [status: "versioned"])
+      |> Multi.update_all(:versioned, query, set: [status: "versioned", current: false])
       |> Multi.update(:published, changeset)
       |> Multi.run(:audit, Audit, :business_concept_published, [])
       |> Repo.transaction()
@@ -136,7 +137,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
       draft_attrs
       |> BusinessConcepts.attrs_keys_to_atoms()
       |> BusinessConcepts.validate_new_concept()
-      |> do_new_version(business_concept_version)
+      |> do_new_version()
 
     case result do
       {:ok, %{current: new_version}} ->
@@ -149,10 +150,9 @@ defmodule TdBg.BusinessConcepts.Workflow do
     end
   end
 
-  defp do_new_version(%{changeset: changeset}, business_concept_version) do
+  defp do_new_version(%{changeset: changeset}) do
     Multi.new()
-    |> Multi.update(:previous, Changeset.change(business_concept_version, current: false))
-    |> Multi.insert(:current, changeset)
+    |> Multi.insert(:current, Changeset.change(changeset, current: false))
     |> Multi.run(:audit, Audit, :business_concept_versioned, [])
     |> Repo.transaction()
   end

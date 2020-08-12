@@ -62,7 +62,7 @@ defmodule TdBg.Cache.ConceptLoader do
   @impl GenServer
   def handle_info(:refresh_all, state) do
     # Full refresh on startup, only if last full refresh was more than one day ago
-    if acquire_lock?("TdBg.Cache.ConceptLoader:REFRESH", @seconds_in_day) do
+    if acquire_lock?("TdBg.Cache.ConceptLoader:TD-2849", @seconds_in_day) do
       Timer.time(
         fn ->
           BusinessConcepts.get_active_ids()
