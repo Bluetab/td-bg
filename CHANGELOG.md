@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [4.2.0] 2020-08-17
 
 ### Added
 
-- [TD-2280] Domain group as independent entity 
+- [TD-2280] Domain group as independent entity
 - [TD-2790] User search filters entity and management
 
 ### Changed
@@ -17,8 +17,8 @@
 
 ### Fixed
 
-- [TD-2737] Create domain permission ability was checking permissions on parent domain 
-making that hypermedia actions did not contain create domain action
+- [TD-2737] Create domain permission ability was checking permissions on parent domain
+  making that hypermedia actions did not contain create domain action
 
 ## [4.0.0] 2020-07-01
 
