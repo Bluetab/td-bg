@@ -40,11 +40,20 @@ defmodule TdBg.Search.Aggregations do
   end
 
   defp filter_content_term(%{"name" => "_confidential"}), do: true
+  defp filter_content_term(%{"type" => "system"}), do: true
   defp filter_content_term(%{"values" => values}) when is_map(values), do: true
   defp filter_content_term(_), do: false
 
   defp content_term(%{"name" => field, "type" => "user"}) do
     {field, %{terms: %{field: "content.#{field}.raw", size: 50}}}
+  end
+
+  defp content_term(%{"name" => field, "type" => "system"}) do
+    {field,
+     %{
+       nested: %{path: "content.#{field}"},
+       aggs: %{distinct_search: %{terms: %{field: "content.#{field}.external_id.raw", size: 50}}}
+     }}
   end
 
   defp content_term(%{"name" => field}) do

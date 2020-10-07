@@ -93,6 +93,18 @@ defmodule TdBg.Search.Mappings do
     {name, mapping_type("enriched_text")}
   end
 
+  defp field_mapping(%{"name" => name, "type" => "system"}) do
+    {name,
+     %{
+       type: "nested",
+       properties: %{
+         id: %{type: "long"},
+         name: %{type: "text", fields: @raw},
+         external_id: %{type: "text", fields: @raw}
+       }
+     }}
+  end
+
   defp field_mapping(%{"name" => name, "values" => values}) do
     {name, mapping_type(values)}
   end
