@@ -5,6 +5,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   alias TdBgWeb.BusinessConceptVersionView
   alias TdBgWeb.LinkView
   alias TdCache.UserCache
+  alias TdDfLib.Format
 
   def render("index.json", %{hypermedia: hypermedia}) do
     render_many_hypermedia(
@@ -143,6 +144,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     )
     |> add_template(assigns)
     |> add_embedded_resources(assigns)
+    |> add_cached_content(assigns)
   end
 
   def render("versions.json", %{hypermedia: hypermedia}) do
@@ -178,7 +180,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     Map.put(concept, :mod_comments, mod_comments)
   end
 
-  def add_template(concept, assigns) do
+  defp add_template(concept, assigns) do
     case Map.get(assigns, :template, nil) do
       nil ->
         concept
@@ -186,6 +188,21 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       template ->
         template_view = Map.take(template, [:content, :label])
         Map.put(concept, :template, template_view)
+    end
+  end
+
+  defp add_cached_content(concept, assigns) do
+    case Map.get(assigns, :template) do
+      nil ->
+        concept
+
+      template ->
+        content =
+          concept
+          |> Map.get(:content)
+          |> Format.enrich_content_values(template)
+
+        Map.put(concept, :content, content)
     end
   end
 end
