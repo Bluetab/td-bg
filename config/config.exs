@@ -68,7 +68,7 @@ config :td_cache, :event_stream,
     [key: "template:events", consumer: TdBg.Search.IndexWorker]
   ]
 
-  config :td_bg, TdBg.Scheduler,
+config :td_bg, TdBg.Scheduler,
   jobs: [
     [
       schedule: "@daily",
