@@ -64,6 +64,7 @@ defmodule TdBg.Mixfile do
       {:ex_machina, "~> 2.3", only: [:test]},
       {:corsica, "~> 1.0"},
       {:phoenix_swagger, "~> 0.8.2"},
+      {:quantum, "~> 3.0"},
       {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
       {:csv, "~> 2.3"},

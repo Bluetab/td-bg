@@ -42,7 +42,8 @@ defmodule TdBg.Application do
       TdBg.Search.IndexWorker,
       # Cache workers
       TdBg.Cache.ConceptLoader,
-      TdBg.Cache.DomainLoader
+      TdBg.Cache.DomainLoader,
+      TdBg.Scheduler
     ]
   end
 end
