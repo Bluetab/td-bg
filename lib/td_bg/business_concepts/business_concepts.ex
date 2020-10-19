@@ -701,7 +701,8 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp update_content_schema(changes, _params, %BusinessConceptVersion{status: "draft"}), do: changes
+  defp update_content_schema(changes, _params, %BusinessConceptVersion{status: "draft"}),
+    do: changes
 
   defp update_content_schema(changes, params, _bcv) do
     updated =

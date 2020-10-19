@@ -68,6 +68,15 @@ config :td_cache, :event_stream,
     [key: "template:events", consumer: TdBg.Search.IndexWorker]
   ]
 
+config :td_bg, TdBg.Scheduler,
+  jobs: [
+    [
+      schedule: "@daily",
+      task: {TdBg.Search.IndexWorker, :reindex, []},
+      run_strategy: Quantum.RunStrategy.Local
+    ]
+  ]
+
 # Import Elasticsearch config
 import_config "elastic.exs"
 
