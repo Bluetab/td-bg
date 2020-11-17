@@ -89,6 +89,10 @@ defmodule TdBg.Search.Mappings do
     {name, %{enabled: false}}
   end
 
+  defp field_mapping(%{"name" => name, "type" => "copy"}) do
+    {name, %{enabled: false}}
+  end
+
   defp field_mapping(%{"name" => name, "type" => "enriched_text"}) do
     {name, mapping_type("enriched_text")}
   end
