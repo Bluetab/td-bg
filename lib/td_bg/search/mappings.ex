@@ -97,7 +97,7 @@ defmodule TdBg.Search.Mappings do
     {name, mapping_type("enriched_text")}
   end
 
-  defp field_mapping(%{"name" => name, "type" => "system"}) do
+  defp field_mapping(%{"name" => name, "type" => type}) when type in ["domain", "system"] do
     {name,
      %{
        type: "nested",
