@@ -45,4 +45,24 @@ defmodule TdBg.Canada.TaxonomyAbilities do
   def can?(%User{} = user, :move, %Domain{} = domain) do
     can?(user, :delete, domain) and can?(user, :update, domain)
   end
+
+  def can?(%User{} = user, :manage_data_sources, %Domain{id: domain_id}) do
+    Permissions.authorized?(user, :manage_data_sources, domain_id)
+  end
+
+  def can?(%User{} = user, :manage_configurations, %Domain{id: domain_id}) do
+    Permissions.authorized?(user, :manage_configurations, domain_id)
+  end
+
+  def can?(%User{} = user, :update_data_structure, %Domain{id: domain_id}) do
+    Permissions.authorized?(user, :update_data_structure, domain_id)
+  end
+
+  def can?(%User{} = user, :manage_quality_rule, %Domain{id: domain_id}) do
+    Permissions.authorized?(user, :manage_quality_rule, domain_id)
+  end
+
+  def can?(%User{} = user, :update_ingest, %Domain{id: domain_id}) do
+    Permissions.authorized?(user, :update_ingest, domain_id)
+  end
 end

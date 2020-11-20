@@ -41,9 +41,25 @@ defmodule TdBgWeb.DomainController do
         )
 
       actions ->
-        filtered_domains = Enum.filter(domains, &can_any?(actions, user, &1))
-        render(conn, "index_tiny.json", domains: filtered_domains)
+        filtered_domains = filter_domains(user, domains, actions, params)
+        render(conn, "index.json", domains: filtered_domains)
     end
+  end
+
+  defp filter_domains(user, domains, actions, %{"filter" => "all"}) do
+    Enum.filter(domains, &can_all?(actions, user, &1))
+  end
+
+  defp filter_domains(user, domains, actions, _params) do
+    Enum.filter(domains, &can_any?(actions, user, &1))
+  end
+
+  defp can_all?(actions, user, domain) do
+    alias Canada.Can
+
+    actions
+    |> Enum.map(&String.to_atom/1)
+    |> Enum.all?(&Can.can?(user, &1, domain))
   end
 
   defp can_any?(actions, user, domain) do

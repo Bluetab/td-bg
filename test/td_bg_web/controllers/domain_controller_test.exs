@@ -78,7 +78,34 @@ defmodule TdBgWeb.DomainControllerTest do
 
       assert %{"data" => data} =
                conn
-               |> get(Routes.domain_path(conn, :index, %{actions: "show"}))
+               |> get(Routes.domain_path(conn, :index, %{actions: "show, update"}))
+               |> validate_resp_schema(schema, "DomainsResponse")
+               |> json_response(:ok)
+
+      assert [%{"id" => ^domain_id}] = data
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.domain_path(conn, :index, %{actions: "show, update", filter: "all"}))
+               |> validate_resp_schema(schema, "DomainsResponse")
+               |> json_response(:ok)
+
+      assert [] = data
+
+      role = get_role_by_name("publish")
+
+      MockPermissionResolver.create_acl_entry(%{
+        principal_id: user.id,
+        principal_type: "user",
+        resource_id: domain.id,
+        resource_type: "domain",
+        role_id: role.id,
+        role_name: role.name
+      })
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.domain_path(conn, :index, %{actions: "show, update"}))
                |> validate_resp_schema(schema, "DomainsResponse")
                |> json_response(:ok)
 

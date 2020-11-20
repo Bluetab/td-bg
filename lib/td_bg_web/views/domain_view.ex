@@ -11,10 +11,6 @@ defmodule TdBgWeb.DomainView do
     %{data: render_many(domains, DomainView, "domain.json")}
   end
 
-  def render("index_tiny.json", %{domains: domains}) do
-    %{data: render_many(domains, DomainView, "domain_tiny.json")}
-  end
-
   def render("show.json", %{
         domain: domain,
         parentable_ids: parentable_ids,
@@ -53,10 +49,6 @@ defmodule TdBgWeb.DomainView do
 
   def render("domain_bc_count.json", %{counter: counter}) do
     %{data: %{counter: counter}}
-  end
-
-  def render("domain_tiny.json", %{domain: domain}) do
-    %{id: domain.id, name: domain.name}
   end
 
   defp with_group(%{domain_group: domain_group} = domain) when not is_nil(domain_group) do
