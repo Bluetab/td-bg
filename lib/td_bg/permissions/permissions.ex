@@ -6,7 +6,7 @@ defmodule TdBg.Permissions do
   alias TdBg.Accounts.User
   alias TdBg.Taxonomies.Domain
 
-  @permission_resolver Application.get_env(:td_bg, :permission_resolver)
+  @permission_resolver Application.compile_env(:td_bg, :permission_resolver)
 
   def get_domain_permissions(%User{jti: jti}) do
     @permission_resolver.get_acls_by_resource_type(jti, "domain")

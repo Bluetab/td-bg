@@ -73,7 +73,7 @@ defmodule TdBgWeb.Router do
     %{
       schemes: ["http", "https"],
       info: %{
-        version: "3.10",
+        version: Application.spec(:td_bg, :vsn),
         title: "Truedat Business Glossary Service"
       },
       securityDefinitions: %{
