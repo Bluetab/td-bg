@@ -1,12 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+- [TD-2486] Template type `domain`
+- [TD-2486] Check new permissions on taxonomy abilies
+
 ## [4.9.0] 2020-11-30
 
 ### Added
 
 - [TD-3089] Widget and type `copy` on df
-- [TD-2486] Template type `domain`
-- [TD-2486] Check new permissions on taxonomy abilies
+
 ## [4.6.0] 2020-10-19
 
 ### Added
