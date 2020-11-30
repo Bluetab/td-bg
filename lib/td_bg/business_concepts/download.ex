@@ -90,11 +90,12 @@ defmodule TdBg.BusinessConcept.Download do
     |> Enum.join(", ")
   end
 
-  defp get_content_field(%{"type" => "system", "name" => name}, content) do
+  defp get_content_field(%{"type" => type, "name" => name}, content)
+       when type in ["domain", "system"] do
     content
     |> Map.get(name, [])
     |> content_to_list()
-    |> Enum.map(&get_system_value/1)
+    |> Enum.map(&Map.get(&1, "name"))
     |> Enum.reject(&is_nil/1)
     |> Enum.join(", ")
   end
@@ -122,10 +123,6 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp get_content_field(%{"name" => name}, content) do
     Map.get(content, name, "")
-  end
-
-  defp get_system_value(system) do
-    Map.get(system, "name")
   end
 
   defp content_to_list(nil), do: []

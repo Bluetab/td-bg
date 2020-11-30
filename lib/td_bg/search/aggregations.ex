@@ -40,6 +40,7 @@ defmodule TdBg.Search.Aggregations do
   end
 
   defp filter_content_term(%{"name" => "_confidential"}), do: true
+  defp filter_content_term(%{"type" => "domain"}), do: true
   defp filter_content_term(%{"type" => "system"}), do: true
   defp filter_content_term(%{"values" => values}) when is_map(values), do: true
   defp filter_content_term(_), do: false
@@ -48,7 +49,7 @@ defmodule TdBg.Search.Aggregations do
     {field, %{terms: %{field: "content.#{field}.raw", size: 50}}}
   end
 
-  defp content_term(%{"name" => field, "type" => "system"}) do
+  defp content_term(%{"name" => field, "type" => type}) when type in ["domain", "external_id"] do
     {field,
      %{
        nested: %{path: "content.#{field}"},

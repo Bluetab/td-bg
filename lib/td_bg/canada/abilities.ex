@@ -68,8 +68,32 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(user, :create_business_concept, domain)
     end
 
+    def can?(%User{} = user, :update_business_concept, %Domain{} = domain) do
+      BusinessConceptAbilities.can?(user, :update_business_concept, domain)
+    end
+
     def can?(%User{} = user, :create_ingest, %Domain{} = domain) do
       BusinessConceptAbilities.can?(user, :create_ingest, domain)
+    end
+
+    def can?(%User{} = user, :manage_data_sources, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :manage_data_sources, domain)
+    end
+
+    def can?(%User{} = user, :manage_configurations, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :manage_configurations, domain)
+    end
+
+    def can?(%User{} = user, :update_data_structure, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :update_data_structure, domain)
+    end
+
+    def can?(%User{} = user, :manage_quality_rule, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :manage_quality_rule, domain)
+    end
+
+    def can?(%User{} = user, :update_ingest, %Domain{} = domain) do
+      TaxonomyAbilities.can?(user, :update_ingest, domain)
     end
 
     def can?(%User{} = user, :create, BusinessConceptVersion) do
