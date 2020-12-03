@@ -63,6 +63,14 @@ defmodule TdBgWeb.SwaggerDefinitions do
             parent_id: 1
           })
         end,
+      DomainRefs:
+        swagger_schema do
+          title("Domains")
+          description("A collection of Domains")
+          nullable(true)
+          type(:array)
+          items(Schema.ref(:DomainRef))
+        end,
       DomainRef:
         swagger_schema do
           title("Domain Reference")
@@ -212,6 +220,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             status(:string, "Business Concept Version status", required: true)
             current(:boolean, "Is this the current version?", required: true)
             version(:integer, "Business Concept Version version number", required: true)
+            domain_parents(Schema.ref(:DomainRefs))
 
             reject_reason(
               [:string, :null],

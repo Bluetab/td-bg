@@ -132,7 +132,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       in_progress: business_concept_version.in_progress,
       last_change_user: user,
       rule_count: Map.get(business_concept_version, :rule_count),
-      link_count: Map.get(business_concept_version, :link_count)
+      link_count: Map.get(business_concept_version, :link_count),
+      domain_parents: Map.get(business_concept_version, :domain_parents)
     }
     |> add_reject_reason(
       business_concept_version.reject_reason,

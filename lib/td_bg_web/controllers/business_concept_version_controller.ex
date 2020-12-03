@@ -259,6 +259,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         business_concept_version
         |> add_completeness()
         |> add_counts()
+        |> add_taxonomy()
 
       links = Links.get_links(business_concept_version)
 
@@ -277,6 +278,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp add_counts(%BusinessConceptVersion{} = business_concept_version) do
     counts = BusinessConcepts.get_concept_counts(business_concept_version.business_concept_id)
     Map.merge(business_concept_version, counts)
+  end
+
+  defp add_taxonomy(%BusinessConceptVersion{} = business_concept_version) do
+    BusinessConcepts.add_parents(business_concept_version)
   end
 
   defp links_hypermedia(conn, links, business_concept_version) do
