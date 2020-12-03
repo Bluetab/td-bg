@@ -4,6 +4,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
+  alias TdBg.Cache.DomainLoader
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
   alias TdCache.Redix
@@ -15,6 +16,7 @@ defmodule TdBg.BusinessConceptsTest do
   setup_all do
     Redix.del!(@stream)
     start_supervised(ConceptLoader)
+    start_supervised(DomainLoader)
     start_supervised(IndexWorker)
     :ok
   end
@@ -568,7 +570,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert length(BusinessConcepts.list_all_business_concepts()) == 2
     end
 
-    test "load_business_concept/1 return the expected business_concetp" do
+    test "load_business_concept/1 return the expected business_concept" do
       business_concept = fixture()
       assert business_concept.id == BusinessConcepts.get_business_concept!(business_concept.id).id
     end
@@ -653,6 +655,45 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert Map.get(template, :name) == @template_name
       assert Map.get(content, "multiple_1") == [""]
+    end
+  end
+
+  defp concept_taxonomy(_) do
+    parent_id = fn
+      1 -> nil
+      id -> id - 1
+    end
+
+    domains =
+      Enum.map(
+        1..5,
+        &insert(:domain,
+          id: &1,
+          parent_id: parent_id.(&1)
+        )
+      )
+
+    concept =
+      insert(:business_concept_version,
+        business_concept: insert(:business_concept, domain: List.last(domains))
+      )
+
+    Enum.each(domains, &DomainLoader.refresh(&1.id))
+
+    on_exit(fn -> Enum.each(domains, &DomainLoader.delete(&1.id)) end)
+    [concept: concept, domains: domains]
+  end
+
+  describe "add_parents/1" do
+    setup [:concept_taxonomy]
+
+    test "add_parents/1 gets concept taxonomy", %{concept: concept, domains: parents} do
+      parents =
+        parents
+        |> Enum.reverse()
+        |> Enum.map(&Map.take(&1, [:external_id, :id, :name]))
+
+      assert %{domain_parents: ^parents} = BusinessConcepts.add_parents(concept)
     end
   end
 
