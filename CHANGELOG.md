@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [4.10.0] 2020-12-14
 
 - [TD-2486] Template type `domain`
 - [TD-2486] Check new permissions on taxonomy abilies
