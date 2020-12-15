@@ -86,6 +86,14 @@ defmodule TdBg.Taxonomies do
     end
   end
 
+  def get_parents(id) do
+    id
+    |> get_parent_ids()
+    |> Enum.map(&TaxonomyCache.get_domain/1)
+    |> Enum.filter(& &1)
+    |> Enum.map(&Map.take(&1, [:id, :external_id, :name]))
+  end
+
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
@@ -317,7 +325,7 @@ defmodule TdBg.Taxonomies do
          %{domain_group: domain_group} = attrs
        )
        when domain_group == name do
-      group_on_update(domain, Map.delete(attrs, :domain_group))
+    group_on_update(domain, Map.delete(attrs, :domain_group))
   end
 
   defp group_on_update(_domain, %{domain_group: domain_group}) do

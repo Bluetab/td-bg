@@ -2,8 +2,11 @@
 
 ## [4.10.0] 2020-12-14
 
+### Added
+
 - [TD-2486] Template type `domain`
-- [TD-2486] Check new permissions on taxonomy abilies
+- [TD-2486] Check new permissions on taxonomy abilties
+- [TD-3085] Attribute `domain_parents` on business concept version
 
 ## [4.9.0] 2020-11-30
 

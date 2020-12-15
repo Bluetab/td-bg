@@ -781,6 +781,10 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
+  def add_parents(%BusinessConceptVersion{business_concept: %{domain_id: domain_id}} = bcv) do
+    Map.put(bcv, :domain_parents, TdBg.Taxonomies.get_parents(domain_id))
+  end
+
   @doc """
   Returns count of business concepts applying clauses dynamically
   """
