@@ -351,7 +351,7 @@ defmodule TdBg.Taxonomies do
        when domain_group_id == parent_group_id do
     parent_id
     |> get_domain_group()
-    |> domain_group_from_parent(parent_id)
+    |> domain_group_from_parent(domain_group_id)
   end
 
   defp group_on_update(%Domain{domain_group: domain_group}, _attrs),
