@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-3155] Verification of duplicated concept names on parent domain change
+
 ## [4.10.0] 2020-12-14
 
 - [TD-2486] Template type `domain`
