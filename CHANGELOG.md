@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [TD-3170] Build docker image which runs with non-root user
+
 ### Fixed
 
 - [TD-3155] Verification of duplicated concept names on parent domain change
