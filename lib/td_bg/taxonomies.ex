@@ -347,7 +347,9 @@ defmodule TdBg.Taxonomies do
   end
 
   defp group_on_update(%Domain{domain_group_id: nil}, %{parent_id: parent_id}) do
-    {:ok, %{domain_group: get_domain_group(parent_id), status: :inherited}}
+    parent_id
+    |> get_domain_group()
+    |> domain_group_from_parent(nil)
   end
 
   defp group_on_update(
@@ -355,7 +357,9 @@ defmodule TdBg.Taxonomies do
          %{parent_id: parent_id}
        )
        when domain_group_id == parent_group_id do
-    {:ok, %{domain_group: get_domain_group(parent_id), status: :inherited}}
+    parent_id
+    |> get_domain_group()
+    |> domain_group_from_parent(domain_group_id)
   end
 
   defp group_on_update(%Domain{domain_group: domain_group}, _attrs),
@@ -411,6 +415,14 @@ defmodule TdBg.Taxonomies do
 
     {:ok, descendants}
   end
+
+  defp domain_group_from_parent(nil, nil), do: {:ok, %{domain_group: %{status: :unchanged}}}
+
+  defp domain_group_from_parent(%{id: domain_group_id}, domain_group_id),
+    do: {:ok, %{domain_group: %{status: :unchanged}}}
+
+  defp domain_group_from_parent(domain_group, _domain_group_id),
+    do: {:ok, %{domain_group: domain_group, status: :inherited}}
 
   defp domain_changeset(%{domain_group: %{status: :unchanged}}, domain, attrs) do
     Domain.changeset(domain, Map.delete(attrs, :domain_group))

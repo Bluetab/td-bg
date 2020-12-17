@@ -595,6 +595,27 @@ defmodule TdBg.TaxonomiesTest do
              )
     end
 
+    test "update_domain/2 does not change domain group from parent if child and parent have the same group" do
+      g = insert(:domain_group)
+      d1 = insert(:domain, domain_group: g)
+      d2 = insert(:domain, domain_group: g)
+
+      insert(:business_concept_version,
+        name: "name",
+        business_concept: insert(:business_concept, domain: d1)
+      )
+
+      insert(:business_concept_version,
+        name: "name1",
+        business_concept: insert(:business_concept, domain: d2)
+      )
+
+      domain_group_id = g.id
+
+      assert {:ok, %Domain{domain_group_id: ^domain_group_id}} =
+               Taxonomies.update_domain(d2, %{parent_id: d1.id})
+    end
+
     test "delete_domain/1 soft-deletes the domain" do
       domain = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
