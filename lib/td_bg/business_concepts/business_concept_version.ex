@@ -226,7 +226,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   defimpl Elasticsearch.Document do
-    alias TdBg.Taxonomies
     alias TdCache.TaxonomyCache
     alias TdCache.TemplateCache
     alias TdCache.UserCache
@@ -243,7 +242,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     def encode(%BusinessConceptVersion{business_concept: business_concept} = bcv) do
       %{type: type, domain: domain, confidential: confidential} = business_concept
       template = TemplateCache.get_by_name!(type) || %{content: []}
-      domain_ids = Taxonomies.get_parent_ids(domain.id)
+      domain_ids = TaxonomyCache.get_parent_ids(domain.id, true, refresh: true)
       domain_parents = Enum.map(domain_ids, &get_domain/1)
 
       content =

@@ -88,14 +88,11 @@ defmodule TdBg.Taxonomies do
 
   def get_parents(id) do
     id
-    |> get_parent_ids()
+    |> TaxonomyCache.get_parent_ids()
     |> Enum.map(&TaxonomyCache.get_domain/1)
     |> Enum.filter(& &1)
     |> Enum.map(&Map.take(&1, [:id, :external_id, :name]))
   end
-
-  def get_parent_ids(nil), do: []
-  def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
   def get_domain_by_external_id(external_id, preload \\ []) do
     Domain
