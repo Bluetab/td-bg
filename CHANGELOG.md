@@ -5,6 +5,7 @@
 ### Changed
 
 - [TD-3170] Build docker image which runs with non-root user
+- [TD-3182] Allow to use redis with password
 
 ### Fixed
 
