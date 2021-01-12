@@ -399,11 +399,11 @@ defmodule TdBg.BusinessConcepts do
 
   def get_concept_counts(business_concept_id) do
     case ConceptCache.get(business_concept_id, refresh: true) do
-      {:ok, %{rule_count: rule_count, link_count: link_count}} ->
-        %{rule_count: rule_count, link_count: link_count}
+      {:ok, %{rule_count: rule_count, link_count: link_count,concept_count: concept_count}} ->
+        %{rule_count: rule_count, link_count: link_count, concept_count: concept_count}
 
       _ ->
-        %{rule_count: 0, link_count: 0}
+        %{rule_count: 0, link_count: 0, concept_count: 0}
     end
   end
 

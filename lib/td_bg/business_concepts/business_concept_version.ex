@@ -262,6 +262,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         :current,
         :link_count,
         :rule_count,
+        :concept_count,
         :in_progress,
         :inserted_at
       ])

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-2591] Include the number of related concepts when archiving a concept
+
 ### Changed
 
 - [TD-3170] Build docker image which runs with non-root user
