@@ -12,7 +12,7 @@ defmodule TdBgWeb.Router do
   end
 
   pipeline :api_authorized do
-    plug(TdBg.Auth.CurrentUser)
+    plug(TdBg.Auth.CurrentResource)
     plug(Guardian.Plug.LoadResource)
   end
 

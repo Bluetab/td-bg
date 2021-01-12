@@ -39,7 +39,9 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
     @tag :admin_authenticated
     test "lists current user user_search_filters", %{conn: conn} do
       conn1 = get(conn, Routes.user_search_filter_path(conn, :index))
-      current_user_id = conn1 |> Map.get(:assigns) |> Map.get(:current_user) |> Map.get(:id)
+
+      current_user_id =
+        conn1 |> Map.get(:assigns) |> Map.get(:current_resource) |> Map.get(:user_id)
 
       insert(:user_search_filter, user_id: 1)
       insert(:user_search_filter, user_id: 2)
@@ -48,7 +50,7 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
 
       conn = get(conn, Routes.user_search_filter_path(conn, :index_by_user))
       user_filters = json_response(conn, 200)["data"]
-      [user_id] = user_filters |> Enum.map(&(Map.get(&1, "user_id"))) |> Enum.uniq()
+      [user_id] = user_filters |> Enum.map(&Map.get(&1, "user_id")) |> Enum.uniq()
       assert user_id == current_user_id
       assert length(user_filters) == 2
     end
@@ -67,10 +69,10 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
       conn = get(conn, Routes.user_search_filter_path(conn, :show, id))
 
       assert %{
-               "id" => id,
+               "id" => _,
                "filters" => %{},
                "name" => "some name",
-               "user_id" => user_id
+               "user_id" => _
              } = json_response(conn, 200)["data"]
     end
 

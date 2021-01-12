@@ -85,9 +85,11 @@ defmodule TdBg.Permissions.MockPermissionResolver do
   def has_resource_permission?(session_id, permission, resource_type, resource_id) do
     user_id = Agent.get(:MockSessions, &Map.get(&1, session_id))
 
-    Agent.get(:MockPermissions, & &1)
+    :MockPermissions
+    |> Agent.get(& &1)
     |> Enum.filter(
-      &(&1.principal_id == user_id && &1.resource_type == resource_type &&
+      &(&1.principal_id == user_id &&
+          &1.resource_type == resource_type &&
           &1.resource_id == resource_id)
     )
     |> Enum.any?(&can?(&1.role_name, permission))
@@ -112,14 +114,15 @@ defmodule TdBg.Permissions.MockPermissionResolver do
 
   def register_token(resource) do
     %{"sub" => sub, "jti" => jti} = resource |> Map.take(["sub", "jti"])
-    %{"id" => user_id} = sub |> JSON.decode!()
+    %{"id" => user_id} = JSON.decode!(sub)
     Agent.update(:MockSessions, &Map.put(&1, jti, user_id))
   end
 
   def get_acls_by_resource_type(session_id, resource_type) do
     user_id = Agent.get(:MockSessions, &Map.get(&1, session_id))
 
-    Agent.get(:MockPermissions, & &1)
+    :MockPermissions
+    |> Agent.get(& &1)
     |> Enum.filter(&(&1.principal_id == user_id && &1.resource_type == resource_type))
     |> Enum.map(fn %{role_name: role_name} = map ->
       Map.put(map, :permissions, Map.get(@role_permissions, role_name))

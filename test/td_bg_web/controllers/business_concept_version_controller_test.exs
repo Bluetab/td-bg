@@ -20,7 +20,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     :ok
   end
 
-  @user_name "user"
+  @user_name "session"
   @template_name "foo_template"
 
   setup %{conn: conn} = context do
@@ -71,14 +71,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authenticated_user: @user_name
     @tag :template
-    test "show with actions",
-         %{conn: conn} do
-      user = create_user(@user_name)
+    test "show with actions", %{conn: conn} do
+      %{user_id: user_id} = create_session(@user_name)
       domain_create = insert(:domain, id: :rand.uniform(100_000_000))
       role_create = get_role_by_name("create")
 
       MockPermissionResolver.create_acl_entry(%{
-        principal_id: user.id,
+        principal_id: user_id,
         principal_type: "user",
         resource_id: domain_create.id,
         resource_type: "domain",
@@ -124,14 +123,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authenticated_user: @user_name
     test "find only linkable concepts", %{conn: conn} do
-      user = create_user(@user_name)
+      %{user_id: user_id} = create_session(@user_name)
       domain_watch = insert(:domain)
       domain_create = insert(:domain)
       role_watch = get_role_by_name("watch")
       role_create = get_role_by_name("create")
 
       MockPermissionResolver.create_acl_entry(%{
-        principal_id: user.id,
+        principal_id: user_id,
         principal_type: "user",
         resource_id: domain_watch.id,
         resource_type: "domain",
@@ -140,7 +139,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       })
 
       MockPermissionResolver.create_acl_entry(%{
-        principal_id: user.id,
+        principal_id: user_id,
         principal_type: "user",
         resource_id: domain_create.id,
         resource_type: "domain",
@@ -298,19 +297,19 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           scope: "test"
         })
 
-      user = build(:user)
+      %{user_id: user_id} = build(:session)
 
       business_concept =
         insert(:business_concept,
           type: template.name,
-          last_change_by: user.id
+          last_change_by: user_id
         )
 
       business_concept_version =
         insert(
           :business_concept_version,
           business_concept: business_concept,
-          last_change_by: user.id,
+          last_change_by: user_id,
           status: "published"
         )
 
@@ -346,8 +345,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      %{user_id: user_id} = build(:session)
+
+      business_concept_version = insert(:business_concept_version, last_change_by: user_id)
+
       business_concept_version_id = business_concept_version.id
 
       update_attrs = %{
@@ -387,8 +388,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      user = build(:user)
-      business_concept_version = insert(:business_concept_version, last_change_by: user.id)
+      %{user_id: user_id} = build(:session)
+
+      business_concept_version = insert(:business_concept_version, last_change_by: user_id)
       business_concept_version_id = business_concept_version.id
 
       assert %{"data" => data} =

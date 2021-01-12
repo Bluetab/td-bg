@@ -1,7 +1,7 @@
 defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
 
-  alias TdBg.Accounts.User
+  alias TdBg.Accounts.Session
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Permissions
@@ -16,165 +16,169 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     "versioned" => :view_versioned_business_concepts
   }
 
-  def can?(%User{is_admin: true}, :create_business_concept), do: true
+  def can?(%Session{is_admin: true}, :create_business_concept), do: true
 
-  def can?(%User{} = user, :create_business_concept) do
+  def can?(%Session{} = session, :create_business_concept) do
     Permissions.has_any_permission_on_resource_type?(
-      user,
+      session,
       [:create_business_concept],
       Domain
     )
   end
 
-  def can?(%User{} = user, :create_business_concept, %Domain{
+  def can?(%Session{} = session, :create_business_concept, %Domain{
         id: domain_id
       }) do
-    Permissions.authorized?(user, :create_business_concept, domain_id)
+    Permissions.authorized?(session, :create_business_concept, domain_id)
   end
 
-  def can?(%User{} = user, :create_ingest, %Domain{
+  def can?(%Session{} = session, :create_ingest, %Domain{
         id: domain_id
       }) do
-    Permissions.authorized?(user, :create_ingest, domain_id)
+    Permissions.authorized?(session, :create_ingest, domain_id)
   end
 
-  def can?(%User{} = user, :update_business_concept, %Domain{
+  def can?(%Session{} = session, :update_business_concept, %Domain{
         id: domain_id
       }) do
-    Permissions.authorized?(user, :update_business_concept, domain_id)
+    Permissions.authorized?(session, :update_business_concept, domain_id)
   end
 
-  def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%Session{} = session, :update, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :update_business_concept,
         business_concept_version
       )
   end
 
-  def can?(%User{} = user, :update, %BusinessConcept{} = business_concept) do
+  def can?(%Session{} = session, :update, %BusinessConcept{} = business_concept) do
     authorized?(
-      user,
+      session,
       :update_business_concept,
       business_concept
     )
   end
 
   def can?(
-        %User{} = user,
+        %Session{} = session,
         :get_data_structures,
         %BusinessConceptVersion{} = business_concept_version
       ) do
     authorized?(
-      user,
+      session,
       :update_business_concept,
       business_concept_version
     )
   end
 
   def can?(
-        %User{} = user,
+        %Session{} = session,
         :send_for_approval,
         %BusinessConceptVersion{} = business_concept_version
       ) do
     BusinessConceptVersion.is_updatable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :send_business_concept_for_approval,
         business_concept_version
       )
   end
 
-  def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%Session{} = session, :reject, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_rejectable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :reject_business_concept,
         business_concept_version
       )
   end
 
-  def can?(%User{} = user, :undo_rejection, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(
+        %Session{} = session,
+        :undo_rejection,
+        %BusinessConceptVersion{} = business_concept_version
+      ) do
     BusinessConceptVersion.is_undo_rejectable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :update_business_concept,
         business_concept_version
       )
   end
 
-  def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%Session{} = session, :publish, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_publishable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :publish_business_concept,
         business_concept_version
       )
   end
 
-  def can?(%User{} = user, :version, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%Session{} = session, :version, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_versionable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :update_business_concept,
         business_concept_version
       )
   end
 
-  def can?(%User{} = user, :deprecate, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%Session{} = session, :deprecate, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_deprecatable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :deprecate_business_concept,
         business_concept_version
       )
   end
 
-  def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_version) do
+  def can?(%Session{} = session, :delete, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_deletable?(business_concept_version) &&
       authorized?(
-        user,
+        session,
         :delete_business_concept,
         business_concept_version
       )
   end
 
-  def can?(%User{is_admin: true}, :view_business_concept, %BusinessConceptVersion{}), do: true
+  def can?(%Session{is_admin: true}, :view_business_concept, %BusinessConceptVersion{}), do: true
 
   def can?(
-        %User{} = user,
+        %Session{} = session,
         :view_business_concept,
         %BusinessConceptVersion{status: status} = business_concept_version
       ) do
     permission = Map.get(@status_to_permission, status)
-    authorized?(user, permission, business_concept_version)
+    authorized?(session, permission, business_concept_version)
   end
 
   def can?(
-        %User{} = user,
+        %Session{} = session,
         :manage_confidential_business_concepts,
         %BusinessConceptVersion{} = business_concept_version
       ) do
-    authorized?(user, :manage_confidential_business_concepts, business_concept_version)
+    authorized?(session, :manage_confidential_business_concepts, business_concept_version)
   end
 
-  def can?(%User{}, _action, _business_concept_version), do: false
+  def can?(%Session{}, _action, _business_concept_version), do: false
 
-  defp authorized?(%User{is_admin: true}, _permission, _), do: true
+  defp authorized?(%Session{is_admin: true}, _permission, _), do: true
 
-  defp authorized?(%User{} = user, permission, %BusinessConceptVersion{
+  defp authorized?(%Session{} = session, permission, %BusinessConceptVersion{
          business_concept: business_concept
        }) do
-    authorized_business_concept(user, permission, business_concept)
+    authorized_business_concept(session, permission, business_concept)
   end
 
-  defp authorized?(%User{} = user, permission, %BusinessConcept{} = business_concept) do
-    authorized_business_concept(user, permission, business_concept)
+  defp authorized?(%Session{} = session, permission, %BusinessConcept{} = business_concept) do
+    authorized_business_concept(session, permission, business_concept)
   end
 
   defp authorized_business_concept(
-         %User{} = user,
+         %Session{} = session,
          permission,
          %BusinessConcept{} = business_concept
        ) do
@@ -182,11 +186,11 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
 
     case business_concept.confidential do
       true ->
-        Permissions.authorized?(user, :manage_confidential_business_concepts, domain_id) &&
-          Permissions.authorized?(user, permission, domain_id)
+        Permissions.authorized?(session, :manage_confidential_business_concepts, domain_id) &&
+          Permissions.authorized?(session, permission, domain_id)
 
       false ->
-        Permissions.authorized?(user, permission, domain_id)
+        Permissions.authorized?(session, permission, domain_id)
     end
   end
 end

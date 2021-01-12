@@ -15,16 +15,4 @@ defmodule TdBgWeb.User do
     |> :binary.bin_to_list()
     |> Enum.sum()
   end
-
-  def is_admin_bool(is_admin) do
-    case is_admin do
-      "yes" -> true
-      "no" -> false
-      _ -> is_admin
-    end
-  end
-
-  def get_group_by_name(group_name) do
-    MockTdAuthService.get_group_by_name(group_name)
-  end
 end

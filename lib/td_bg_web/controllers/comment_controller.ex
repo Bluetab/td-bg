@@ -42,16 +42,12 @@ defmodule TdBgWeb.CommentController do
   end
 
   def create(conn, %{"comment" => comment_params}) do
-    user = conn.assigns[:current_user]
+    %{user_id: user_id, user_name: user_name} = session = conn.assigns[:current_resource]
 
     creation_attrs =
-      Map.put(comment_params, "user", %{
-        "user_id" => user.id,
-        "full_name" => user.full_name,
-        "user_name" => user.user_name
-      })
+      Map.put(comment_params, "user", %{"user_id" => user_id, "user_name" => user_name})
 
-    with {:ok, %{comment: comment}} <- Comments.create_comment(creation_attrs, user) do
+    with {:ok, %{comment: comment}} <- Comments.create_comment(creation_attrs, session) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.comment_path(conn, :show, comment))
@@ -90,10 +86,10 @@ defmodule TdBgWeb.CommentController do
   end
 
   def delete(conn, %{"id" => id}) do
-    user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
     with {:ok, comment} <- Comments.get_comment(id),
-         {:ok, _} <- Comments.delete_comment(comment, user) do
+         {:ok, _} <- Comments.delete_comment(comment, session) do
       send_resp(conn, :no_content, "")
     end
   end

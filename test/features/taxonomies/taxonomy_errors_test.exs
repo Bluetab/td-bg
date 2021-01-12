@@ -42,7 +42,12 @@ defmodule TdBg.TaxonomyErrorsTest do
     token = build_user_token(user_name)
 
     {_, status_code, json_resp} =
-      domain_create(token, %{name: name, external_id: name, description: description, domain_id: parent["id"]})
+      domain_create(token, %{
+        name: name,
+        external_id: name,
+        description: description,
+        domain_id: parent["id"]
+      })
 
     {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
   end
@@ -63,7 +68,7 @@ defmodule TdBg.TaxonomyErrorsTest do
             table: [%{name: name, description: description}]
           },
           state do
-    token_admin = build_user_token(username, is_admin: true)
+    token_admin = build_user_token(username, role: "admin")
     domain_parent = get_domain_by_name(token_admin, domain_name_parent)
 
     domain_child =
@@ -79,7 +84,7 @@ defmodule TdBg.TaxonomyErrorsTest do
   defwhen ~r/^user "(?<username>[^"]+)" tries to create a Domain with following data:$/,
           %{username: username, table: [%{name: name, description: description}]},
           state do
-    token_admin = build_user_token(username, is_admin: true)
+    token_admin = build_user_token(username, role: "admin")
 
     {_, status_code, json_resp} =
       domain_create(token_admin, %{name: name, external_id: name, description: description})

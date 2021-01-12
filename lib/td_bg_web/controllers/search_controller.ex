@@ -16,9 +16,9 @@ defmodule TdBgWeb.SearchController do
   end
 
   def reindex_all(conn, _params) do
-    user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
-    if can?(user, reindex_all(BusinessConcept)) do
+    if can?(session, reindex_all(BusinessConcept)) do
       @index_worker.reindex(:all)
       send_resp(conn, :accepted, "")
     else

@@ -11,12 +11,12 @@ defmodule TdBg.UsersSteps do
     Enum.map(table, fn x ->
       user_name = x[:user]
       role_name = x[:role]
-      principal_id = find_or_create_user(user_name).id
+      %{user_id: user_id} = find_or_create_user(user_name)
       %{id: role_id} = get_role_by_name(role_name)
 
       acl_entry_params = %{
         principal_type: "user",
-        principal_id: principal_id,
+        principal_id: user_id,
         resource_type: "domain",
         resource_id: domain["id"],
         role_id: role_id,

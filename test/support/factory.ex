@@ -9,13 +9,15 @@ defmodule TdBg.Factory do
   alias TdBg.Groups.DomainGroup
   alias TdBg.UserSearchFilters.UserSearchFilter
 
-  def user_factory do
-    %TdBg.Accounts.User{
-      id: 0,
+  def session_factory(attrs) do
+    %TdBg.Accounts.Session{
+      user_id: sequence(:user_id, & &1),
       user_name: sequence("user_name"),
-      is_admin: false,
-      jti: 0
+      role: "user",
+      jti: sequence("jti"),
+      is_admin: Map.get(attrs, :role) == "admin"
     }
+    |> merge_attributes(attrs)
   end
 
   def domain_factory do
@@ -78,7 +80,7 @@ defmodule TdBg.Factory do
   def user_search_filter_factory do
     %UserSearchFilter{
       id: sequence(:user_search_filter, & &1),
-      name:  sequence("filter_name"),
+      name: sequence("filter_name"),
       filters: %{country: ["Sp"]},
       user_id: sequence(:user_id, & &1)
     }

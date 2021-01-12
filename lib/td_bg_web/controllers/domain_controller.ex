@@ -28,12 +28,12 @@ defmodule TdBgWeb.DomainController do
   end
 
   def index(conn, params) do
-    user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
     domains = Taxonomies.list_domains([:domain_group])
 
     case get_actions(params) do
       [] ->
-        domains = Enum.filter(domains, &can?(user, show(&1)))
+        domains = Enum.filter(domains, &can?(session, show(&1)))
 
         render(conn, "index.json",
           domains: domains,
@@ -41,33 +41,33 @@ defmodule TdBgWeb.DomainController do
         )
 
       actions ->
-        filtered_domains = filter_domains(user, domains, actions, params)
+        filtered_domains = filter_domains(session, domains, actions, params)
         render(conn, "index.json", domains: filtered_domains)
     end
   end
 
-  defp filter_domains(user, domains, actions, %{"filter" => "all"}) do
-    Enum.filter(domains, &can_all?(actions, user, &1))
+  defp filter_domains(session, domains, actions, %{"filter" => "all"}) do
+    Enum.filter(domains, &can_all?(actions, session, &1))
   end
 
-  defp filter_domains(user, domains, actions, _params) do
-    Enum.filter(domains, &can_any?(actions, user, &1))
+  defp filter_domains(session, domains, actions, _params) do
+    Enum.filter(domains, &can_any?(actions, session, &1))
   end
 
-  defp can_all?(actions, user, domain) do
+  defp can_all?(actions, session, domain) do
     alias Canada.Can
 
     actions
     |> Enum.map(&String.to_atom/1)
-    |> Enum.all?(&Can.can?(user, &1, domain))
+    |> Enum.all?(&Can.can?(session, &1, domain))
   end
 
-  defp can_any?(actions, user, domain) do
+  defp can_any?(actions, session, domain) do
     alias Canada.Can
 
     actions
     |> Enum.map(&String.to_atom/1)
-    |> Enum.any?(&Can.can?(user, &1, domain))
+    |> Enum.any?(&Can.can?(session, &1, domain))
   end
 
   defp get_actions(params) do
@@ -91,10 +91,10 @@ defmodule TdBgWeb.DomainController do
   end
 
   def create(conn, %{"domain" => domain_params}) do
-    current_user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
     with %Domain{} = domain <- Taxonomies.apply_changes(Domain, domain_params),
-         {:can, true} <- {:can, can_create_domain(current_user, domain)},
+         {:can, true} <- {:can, can_create_domain(session, domain)},
          {:ok, %Domain{} = domain} <- Taxonomies.create_domain(domain_params) do
       conn
       |> put_status(:created)
@@ -103,18 +103,18 @@ defmodule TdBgWeb.DomainController do
     end
   end
 
-  defp can_create_domain(current_user, %{parent_id: parent_id}) when not is_nil(parent_id) do
+  defp can_create_domain(session, %{parent_id: parent_id}) when not is_nil(parent_id) do
     case Taxonomies.get_domain(parent_id) do
       {:ok, parent_domain} ->
-        can?(current_user, create(parent_domain))
+        can?(session, create(parent_domain))
 
       {:error, :not_found} ->
         true
     end
   end
 
-  defp can_create_domain(current_user, domain) do
-    can?(current_user, create(domain))
+  defp can_create_domain(session, domain) do
+    can?(session, create(domain))
   end
 
   swagger_path :show do
@@ -130,11 +130,11 @@ defmodule TdBgWeb.DomainController do
   end
 
   def show(conn, %{"id" => id}) do
-    current_user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
     with domain <- Taxonomies.get_domain!(id, [:parent, :domain_group]),
-         {:can, true} <- {:can, can?(current_user, show(domain))},
-         parentable_ids <- Taxonomies.get_parentable_ids(current_user, domain) do
+         {:can, true} <- {:can, can?(session, show(domain))},
+         parentable_ids <- Taxonomies.get_parentable_ids(session, domain) do
       render(conn, "show.json",
         domain: enrich_group(domain),
         parentable_ids: parentable_ids,
@@ -157,31 +157,31 @@ defmodule TdBgWeb.DomainController do
   end
 
   def update(conn, %{"id" => id, "domain" => domain_params}) do
-    current_user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
     with {:ok, domain} <- Taxonomies.get_domain(id),
-         {:can, true} <- {:can, can_update?(current_user, domain, domain_params)},
+         {:can, true} <- {:can, can_update?(session, domain, domain_params)},
          {:ok, %Domain{} = updated_domain} <- Taxonomies.update_domain(domain, domain_params) do
       render(conn, "show.json", domain: updated_domain)
     end
   end
 
-  defp can_update?(current_user, %{parent_id: id} = domain, %{parent_id: id} = _new_domain) do
-    can?(current_user, update(domain))
+  defp can_update?(session, %{parent_id: id} = domain, %{parent_id: id} = _new_domain) do
+    can?(session, update(domain))
   end
 
-  defp can_update?(current_user, %{parent_id: _} = domain, %{parent_id: _} = new_domain) do
+  defp can_update?(session, %{parent_id: _} = domain, %{parent_id: _} = new_domain) do
     # Changing parent_id requires delete/update permission on existing domain
     # and create permission on new domain
     Enum.all?([
-      can?(current_user, move(domain)),
-      can?(current_user, create(new_domain))
+      can?(session, move(domain)),
+      can?(session, create(new_domain))
     ])
   end
 
-  defp can_update?(current_user, %Domain{} = domain, %{} = params) do
+  defp can_update?(session, %Domain{} = domain, %{} = params) do
     new_domain = Taxonomies.apply_changes(domain, params)
-    can_update?(current_user, domain, new_domain)
+    can_update?(session, domain, new_domain)
   end
 
   swagger_path :delete do
@@ -197,10 +197,10 @@ defmodule TdBgWeb.DomainController do
   end
 
   def delete(conn, %{"id" => id}) do
-    current_user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
     with {:ok, domain} <- Taxonomies.get_domain(id),
-         {:can, true} <- {:can, can?(current_user, delete(domain))},
+         {:can, true} <- {:can, can?(session, delete(domain))},
          {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
       send_resp(conn, :no_content, "")
     end
@@ -208,7 +208,7 @@ defmodule TdBgWeb.DomainController do
 
   swagger_path :count_bc_in_domain_for_user do
     description(
-      "Counts the number of Business Concepts where the given user has any role in the provided domain"
+      "Counts the number of Business Concepts where the given session has any role in the provided domain"
     )
 
     produces("application/json")
@@ -223,10 +223,10 @@ defmodule TdBgWeb.DomainController do
   end
 
   def count_bc_in_domain_for_user(conn, %{"domain_id" => id, "user_name" => user_name}) do
-    current_user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
     with {:ok, domain} <- Taxonomies.get_domain(id),
-         {:can, true} <- {:can, can?(current_user, show(domain))} do
+         {:can, true} <- {:can, can?(session, show(domain))} do
       counter = Taxonomies.count_existing_users_with_roles(id, user_name)
       render(conn, "domain_bc_count.json", counter: counter)
     end

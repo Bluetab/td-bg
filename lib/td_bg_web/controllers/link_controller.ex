@@ -32,10 +32,10 @@ defmodule TdBgWeb.BusinessConceptLinkController do
   end
 
   def delete(conn, %{"id" => id}) do
-    user = conn.assigns[:current_user]
+    session = conn.assigns[:current_resource]
 
     with {:ok, link} <- Links.get(id),
-         true <- can?(user, delete(link)),
+         true <- can?(session, delete(link)),
          {:ok, _} <- Links.delete(id) do
       send_resp(conn, :accepted, "")
     else

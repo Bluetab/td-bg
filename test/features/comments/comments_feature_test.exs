@@ -28,13 +28,13 @@ defmodule TdBg.CommentsFeatureTest do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockTdAuthService)
     start_supervised(MockPermissionResolver)
     :ok
   end
 
   setup do
-    on_exit(fn -> MockTdAuthService.set_users([]) end)
+    start_supervised(MockTdAuthService)
+    :ok
   end
 
   defwhen ~r/^"(?<admin_name>[^"]+)" tries to create a new comment "(?<comment>[^"]+)" on the business concept "(?<bc_name>[^"]+)"$/,

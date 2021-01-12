@@ -75,7 +75,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
   describe "business_concepts_bulk_update" do
     test "update_all/3 update all business concept versions with valid data" do
-      user = build(:user)
+      session = build(:session)
 
       d1 = insert(:domain, name: "d1")
       d2 = insert(:domain, name: "d2")
@@ -124,7 +124,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "content" => update_content
       }
 
-      assert {:ok, bcv_ids} = BulkUpdate.update_all(user, bc_versions, params)
+      assert {:ok, bcv_ids} = BulkUpdate.update_all(session, bc_versions, params)
       assert length(bcv_ids) == 2
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
@@ -151,7 +151,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     end
 
     test "update_all/3 update all business concept versions with invalid data: template does not exist" do
-      user = build(:user)
+      session = build(:session)
 
       d1 = insert(:domain, name: "d1")
       d2 = insert(:domain, name: "d2")
@@ -183,11 +183,11 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "content" => update_content
       }
 
-      assert {:error, :template_not_found} = BulkUpdate.update_all(user, bc_versions, params)
+      assert {:error, :template_not_found} = BulkUpdate.update_all(session, bc_versions, params)
     end
 
     test "update_all/3 update all business concept versions with invalid data: domain value to update does not exist" do
-      user = build(:user)
+      session = build(:session)
 
       d1 = insert(:domain, name: "d1")
       d2 = insert(:domain, name: "d2")
@@ -223,11 +223,11 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "content" => update_content
       }
 
-      assert {:error, :missing_domain} = BulkUpdate.update_all(user, bc_versions, params)
+      assert {:error, :missing_domain} = BulkUpdate.update_all(session, bc_versions, params)
     end
 
     test "update_all/3 update all business concept versions with invalid data: name exiting on target domain group" do
-      user = build(:user)
+      session = build(:session)
       group = insert(:domain_group)
 
       d1 = insert(:domain, name: "d1")
@@ -264,12 +264,14 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "content" => update_content
       }
 
-      assert {:error, %{errors: [name: error]}} = BulkUpdate.update_all(user, bc_versions, params)
+      assert {:error, %{errors: [name: error]}} =
+               BulkUpdate.update_all(session, bc_versions, params)
+
       assert {"error.existing.business_concept.name", []} = error
     end
 
     test "update_all/3 two versions of the same concept" do
-      user = build(:user)
+      session = build(:session)
 
       d1 = insert(:domain, name: "d1")
       d3 = insert(:domain, name: "d3")
@@ -306,7 +308,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "content" => update_content
       }
 
-      assert {:ok, bcv_ids} = BulkUpdate.update_all(user, bc_versions, params)
+      assert {:ok, bcv_ids} = BulkUpdate.update_all(session, bc_versions, params)
       assert length(bcv_ids) == 2
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
@@ -327,7 +329,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     end
 
     test "update_all/3 validates only updated fields and gives an error when they arec incorrect" do
-      user = build(:user)
+      session = build(:session)
 
       d1 = insert(:domain, name: "d1")
       c1 = insert(:business_concept, domain: d1, type: "template_test")
@@ -367,7 +369,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "content" => update_content
       }
 
-      assert {:ok, bcv_ids} = BulkUpdate.update_all(user, bc_versions, params)
+      assert {:ok, bcv_ids} = BulkUpdate.update_all(session, bc_versions, params)
       assert length(bcv_ids) == 2
 
       assert Enum.all?(
@@ -395,11 +397,13 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "content" => update_content
       }
 
-      assert {:error, changeset} = BulkUpdate.update_all(user, [Enum.at(bc_versions, 0)], params)
+      assert {:error, changeset} =
+               BulkUpdate.update_all(session, [Enum.at(bc_versions, 0)], params)
+
       assert %{errors: [Field3: error], valid?: false} = changeset
       assert {"is invalid", [{:validation, :inclusion}, _]} = error
 
-      assert {:ok, bcv_ids} = BulkUpdate.update_all(user, [Enum.at(bc_versions, 1)], params)
+      assert {:ok, bcv_ids} = BulkUpdate.update_all(session, [Enum.at(bc_versions, 1)], params)
       assert length(bcv_ids) == 1
 
       assert Enum.all?(

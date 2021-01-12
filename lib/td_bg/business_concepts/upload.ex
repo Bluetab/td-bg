@@ -7,6 +7,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
   alias Codepagex
   alias NimbleCSV
+  alias TdBg.Accounts.Session
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.Cache.ConceptLoader
@@ -21,10 +22,10 @@ defmodule TdBg.BusinessConcept.Upload do
 
   def from_csv(nil, _user), do: {:error, %{message: :no_csv_uploaded}}
 
-  def from_csv(business_concept_upload, user) do
+  def from_csv(business_concept_upload, session) do
     path = business_concept_upload.path
 
-    case create_concepts(path, user) do
+    case create_concepts(path, session) do
       {:ok, concept_ids} ->
         Audit.business_concepts_created(concept_ids)
         ConceptLoader.refresh(concept_ids)
@@ -35,16 +36,16 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp create_concepts(path, user) do
+  defp create_concepts(path, session) do
     Logger.info("Inserting business concepts...")
 
     Timer.time(
-      fn -> Repo.transaction(fn -> upload_in_transaction(path, user) end) end,
+      fn -> Repo.transaction(fn -> upload_in_transaction(path, session) end) end,
       fn ms, _ -> Logger.info("Business concepts inserted in #{ms}ms") end
     )
   end
 
-  defp upload_in_transaction(path, user) do
+  defp upload_in_transaction(path, session) do
     file =
       path
       |> Path.expand()
@@ -52,7 +53,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
     with {:ok, parsed_file} <- parse_file(file),
          {:ok, parsed_list} <- parse_data_list(parsed_file),
-         {:ok, uploaded_ids} <- upload_data(parsed_list, user, [], 2) do
+         {:ok, uploaded_ids} <- upload_data(parsed_list, session, [], 2) do
       uploaded_ids
     else
       {:error, err} -> Repo.rollback(err)
@@ -105,10 +106,10 @@ defmodule TdBg.BusinessConcept.Upload do
     |> Enum.into(%{})
   end
 
-  defp upload_data([head | tail], user, acc, row_count) do
-    case insert_business_concept(head, user) do
+  defp upload_data([head | tail], session, acc, row_count) do
+    case insert_business_concept(head, session) do
       {:ok, %{business_concept_version: %{business_concept_id: concept_id}}} ->
-        upload_data(tail, user, [concept_id | acc], row_count + 1)
+        upload_data(tail, session, [concept_id | acc], row_count + 1)
 
       {:error, :business_concept_version, error, _} ->
         {:error, Map.put(error, :row, row_count)}
@@ -120,7 +121,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp upload_data(_, _, acc, _), do: {:ok, acc}
 
-  defp insert_business_concept(data, user) do
+  defp insert_business_concept(data, %Session{user_id: user_id}) do
     with {:ok, %{name: concept_type, content: content_schema}} <- validate_template(data),
          {:ok, %{id: domain_id} = domain} <- validate_domain(data),
          {:ok} <- validate_name(data, domain),
@@ -147,7 +148,7 @@ defmodule TdBg.BusinessConcept.Upload do
         %{}
         |> Map.put("domain_id", domain_id)
         |> Map.put("type", concept_type)
-        |> Map.put("last_change_by", user.id)
+        |> Map.put("last_change_by", user_id)
         |> Map.put("last_change_at", DateTime.utc_now())
         |> Map.put("confidential", convert_confidential(data))
 
@@ -158,7 +159,7 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Map.put("content", content)
         |> Map.put("business_concept", business_concept_attrs)
         |> Map.put("content_schema", content_schema)
-        |> Map.put("last_change_by", user.id)
+        |> Map.put("last_change_by", user_id)
         |> Map.put("last_change_at", DateTime.utc_now())
         |> Map.put("status", "draft")
         |> Map.put("version", 1)

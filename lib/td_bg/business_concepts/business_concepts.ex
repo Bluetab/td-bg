@@ -6,6 +6,7 @@ defmodule TdBg.BusinessConcepts do
   import Ecto.Query
 
   alias Ecto.Multi
+  alias TdBg.Accounts.Session
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -508,20 +509,21 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Deletes a BusinessCocneptVersion.
+  Deletes a BusinessConceptVersion.
 
   ## Examples
 
       iex> delete_business_concept_version(data_structure)
-      {:ok, %BusinessCocneptVersion{}}
+      {:ok, %BusinessConceptVersion{}}
 
       iex> delete_business_concept_version(data_structure)
       {:error, %Changeset{}}
 
   """
-  def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version, %{
-        id: user_id
-      }) do
+  def delete_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        %Session{user_id: user_id}
+      ) do
     business_concept = business_concept_version.business_concept
     business_concept_id = business_concept.id
 
