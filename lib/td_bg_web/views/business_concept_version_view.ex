@@ -88,6 +88,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "status",
       "rule_count",
       "link_count",
+      "concept_count",
       "content",
       "last_change_by",
       "last_change_at",
@@ -133,6 +134,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       last_change_user: user,
       rule_count: Map.get(business_concept_version, :rule_count),
       link_count: Map.get(business_concept_version, :link_count),
+      concept_count: Map.get(business_concept_version, :concept_count),
       domain_parents: Map.get(business_concept_version, :domain_parents)
     }
     |> add_reject_reason(
