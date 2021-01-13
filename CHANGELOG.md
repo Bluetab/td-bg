@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased] 
+
 ### Added
 
 - [TD-2591] Include the number of related concepts on concept view
