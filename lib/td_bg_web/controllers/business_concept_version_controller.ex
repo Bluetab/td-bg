@@ -43,10 +43,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def index(conn, params) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
 
     params
-    |> Search.search_business_concept_versions(session)
+    |> Search.search_business_concept_versions(claims)
     |> render_search_results(conn)
   end
 
@@ -65,13 +65,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def search(conn, params) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     page = Map.get(params, "page", 0)
     size = Map.get(params, "size", 50)
 
     params
     |> Map.drop(["page", "size"])
-    |> Search.search_business_concept_versions(session, page, size)
+    |> Search.search_business_concept_versions(claims, page, size)
     |> render_search_results(conn)
   end
 
@@ -94,12 +94,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def csv(conn, params) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
 
     {header_labels, params} = Map.pop(params, "header_labels", %{})
 
     %{results: business_concept_versions} =
-      Search.search_business_concept_versions(params, session, 0, 10_000)
+      Search.search_business_concept_versions(params, claims, 0, 10_000)
 
     conn
     |> put_resp_content_type("text/csv", "utf-8")
@@ -108,11 +108,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def upload(conn, params) do
-    %{is_admin: is_admin} = session = conn.assigns[:current_resource]
+    %{is_admin: is_admin} = claims = conn.assigns[:current_resource]
     business_concepts_upload = Map.get(params, "business_concepts")
 
     with {:can, true} <- {:can, is_admin},
-         {:ok, response} <- Upload.from_csv(business_concepts_upload, session),
+         {:ok, response} <- Upload.from_csv(business_concepts_upload, claims),
          body <- JSON.encode!(%{data: %{message: response}}) do
       send_resp(conn, :ok, body)
     end
@@ -141,7 +141,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp get_flat_template_content(_), do: []
 
   def create(conn, %{"business_concept_version" => business_concept_params}) do
-    %{user_id: user_id} = session = conn.assigns[:current_resource]
+    %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
     # validate fields that if not present are throwing internal server errors in bc creation
     validate_required_bc_fields(business_concept_params)
@@ -172,7 +172,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> Map.put("status", "draft")
       |> Map.put("version", 1)
 
-    with {:can, true} <- {:can, can?(session, create_business_concept(domain))},
+    with {:can, true} <- {:can, can?(claims, create_business_concept(domain))},
          :ok <-
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name,
              domain_group_id: domain_group_id
@@ -214,14 +214,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def versions(conn, %{"business_concept_version_id" => business_concept_version_id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
 
     business_concept_version =
       BusinessConcepts.get_business_concept_version!(business_concept_version_id)
 
     case Search.list_business_concept_versions(
            business_concept_version.business_concept_id,
-           session
+           claims
          ) do
       %{results: business_concept_versions} ->
         render(
@@ -252,11 +252,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def show(conn, %{"id" => id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     with %{id: _} <- BusinessConcepts.get_business_concept_version!(id),
-         {:can, true} <- {:can, can?(session, view_business_concept(business_concept_version))},
+         {:can, true} <- {:can, can?(claims, view_business_concept(business_concept_version))},
          template <- BusinessConcepts.get_template(business_concept_version) do
       business_concept_version =
         business_concept_version
@@ -319,12 +319,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def delete(conn, %{"id" => id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    with {:can, true} <- {:can, can?(session, delete(business_concept_version))},
+    with {:can, true} <- {:can, can?(claims, delete(business_concept_version))},
          {:ok, %BusinessConceptVersion{}} <-
-           BusinessConcepts.delete_business_concept_version(business_concept_version, session) do
+           BusinessConcepts.delete_business_concept_version(business_concept_version, claims) do
       send_resp(conn, :no_content, "")
     end
   end
@@ -343,12 +343,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def send_for_approval(conn, %{"business_concept_version_id" => id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"draft", true} ->
-        send_for_approval(conn, session, business_concept_version)
+        send_for_approval(conn, claims, business_concept_version)
 
       _ ->
         conn
@@ -372,12 +372,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def publish(conn, %{"business_concept_version_id" => id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"pending_approval", true} ->
-        do_publish(conn, session, business_concept_version)
+        do_publish(conn, claims, business_concept_version)
 
       _ ->
         conn
@@ -402,12 +402,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def reject(conn, %{"business_concept_version_id" => id} = params) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"pending_approval", true} ->
-        do_reject(conn, session, business_concept_version, Map.get(params, "reject_reason"))
+        do_reject(conn, claims, business_concept_version, Map.get(params, "reject_reason"))
 
       _ ->
         conn
@@ -431,12 +431,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def undo_rejection(conn, %{"business_concept_version_id" => id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"rejected", true} ->
-        undo_rejection(conn, session, business_concept_version)
+        undo_rejection(conn, claims, business_concept_version)
 
       _ ->
         conn
@@ -460,12 +460,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def version(conn, %{"business_concept_version_id" => id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"published", true} ->
-        do_version(conn, session, business_concept_version)
+        do_version(conn, claims, business_concept_version)
 
       _ ->
         conn
@@ -489,12 +489,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def deprecate(conn, %{"business_concept_version_id" => id}) do
-    session = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, business_concept_version.current} do
       {"published", true} ->
-        deprecate(conn, session, business_concept_version)
+        deprecate(conn, claims, business_concept_version)
 
       _ ->
         conn
@@ -510,50 +510,50 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp send_for_approval(conn, session, business_concept_version) do
-    with {:can, true} <- {:can, can?(session, send_for_approval(business_concept_version))},
+  defp send_for_approval(conn, claims, business_concept_version) do
+    with {:can, true} <- {:can, can?(claims, send_for_approval(business_concept_version))},
          {:ok, %{updated: business_concept_version}} <-
-           Workflow.submit_business_concept_version(business_concept_version, session) do
+           Workflow.submit_business_concept_version(business_concept_version, claims) do
       render_concept(conn, business_concept_version)
     end
   end
 
-  defp undo_rejection(conn, session, business_concept_version) do
-    with {:can, true} <- {:can, can?(session, undo_rejection(business_concept_version))},
+  defp undo_rejection(conn, claims, business_concept_version) do
+    with {:can, true} <- {:can, can?(claims, undo_rejection(business_concept_version))},
          {:ok, %{updated: business_concept_version}} <-
-           Workflow.undo_rejected_business_concept_version(business_concept_version, session) do
+           Workflow.undo_rejected_business_concept_version(business_concept_version, claims) do
       render_concept(conn, business_concept_version)
     end
   end
 
-  defp deprecate(conn, session, business_concept_version) do
-    with {:can, true} <- {:can, can?(session, deprecate(business_concept_version))},
+  defp deprecate(conn, claims, business_concept_version) do
+    with {:can, true} <- {:can, can?(claims, deprecate(business_concept_version))},
          {:ok, %{updated: business_concept_version}} <-
-           Workflow.deprecate_business_concept_version(business_concept_version, session) do
+           Workflow.deprecate_business_concept_version(business_concept_version, claims) do
       render_concept(conn, business_concept_version)
     end
   end
 
-  defp do_publish(conn, session, business_concept_version) do
-    with {:can, true} <- {:can, can?(session, publish(business_concept_version))},
+  defp do_publish(conn, claims, business_concept_version) do
+    with {:can, true} <- {:can, can?(claims, publish(business_concept_version))},
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
-           Workflow.publish(business_concept_version, session) do
+           Workflow.publish(business_concept_version, claims) do
       render_concept(conn, concept)
     end
   end
 
-  defp do_reject(conn, session, business_concept_version, reason) do
-    with {:can, true} <- {:can, can?(session, reject(business_concept_version))},
+  defp do_reject(conn, claims, business_concept_version, reason) do
+    with {:can, true} <- {:can, can?(claims, reject(business_concept_version))},
          {:ok, %{rejected: %BusinessConceptVersion{} = version}} <-
-           Workflow.reject(business_concept_version, reason, session) do
+           Workflow.reject(business_concept_version, reason, claims) do
       render_concept(conn, version)
     end
   end
 
-  defp do_version(conn, session, business_concept_version) do
-    with {:can, true} <- {:can, can?(session, version(business_concept_version))},
+  defp do_version(conn, claims, business_concept_version) do
+    with {:can, true} <- {:can, can?(claims, version(business_concept_version))},
          {:ok, %{current: %BusinessConceptVersion{} = new_version}} <-
-           Workflow.new_version(business_concept_version, session) do
+           Workflow.new_version(business_concept_version, claims) do
       conn = put_status(conn, :created)
       render_concept(conn, new_version)
     end
@@ -592,7 +592,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def update(conn, %{"id" => id, "business_concept_version" => business_concept_version_params}) do
-    %{user_id: user_id} = session = conn.assigns[:current_resource]
+    %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
@@ -620,7 +620,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
-    with {:can, true} <- {:can, can?(session, update(business_concept_version))},
+    with {:can, true} <- {:can, can?(claims, update(business_concept_version))},
          :ok <-
            BusinessConcepts.check_business_concept_name_availability(
              template.name,
@@ -667,7 +667,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "business_concept_version_id" => id,
         "confidential" => confidential
       }) do
-    %{user_id: user_id} = session = conn.assigns[:current_resource]
+    %{user_id: user_id} = claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
     business_concept = business_concept_version.business_concept
     template = BusinessConcepts.get_template(business_concept_version)
@@ -684,8 +684,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     with {:can, true} <-
            {:can,
-            can?(session, update(business_concept)) &&
-              can?(session, set_confidential(business_concept_version))},
+            can?(claims, update(business_concept)) &&
+              can?(claims, set_confidential(business_concept_version))},
          {:ok, %BusinessConceptVersion{} = concept_version} <-
            BusinessConcepts.update_business_concept(
              business_concept_version,
@@ -722,11 +722,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "update_attributes" => update_attributes,
         "search_params" => search_params
       }) do
-    %{is_admin: is_admin} = session = conn.assigns[:current_resource]
+    %{is_admin: is_admin} = claims = conn.assigns[:current_resource]
 
     with true <- is_admin,
-         %{results: results} <- search_all_business_concept_versions(session, search_params),
-         {:ok, response} <- BulkUpdate.update_all(session, results, update_attributes) do
+         %{results: results} <- search_all_business_concept_versions(claims, search_params),
+         {:ok, response} <- BulkUpdate.update_all(claims, results, update_attributes) do
       body = JSON.encode!(%{data: %{message: response}})
 
       conn
@@ -751,10 +751,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp search_all_business_concept_versions(session, params) do
+  defp search_all_business_concept_versions(claims, params) do
     params
     |> Map.drop(["page", "size"])
-    |> Search.search_business_concept_versions(session, 0, 10_000)
+    |> Search.search_business_concept_versions(claims, 0, 10_000)
   end
 
   defp handle_bc_errors(conn, error) do

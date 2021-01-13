@@ -7,7 +7,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
   alias Ecto.Changeset
   alias Ecto.Multi
-  alias TdBg.Auth.Session
+  alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -17,10 +17,10 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
   def deprecate_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        %Session{} = session
+        %Claims{} = claims
       ) do
     result =
-      update_business_concept_version_status(business_concept_version, "deprecated", session)
+      update_business_concept_version_status(business_concept_version, "deprecated", claims)
 
     ConceptCache.delete(business_concept_version.business_concept_id)
     result
@@ -28,26 +28,26 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
   @spec submit_business_concept_version(
           TdBg.BusinessConcepts.BusinessConceptVersion.t(),
-          TdBg.Auth.Session.t()
+          TdBg.Auth.Claims.t()
         ) :: any
   def submit_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        %Session{} = session
+        %Claims{} = claims
       ) do
-    update_business_concept_version_status(business_concept_version, "pending_approval", session)
+    update_business_concept_version_status(business_concept_version, "pending_approval", claims)
   end
 
   def undo_rejected_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        %Session{} = session
+        %Claims{} = claims
       ) do
-    update_business_concept_version_status(business_concept_version, "draft", session)
+    update_business_concept_version_status(business_concept_version, "draft", claims)
   end
 
   defp update_business_concept_version_status(
          %BusinessConceptVersion{} = business_concept_version,
          status,
-         %Session{user_id: user_id}
+         %Claims{user_id: user_id}
        ) do
     changeset = BusinessConceptVersion.status_changeset(business_concept_version, status, user_id)
 
@@ -66,7 +66,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
     end
   end
 
-  def publish(business_concept_version, %Session{user_id: user_id}) do
+  def publish(business_concept_version, %Claims{user_id: user_id}) do
     business_concept_id = business_concept_version.business_concept.id
 
     query =
@@ -100,7 +100,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
   def reject(
         %BusinessConceptVersion{} = business_concept_version,
         reason,
-        %Session{user_id: user_id}
+        %Claims{user_id: user_id}
       ) do
     params = %{reject_reason: reason}
     changeset = BusinessConceptVersion.reject_changeset(business_concept_version, params, user_id)
@@ -122,7 +122,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
   @doc """
   Creates a new business_concept version.
   """
-  def new_version(%BusinessConceptVersion{} = business_concept_version, %Session{user_id: user_id}) do
+  def new_version(%BusinessConceptVersion{} = business_concept_version, %Claims{user_id: user_id}) do
     business_concept = business_concept_version.business_concept
 
     business_concept =

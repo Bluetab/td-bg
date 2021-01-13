@@ -18,7 +18,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     :ok
   end
 
-  @user_name "session"
+  @user_name "claims"
   @template_name "foo_template"
 
   setup %{conn: conn} = context do
@@ -70,7 +70,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag authenticated_user: @user_name
     @tag :template
     test "show with actions", %{conn: conn} do
-      %{user_id: user_id} = create_session(@user_name)
+      %{user_id: user_id} = create_claims(@user_name)
       domain_create = insert(:domain, id: :rand.uniform(100_000_000))
       role_create = get_role_by_name("create")
 
@@ -121,7 +121,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authenticated_user: @user_name
     test "find only linkable concepts", %{conn: conn} do
-      %{user_id: user_id} = create_session(@user_name)
+      %{user_id: user_id} = create_claims(@user_name)
       domain_watch = insert(:domain)
       domain_create = insert(:domain)
       role_watch = get_role_by_name("watch")
@@ -295,7 +295,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           scope: "test"
         })
 
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
 
       business_concept =
         insert(:business_concept,
@@ -343,7 +343,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
 
       business_concept_version = insert(:business_concept_version, last_change_by: user_id)
 
@@ -386,7 +386,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
 
       business_concept_version = insert(:business_concept_version, last_change_by: user_id)
       business_concept_version_id = business_concept_version.id

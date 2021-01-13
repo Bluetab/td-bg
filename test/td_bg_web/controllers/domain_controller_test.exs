@@ -42,7 +42,7 @@ defmodule TdBgWeb.DomainControllerTest do
     tags
     |> Map.take([:authenticated_user, :conn])
     |> Map.new(fn
-      {:authenticated_user, user_name} -> {:session, create_session(user_name)}
+      {:authenticated_user, user_name} -> {:claims, create_claims(user_name)}
       {:conn, conn} -> {:conn, put_req_header(conn, "accept", "application/json")}
     end)
   end
@@ -62,7 +62,7 @@ defmodule TdBgWeb.DomainControllerTest do
     test "list all domains user can view", %{
       conn: conn,
       swagger_schema: schema,
-      session: %{user_id: user_id}
+      claims: %{user_id: user_id}
     } do
       %{id: domain_id} = domain = insert(:domain)
       role = get_role_by_name("watch")
@@ -129,7 +129,7 @@ defmodule TdBgWeb.DomainControllerTest do
     test "includes parentable ids", %{
       conn: conn,
       swagger_schema: schema,
-      session: %{user_id: user_id}
+      claims: %{user_id: user_id}
     } do
       %{id: parent_id} = insert(:domain)
       %{id: sibling_id} = insert(:domain, parent_id: parent_id)

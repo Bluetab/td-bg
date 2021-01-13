@@ -19,8 +19,8 @@ defmodule TdBgWeb.BusinessConceptFilterController do
   end
 
   def index(conn, _params) do
-    session = conn.assigns[:current_resource]
-    filters = Search.get_filter_values(session, %{})
+    claims = conn.assigns[:current_resource]
+    filters = Search.get_filter_values(claims, %{})
     render(conn, "show.json", filters: filters)
   end
 
@@ -30,8 +30,8 @@ defmodule TdBgWeb.BusinessConceptFilterController do
   end
 
   def search(conn, params) do
-    session = conn.assigns[:current_resource]
-    filters = Search.get_filter_values(session, params)
+    claims = conn.assigns[:current_resource]
+    filters = Search.get_filter_values(claims, params)
     render(conn, "show.json", filters: filters)
   end
 end

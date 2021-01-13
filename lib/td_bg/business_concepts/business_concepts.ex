@@ -6,7 +6,7 @@ defmodule TdBg.BusinessConcepts do
   import Ecto.Query
 
   alias Ecto.Multi
-  alias TdBg.Auth.Session
+  alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -522,7 +522,7 @@ defmodule TdBg.BusinessConcepts do
   """
   def delete_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        %Session{user_id: user_id}
+        %Claims{user_id: user_id}
       ) do
     business_concept = business_concept_version.business_concept
     business_concept_id = business_concept.id

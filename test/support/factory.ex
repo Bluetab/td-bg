@@ -9,8 +9,8 @@ defmodule TdBg.Factory do
   alias TdBg.Groups.DomainGroup
   alias TdBg.UserSearchFilters.UserSearchFilter
 
-  def session_factory(attrs) do
-    %TdBg.Auth.Session{
+  def claims_factory(attrs) do
+    %TdBg.Auth.Claims{
       user_id: sequence(:user_id, & &1),
       user_name: sequence("user_name"),
       role: "user",

@@ -43,7 +43,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "create_business_concept/1" do
     test "with valid data creates a business_concept" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       concept_attrs = %{
@@ -100,7 +100,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with content" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [
@@ -142,7 +142,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with invalid content: required" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [
@@ -189,7 +189,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with content: default values" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [
@@ -226,7 +226,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with invalid content: invalid variable list" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "1"}]
@@ -269,7 +269,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with no content" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "?"}]
@@ -299,7 +299,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with nil content" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "?"}]
@@ -330,7 +330,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with no content schema" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       concept_attrs = %{
@@ -358,7 +358,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "update_business_concept_version/2" do
     test "updates the business_concept_version if data is valid" do
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
       business_concept_version = insert(:business_concept_version)
 
       concept_attrs = %{
@@ -402,7 +402,7 @@ defmodule TdBg.BusinessConceptsTest do
         %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
       ]
 
-      %{user_id: user_id} = build(:session)
+      %{user_id: user_id} = build(:claims)
 
       content = %{
         "Field1" => "First field",
@@ -698,7 +698,7 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   test "with invalid content: required" do
-    %{user_id: user_id} = build(:session)
+    %{user_id: user_id} = build(:claims)
     domain = insert(:domain)
 
     content_schema = [

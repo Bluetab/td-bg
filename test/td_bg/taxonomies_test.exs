@@ -717,9 +717,9 @@ defmodule TdBg.TaxonomiesTest do
         |> Enum.map(& &1.id)
         |> MapSet.new()
 
-      session = build(:session, role: "admin")
+      claims = build(:claims, role: "admin")
 
-      parentable_ids = session |> Taxonomies.get_parentable_ids(domain) |> MapSet.new()
+      parentable_ids = claims |> Taxonomies.get_parentable_ids(domain) |> MapSet.new()
 
       assert MapSet.equal?(parentable_ids, parent_ids)
       refute MapSet.member?(parentable_ids, domain_id)

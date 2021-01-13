@@ -3,16 +3,16 @@ defmodule TdBg.Auth.Guardian do
 
   use Guardian, otp_app: :td_bg
 
-  alias TdBg.Auth.Session
+  alias TdBg.Auth.Claims
 
-  def subject_for_token(%Session{user_id: user_id, user_name: user_name}, _claims) do
+  def subject_for_token(%Claims{user_id: user_id, user_name: user_name}, _claims) do
     Jason.encode(%{id: user_id, user_name: user_name})
   end
 
   def resource_from_claims(%{"role" => role, "sub" => sub} = claims) do
     %{"id" => id, "user_name" => user_name} = Jason.decode!(sub)
 
-    resource = %Session{
+    resource = %Claims{
       user_id: id,
       is_admin: role == "admin",
       role: role,

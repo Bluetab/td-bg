@@ -11,7 +11,7 @@ defmodule TdBg.UsersSteps do
     Enum.map(table, fn row ->
       user_name = row[:user]
       role_name = row[:role]
-      %{user_id: user_id} = create_session(user_name)
+      %{user_id: user_id} = create_claims(user_name)
       %{id: role_id} = get_role_by_name(role_name)
 
       acl_entry_params = %{

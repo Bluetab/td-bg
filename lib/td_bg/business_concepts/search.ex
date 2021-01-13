@@ -2,7 +2,7 @@ defmodule TdBg.BusinessConcept.Search do
   @moduledoc """
   Helper module to construct business concept search queries.
   """
-  alias TdBg.Auth.Session
+  alias TdBg.Auth.Claims
   alias TdBg.BusinessConcept.Query
   alias TdBg.Permissions
   alias TdBg.Search
@@ -24,15 +24,15 @@ defmodule TdBg.BusinessConcept.Search do
     view_versioned_business_concepts: "versioned"
   }
 
-  def get_filter_values(%Session{is_admin: true}, params) do
+  def get_filter_values(%Claims{is_admin: true}, params) do
     filter_clause = create_filters(params)
     query = create_query(%{}, filter_clause)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     Search.get_filters(search)
   end
 
-  def get_filter_values(%Session{} = session, params) do
-    permissions = get_permissions(params, session)
+  def get_filter_values(%Claims{} = claims, params) do
+    permissions = get_permissions(params, claims)
     get_filter_values(permissions, params)
   end
 
@@ -46,10 +46,10 @@ defmodule TdBg.BusinessConcept.Search do
     Search.get_filters(search)
   end
 
-  def search_business_concept_versions(params, session, page \\ 0, size \\ 50)
+  def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
 
   # Admin user search, no filters applied
-  def search_business_concept_versions(params, %Session{is_admin: true}, page, size) do
+  def search_business_concept_versions(params, %Claims{is_admin: true}, page, size) do
     filter_clause = create_filters(params)
 
     query =
@@ -71,13 +71,13 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   # Non-admin user search, filters applied
-  def search_business_concept_versions(params, %Session{} = session, page, size) do
-    permissions = get_permissions(params, session)
+  def search_business_concept_versions(params, %Claims{} = claims, page, size) do
+    permissions = get_permissions(params, claims)
     filter_business_concept_versions(params, permissions, page, size)
   end
 
-  def get_permissions(%{"only_linkable" => true}, session) do
-    session
+  def get_permissions(%{"only_linkable" => true}, claims) do
+    claims
     |> Permissions.get_domain_permissions()
     |> Enum.filter(
       &(&1
@@ -86,17 +86,17 @@ defmodule TdBg.BusinessConcept.Search do
     )
   end
 
-  def get_permissions(_, session), do: Permissions.get_domain_permissions(session)
+  def get_permissions(_, claims), do: Permissions.get_domain_permissions(claims)
 
-  def list_business_concept_versions(business_concept_id, %Session{is_admin: true}) do
+  def list_business_concept_versions(business_concept_id, %Claims{is_admin: true}) do
     query = %{business_concept_id: business_concept_id} |> create_query
 
     %{query: query}
     |> do_search()
   end
 
-  def list_business_concept_versions(business_concept_id, %Session{} = session) do
-    permissions = Permissions.get_domain_permissions(session)
+  def list_business_concept_versions(business_concept_id, %Claims{} = claims) do
+    permissions = Permissions.get_domain_permissions(claims)
     predefined_query = %{business_concept_id: business_concept_id} |> create_query
     filter = create_filter_clause(permissions, [predefined_query])
     query = create_query(nil, filter)

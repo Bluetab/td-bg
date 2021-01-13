@@ -17,14 +17,14 @@ defmodule TdBg.Comments.AuditTest do
   setup do
     on_exit(fn -> Redix.del!(@stream) end)
 
-    session = build(:session, role: "admin")
-    [session: session, comment: insert(:comment)]
+    claims = build(:claims, role: "admin")
+    [claims: claims, comment: insert(:comment)]
   end
 
   describe "comment_created/4" do
     test "publishes an event", %{
       comment: %{id: comment_id} = comment,
-      session: %{user_id: user_id}
+      claims: %{user_id: user_id}
     } do
       %{
         "content" => content,
@@ -63,7 +63,7 @@ defmodule TdBg.Comments.AuditTest do
   end
 
   describe "comment_deleted/3" do
-    test "publishes an event", %{session: %{user_id: user_id}} do
+    test "publishes an event", %{claims: %{user_id: user_id}} do
       %{id: comment_id} = comment = insert(:comment)
 
       assert {:ok, event_id} = Audit.comment_deleted(Repo, %{comment: comment}, user_id)

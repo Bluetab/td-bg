@@ -2,21 +2,21 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   @moduledoc false
   require Logger
 
-  alias TdBg.Auth.Session
+  alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies
 
-  def update_all(%Session{} = session, business_concept_versions, params) do
+  def update_all(%Claims{} = claims, business_concept_versions, params) do
     business_concept_versions =
       business_concept_versions
       |> ids_from_business_concept_versions()
       |> BusinessConcepts.business_concept_versions_by_ids()
 
     with {:ok, update_attributes} <-
-           update_attributes_from_params(session, params, business_concept_versions),
+           update_attributes_from_params(claims, params, business_concept_versions),
          {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
       Enum.each(bcv_list, &refresh_cache_and_elastic/1)
 
@@ -79,12 +79,12 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     Enum.map(business_concept_versions, &Map.get(&1, "id"))
   end
 
-  defp update_attributes_from_params(_session, _params, []) do
+  defp update_attributes_from_params(_claims, _params, []) do
     {:error, :empty_business_concepts}
   end
 
   defp update_attributes_from_params(
-         %Session{user_id: user_id},
+         %Claims{user_id: user_id},
          params,
          business_concept_versions
        ) do

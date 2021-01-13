@@ -261,15 +261,15 @@ defmodule TdBg.Taxonomies do
   `:update_domain` on the domain to move, and `:create_domain` on the new parent
   domain.
   """
-  def get_parentable_ids(session, %Domain{id: id} = domain) do
+  def get_parentable_ids(claims, %Domain{id: id} = domain) do
     import Canada, only: [can?: 2]
 
-    if can?(session, move(domain)) do
+    if can?(claims, move(domain)) do
       descendent_ids = descendent_ids(id)
 
       list_domains()
       |> Enum.reject(&Enum.member?(descendent_ids, &1.id))
-      |> Enum.filter(&can?(session, create(&1)))
+      |> Enum.filter(&can?(claims, create(&1)))
       |> Enum.map(& &1.id)
     else
       []
