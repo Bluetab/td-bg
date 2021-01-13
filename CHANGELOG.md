@@ -6,6 +6,10 @@
 
 - [TD-2591] Include the number of related concepts on concept view
 
+### Changed
+
+- [TD-3182] Allow to use redis with password
+
 ## [4.11.0] 2021-01-11
 
 ### Changed
