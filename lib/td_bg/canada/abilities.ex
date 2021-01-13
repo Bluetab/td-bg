@@ -1,7 +1,7 @@
 defmodule TdBg.Canada.Abilities do
   @moduledoc false
 
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canada.BusinessConceptAbilities

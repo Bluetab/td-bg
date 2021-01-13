@@ -12,7 +12,6 @@ defmodule TdBgWeb.DomainControllerTest do
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{
     description: "some description",
@@ -36,7 +35,6 @@ defmodule TdBgWeb.DomainControllerTest do
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
-    start_supervised(MockTdAuthService)
     :ok
   end
 

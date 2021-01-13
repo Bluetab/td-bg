@@ -3,10 +3,8 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TdBg.Permissions.MockPermissionResolver
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
-    start_supervised(MockTdAuthService)
     start_supervised(MockPermissionResolver)
     :ok
   end

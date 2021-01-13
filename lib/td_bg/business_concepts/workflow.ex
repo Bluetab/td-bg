@@ -7,7 +7,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
   alias Ecto.Changeset
   alias Ecto.Multi
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -28,7 +28,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
   @spec submit_business_concept_version(
           TdBg.BusinessConcepts.BusinessConceptVersion.t(),
-          TdBg.Accounts.Session.t()
+          TdBg.Auth.Session.t()
         ) :: any
   def submit_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,

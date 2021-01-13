@@ -5,12 +5,10 @@ defmodule TdBg.UploadTest do
   alias TdBg.BusinessConcepts
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised(ConceptLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockTdAuthService)
     :ok
   end
 

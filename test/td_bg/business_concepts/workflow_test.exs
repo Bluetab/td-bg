@@ -1,7 +1,7 @@
 defmodule TdBg.BusinessConcepts.WorkflowTest do
   use TdBg.DataCase
 
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.Workflow
   alias TdBg.Cache.ConceptLoader

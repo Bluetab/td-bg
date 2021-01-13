@@ -13,7 +13,6 @@ defmodule TdBg.BusinessConceptUploadTest do
   alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
   import_steps(TdBg.DomainSteps)
@@ -27,7 +26,6 @@ defmodule TdBg.BusinessConceptUploadTest do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockTdAuthService)
     start_supervised(MockPermissionResolver)
     :ok
   end

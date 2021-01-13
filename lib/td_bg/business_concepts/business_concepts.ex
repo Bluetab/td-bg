@@ -6,7 +6,7 @@ defmodule TdBg.BusinessConcepts do
   import Ecto.Query
 
   alias Ecto.Multi
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion

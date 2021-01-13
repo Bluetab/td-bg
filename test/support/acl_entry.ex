@@ -3,7 +3,7 @@ defmodule TdBgWeb.AclEntry do
 
   alias TdBg.Permissions.MockPermissionResolver
 
-  def acl_entry_create(_token, acl_entry_params) do
+  def acl_entry_create(acl_entry_params) do
     MockPermissionResolver.create_acl_entry(acl_entry_params)
     {:ok, 200, %{}}
   end

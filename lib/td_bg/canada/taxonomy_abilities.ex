@@ -1,6 +1,6 @@
 defmodule TdBg.Canada.TaxonomyAbilities do
   @moduledoc false
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
 

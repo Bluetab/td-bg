@@ -3,13 +3,12 @@ defmodule TdBgWeb.Authentication do
   This module defines the functions required to
   add auth headers to requests
   """
-  alias Phoenix.ConnTest
-  alias TdBg.Accounts.Session
-  alias TdBg.Auth.Guardian
-  alias TdBg.Permissions.MockPermissionResolver
-  alias TdBgWeb.ApiServices.MockTdAuthService
-
   import Plug.Conn
+
+  alias Phoenix.ConnTest
+  alias TdBg.Auth.Guardian
+  alias TdBg.Auth.Session
+  alias TdBg.Permissions.MockPermissionResolver
 
   @headers {"Content-type", "application/json"}
 
@@ -24,7 +23,7 @@ defmodule TdBgWeb.Authentication do
     register_token(jwt)
     conn = ConnTest.build_conn()
     conn = put_auth_headers(conn, jwt)
-    {:ok, %{conn: conn, jwt: jwt, claims: full_claims}}
+    {:ok, %{conn: conn, jwt: jwt, claims: full_claims, session: session}}
   end
 
   def get_header(token) do
@@ -33,41 +32,14 @@ defmodule TdBgWeb.Authentication do
 
   def create_session(user_name, opts \\ []) do
     role = Keyword.get(opts, :role, "user")
+    is_admin = role === "admin"
 
-    MockTdAuthService.create_session(%{
-      "user" => %{
-        "user_name" => user_name,
-        "role" => role
-      }
-    })
-  end
-
-  def find_or_create_user(user_name, opts \\ []) do
-    user =
-      case get_user_by_name(user_name) do
-        nil ->
-          role = Keyword.get(opts, :role, "user")
-
-          MockTdAuthService.create_session(%{
-            "user" => %{
-              "user_name" => user_name,
-              "role" => role
-            }
-          })
-
-        user ->
-          user
-      end
-
-    user
-  end
-
-  def get_user_by_name(user_name) do
-    MockTdAuthService.get_user_by_name(user_name)
-  end
-
-  def get_users do
-    MockTdAuthService.index()
+    %Session{
+      user_id: Integer.mod(:binary.decode_unsigned(user_name), 100_000),
+      user_name: user_name,
+      role: role,
+      is_admin: is_admin
+    }
   end
 
   def build_user_token(%Session{role: role} = session) do
@@ -78,14 +50,19 @@ defmodule TdBgWeb.Authentication do
   end
 
   def build_user_token(user_name, opts \\ []) when is_binary(user_name) do
-    user = find_or_create_user(user_name, opts)
-    build_user_token(user)
+    opts = user_name |> role_opts() |> Keyword.merge(opts)
+
+    user_name
+    |> create_session(opts)
+    |> build_user_token()
   end
 
   def get_user_token(user_name) do
+    opts = role_opts(user_name)
+
     user_name
-    |> build_user_token(role_opts(user_name))
-    |> register_token
+    |> build_user_token(opts)
+    |> register_token()
   end
 
   defp role_opts("app-admin"), do: [role: "admin"]

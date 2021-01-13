@@ -3,7 +3,7 @@ defmodule TdBg.Canada.LinkAbilities do
   Canada permissions model for Business Concept Link resources
   """
 
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.BusinessConcepts
   alias TdBg.Canada.TaxonomyAbilities
   alias TdBg.Taxonomies.Domain

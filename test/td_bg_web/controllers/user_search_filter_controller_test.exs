@@ -3,11 +3,9 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
 
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.UserSearchFilters
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised(MockPermissionResolver)
-    start_supervised(MockTdAuthService)
     :ok
   end
 

@@ -2,7 +2,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   @moduledoc false
   require Logger
 
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader

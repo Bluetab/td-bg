@@ -1,8 +1,6 @@
 defmodule TdBgWeb.User do
   @moduledoc false
 
-  alias TdBgWeb.ApiServices.MockTdAuthService
-
   def get_role_by_name(role_name) do
     # Use hash to map name to role id for tests
     id = hash_to_int(role_name)

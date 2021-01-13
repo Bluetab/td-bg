@@ -14,7 +14,6 @@ defmodule TdBg.CommentsFeatureTest do
   alias TdBg.Cache.DomainLoader
   alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   import_steps(TdBg.BusinessConceptSteps)
   import_steps(TdBg.DomainSteps)
@@ -33,7 +32,6 @@ defmodule TdBg.CommentsFeatureTest do
   end
 
   setup do
-    start_supervised(MockTdAuthService)
     :ok
   end
 

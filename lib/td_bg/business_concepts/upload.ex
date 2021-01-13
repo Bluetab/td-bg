@@ -7,7 +7,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
   alias Codepagex
   alias NimbleCSV
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.Cache.ConceptLoader

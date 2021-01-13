@@ -3,7 +3,7 @@ defmodule TdBg.Permissions do
   The Permissions context.
   """
 
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.Taxonomies.Domain
 
   @permission_resolver Application.compile_env(:td_bg, :permission_resolver)

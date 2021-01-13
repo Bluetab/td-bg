@@ -47,12 +47,14 @@ defmodule TdBgWeb.ConnCase do
 
     cond do
       tags[:admin_authenticated] ->
-        session = create_session(@admin_user_name, role: "admin")
-        create_user_auth_conn(session)
+        @admin_user_name
+        |> create_session(role: "admin")
+        |> create_user_auth_conn()
 
-      tags[:authenticated_user] ->
-        session = create_session(tags[:authenticated_user])
-        create_user_auth_conn(session)
+      user_name = tags[:authenticated_user] ->
+        user_name
+        |> create_session()
+        |> create_user_auth_conn()
 
       true ->
         {:ok, conn: ConnTest.build_conn()}

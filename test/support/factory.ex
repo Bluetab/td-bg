@@ -10,7 +10,7 @@ defmodule TdBg.Factory do
   alias TdBg.UserSearchFilters.UserSearchFilter
 
   def session_factory(attrs) do
-    %TdBg.Accounts.Session{
+    %TdBg.Auth.Session{
       user_id: sequence(:user_id, & &1),
       user_name: sequence("user_name"),
       role: "user",

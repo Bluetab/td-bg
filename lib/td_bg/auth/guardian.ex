@@ -3,7 +3,7 @@ defmodule TdBg.Auth.Guardian do
 
   use Guardian, otp_app: :td_bg
 
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
 
   def subject_for_token(%Session{user_id: user_id, user_name: user_name}, _claims) do
     Jason.encode(%{id: user_id, user_name: user_name})

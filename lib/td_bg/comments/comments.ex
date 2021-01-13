@@ -6,7 +6,7 @@ defmodule TdBg.Comments do
   import Ecto.Query
 
   alias Ecto.Multi
-  alias TdBg.Accounts.Session
+  alias TdBg.Auth.Session
   alias TdBg.Comments.Audit
   alias TdBg.Comments.Comment
   alias TdBg.Repo
