@@ -1,7 +1,7 @@
 defmodule TdBg.Canada.Abilities do
   @moduledoc false
 
-  alias TdBg.Accounts.User
+  alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Canada.BusinessConceptAbilities
@@ -10,172 +10,173 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.Taxonomies.Domain
   alias TdCache.Link
 
-  defimpl Canada.Can, for: User do
+  defimpl Canada.Can, for: Claims do
     # administrator is superpowerful for Domain
-    def can?(%User{is_admin: true}, _action, BusinessConcept) do
+    def can?(%Claims{is_admin: true}, _action, BusinessConcept) do
       true
     end
 
-    def can?(%User{is_admin: true}, _action, %BusinessConcept{}) do
+    def can?(%Claims{is_admin: true}, _action, %BusinessConcept{}) do
       true
     end
 
-    def can?(%User{is_admin: true}, _action, Domain) do
+    def can?(%Claims{is_admin: true}, _action, Domain) do
       true
     end
 
-    def can?(%User{is_admin: true}, _action, %Domain{}) do
+    def can?(%Claims{is_admin: true}, _action, %Domain{}) do
       true
     end
 
-    def can?(%User{} = user, action, %Link{} = link) do
-      LinkAbilities.can?(user, action, link)
+    def can?(%Claims{} = claims, action, %Link{} = link) do
+      LinkAbilities.can?(claims, action, link)
     end
 
-    def can?(%User{} = user, :create_link, %{business_concept: business_concept}) do
-      LinkAbilities.can?(user, :create_link, business_concept)
+    def can?(%Claims{} = claims, :create_link, %{business_concept: business_concept}) do
+      LinkAbilities.can?(claims, :create_link, business_concept)
     end
 
-    def can?(%User{} = user, action, %{hint: :link} = resource) do
-      LinkAbilities.can?(user, action, resource)
+    def can?(%Claims{} = claims, action, %{hint: :link} = resource) do
+      LinkAbilities.can?(claims, action, resource)
     end
 
-    def can?(%User{} = user, :list, Domain) do
-      TaxonomyAbilities.can?(user, :list, Domain)
+    def can?(%Claims{} = claims, :list, Domain) do
+      TaxonomyAbilities.can?(claims, :list, Domain)
     end
 
-    def can?(%User{} = user, :create, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :create, domain)
+    def can?(%Claims{} = claims, :create, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :create, domain)
     end
 
-    def can?(%User{} = user, :update, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :update, domain)
+    def can?(%Claims{} = claims, :update, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :update, domain)
     end
 
-    def can?(%User{} = user, :show, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :show, domain)
+    def can?(%Claims{} = claims, :show, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :show, domain)
     end
 
-    def can?(%User{} = user, :delete, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :delete, domain)
+    def can?(%Claims{} = claims, :delete, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :delete, domain)
     end
 
-    def can?(%User{} = user, :move, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :move, domain)
+    def can?(%Claims{} = claims, :move, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :move, domain)
     end
 
-    def can?(%User{} = user, :create_business_concept, %Domain{} = domain) do
-      BusinessConceptAbilities.can?(user, :create_business_concept, domain)
+    def can?(%Claims{} = claims, :create_business_concept, %Domain{} = domain) do
+      BusinessConceptAbilities.can?(claims, :create_business_concept, domain)
     end
 
-    def can?(%User{} = user, :update_business_concept, %Domain{} = domain) do
-      BusinessConceptAbilities.can?(user, :update_business_concept, domain)
+    def can?(%Claims{} = claims, :update_business_concept, %Domain{} = domain) do
+      BusinessConceptAbilities.can?(claims, :update_business_concept, domain)
     end
 
-    def can?(%User{} = user, :create_ingest, %Domain{} = domain) do
-      BusinessConceptAbilities.can?(user, :create_ingest, domain)
+    def can?(%Claims{} = claims, :create_ingest, %Domain{} = domain) do
+      BusinessConceptAbilities.can?(claims, :create_ingest, domain)
     end
 
-    def can?(%User{} = user, :manage_data_sources, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :manage_data_sources, domain)
+    def can?(%Claims{} = claims, :manage_data_sources, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :manage_data_sources, domain)
     end
 
-    def can?(%User{} = user, :manage_configurations, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :manage_configurations, domain)
+    def can?(%Claims{} = claims, :manage_configurations, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :manage_configurations, domain)
     end
 
-    def can?(%User{} = user, :update_data_structure, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :update_data_structure, domain)
+    def can?(%Claims{} = claims, :update_data_structure, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :update_data_structure, domain)
     end
 
-    def can?(%User{} = user, :manage_quality_rule, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :manage_quality_rule, domain)
+    def can?(%Claims{} = claims, :manage_quality_rule, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :manage_quality_rule, domain)
     end
 
-    def can?(%User{} = user, :update_ingest, %Domain{} = domain) do
-      TaxonomyAbilities.can?(user, :update_ingest, domain)
+    def can?(%Claims{} = claims, :update_ingest, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :update_ingest, domain)
     end
 
-    def can?(%User{} = user, :create, BusinessConceptVersion) do
-      BusinessConceptAbilities.can?(user, :create_business_concept)
+    def can?(%Claims{} = claims, :create, BusinessConceptVersion) do
+      BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
 
-    def can?(%User{} = user, :update, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :update, business_concept_version)
+    def can?(%Claims{} = claims, :update, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(claims, :update, business_concept_version)
     end
 
-    def can?(%User{} = user, :update, %BusinessConcept{} = business_concept) do
-      BusinessConceptAbilities.can?(user, :update, business_concept)
+    def can?(%Claims{} = claims, :update, %BusinessConcept{} = business_concept) do
+      BusinessConceptAbilities.can?(claims, :update, business_concept)
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
           :get_data_structures,
           %BusinessConceptVersion{} = business_concept_version
         ) do
-      BusinessConceptAbilities.can?(user, :get_data_structures, business_concept_version)
+      BusinessConceptAbilities.can?(claims, :get_data_structures, business_concept_version)
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
           :send_for_approval,
           %BusinessConceptVersion{} = business_concept_version
         ) do
-      BusinessConceptAbilities.can?(user, :send_for_approval, business_concept_version)
+      BusinessConceptAbilities.can?(claims, :send_for_approval, business_concept_version)
     end
 
-    def can?(%User{} = user, :reject, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :reject, business_concept_version)
+    def can?(%Claims{} = claims, :reject, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(claims, :reject, business_concept_version)
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
           :undo_rejection,
           %BusinessConceptVersion{} = business_concept_version
         ) do
-      BusinessConceptAbilities.can?(user, :undo_rejection, business_concept_version)
+      BusinessConceptAbilities.can?(claims, :undo_rejection, business_concept_version)
     end
 
-    def can?(%User{} = user, :publish, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :publish, business_concept_version)
+    def can?(%Claims{} = claims, :publish, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(claims, :publish, business_concept_version)
     end
 
-    def can?(%User{} = user, :version, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :version, business_concept_version)
-    end
-
-    def can?(%User{} = user, :deprecate, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :deprecate, business_concept_version)
-    end
-
-    def can?(%User{} = user, :delete, %BusinessConceptVersion{} = business_concept_version) do
-      BusinessConceptAbilities.can?(user, :delete, business_concept_version)
+    def can?(%Claims{} = claims, :version, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(claims, :version, business_concept_version)
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
+          :deprecate,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
+      BusinessConceptAbilities.can?(claims, :deprecate, business_concept_version)
+    end
+
+    def can?(%Claims{} = claims, :delete, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(claims, :delete, business_concept_version)
+    end
+
+    def can?(
+          %Claims{} = claims,
           :set_confidential,
           %BusinessConceptVersion{} = business_concept_version
         ) do
       BusinessConceptAbilities.can?(
-        user,
+        claims,
         :manage_confidential_business_concepts,
         business_concept_version
       )
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
           :view_business_concept,
           %BusinessConceptVersion{} = business_concept_version
         ) do
-      BusinessConceptAbilities.can?(user, :view_business_concept, business_concept_version)
+      BusinessConceptAbilities.can?(claims, :view_business_concept, business_concept_version)
     end
 
-    def can?(%User{is_admin: true}, _action, %{}) do
-      true
-    end
-
-    def can?(%User{}, _action, _domain), do: false
+    def can?(%Claims{is_admin: true}, _action, %{}), do: true
+    def can?(%Claims{}, _action, _domain), do: false
   end
 end

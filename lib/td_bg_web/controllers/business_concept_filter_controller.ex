@@ -1,10 +1,11 @@
 defmodule TdBgWeb.BusinessConceptFilterController do
-  require Logger
   use TdBgWeb, :controller
   use PhoenixSwagger
 
   alias TdBg.BusinessConcept.Search
   alias TdBgWeb.SwaggerDefinitions
+
+  require Logger
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -18,8 +19,8 @@ defmodule TdBgWeb.BusinessConceptFilterController do
   end
 
   def index(conn, _params) do
-    user = conn.assigns[:current_user]
-    filters = Search.get_filter_values(user, %{})
+    claims = conn.assigns[:current_resource]
+    filters = Search.get_filter_values(claims, %{})
     render(conn, "show.json", filters: filters)
   end
 
@@ -29,8 +30,8 @@ defmodule TdBgWeb.BusinessConceptFilterController do
   end
 
   def search(conn, params) do
-    user = conn.assigns[:current_user]
-    filters = Search.get_filter_values(user, params)
+    claims = conn.assigns[:current_resource]
+    filters = Search.get_filter_values(claims, params)
     render(conn, "show.json", filters: filters)
   end
 end

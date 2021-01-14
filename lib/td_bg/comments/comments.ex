@@ -6,6 +6,7 @@ defmodule TdBg.Comments do
   import Ecto.Query
 
   alias Ecto.Multi
+  alias TdBg.Auth.Claims
   alias TdBg.Comments.Audit
   alias TdBg.Comments.Comment
   alias TdBg.Repo
@@ -81,14 +82,14 @@ defmodule TdBg.Comments do
 
   ## Examples
 
-      iex> create_comment(%{field: value}, user)
+      iex> create_comment(%{field: value}, claims)
       {:ok, %{audit: "event_id", comment: %Comment{}}}
 
-      iex> create_comment(%{field: bad_value}, user)
+      iex> create_comment(%{field: bad_value}, claims)
       {:error, :comment, %Ecto.Changeset{}, %{}}
 
   """
-  def create_comment(%{} = params, %{id: user_id}) do
+  def create_comment(%{} = params, %Claims{user_id: user_id}) do
     changeset = Comment.changeset(params)
 
     Multi.new()
@@ -116,14 +117,14 @@ defmodule TdBg.Comments do
 
   ## Examples
 
-      iex> delete_comment(comment, user)
+      iex> delete_comment(comment, claims)
       {:ok, %{audit: "event_id", comment: %Comment{}}}
 
-      iex> delete_comment(comment, user)
+      iex> delete_comment(comment, claims)
       {:error, :comment, %Ecto.Changeset{}, %{}}
 
   """
-  def delete_comment(%Comment{} = comment, %{id: user_id}) do
+  def delete_comment(%Comment{} = comment, %Claims{user_id: user_id}) do
     Multi.new()
     |> Multi.delete(:comment, comment)
     |> Multi.run(:audit, Audit, :comment_deleted, [user_id])

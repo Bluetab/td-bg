@@ -177,7 +177,7 @@ defmodule TdBg.TaxonomiesTest do
       %{name: name} = domain_to_delete = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
 
-      assert {:ok, %Domain{name: ^name} = domain} =
+      assert {:ok, %Domain{name: ^name}} =
                Taxonomies.create_domain(%{
                  name: name,
                  external_id: "External id: #{:rand.uniform(100_000_000)}"
@@ -188,7 +188,7 @@ defmodule TdBg.TaxonomiesTest do
       %{external_id: external_id} = domain_to_delete = insert(:domain)
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain_to_delete)
 
-      assert {:ok, %Domain{external_id: ^external_id} = domain} =
+      assert {:ok, %Domain{external_id: ^external_id}} =
                Taxonomies.create_domain(%{name: "new name", external_id: external_id})
     end
 
@@ -344,7 +344,7 @@ defmodule TdBg.TaxonomiesTest do
       assert {:ok, %Domain{domain_group: nil}} =
                Taxonomies.update_domain(root, %{domain_group: nil})
 
-      assert %{id: domain_group_id} = Groups.get_by(name: root_group.name)
+      assert %{id: _domain_group_id} = Groups.get_by(name: root_group.name)
 
       assert Enum.all?(
                root_children,
@@ -464,7 +464,7 @@ defmodule TdBg.TaxonomiesTest do
       d1 = insert(:domain, name: "name1")
       d2 = insert(:domain, name: "name2", parent_id: d1.id)
 
-      assert {:ok, %Domain{parent_id: parent_id, domain_group_id: domain_group_id}} =
+      assert {:ok, %Domain{}} =
                Taxonomies.update_domain(d2, %{parent_id: child.id, domain_group: group1.name})
     end
 
@@ -717,9 +717,9 @@ defmodule TdBg.TaxonomiesTest do
         |> Enum.map(& &1.id)
         |> MapSet.new()
 
-      user = build(:user, is_admin: true)
+      claims = build(:claims, role: "admin")
 
-      parentable_ids = user |> Taxonomies.get_parentable_ids(domain) |> MapSet.new()
+      parentable_ids = claims |> Taxonomies.get_parentable_ids(domain) |> MapSet.new()
 
       assert MapSet.equal?(parentable_ids, parent_ids)
       refute MapSet.member?(parentable_ids, domain_id)

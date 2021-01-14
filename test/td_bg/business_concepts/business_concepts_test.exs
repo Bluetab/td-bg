@@ -43,13 +43,13 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "create_business_concept/1" do
     test "with valid data creates a business_concept" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -58,7 +58,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: %{},
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -100,7 +100,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with content" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [
@@ -119,7 +119,7 @@ defmodule TdBg.BusinessConceptsTest do
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -128,7 +128,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -142,7 +142,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with invalid content: required" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [
@@ -155,7 +155,7 @@ defmodule TdBg.BusinessConceptsTest do
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -164,7 +164,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -189,7 +189,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with content: default values" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [
@@ -202,7 +202,7 @@ defmodule TdBg.BusinessConceptsTest do
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -211,7 +211,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -226,7 +226,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with invalid content: invalid variable list" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "1"}]
@@ -235,7 +235,7 @@ defmodule TdBg.BusinessConceptsTest do
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -244,7 +244,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -269,7 +269,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with no content" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "?"}]
@@ -277,7 +277,7 @@ defmodule TdBg.BusinessConceptsTest do
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -285,7 +285,7 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -299,7 +299,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with nil content" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "?"}]
@@ -307,7 +307,7 @@ defmodule TdBg.BusinessConceptsTest do
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -316,7 +316,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: nil,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -330,13 +330,13 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "with no content schema" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       concept_attrs = %{
         type: "some_type",
         domain_id: domain.id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -345,7 +345,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: %{},
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -358,7 +358,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "update_business_concept_version/2" do
     test "updates the business_concept_version if data is valid" do
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       business_concept_version = insert(:business_concept_version)
 
       concept_attrs = %{
@@ -372,7 +372,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: %{},
         name: "updated name",
         description: to_rich_text("updated description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -402,7 +402,7 @@ defmodule TdBg.BusinessConceptsTest do
         %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
       ]
 
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
 
       content = %{
         "Field1" => "First field",
@@ -410,7 +410,7 @@ defmodule TdBg.BusinessConceptsTest do
       }
 
       business_concept_version =
-        insert(:business_concept_version, last_change_by: user.id, content: content)
+        insert(:business_concept_version, last_change_by: user_id, content: content)
 
       update_content = %{
         "Field1" => "New first field"
@@ -427,7 +427,7 @@ defmodule TdBg.BusinessConceptsTest do
         content: update_content,
         name: "updated name",
         description: to_rich_text("updated description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -698,7 +698,7 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   test "with invalid content: required" do
-    user = build(:user)
+    %{user_id: user_id} = build(:claims)
     domain = insert(:domain)
 
     content_schema = [
@@ -748,7 +748,7 @@ defmodule TdBg.BusinessConceptsTest do
     concept_attrs = %{
       type: "some_type",
       domain_id: domain.id,
-      last_change_by: user.id,
+      last_change_by: user_id,
       last_change_at: DateTime.utc_now()
     }
 
@@ -757,7 +757,7 @@ defmodule TdBg.BusinessConceptsTest do
       content: content,
       name: "some name",
       description: RichText.to_rich_text("some description"),
-      last_change_by: user.id,
+      last_change_by: user_id,
       last_change_at: DateTime.utc_now(),
       version: 1
     }

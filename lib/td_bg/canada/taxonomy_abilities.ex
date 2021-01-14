@@ -1,10 +1,10 @@
 defmodule TdBg.Canada.TaxonomyAbilities do
   @moduledoc false
-  alias TdBg.Accounts.User
+  alias TdBg.Auth.Claims
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
 
-  def can?(%User{} = user, :list, Domain) do
+  def can?(%Claims{} = claims, :list, Domain) do
     permissions = [
       :create_domain,
       :update_domain,
@@ -15,54 +15,54 @@ defmodule TdBg.Canada.TaxonomyAbilities do
       :view_domain
     ]
 
-    Permissions.has_any_permission_on_resource_type?(user, permissions, Domain)
+    Permissions.has_any_permission_on_resource_type?(claims, permissions, Domain)
   end
 
-  def can?(%User{} = user, :create, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :create_domain, domain_id)
+  def can?(%Claims{} = claims, :create, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :create_domain, domain_id)
   end
 
-  def can?(%User{} = user, :update, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :update_domain, domain_id)
+  def can?(%Claims{} = claims, :update, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :update_domain, domain_id)
   end
 
-  def can?(%User{} = user, :show, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :view_domain, domain_id)
+  def can?(%Claims{} = claims, :show, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :view_domain, domain_id)
   end
 
-  def can?(%User{} = user, :delete, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :delete_domain, domain_id)
+  def can?(%Claims{} = claims, :delete, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :delete_domain, domain_id)
   end
 
-  def can?(%User{} = user, :delete_link, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :manage_business_concept_links, domain_id)
+  def can?(%Claims{} = claims, :delete_link, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_business_concept_links, domain_id)
   end
 
-  def can?(%User{} = user, :create_link, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :manage_business_concept_links, domain_id)
+  def can?(%Claims{} = claims, :create_link, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_business_concept_links, domain_id)
   end
 
-  def can?(%User{} = user, :move, %Domain{} = domain) do
-    can?(user, :delete, domain) and can?(user, :update, domain)
+  def can?(%Claims{} = claims, :move, %Domain{} = domain) do
+    can?(claims, :delete, domain) and can?(claims, :update, domain)
   end
 
-  def can?(%User{} = user, :manage_data_sources, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :manage_data_sources, domain_id)
+  def can?(%Claims{} = claims, :manage_data_sources, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_data_sources, domain_id)
   end
 
-  def can?(%User{} = user, :manage_configurations, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :manage_configurations, domain_id)
+  def can?(%Claims{} = claims, :manage_configurations, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_configurations, domain_id)
   end
 
-  def can?(%User{} = user, :update_data_structure, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :update_data_structure, domain_id)
+  def can?(%Claims{} = claims, :update_data_structure, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :update_data_structure, domain_id)
   end
 
-  def can?(%User{} = user, :manage_quality_rule, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :manage_quality_rule, domain_id)
+  def can?(%Claims{} = claims, :manage_quality_rule, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_quality_rule, domain_id)
   end
 
-  def can?(%User{} = user, :update_ingest, %Domain{id: domain_id}) do
-    Permissions.authorized?(user, :update_ingest, domain_id)
+  def can?(%Claims{} = claims, :update_ingest, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :update_ingest, domain_id)
   end
 end
