@@ -8,11 +8,13 @@ defmodule TdBg.DomainSteps do
            state do
     token_admin =
       case state[:token_admin] do
-        nil -> build_user_token("app-admin", is_admin: true)
+        nil -> build_user_token("app-admin", role: "admin")
         _ -> state[:token_admin]
       end
 
-    {_, status_code, _json_resp} = domain_create(token_admin, %{name: domain_name, external_id: domain_name})
+    {_, status_code, _json_resp} =
+      domain_create(token_admin, %{name: domain_name, external_id: domain_name})
+
     assert rc_created() == to_response_code(status_code)
     {:ok, Map.merge(state, %{token_admin: token_admin})}
   end
@@ -20,7 +22,7 @@ defmodule TdBg.DomainSteps do
   defgiven ~r/^an existing Domain called "(?<domain_name>[^"]+)" with following data:$/,
            %{domain_name: name, table: [%{Description: description}]},
            state do
-    token_admin = build_user_token("app-admin", is_admin: true)
+    token_admin = build_user_token("app-admin", role: "admin")
     state = Map.merge(state, %{token_admin: token_admin})
 
     {:ok, status_code, json_resp} =
@@ -38,7 +40,11 @@ defmodule TdBg.DomainSteps do
     parent = get_domain_by_name(token_admin, domain_name)
 
     {_, _status_code, _json_resp} =
-      domain_create(token_admin, %{name: child_domain_name, external_id: child_domain_name, parent_id: parent["id"]})
+      domain_create(token_admin, %{
+        name: child_domain_name,
+        external_id: child_domain_name,
+        parent_id: parent["id"]
+      })
   end
 
   defgiven ~r/^an existing Domain called "(?<name>[^"]+)" child of Domain "(?<domain_name>[^"]+)" with following data:$/,

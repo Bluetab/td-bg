@@ -4,7 +4,6 @@ defmodule TdBgWeb.CommentControllerTest do
 
   setup_all do
     start_supervised(TdBg.Permissions.MockPermissionResolver)
-    start_supervised(TdBgWeb.ApiServices.MockTdAuthService)
     :ok
   end
 

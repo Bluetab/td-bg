@@ -2,20 +2,21 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   @moduledoc false
   require Logger
 
+  alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies
 
-  def update_all(user, business_concept_versions, params) do
+  def update_all(%Claims{} = claims, business_concept_versions, params) do
     business_concept_versions =
       business_concept_versions
       |> ids_from_business_concept_versions()
       |> BusinessConcepts.business_concept_versions_by_ids()
 
     with {:ok, update_attributes} <-
-           update_attributes_from_params(user, params, business_concept_versions),
+           update_attributes_from_params(claims, params, business_concept_versions),
          {:ok, bcv_list} <- update(business_concept_versions, update_attributes) do
       Enum.each(bcv_list, &refresh_cache_and_elastic/1)
 
@@ -78,11 +79,15 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     Enum.map(business_concept_versions, &Map.get(&1, "id"))
   end
 
-  defp update_attributes_from_params(_user, _params, []) do
+  defp update_attributes_from_params(_claims, _params, []) do
     {:error, :empty_business_concepts}
   end
 
-  defp update_attributes_from_params(user, params, business_concept_versions) do
+  defp update_attributes_from_params(
+         %Claims{user_id: user_id},
+         params,
+         business_concept_versions
+       ) do
     business_concept_version = Enum.at(business_concept_versions, 0)
 
     case BusinessConcepts.get_content_schema(business_concept_version) do
@@ -97,7 +102,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
             business_concept_attrs =
               %{}
               |> Map.put("domain_id", domain_id)
-              |> Map.put("last_change_by", user.id)
+              |> Map.put("last_change_by", user_id)
               |> Map.put("last_change_at", DateTime.utc_now())
 
             update_attributes =
@@ -105,7 +110,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
               |> Map.put("business_concept", business_concept_attrs)
               |> Map.put("content_schema", content_schema)
               |> Map.update("content", %{}, &content_fields/1)
-              |> Map.put("last_change_by", user.id)
+              |> Map.put("last_change_by", user_id)
               |> Map.put("last_change_at", DateTime.utc_now())
 
             {:ok, update_attributes}

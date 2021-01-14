@@ -9,7 +9,7 @@ defmodule TdBg.Taxonomies.TreeTest do
     parent = insert(:domain)
     children = Enum.map(1..5, fn _ -> insert(:domain, parent: parent) end)
     Enum.each(1..3, fn _ -> insert(:domain, parent: parent, deleted_at: DateTime.utc_now()) end)
-    assert graph = %Graph{} = Tree.graph()
+    assert _graph = %Graph{} = Tree.graph()
     [parent: parent, children: children]
   end
 

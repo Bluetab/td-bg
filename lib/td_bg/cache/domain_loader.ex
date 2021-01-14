@@ -57,8 +57,8 @@ defmodule TdBg.Cache.DomainLoader do
     {:noreply, state}
   end
 
-  defp schedule_work(action, seconds) do
-    Process.send_after(self(), action, seconds)
+  defp schedule_work(action, millis) do
+    Process.send_after(self(), action, millis)
   end
 
   defp load_domain(domain_id) do

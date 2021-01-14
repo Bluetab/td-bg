@@ -7,6 +7,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
   alias Ecto.Changeset
   alias Ecto.Multi
+  alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -16,28 +17,37 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
   def deprecate_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        user
+        %Claims{} = claims
       ) do
-    result = update_business_concept_version_status(business_concept_version, "deprecated", user)
+    result =
+      update_business_concept_version_status(business_concept_version, "deprecated", claims)
+
     ConceptCache.delete(business_concept_version.business_concept_id)
     result
   end
 
-  def submit_business_concept_version(%BusinessConceptVersion{} = business_concept_version, user) do
-    update_business_concept_version_status(business_concept_version, "pending_approval", user)
+  @spec submit_business_concept_version(
+          TdBg.BusinessConcepts.BusinessConceptVersion.t(),
+          TdBg.Auth.Claims.t()
+        ) :: any
+  def submit_business_concept_version(
+        %BusinessConceptVersion{} = business_concept_version,
+        %Claims{} = claims
+      ) do
+    update_business_concept_version_status(business_concept_version, "pending_approval", claims)
   end
 
   def undo_rejected_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
-        user
+        %Claims{} = claims
       ) do
-    update_business_concept_version_status(business_concept_version, "draft", user)
+    update_business_concept_version_status(business_concept_version, "draft", claims)
   end
 
   defp update_business_concept_version_status(
          %BusinessConceptVersion{} = business_concept_version,
          status,
-         %{id: user_id}
+         %Claims{user_id: user_id}
        ) do
     changeset = BusinessConceptVersion.status_changeset(business_concept_version, status, user_id)
 
@@ -56,7 +66,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
     end
   end
 
-  def publish(business_concept_version, %{id: user_id} = _user) do
+  def publish(business_concept_version, %Claims{user_id: user_id}) do
     business_concept_id = business_concept_version.business_concept.id
 
     query =
@@ -67,10 +77,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
 
     changeset =
       business_concept_version
-      |> BusinessConceptVersion.status_changeset(
-          "published",
-          user_id
-        )
+      |> BusinessConceptVersion.status_changeset("published", user_id)
       |> Changeset.change(current: true)
 
     result =
@@ -93,7 +100,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
   def reject(
         %BusinessConceptVersion{} = business_concept_version,
         reason,
-        %{id: user_id}
+        %Claims{user_id: user_id}
       ) do
     params = %{reject_reason: reason}
     changeset = BusinessConceptVersion.reject_changeset(business_concept_version, params, user_id)
@@ -115,12 +122,12 @@ defmodule TdBg.BusinessConcepts.Workflow do
   @doc """
   Creates a new business_concept version.
   """
-  def new_version(%BusinessConceptVersion{} = business_concept_version, %{} = user) do
+  def new_version(%BusinessConceptVersion{} = business_concept_version, %Claims{user_id: user_id}) do
     business_concept = business_concept_version.business_concept
 
     business_concept =
       business_concept
-      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
     draft_attrs = Map.from_struct(business_concept_version)
@@ -128,7 +135,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
     draft_attrs =
       draft_attrs
       |> Map.put("business_concept", business_concept)
-      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
       |> Map.put("status", "draft")
       |> Map.put("version", business_concept_version.version + 1)

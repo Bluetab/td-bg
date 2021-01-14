@@ -12,7 +12,6 @@ defmodule TdBgWeb.DomainControllerTest do
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBgWeb.ApiServices.MockTdAuthService
 
   @create_attrs %{
     description: "some description",
@@ -26,8 +25,6 @@ defmodule TdBgWeb.DomainControllerTest do
   }
   @invalid_attrs %{description: nil, name: nil}
 
-  @user_name "user"
-
   def fixture(:domain) do
     {:ok, domain} = Taxonomies.create_domain(@create_attrs)
     domain
@@ -38,7 +35,6 @@ defmodule TdBgWeb.DomainControllerTest do
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
     start_supervised(MockPermissionResolver)
-    start_supervised(MockTdAuthService)
     :ok
   end
 
@@ -46,7 +42,7 @@ defmodule TdBgWeb.DomainControllerTest do
     tags
     |> Map.take([:authenticated_user, :conn])
     |> Map.new(fn
-      {:authenticated_user, user_name} -> {:user, create_user(user_name)}
+      {:authenticated_user, user_name} -> {:claims, create_claims(user_name)}
       {:conn, conn} -> {:conn, put_req_header(conn, "accept", "application/json")}
     end)
   end
@@ -62,13 +58,17 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "index with actions" do
-    @tag authenticated_user: @user_name
-    test "list all domains user can view", %{conn: conn, swagger_schema: schema, user: user} do
+    @tag authenticated_user: "non_admin_user"
+    test "list all domains user can view", %{
+      conn: conn,
+      swagger_schema: schema,
+      claims: %{user_id: user_id}
+    } do
       %{id: domain_id} = domain = insert(:domain)
       role = get_role_by_name("watch")
 
       MockPermissionResolver.create_acl_entry(%{
-        principal_id: user.id,
+        principal_id: user_id,
         principal_type: "user",
         resource_id: domain.id,
         resource_type: "domain",
@@ -95,7 +95,7 @@ defmodule TdBgWeb.DomainControllerTest do
       role = get_role_by_name("publish")
 
       MockPermissionResolver.create_acl_entry(%{
-        principal_id: user.id,
+        principal_id: user_id,
         principal_type: "user",
         resource_id: domain.id,
         resource_type: "domain",
@@ -112,7 +112,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert [%{"id" => ^domain_id}] = data
     end
 
-    @tag authenticated_user: @user_name
+    @tag authenticated_user: "non_admin_user"
     test "user cant view any domain", %{conn: conn, swagger_schema: schema} do
       insert(:domain)
 
@@ -125,8 +125,12 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "GET /api/domains/:id" do
-    @tag authenticated_user: @user_name
-    test "includes parentable ids", %{conn: conn, swagger_schema: schema, user: user} do
+    @tag authenticated_user: "non_admin_user"
+    test "includes parentable ids", %{
+      conn: conn,
+      swagger_schema: schema,
+      claims: %{user_id: user_id}
+    } do
       %{id: parent_id} = insert(:domain)
       %{id: sibling_id} = insert(:domain, parent_id: parent_id)
       %{id: domain_id} = domain = insert(:domain, parent_id: parent_id)
@@ -135,7 +139,7 @@ defmodule TdBgWeb.DomainControllerTest do
       [parent_id, domain_id, sibling_id]
       |> Enum.each(fn id ->
         MockPermissionResolver.create_acl_entry(%{
-          principal_id: user.id,
+          principal_id: user_id,
           principal_type: "user",
           resource_id: id,
           resource_type: "domain",
@@ -245,7 +249,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"parent_id" => ^parent_id} = data
     end
 
-    @tag authenticated_user: @user_name
+    @tag authenticated_user: "non_admin_user"
     test "returns forbidden if user doesn't have permission to update domain parent", %{
       conn: conn,
       domain: domain
