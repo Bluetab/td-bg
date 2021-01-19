@@ -4,6 +4,9 @@ defmodule TdBg.Canada.TaxonomyAbilities do
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
 
+  # Service account can view all domains
+  def can?(%Claims{role: "service"}, :show, %Domain{}), do: true
+
   def can?(%Claims{} = claims, :list, Domain) do
     permissions = [
       :create_domain,

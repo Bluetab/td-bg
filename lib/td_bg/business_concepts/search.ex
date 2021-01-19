@@ -48,8 +48,9 @@ defmodule TdBg.BusinessConcept.Search do
 
   def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
 
-  # Admin user search, no filters applied
-  def search_business_concept_versions(params, %Claims{is_admin: true}, page, size) do
+  # Admin user or service account search, no filters applied
+  def search_business_concept_versions(params, %Claims{role: role}, page, size)
+      when role in ["admin", "service"] do
     filter_clause = create_filters(params)
 
     query =

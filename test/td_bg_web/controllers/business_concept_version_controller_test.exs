@@ -18,10 +18,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     :ok
   end
 
-  @user_name "claims"
+  @user_name "some_username"
   @template_name "foo_template"
 
-  setup %{conn: conn} = context do
+  setup context do
     case context[:template] do
       nil ->
         :ok
@@ -39,10 +39,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         })
     end
 
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    [domain: insert(:domain)]
   end
 
-  describe "show" do
+  describe "GET /api/business_concept_versions/:id" do
     @tag authentication: [role: "admin"]
     @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",
@@ -69,54 +69,85 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [user_name: @user_name]
     @tag :template
-    test "show with actions", %{conn: conn} do
+    test "show with actions", %{conn: conn, domain: %{id: domain_id} = domain} do
       %{user_id: user_id} = create_claims(user_name: @user_name)
-      domain_create = insert(:domain, id: :rand.uniform(100_000_000))
-      role_create = get_role_by_name("create")
+      %{id: role_id, name: role_name} = get_role_by_name("create")
 
       MockPermissionResolver.create_acl_entry(%{
         principal_id: user_id,
         principal_type: "user",
-        resource_id: domain_create.id,
+        resource_id: domain_id,
         resource_type: "domain",
-        role_id: role_create.id,
-        role_name: role_create.name
+        role_id: role_id,
+        role_name: role_name
       })
 
-      business_concept = insert(:business_concept, domain: domain_create)
-      bcv = insert(:business_concept_version, business_concept: business_concept, name: "name")
+      %{id: id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
 
-      conn = get(conn, Routes.business_concept_version_path(conn, :show, bcv.id))
-      data = json_response(conn, 200)["_actions"]
+      assert %{"_actions" => actions} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :show, id))
+               |> json_response(:ok)
 
-      assert Map.has_key?(data, "create_link")
+      assert Map.has_key?(actions, "create_link")
 
       MockPermissionResolver.clean()
     end
   end
 
-  describe "index" do
+  describe "GET /api/business_concept_versions" do
+    setup do
+      insert(:business_concept_version)
+      :ok
+    end
+
     @tag authentication: [role: "admin"]
-    test "lists all business_concept_versions", %{conn: conn} do
-      conn = get(conn, Routes.business_concept_version_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+    test "admin user can list all business_concept_versions", %{conn: conn} do
+      assert %{"data" => [_]} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :index))
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "service"]
+    test "service account can list all business_concept_versions", %{conn: conn} do
+      assert %{"data" => [_]} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :index))
+               |> json_response(:ok)
     end
   end
 
-  describe "search" do
+  describe "POST /api/business_concept_versions/search" do
     @tag authentication: [role: "admin"]
-    test "find business_concepts by status", %{conn: conn} do
-      domain = insert(:domain)
-      create_version(domain, "one", "draft").business_concept_id
-      create_version(domain, "two", "published").business_concept_id
-      create_version(domain, "three", "published").business_concept_id
+    test "find business_concepts by status", %{conn: conn, domain: domain} do
+      create_version(domain, "one", "draft")
+      create_version(domain, "two", "published")
+      create_version(domain, "three", "published")
 
-      conn =
-        post(conn, Routes.business_concept_version_path(conn, :search), %{
-          filters: %{status: ["published"]}
-        })
+      filter_params = %{"status" => ["published"]}
 
-      assert 2 == length(json_response(conn, 200)["data"])
+      assert %{"data" => [_, _]} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), filters: filter_params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "service"]
+    test "service account filter by status", %{conn: conn, domain: domain} do
+      create_version(domain, "one", "draft")
+      create_version(domain, "two", "published")
+      create_version(domain, "three", "published")
+
+      filter_params = %{"status" => ["published"]}
+
+      assert %{"data" => [_, _]} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), filters: filter_params)
+               |> json_response(:ok)
     end
 
     @tag authentication: [user_name: @user_name]
@@ -145,21 +176,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         role_name: role_create.name
       })
 
-      create_version(domain_watch, "bc_watch", "draft").business_concept_id
-      bc_create_id = create_version(domain_create, "bc_create", "draft").business_concept_id
+      create_version(domain_watch, "bc_watch", "draft")
+      %{business_concept_id: id} = create_version(domain_create, "bc_create", "draft")
 
-      conn =
-        post(conn, Routes.business_concept_version_path(conn, :search), %{
-          only_linkable: true
-        })
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), only_linkable: true)
+               |> json_response(:ok)
 
-      data = json_response(conn, 200)["data"]
-      assert 1 == length(data)
-
-      assert bc_create_id ==
-               data
-               |> Enum.at(0)
-               |> Map.get("business_concept_id")
+      assert [%{"business_concept_id" => ^id}] = data
     end
   end
 

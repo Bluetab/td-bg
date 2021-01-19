@@ -38,8 +38,28 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "index" do
+    setup do
+      [domain: insert(:domain)]
+    end
+
     @tag authentication: [role: "admin"]
     test "lists all domains", %{conn: conn} do
+      assert %{"data" => [_]} =
+               conn
+               |> get(Routes.domain_path(conn, :index))
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "service"]
+    test "service account can list domains", %{conn: conn} do
+      assert %{"data" => [_]} =
+               conn
+               |> get(Routes.domain_path(conn, :index))
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "user"]
+    test "user account cannot list domains", %{conn: conn} do
       assert %{"data" => []} =
                conn
                |> get(Routes.domain_path(conn, :index))
