@@ -108,6 +108,7 @@ defmodule TdBg.TaxonomyTest do
         nil -> build_user_token(user_name)
         t -> t
       end
+
     {_, status_code, _json_resp} =
       domain_create(token, %{
         name: new_domain_group_name,
@@ -195,7 +196,7 @@ defmodule TdBg.TaxonomyTest do
            table: [%{Description: description}]
          },
          state do
-    token = get_user_token(user_name)
+    token = build_user_token(user_name)
     domain = get_domain_by_name(token, domain_group_name)
 
     {_, status_code, _json_resp} =
@@ -210,7 +211,7 @@ defmodule TdBg.TaxonomyTest do
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to modify a Domain with the name "(?<domain_name>[^"]+)" introducing following data:$/,
           %{user_name: user_name, domain_name: domain_name, table: [%{Description: description}]},
           state do
-    token = get_user_token(user_name)
+    token = build_user_token(user_name)
     domain_info = get_domain_by_name(token, domain_name)
 
     {:ok, status_code, _json_resp} =
@@ -243,7 +244,7 @@ defmodule TdBg.TaxonomyTest do
          },
          _state do
     if actual_result == expected_result do
-      token = get_user_token("app-admin")
+      token = build_user_token("app-admin")
       parent = get_domain_by_name(token, parent_name)
       child = get_domain_group_by_name_and_parent(token, child_name, parent["id"])
       assert !child
@@ -268,7 +269,7 @@ defmodule TdBg.TaxonomyTest do
   defwhen ~r/^user "(?<user_name>[^"]+)" tries to delete a Domain with the name "(?<domain_name>[^"]+)"$/,
           %{user_name: user_name, domain_name: domain_name},
           state do
-    token = get_user_token(user_name)
+    token = build_user_token(user_name)
     domain_info = get_domain_by_name(token, domain_name)
     {:ok, status_code, json_resp} = domain_delete(token, domain_info["id"])
     {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
@@ -283,7 +284,7 @@ defmodule TdBg.TaxonomyTest do
          },
          _state do
     if actual_result == expected_result do
-      token = get_user_token("app-admin")
+      token = build_user_token("app-admin")
       domain = get_domain_by_name(token, domain_group_name)
       domain = get_domain_by_name_and_parent(token, domain_name, domain["id"])
       assert !domain

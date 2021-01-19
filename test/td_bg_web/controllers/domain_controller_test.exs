@@ -2,7 +2,6 @@ defmodule TdBgWeb.DomainControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.User, only: :functions
   import TdBg.TestOperators
 
@@ -38,17 +37,8 @@ defmodule TdBgWeb.DomainControllerTest do
     :ok
   end
 
-  setup tags do
-    tags
-    |> Map.take([:authenticated_user, :conn])
-    |> Map.new(fn
-      {:authenticated_user, user_name} -> {:claims, create_claims(user_name)}
-      {:conn, conn} -> {:conn, put_req_header(conn, "accept", "application/json")}
-    end)
-  end
-
   describe "index" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists all domains", %{conn: conn} do
       assert %{"data" => []} =
                conn
@@ -58,7 +48,7 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "index with actions" do
-    @tag authenticated_user: "non_admin_user"
+    @tag authentication: [user_name: "non_admin_user"]
     test "list all domains user can view", %{
       conn: conn,
       swagger_schema: schema,
@@ -112,7 +102,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert [%{"id" => ^domain_id}] = data
     end
 
-    @tag authenticated_user: "non_admin_user"
+    @tag authentication: [user_name: "non_admin_user"]
     test "user cant view any domain", %{conn: conn, swagger_schema: schema} do
       insert(:domain)
 
@@ -125,7 +115,7 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "GET /api/domains/:id" do
-    @tag authenticated_user: "non_admin_user"
+    @tag authentication: [user_name: "non_admin_user"]
     test "includes parentable ids", %{
       conn: conn,
       swagger_schema: schema,
@@ -160,7 +150,7 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "create domain" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders domain when data is valid", %{conn: conn, swagger_schema: schema} do
       %{id: parent_id} = insert(:domain)
 
@@ -183,7 +173,7 @@ defmodule TdBgWeb.DomainControllerTest do
              } = data
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "returns unprocessable_entity and errors when parent is missing", %{conn: conn} do
       params =
         build(:domain, parent_id: 1_234_567)
@@ -197,7 +187,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"parent_id" => ["does not exist"]} = errors
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn} do
       assert %{"errors" => errors} =
                conn
@@ -211,7 +201,7 @@ defmodule TdBgWeb.DomainControllerTest do
   describe "update domain" do
     setup [:create_domain]
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders domain when data is valid", %{
       conn: conn,
       swagger_schema: schema,
@@ -230,7 +220,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert data["external_id"] == "domain external id"
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "updates parent_id if user has permission to update domain parent", %{
       conn: conn,
       swagger_schema: schema,
@@ -249,7 +239,7 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"parent_id" => ^parent_id} = data
     end
 
-    @tag authenticated_user: "non_admin_user"
+    @tag authentication: [user_name: "non_admin_user"]
     test "returns forbidden if user doesn't have permission to update domain parent", %{
       conn: conn,
       domain: domain
@@ -264,7 +254,7 @@ defmodule TdBgWeb.DomainControllerTest do
                |> json_response(:forbidden)
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn, domain: domain} do
       conn = put conn, Routes.domain_path(conn, :update, domain), domain: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
@@ -274,7 +264,7 @@ defmodule TdBgWeb.DomainControllerTest do
   describe "delete domain" do
     setup [:create_domain]
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "deletes chosen domain", %{conn: conn, domain: domain} do
       assert conn
              |> delete(Routes.domain_path(conn, :delete, domain))
@@ -289,7 +279,7 @@ defmodule TdBgWeb.DomainControllerTest do
   describe "count business concept from domain given a user name" do
     setup [:create_domain]
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "fetch counter", %{conn: conn, swagger_schema: schema, domain: domain} do
       user_name = "My cool name"
       business_concept_1 = insert(:business_concept, domain: domain)

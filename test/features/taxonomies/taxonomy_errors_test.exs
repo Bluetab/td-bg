@@ -66,7 +66,7 @@ defmodule TdBg.TaxonomyErrorsTest do
             table: [%{name: name, description: description}]
           },
           state do
-    token_admin = build_user_token(username, role: "admin")
+    token_admin = build_user_token(user_name: username, role: "admin")
     domain_parent = get_domain_by_name(token_admin, domain_name_parent)
 
     domain_child =
@@ -82,7 +82,7 @@ defmodule TdBg.TaxonomyErrorsTest do
   defwhen ~r/^user "(?<username>[^"]+)" tries to create a Domain with following data:$/,
           %{username: username, table: [%{name: name, description: description}]},
           state do
-    token_admin = build_user_token(username, role: "admin")
+    token_admin = build_user_token(user_name: username, role: "admin")
 
     {_, status_code, json_resp} =
       domain_create(token_admin, %{name: name, external_id: name, description: description})

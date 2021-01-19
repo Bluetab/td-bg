@@ -8,7 +8,7 @@ defmodule TdBg.DomainSteps do
            state do
     token_admin =
       case state[:token_admin] do
-        nil -> build_user_token("app-admin", role: "admin")
+        nil -> build_user_token("app-admin")
         _ -> state[:token_admin]
       end
 
@@ -22,7 +22,7 @@ defmodule TdBg.DomainSteps do
   defgiven ~r/^an existing Domain called "(?<domain_name>[^"]+)" with following data:$/,
            %{domain_name: name, table: [%{Description: description}]},
            state do
-    token_admin = build_user_token("app-admin", role: "admin")
+    token_admin = build_user_token("app-admin")
     state = Map.merge(state, %{token_admin: token_admin})
 
     {:ok, status_code, json_resp} =

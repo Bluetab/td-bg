@@ -34,8 +34,6 @@ defmodule TdBgWeb.ConnCase do
     end
   end
 
-  @admin_user_name "app-admin"
-
   setup tags do
     :ok = Sandbox.checkout(TdBg.Repo)
 
@@ -45,19 +43,14 @@ defmodule TdBgWeb.ConnCase do
       allow(parent, [TdBg.Cache.ConceptLoader, TdBg.Search.IndexWorker])
     end
 
-    cond do
-      tags[:admin_authenticated] ->
-        @admin_user_name
-        |> create_claims(role: "admin")
-        |> create_user_auth_conn()
+    case tags[:authentication] do
+      nil ->
+        [conn: ConnTest.build_conn()]
 
-      user_name = tags[:authenticated_user] ->
-        user_name
+      auth_opts ->
+        auth_opts
         |> create_claims()
         |> create_user_auth_conn()
-
-      true ->
-        {:ok, conn: ConnTest.build_conn()}
     end
   end
 

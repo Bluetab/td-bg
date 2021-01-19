@@ -16,13 +16,13 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   end
 
   describe "index" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists all filters (admin user)", %{conn: conn} do
       conn = get(conn, Routes.business_concept_filter_path(conn, :index))
       assert json_response(conn, 200)["data"] == %{}
     end
 
-    @tag authenticated_user: "some_username"
+    @tag authentication: [user_name: "some_username"]
     test "lists all filters (non-admin user)", %{conn: conn} do
       conn = get(conn, Routes.business_concept_filter_path(conn, :index))
       assert json_response(conn, 200)["data"] == %{}

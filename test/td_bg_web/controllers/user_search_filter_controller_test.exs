@@ -26,7 +26,7 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
   end
 
   describe "index" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists all user_search_filters", %{conn: conn} do
       conn = get(conn, Routes.user_search_filter_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
@@ -34,7 +34,7 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
   end
 
   describe "index by user" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists current user user_search_filters", %{conn: conn} do
       conn1 = get(conn, Routes.user_search_filter_path(conn, :index))
 
@@ -55,7 +55,7 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
   end
 
   describe "create user_search_filter" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders user_search_filter when data is valid", %{conn: conn} do
       conn =
         post(conn, Routes.user_search_filter_path(conn, :create),
@@ -74,7 +74,7 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
              } = json_response(conn, 200)["data"]
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn} do
       conn =
         post(conn, Routes.user_search_filter_path(conn, :create),
@@ -86,7 +86,7 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
   end
 
   describe "delete user_search_filter" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "deletes chosen user_search_filter", %{
       conn: conn
     } do

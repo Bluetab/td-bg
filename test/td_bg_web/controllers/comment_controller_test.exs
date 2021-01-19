@@ -12,7 +12,7 @@ defmodule TdBgWeb.CommentControllerTest do
   end
 
   describe "GET /api/business_concepts/comments" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "returns ok and json if comment exists", %{conn: conn, swagger_schema: schema} do
       %{id: id, content: content, resource_id: resource_id} = insert(:comment)
 
@@ -27,7 +27,7 @@ defmodule TdBgWeb.CommentControllerTest do
   end
 
   describe "POST /api/business_concepts/comments" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "returns created and json if comment was created", %{conn: conn, swagger_schema: schema} do
       %{id: resource_id} = insert(:business_concept)
 
@@ -45,14 +45,14 @@ defmodule TdBgWeb.CommentControllerTest do
   end
 
   describe "DELETE /api/business_concepts/comments/:id" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "returns not found if comment does not exist", %{conn: conn} do
       assert conn
              |> delete(Routes.comment_path(conn, :delete, 123))
              |> response(:not_found)
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "returns no content if comment is deleted", %{conn: conn} do
       %{id: id} = insert(:comment)
 

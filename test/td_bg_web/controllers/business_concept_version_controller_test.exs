@@ -43,7 +43,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "show" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
@@ -67,10 +67,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
     end
 
-    @tag authenticated_user: @user_name
+    @tag authentication: [user_name: @user_name]
     @tag :template
     test "show with actions", %{conn: conn} do
-      %{user_id: user_id} = create_claims(@user_name)
+      %{user_id: user_id} = create_claims(user_name: @user_name)
       domain_create = insert(:domain, id: :rand.uniform(100_000_000))
       role_create = get_role_by_name("create")
 
@@ -96,7 +96,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "index" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists all business_concept_versions", %{conn: conn} do
       conn = get(conn, Routes.business_concept_version_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
@@ -104,7 +104,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "search" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "find business_concepts by status", %{conn: conn} do
       domain = insert(:domain)
       create_version(domain, "one", "draft").business_concept_id
@@ -119,9 +119,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert 2 == length(json_response(conn, 200)["data"])
     end
 
-    @tag authenticated_user: @user_name
+    @tag authentication: [user_name: @user_name]
     test "find only linkable concepts", %{conn: conn} do
-      %{user_id: user_id} = create_claims(@user_name)
+      %{user_id: user_id} = create_claims(user_name: @user_name)
       domain_watch = insert(:domain)
       domain_create = insert(:domain)
       role_watch = get_role_by_name("watch")
@@ -164,7 +164,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "create business_concept" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
@@ -205,7 +205,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["domain"]["name"] == domain.name
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
@@ -231,7 +231,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "index_by_name" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "find business concept by name", %{conn: conn} do
       domain = insert(:domain)
       id = [create_version(domain, "one", "draft").business_concept.id]
@@ -255,7 +255,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "versions" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists business_concept_versions", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
 
@@ -275,7 +275,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "create new versions" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "create new version with modified template", %{
       conn: conn
     } do
@@ -337,7 +337,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "update business_concept_version" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "renders business_concept_version when data is valid", %{
       conn: conn,
@@ -380,7 +380,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "set business_concept_version confidential" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "updates business concept confidential and renders version", %{
       conn: conn,
@@ -417,7 +417,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"confidential" => true} = data
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "renders error if invalid value for confidential", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
@@ -439,7 +439,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "bulk_update" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag template: [
            %{
              "name" => "group",
@@ -495,7 +495,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert Enum.at(updated_version_ids, 0) == version_published.id
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag template: [
            %{
              "name" => "group",

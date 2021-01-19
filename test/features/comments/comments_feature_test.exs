@@ -38,7 +38,7 @@ defmodule TdBg.CommentsFeatureTest do
   defwhen ~r/^"(?<admin_name>[^"]+)" tries to create a new comment "(?<comment>[^"]+)" on the business concept "(?<bc_name>[^"]+)"$/,
           %{admin_name: admin_name, comment: comment, bc_name: bc_name},
           state do
-    token = get_user_token(admin_name)
+    token = build_user_token(admin_name)
     business_concept = business_concept_version_by_name(token, bc_name)
 
     comment_params = %{
@@ -70,7 +70,7 @@ defmodule TdBg.CommentsFeatureTest do
          %{result: result, user_name: user_name, bc_name: bc_name},
          state do
     assert result == to_response_code(state[:status_code])
-    token = get_user_token(user_name)
+    token = build_user_token(user_name)
     business_concept = business_concept_version_by_name(token, bc_name)
 
     {_, status_code, json_resp} =
