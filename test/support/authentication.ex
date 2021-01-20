@@ -8,7 +8,6 @@ defmodule TdBgWeb.Authentication do
   alias Phoenix.ConnTest
   alias TdBg.Auth.Claims
   alias TdBg.Auth.Guardian
-  alias TdBg.Permissions.MockPermissionResolver
 
   @headers {"Content-type", "application/json"}
 

@@ -7,7 +7,6 @@ defmodule TdBgWeb.DomainControllerTest do
 
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
-  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain

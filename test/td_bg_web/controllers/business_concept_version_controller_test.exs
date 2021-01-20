@@ -7,7 +7,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
-  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
 
   setup_all do

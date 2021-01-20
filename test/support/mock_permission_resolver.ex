@@ -1,4 +1,4 @@
-defmodule TdBg.Permissions.MockPermissionResolver do
+defmodule MockPermissionResolver do
   @moduledoc """
   A mock permissions resolver defining the default permissions for the admin, watch, create and publish
   roles

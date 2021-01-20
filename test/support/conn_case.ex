@@ -35,7 +35,7 @@ defmodule TdBgWeb.ConnCase do
   end
 
   setup tags do
-    start_supervised!(TdBg.Permissions.MockPermissionResolver)
+    start_supervised!(MockPermissionResolver)
 
     :ok = Sandbox.checkout(TdBg.Repo)
 
