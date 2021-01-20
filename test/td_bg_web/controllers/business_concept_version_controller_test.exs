@@ -2,9 +2,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBgWeb.Authentication, only: :functions
-  import TdBgWeb.User, only: :functions
-
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
   alias TdBg.Search.IndexWorker
@@ -67,18 +64,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [user_name: @user_name]
     @tag :template
-    test "show with actions", %{conn: conn, domain: %{id: domain_id} = domain} do
-      %{user_id: user_id} = create_claims(user_name: @user_name)
-      %{id: role_id, name: role_name} = get_role_by_name("create")
-
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain_id,
-        resource_type: "domain",
-        role_id: role_id,
-        role_name: role_name
-      })
+    test "show with actions", %{
+      conn: conn,
+      domain: %{id: domain_id} = domain,
+      claims: %{user_id: user_id}
+    } do
+      create_acl_entry(user_id, "domain", domain_id, "create")
 
       %{id: id} =
         insert(:business_concept_version,
@@ -147,30 +138,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag authentication: [user_name: @user_name]
-    test "find only linkable concepts", %{conn: conn} do
-      %{user_id: user_id} = create_claims(user_name: @user_name)
+    test "find only linkable concepts", %{conn: conn, claims: %{user_id: user_id}} do
       domain_watch = insert(:domain)
       domain_create = insert(:domain)
-      role_watch = get_role_by_name("watch")
-      role_create = get_role_by_name("create")
 
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain_watch.id,
-        resource_type: "domain",
-        role_id: role_watch.id,
-        role_name: role_watch.name
-      })
-
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain_create.id,
-        resource_type: "domain",
-        role_id: role_create.id,
-        role_name: role_create.name
-      })
+      create_acl_entry(user_id, "domain", domain_watch.id, "watch")
+      create_acl_entry(user_id, "domain", domain_create.id, "create")
 
       create_version(domain_watch, "bc_watch", "draft")
       %{business_concept_id: id} = create_version(domain_create, "bc_create", "draft")

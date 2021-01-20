@@ -2,12 +2,11 @@ defmodule TdBg.BusinessConceptCreationTest do
   use Cabbage.Feature, file: "business_concept/business_concept_creation.feature"
   use TdBgWeb.FeatureCase
 
+  import TdBg.BusinessConceptSteps
+  import TdBg.ResultSteps
   import TdBgWeb.BusinessConcept
   import TdBgWeb.ResponseCode
-  import TdBgWeb.User, only: :functions
   import TdBgWeb.Taxonomy, only: :functions
-  import TdBgWeb.AclEntry, only: :functions
-  import TdBgWeb.Authentication, only: :functions
 
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
@@ -17,9 +16,6 @@ defmodule TdBg.BusinessConceptCreationTest do
   import_steps(TdBg.DomainSteps)
   import_steps(TdBg.ResultSteps)
   import_steps(TdBg.UsersSteps)
-
-  import TdBg.BusinessConceptSteps
-  import TdBg.ResultSteps
 
   setup_all do
     start_supervised(ConceptLoader)

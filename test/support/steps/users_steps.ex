@@ -8,22 +8,9 @@ defmodule TdBg.UsersSteps do
            state do
     domain = get_domain_by_name(state[:token_admin], domain_name)
 
-    Enum.map(table, fn row ->
-      user_name = row[:user]
-      role_name = row[:role]
-      %{user_id: user_id} = create_claims(user_name: user_name)
-      %{id: role_id} = get_role_by_name(role_name)
-
-      acl_entry_params = %{
-        principal_type: "user",
-        principal_id: user_id,
-        resource_type: "domain",
-        resource_id: domain["id"],
-        role_id: role_id,
-        role_name: role_name
-      }
-
-      {:ok, _, _json_resp} = acl_entry_create(acl_entry_params)
+    Enum.each(table, fn %{user: user_name, role: role_name} ->
+      %{user_id: user_id} = Authentication.create_claims(user_name: user_name)
+      Authentication.create_acl_entry(user_id, "domain", domain["id"], role_name)
     end)
   end
 end

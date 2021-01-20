@@ -11,22 +11,11 @@ defmodule TdBg.Canada.Abilities do
   alias TdCache.Link
 
   defimpl Canada.Can, for: Claims do
-    # administrator is superpowerful for Domain
-    def can?(%Claims{is_admin: true}, _action, BusinessConcept) do
-      true
-    end
-
-    def can?(%Claims{is_admin: true}, _action, %BusinessConcept{}) do
-      true
-    end
-
-    def can?(%Claims{is_admin: true}, _action, Domain) do
-      true
-    end
-
-    def can?(%Claims{is_admin: true}, _action, %Domain{}) do
-      true
-    end
+    # administrator can manage all domains and concepts
+    def can?(%Claims{role: "admin"}, _action, BusinessConcept), do: true
+    def can?(%Claims{role: "admin"}, _action, %BusinessConcept{}), do: true
+    def can?(%Claims{role: "admin"}, _action, Domain), do: true
+    def can?(%Claims{role: "admin"}, _action, %Domain{}), do: true
 
     def can?(%Claims{} = claims, action, %Link{} = link) do
       LinkAbilities.can?(claims, action, link)
@@ -176,7 +165,7 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :view_business_concept, business_concept_version)
     end
 
-    def can?(%Claims{is_admin: true}, _action, %{}), do: true
+    def can?(%Claims{role: "admin"}, _action, %{}), do: true
     def can?(%Claims{}, _action, _domain), do: false
   end
 end

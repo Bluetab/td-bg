@@ -5,7 +5,7 @@ defmodule MockPermissionResolver do
   """
   use Agent
 
-  alias Jason, as: JSON
+  alias Jason
   alias TdCache.TaxonomyCache
 
   @role_permissions %{
@@ -70,68 +70,94 @@ defmodule MockPermissionResolver do
       :view_deprecated_business_concepts
     ]
   }
+  @initial_state %{sessions: Map.new(), acls: []}
 
-  def start_link(_) do
-    Agent.start_link(fn -> [] end, name: :MockPermissions)
-    Agent.start_link(fn -> Map.new() end, name: :MockSessions)
+  ## Public API
+
+  def start_link(_init_arg) do
+    Agent.start_link(
+      fn -> @initial_state end,
+      name: __MODULE__
+    )
+  end
+
+  def register_token(resource) do
+    if Process.whereis(__MODULE__) do
+      %{"sub" => sub, "jti" => jti} = Map.take(resource, ["sub", "jti"])
+      %{"id" => user_id} = Jason.decode!(sub)
+      put_session(jti, user_id)
+    end
+  end
+
+  def create_acl_entry(item) do
+    Agent.update(__MODULE__, fn %{acls: acls} = state ->
+      item =
+        case item do
+          %{permissions: _} ->
+            item
+
+          %{role_name: role_name} ->
+            permissions = Map.get(@role_permissions, role_name, [])
+            Map.put(item, :permissions, permissions)
+        end
+
+      %{state | acls: [item | acls]}
+    end)
+  end
+
+  def has_permission?(session_id, permission) do
+    case TdCache.DomainCache.domains() do
+      {:ok, domain_ids} -> has_resource_permission?(domain_ids, "domain", session_id, permission)
+    end
   end
 
   def has_permission?(session_id, permission, "domain", domain_id) do
     domain_id
     |> TaxonomyCache.get_parent_ids()
-    |> Enum.any?(&has_resource_permission?(session_id, permission, "domain", &1))
+    |> has_resource_permission?("domain", session_id, permission)
   end
 
-  def has_resource_permission?(session_id, permission, resource_type, resource_id) do
-    user_id = Agent.get(:MockSessions, &Map.get(&1, session_id))
-
-    :MockPermissions
-    |> Agent.get(& &1)
-    |> Enum.filter(
-      &(&1.principal_id == user_id &&
-          &1.resource_type == resource_type &&
-          &1.resource_id == resource_id)
-    )
-    |> Enum.any?(&can?(&1.role_name, permission))
-  end
-
-  defp can?("admin", _permission), do: true
-
-  defp can?(role, permission) do
-    case Map.get(@role_permissions, role) do
-      nil -> false
-      permissions -> Enum.member?(permissions, permission)
-    end
-  end
-
-  def create_acl_entry(item) do
-    Agent.update(:MockPermissions, &[item | &1])
-  end
-
-  def get_acl_entries do
-    Agent.get(:MockPermissions, & &1)
-  end
-
-  def register_token(resource) do
-    %{"sub" => sub, "jti" => jti} = resource |> Map.take(["sub", "jti"])
-    %{"id" => user_id} = JSON.decode!(sub)
-    Agent.update(:MockSessions, &Map.put(&1, jti, user_id))
+  def has_permission?(session_id, permission, resource_type, resource_id) do
+    has_resource_permission?([resource_id], resource_type, session_id, permission)
   end
 
   def get_acls_by_resource_type(session_id, resource_type) do
-    user_id = Agent.get(:MockSessions, &Map.get(&1, session_id))
+    Agent.get(__MODULE__, fn %{sessions: sessions, acls: acls} ->
+      case Map.get(sessions, session_id) do
+        nil ->
+          []
 
-    :MockPermissions
-    |> Agent.get(& &1)
-    |> Enum.filter(&(&1.principal_id == user_id && &1.resource_type == resource_type))
-    |> Enum.map(fn %{role_name: role_name} = map ->
-      Map.put(map, :permissions, Map.get(@role_permissions, role_name))
+        user_id ->
+          acls
+          |> Enum.filter(&(&1.principal_id == user_id && &1.resource_type == resource_type))
+          |> Enum.map(&Map.take(&1, [:resource_type, :resource_id, :permissions, :role_name]))
+      end
     end)
-    |> Enum.map(&Map.take(&1, [:resource_type, :resource_id, :permissions, :role_name]))
   end
 
-  def clean do
-    Agent.update(:MockPermissions, fn _ -> [] end)
-    Agent.update(:MockSessions, fn _ -> Map.new() end)
+  ## Private functions
+
+  defp has_resource_permission?(resource_ids, resource_type, session_id, permission) do
+    Agent.get(__MODULE__, fn %{acls: acls, sessions: sessions} ->
+      case Map.get(sessions, session_id) do
+        nil ->
+          false
+
+        user_id ->
+          Enum.any?(
+            acls,
+            &(&1.principal_id == user_id &&
+                &1.resource_type == resource_type &&
+                &1.resource_id in resource_ids &&
+                permission in &1.permissions)
+          )
+      end
+    end)
+  end
+
+  defp put_session(session_id, user_id) do
+    Agent.update(__MODULE__, fn %{sessions: sessions} = state ->
+      %{state | sessions: Map.put(sessions, session_id, user_id)}
+    end)
   end
 end

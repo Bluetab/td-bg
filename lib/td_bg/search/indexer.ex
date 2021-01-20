@@ -4,7 +4,6 @@ defmodule TdBg.Search.Indexer do
   """
   alias Elasticsearch.Index
   alias Elasticsearch.Index.Bulk
-  alias Jason, as: JSON
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Search.Cluster
   alias TdBg.Search.Mappings
@@ -20,7 +19,7 @@ defmodule TdBg.Search.Indexer do
     {:ok, _} =
       Mappings.get_mappings()
       |> Map.put(:index_patterns, "#{@index}-*")
-      |> JSON.encode!()
+      |> Jason.encode!()
       |> put_template(@index)
 
     Index.hot_swap(Cluster, @index)

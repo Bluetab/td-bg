@@ -35,19 +35,17 @@ defmodule TdBgWeb.Authentication do
 
   def create_claims(opts \\ []) do
     role = Keyword.get(opts, :role, "user")
-    is_admin = role === "admin"
 
     user_name =
       case Keyword.get(opts, :user_name) do
-        nil -> if is_admin, do: "app-admin", else: "user"
+        nil -> if role === "admin", do: "app-admin", else: "user"
         name -> name
       end
 
     %Claims{
       user_id: Integer.mod(:binary.decode_unsigned(user_name), 100_000),
       user_name: user_name,
-      role: role,
-      is_admin: is_admin
+      role: role
     }
   end
 
@@ -80,5 +78,16 @@ defmodule TdBgWeb.Authentication do
     end
 
     token
+  end
+
+  def create_acl_entry(user_id, resource_type, resource_id, role_name)
+      when is_binary(role_name) do
+    MockPermissionResolver.create_acl_entry(%{
+      principal_type: "user",
+      principal_id: user_id,
+      resource_type: resource_type,
+      resource_id: resource_id,
+      role_name: role_name
+    })
   end
 end

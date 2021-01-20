@@ -2,7 +2,6 @@ defmodule TdBgWeb.DomainControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBgWeb.User, only: :functions
   import TdBg.TestOperators
 
   alias TdBg.Cache.ConceptLoader
@@ -72,17 +71,9 @@ defmodule TdBgWeb.DomainControllerTest do
       swagger_schema: schema,
       claims: %{user_id: user_id}
     } do
-      %{id: domain_id} = domain = insert(:domain)
-      role = get_role_by_name("watch")
+      %{id: domain_id} = insert(:domain)
 
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain.id,
-        resource_type: "domain",
-        role_id: role.id,
-        role_name: role.name
-      })
+      create_acl_entry(user_id, "domain", domain_id, "watch")
 
       assert %{"data" => data} =
                conn
@@ -100,16 +91,7 @@ defmodule TdBgWeb.DomainControllerTest do
 
       assert [] = data
 
-      role = get_role_by_name("publish")
-
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain.id,
-        resource_type: "domain",
-        role_id: role.id,
-        role_name: role.name
-      })
+      create_acl_entry(user_id, "domain", domain_id, "publish")
 
       assert %{"data" => data} =
                conn
@@ -142,19 +124,11 @@ defmodule TdBgWeb.DomainControllerTest do
       %{id: parent_id} = insert(:domain)
       %{id: sibling_id} = insert(:domain, parent_id: parent_id)
       %{id: domain_id} = domain = insert(:domain, parent_id: parent_id)
-      %{id: role_id, name: role_name} = get_role_by_name("admin")
 
-      [parent_id, domain_id, sibling_id]
-      |> Enum.each(fn id ->
-        MockPermissionResolver.create_acl_entry(%{
-          principal_id: user_id,
-          principal_type: "user",
-          resource_id: id,
-          resource_type: "domain",
-          role_id: role_id,
-          role_name: role_name
-        })
-      end)
+      Enum.each(
+        [parent_id, domain_id, sibling_id],
+        &create_acl_entry(user_id, "domain", &1, "admin")
+      )
 
       assert %{"data" => data} =
                conn

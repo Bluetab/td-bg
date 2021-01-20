@@ -10,7 +10,9 @@ defmodule TdBgWeb.FeatureCase do
 
   using do
     quote do
+      alias TdBgWeb.Authentication
       alias TdBgWeb.Router.Helpers, as: Routes
+
       @endpoint TdBgWeb.Endpoint
     end
   end

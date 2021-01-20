@@ -15,10 +15,9 @@ defmodule TdBgWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
-  import TdBgWeb.Authentication, only: :functions
-
   alias Ecto.Adapters.SQL.Sandbox
   alias Phoenix.ConnTest
+  alias TdBgWeb.Authentication
 
   using do
     quote do
@@ -26,6 +25,7 @@ defmodule TdBgWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import TdBg.Factory
+      import TdBgWeb.Authentication, only: [create_acl_entry: 4, create_claims: 1]
 
       alias TdBgWeb.Router.Helpers, as: Routes
 
@@ -51,8 +51,8 @@ defmodule TdBgWeb.ConnCase do
 
       auth_opts ->
         auth_opts
-        |> create_claims()
-        |> create_user_auth_conn()
+        |> Authentication.create_claims()
+        |> Authentication.create_user_auth_conn()
     end
   end
 
