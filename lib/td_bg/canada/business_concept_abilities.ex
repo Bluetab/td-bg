@@ -16,7 +16,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     "versioned" => :view_versioned_business_concepts
   }
 
-  def can?(%Claims{is_admin: true}, :create_business_concept), do: true
+  def can?(%Claims{role: "admin"}, :create_business_concept), do: true
 
   def can?(%Claims{} = claims, :create_business_concept) do
     Permissions.has_any_permission_on_resource_type?(
@@ -144,7 +144,9 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
-  def can?(%Claims{is_admin: true}, :view_business_concept, %BusinessConceptVersion{}), do: true
+  def can?(%Claims{role: role}, :view_business_concept, %BusinessConceptVersion{})
+      when role in ["admin", "service"],
+      do: true
 
   def can?(
         %Claims{} = claims,
@@ -165,7 +167,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
 
   def can?(%Claims{}, _action, _business_concept_version), do: false
 
-  defp authorized?(%Claims{is_admin: true}, _permission, _), do: true
+  defp authorized?(%Claims{role: "admin"}, _permission, _), do: true
 
   defp authorized?(%Claims{} = claims, permission, %BusinessConceptVersion{
          business_concept: business_concept

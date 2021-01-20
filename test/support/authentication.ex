@@ -8,7 +8,6 @@ defmodule TdBgWeb.Authentication do
   alias Phoenix.ConnTest
   alias TdBg.Auth.Claims
   alias TdBg.Auth.Guardian
-  alias TdBg.Permissions.MockPermissionResolver
 
   @headers {"Content-type", "application/json"}
 
@@ -34,15 +33,19 @@ defmodule TdBgWeb.Authentication do
     [@headers, {"authorization", "Bearer #{token}"}]
   end
 
-  def create_claims(user_name, opts \\ []) do
+  def create_claims(opts \\ []) do
     role = Keyword.get(opts, :role, "user")
-    is_admin = role === "admin"
+
+    user_name =
+      case Keyword.get(opts, :user_name) do
+        nil -> if role === "admin", do: "app-admin", else: "user"
+        name -> name
+      end
 
     %Claims{
       user_id: Integer.mod(:binary.decode_unsigned(user_name), 100_000),
       user_name: user_name,
-      role: role,
-      is_admin: is_admin
+      role: role
     }
   end
 
@@ -53,24 +56,20 @@ defmodule TdBgWeb.Authentication do
     end
   end
 
-  def build_user_token(user_name, opts \\ []) when is_binary(user_name) do
-    opts = user_name |> role_opts() |> Keyword.merge(opts)
-
-    user_name
-    |> create_claims(opts)
+  def build_user_token(opts) when is_list(opts) do
+    opts
+    |> create_claims()
     |> build_user_token()
   end
 
-  def get_user_token(user_name) do
-    opts = role_opts(user_name)
-
+  def build_user_token(user_name) when is_binary(user_name) do
     user_name
-    |> build_user_token(opts)
-    |> register_token()
+    |> role_opts()
+    |> build_user_token()
   end
 
-  defp role_opts("app-admin"), do: [role: "admin"]
-  defp role_opts(_user_name), do: []
+  defp role_opts("app-admin"), do: [user_name: "app-admin", role: "admin"]
+  defp role_opts(user_name), do: [user_name: user_name, role: "user"]
 
   defp register_token(token) do
     case Guardian.decode_and_verify(token) do
@@ -79,5 +78,16 @@ defmodule TdBgWeb.Authentication do
     end
 
     token
+  end
+
+  def create_acl_entry(user_id, resource_type, resource_id, role_name)
+      when is_binary(role_name) do
+    MockPermissionResolver.create_acl_entry(%{
+      principal_type: "user",
+      principal_id: user_id,
+      resource_type: resource_type,
+      resource_id: resource_id,
+      role_name: role_name
+    })
   end
 end

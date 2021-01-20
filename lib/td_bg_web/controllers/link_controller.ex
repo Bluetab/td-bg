@@ -5,12 +5,11 @@ defmodule TdBgWeb.BusinessConceptLinkController do
 
   import Canada, only: [can?: 2]
 
-  alias Jason, as: JSON
+  require Logger
+
   alias TdBg.BusinessConcepts.Links
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
-
-  require Logger
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -47,10 +46,7 @@ defmodule TdBgWeb.BusinessConceptLinkController do
 
       {:error, error} ->
         Logger.error("While reading link... #{inspect(error)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> send_resp(422, JSON.encode!(error))
+        send_resp(conn, :unprocessable_entity, Jason.encode!(error))
 
       error ->
         Logger.error("While reading link... #{inspect(error)}")

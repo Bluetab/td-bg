@@ -1,9 +1,7 @@
 defmodule TdBgWeb.BusinessConcept do
   @moduledoc false
 
-  import TdBgWeb.Authentication, only: :functions
-
-  alias Jason, as: JSON
+  alias TdBgWeb.Authentication
   alias TdBgWeb.Router.Helpers, as: Routes
 
   @endpoint TdBgWeb.Endpoint
@@ -48,12 +46,12 @@ defmodule TdBgWeb.BusinessConcept do
 
     create_attrs = Map.put(create_attrs, "domain_id", domain_id)
 
-    body = %{"business_concept_version" => create_attrs} |> JSON.encode!()
+    body = %{"business_concept_version" => create_attrs} |> Jason.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(Routes.business_concept_version_url(@endpoint, :create), body, headers, [])
 
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, status_code, resp |> Jason.decode!()}
   end
 
   def business_concept_version_update(token, business_concept_version_id, attrs) do
@@ -69,7 +67,7 @@ defmodule TdBgWeb.BusinessConcept do
           attrs
       end
 
-    body = %{"business_concept_version" => attrs} |> JSON.encode!()
+    body = %{"business_concept_version" => attrs} |> Jason.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.put!(
@@ -79,7 +77,7 @@ defmodule TdBgWeb.BusinessConcept do
         []
       )
 
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, status_code, resp |> Jason.decode!()}
   end
 
   def business_concept_version_show(token, id) do
@@ -88,7 +86,7 @@ defmodule TdBgWeb.BusinessConcept do
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(Routes.business_concept_version_url(@endpoint, :show, id), headers, [])
 
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, status_code, resp |> Jason.decode!()}
   end
 
   def business_concept_version_delete(token, id) do
@@ -101,7 +99,7 @@ defmodule TdBgWeb.BusinessConcept do
   end
 
   def business_concept_version_versions(token, business_concept_version_id) do
-    headers = get_header(token)
+    headers = Authentication.get_header(token)
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(
@@ -114,16 +112,16 @@ defmodule TdBgWeb.BusinessConcept do
         []
       )
 
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, status_code, resp |> Jason.decode!()}
   end
 
   def business_concept_version_list(token) do
-    headers = get_header(token)
+    headers = Authentication.get_header(token)
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(Routes.business_concept_version_url(@endpoint, :index), headers, [])
 
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, status_code, resp |> Jason.decode!()}
   end
 
   def business_concept_version_send_for_approval(token, business_concept_version_id) do
@@ -135,7 +133,7 @@ defmodule TdBgWeb.BusinessConcept do
   end
 
   def business_concept_version_reject(token, business_concept_version_id, reject_reason) do
-    body = %{"reject_reason" => reject_reason} |> JSON.encode!()
+    body = %{"reject_reason" => reject_reason} |> Jason.encode!()
     business_concept_version_workflow(token, business_concept_version_id, :reject, body)
   end
 
@@ -166,7 +164,7 @@ defmodule TdBgWeb.BusinessConcept do
         []
       )
 
-    {:ok, status_code, JSON.decode!(body)}
+    {:ok, status_code, Jason.decode!(body)}
   end
 
   def business_concept_version_by_name(token, business_concept_name) do
@@ -213,7 +211,7 @@ defmodule TdBgWeb.BusinessConcept do
   end
 
   def business_concept_version_upload(token, business_concepts) do
-    headers = get_header(token)
+    headers = Authentication.get_header(token)
 
     form =
       {:multipart,

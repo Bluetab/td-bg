@@ -21,9 +21,6 @@ defmodule TdBg.Comments.Audit do
     comment_created(repo, Map.delete(multi, :resource), changeset, user_id)
   end
 
-  @doc """
-  Publishes a `:comment_created` event. Should be called using `Ecto.Multi.run/5`.
-  """
   def comment_created(_repo, %{comment: %{id: id}}, %{} = changeset, user_id) do
     publish("comment_created", "comment", id, user_id, changeset)
   end

@@ -10,12 +10,16 @@ defmodule TdBgWeb.FeatureCase do
 
   using do
     quote do
+      alias TdBgWeb.Authentication
       alias TdBgWeb.Router.Helpers, as: Routes
+
       @endpoint TdBgWeb.Endpoint
     end
   end
 
   setup tags do
+    start_supervised!(MockPermissionResolver)
+
     :ok = Sandbox.checkout(TdBg.Repo)
 
     unless tags[:async] do

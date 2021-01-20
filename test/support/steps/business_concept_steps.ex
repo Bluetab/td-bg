@@ -16,7 +16,7 @@ defmodule TdBg.BusinessConceptSteps do
   defand ~r/^"(?<user_name>[^"]+)" tries to create a business concept in the Domain "(?<domain_name>[^"]+)" with following data:$/,
          %{user_name: user_name, domain_name: domain_name, table: fields},
          %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     attrs =
       fields
@@ -36,7 +36,7 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     domain = get_domain_by_name(token_admin, domain_name)
     business_concept_version = business_concept_version_by_name(token, business_concept_name)
 
@@ -69,7 +69,7 @@ defmodule TdBg.BusinessConceptSteps do
          state do
     token_admin =
       case state[:token_admin] do
-        nil -> build_user_token("app-admin", role: "admin")
+        nil -> Authentication.build_user_token("app-admin")
         _ -> state[:token_admin]
       end
 
@@ -90,7 +90,7 @@ defmodule TdBg.BusinessConceptSteps do
            domain_name: domain_name
          },
          %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     domain = get_domain_by_name(token_admin, domain_name)
     business_concept_version = business_concept_version_by_name(token, business_concept_name)
 
@@ -128,7 +128,7 @@ defmodule TdBg.BusinessConceptSteps do
             table: fields
           },
           %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     business_concept_version =
       business_concept_version_by_name(token_admin, business_concept_name)
@@ -161,7 +161,7 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     if result == status_code do
       business_concept_tmp = business_concept_version_by_name(token_admin, business_concept_name)
@@ -186,7 +186,7 @@ defmodule TdBg.BusinessConceptSteps do
             business_concept_type: business_concept_type
           },
           %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     business_concept =
       business_concept_version_by_name_and_type(
@@ -301,7 +301,7 @@ defmodule TdBg.BusinessConceptSteps do
             business_concept_type: business_concept_type
           },
           %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     business_concept =
       business_concept_version_by_name_and_type(
@@ -323,7 +323,7 @@ defmodule TdBg.BusinessConceptSteps do
             reject_reason: reject_reason
           },
           %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     business_concept =
       business_concept_version_by_name_and_type(
@@ -352,7 +352,7 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     version = String.to_integer(version)
 
     if result == status_code do
@@ -426,7 +426,7 @@ defmodule TdBg.BusinessConceptSteps do
       )
 
     assert business_concept_tmp
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     business_concept_version_id = business_concept_tmp["id"]
     {_, status_code} = business_concept_version_delete(token, business_concept_version_id)
 
@@ -448,7 +448,7 @@ defmodule TdBg.BusinessConceptSteps do
          },
          %{deleted_business_concept_version_id: business_concept_version_id} = state do
     if result == status_code do
-      token = get_user_token(user_name)
+      token = Authentication.build_user_token(user_name)
       {_, http_status_code, _} = business_concept_version_show(token, business_concept_version_id)
       assert rc_not_found() == to_response_code(http_status_code)
       {:ok, state}
@@ -469,7 +469,7 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     version = String.to_integer(version)
 
     if result != status_code do
@@ -517,7 +517,7 @@ defmodule TdBg.BusinessConceptSteps do
 
     assert business_concept_version
     assert business_concept_type == business_concept_version["type"]
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     {_, http_status_code, %{"data" => business_concept_version}} =
       business_concept_version_show(token, business_concept_version["id"])
@@ -560,7 +560,7 @@ defmodule TdBg.BusinessConceptSteps do
             business_concept_type: business_concept_type
           },
           %{token_admin: token_admin} = state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     business_concept =
       business_concept_version_by_name_and_type(
@@ -589,7 +589,7 @@ defmodule TdBg.BusinessConceptSteps do
       )
 
     business_concept_version_id = business_concept_version["id"]
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     {_, status_code, %{"data" => business_concept_versions}} =
       business_concept_version_versions(token, business_concept_version_id)
@@ -634,7 +634,7 @@ defmodule TdBg.BusinessConceptSteps do
            table: fields
          },
          %{token_admin: token_admin} = _state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     business_concept_version =
       business_concept_version_by_name_and_type(
@@ -719,7 +719,7 @@ defmodule TdBg.BusinessConceptSteps do
       |> Enum.to_list()
       |> Enum.join()
 
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     {:ok, status_code} = business_concept_version_upload(token, business_concepts)
     {:ok, Map.merge(state, %{status_code: status_code})}
   end
@@ -727,7 +727,7 @@ defmodule TdBg.BusinessConceptSteps do
   defthen ~r/^"(?<user_name>[^"]+)" is able to view the following uploaded business concepts:$/,
           %{user_name: user_name, table: values},
           _state do
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     {:ok, 200, %{"data" => bcv_list}} = business_concept_version_list(token)
 
     business_concept_versions =
