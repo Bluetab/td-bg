@@ -14,7 +14,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockPermissionResolver)
     :ok
   end
 
@@ -93,8 +92,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert Map.has_key?(actions, "create_link")
-
-      MockPermissionResolver.clean()
     end
   end
 

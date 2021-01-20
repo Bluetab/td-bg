@@ -2,11 +2,6 @@ defmodule TdBgWeb.CommentControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  setup_all do
-    start_supervised(TdBg.Permissions.MockPermissionResolver)
-    :ok
-  end
-
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end

@@ -1,13 +1,7 @@
 defmodule TdBgWeb.UserSearchFilterControllerTest do
   use TdBgWeb.ConnCase
 
-  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.UserSearchFilters
-
-  setup_all do
-    start_supervised(MockPermissionResolver)
-    :ok
-  end
 
   @create_attrs %{
     filters: %{country: ["Spa"]},

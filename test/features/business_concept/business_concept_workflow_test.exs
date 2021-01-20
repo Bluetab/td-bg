@@ -12,7 +12,6 @@ defmodule TdBg.BusinessConceptWorkflowTest do
 
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
-  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
 
   import_steps(TdBg.BusinessConceptSteps)
@@ -27,7 +26,6 @@ defmodule TdBg.BusinessConceptWorkflowTest do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockPermissionResolver)
     :ok
   end
 end

@@ -33,7 +33,6 @@ defmodule TdBgWeb.DomainControllerTest do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockPermissionResolver)
     :ok
   end
 

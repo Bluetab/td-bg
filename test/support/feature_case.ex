@@ -16,6 +16,8 @@ defmodule TdBgWeb.FeatureCase do
   end
 
   setup tags do
+    start_supervised!(TdBg.Permissions.MockPermissionResolver)
+
     :ok = Sandbox.checkout(TdBg.Repo)
 
     unless tags[:async] do

@@ -2,13 +2,6 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdBg.Permissions.MockPermissionResolver
-
-  setup_all do
-    start_supervised(MockPermissionResolver)
-    :ok
-  end
-
   setup %{conn: conn} do
     insert(:business_concept_version, content: %{"foo" => "bar"}, name: "Concept Name")
 
