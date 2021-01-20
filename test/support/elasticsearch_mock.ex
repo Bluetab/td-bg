@@ -7,7 +7,6 @@ defmodule TdBg.ElasticsearchMock do
 
   alias Elasticsearch.Document
   alias HTTPoison.Response
-  alias Jason, as: JSON
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
 
@@ -59,7 +58,7 @@ defmodule TdBg.ElasticsearchMock do
 
   @impl true
   def request(_config, method, url, data, _opts) do
-    Logger.warn("#{method} #{url} #{JSON.encode!(data)}")
+    Logger.warn("#{method} #{url} #{Jason.encode!(data)}")
     search_results([])
   end
 
@@ -284,7 +283,7 @@ defmodule TdBg.ElasticsearchMock do
         |> Enum.any?(fn field ->
           concept
           |> Map.get(field)
-          |> JSON.encode!()
+          |> Jason.encode!()
           |> String.downcase()
           |> String.contains?(String.downcase(q))
         end)
@@ -317,8 +316,8 @@ defmodule TdBg.ElasticsearchMock do
     results =
       hits
       |> Enum.map(&%{_source: &1})
-      |> JSON.encode!()
-      |> JSON.decode!()
+      |> Jason.encode!()
+      |> Jason.decode!()
 
     body = %{
       "hits" => %{"hits" => results, "total" => Enum.count(results)},

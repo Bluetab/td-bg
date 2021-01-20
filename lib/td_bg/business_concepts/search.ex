@@ -24,7 +24,7 @@ defmodule TdBg.BusinessConcept.Search do
     view_versioned_business_concepts: "versioned"
   }
 
-  def get_filter_values(%Claims{is_admin: true}, params) do
+  def get_filter_values(%Claims{role: "admin"}, params) do
     filter_clause = create_filters(params)
     query = create_query(%{}, filter_clause)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
@@ -48,8 +48,9 @@ defmodule TdBg.BusinessConcept.Search do
 
   def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
 
-  # Admin user search, no filters applied
-  def search_business_concept_versions(params, %Claims{is_admin: true}, page, size) do
+  # Admin user or service account search, no filters applied
+  def search_business_concept_versions(params, %Claims{role: role}, page, size)
+      when role in ["admin", "service"] do
     filter_clause = create_filters(params)
 
     query =
@@ -88,8 +89,9 @@ defmodule TdBg.BusinessConcept.Search do
 
   def get_permissions(_, claims), do: Permissions.get_domain_permissions(claims)
 
-  def list_business_concept_versions(business_concept_id, %Claims{is_admin: true}) do
-    query = %{business_concept_id: business_concept_id} |> create_query
+  def list_business_concept_versions(business_concept_id, %Claims{role: role})
+      when role in ["admin", "service"] do
+    query = create_query(%{business_concept_id: business_concept_id})
 
     %{query: query}
     |> do_search()

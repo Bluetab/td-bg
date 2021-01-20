@@ -2,17 +2,14 @@ defmodule TdBg.CommentsFeatureTest do
   use Cabbage.Feature, async: false, file: "comments/comments.feature"
   use TdBgWeb.FeatureCase
 
+  import TdBg.BusinessConceptSteps
+  import TdBg.ResultSteps
   import TdBgWeb.BusinessConcept
   import TdBgWeb.ResponseCode
-  import TdBgWeb.User, only: :functions
   import TdBgWeb.Taxonomy, only: :functions
-  import TdBgWeb.AclEntry, only: :functions
-  import TdBgWeb.Authentication, only: :functions
 
-  alias Jason, as: JSON
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
-  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
 
   import_steps(TdBg.BusinessConceptSteps)
@@ -20,14 +17,10 @@ defmodule TdBg.CommentsFeatureTest do
   import_steps(TdBg.ResultSteps)
   import_steps(TdBg.UsersSteps)
 
-  import TdBg.BusinessConceptSteps
-  import TdBg.ResultSteps
-
   setup_all do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockPermissionResolver)
     :ok
   end
 
@@ -38,7 +31,7 @@ defmodule TdBg.CommentsFeatureTest do
   defwhen ~r/^"(?<admin_name>[^"]+)" tries to create a new comment "(?<comment>[^"]+)" on the business concept "(?<bc_name>[^"]+)"$/,
           %{admin_name: admin_name, comment: comment, bc_name: bc_name},
           state do
-    token = get_user_token(admin_name)
+    token = Authentication.build_user_token(admin_name)
     business_concept = business_concept_version_by_name(token, bc_name)
 
     comment_params = %{
@@ -70,7 +63,7 @@ defmodule TdBg.CommentsFeatureTest do
          %{result: result, user_name: user_name, bc_name: bc_name},
          state do
     assert result == to_response_code(state[:status_code])
-    token = get_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
     business_concept = business_concept_version_by_name(token, bc_name)
 
     {_, status_code, json_resp} =
@@ -90,7 +83,7 @@ defmodule TdBg.CommentsFeatureTest do
   end
 
   defp list_bc_comments(token, params) do
-    headers = get_header(token)
+    headers = Authentication.get_header(token)
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(
@@ -102,16 +95,16 @@ defmodule TdBg.CommentsFeatureTest do
         []
       )
 
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, status_code, resp |> Jason.decode!()}
   end
 
   defp create_comment(token, comment_params) do
-    headers = get_header(token)
-    body = %{"comment" => comment_params} |> JSON.encode!()
+    headers = Authentication.get_header(token)
+    body = %{"comment" => comment_params} |> Jason.encode!()
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.post!(Routes.comment_url(TdBgWeb.Endpoint, :create), body, headers, [])
 
-    {:ok, status_code, resp |> JSON.decode!()}
+    {:ok, status_code, resp |> Jason.decode!()}
   end
 end

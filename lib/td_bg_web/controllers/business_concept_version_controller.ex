@@ -5,12 +5,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   import Canada, only: [can?: 2]
 
-  alias Jason, as: JSON
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Links
   alias TdBg.BusinessConcepts.Workflow
@@ -108,12 +108,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def upload(conn, params) do
-    %{is_admin: is_admin} = claims = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
     business_concepts_upload = Map.get(params, "business_concepts")
 
-    with {:can, true} <- {:can, is_admin},
+    with {:can, true} <- {:can, can?(claims, upload(BusinessConcept))},
          {:ok, response} <- Upload.from_csv(business_concepts_upload, claims),
-         body <- JSON.encode!(%{data: %{message: response}}) do
+         body <- Jason.encode!(%{data: %{message: response}}) do
       send_resp(conn, :ok, body)
     end
   end
@@ -722,18 +722,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "update_attributes" => update_attributes,
         "search_params" => search_params
       }) do
-    %{is_admin: is_admin} = claims = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
 
-    with true <- is_admin,
+    with {:can, true} <- {:can, can?(claims, bulk_update(BusinessConcept))},
          %{results: results} <- search_all_business_concept_versions(claims, search_params),
          {:ok, response} <- BulkUpdate.update_all(claims, results, update_attributes) do
-      body = JSON.encode!(%{data: %{message: response}})
+      body = Jason.encode!(%{data: %{message: response}})
 
       conn
       |> put_resp_content_type("application/json", "utf-8")
-      |> send_resp(200, body)
+      |> send_resp(:ok, body)
     else
-      false ->
+      {:can, false} ->
         conn
         |> put_status(:forbidden)
         |> put_view(ErrorView)

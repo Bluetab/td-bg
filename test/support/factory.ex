@@ -14,8 +14,7 @@ defmodule TdBg.Factory do
       user_id: sequence(:user_id, & &1),
       user_name: sequence("user_name"),
       role: "user",
-      jti: sequence("jti"),
-      is_admin: Map.get(attrs, :role) == "admin"
+      jti: sequence("jti")
     }
     |> merge_attributes(attrs)
   end

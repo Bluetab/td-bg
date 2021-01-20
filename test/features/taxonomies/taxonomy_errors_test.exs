@@ -2,29 +2,24 @@ defmodule TdBg.TaxonomyErrorsTest do
   use Cabbage.Feature, async: false, file: "taxonomies/taxonomy_errors.feature"
   use TdBgWeb.FeatureCase
 
+  import TdBg.ResultSteps
+  import TdBg.BusinessConceptSteps
   import TdBgWeb.ResponseCode
   import TdBgWeb.Taxonomy
-  import TdBgWeb.Authentication, only: :functions
   import TdBgWeb.BusinessConcept
 
-  alias Jason, as: JSON
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
-  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
 
   import_steps(TdBg.BusinessConceptSteps)
   import_steps(TdBg.DomainSteps)
   import_steps(TdBg.ResultSteps)
 
-  import TdBg.ResultSteps
-  import TdBg.BusinessConceptSteps
-
   setup_all do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockPermissionResolver)
     :ok
   end
 
@@ -37,7 +32,7 @@ defmodule TdBg.TaxonomyErrorsTest do
           state do
     parent = get_domain_by_name(state[:token_admin], domain_name)
     assert parent["name"] == domain_name
-    token = build_user_token(user_name)
+    token = Authentication.build_user_token(user_name)
 
     {_, status_code, json_resp} =
       domain_create(token, %{
@@ -50,11 +45,9 @@ defmodule TdBg.TaxonomyErrorsTest do
     {:ok, Map.merge(state, %{status_code: status_code, json_resp: json_resp})}
   end
 
-  defand ~r/^the system returns a response with following data:$/,
-         %{doc_string: json_string},
-         state do
+  defand ~r/^the system returns a response with following data:$/, %{doc_string: json}, state do
     actual_data = state[:json_resp]
-    expected_data = json_string |> JSON.decode!()
+    expected_data = Jason.decode!(json)
     assert JSONDiff.diff(actual_data, expected_data) == []
   end
 
@@ -66,7 +59,7 @@ defmodule TdBg.TaxonomyErrorsTest do
             table: [%{name: name, description: description}]
           },
           state do
-    token_admin = build_user_token(username, role: "admin")
+    token_admin = Authentication.build_user_token(user_name: username, role: "admin")
     domain_parent = get_domain_by_name(token_admin, domain_name_parent)
 
     domain_child =
@@ -82,7 +75,7 @@ defmodule TdBg.TaxonomyErrorsTest do
   defwhen ~r/^user "(?<username>[^"]+)" tries to create a Domain with following data:$/,
           %{username: username, table: [%{name: name, description: description}]},
           state do
-    token_admin = build_user_token(username, role: "admin")
+    token_admin = Authentication.build_user_token(user_name: username, role: "admin")
 
     {_, status_code, json_resp} =
       domain_create(token_admin, %{name: name, external_id: name, description: description})

@@ -2,26 +2,21 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBgWeb.Authentication, only: :functions
-  import TdBgWeb.User, only: :functions
-
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
-  alias TdBg.Permissions.MockPermissionResolver
   alias TdBg.Search.IndexWorker
 
   setup_all do
     start_supervised(ConceptLoader)
     start_supervised(DomainLoader)
     start_supervised(IndexWorker)
-    start_supervised(MockPermissionResolver)
     :ok
   end
 
-  @user_name "claims"
+  @user_name "some_username"
   @template_name "foo_template"
 
-  setup %{conn: conn} = context do
+  setup context do
     case context[:template] do
       nil ->
         :ok
@@ -39,11 +34,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         })
     end
 
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    [domain: insert(:domain)]
   end
 
-  describe "show" do
-    @tag :admin_authenticated
+  describe "GET /api/business_concept_versions/:id" do
+    @tag authentication: [role: "admin"]
     @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
@@ -67,104 +62,103 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
     end
 
-    @tag authenticated_user: @user_name
+    @tag authentication: [user_name: @user_name]
     @tag :template
-    test "show with actions", %{conn: conn} do
-      %{user_id: user_id} = create_claims(@user_name)
-      domain_create = insert(:domain, id: :rand.uniform(100_000_000))
-      role_create = get_role_by_name("create")
+    test "show with actions", %{
+      conn: conn,
+      domain: %{id: domain_id} = domain,
+      claims: %{user_id: user_id}
+    } do
+      create_acl_entry(user_id, "domain", domain_id, "create")
 
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain_create.id,
-        resource_type: "domain",
-        role_id: role_create.id,
-        role_name: role_create.name
-      })
+      %{id: id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
 
-      business_concept = insert(:business_concept, domain: domain_create)
-      bcv = insert(:business_concept_version, business_concept: business_concept, name: "name")
+      assert %{"_actions" => actions} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :show, id))
+               |> json_response(:ok)
 
-      conn = get(conn, Routes.business_concept_version_path(conn, :show, bcv.id))
-      data = json_response(conn, 200)["_actions"]
-
-      assert Map.has_key?(data, "create_link")
-
-      MockPermissionResolver.clean()
+      assert Map.has_key?(actions, "create_link")
     end
   end
 
-  describe "index" do
-    @tag :admin_authenticated
-    test "lists all business_concept_versions", %{conn: conn} do
-      conn = get(conn, Routes.business_concept_version_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+  describe "GET /api/business_concept_versions" do
+    setup do
+      insert(:business_concept_version)
+      :ok
+    end
+
+    @tag authentication: [role: "admin"]
+    test "admin user can list all business_concept_versions", %{conn: conn} do
+      assert %{"data" => [_]} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :index))
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "service"]
+    test "service account can list all business_concept_versions", %{conn: conn} do
+      assert %{"data" => [_]} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :index))
+               |> json_response(:ok)
     end
   end
 
-  describe "search" do
-    @tag :admin_authenticated
-    test "find business_concepts by status", %{conn: conn} do
-      domain = insert(:domain)
-      create_version(domain, "one", "draft").business_concept_id
-      create_version(domain, "two", "published").business_concept_id
-      create_version(domain, "three", "published").business_concept_id
+  describe "POST /api/business_concept_versions/search" do
+    @tag authentication: [role: "admin"]
+    test "find business_concepts by status", %{conn: conn, domain: domain} do
+      create_version(domain, "one", "draft")
+      create_version(domain, "two", "published")
+      create_version(domain, "three", "published")
 
-      conn =
-        post(conn, Routes.business_concept_version_path(conn, :search), %{
-          filters: %{status: ["published"]}
-        })
+      filter_params = %{"status" => ["published"]}
 
-      assert 2 == length(json_response(conn, 200)["data"])
+      assert %{"data" => [_, _]} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), filters: filter_params)
+               |> json_response(:ok)
     end
 
-    @tag authenticated_user: @user_name
-    test "find only linkable concepts", %{conn: conn} do
-      %{user_id: user_id} = create_claims(@user_name)
+    @tag authentication: [role: "service"]
+    test "service account filter by status", %{conn: conn, domain: domain} do
+      create_version(domain, "one", "draft")
+      create_version(domain, "two", "published")
+      create_version(domain, "three", "published")
+
+      filter_params = %{"status" => ["published"]}
+
+      assert %{"data" => [_, _]} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), filters: filter_params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [user_name: @user_name]
+    test "find only linkable concepts", %{conn: conn, claims: %{user_id: user_id}} do
       domain_watch = insert(:domain)
       domain_create = insert(:domain)
-      role_watch = get_role_by_name("watch")
-      role_create = get_role_by_name("create")
 
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain_watch.id,
-        resource_type: "domain",
-        role_id: role_watch.id,
-        role_name: role_watch.name
-      })
+      create_acl_entry(user_id, "domain", domain_watch.id, "watch")
+      create_acl_entry(user_id, "domain", domain_create.id, "create")
 
-      MockPermissionResolver.create_acl_entry(%{
-        principal_id: user_id,
-        principal_type: "user",
-        resource_id: domain_create.id,
-        resource_type: "domain",
-        role_id: role_create.id,
-        role_name: role_create.name
-      })
+      create_version(domain_watch, "bc_watch", "draft")
+      %{business_concept_id: id} = create_version(domain_create, "bc_create", "draft")
 
-      create_version(domain_watch, "bc_watch", "draft").business_concept_id
-      bc_create_id = create_version(domain_create, "bc_create", "draft").business_concept_id
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), only_linkable: true)
+               |> json_response(:ok)
 
-      conn =
-        post(conn, Routes.business_concept_version_path(conn, :search), %{
-          only_linkable: true
-        })
-
-      data = json_response(conn, 200)["data"]
-      assert 1 == length(data)
-
-      assert bc_create_id ==
-               data
-               |> Enum.at(0)
-               |> Map.get("business_concept_id")
+      assert [%{"business_concept_id" => ^id}] = data
     end
   end
 
   describe "create business_concept" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
@@ -205,7 +199,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["domain"]["name"] == domain.name
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
@@ -231,7 +225,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "index_by_name" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "find business concept by name", %{conn: conn} do
       domain = insert(:domain)
       id = [create_version(domain, "one", "draft").business_concept.id]
@@ -255,7 +249,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "versions" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists business_concept_versions", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
 
@@ -275,7 +269,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "create new versions" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "create new version with modified template", %{
       conn: conn
     } do
@@ -337,7 +331,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "update business_concept_version" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "renders business_concept_version when data is valid", %{
       conn: conn,
@@ -380,7 +374,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "set business_concept_version confidential" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "updates business concept confidential and renders version", %{
       conn: conn,
@@ -417,7 +411,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"confidential" => true} = data
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag :template
     test "renders error if invalid value for confidential", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
@@ -439,7 +433,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "bulk_update" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag template: [
            %{
              "name" => "group",
@@ -495,7 +489,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert Enum.at(updated_version_ids, 0) == version_published.id
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     @tag template: [
            %{
              "name" => "group",
