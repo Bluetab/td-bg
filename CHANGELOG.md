@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [TD-3146] Cache deleted domain ids
+
 ## [4.12.0] 2021-01-25
 
 ### Added

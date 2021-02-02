@@ -26,13 +26,14 @@ defmodule TdBg.Taxonomies do
       [%Domain{}, ...]
 
   """
-  def list_domains(preload \\ []) do
-    query = from(d in Domain)
+  def list_domains(opts \\ []) do
+    deleted = Keyword.get(opts, :deleted, false)
+    preloads = Keyword.get(opts, :preload, [])
 
-    query
-    |> where([d], is_nil(d.deleted_at))
+    Domain
+    |> where_deleted(deleted)
+    |> preload(^preloads)
     |> Repo.all()
-    |> with_preloads(preload)
   end
 
   @doc """
@@ -69,11 +70,11 @@ defmodule TdBg.Taxonomies do
       ** (Ecto.NoResultsError)
 
   """
-  def get_domain!(id, preload \\ []) do
+  def get_domain!(id, preloads \\ []) do
     Domain
     |> where([d], d.id == ^id and is_nil(d.deleted_at))
+    |> preload(^preloads)
     |> Repo.one!()
-    |> with_preloads(preload)
   end
 
   def get_domain(id) do
@@ -97,21 +98,17 @@ defmodule TdBg.Taxonomies do
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 
-  def get_domain_by_external_id(external_id, preload \\ []) do
+  def get_domain_by_external_id(external_id, preloads \\ []) do
     Domain
     |> where([d], d.external_id == ^external_id)
     |> where([d], is_nil(d.deleted_at))
+    |> preload(^preloads)
     |> Repo.one()
-    |> with_preloads(preload)
   end
 
-  defp with_preloads(%Domain{} = domain, []), do: domain
+  defp where_deleted(query, false), do: where(query, [d], is_nil(d.deleted_at))
 
-  defp with_preloads(%Domain{} = domain, preload), do: Repo.preload(domain, preload)
-
-  defp with_preloads([_ | _] = collection, preload), do: Repo.preload(collection, preload)
-
-  defp with_preloads(result, _preload), do: result
+  defp where_deleted(query, true), do: where(query, [d], not is_nil(d.deleted_at))
 
   def get_children_domains(%Domain{} = domain) do
     id = domain.id
