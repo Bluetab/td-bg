@@ -71,6 +71,16 @@ config :td_cache, :event_stream,
 config :td_bg, TdBg.Scheduler,
   jobs: [
     [
+      schedule: "@reboot",
+      task: {TdBg.Cache.DomainLoader, :refresh_deleted, []},
+      run_strategy: Quantum.RunStrategy.Local
+    ],
+    [
+      schedule: "@reboot",
+      task: {TdBg.Cache.DomainLoader, :refresh, [:all]},
+      run_strategy: Quantum.RunStrategy.Local
+    ],
+    [
       schedule: "@daily",
       task: {TdBg.Search.IndexWorker, :reindex, []},
       run_strategy: Quantum.RunStrategy.Local

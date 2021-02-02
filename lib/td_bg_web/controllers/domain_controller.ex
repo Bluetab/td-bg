@@ -29,7 +29,7 @@ defmodule TdBgWeb.DomainController do
 
   def index(conn, params) do
     claims = conn.assigns[:current_resource]
-    domains = Taxonomies.list_domains([:domain_group])
+    domains = Taxonomies.list_domains(preload: [:domain_group])
 
     case get_actions(params) do
       [] ->
