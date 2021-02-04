@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-3263] Use HTTP Basic authentication for Elasticsearch if environment
+  variables `ELASTIC_USERNAME` and `ELASTIC_PASSWORD` are present
+
 ### Changed
 
 - [TD-3146] Cache deleted domain ids
@@ -67,8 +72,8 @@
 
 ### Fixed
 
-- [TD-2737] Create domain permission ability was checking permissions on parent domain
-  making that hypermedia actions did not contain create domain action
+- [TD-2737] Create domain permission ability was checking permissions on parent
+  domain making that hypermedia actions did not contain create domain action
 
 ## [4.0.0] 2020-07-01
 

@@ -9,8 +9,6 @@ config :td_bg, TdBg.Repo,
 
 config :td_bg, TdBg.Auth.Guardian, secret_key: System.fetch_env!("GUARDIAN_SECRET_KEY")
 
-config :td_bg, TdBg.Search.Cluster, url: System.fetch_env!("ES_URL")
-
 config :td_cache,
   redis_host: System.fetch_env!("REDIS_HOST"),
   port: System.get_env("REDIS_PORT", "6379") |> String.to_integer(),
@@ -26,3 +24,12 @@ config :td_bg, TdBg.Scheduler,
       run_strategy: Quantum.RunStrategy.Local
     ]
   ]
+
+config :td_bg, TdBg.Search.Cluster, url: System.fetch_env!("ES_URL")
+
+with username when not is_nil(username) <- System.get_env("ELASTIC_USERNAME"),
+     password when not is_nil(password) <- System.get_env("ELASTIC_PASSWORD") do
+  config :td_bg, TdBg.Search.Cluster,
+    username: username,
+    password: password
+end
