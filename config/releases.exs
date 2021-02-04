@@ -19,7 +19,7 @@ config :td_cache, :event_stream, consumer_id: System.fetch_env!("HOSTNAME")
 config :td_bg, TdBg.Scheduler,
   jobs: [
     [
-      schedule: System.get_env("ELASTIC_REFRESH_SCHEDULE", "@daily"),
+      schedule: System.get_env("ES_REFRESH_SCHEDULE", "@daily"),
       task: {TdBg.Search.IndexWorker, :reindex, []},
       run_strategy: Quantum.RunStrategy.Local
     ]
@@ -27,8 +27,8 @@ config :td_bg, TdBg.Scheduler,
 
 config :td_bg, TdBg.Search.Cluster, url: System.fetch_env!("ES_URL")
 
-with username when not is_nil(username) <- System.get_env("ELASTIC_USERNAME"),
-     password when not is_nil(password) <- System.get_env("ELASTIC_PASSWORD") do
+with username when not is_nil(username) <- System.get_env("ES_USERNAME"),
+     password when not is_nil(password) <- System.get_env("ES_PASSWORD") do
   config :td_bg, TdBg.Search.Cluster,
     username: username,
     password: password
