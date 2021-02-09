@@ -37,7 +37,95 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     [domain: insert(:domain)]
   end
 
-  describe "GET /api/business_concept_versions/:id" do
+  describe "GET /api/business_concepts/:business_concept_id/versions/:id" do
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "shows the specified business_concept_version including it's name, description, domain and content",
+         %{conn: conn} do
+      business_concept_version =
+        insert(
+          :business_concept_version,
+          content: %{"foo" => "bar"},
+          name: "Concept Name",
+          description: to_rich_text("The awesome concept")
+        )
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id,
+            "current"
+          )
+        )
+
+      data = json_response(conn, 200)["data"]
+      assert data["name"] == business_concept_version.name
+      assert data["description"] == business_concept_version.description
+      assert data["business_concept_id"] == business_concept_version.business_concept.id
+      assert data["content"] == business_concept_version.content
+      assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
+      assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id,
+            business_concept_version.version
+          )
+        )
+
+      data = json_response(conn, 200)["data"]
+      assert data["name"] == business_concept_version.name
+      assert data["description"] == business_concept_version.description
+      assert data["business_concept_id"] == business_concept_version.business_concept.id
+      assert data["content"] == business_concept_version.content
+      assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
+      assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id + 1,
+            "current"
+          )
+        )
+
+      assert %{"errors" => %{"detail" => "Not found"}} = json_response(conn, 404)
+    end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
+    test "show with actions", %{
+      conn: conn,
+      domain: %{id: domain_id} = domain,
+      claims: %{user_id: user_id}
+    } do
+      create_acl_entry(user_id, "domain", domain_id, "create")
+
+      %{id: id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
+
+      assert %{"_actions" => actions} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :show, id))
+               |> json_response(:ok)
+
+      assert Map.has_key?(actions, "create_link")
+    end
+  end
+
+  describe "GET /api/business_concept_versions/:id/versions" do
     @tag authentication: [role: "admin"]
     @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",

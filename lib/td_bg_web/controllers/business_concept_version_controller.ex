@@ -251,6 +251,41 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(400, "Client Error")
   end
 
+  def show(conn, %{"business_concept_id" => concept_id, "id" => version}) do
+    claims = conn.assigns[:current_resource]
+
+    with %BusinessConcept{id: id} <- BusinessConcepts.get_business_concept!(concept_id),
+         %BusinessConceptVersion{} = business_concept_version <-
+           BusinessConcepts.get_business_concept_version!(id, version),
+         {:can, true} <- {:can, can?(claims, view_business_concept(business_concept_version))},
+         template <- BusinessConcepts.get_template(business_concept_version) do
+      business_concept_version =
+        business_concept_version
+        |> add_completeness()
+        |> add_counts()
+        |> add_taxonomy()
+
+      links = Links.get_links(business_concept_version)
+
+      render(
+        conn,
+        "show.json",
+        business_concept_version: business_concept_version,
+        links: links,
+        links_hypermedia: links_hypermedia(conn, links, business_concept_version),
+        hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
+        template: template
+      )
+    end
+  rescue
+    Ecto.NoResultsError ->
+      Logger.info("Concept #{concept_id} and version #{version} not found")
+      conn
+      |> put_status(:not_found)
+      |> put_view(TdBgWeb.ErrorView)
+      |> render("404.json")
+  end
+
   def show(conn, %{"id" => id}) do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)

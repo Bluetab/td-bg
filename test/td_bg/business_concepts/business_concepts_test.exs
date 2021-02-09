@@ -3,6 +3,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.Workflow
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Cache.DomainLoader
   alias TdBg.Repo
@@ -603,6 +604,43 @@ defmodule TdBg.BusinessConceptsTest do
     test "get_business_concept_version!/1 returns the business_concept_version with given id" do
       %{id: id} = insert(:business_concept_version)
       assert %BusinessConceptVersion{id: ^id} = BusinessConcepts.get_business_concept_version!(id)
+    end
+
+    test "get_business_concept_version!/2 returns the business_concept_version by concept id and version" do
+      claims = build(:claims)
+
+      %{id: id, business_concept_id: business_concept_id, version: version} =
+        bv1 = insert(:business_concept_version)
+
+      assert %BusinessConceptVersion{id: ^id, version: ^version} =
+               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+
+      assert %BusinessConceptVersion{id: ^id, version: ^version} =
+               BusinessConcepts.get_business_concept_version!(business_concept_id, version)
+
+      assert {:ok, %{updated: bv2}} = Workflow.submit_business_concept_version(bv1, claims)
+
+      assert %BusinessConceptVersion{id: ^id, version: ^version} =
+               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+
+      assert {:ok, %{published: %{id: id} = bv3}} = Workflow.publish(bv2, claims)
+
+      assert %BusinessConceptVersion{id: ^id, version: ^version} =
+               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+
+      assert {:ok, %{current: bv4}} = Workflow.new_version(bv3, claims)
+
+      assert %BusinessConceptVersion{id: ^id, version: ^version} =
+               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+
+      %{id: id, version: version} = Map.take(bv4, [:id, :version])
+
+      assert %BusinessConceptVersion{id: ^id, version: ^version} =
+               BusinessConcepts.get_business_concept_version!(business_concept_id, version)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        BusinessConcepts.get_business_concept_version!(business_concept_id + 1, version)
+      end
     end
 
     test "get_confidential_ids returns all business concept ids which are confidential" do

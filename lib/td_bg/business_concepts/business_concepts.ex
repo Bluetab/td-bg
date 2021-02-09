@@ -182,16 +182,6 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.one!()
   end
 
-  def get_last_version_by_business_concept_id!(business_concept_id, %{current: current}) do
-    BusinessConceptVersion
-    |> where([v], v.business_concept_id == ^business_concept_id)
-    |> where([v], v.current == ^current)
-    |> order_by(desc: :version)
-    |> limit(1)
-    |> preload(business_concept: :domain)
-    |> Repo.one!()
-  end
-
   def last?(%BusinessConceptVersion{id: id, business_concept_id: business_concept_id}) do
     get_last_version_by_business_concept_id!(business_concept_id).id == id
   end
@@ -507,6 +497,35 @@ defmodule TdBg.BusinessConcepts do
     |> where([v, _], v.id == ^id)
     |> Repo.one!()
   end
+
+  @doc """
+  Gets a single business_concept_version by concept id and version.
+
+  Raises `Ecto.NoResultsError` if the Business concept version does not exist.
+
+  ## Examples
+
+      iex> get_business_concept_version!(123, "current")
+      %BusinessConceptVersion{}
+
+      iex> get_business_concept_version!(456, 12)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_business_concept_version!(id, version) do
+    BusinessConceptVersion
+    |> join(:left, [v], _ in assoc(v, :business_concept))
+    |> join(:left, [_, c], _ in assoc(c, :domain))
+    |> join(:left, [_, _, d], _ in assoc(d, :domain_group))
+    |> preload([_, c, d, g], business_concept: [domain: :domain_group])
+    |> where([_, c], c.id == ^id)
+    |> where_version(version)
+    |> Repo.one!()
+  end
+
+  def where_version(query, "current"), do: where(query, [v], v.current == true)
+
+  def where_version(query, version), do: where(query, [v], v.version == ^version)
 
   @doc """
   Deletes a BusinessConceptVersion.

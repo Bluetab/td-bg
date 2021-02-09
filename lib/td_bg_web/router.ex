@@ -33,6 +33,10 @@ defmodule TdBgWeb.Router do
       get("/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user)
     end
 
+    resources "/business_concepts", BusinessConceptController, only: [] do
+      resources("/versions", BusinessConceptVersionController, only: [:show])
+    end
+
     post("/business_concept_versions/csv", BusinessConceptVersionController, :csv)
     post("/business_concept_versions/upload", BusinessConceptVersionController, :upload)
     post("/business_concept_versions/bulk_update", BusinessConceptVersionController, :bulk_update)
