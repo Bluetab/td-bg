@@ -33,9 +33,14 @@ defmodule TdBgWeb.Router do
       get("/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user)
     end
 
+    resources("/business_concepts/comments", CommentController, only: [:create, :delete, :show, :index])
+
     resources "/business_concepts", BusinessConceptController, only: [] do
-      resources("/versions", BusinessConceptVersionController, only: [:show])
+      resources("/links", BusinessConceptLinkController, singleton: true, only: [:delete])
+      resources("/versions", BusinessConceptVersionController, only: [:show, :index])
     end
+
+    post("/business_concepts/links", BusinessConceptVersionController, :create_link)
 
     post("/business_concept_versions/csv", BusinessConceptVersionController, :csv)
     post("/business_concept_versions/upload", BusinessConceptVersionController, :upload)
@@ -51,11 +56,6 @@ defmodule TdBgWeb.Router do
       post("/version", BusinessConceptVersionController, :version)
       post("/redraft", BusinessConceptVersionController, :undo_rejection)
       post("/set_confidential", BusinessConceptVersionController, :set_confidential)
-      get("/data_structures", BusinessConceptVersionController, :get_data_structures)
-
-      get("/versions", BusinessConceptVersionController, :versions)
-      resources("/links", BusinessConceptLinkController, only: [:delete])
-      post("/links", BusinessConceptLinkController, :create_link)
     end
 
     post("/business_concept_versions/search", BusinessConceptVersionController, :search)
@@ -65,11 +65,6 @@ defmodule TdBgWeb.Router do
 
     get("/business_concept_user_filters/user/me", UserSearchFilterController, :index_by_user)
     resources("/business_concept_user_filters", UserSearchFilterController, except: [:new, :edit])
-
-    resources("/business_concepts/comments", CommentController,
-      only: [:index, :create, :delete, :show]
-    )
-
     get("/business_concepts/search/reindex_all", SearchController, :reindex_all)
   end
 

@@ -29,17 +29,21 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :index do
-    description("Business Concept Versions")
+    description("List Business Concept Versions")
 
     parameters do
-      search(
-        :body,
-        Schema.ref(:BusinessConceptVersionFilterRequest),
-        "Search query and filter parameters"
-      )
+      business_concept_id(:path, :integer, "Business Concept ID", required: true)
     end
 
     response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
+  end
+
+  def index(conn, %{"business_concept_id" => business_concept_id}) do
+    claims = conn.assigns[:current_resource]
+
+    business_concept_id
+    |> Search.list_business_concept_versions(claims)
+    |> render_search_results(conn)
   end
 
   def index(conn, params) do
@@ -203,42 +207,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :versions do
-    description("List Business Concept Versions")
-
-    parameters do
-      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
-  end
-
-  def versions(conn, %{"business_concept_version_id" => business_concept_version_id}) do
-    claims = conn.assigns[:current_resource]
-
-    business_concept_version =
-      BusinessConcepts.get_business_concept_version!(business_concept_version_id)
-
-    case Search.list_business_concept_versions(
-           business_concept_version.business_concept_id,
-           claims
-         ) do
-      %{results: business_concept_versions} ->
-        render(
-          conn,
-          "versions.json",
-          business_concept_versions: business_concept_versions,
-          hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
-        )
-
-      _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
-    end
-  end
-
   swagger_path :show do
     description("Show Business Concept Version")
     produces("application/json")
@@ -324,7 +292,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp links_hypermedia(conn, links, business_concept_version) do
     collection_hypermedia(
-      "business_concept_version_business_concept_link",
+      "business_concept_business_concept_link",
       conn,
       Enum.map(links, &annotate(&1, business_concept_version)),
       Link

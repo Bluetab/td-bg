@@ -103,9 +103,9 @@ defmodule TdBgWeb.BusinessConcept do
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
       HTTPoison.get!(
-        Routes.business_concept_version_business_concept_version_url(
+        Routes.business_concept_business_concept_version_url(
           @endpoint,
-          :versions,
+          :index,
           business_concept_version_id
         ),
         headers,

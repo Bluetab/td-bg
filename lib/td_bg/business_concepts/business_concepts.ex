@@ -417,27 +417,6 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Returns the list of business_concept_versions of a
-  business_concept
-
-  ## Examples
-
-      iex> list_business_concept_versions(business_concept_id)
-      [%BusinessConceptVersion{}, ...]
-
-  """
-  def list_business_concept_versions(business_concept_id, status) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
-    |> where([_, c], c.id == ^business_concept_id)
-    |> include_status_in_where(status)
-    |> order_by(desc: :version)
-    |> Repo.all()
-  end
-
-  @doc """
   Returns the list of business_concept_versions_by_ids giving a
   list of ids
 
@@ -525,7 +504,7 @@ defmodule TdBg.BusinessConcepts do
 
   def where_version(query, "current"), do: where(query, [v], v.current == true)
 
-  def where_version(query, version), do: where(query, [v], v.version == ^version)
+  def where_version(query, version), do: where(query, [v], v.id == ^version)
 
   @doc """
   Deletes a BusinessConceptVersion.

@@ -587,20 +587,6 @@ defmodule TdBg.BusinessConceptsTest do
                [business_concept_version]
     end
 
-    test "list_business_concept_versions/1 returns all business_concept_versions of a business_concept_version" do
-      business_concept_version = insert(:business_concept_version)
-      business_concept_id = business_concept_version.business_concept.id
-
-      business_concept_versions =
-        BusinessConcepts.list_business_concept_versions(business_concept_id, [
-          "draft"
-        ])
-
-      assert business_concept_versions
-             |> Enum.map(fn b -> business_concept_version_preload(b) end) ==
-               [business_concept_version]
-    end
-
     test "get_business_concept_version!/1 returns the business_concept_version with given id" do
       %{id: id} = insert(:business_concept_version)
       assert %BusinessConceptVersion{id: ^id} = BusinessConcepts.get_business_concept_version!(id)
@@ -616,7 +602,7 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, version)
+               BusinessConcepts.get_business_concept_version!(business_concept_id, id)
 
       assert {:ok, %{updated: bv2}} = Workflow.submit_business_concept_version(bv1, claims)
 
@@ -636,10 +622,10 @@ defmodule TdBg.BusinessConceptsTest do
       %{id: id, version: version} = Map.take(bv4, [:id, :version])
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, version)
+               BusinessConcepts.get_business_concept_version!(business_concept_id, id)
 
       assert_raise Ecto.NoResultsError, fn ->
-        BusinessConcepts.get_business_concept_version!(business_concept_id + 1, version)
+        BusinessConcepts.get_business_concept_version!(business_concept_id + 1, id)
       end
     end
 

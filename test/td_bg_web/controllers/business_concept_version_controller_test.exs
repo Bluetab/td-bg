@@ -76,7 +76,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
             conn,
             :show,
             business_concept_version.business_concept_id,
-            business_concept_version.version
+            business_concept_version.id
           )
         )
 
@@ -111,21 +111,28 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     } do
       create_acl_entry(user_id, "domain", domain_id, "create")
 
-      %{id: id} =
+      %{id: id, business_concept_id: business_concept_id} =
         insert(:business_concept_version,
           business_concept: build(:business_concept, domain: domain)
         )
 
       assert %{"_actions" => actions} =
                conn
-               |> get(Routes.business_concept_version_path(conn, :show, id))
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
                |> json_response(:ok)
 
       assert Map.has_key?(actions, "create_link")
     end
   end
 
-  describe "GET /api/business_concept_versions/:id/versions" do
+  describe "GET /api/business_concept_versions/:id" do
     @tag authentication: [role: "admin"]
     @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",
@@ -148,28 +155,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["content"] == business_concept_version.content
       assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
       assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
-    end
-
-    @tag authentication: [user_name: @user_name]
-    @tag :template
-    test "show with actions", %{
-      conn: conn,
-      domain: %{id: domain_id} = domain,
-      claims: %{user_id: user_id}
-    } do
-      create_acl_entry(user_id, "domain", domain_id, "create")
-
-      %{id: id} =
-        insert(:business_concept_version,
-          business_concept: build(:business_concept, domain: domain)
-        )
-
-      assert %{"_actions" => actions} =
-               conn
-               |> get(Routes.business_concept_version_path(conn, :show, id))
-               |> json_response(:ok)
-
-      assert Map.has_key?(actions, "create_link")
     end
   end
 
@@ -336,7 +321,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
-  describe "versions" do
+  describe "index by business concept id" do
     @tag authentication: [role: "admin"]
     test "lists business_concept_versions", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
@@ -344,10 +329,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         get(
           conn,
-          Routes.business_concept_version_business_concept_version_path(
+          Routes.business_concept_business_concept_version_path(
             conn,
-            :versions,
-            business_concept_version.id
+            :index,
+            business_concept_version.business_concept.id
           )
         )
 
