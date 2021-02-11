@@ -181,11 +181,20 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name,
              domain_group_id: domain_group_id
            ),
-         {:ok, %BusinessConceptVersion{id: id} = version} <-
+         {:ok,
+          %BusinessConceptVersion{id: id, business_concept_id: business_concept_id} = version} <-
            BusinessConcepts.create_business_concept(creation_attrs, index: true) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.business_concept_version_path(conn, :show, id))
+      |> put_resp_header(
+        "location",
+        Routes.business_concept_business_concept_version_path(
+          conn,
+          :show,
+          business_concept_id,
+          id
+        )
+      )
       |> render("show.json", business_concept_version: version, template: template)
     else
       error -> handle_bc_errors(conn, error)
@@ -248,37 +257,11 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   rescue
     Ecto.NoResultsError ->
       Logger.info("Concept #{concept_id} and version #{version} not found")
+
       conn
       |> put_status(:not_found)
       |> put_view(TdBgWeb.ErrorView)
       |> render("404.json")
-  end
-
-  def show(conn, %{"id" => id}) do
-    claims = conn.assigns[:current_resource]
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-
-    with %{id: _} <- BusinessConcepts.get_business_concept_version!(id),
-         {:can, true} <- {:can, can?(claims, view_business_concept(business_concept_version))},
-         template <- BusinessConcepts.get_template(business_concept_version) do
-      business_concept_version =
-        business_concept_version
-        |> add_completeness()
-        |> add_counts()
-        |> add_taxonomy()
-
-      links = Links.get_links(business_concept_version)
-
-      render(
-        conn,
-        "show.json",
-        business_concept_version: business_concept_version,
-        links: links,
-        links_hypermedia: links_hypermedia(conn, links, business_concept_version),
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-        template: template
-      )
-    end
   end
 
   defp add_counts(%BusinessConceptVersion{} = business_concept_version) do

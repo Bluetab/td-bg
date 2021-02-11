@@ -80,11 +80,11 @@ defmodule TdBgWeb.BusinessConcept do
     {:ok, status_code, resp |> Jason.decode!()}
   end
 
-  def business_concept_version_show(token, id) do
+  def business_concept_version_show(token, business_concept_id, id) do
     headers = [@headers, {"authorization", "Bearer #{token}"}]
 
     %HTTPoison.Response{status_code: status_code, body: resp} =
-      HTTPoison.get!(Routes.business_concept_version_url(@endpoint, :show, id), headers, [])
+      HTTPoison.get!(Routes.business_concept_business_concept_version_url(@endpoint, :show, business_concept_id, id), headers, [])
 
     {:ok, status_code, resp |> Jason.decode!()}
   end
