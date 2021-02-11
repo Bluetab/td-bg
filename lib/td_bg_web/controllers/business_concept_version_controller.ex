@@ -29,10 +29,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :index do
-    description("List Business Concept Versions")
+    description("List Business Concept Versions by business concept id")
 
     parameters do
-      business_concept_id(:path, :integer, "Business Concept ID", required: true)
+      business_concept_id(:path, :integer, "Business Concept ID")
     end
 
     response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
