@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3265] Version as sub resource of a concept
+
+### CHANGED
+
+- [TD-3265]: 
+  - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id` to `/business_concepts/:business_concept_id/versions/:id`
+  - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id/versions` to `/business_concepts/:business_concept_id/versions`
+
 ## [4.13.0] 2021-02-08
 
 ### Added
