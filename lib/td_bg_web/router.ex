@@ -36,11 +36,9 @@ defmodule TdBgWeb.Router do
     resources("/business_concepts/comments", CommentController, only: [:create, :delete, :show, :index])
 
     resources "/business_concepts", BusinessConceptController, only: [] do
-      resources("/links", BusinessConceptLinkController, singleton: true, only: [:delete])
       resources("/versions", BusinessConceptVersionController, only: [:show, :index])
     end
 
-    post("/business_concepts/links", BusinessConceptVersionController, :create_link)
 
     post("/business_concept_versions/csv", BusinessConceptVersionController, :csv)
     post("/business_concept_versions/upload", BusinessConceptVersionController, :upload)
@@ -56,6 +54,8 @@ defmodule TdBgWeb.Router do
       post("/version", BusinessConceptVersionController, :version)
       post("/redraft", BusinessConceptVersionController, :undo_rejection)
       post("/set_confidential", BusinessConceptVersionController, :set_confidential)
+      resources("/links", BusinessConceptLinkController, only: [:delete])
+      post("/links", BusinessConceptLinkController, :create_link)
     end
 
     post("/business_concept_versions/search", BusinessConceptVersionController, :search)

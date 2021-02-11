@@ -292,7 +292,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp links_hypermedia(conn, links, business_concept_version) do
     collection_hypermedia(
-      "business_concept_business_concept_link",
+      "business_concept_version_business_concept_link",
       conn,
       Enum.map(links, &annotate(&1, business_concept_version)),
       Link
