@@ -150,27 +150,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_cached_content(assigns)
   end
 
-  def render("versions.json", %{hypermedia: hypermedia}) do
-    render_many_hypermedia(hypermedia, BusinessConceptVersionView, "version.json")
-  end
-
-  def render("version.json", %{business_concept_version: business_concept_version}) do
-    %{
-      id: business_concept_version["id"],
-      business_concept_id: business_concept_version["business_concept_id"],
-      type: business_concept_version["template"]["name"],
-      content: business_concept_version["content"],
-      name: business_concept_version["name"],
-      description: business_concept_version["description"],
-      last_change_by: Map.get(business_concept_version["last_change_by"], "full_name", ""),
-      last_change_at: business_concept_version["last_change_at"],
-      domain: business_concept_version["domain"],
-      status: business_concept_version["status"],
-      current: business_concept_version["current"],
-      version: business_concept_version["version"]
-    }
-  end
-
   defp add_reject_reason(concept, reject_reason, :rejected) do
     Map.put(concept, :reject_reason, reject_reason)
   end

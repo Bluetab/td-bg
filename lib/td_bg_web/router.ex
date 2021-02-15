@@ -33,13 +33,19 @@ defmodule TdBgWeb.Router do
       get("/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user)
     end
 
+    resources("/business_concepts/comments", CommentController, only: [:create, :delete, :show, :index])
+
+    resources "/business_concepts", BusinessConceptController, only: [] do
+      resources("/versions", BusinessConceptVersionController, only: [:show, :index])
+    end
+
     post("/business_concept_versions/csv", BusinessConceptVersionController, :csv)
     post("/business_concept_versions/upload", BusinessConceptVersionController, :upload)
     post("/business_concept_versions/bulk_update", BusinessConceptVersionController, :bulk_update)
     put("/business_concept_versions/:id", BusinessConceptVersionController, :update)
 
     resources "/business_concept_versions", BusinessConceptVersionController,
-      except: [:new, :edit, :update] do
+      except: [:show, :new, :edit, :update] do
       post("/submit", BusinessConceptVersionController, :send_for_approval)
       post("/publish", BusinessConceptVersionController, :publish)
       post("/reject", BusinessConceptVersionController, :reject)
@@ -47,9 +53,6 @@ defmodule TdBgWeb.Router do
       post("/version", BusinessConceptVersionController, :version)
       post("/redraft", BusinessConceptVersionController, :undo_rejection)
       post("/set_confidential", BusinessConceptVersionController, :set_confidential)
-      get("/data_structures", BusinessConceptVersionController, :get_data_structures)
-
-      get("/versions", BusinessConceptVersionController, :versions)
       resources("/links", BusinessConceptLinkController, only: [:delete])
       post("/links", BusinessConceptLinkController, :create_link)
     end
@@ -61,11 +64,6 @@ defmodule TdBgWeb.Router do
 
     get("/business_concept_user_filters/user/me", UserSearchFilterController, :index_by_user)
     resources("/business_concept_user_filters", UserSearchFilterController, except: [:new, :edit])
-
-    resources("/business_concepts/comments", CommentController,
-      only: [:index, :create, :delete, :show]
-    )
-
     get("/business_concepts/search/reindex_all", SearchController, :reindex_all)
   end
 

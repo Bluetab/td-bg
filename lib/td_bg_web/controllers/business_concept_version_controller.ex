@@ -29,17 +29,21 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   swagger_path :index do
-    description("Business Concept Versions")
+    description("List Business Concept Versions by business concept id")
 
     parameters do
-      search(
-        :body,
-        Schema.ref(:BusinessConceptVersionFilterRequest),
-        "Search query and filter parameters"
-      )
+      business_concept_id(:path, :integer, "Business Concept ID")
     end
 
     response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
+  end
+
+  def index(conn, %{"business_concept_id" => business_concept_id}) do
+    claims = conn.assigns[:current_resource]
+
+    business_concept_id
+    |> Search.list_business_concept_versions(claims)
+    |> render_search_results(conn)
   end
 
   def index(conn, params) do
@@ -177,11 +181,20 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name,
              domain_group_id: domain_group_id
            ),
-         {:ok, %BusinessConceptVersion{id: id} = version} <-
+         {:ok,
+          %BusinessConceptVersion{id: id, business_concept_id: business_concept_id} = version} <-
            BusinessConcepts.create_business_concept(creation_attrs, index: true) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.business_concept_version_path(conn, :show, id))
+      |> put_resp_header(
+        "location",
+        Routes.business_concept_business_concept_version_path(
+          conn,
+          :show,
+          business_concept_id,
+          id
+        )
+      )
       |> render("show.json", business_concept_version: version, template: template)
     else
       error -> handle_bc_errors(conn, error)
@@ -203,42 +216,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :versions do
-    description("List Business Concept Versions")
-
-    parameters do
-      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
-  end
-
-  def versions(conn, %{"business_concept_version_id" => business_concept_version_id}) do
-    claims = conn.assigns[:current_resource]
-
-    business_concept_version =
-      BusinessConcepts.get_business_concept_version!(business_concept_version_id)
-
-    case Search.list_business_concept_versions(
-           business_concept_version.business_concept_id,
-           claims
-         ) do
-      %{results: business_concept_versions} ->
-        render(
-          conn,
-          "versions.json",
-          business_concept_versions: business_concept_versions,
-          hypermedia: hypermedia("business_concept_version", conn, business_concept_versions)
-        )
-
-      _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
-    end
-  end
-
   swagger_path :show do
     description("Show Business Concept Version")
     produces("application/json")
@@ -251,11 +228,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(400, "Client Error")
   end
 
-  def show(conn, %{"id" => id}) do
+  def show(conn, %{"business_concept_id" => concept_id, "id" => version}) do
     claims = conn.assigns[:current_resource]
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
-    with %{id: _} <- BusinessConcepts.get_business_concept_version!(id),
+    with %BusinessConcept{id: id} <- BusinessConcepts.get_business_concept!(concept_id),
+         %BusinessConceptVersion{} = business_concept_version <-
+           BusinessConcepts.get_business_concept_version!(id, version),
          {:can, true} <- {:can, can?(claims, view_business_concept(business_concept_version))},
          template <- BusinessConcepts.get_template(business_concept_version) do
       business_concept_version =
@@ -276,6 +254,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         template: template
       )
     end
+  rescue
+    Ecto.NoResultsError ->
+      Logger.info("Concept #{concept_id} and version #{version} not found")
+
+      conn
+      |> put_status(:not_found)
+      |> put_view(TdBgWeb.ErrorView)
+      |> render("404.json")
   end
 
   defp add_counts(%BusinessConceptVersion{} = business_concept_version) do

@@ -37,7 +37,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     [domain: insert(:domain)]
   end
 
-  describe "GET /api/business_concept_versions/:id" do
+  describe "GET /api/business_concepts/:business_concept_id/versions/:id" do
     @tag authentication: [role: "admin"]
     @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",
@@ -51,7 +51,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       conn =
-        get(conn, Routes.business_concept_version_path(conn, :show, business_concept_version.id))
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id,
+            "current"
+          )
+        )
 
       data = json_response(conn, 200)["data"]
       assert data["name"] == business_concept_version.name
@@ -60,6 +68,38 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["content"] == business_concept_version.content
       assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
       assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id,
+            business_concept_version.id
+          )
+        )
+
+      data = json_response(conn, 200)["data"]
+      assert data["name"] == business_concept_version.name
+      assert data["description"] == business_concept_version.description
+      assert data["business_concept_id"] == business_concept_version.business_concept.id
+      assert data["content"] == business_concept_version.content
+      assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
+      assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id + 1,
+            "current"
+          )
+        )
+
+      assert %{"errors" => %{"detail" => "Not found"}} = json_response(conn, 404)
     end
 
     @tag authentication: [user_name: @user_name]
@@ -71,14 +111,21 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     } do
       create_acl_entry(user_id, "domain", domain_id, "create")
 
-      %{id: id} =
+      %{id: id, business_concept_id: business_concept_id} =
         insert(:business_concept_version,
           business_concept: build(:business_concept, domain: domain)
         )
 
       assert %{"_actions" => actions} =
                conn
-               |> get(Routes.business_concept_version_path(conn, :show, id))
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
                |> json_response(:ok)
 
       assert Map.has_key?(actions, "create_link")
@@ -181,11 +228,18 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:created)
 
-      assert %{"id" => id} = data
+      assert %{"id" => id, "business_concept_id" => business_concept_id} = data
 
       assert %{"data" => data} =
                conn
-               |> get(Routes.business_concept_version_path(conn, :show, id))
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
@@ -248,7 +302,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
-  describe "versions" do
+  describe "index by business concept id" do
     @tag authentication: [role: "admin"]
     test "lists business_concept_versions", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
@@ -256,10 +310,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn =
         get(
           conn,
-          Routes.business_concept_version_business_concept_version_path(
+          Routes.business_concept_business_concept_version_path(
             conn,
-            :versions,
-            business_concept_version.id
+            :index,
+            business_concept_version.business_concept.id
           )
         )
 
@@ -342,6 +396,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version = insert(:business_concept_version, last_change_by: user_id)
 
       business_concept_version_id = business_concept_version.id
+      business_concept_id = business_concept_version.business_concept_id
 
       update_attrs = %{
         "content" => %{},
@@ -364,7 +419,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"data" => data} =
                conn
                |> get(
-                 Routes.business_concept_version_path(conn, :show, business_concept_version_id)
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   business_concept_version_id
+                 )
                )
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
@@ -384,6 +444,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       business_concept_version = insert(:business_concept_version, last_change_by: user_id)
       business_concept_version_id = business_concept_version.id
+      business_concept_id = business_concept_version.business_concept_id
 
       assert %{"data" => data} =
                conn
@@ -403,7 +464,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"data" => data} =
                conn
                |> get(
-                 Routes.business_concept_version_path(conn, :show, business_concept_version_id)
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   business_concept_version_id
+                 )
                )
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)

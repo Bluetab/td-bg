@@ -171,6 +171,10 @@ defmodule TdBg.ElasticsearchMock do
     fn c -> c.current == current end
   end
 
+  defp create_term_filter(%{business_concept_id: business_concept_id}) when is_binary(business_concept_id) do
+    create_term_filter(%{business_concept_id: String.to_integer(business_concept_id)})
+  end
+
   defp create_term_filter(%{business_concept_id: business_concept_id}) do
     fn c -> c.business_concept_id == business_concept_id end
   end
