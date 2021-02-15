@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### Added
 
 - [TD-3265] Version as sub resource of a concept
@@ -11,6 +12,12 @@
 - [TD-3265]: 
   - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id` to `/business_concepts/:business_concept_id/versions/:id`
   - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id/versions` to `/business_concepts/:business_concept_id/versions`
+=======
+### Changed
+
+- [TD-3245] Tested compatibility with PostgreSQL 9.6, 10.15, 11.10, 12.5 and
+  13.1. CI pipeline changed to use `postgres:12.5-alpine`.
+>>>>>>> 50a8665461cf1b6bd8c82fde0ccf87864b4296b0
 
 ## [4.13.0] 2021-02-08
 
