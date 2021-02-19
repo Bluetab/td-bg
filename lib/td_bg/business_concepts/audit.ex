@@ -4,14 +4,12 @@ defmodule TdBg.BusinessConcepts.Audit do
   """
 
   import Ecto.Query
-  import TdBg.Audit.AuditSupport, only: [publish: 5]
+  import TdBg.Audit.AuditSupport
 
   alias Ecto.Changeset
-  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
   alias TdCache.TaxonomyCache
-  alias TdDfLib.Templates
 
   def business_concepts_created(concept_ids) do
     audit_fields = [
@@ -151,28 +149,4 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   defp get_domain_ids(_), do: []
-
-  defp subscribable_fields(%Changeset{data: data} = _changeset) do
-    subscribable_fields(data)
-  end
-
-  defp subscribable_fields(%{} = business_concept_version) do
-    case business_concept_version do
-      %{current: true, type: type, content: content} ->
-        do_get_subscribable_fields(type, content)
-
-      %{business_concept_id: id, type: type} ->
-        id
-        |> BusinessConcepts.get_business_concept_version!("current")
-        |> Map.get(:content)
-        |> do_get_subscribable_fields(type)
-
-      _ ->
-        []
-    end
-  end
-
-  defp do_get_subscribable_fields(content, type) do
-    Map.take(content, Templates.subscribable_fields(type))
-  end
 end

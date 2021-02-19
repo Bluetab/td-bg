@@ -4,8 +4,9 @@ defmodule TdBg.Audit.AuditSupport do
   """
 
   alias Ecto.Changeset
+  alias TdBg.BusinessConcepts
   alias TdCache.Audit
-  alias TdDfLib.{MapDiff, Masks}
+  alias TdDfLib.{MapDiff, Masks, Templates}
 
   def publish(event, resource_type, resource_id, user_id, payload \\ %{})
 
@@ -31,6 +32,30 @@ defmodule TdBg.Audit.AuditSupport do
       user_id: user_id,
       payload: payload
     )
+  end
+
+  def subscribable_fields(%Changeset{data: data} = _changeset) do
+    subscribable_fields(data)
+  end
+
+  def subscribable_fields(%{} = business_concept_version) do
+    case business_concept_version do
+      %{current: true, type: type, content: content} ->
+        do_get_subscribable_fields(type, content)
+
+      %{business_concept_id: id, type: type} ->
+        id
+        |> BusinessConcepts.get_business_concept_version!("current")
+        |> Map.get(:content)
+        |> do_get_subscribable_fields(type)
+
+      _ ->
+        []
+    end
+  end
+
+  def do_get_subscribable_fields(content, type) do
+    Map.take(content, Templates.subscribable_fields(type))
   end
 
   defp payload(%{description: description} = changes, data) do

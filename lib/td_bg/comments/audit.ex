@@ -3,9 +3,10 @@ defmodule TdBg.Comments.Audit do
   Manages the creation of audit events relating to comments
   """
 
-  import TdBg.Audit.AuditSupport, only: [publish: 4, publish: 5]
+  import TdBg.Audit.AuditSupport
 
   alias Ecto.Changeset
+  alias TdBg.BusinessConcepts
   alias TdCache.TaxonomyCache
 
   @doc """
@@ -17,6 +18,7 @@ defmodule TdBg.Comments.Audit do
       |> Changeset.put_change(:domain_ids, domain_ids(resource))
       |> Changeset.put_change(:version_id, version_id(resource))
       |> Changeset.put_change(:resource_name, resource_name(resource))
+      |> put_subscribable_ids(resource)
 
     comment_created(repo, Map.delete(multi, :resource), changeset, user_id)
   end
@@ -50,4 +52,17 @@ defmodule TdBg.Comments.Audit do
 
   defp resource_name(%{name: name}), do: name
   defp resource_name(_), do: nil
+
+  defp put_subscribable_ids(changeset, %{business_concept_version_id: id}) do
+    fields =
+      id
+      |> BusinessConcepts.get_business_concept_version!()
+      |> subscribable_fields()
+
+    Changeset.put_change(changeset, :subscribable_fields, fields)
+  end
+
+  defp put_subscribable_ids(changeset, _) do
+    changeset
+  end
 end
