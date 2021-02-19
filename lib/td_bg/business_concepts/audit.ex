@@ -7,9 +7,11 @@ defmodule TdBg.BusinessConcepts.Audit do
   import TdBg.Audit.AuditSupport, only: [publish: 5]
 
   alias Ecto.Changeset
+  alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Repo
   alias TdCache.TaxonomyCache
+  alias TdDfLib.Templates
 
   def business_concepts_created(concept_ids) do
     audit_fields = [
@@ -49,12 +51,20 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   def business_concept_created({id, %{last_change_by: user_id} = payload}) do
+    payload = Map.put(payload, :subscribable_fields, subscribable_fields(payload))
     publish("create_concept_draft", "concept", id, user_id, payload)
+  end
+
+  def business_concept_updated(_repo, _payload, %Changeset{changes: changes})
+      when map_size(changes) == 0 do
+    {:ok, :unchanged}
   end
 
   def business_concept_updated(_repo, %{updated: updated}, changeset) do
     case updated do
       %{business_concept_id: id, last_change_by: user_id} ->
+        fields = subscribable_fields(changeset)
+        changeset = Changeset.put_change(changeset, :subscribable_fields, fields)
         publish("update_concept_draft", "concept", id, user_id, changeset)
     end
   end
@@ -129,6 +139,7 @@ defmodule TdBg.BusinessConcepts.Audit do
     business_concept_version
     |> Map.take([:version, :id, :name])
     |> Map.put(:domain_ids, get_domain_ids(business_concept_version))
+    |> Map.put(:subscribable_fields, subscribable_fields(business_concept_version))
   end
 
   defp get_domain_ids(%{business_concept: business_concept}) do
@@ -140,4 +151,28 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   defp get_domain_ids(_), do: []
+
+  defp subscribable_fields(%Changeset{data: data} = _changeset) do
+    subscribable_fields(data)
+  end
+
+  defp subscribable_fields(%{} = business_concept_version) do
+    case business_concept_version do
+      %{current: true, type: type, content: content} ->
+        do_get_subscribable_fields(type, content)
+
+      %{business_concept_id: id, type: type} ->
+        id
+        |> BusinessConcepts.get_business_concept_version!("current")
+        |> Map.get(:content)
+        |> do_get_subscribable_fields(type)
+
+      _ ->
+        []
+    end
+  end
+
+  defp do_get_subscribable_fields(content, type) do
+    Map.take(content, Templates.subscribable_fields(type))
+  end
 end
