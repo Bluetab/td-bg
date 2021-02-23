@@ -14,6 +14,7 @@ defmodule TdBg.Cache.ConceptLoader do
   alias TdCache.ConceptCache
   alias TdCache.Redix
   alias TdCache.TemplateCache
+  alias TdDfLib.Templates
 
   require Logger
 
@@ -62,7 +63,7 @@ defmodule TdBg.Cache.ConceptLoader do
   @impl GenServer
   def handle_info(:refresh_all, state) do
     # Full refresh on startup, only if last full refresh was more than one day ago
-    if acquire_lock?("TdBg.Cache.ConceptLoader:TD-2849", @seconds_in_day) do
+    if acquire_lock?("TdBg.Cache.ConceptLoader:TD-3063", @seconds_in_day) do
       Timer.time(
         fn ->
           BusinessConcepts.get_active_ids()
@@ -167,7 +168,7 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp cache_concepts(business_concept_ids) do
-    content_fields = TemplateCache.fields_by_type!("bg", "user")
+    content_fields = get_content_fields()
 
     business_concept_ids
     |> get_published_or_current_versions()
@@ -211,10 +212,20 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp valid_value?({_key, value}) when is_binary(value) do
-    String.trim(value) != ""
+    valid?(value)
+  end
+
+  defp valid_value?({_key, [_ | _] = values}) do
+    Enum.all?(values, &valid?(&1))
   end
 
   defp valid_value?(_), do: false
+
+  defp valid?(value) when is_binary(value) do
+    String.trim(value) != ""
+  end
+
+  defp valid?(_), do: false
 
   defp concept_props(%BusinessConcept{} = business_concept) do
     Map.take(business_concept, @concept_props)
@@ -246,5 +257,15 @@ defmodule TdBg.Cache.ConceptLoader do
 
   defp acquire_lock?(key, expiry_seconds) do
     Redix.command!(["SET", key, node(), "NX", "EX", expiry_seconds])
+  end
+
+  defp get_content_fields do
+    by_type = TemplateCache.fields_by_type!("bg", "user")
+    subscribable = Templates.subscribable_fields_by_type("bg")
+
+    by_type
+    |> Map.merge(subscribable, fn _k, v1, v2 -> v1 ++ v2 end)
+    |> Enum.map(fn {type, names} -> {type, Enum.uniq(names)} end)
+    |> Map.new()
   end
 end
