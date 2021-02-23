@@ -49,7 +49,12 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   def business_concept_created({id, %{last_change_by: user_id} = payload}) do
-    payload = Map.put(payload, :subscribable_fields, subscribable_fields(payload))
+    fields =
+      payload
+      |> Map.put(:business_concept_id, id)
+      |> subscribable_fields()
+
+    payload = Map.put(payload, :subscribable_fields, fields)
     publish("create_concept_draft", "concept", id, user_id, payload)
   end
 
