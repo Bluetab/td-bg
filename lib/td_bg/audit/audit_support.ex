@@ -38,21 +38,24 @@ defmodule TdBg.Audit.AuditSupport do
     subscribable_fields(data)
   end
 
-  def subscribable_fields(%{} = business_concept_version) do
-    case business_concept_version do
-      %{current: true, type: type, content: content} ->
-        do_get_subscribable_fields(type, content)
-
-      %{business_concept_id: id, type: type} ->
-        id
-        |> BusinessConcepts.get_business_concept_version!("current")
-        |> Map.get(:content)
-        |> do_get_subscribable_fields(type)
-
-      _ ->
-        []
-    end
+  def subscribable_fields(%{resource_id: id, resource_type: "business_concept"} = _resource) do
+    id
+    |> BusinessConcepts.get_business_concept_version("current")
+    |> subscribable_fields()
   end
+
+  def subscribable_fields(%{current: true, business_concept: %{type: type}, content: content}) do
+    do_get_subscribable_fields(content, type)
+  end
+
+  def subscribable_fields(%{business_concept_id: id, business_concept: %{type: type}}) do
+    id
+    |> BusinessConcepts.get_business_concept_version("current")
+    |> Map.get(:content)
+    |> do_get_subscribable_fields(type)
+  end
+
+  def subscribable_fields(_), do: %{}
 
   def do_get_subscribable_fields(content, type) do
     Map.take(content, Templates.subscribable_fields(type))

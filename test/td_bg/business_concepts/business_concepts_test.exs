@@ -573,7 +573,7 @@ defmodule TdBg.BusinessConceptsTest do
 
     test "load_business_concept/1 return the expected business_concept" do
       business_concept = fixture()
-      assert business_concept.id == BusinessConcepts.get_business_concept!(business_concept.id).id
+      assert business_concept.id == BusinessConcepts.get_business_concept(business_concept.id).id
     end
   end
 
@@ -599,34 +599,32 @@ defmodule TdBg.BusinessConceptsTest do
         bv1 = insert(:business_concept_version)
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+               BusinessConcepts.get_business_concept_version(business_concept_id, "current")
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, id)
+               BusinessConcepts.get_business_concept_version(business_concept_id, id)
 
       assert {:ok, %{updated: bv2}} = Workflow.submit_business_concept_version(bv1, claims)
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+               BusinessConcepts.get_business_concept_version(business_concept_id, "current")
 
       assert {:ok, %{published: %{id: id} = bv3}} = Workflow.publish(bv2, claims)
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+               BusinessConcepts.get_business_concept_version(business_concept_id, "current")
 
       assert {:ok, %{current: bv4}} = Workflow.new_version(bv3, claims)
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, "current")
+               BusinessConcepts.get_business_concept_version(business_concept_id, "current")
 
       %{id: id, version: version} = Map.take(bv4, [:id, :version])
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
-               BusinessConcepts.get_business_concept_version!(business_concept_id, id)
+               BusinessConcepts.get_business_concept_version(business_concept_id, id)
 
-      assert_raise Ecto.NoResultsError, fn ->
-        BusinessConcepts.get_business_concept_version!(business_concept_id + 1, id)
-      end
+      refute BusinessConcepts.get_business_concept_version(business_concept_id + 1, id)
     end
 
     test "get_confidential_ids returns all business concept ids which are confidential" do

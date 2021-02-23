@@ -102,10 +102,10 @@ defmodule TdBg.BusinessConcepts do
   @doc """
   Fetch an exsisting business_concept by its id
   """
-  def get_business_concept!(business_concept_id) do
+  def get_business_concept(business_concept_id) do
     BusinessConcept
     |> where([c], c.id == ^business_concept_id)
-    |> Repo.one!()
+    |> Repo.one()
   end
 
   @doc """
@@ -480,18 +480,16 @@ defmodule TdBg.BusinessConcepts do
   @doc """
   Gets a single business_concept_version by concept id and version.
 
-  Raises `Ecto.NoResultsError` if the Business concept version does not exist.
-
   ## Examples
 
-      iex> get_business_concept_version!(123, "current")
+      iex> get_business_concept_version(123, "current")
       %BusinessConceptVersion{}
 
-      iex> get_business_concept_version!(456, 12)
-      ** (Ecto.NoResultsError)
+      iex> get_business_concept_version(456, 12)
+      ** nil
 
   """
-  def get_business_concept_version!(id, version) do
+  def get_business_concept_version(id, version) do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [_, c], _ in assoc(c, :domain))
@@ -499,12 +497,12 @@ defmodule TdBg.BusinessConcepts do
     |> preload([_, c, d, g], business_concept: [domain: :domain_group])
     |> where([_, c], c.id == ^id)
     |> where_version(version)
-    |> Repo.one!()
+    |> Repo.one()
   end
 
-  def where_version(query, "current"), do: where(query, [v], v.current == true)
+  defp where_version(query, "current"), do: where(query, [v], v.current == true)
 
-  def where_version(query, version), do: where(query, [v], v.id == ^version)
+  defp where_version(query, version), do: where(query, [v], v.id == ^version)
 
   @doc """
   Deletes a BusinessConceptVersion.
