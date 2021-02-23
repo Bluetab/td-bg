@@ -13,6 +13,10 @@ config :td_bg, TdBg.Search.Cluster,
   # The library used for JSON encoding/decoding.
   json_library: Jason,
 
+  default_options: [
+    ssl: [cacertfile: "/etc/ssl/certs/ca-certificates.crt"]
+  ],
+
   # You should configure each index which you maintain in Elasticsearch here.
   # This configuration will be read by the `mix elasticsearch.build` task,
   # described below.
