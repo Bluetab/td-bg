@@ -84,6 +84,15 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert %{id: ^event_id, payload: payload} = event
       assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
     end
+
+    test "publishes an event including subscribable_fields", %{claims: claims} do
+      business_concept_version = insert(:business_concept_version, status: "draft")
+
+      assert {:ok, %{audit: event_id}} = Workflow.publish(business_concept_version, claims)
+      assert {:ok, [event]} = Stream.read(:redix, @stream, transform: true)
+      assert %{id: ^event_id, payload: payload} = event
+      assert %{"subscribable_fields" => _} = Jason.decode!(payload)
+    end
   end
 
   describe "reject/3" do

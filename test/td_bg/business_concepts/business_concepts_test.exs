@@ -9,10 +9,31 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.Repo
   alias TdBg.Search.IndexWorker
   alias TdCache.Redix
+  alias TdCache.Redix.Stream
   alias TdDfLib.RichText
 
   @stream TdCache.Audit.stream()
   @template_name "TestTemplate1234"
+  @content [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          name: "foo",
+          type: "string",
+          cardinality: "?",
+          values: %{"fixed" => ["bar"]},
+          subscribable: true
+        },
+        %{
+          name: "xyz",
+          type: "string",
+          cardinality: "?",
+          values: %{"fixed" => ["foo"]}
+        }
+      ]
+    }
+  ]
 
   setup_all do
     Redix.del!(@stream)
@@ -43,12 +64,13 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   describe "create_business_concept/1" do
-    test "with valid data creates a business_concept" do
+    @tag template: @content
+    test "with valid data creates a business_concept and publishes an event including subscribable fields to the audit stream " do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
       concept_attrs = %{
-        type: "some_type",
+        type: @template_name,
         domain_id: domain.id,
         last_change_by: user_id,
         last_change_at: DateTime.utc_now()
@@ -56,7 +78,7 @@ defmodule TdBg.BusinessConceptsTest do
 
       version_attrs = %{
         business_concept: concept_attrs,
-        content: %{},
+        content: %{"foo" => "bar", "xyz" => "foo"},
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user_id,
@@ -64,9 +86,10 @@ defmodule TdBg.BusinessConceptsTest do
         version: 1
       }
 
-      creation_attrs = Map.put(version_attrs, :content_schema, [])
+      content_schema = TdDfLib.Templates.content_schema(@template_name)
+      creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %{business_concept_version: business_concept_version}} =
+      assert {:ok, %{business_concept_version: business_concept_version, audit: [event_id]}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
       assert business_concept_version.content == version_attrs.content
@@ -81,6 +104,11 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert business_concept_version.business_concept.last_change_by ==
                concept_attrs.last_change_by
+
+      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"subscribable_fields" => %{"foo" => "bar"}} = Jason.decode!(payload)
     end
 
     test "with invalid data returns error changeset" do
@@ -358,9 +386,15 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   describe "update_business_concept_version/2" do
-    test "updates the business_concept_version if data is valid" do
+    @tag template: @content
+    test "updates the business_concept_version if data is valid and publishes an event including subscribable fields from current version to the audit stream" do
       %{user_id: user_id} = build(:claims)
-      business_concept_version = insert(:business_concept_version)
+
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: insert(:business_concept, type: @template_name),
+          content: %{"foo" => "bar", "xyz" => "foo"}
+        )
 
       concept_attrs = %{
         last_change_by: 1000,
@@ -370,7 +404,7 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         business_concept_id: business_concept_version.business_concept.id,
-        content: %{},
+        content: %{"foo" => "bar", "xyz" => "foo"},
         name: "updated name",
         description: to_rich_text("updated description"),
         last_change_by: user_id,
@@ -378,7 +412,8 @@ defmodule TdBg.BusinessConceptsTest do
         version: 1
       }
 
-      update_attrs = Map.put(version_attrs, :content_schema, [])
+      content_schema = TdDfLib.Templates.content_schema(@template_name)
+      update_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
       assert {:ok, %BusinessConceptVersion{} = object} =
                BusinessConcepts.update_business_concept_version(
@@ -395,6 +430,10 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert object.business_concept.id == business_concept_version.business_concept.id
       assert object.business_concept.last_change_by == 1000
+
+      assert {:ok, [%{payload: payload}]} = Stream.read(:redix, @stream, transform: true)
+
+      assert %{"subscribable_fields" => %{"foo" => "bar"}} = Jason.decode!(payload)
     end
 
     test "updates the content with valid content data" do
