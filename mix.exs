@@ -9,7 +9,7 @@ defmodule TdBg.Mixfile do
           nil -> "4.14.0-local"
           v -> v
         end,
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers() ++ [:phoenix_swagger],
       start_permanent: Mix.env() == :prod,
