@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Change
+
+- [TD-3341] Update elixir version to 1.11
+
+## [4.14.0] 2021-2-22
+
 ### Added
 
 - [TD-3265] Version as sub resource of a concept
