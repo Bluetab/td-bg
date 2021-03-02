@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
-### Change
+### Added
+
+- [TD-3063] Cache and send on events subscribable fields
+
+### Changed
 
 - [TD-3341] Update elixir version to 1.11
 
