@@ -54,22 +54,22 @@ defmodule TdBg.UploadTest do
   end
 
   describe "business_concept_upload" do
-    test "from_csv/2 uploads business concept versions with valid data" do
+    test "from_csv/3 uploads business concept versions with valid data" do
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
-      assert {:ok, [concept_id | _]} = Upload.from_csv(business_concept_upload, claims)
+      assert {:ok, [concept_id | _]} = Upload.from_csv(business_concept_upload, claims, fn _, _-> true end)
       version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
       assert version |> Map.get(:content) |> Map.get("role") == ["Role"]
     end
 
-    test "from_csv/2 returns error on invalid content" do
+    test "from_csv/3 returns error on invalid content" do
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/incorrect_upload.csv"}
-      assert {:error, changeset} = Upload.from_csv(business_concept_upload, claims)
+      assert {:error, changeset} = Upload.from_csv(business_concept_upload, claims, fn _, _-> true end)
 
       message =
         changeset
@@ -79,5 +79,13 @@ defmodule TdBg.UploadTest do
 
       assert message == "is invalid"
     end
+
+    test "from_csv/3 Does not upload business concept versions without permissions" do
+      claims = build(:claims)
+      insert(:domain, external_id: "domain")
+      business_concept_upload = %{path: "test/fixtures/upload.csv"}
+      assert {:error, %{domain: %{external_id: "domain"}}} = Upload.from_csv(business_concept_upload, claims, fn _, _-> false end)
+    end
+
   end
 end

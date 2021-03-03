@@ -116,10 +116,14 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     business_concepts_upload = Map.get(params, "business_concepts")
 
     with {:can, true} <- {:can, can?(claims, upload(BusinessConcept))},
-         {:ok, response} <- Upload.from_csv(business_concepts_upload, claims),
+         {:ok, response} <- Upload.from_csv(business_concepts_upload, claims, &can_upload?/2),
          body <- Jason.encode!(%{data: %{message: response}}) do
       send_resp(conn, :ok, body)
     end
+  end
+
+  defp can_upload?(claims, domain) do
+    can?(claims, create_business_concept(domain))
   end
 
   swagger_path :create do
