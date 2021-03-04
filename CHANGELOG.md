@@ -2,9 +2,12 @@
 
 ## [Unreleased]
 
-### Change
+### Added
 
 - [TD-3173] A non administrator user can to bulk load concepts
+
+### Change
+
 - [TD-3341] Update elixir version to 1.11
 
 ## [4.14.0] 2021-2-22
