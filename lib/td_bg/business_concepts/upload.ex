@@ -125,8 +125,8 @@ defmodule TdBg.BusinessConcept.Upload do
     with {:ok, %{name: concept_type, content: content_schema}} <- validate_template(data),
          {:ok, %{id: domain_id} = domain} <- validate_domain(data),
          {:ok} <- validate_name(data, domain),
-         {:ok} <- validate_description(data), 
-         {:ok} <- validate_permission(claims, domain, can?) do 
+         {:ok} <- validate_description(data),
+         {:ok} <- validate_permission(claims, domain, can?) do
       empty_fields =
         data
         |> Enum.filter(fn {_field_name, value} -> is_empty?(value) end)
@@ -221,7 +221,6 @@ defmodule TdBg.BusinessConcept.Upload do
   defp validate_description(_), do: {:error, %{error: :missing_value, field: "description"}}
 
   defp validate_permission(claims, domain, can?) do
-  
     if can?.(claims, domain) do
       {:ok}
     else
