@@ -74,7 +74,7 @@ defmodule TdBg.Comments.AuditTest do
 
       assert %{
                event: "comment_deleted",
-               payload: "{}",
+               payload: "{\"subscribable_fields\":{}}",
                resource_id: ^resource_id,
                resource_type: "comment",
                service: "td_bg",

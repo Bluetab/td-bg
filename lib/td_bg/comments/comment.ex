@@ -13,6 +13,7 @@ defmodule TdBg.Comments.Comment do
     field(:resource_type, :string)
     field(:user, :map)
     field(:domain_ids, {:array, :integer}, virtual: true)
+    field(:subscribable_fields, {:array, :string}, virtual: true)
     field(:version_id, :integer, virtual: true)
     field(:resource_name, :string, virtual: true)
 

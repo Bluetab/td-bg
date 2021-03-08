@@ -4,7 +4,7 @@ defmodule TdBg.BusinessConcepts.Audit do
   """
 
   import Ecto.Query
-  import TdBg.Audit.AuditSupport, only: [publish: 5]
+  import TdBg.Audit.AuditSupport
 
   alias Ecto.Changeset
   alias TdBg.BusinessConcepts.BusinessConceptVersion
@@ -49,12 +49,25 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   def business_concept_created({id, %{last_change_by: user_id} = payload}) do
+    fields =
+      payload
+      |> Map.put(:business_concept_id, id)
+      |> subscribable_fields()
+
+    payload = Map.put(payload, :subscribable_fields, fields)
     publish("create_concept_draft", "concept", id, user_id, payload)
+  end
+
+  def business_concept_updated(_repo, _payload, %Changeset{changes: changes})
+      when map_size(changes) == 0 do
+    {:ok, :unchanged}
   end
 
   def business_concept_updated(_repo, %{updated: updated}, changeset) do
     case updated do
       %{business_concept_id: id, last_change_by: user_id} ->
+        fields = subscribable_fields(changeset)
+        changeset = Changeset.put_change(changeset, :subscribable_fields, fields)
         publish("update_concept_draft", "concept", id, user_id, changeset)
     end
   end
@@ -129,6 +142,7 @@ defmodule TdBg.BusinessConcepts.Audit do
     business_concept_version
     |> Map.take([:version, :id, :name])
     |> Map.put(:domain_ids, get_domain_ids(business_concept_version))
+    |> Map.put(:subscribable_fields, subscribable_fields(business_concept_version))
   end
 
   defp get_domain_ids(%{business_concept: business_concept}) do
