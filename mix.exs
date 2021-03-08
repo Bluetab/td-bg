@@ -63,11 +63,11 @@ defmodule TdBg.Mixfile do
       {:canada, "~> 2.0"},
       {:ex_machina, "~> 2.3", only: [:test]},
       {:corsica, "~> 1.0"},
-      {:phoenix_swagger, "~> 0.8.2"},
+      {:phoenix_swagger, "~> 0.8.3"},
       {:quantum, "~> 3.0"},
       {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
-      {:csv, "~> 2.3"},
+      {:csv, "~> 2.4"},
       {:nimble_csv, "~> 0.3"},
       {:codepagex, "~> 0.1.4"},
       {:elasticsearch,
@@ -76,7 +76,7 @@ defmodule TdBg.Mixfile do
       {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.15.0"},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.15.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.0.0"},
-      {:graph, git: "https://github.com/Bluetab/graph.git", tag: "0.1.1"}
+      {:graph, git: "https://github.com/Bluetab/graph.git", tag: "1.1.0"}
     ]
   end
 
