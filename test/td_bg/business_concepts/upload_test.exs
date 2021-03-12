@@ -87,10 +87,10 @@ defmodule TdBg.UploadTest do
 
     test "from_csv/3 Does not upload business concept versions without permissions" do
       claims = build(:claims)
-      insert(:domain, external_id: "domain")
+      insert(:domain, external_id: "domain", name: "fobidden_domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
 
-      assert {:error, %{domain: %{external_id: "domain"}}} =
+      assert {:error, %{error: :forbidden, domain: "fobidden_domain"}} =
                Upload.from_csv(business_concept_upload, claims, fn _, _ -> false end)
     end
   end
