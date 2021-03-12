@@ -123,7 +123,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp can_upload?(claims, domain) do
-    can?(claims, create_business_concept(domain))
+    can?(claims, upload(domain))
   end
 
   swagger_path :create do

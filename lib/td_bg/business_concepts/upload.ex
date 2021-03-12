@@ -224,7 +224,7 @@ defmodule TdBg.BusinessConcept.Upload do
     if can?.(claims, domain) do
       {:ok}
     else
-      {:error, %{error: :unauthorized, domain: domain}}
+      {:error, %{error: :forbidden, domain: domain.name}}
     end
   end
 
