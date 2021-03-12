@@ -17,12 +17,12 @@ defmodule TdBg.Canada.LinkAbilities do
   def can?(%Claims{} = claims, :delete, %Link{
         source: "business_concept:" <> business_concept_id
       }) do
-    case BusinessConcepts.get_business_concept!(String.to_integer(business_concept_id)) do
+    case BusinessConcepts.get_business_concept(String.to_integer(business_concept_id)) do
       %{domain_id: domain_id} ->
         TaxonomyAbilities.can?(claims, :delete_link, %Domain{id: domain_id})
 
-      error ->
-        Logger.error("In LinkAbilities.can?/2... #{inspect(error)}")
+      nil ->
+        Logger.error("In LinkAbilities.can?/2... concept not found #{inspect(business_concept_id)}")
     end
   end
 

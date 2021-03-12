@@ -6,11 +6,14 @@
 
 - [TD-3173] A non administrator user can to bulk load concepts
 
+## [4.15.0] 2021-03-08
+
 ### Change
 
-- [TD-3341] Update elixir version to 1.11
+- [TD-3063] Cache and send on events subscribable fields
+- [TD-3341] Build with `elixir:1.11.3-alpine`, runtime `alpine:3.13`
 
-## [4.14.0] 2021-2-22
+## [4.14.0] 2021-02-22
 
 ### Added
 
@@ -18,7 +21,7 @@
 
 ### Changed
 
-- [TD-3265]: 
+- [TD-3265]:
   - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id` to `/business_concepts/:business_concept_id/versions/:id`
   - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id/versions` to `/business_concepts/:business_concept_id/versions`
 - [TD-3245] Tested compatibility with PostgreSQL 9.6, 10.15, 11.10, 12.5 and
