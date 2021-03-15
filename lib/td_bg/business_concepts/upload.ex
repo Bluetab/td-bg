@@ -20,12 +20,12 @@ defmodule TdBg.BusinessConcept.Upload do
 
   NimbleCSV.define(ParserCSVUpload, separator: ";")
 
-  def from_csv(nil, _claims), do: {:error, %{message: :no_csv_uploaded}}
+  def from_csv(nil, _claims, _can?), do: {:error, %{message: :no_csv_uploaded}}
 
-  def from_csv(business_concept_upload, claims) do
+  def from_csv(business_concept_upload, claims, can?) do
     path = business_concept_upload.path
 
-    case create_concepts(path, claims) do
+    case create_concepts(path, claims, can?) do
       {:ok, concept_ids} ->
         Audit.business_concepts_created(concept_ids)
         ConceptLoader.refresh(concept_ids)
@@ -36,16 +36,16 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp create_concepts(path, claims) do
+  defp create_concepts(path, claims, can?) do
     Logger.info("Inserting business concepts...")
 
     Timer.time(
-      fn -> Repo.transaction(fn -> upload_in_transaction(path, claims) end) end,
+      fn -> Repo.transaction(fn -> upload_in_transaction(path, claims, can?) end) end,
       fn ms, _ -> Logger.info("Business concepts inserted in #{ms}ms") end
     )
   end
 
-  defp upload_in_transaction(path, claims) do
+  defp upload_in_transaction(path, claims, can?) do
     file =
       path
       |> Path.expand()
@@ -53,7 +53,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
     with {:ok, parsed_file} <- parse_file(file),
          {:ok, parsed_list} <- parse_data_list(parsed_file),
-         {:ok, uploaded_ids} <- upload_data(parsed_list, claims, [], 2) do
+         {:ok, uploaded_ids} <- upload_data(parsed_list, claims, can?, [], 2) do
       uploaded_ids
     else
       {:error, err} -> Repo.rollback(err)
@@ -106,10 +106,10 @@ defmodule TdBg.BusinessConcept.Upload do
     |> Enum.into(%{})
   end
 
-  defp upload_data([head | tail], claims, acc, row_count) do
-    case insert_business_concept(head, claims) do
+  defp upload_data([head | tail], claims, can?, acc, row_count) do
+    case insert_business_concept(head, claims, can?) do
       {:ok, %{business_concept_version: %{business_concept_id: concept_id}}} ->
-        upload_data(tail, claims, [concept_id | acc], row_count + 1)
+        upload_data(tail, claims, can?, [concept_id | acc], row_count + 1)
 
       {:error, :business_concept_version, error, _} ->
         {:error, Map.put(error, :row, row_count)}
@@ -119,13 +119,14 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp upload_data(_, _, acc, _), do: {:ok, acc}
+  defp upload_data(_, _, _, acc, _), do: {:ok, acc}
 
-  defp insert_business_concept(data, %Claims{user_id: user_id}) do
+  defp insert_business_concept(data, %Claims{user_id: user_id} = claims, can?) do
     with {:ok, %{name: concept_type, content: content_schema}} <- validate_template(data),
          {:ok, %{id: domain_id} = domain} <- validate_domain(data),
          {:ok} <- validate_name(data, domain),
-         {:ok} <- validate_description(data) do
+         {:ok} <- validate_description(data),
+         {:ok} <- validate_permission(claims, domain, can?) do
       empty_fields =
         data
         |> Enum.filter(fn {_field_name, value} -> is_empty?(value) end)
@@ -218,6 +219,14 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp validate_description(%{"description" => _}), do: {:ok}
   defp validate_description(_), do: {:error, %{error: :missing_value, field: "description"}}
+
+  defp validate_permission(claims, domain, can?) do
+    if can?.(claims, domain) do
+      {:ok}
+    else
+      {:error, %{error: :forbidden, domain: domain.name}}
+    end
+  end
 
   defp convert_confidential(%{"confidential" => confidential_value}) do
     confidential_value = String.downcase(confidential_value)

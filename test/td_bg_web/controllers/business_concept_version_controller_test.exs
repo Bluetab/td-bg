@@ -205,10 +205,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "create business_concept" do
-    @tag authentication: [role: "admin"]
+    @tag authentication: [role: "user"]
     @tag :template
-    test "renders business_concept when data is valid", %{conn: conn, swagger_schema: schema} do
+    test "renders business_concept when data is valid", %{
+      conn: conn,
+      claims: %{user_id: user_id},
+      swagger_schema: schema
+    } do
       domain = insert(:domain)
+      create_acl_entry(user_id, "domain", domain.id, "create")
 
       creation_attrs = %{
         "content" => %{},
@@ -253,6 +258,29 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["domain"]["name"] == domain.name
     end
 
+    @tag authentication: [role: "user"]
+    @tag :template
+    test "doesn't allow concept creation when not in domain", %{conn: conn, swagger_schema: schema} do
+      domain = insert(:domain)
+
+      creation_attrs = %{
+        "content" => %{},
+        "type" => "some_type",
+        "name" => "Some name",
+        "description" => to_rich_text("Some description"),
+        "domain_id" => domain.id,
+        "in_progress" => false
+      }
+
+      assert conn
+             |> post(
+               Routes.business_concept_version_path(conn, :create),
+               business_concept_version: creation_attrs
+             )
+             |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+             |> json_response(:forbidden)
+    end
+
     @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
@@ -266,15 +294,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         in_progress: false
       }
 
-      conn =
-        post(
-          conn,
-          Routes.business_concept_version_path(conn, :create),
-          business_concept_version: creation_attrs
-        )
-
-      validate_resp_schema(conn, schema, "BusinessConceptVersionResponse")
-      assert json_response(conn, 422)["errors"] != %{}
+      assert %{"errors" => [%{"name" => _}]} =
+               conn
+               |> post(
+                 Routes.business_concept_version_path(conn, :create),
+                 business_concept_version: creation_attrs
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(422)
     end
   end
 

@@ -1,13 +1,16 @@
 # Changelog
 
-## [4.15.0] 2021-03-08
+## [Unreleased]
 
 ### Added
 
+- [TD-3173] A non administrator user can to bulk load concepts
+
+## [4.15.0] 2021-03-08
+
+### Change
+
 - [TD-3063] Cache and send on events subscribable fields
-
-### Changed
-
 - [TD-3341] Build with `elixir:1.11.3-alpine`, runtime `alpine:3.13`
 
 ## [4.14.0] 2021-02-22
