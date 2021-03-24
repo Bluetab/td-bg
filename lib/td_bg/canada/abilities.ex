@@ -97,6 +97,10 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
 
+    def can?(%Claims{} = claims, :upload, %Domain{} = domain) do
+      BusinessConceptAbilities.can?(claims, :create_business_concept, domain)
+    end
+
     def can?(%Claims{} = claims, :update, %BusinessConceptVersion{} = business_concept_version) do
       BusinessConceptAbilities.can?(claims, :update, business_concept_version)
     end
