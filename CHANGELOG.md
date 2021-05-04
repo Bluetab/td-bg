@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.19.0] 2021-05-04
+
+### Added
+
+- [TD-3628] Force release to update base image
+
 ## [4.17.0] 2021-04-05
 
 ### Changed
