@@ -6,7 +6,7 @@ defmodule TdBg.Mixfile do
       app: :td_bg,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "4.19.0-local"
+          nil -> "4.20.0-local"
           v -> v
         end,
       elixir: "~> 1.11",
@@ -68,7 +68,7 @@ defmodule TdBg.Mixfile do
       {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
       {:csv, "~> 2.4"},
-      {:nimble_csv, "~> 0.3"},
+      {:nimble_csv, "~> 1.1"},
       {:codepagex, "~> 0.1.4"},
       {:elasticsearch,
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
