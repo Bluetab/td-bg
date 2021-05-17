@@ -1,5 +1,9 @@
 # Changelog
 
+## [4.20.0] 2021-05-17
+
+- Security patches from `alpine:3.13`
+
 ## [4.19.0] 2021-05-04
 
 ### Added
