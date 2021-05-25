@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3446] Aggregation to filter by domain ids
+
 ## [4.19.0] 2021-05-04
 
 ### Added
