@@ -6,6 +6,13 @@
 
 - [TD-3446] Aggregation to filter by domain ids
 
+## [4.20.0] 2021-05-17
+
+### Changed
+
+- Security patches from `alpine:3.13`
+- Update dependencies
+
 ## [4.19.0] 2021-05-04
 
 ### Added
