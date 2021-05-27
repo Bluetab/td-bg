@@ -13,6 +13,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Search.Indexer
+  alias TdBg.Taxonomies
   alias TdCache.ConceptCache
   alias TdCache.EventStream.Publisher
   alias TdCache.TemplateCache
@@ -799,5 +800,19 @@ defmodule TdBg.BusinessConcepts do
     end)
     |> select([_], count())
     |> Repo.one!()
+  end
+
+  def share(%BusinessConcept{} = concept, domain_ids) do
+    domains = Taxonomies.list_domains(%{domain_ids: domain_ids})
+
+    changeset =
+      concept
+      |> Repo.preload(:shared_to)
+      |> BusinessConcept.changeset(%{shared_to: domains})
+
+    Multi.new()
+    |> Multi.update(:updated, changeset)
+    |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
+    |> Repo.transaction()
   end
 end

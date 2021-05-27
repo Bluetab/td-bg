@@ -7,7 +7,7 @@ defmodule TdBg.BusinessConcepts.Audit do
   import TdBg.Audit.AuditSupport
 
   alias Ecto.Changeset
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.{BusinessConcept, BusinessConceptVersion}
   alias TdBg.Repo
   alias TdCache.TaxonomyCache
 
@@ -65,10 +65,15 @@ defmodule TdBg.BusinessConcepts.Audit do
 
   def business_concept_updated(_repo, %{updated: updated}, changeset) do
     case updated do
-      %{business_concept_id: id, last_change_by: user_id} ->
+      %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} ->
         fields = subscribable_fields(changeset)
         changeset = Changeset.put_change(changeset, :subscribable_fields, fields)
         publish("update_concept_draft", "concept", id, user_id, changeset)
+
+      %BusinessConcept{id: id, last_change_by: user_id} ->
+        fields = subscribable_fields(changeset)
+        changeset = Changeset.put_change(changeset, :subscribable_fields, fields)
+        publish("update_concept", "concept", id, user_id, changeset)
     end
   end
 

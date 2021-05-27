@@ -27,12 +27,25 @@ defmodule TdBg.TaxonomiesTest do
     end
 
     test "returns deleted domains", %{deleted_domain: %{id: id}} do
-      assert [%{id: ^id}] = Taxonomies.list_domains(deleted: true)
+      assert [%{id: ^id}] = Taxonomies.list_domains(%{}, deleted: true)
     end
 
     test "preloads associations", %{domain: %{id: id, domain_group_id: group_id}} do
       assert [%{id: ^id, domain_group: %{id: ^group_id}}] =
-               Taxonomies.list_domains(preload: [:domain_group])
+               Taxonomies.list_domains(%{}, preload: [:domain_group])
+    end
+
+    test "returns domains filtered by ids", %{domain: %{id: domain_id1}} do
+      %{id: domain_id2} = insert(:domain)
+
+      assert [%{id: ^domain_id1}, %{id: ^domain_id2}] =
+               Taxonomies.list_domains(%{domain_ids: [domain_id1, domain_id2]})
+
+      assert [%{id: ^domain_id1}] = Taxonomies.list_domains(%{domain_ids: [domain_id1]})
+
+      assert [%{id: ^domain_id2}] = Taxonomies.list_domains(%{domain_ids: [domain_id2]})
+
+      assert [] = Taxonomies.list_domains(%{domain_ids: []})
     end
   end
 

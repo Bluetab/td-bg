@@ -868,6 +868,68 @@ defmodule TdBg.BusinessConceptsTest do
     assert BusinessConcepts.count(domain_id: domain_id, deprecated: false) == 1
   end
 
+  describe "share/2" do
+    test "shares a business concept to a group of domains" do
+      concept = %{id: concept_id} = insert(:business_concept)
+      d1 = %{id: domain_id1} = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+
+      assert {:ok,
+              %{
+                audit: event_id,
+                updated: %{id: ^concept_id, shared_to: [%{id: ^domain_id1}, %{id: ^domain_id2}]}
+              }} = BusinessConcepts.share(concept, [d1.id, d2.id])
+
+      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]} =
+               Jason.decode!(payload)
+    end
+
+    test "updates an existing relation between a business concept and a group of domains" do
+      d1 = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+      d3 = %{id: domain_id3} = insert(:domain)
+
+      concept = %{id: concept_id} = insert(:business_concept)
+      insert(:shared_concept, business_concept: concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+
+      assert {:ok,
+              %{
+                audit: event_id,
+                updated: %{id: ^concept_id, shared_to: [%{id: ^domain_id2}, %{id: ^domain_id3}]}
+              }} = BusinessConcepts.share(concept, [d2.id, d3.id])
+
+      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"shared_to" => [%{"id" => ^domain_id2}, %{"id" => ^domain_id3}]} =
+               Jason.decode!(payload)
+    end
+
+    test "deletes an existing relation between a business concept and a group of domains" do
+      d1 = insert(:domain)
+      d2 = insert(:domain)
+
+      concept = %{id: concept_id} = insert(:business_concept)
+      insert(:shared_concept, business_concept: concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+
+      assert {:ok,
+              %{
+                audit: event_id,
+                updated: %{id: ^concept_id, shared_to: []}
+              }} = BusinessConcepts.share(concept, [])
+
+      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"shared_to" => []} = Jason.decode!(payload)
+    end
+  end
+
   defp to_rich_text(plain) do
     %{"document" => plain}
   end

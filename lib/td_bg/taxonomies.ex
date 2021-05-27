@@ -26,11 +26,21 @@ defmodule TdBg.Taxonomies do
       [%Domain{}, ...]
 
   """
-  def list_domains(opts \\ []) do
+  def list_domains(clauses \\ %{}, opts \\ []) do
     deleted = Keyword.get(opts, :deleted, false)
     preloads = Keyword.get(opts, :preload, [])
 
-    Domain
+    clauses
+    |> Enum.reduce(
+      Domain,
+      fn
+        {:domain_ids, domain_ids}, q when is_list(domain_ids) ->
+          where(q, [d], d.id in ^domain_ids)
+
+        _, q ->
+          q
+      end
+    )
     |> where_deleted(deleted)
     |> preload(^preloads)
     |> Repo.all()
