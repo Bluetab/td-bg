@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [TD-3753] Build using Elixir 1.12 and Erlang/OTP 24
+
 ### Added
 
 - [TD-3446] Aggregation to filter by domain ids
