@@ -631,7 +631,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert %BusinessConceptVersion{id: ^id} = BusinessConcepts.get_business_concept_version!(id)
     end
 
-    test "get_business_concept_version!/2 returns the business_concept_version by concept id and version" do
+    test "get_business_concept_version/2 returns the business_concept_version by concept id and version" do
       claims = build(:claims)
 
       %{id: id, business_concept_id: business_concept_id, version: version} =
@@ -664,6 +664,27 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.get_business_concept_version(business_concept_id, id)
 
       refute BusinessConcepts.get_business_concept_version(business_concept_id + 1, id)
+    end
+
+    test "get_business_concept_version/2 returns preloads" do
+      d1 = %{id: domain_id1} = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+      d3 = %{id: domain_id3} = insert(:domain)
+
+      concept = %{id: concept_id} = insert(:business_concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+      insert(:shared_concept, business_concept: concept, domain: d3)
+
+      %{id: id} = insert(:business_concept_version, business_concept: concept)
+
+      assert %{
+               id: ^id,
+               business_concept: %{
+                 id: ^concept_id,
+                 domain: %{id: ^domain_id1},
+                 shared_to: [%{id: ^domain_id2}, %{id: ^domain_id3}]
+               }
+             } = BusinessConcepts.get_business_concept_version(concept_id, id)
     end
 
     test "get_confidential_ids returns all business concept ids which are confidential" do
