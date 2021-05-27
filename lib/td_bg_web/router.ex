@@ -33,10 +33,13 @@ defmodule TdBgWeb.Router do
       get("/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user)
     end
 
-    resources("/business_concepts/comments", CommentController, only: [:create, :delete, :show, :index])
+    resources("/business_concepts/comments", CommentController,
+      only: [:create, :delete, :show, :index]
+    )
 
     resources "/business_concepts", BusinessConceptController, only: [] do
       resources("/versions", BusinessConceptVersionController, only: [:show, :index])
+      resources("/shared_domains", SharedDomainController, only: [:update], singleton: true)
     end
 
     post("/business_concept_versions/csv", BusinessConceptVersionController, :csv)

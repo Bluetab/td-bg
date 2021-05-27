@@ -1,0 +1,85 @@
+defmodule TdBgWeb.SharedDomainControllerTest do
+  use TdBgWeb.ConnCase
+  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
+
+  describe "patch" do
+    @tag authentication: [role: "admin"]
+    test "shares a business concept with domains", %{conn: conn, swagger_schema: schema} do
+      %{id: concept_id} = insert(:business_concept)
+      %{id: domain_id1} = insert(:domain)
+      %{id: domain_id2} = insert(:domain)
+      body = %{domain_ids: [domain_id1, domain_id2]}
+
+      conn =
+        patch(conn, Routes.business_concept_shared_domain_path(conn, :update, concept_id), body)
+
+      assert %{
+               "data" => %{
+                 "id" => ^concept_id,
+                 "_embedded" => %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]}
+               }
+             } =
+               conn
+               |> validate_resp_schema(schema, "BusinessConceptResponse")
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "gets not found when concept does not exist", %{conn: conn} do
+      concept_id = System.unique_integer([:positive])
+      %{id: domain_id1} = insert(:domain)
+      %{id: domain_id2} = insert(:domain)
+      body = %{domain_ids: [domain_id1, domain_id2]}
+
+      conn =
+        patch(conn, Routes.business_concept_shared_domain_path(conn, :update, concept_id), body)
+
+      assert %{"errors" => %{"detail" => "Not found"}} = json_response(conn, :not_found)
+    end
+
+    @tag authentication: [user_name: "foo"]
+    test "shares a business concept with domains when user has permissions", %{
+      conn: conn,
+      claims: %{user_id: user_id},
+      swagger_schema: schema
+    } do
+      %{id: domain_id} = domain = insert(:domain)
+      create_acl_entry(user_id, "domain", domain_id, "create")
+      %{id: concept_id} = insert(:business_concept, domain: domain)
+      %{id: domain_id1} = insert(:domain)
+      %{id: domain_id2} = insert(:domain)
+      body = %{domain_ids: [domain_id1, domain_id2]}
+
+      conn =
+        patch(conn, Routes.business_concept_shared_domain_path(conn, :update, concept_id), body)
+
+      assert %{
+               "data" => %{
+                 "id" => ^concept_id,
+                 "_embedded" => %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]}
+               }
+             } =
+               conn
+               |> validate_resp_schema(schema, "BusinessConceptResponse")
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [user_name: "foo"]
+    test "gets forbidden when user has no permissions", %{
+      conn: conn,
+      claims: %{user_id: user_id}
+    } do
+      %{id: domain_id} = domain = insert(:domain)
+      create_acl_entry(user_id, "domain", domain_id, "watch")
+      %{id: concept_id} = insert(:business_concept, domain: domain)
+      %{id: domain_id1} = insert(:domain)
+      %{id: domain_id2} = insert(:domain)
+      body = %{domain_ids: [domain_id1, domain_id2]}
+
+      conn =
+        patch(conn, Routes.business_concept_shared_domain_path(conn, :update, concept_id), body)
+
+      assert %{"errors" => %{"detail" => "Forbidden"}} = json_response(conn, :forbidden)
+    end
+  end
+end
