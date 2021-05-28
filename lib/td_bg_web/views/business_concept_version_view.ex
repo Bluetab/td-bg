@@ -148,6 +148,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_template(assigns)
     |> add_embedded_resources(assigns)
     |> add_cached_content(assigns)
+    |> add_shared_to(assigns)
   end
 
   defp add_reject_reason(concept, reject_reason, :rejected) do
@@ -187,4 +188,14 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         Map.put(concept, :content, content)
     end
   end
+
+  defp add_shared_to(
+         concept,
+         %{business_concept_version: %{business_concept: %{shared_to: [_ | _] = shared_to}}} =
+           assigns
+       ) do
+    %{concept | shared_to: shared_to}
+  end
+
+  defp add_shared_to(concept, _assigns), do: concept
 end
