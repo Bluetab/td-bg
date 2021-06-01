@@ -568,7 +568,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp render_concept(conn, concept) do
+    claims = conn.assigns[:current_resource]
     template = BusinessConcepts.get_template(concept)
+    permissions = get_permissions(claims, concept)
 
     business_concept_version = add_completeness(concept)
 
@@ -577,7 +579,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       "show.json",
       business_concept_version: business_concept_version,
       hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-      template: template
+      template: template,
+      permissions: permissions
     )
   end
 

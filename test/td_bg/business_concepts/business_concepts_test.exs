@@ -627,6 +627,23 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "get_business_concept_version!/1 returns the business_concept_version with given id" do
+      d1 = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+      d3 = %{id: domain_id3} = insert(:domain)
+
+      concept = insert(:business_concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+      insert(:shared_concept, business_concept: concept, domain: d3)
+
+      %{id: id} = insert(:business_concept_version, business_concept: concept)
+
+      assert %BusinessConceptVersion{
+               id: ^id,
+               business_concept: %{shared_to: [%{id: ^domain_id2}, %{id: ^domain_id3}]}
+             } = BusinessConcepts.get_business_concept_version!(id)
+    end
+
+    test "get_business_concept_version!/1 with preloaded shared_to" do
       %{id: id} = insert(:business_concept_version)
       assert %BusinessConceptVersion{id: ^id} = BusinessConcepts.get_business_concept_version!(id)
     end

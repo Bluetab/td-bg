@@ -60,7 +60,7 @@ defmodule TdBgWeb.DomainView do
   defp with_group(domain), do: domain
 
   defp with_parents(%{parents: parents} = domain) when is_list(parents) do
-    %{domain | parents: Enum.map(parents, &Map.take(&1, [:id, :external_id, :domain]))}
+    %{domain | parents: Enum.map(parents, &Map.take(&1, [:id, :external_id, :name]))}
   end
 
   defp with_parents(domain), do: domain

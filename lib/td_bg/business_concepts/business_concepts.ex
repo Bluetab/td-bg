@@ -473,7 +473,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [_, c], _ in assoc(c, :domain))
     |> join(:left, [_, _, d], _ in assoc(d, :domain_group))
-    |> preload([_, c, d, g], business_concept: [domain: :domain_group])
+    |> preload([_, c, d, g], business_concept: [{:domain, :domain_group}, :shared_to])
     |> where([v, _], v.id == ^id)
     |> Repo.one!()
   end
