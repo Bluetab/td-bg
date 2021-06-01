@@ -14,6 +14,7 @@ defmodule TdBg.Search.Aggregations do
          nested: %{path: "domain_parents"},
          aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}
        }},
+      {"shared_to_names", %{terms: %{field: "shared_to_names.raw"}}},
       {"domain_ids", %{terms: %{field: "domain_ids"}}},
       {"status", %{terms: %{field: "status"}}},
       {"confidential.raw", %{terms: %{field: "confidential.raw"}}},
