@@ -245,6 +245,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> add_completeness()
         |> add_counts()
         |> add_taxonomy()
+        |> add_shared_to_parents()
 
       links = Links.get_links(business_concept_version)
       permissions = get_permissions(claims, business_concept_version)
@@ -278,6 +279,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp add_taxonomy(%BusinessConceptVersion{} = business_concept_version) do
     BusinessConcepts.add_parents(business_concept_version)
+  end
+
+  defp add_shared_to_parents(
+         %BusinessConceptVersion{business_concept: %{shared_to: shared_to} = concept} =
+           business_concept_version
+       ) do
+    %{
+      business_concept_version
+      | business_concept: %{concept | shared_to: Taxonomies.add_parents(shared_to)}
+    }
   end
 
   defp links_hypermedia(conn, links, business_concept_version) do

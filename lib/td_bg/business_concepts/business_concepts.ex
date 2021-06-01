@@ -814,5 +814,12 @@ defmodule TdBg.BusinessConcepts do
     |> Multi.update(:updated, changeset)
     |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
     |> Repo.transaction()
+    |> on_share()
   end
+
+  defp on_share({:ok, %{updated: %{shared_to: shared_to} = updated} = reply}) do
+    {:ok, %{reply | updated: %{updated | shared_to: TdBg.Taxonomies.add_parents(shared_to)}}}
+  end
+
+  defp on_share(error), do: error
 end

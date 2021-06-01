@@ -22,6 +22,7 @@ defmodule TdBg.Taxonomies.Domain do
     field(:name, :string)
     field(:external_id, :string)
     field(:deleted_at, :utc_datetime_usec)
+    field(:parents, {:array, :map}, virtual: true)
     belongs_to(:parent, __MODULE__)
     belongs_to(:domain_group, DomainGroup, on_replace: :nilify)
     has_many(:business_concepts, BusinessConcept)

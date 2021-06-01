@@ -105,6 +105,16 @@ defmodule TdBg.Taxonomies do
     |> Enum.map(&Map.take(&1, [:id, :external_id, :name]))
   end
 
+  def add_parents(domains) when is_list(domains) do
+    Enum.map(domains, &add_parents/1)
+  end
+
+  def add_parents(%Domain{id: id} = domain) do
+    %{domain | parents: TdBg.Taxonomies.get_parents(id)}
+  end
+
+  def add_parents(other), do: other
+
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
 

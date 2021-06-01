@@ -42,9 +42,11 @@ defmodule TdBgWeb.DomainView do
       :external_id,
       :description,
       :parentable_ids,
-      :domain_group
+      :domain_group,
+      :parents
     ])
     |> with_group()
+    |> with_parents()
   end
 
   def render("domain_bc_count.json", %{counter: counter}) do
@@ -56,4 +58,10 @@ defmodule TdBgWeb.DomainView do
   end
 
   defp with_group(domain), do: domain
+
+  defp with_parents(%{parents: parents} = domain) when is_list(parents) do
+    %{domain | parents: Enum.map(parents, &Map.take(&1, [:id, :external_id, :domain]))}
+  end
+
+  defp with_parents(domain), do: domain
 end
