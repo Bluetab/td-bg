@@ -412,7 +412,7 @@ defmodule TdBg.BusinessConcepts do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+    |> preload([_, c, d], business_concept: [:domain, :shared_to])
     |> order_by(asc: :version)
     |> Repo.all()
   end

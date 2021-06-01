@@ -623,7 +623,7 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert business_concept_versions
              |> Enum.map(fn b -> business_concept_version_preload(b) end) ==
-               [business_concept_version]
+               [business_concept_version_preload(business_concept_version, [:domain, :shared_to])]
     end
 
     test "get_business_concept_version!/1 returns the business_concept_version with given id" do
@@ -745,7 +745,7 @@ defmodule TdBg.BusinessConceptsTest do
     test "search_fields/1 returns a business_concept_version with default values in its content" do
       alias Elasticsearch.Document
 
-      business_concept = insert(:business_concept, type: @template_name)
+      business_concept = insert(:business_concept, type: @template_name, shared_to: [])
 
       business_concept_version =
         insert(:business_concept_version, business_concept: business_concept)
@@ -972,10 +972,10 @@ defmodule TdBg.BusinessConceptsTest do
     %{"document" => plain}
   end
 
-  defp business_concept_version_preload(business_concept_version) do
+  defp business_concept_version_preload(business_concept_version, preload \\ [:domain]) do
     business_concept_version
     |> Repo.preload(:business_concept)
-    |> Repo.preload(business_concept: [:domain])
+    |> Repo.preload(business_concept: preload)
   end
 
   defp assert_expected_validation(changeset, field, expected_validation) do

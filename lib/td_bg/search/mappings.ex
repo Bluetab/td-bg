@@ -52,6 +52,14 @@ defmodule TdBg.Search.Mappings do
           external_id: %{type: "text", fields: @raw}
         }
       },
+      shared_to: %{
+        type: "nested",
+        properties: %{
+          id: %{type: "long"},
+          name: %{type: "text", fields: @raw},
+          external_id: %{type: "text", fields: @raw}
+        }
+      },
       link_count: %{type: "short"},
       rule_count: %{type: "short"},
       content: content_mappings

@@ -110,7 +110,7 @@ defmodule TdBg.Taxonomies do
   end
 
   def add_parents(%Domain{id: id} = domain) do
-    %{domain | parents: TdBg.Taxonomies.get_parents(id)}
+    %{domain | parents: get_parents(id)}
   end
 
   def add_parents(other), do: other
