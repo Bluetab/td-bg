@@ -16,6 +16,15 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     "versioned" => :view_versioned_business_concepts
   }
 
+  @shared_permissions [
+    :view_approval_pending_business_concepts,
+    :view_deprecated_business_concepts,
+    :view_draft_business_concepts,
+    :view_published_business_concepts,
+    :view_rejected_business_concepts,
+    :view_versioned_business_concepts
+  ]
+
   def can?(%Claims{role: "admin"}, :create_business_concept), do: true
 
   def can?(%Claims{} = claims, :create_business_concept) do
@@ -182,17 +191,34 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   defp authorized_business_concept(
          %Claims{} = claims,
          permission,
-         %BusinessConcept{} = business_concept
-       ) do
-    domain_id = business_concept.domain_id
+         %BusinessConcept{confidential: confidential, domain_id: domain_id, shared_to: shared_to}
+       )
+       when permission in @shared_permissions do
+    domain_ids =
+      shared_to
+      |> Enum.map(& &1.id)
+      |> Enum.concat([domain_id])
+      |> Enum.uniq()
 
-    case business_concept.confidential do
+    authorized_business_concept(claims, permission, confidential, domain_ids)
+  end
+
+  defp authorized_business_concept(
+         %Claims{} = claims,
+         permission,
+         %BusinessConcept{confidential: confidential, domain_id: domain_id}
+       ) do
+    authorized_business_concept(claims, permission, confidential, domain_id)
+  end
+
+  defp authorized_business_concept(%Claims{} = claims, permission, confidential, domain_ids) do
+    case confidential do
       true ->
-        Permissions.authorized?(claims, :manage_confidential_business_concepts, domain_id) &&
-          Permissions.authorized?(claims, permission, domain_id)
+        Permissions.authorized?(claims, :manage_confidential_business_concepts, domain_ids) &&
+          Permissions.authorized?(claims, permission, domain_ids)
 
       false ->
-        Permissions.authorized?(claims, permission, domain_id)
+        Permissions.authorized?(claims, permission, domain_ids)
     end
   end
 end

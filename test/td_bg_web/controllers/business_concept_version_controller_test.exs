@@ -163,6 +163,43 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert Map.has_key?(actions, "create_link")
     end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
+    test "shows concept when we have permissions over shared domain", %{
+      conn: conn,
+      domain: domain,
+      claims: %{user_id: user_id}
+    } do
+      %{id: domain_id} = shared = insert(:domain)
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain, shared_to: [shared])
+        )
+
+      create_acl_entry(user_id, "domain", domain_id, "create")
+
+      assert %{
+               "data" => %{
+                 "id" => ^id,
+                 "business_concept_id" => ^business_concept_id,
+                 "_embedded" => %{
+                   "shared_to" => [%{"id" => ^domain_id}]
+                 }
+               }
+             } =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+    end
   end
 
   describe "GET /api/business_concept_versions" do
