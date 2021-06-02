@@ -138,7 +138,7 @@ defmodule TdBg.BusinessConcepts do
   def get_all_versions_by_business_concept_ids(business_concept_ids) do
     BusinessConceptVersion
     |> where([v], v.business_concept_id in ^business_concept_ids)
-    |> preload(:business_concept)
+    |> preload(business_concept: [:shared_to])
     |> Repo.all()
   end
 
@@ -817,7 +817,8 @@ defmodule TdBg.BusinessConcepts do
     |> on_share()
   end
 
-  defp on_share({:ok, %{updated: %{shared_to: shared_to} = updated} = reply}) do
+  defp on_share({:ok, %{updated: %{id: id, shared_to: shared_to} = updated} = reply}) do
+    ConceptLoader.refresh(id)
     {:ok, %{reply | updated: %{updated | shared_to: TdBg.Taxonomies.add_parents(shared_to)}}}
   end
 

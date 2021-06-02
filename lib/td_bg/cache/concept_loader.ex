@@ -228,7 +228,14 @@ defmodule TdBg.Cache.ConceptLoader do
   defp valid?(_), do: false
 
   defp concept_props(%BusinessConcept{} = business_concept) do
-    Map.take(business_concept, @concept_props)
+    shared_to_ids =
+      business_concept
+      |> Map.get(:shared_to, [])
+      |> Enum.map(& &1.id)
+
+    business_concept
+    |> Map.take(@concept_props)
+    |> Map.put(:shared_to_ids, shared_to_ids)
   end
 
   defp version_props(%BusinessConceptVersion{id: id} = business_concept_version) do
