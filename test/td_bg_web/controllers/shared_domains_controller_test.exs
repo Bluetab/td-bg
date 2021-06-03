@@ -2,6 +2,15 @@ defmodule TdBgWeb.SharedDomainControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
+  alias TdBg.Cache.ConceptLoader
+  alias TdBg.Search.IndexWorker
+
+  setup_all do
+    start_supervised(ConceptLoader)
+    start_supervised(IndexWorker)
+    :ok
+  end
+
   describe "patch" do
     @tag authentication: [role: "admin"]
     test "shares a business concept with domains", %{conn: conn, swagger_schema: schema} do

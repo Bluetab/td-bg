@@ -2,8 +2,8 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
 
   alias TdBg.Auth.Claims
-  alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.{BusinessConcept, BusinessConceptVersion}
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
 
@@ -191,15 +191,10 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   defp authorized_business_concept(
          %Claims{} = claims,
          permission,
-         %BusinessConcept{confidential: confidential, domain_id: domain_id, shared_to: shared_to}
+         %BusinessConcept{confidential: confidential} = concept
        )
        when permission in @shared_permissions do
-    domain_ids =
-      shared_to
-      |> Enum.map(& &1.id)
-      |> Enum.concat([domain_id])
-      |> Enum.uniq()
-
+    domain_ids = BusinessConcepts.get_domain_ids(concept)
     authorized_business_concept(claims, permission, confidential, domain_ids)
   end
 

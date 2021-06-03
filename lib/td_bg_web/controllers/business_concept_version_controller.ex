@@ -302,9 +302,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp annotate(link, %BusinessConceptVersion{
          id: business_concept_version_id,
-         business_concept: %{domain_id: domain_id}
+         business_concept: %{domain_id: domain_id, shared_to: shared_to}
        }) do
     link
+    |> Map.put(:shared_to, shared_to)
     |> Map.put(:business_concept_version_id, business_concept_version_id)
     |> Map.put(:domain_id, domain_id)
     |> Map.put(:hint, :link)

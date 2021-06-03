@@ -161,7 +161,39 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> json_response(:ok)
 
-      assert Map.has_key?(actions, "create_link")
+      assert Map.has_key?(actions, "create_concept_link")
+      assert Map.has_key?(actions, "create_structure_link")
+    end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
+    test "show actions in shared domains", %{
+      conn: conn,
+      domain: domain,
+      claims: %{user_id: user_id}
+    } do
+      shared_to = %{id: domain_id} = insert(:domain)
+      create_acl_entry(user_id, "domain", domain_id, "create")
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain, shared_to: [shared_to])
+        )
+
+      assert %{"_actions" => actions} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert Map.has_key?(actions, "create_structure_link")
+      refute Map.has_key?(actions, "create_concept_link")
     end
 
     @tag authentication: [user_name: @user_name]

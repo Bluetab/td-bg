@@ -106,6 +106,7 @@ defmodule TdBg.BusinessConcepts do
   def get_business_concept(business_concept_id) do
     BusinessConcept
     |> where([c], c.id == ^business_concept_id)
+    |> preload(:shared_to)
     |> Repo.one()
   end
 
@@ -816,6 +817,15 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.transaction()
     |> on_share()
   end
+
+  def get_domain_ids(%{domain_id: domain_id, shared_to: shared_to}) do
+    shared_to
+    |> Enum.map(& &1.id)
+    |> Enum.concat([domain_id])
+    |> Enum.uniq()
+  end
+
+  def get_domain_ids(_), do: []
 
   defp on_share({:ok, %{updated: %{id: id, shared_to: shared_to} = updated} = reply}) do
     ConceptLoader.refresh(id)
