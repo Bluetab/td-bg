@@ -38,16 +38,8 @@ defmodule TdBg.Canada.LinkAbilities do
     TaxonomyAbilities.can?(claims, :create_concept_link, %Domain{id: domain_id})
   end
 
-  def can?(%Claims{} = claims, :create_structure_link, %{
-        domain_id: domain_id,
-        shared_to: shared_to
-      }) do
-    domain_ids =
-      shared_to
-      |> Enum.map(& &1.id)
-      |> Enum.concat([domain_id])
-      |> Enum.uniq()
-
+  def can?(%Claims{} = claims, :create_structure_link, %{} = concept) do
+    domain_ids = BusinessConcepts.get_domain_ids(concept)
     Permissions.authorized?(claims, :manage_business_concept_links, domain_ids)
   end
 

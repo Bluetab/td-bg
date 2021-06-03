@@ -819,10 +819,8 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def get_domain_ids(%{domain_id: domain_id, shared_to: shared_to}) do
-    shared_to
-    |> Enum.map(& &1.id)
-    |> Enum.concat([domain_id])
-    |> Enum.uniq()
+    shared_ids = Enum.map(shared_to, & &1.id)
+    Enum.uniq([domain_id | shared_ids])
   end
 
   def get_domain_ids(_), do: []
