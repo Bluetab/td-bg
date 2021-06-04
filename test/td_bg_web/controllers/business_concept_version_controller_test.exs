@@ -109,7 +109,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       d1 = %{id: d1_id} = insert(:domain)
       d2 = %{id: d2_id} = insert(:domain)
 
-      %{business_concept: concept} =
+      %{business_concept: %{id: concept_id} = concept} =
         insert(
           :business_concept_version,
           content: %{"foo" => "bar"}
@@ -124,14 +124,22 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           Routes.business_concept_business_concept_version_path(
             conn,
             :show,
-            concept.id,
+            concept_id,
             "current"
           )
         )
 
+      link = "/api/business_concepts/#{concept_id}/shared_domains"
+
       %{
         "_embedded" => %{"shared_to" => [%{"id" => ^d1_id}, %{"id" => ^d2_id}]},
-        "permissions" => %{"update_concept" => true}
+        "actions" => %{
+          "share" => %{
+            "href" => ^link,
+            "method" => "PATCH",
+            "input" => %{}
+          }
+        }
       } = json_response(conn, 200)["data"]
     end
 

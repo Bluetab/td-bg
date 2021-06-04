@@ -248,7 +248,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> add_shared_to_parents()
 
       links = Links.get_links(business_concept_version)
-      permissions = get_permissions(claims, business_concept_version)
+      actions = get_actions(claims, business_concept_version)
 
       shared_to =
         business_concept_version
@@ -264,7 +264,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         links_hypermedia: links_hypermedia(conn, links, business_concept_version),
         hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
         template: template,
-        permissions: permissions
+        actions: actions
       )
     else
       nil -> {:error, :not_found}
@@ -311,8 +311,20 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     |> Map.put(:hint, :link)
   end
 
-  def get_permissions(claims, %BusinessConceptVersion{business_concept: concept}) do
-    %{update_concept: can?(claims, update(concept))}
+  def get_actions(claims, %BusinessConceptVersion{business_concept: concept}) do
+    case can?(claims, update(concept)) do
+      true ->
+        %{
+          share: %{
+            href: "/api/business_concepts/#{concept.id}/shared_domains",
+            method: "PATCH",
+            input: %{}
+          }
+        }
+
+      _ ->
+        %{}
+    end
   end
 
   swagger_path :delete do
@@ -571,7 +583,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp render_concept(conn, concept) do
     claims = conn.assigns[:current_resource]
     template = BusinessConcepts.get_template(concept)
-    permissions = get_permissions(claims, concept)
+    actions = get_actions(claims, concept)
 
     business_concept_version = add_completeness(concept)
 
@@ -581,7 +593,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       business_concept_version: business_concept_version,
       hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
       template: template,
-      permissions: permissions
+      actions: actions
     )
   end
 

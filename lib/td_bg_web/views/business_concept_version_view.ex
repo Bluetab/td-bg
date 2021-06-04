@@ -148,7 +148,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_template(assigns)
     |> add_embedded_resources(assigns)
     |> add_cached_content(assigns)
-    |> add_permissions(assigns)
+    |> add_actions(assigns)
   end
 
   defp add_reject_reason(concept, reject_reason, :rejected) do
@@ -195,9 +195,9 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   defp render_shared_to(_assigns), do: []
 
-  defp add_permissions(concept, %{permissions: permissions = %{}}) do
-    Map.put(concept, :permissions, permissions)
+  defp add_actions(concept, %{actions: actions = %{}}) do
+    Map.put(concept, :actions, actions)
   end
 
-  defp add_permissions(concept, _assigns), do: concept
+  defp add_actions(concept, _assigns), do: concept
 end
