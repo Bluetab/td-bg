@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3447] Share concept to a group of domains
+
 ## [4.21.0] 2021-05-31
 
 ### Changed
