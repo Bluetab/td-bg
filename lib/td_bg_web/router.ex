@@ -33,10 +33,13 @@ defmodule TdBgWeb.Router do
       get("/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user)
     end
 
-    resources("/business_concepts/comments", CommentController, only: [:create, :delete, :show, :index])
+    resources("/business_concepts/comments", CommentController,
+      only: [:create, :delete, :show, :index]
+    )
 
     resources "/business_concepts", BusinessConceptController, only: [] do
       resources("/versions", BusinessConceptVersionController, only: [:show, :index])
+      resources("/shared_domains", SharedDomainController, only: [:update], singleton: true)
     end
 
     post("/business_concept_versions/csv", BusinessConceptVersionController, :csv)
@@ -54,7 +57,8 @@ defmodule TdBgWeb.Router do
       post("/redraft", BusinessConceptVersionController, :undo_rejection)
       post("/set_confidential", BusinessConceptVersionController, :set_confidential)
       resources("/links", BusinessConceptLinkController, only: [:delete])
-      post("/links", BusinessConceptLinkController, :create_link)
+      post("/links/concepts", BusinessConceptLinkController, :create_concept_link)
+      post("/links/structures", BusinessConceptLinkController, :create_structure_link)
     end
 
     post("/business_concept_versions/search", BusinessConceptVersionController, :search)

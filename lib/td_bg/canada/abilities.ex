@@ -21,8 +21,12 @@ defmodule TdBg.Canada.Abilities do
       LinkAbilities.can?(claims, action, link)
     end
 
-    def can?(%Claims{} = claims, :create_link, %{business_concept: business_concept}) do
-      LinkAbilities.can?(claims, :create_link, business_concept)
+    def can?(%Claims{} = claims, :create_concept_link, %{business_concept: business_concept}) do
+      LinkAbilities.can?(claims, :create_concept_link, business_concept)
+    end
+
+    def can?(%Claims{} = claims, :create_structure_link, %{business_concept: business_concept}) do
+      LinkAbilities.can?(claims, :create_structure_link, business_concept)
     end
 
     def can?(%Claims{} = claims, action, %{hint: :link} = resource) do

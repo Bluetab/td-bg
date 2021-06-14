@@ -70,7 +70,8 @@ defmodule TdBg.Cache.DomainLoader do
 
   defp remove_deleted_domains do
     {results, errors} =
-      Taxonomies.list_domains(deleted: true)
+      %{}
+      |> Taxonomies.list_domains(deleted: true)
       |> Enum.map(fn %{id: id} -> TaxonomyCache.delete_domain(id) end)
       |> Enum.split_with(fn {:ok, _} -> true end)
 

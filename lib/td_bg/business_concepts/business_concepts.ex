@@ -13,6 +13,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Search.Indexer
+  alias TdBg.Taxonomies
   alias TdCache.ConceptCache
   alias TdCache.EventStream.Publisher
   alias TdCache.TemplateCache
@@ -105,6 +106,7 @@ defmodule TdBg.BusinessConcepts do
   def get_business_concept(business_concept_id) do
     BusinessConcept
     |> where([c], c.id == ^business_concept_id)
+    |> preload(:shared_to)
     |> Repo.one()
   end
 
@@ -137,7 +139,7 @@ defmodule TdBg.BusinessConcepts do
   def get_all_versions_by_business_concept_ids(business_concept_ids) do
     BusinessConceptVersion
     |> where([v], v.business_concept_id in ^business_concept_ids)
-    |> preload(:business_concept)
+    |> preload(business_concept: [:shared_to])
     |> Repo.all()
   end
 
@@ -411,7 +413,7 @@ defmodule TdBg.BusinessConcepts do
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+    |> preload([_, c, d], business_concept: [:domain, :shared_to])
     |> order_by(asc: :version)
     |> Repo.all()
   end
@@ -472,7 +474,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [_, c], _ in assoc(c, :domain))
     |> join(:left, [_, _, d], _ in assoc(d, :domain_group))
-    |> preload([_, c, d, g], business_concept: [domain: :domain_group])
+    |> preload([_, c, d, g], business_concept: [{:domain, :domain_group}, :shared_to])
     |> where([v, _], v.id == ^id)
     |> Repo.one!()
   end
@@ -494,7 +496,7 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [_, c], _ in assoc(c, :domain))
     |> join(:left, [_, _, d], _ in assoc(d, :domain_group))
-    |> preload([_, c, d, g], business_concept: [domain: :domain_group])
+    |> preload([_, c, d, g], business_concept: [{:domain, :domain_group}, :shared_to])
     |> where([_, c], c.id == ^id)
     |> where_version(version)
     |> Repo.one()
@@ -800,4 +802,33 @@ defmodule TdBg.BusinessConcepts do
     |> select([_], count())
     |> Repo.one!()
   end
+
+  def share(%BusinessConcept{} = concept, domain_ids) do
+    domains = Taxonomies.list_domains(%{domain_ids: domain_ids})
+
+    changeset =
+      concept
+      |> Repo.preload(:shared_to)
+      |> BusinessConcept.changeset(%{shared_to: domains})
+
+    Multi.new()
+    |> Multi.update(:updated, changeset)
+    |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
+    |> Repo.transaction()
+    |> on_share()
+  end
+
+  def get_domain_ids(%{domain_id: domain_id, shared_to: shared_to}) do
+    shared_ids = Enum.map(shared_to, & &1.id)
+    Enum.uniq([domain_id | shared_ids])
+  end
+
+  def get_domain_ids(_), do: []
+
+  defp on_share({:ok, %{updated: %{id: id, shared_to: shared_to} = updated} = reply}) do
+    ConceptLoader.refresh(id)
+    {:ok, %{reply | updated: %{updated | shared_to: TdBg.Taxonomies.add_parents(shared_to)}}}
+  end
+
+  defp on_share(error), do: error
 end

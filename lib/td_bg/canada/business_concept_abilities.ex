@@ -2,8 +2,8 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   @moduledoc false
 
   alias TdBg.Auth.Claims
-  alias TdBg.BusinessConcepts.BusinessConcept
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.{BusinessConcept, BusinessConceptVersion}
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
 
@@ -15,6 +15,15 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     "rejected" => :view_rejected_business_concepts,
     "versioned" => :view_versioned_business_concepts
   }
+
+  @shared_permissions [
+    :view_approval_pending_business_concepts,
+    :view_deprecated_business_concepts,
+    :view_draft_business_concepts,
+    :view_published_business_concepts,
+    :view_rejected_business_concepts,
+    :view_versioned_business_concepts
+  ]
 
   def can?(%Claims{role: "admin"}, :create_business_concept), do: true
 
@@ -182,17 +191,29 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   defp authorized_business_concept(
          %Claims{} = claims,
          permission,
-         %BusinessConcept{} = business_concept
-       ) do
-    domain_id = business_concept.domain_id
+         %BusinessConcept{confidential: confidential} = concept
+       )
+       when permission in @shared_permissions do
+    domain_ids = BusinessConcepts.get_domain_ids(concept)
+    authorized_business_concept(claims, permission, confidential, domain_ids)
+  end
 
-    case business_concept.confidential do
+  defp authorized_business_concept(
+         %Claims{} = claims,
+         permission,
+         %BusinessConcept{confidential: confidential, domain_id: domain_id}
+       ) do
+    authorized_business_concept(claims, permission, confidential, domain_id)
+  end
+
+  defp authorized_business_concept(%Claims{} = claims, permission, confidential, domain_ids) do
+    case confidential do
       true ->
-        Permissions.authorized?(claims, :manage_confidential_business_concepts, domain_id) &&
-          Permissions.authorized?(claims, permission, domain_id)
+        Permissions.authorized?(claims, :manage_confidential_business_concepts, domain_ids) &&
+          Permissions.authorized?(claims, permission, domain_ids)
 
       false ->
-        Permissions.authorized?(claims, permission, domain_id)
+        Permissions.authorized?(claims, permission, domain_ids)
     end
   end
 end

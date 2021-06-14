@@ -26,11 +26,21 @@ defmodule TdBg.Taxonomies do
       [%Domain{}, ...]
 
   """
-  def list_domains(opts \\ []) do
+  def list_domains(clauses \\ %{}, opts \\ []) do
     deleted = Keyword.get(opts, :deleted, false)
     preloads = Keyword.get(opts, :preload, [])
 
-    Domain
+    clauses
+    |> Enum.reduce(
+      Domain,
+      fn
+        {:domain_ids, domain_ids}, q when is_list(domain_ids) ->
+          where(q, [d], d.id in ^domain_ids)
+
+        _, q ->
+          q
+      end
+    )
     |> where_deleted(deleted)
     |> preload(^preloads)
     |> Repo.all()
@@ -94,6 +104,16 @@ defmodule TdBg.Taxonomies do
     |> Enum.filter(& &1)
     |> Enum.map(&Map.take(&1, [:id, :external_id, :name]))
   end
+
+  def add_parents(domains) when is_list(domains) do
+    Enum.map(domains, &add_parents/1)
+  end
+
+  def add_parents(%Domain{id: id} = domain) do
+    %{domain | parents: get_parents(id)}
+  end
+
+  def add_parents(other), do: other
 
   def get_parent_ids(nil), do: []
   def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)

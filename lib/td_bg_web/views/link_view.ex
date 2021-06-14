@@ -28,6 +28,6 @@ defmodule TdBgWeb.LinkView do
   end
 
   def render("link.json", %{link: link}) do
-    link
+    Map.delete(link, :shared_to)
   end
 end

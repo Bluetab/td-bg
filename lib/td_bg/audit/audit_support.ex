@@ -5,6 +5,7 @@ defmodule TdBg.Audit.AuditSupport do
 
   alias Ecto.Changeset
   alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.BusinessConcept
   alias TdCache.Audit
   alias TdDfLib.{MapDiff, Masks, Templates}
 
@@ -50,15 +51,31 @@ defmodule TdBg.Audit.AuditSupport do
 
   def subscribable_fields(%{business_concept_id: id, business_concept: %{type: type}}) do
     id
-    |> BusinessConcepts.get_business_concept_version("current")
-    |> Map.get(:content)
+    |> current_content()
+    |> do_get_subscribable_fields(type)
+  end
+
+  def subscribable_fields(%BusinessConcept{id: id, type: type}) do
+    id
+    |> current_content()
     |> do_get_subscribable_fields(type)
   end
 
   def subscribable_fields(_), do: %{}
 
-  def do_get_subscribable_fields(content, type) do
+  def do_get_subscribable_fields(%{} = content, type) do
     Map.take(content, Templates.subscribable_fields(type))
+  end
+
+  def do_get_subscribable_fields(_, _), do: %{}
+
+  defp current_content(business_concept_id) do
+    business_concept_id
+    |> BusinessConcepts.get_business_concept_version("current")
+    |> case do
+      version = %{} -> Map.get(version, :content)
+      _ -> nil
+    end
   end
 
   defp payload(%{description: description} = changes, data) do
@@ -91,6 +108,18 @@ defmodule TdBg.Audit.AuditSupport do
     changes
     |> Map.delete(:content)
     |> Map.put(:content, diff)
+  end
+
+  defp payload(%{shared_to: shared_to} = changes, _data) do
+    updated =
+      shared_to
+      |> Enum.filter(&(Map.get(&1, :action) == :update))
+      |> Enum.map(& &1.data)
+      |> Enum.map(&Map.take(&1, [:id, :external_id, :name]))
+
+    changes
+    |> Map.delete(:shared_to)
+    |> Map.put(:shared_to, updated)
   end
 
   defp payload(changes, _data), do: changes

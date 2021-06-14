@@ -228,8 +228,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   defimpl Elasticsearch.Document do
     alias TdBg.Taxonomies
-    alias TdCache.TaxonomyCache
-    alias TdCache.TemplateCache
+    alias TdCache.{TaxonomyCache, TemplateCache}
     alias TdCache.UserCache
     alias TdDfLib.Format
     alias TdDfLib.RichText
@@ -242,10 +241,14 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
     @impl Elasticsearch.Document
     def encode(%BusinessConceptVersion{business_concept: business_concept} = bcv) do
-      %{type: type, domain: domain, confidential: confidential} = business_concept
+      %{type: type, domain: domain, confidential: confidential, shared_to: shared_to} =
+        business_concept
+
       template = TemplateCache.get_by_name!(type) || %{content: []}
-      domain_ids = Taxonomies.get_parent_ids(domain.id)
-      domain_parents = Enum.map(domain_ids, &get_domain/1)
+      domain_parents = get_parents(domain.id)
+      shared_to = get_shared_to(shared_to)
+      domain_ids = get_domain_ids(domain_parents, shared_to)
+      shared_to_names = shared_to_names(shared_to)
 
       content =
         bcv
@@ -276,13 +279,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       |> Map.put(:last_change_by, get_last_change_by(bcv))
       |> Map.put(:template, Map.take(template, [:name, :label]))
       |> Map.put(:confidential, confidential)
-    end
-
-    defp get_domain(id) do
-      case TaxonomyCache.get_domain(id) do
-        %{} = domain -> Map.take(domain, [:id, :external_id, :name])
-        nil -> %{id: id}
-      end
+      |> Map.put(:shared_to_names, shared_to_names)
     end
 
     defp get_last_change_by(%BusinessConceptVersion{last_change_by: last_change_by}) do
@@ -295,5 +292,37 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         {:ok, user} -> user
       end
     end
+
+    defp get_shared_to(shared_to) do
+      shared_to
+      |> Enum.map(&Taxonomies.get_parents(&1.id))
+      |> List.flatten()
+      |> Enum.filter(& &1)
+      |> Enum.uniq_by(& &1.id)
+    end
+
+    defp get_domain_ids(parents, shared_to) do
+      parents
+      |> Enum.concat(shared_to)
+      |> Enum.map(& &1.id)
+      |> Enum.uniq()
+    end
+
+    defp get_parents(id) do
+      id
+      |> Taxonomies.get_parent_ids()
+      |> Enum.map(&get_domain/1)
+    end
+
+    defp get_domain(id) do
+      case TaxonomyCache.get_domain(id) do
+        %{} = domain -> Map.take(domain, [:id, :external_id, :name])
+        nil -> %{id: id}
+      end
+    end
+
+    defp shared_to_names([]), do: nil
+
+    defp shared_to_names(shared_to), do: Enum.map(shared_to, & &1.name)
   end
 end

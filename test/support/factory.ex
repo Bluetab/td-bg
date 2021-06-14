@@ -85,6 +85,13 @@ defmodule TdBg.Factory do
     }
   end
 
+  def shared_concept_factory do
+    %TdBg.SharedConcepts.SharedConcept{
+      business_concept: build(:business_concept),
+      domain: build(:domain)
+    }
+  end
+
   defp default_assoc(attrs, id_key, key) do
     if Enum.any?([key, id_key], &Map.has_key?(attrs, &1)) do
       attrs

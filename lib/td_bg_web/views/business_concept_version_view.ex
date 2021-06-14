@@ -2,8 +2,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
   use TdHypermedia, :view
 
-  alias TdBgWeb.BusinessConceptVersionView
-  alias TdBgWeb.LinkView
+  alias TdBgWeb.{BusinessConceptVersionView, DomainView, LinkView}
   alias TdCache.UserCache
   alias TdDfLib.Format
 
@@ -32,6 +31,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
           assigns
       ) do
     %{"data" => links} = render_many_hypermedia(links_hypermedia, LinkView, "embedded.json")
+    shared_to = render_shared_to(assigns)
 
     render_one(
       business_concept_version,
@@ -39,7 +39,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "show.json",
       assigns
       |> Map.delete(:links_hypermedia)
-      |> Map.put("_embedded", %{links: links})
+      |> Map.put("_embedded", %{links: links, shared_to: shared_to})
     )
   end
 
@@ -148,6 +148,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_template(assigns)
     |> add_embedded_resources(assigns)
     |> add_cached_content(assigns)
+    |> add_actions(assigns)
   end
 
   defp add_reject_reason(concept, reject_reason, :rejected) do
@@ -187,4 +188,16 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         Map.put(concept, :content, content)
     end
   end
+
+  defp render_shared_to(%{shared_to: shared_to}) do
+    render_many(shared_to, DomainView, "domain.json")
+  end
+
+  defp render_shared_to(_assigns), do: []
+
+  defp add_actions(concept, %{actions: actions = %{}}) do
+    Map.put(concept, :actions, actions)
+  end
+
+  defp add_actions(concept, _assigns), do: concept
 end

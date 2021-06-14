@@ -41,7 +41,11 @@ defmodule TdBg.Canada.TaxonomyAbilities do
     Permissions.authorized?(claims, :manage_business_concept_links, domain_id)
   end
 
-  def can?(%Claims{} = claims, :create_link, %Domain{id: domain_id}) do
+  def can?(%Claims{} = claims, :create_concept_link, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_business_concept_links, domain_id)
+  end
+
+  def can?(%Claims{} = claims, :create_structure_link, %Domain{id: domain_id}) do
     Permissions.authorized?(claims, :manage_business_concept_links, domain_id)
   end
 

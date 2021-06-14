@@ -110,6 +110,14 @@ defmodule MockPermissionResolver do
     end
   end
 
+  def has_permission?(session_id, permission, "domain", domain_ids) when is_list(domain_ids) do
+    domain_ids
+    |> Enum.map(&TaxonomyCache.get_parent_ids/1)
+    |> List.flatten()
+    |> Enum.uniq()
+    |> has_resource_permission?("domain", session_id, permission)
+  end
+
   def has_permission?(session_id, permission, "domain", domain_id) do
     domain_id
     |> TaxonomyCache.get_parent_ids()

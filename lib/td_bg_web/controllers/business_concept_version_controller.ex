@@ -245,17 +245,26 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> add_completeness()
         |> add_counts()
         |> add_taxonomy()
+        |> add_shared_to_parents()
 
       links = Links.get_links(business_concept_version)
+      actions = get_actions(claims, business_concept_version)
+
+      shared_to =
+        business_concept_version
+        |> Map.get(:business_concept)
+        |> Map.get(:shared_to)
 
       render(
         conn,
         "show.json",
         business_concept_version: business_concept_version,
         links: links,
+        shared_to: shared_to,
         links_hypermedia: links_hypermedia(conn, links, business_concept_version),
         hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-        template: template
+        template: template,
+        actions: actions
       )
     else
       nil -> {:error, :not_found}
@@ -272,6 +281,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     BusinessConcepts.add_parents(business_concept_version)
   end
 
+  defp add_shared_to_parents(
+         %BusinessConceptVersion{business_concept: %{shared_to: shared_to} = concept} =
+           business_concept_version
+       ) do
+    %{
+      business_concept_version
+      | business_concept: %{concept | shared_to: Taxonomies.add_parents(shared_to)}
+    }
+  end
+
   defp links_hypermedia(conn, links, business_concept_version) do
     collection_hypermedia(
       "business_concept_version_business_concept_link",
@@ -283,12 +302,29 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp annotate(link, %BusinessConceptVersion{
          id: business_concept_version_id,
-         business_concept: %{domain_id: domain_id}
+         business_concept: %{domain_id: domain_id, shared_to: shared_to}
        }) do
     link
+    |> Map.put(:shared_to, shared_to)
     |> Map.put(:business_concept_version_id, business_concept_version_id)
     |> Map.put(:domain_id, domain_id)
     |> Map.put(:hint, :link)
+  end
+
+  def get_actions(claims, %BusinessConceptVersion{business_concept: concept}) do
+    case can?(claims, update(concept)) do
+      true ->
+        %{
+          share: %{
+            href: "/api/business_concepts/#{concept.id}/shared_domains",
+            method: "PATCH",
+            input: %{}
+          }
+        }
+
+      _ ->
+        %{}
+    end
   end
 
   swagger_path :delete do
@@ -545,7 +581,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   defp render_concept(conn, concept) do
+    claims = conn.assigns[:current_resource]
     template = BusinessConcepts.get_template(concept)
+    actions = get_actions(claims, concept)
 
     business_concept_version = add_completeness(concept)
 
@@ -554,7 +592,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       "show.json",
       business_concept_version: business_concept_version,
       hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-      template: template
+      template: template,
+      actions: actions
     )
   end
 

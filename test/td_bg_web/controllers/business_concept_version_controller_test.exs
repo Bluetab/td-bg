@@ -102,6 +102,47 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"errors" => %{"detail" => "Not found"}} = json_response(conn, 404)
     end
 
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "shows the domains in which it has been shared",
+         %{conn: conn} do
+      d1 = %{id: d1_id} = insert(:domain)
+      d2 = %{id: d2_id} = insert(:domain)
+
+      %{business_concept: %{id: concept_id} = concept} =
+        insert(
+          :business_concept_version,
+          content: %{"foo" => "bar"}
+        )
+
+      insert(:shared_concept, business_concept: concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            concept_id,
+            "current"
+          )
+        )
+
+      link = "/api/business_concepts/#{concept_id}/shared_domains"
+
+      %{
+        "_embedded" => %{"shared_to" => [%{"id" => ^d1_id}, %{"id" => ^d2_id}]},
+        "actions" => %{
+          "share" => %{
+            "href" => ^link,
+            "method" => "PATCH",
+            "input" => %{}
+          }
+        }
+      } = json_response(conn, 200)["data"]
+    end
+
     @tag authentication: [user_name: @user_name]
     @tag :template
     test "show with actions", %{
@@ -128,7 +169,76 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> json_response(:ok)
 
-      assert Map.has_key?(actions, "create_link")
+      assert Map.has_key?(actions, "create_concept_link")
+      assert Map.has_key?(actions, "create_structure_link")
+    end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
+    test "show actions in shared domains", %{
+      conn: conn,
+      domain: domain,
+      claims: %{user_id: user_id}
+    } do
+      shared_to = %{id: domain_id} = insert(:domain)
+      create_acl_entry(user_id, "domain", domain_id, "create")
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain, shared_to: [shared_to])
+        )
+
+      assert %{"_actions" => actions} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert Map.has_key?(actions, "create_structure_link")
+      refute Map.has_key?(actions, "create_concept_link")
+    end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
+    test "shows concept when we have permissions over shared domain", %{
+      conn: conn,
+      domain: domain,
+      claims: %{user_id: user_id}
+    } do
+      %{id: domain_id} = shared = insert(:domain)
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain, shared_to: [shared])
+        )
+
+      create_acl_entry(user_id, "domain", domain_id, "create")
+
+      assert %{
+               "data" => %{
+                 "id" => ^id,
+                 "business_concept_id" => ^business_concept_id,
+                 "_embedded" => %{
+                   "shared_to" => [%{"id" => ^domain_id}]
+                 }
+               }
+             } =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
     end
   end
 
@@ -260,7 +370,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [role: "user"]
     @tag :template
-    test "doesn't allow concept creation when not in domain", %{conn: conn, swagger_schema: schema} do
+    test "doesn't allow concept creation when not in domain", %{
+      conn: conn,
+      swagger_schema: schema
+    } do
       domain = insert(:domain)
 
       creation_attrs = %{

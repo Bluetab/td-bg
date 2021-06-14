@@ -623,15 +623,32 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert business_concept_versions
              |> Enum.map(fn b -> business_concept_version_preload(b) end) ==
-               [business_concept_version]
+               [business_concept_version_preload(business_concept_version, [:domain, :shared_to])]
     end
 
     test "get_business_concept_version!/1 returns the business_concept_version with given id" do
+      d1 = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+      d3 = %{id: domain_id3} = insert(:domain)
+
+      concept = insert(:business_concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+      insert(:shared_concept, business_concept: concept, domain: d3)
+
+      %{id: id} = insert(:business_concept_version, business_concept: concept)
+
+      assert %BusinessConceptVersion{
+               id: ^id,
+               business_concept: %{shared_to: [%{id: ^domain_id2}, %{id: ^domain_id3}]}
+             } = BusinessConcepts.get_business_concept_version!(id)
+    end
+
+    test "get_business_concept_version!/1 with preloaded shared_to" do
       %{id: id} = insert(:business_concept_version)
       assert %BusinessConceptVersion{id: ^id} = BusinessConcepts.get_business_concept_version!(id)
     end
 
-    test "get_business_concept_version!/2 returns the business_concept_version by concept id and version" do
+    test "get_business_concept_version/2 returns the business_concept_version by concept id and version" do
       claims = build(:claims)
 
       %{id: id, business_concept_id: business_concept_id, version: version} =
@@ -664,6 +681,27 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.get_business_concept_version(business_concept_id, id)
 
       refute BusinessConcepts.get_business_concept_version(business_concept_id + 1, id)
+    end
+
+    test "get_business_concept_version/2 returns preloads" do
+      d1 = %{id: domain_id1} = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+      d3 = %{id: domain_id3} = insert(:domain)
+
+      concept = %{id: concept_id} = insert(:business_concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+      insert(:shared_concept, business_concept: concept, domain: d3)
+
+      %{id: id} = insert(:business_concept_version, business_concept: concept)
+
+      assert %{
+               id: ^id,
+               business_concept: %{
+                 id: ^concept_id,
+                 domain: %{id: ^domain_id1},
+                 shared_to: [%{id: ^domain_id2}, %{id: ^domain_id3}]
+               }
+             } = BusinessConcepts.get_business_concept_version(concept_id, id)
     end
 
     test "get_confidential_ids returns all business concept ids which are confidential" do
@@ -707,7 +745,7 @@ defmodule TdBg.BusinessConceptsTest do
     test "search_fields/1 returns a business_concept_version with default values in its content" do
       alias Elasticsearch.Document
 
-      business_concept = insert(:business_concept, type: @template_name)
+      business_concept = insert(:business_concept, type: @template_name, shared_to: [])
 
       business_concept_version =
         insert(:business_concept_version, business_concept: business_concept)
@@ -868,14 +906,76 @@ defmodule TdBg.BusinessConceptsTest do
     assert BusinessConcepts.count(domain_id: domain_id, deprecated: false) == 1
   end
 
+  describe "share/2" do
+    test "shares a business concept to a group of domains" do
+      concept = %{id: concept_id} = insert(:business_concept)
+      d1 = %{id: domain_id1} = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+
+      assert {:ok,
+              %{
+                audit: event_id,
+                updated: %{id: ^concept_id, shared_to: [%{id: ^domain_id1}, %{id: ^domain_id2}]}
+              }} = BusinessConcepts.share(concept, [d1.id, d2.id])
+
+      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]} =
+               Jason.decode!(payload)
+    end
+
+    test "updates an existing relation between a business concept and a group of domains" do
+      d1 = insert(:domain)
+      d2 = %{id: domain_id2} = insert(:domain)
+      d3 = %{id: domain_id3} = insert(:domain)
+
+      concept = %{id: concept_id} = insert(:business_concept)
+      insert(:shared_concept, business_concept: concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+
+      assert {:ok,
+              %{
+                audit: event_id,
+                updated: %{id: ^concept_id, shared_to: [%{id: ^domain_id2}, %{id: ^domain_id3}]}
+              }} = BusinessConcepts.share(concept, [d2.id, d3.id])
+
+      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"shared_to" => [%{"id" => ^domain_id2}, %{"id" => ^domain_id3}]} =
+               Jason.decode!(payload)
+    end
+
+    test "deletes an existing relation between a business concept and a group of domains" do
+      d1 = insert(:domain)
+      d2 = insert(:domain)
+
+      concept = %{id: concept_id} = insert(:business_concept)
+      insert(:shared_concept, business_concept: concept, domain: d1)
+      insert(:shared_concept, business_concept: concept, domain: d2)
+
+      assert {:ok,
+              %{
+                audit: event_id,
+                updated: %{id: ^concept_id, shared_to: []}
+              }} = BusinessConcepts.share(concept, [])
+
+      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"shared_to" => []} = Jason.decode!(payload)
+    end
+  end
+
   defp to_rich_text(plain) do
     %{"document" => plain}
   end
 
-  defp business_concept_version_preload(business_concept_version) do
+  defp business_concept_version_preload(business_concept_version, preload \\ [:domain]) do
     business_concept_version
     |> Repo.preload(:business_concept)
-    |> Repo.preload(business_concept: [:domain])
+    |> Repo.preload(business_concept: preload)
   end
 
   defp assert_expected_validation(changeset, field, expected_validation) do

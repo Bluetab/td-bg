@@ -13,7 +13,7 @@ defmodule TdBg.Search.Store do
   def stream(schema) do
     schema
     |> Repo.stream()
-    |> Repo.stream_preload(1000, business_concept: :domain)
+    |> Repo.stream_preload(1000, business_concept: [:domain, :shared_to])
     |> Stream.reject(&domain_deleted?/1)
   end
 
@@ -29,7 +29,7 @@ defmodule TdBg.Search.Store do
       select: bcv
     )
     |> Repo.stream()
-    |> Repo.stream_preload(1000, business_concept: :domain)
+    |> Repo.stream_preload(1000, business_concept: [:domain, :shared_to])
     |> Stream.reject(&domain_deleted?/1)
   end
 

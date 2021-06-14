@@ -343,6 +343,25 @@ defmodule TdBgWeb.SwaggerDefinitions do
               data_owner: ["user1"]
             }
           })
+        end,
+      BusinessConceptResponse:
+        swagger_schema do
+          properties do
+            data(
+              Schema.new do
+                properties do
+                  id(:integer, "Business concept id", required: true)
+                  _embedded(Schema.ref(:EmbeddedSharedTo))
+                end
+              end
+            )
+          end
+        end,
+      EmbeddedSharedTo:
+        swagger_schema do
+          properties do
+            shared_to(Schema.ref(:Domains))
+          end
         end
     }
   end
