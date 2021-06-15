@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.22.1] 2021-06-15
+
+### Fixed
+
+- [TD-3447] Update td-cache with version `4.22.1`
+
 ## [4.22.0] 2021-06-15
 
 ### Added
