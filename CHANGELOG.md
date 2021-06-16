@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.22.2] 2021-06-16
+
+### Fixed
+
+- [TD-3868] Unlock td-cache version `4.22.1`
+
 ## [4.22.1] 2021-06-15
 
 ### Fixed
