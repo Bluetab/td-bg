@@ -85,6 +85,10 @@ defmodule TdBg.Canada.Abilities do
       TaxonomyAbilities.can?(claims, :manage_quality_rule, domain)
     end
 
+    def can?(%Claims{} = claims, :manage_structures_domain, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :manage_structures_domain, domain)
+    end
+
     def can?(%Claims{} = claims, :update_ingest, %Domain{} = domain) do
       TaxonomyAbilities.can?(claims, :update_ingest, domain)
     end
