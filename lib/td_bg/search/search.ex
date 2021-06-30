@@ -43,11 +43,11 @@ defmodule TdBg.Search do
   end
 
   defp filter_values({"taxonomy", %{"buckets" => buckets}}) do
-    domains = 
-      buckets 
+    domains =
+      buckets
       |> Enum.map(& &1["key"])
       |> Taxonomies.enrich()
-      
+
     {"taxonomy", domains}
   end
 
