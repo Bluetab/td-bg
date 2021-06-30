@@ -9,11 +9,6 @@ defmodule TdBg.Search.Aggregations do
   def aggregation_terms do
     static_keywords = [
       {"current", %{terms: %{field: "current"}}},
-      {"domain_parents",
-       %{
-         nested: %{path: "domain_parents"},
-         aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}
-       }},
       {"shared_to_names", %{terms: %{field: "shared_to_names.raw"}}},
       {"domain_ids", %{terms: %{field: "domain_ids"}}},
       {"status", %{terms: %{field: "status"}}},
@@ -22,7 +17,12 @@ defmodule TdBg.Search.Aggregations do
       {"rule_count",
        %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},
       {"link_count",
-       %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}}
+       %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}},
+      {"taxonomy",
+       %{
+         nested: %{path: "domain_parents"},
+         aggs: %{distinct_search: %{terms: %{field: "domain_parents.id", size: 50}}}
+       }}
     ]
 
     dynamic_keywords =
