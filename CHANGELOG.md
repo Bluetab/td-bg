@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.23.0] 2021-06-28
+
+### Added
+
+- [TD-3720] Add manage_structures_domain permission to domain actions
+
 ## [4.22.2] 2021-06-16
 
 ### Fixed
