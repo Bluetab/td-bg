@@ -4,6 +4,7 @@ defmodule TdBg.Search do
   """
 
   alias TdBg.Search.Cluster
+  alias TdBg.Taxonomies
 
   require Logger
 
@@ -39,6 +40,15 @@ defmodule TdBg.Search do
         Logger.warn("Error response from Elasticsearch: #{message}")
         error
     end
+  end
+
+  defp filter_values({"taxonomy", %{"buckets" => buckets}}) do
+    domains =
+      buckets
+      |> Enum.map(& &1["key"])
+      |> Taxonomies.enrich()
+
+    {"taxonomy", domains}
   end
 
   defp filter_values({name, %{"buckets" => buckets}}) do
