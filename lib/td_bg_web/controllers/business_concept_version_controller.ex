@@ -247,7 +247,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> add_taxonomy()
         |> add_shared_to_parents()
 
-      links = Links.get_links(business_concept_version)
+      links =
+        business_concept_version
+        |> Links.get_links()
+        |> Enum.filter(fn(%{domain_id: domain_id}) ->
+            can?(claims, view_data_structure(domain_id))
+          end)
+
       actions = get_actions(claims, business_concept_version)
 
       shared_to =
