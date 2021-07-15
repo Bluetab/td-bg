@@ -17,7 +17,7 @@ defmodule TdBgWeb.SharedDomainControllerTest do
       %{id: concept_id} = insert(:business_concept)
       %{id: domain_id1} = insert(:domain)
       %{id: domain_id2} = insert(:domain)
-      body = %{domain_ids: [domain_id1, domain_id2]}
+      body = %{domain_ids: [domain_id1, domain_id2]} |> IO.inspect
 
       conn =
         patch(conn, Routes.business_concept_shared_domain_path(conn, :update, concept_id), body)
@@ -25,12 +25,16 @@ defmodule TdBgWeb.SharedDomainControllerTest do
       assert %{
                "data" => %{
                  "id" => ^concept_id,
-                 "_embedded" => %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]}
+                 "_embedded" => %{"shared_to" => shared_domains}
                }
              } =
                conn
                |> validate_resp_schema(schema, "BusinessConceptResponse")
                |> json_response(:ok)
+
+
+      assert Enum.find(shared_domains, fn domain -> domain["id"] == domain_id1 end)
+      assert Enum.find(shared_domains, fn domain -> domain["id"] == domain_id2 end)
     end
 
     @tag authentication: [role: "admin"]
