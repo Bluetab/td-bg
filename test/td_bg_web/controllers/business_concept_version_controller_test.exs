@@ -198,7 +198,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
             conn,
             :show,
             business_concept_id,
-            "current"
+            id
           )
         )
 
@@ -239,14 +239,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
             conn,
             :show,
             business_concept_id,
-            "current"
+            id
           )
         )
 
-      link = "/api/business_concepts/#{business_concept_id}/shared_domains"
-
-      nil == Map.get(json_response(conn, 200)["data"]["actions"], "share")
-
+      assert nil == Map.get(json_response(conn, 200)["data"]["actions"], "share")
     end
 
     @tag authentication: [user_name: @user_name]
