@@ -215,7 +215,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       } = json_response(conn, 200)["data"]
     end
 
-
     @tag authentication: [user_name: @user_name]
     @tag :template
     test "does not include share action if non-admin user does not have :share_with_domain permission", %{
@@ -249,7 +248,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       nil == Map.get(json_response(conn, 200)["data"]["actions"], "share")
 
     end
-
 
     @tag authentication: [user_name: @user_name]
     @tag :template

@@ -80,7 +80,6 @@ defmodule TdBgWeb.Authentication do
     token
   end
 
-
   def create_acl_entry(user_id, resource_type, resource_id, permissions) when is_list(permissions) do
     MockPermissionResolver.create_acl_entry(%{
       principal_type: "user",
@@ -90,7 +89,6 @@ defmodule TdBgWeb.Authentication do
       permissions: permissions
     })
   end
-
 
   def create_acl_entry(user_id, resource_type, resource_id, role_name)
       when is_binary(role_name) do
