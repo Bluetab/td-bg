@@ -312,8 +312,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def get_actions(claims, %BusinessConceptVersion{business_concept: concept}) do
-    case can?(claims, update(concept)) do
-      true ->
+    with true <- can?(claims, update(concept)),
+         true <- can?(claims, share_with_domain(concept)) do
         %{
           share: %{
             href: "/api/business_concepts/#{concept.id}/shared_domains",
@@ -322,7 +322,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
           }
         }
 
-      _ ->
+      else _ ->
         %{}
     end
   end

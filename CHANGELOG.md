@@ -4,6 +4,7 @@
 
 ### Added
 
+- [TD-3873] Include a specific permission to be able to share a concept with a domain
 - [TD-3230] Taxonomy aggregations with enriched information
 
 ## [4.23.0] 2021-06-28
