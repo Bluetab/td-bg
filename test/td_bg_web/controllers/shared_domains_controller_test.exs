@@ -57,6 +57,7 @@ defmodule TdBgWeb.SharedDomainControllerTest do
     } do
       %{id: domain_id} = domain = insert(:domain)
       create_acl_entry(user_id, "domain", domain_id, "create")
+      create_acl_entry(user_id, "domain", domain_id, [:share_with_domain])
       %{id: concept_id} = insert(:business_concept, domain: domain)
       %{id: domain_id1} = insert(:domain)
       %{id: domain_id2} = insert(:domain)
