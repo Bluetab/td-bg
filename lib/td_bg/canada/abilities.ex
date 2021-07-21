@@ -97,6 +97,10 @@ defmodule TdBg.Canada.Abilities do
       TaxonomyAbilities.can?(claims, :view_dashboard, domain)
     end
 
+    def can?(%Claims{} = claims, :view_quality_rule, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, :view_quality_rule, domain)
+    end
+
     def can?(%Claims{} = claims, :create, BusinessConceptVersion) do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
