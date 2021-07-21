@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-3873] Include a specific permission to be able to share a concept with a domain
+
 ### Fixed
 
 - [TD-3965] Allow domain filtering by view_dashboard permission
@@ -10,7 +14,6 @@
 
 ### Added
 
-- [TD-3873] Include a specific permission to be able to share a concept with a domain
 - [TD-3230] Taxonomy aggregations with enriched information
 
 ## [4.23.0] 2021-06-28
