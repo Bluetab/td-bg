@@ -103,6 +103,34 @@ defmodule TdBgWeb.DomainControllerTest do
     end
 
     @tag authentication: [user_name: "non_admin_user"]
+    test "list all domains user has view_dashboard permission over", %{
+      conn: conn,
+      swagger_schema: schema,
+      claims: %{user_id: user_id}
+    } do
+      %{id: domain_id} = insert(:domain)
+
+      assert %{"data" => data} =
+        conn
+        |> get(Routes.domain_path(conn, :index, %{actions: "view_dashboard"}))
+        |> validate_resp_schema(schema, "DomainsResponse")
+        |> json_response(:ok)
+
+      assert [] = data
+
+      create_acl_entry(user_id, "domain", domain_id, "watch")
+
+      assert %{"data" => data} =
+        conn
+        |> get(Routes.domain_path(conn, :index, %{actions: "view_dashboard"}))
+        |> validate_resp_schema(schema, "DomainsResponse")
+        |> json_response(:ok)
+
+      assert [%{"id" => ^domain_id}] = data
+
+    end
+
+    @tag authentication: [user_name: "non_admin_user"]
     test "user cant view any domain", %{conn: conn, swagger_schema: schema} do
       insert(:domain)
 
