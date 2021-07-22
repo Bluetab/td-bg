@@ -25,12 +25,15 @@ defmodule TdBgWeb.SharedDomainControllerTest do
       assert %{
                "data" => %{
                  "id" => ^concept_id,
-                 "_embedded" => %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]}
+                 "_embedded" => %{"shared_to" => shared_domains}
                }
              } =
                conn
                |> validate_resp_schema(schema, "BusinessConceptResponse")
                |> json_response(:ok)
+
+      assert Enum.find(shared_domains, fn domain -> domain["id"] == domain_id1 end)
+      assert Enum.find(shared_domains, fn domain -> domain["id"] == domain_id2 end)
     end
 
     @tag authentication: [role: "admin"]
@@ -54,6 +57,7 @@ defmodule TdBgWeb.SharedDomainControllerTest do
     } do
       %{id: domain_id} = domain = insert(:domain)
       create_acl_entry(user_id, "domain", domain_id, "create")
+      create_acl_entry(user_id, "domain", domain_id, [:share_with_domain])
       %{id: concept_id} = insert(:business_concept, domain: domain)
       %{id: domain_id1} = insert(:domain)
       %{id: domain_id2} = insert(:domain)
