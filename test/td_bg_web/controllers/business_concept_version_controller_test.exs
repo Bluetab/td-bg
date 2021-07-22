@@ -175,6 +175,79 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [user_name: @user_name]
     @tag :template
+    test "includes share action if non-admin user has :share_with_domain permission", %{
+      conn: conn,
+      domain: %{id: domain_id} = domain,
+      claims: %{user_id: user_id}
+    } do
+      create_acl_entry(user_id, "domain", domain_id, [
+        :update_business_concept,
+        :view_draft_business_concepts,
+        :share_with_domain
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_id,
+            id
+          )
+        )
+
+      link = "/api/business_concepts/#{business_concept_id}/shared_domains"
+
+      %{
+        "actions" => %{
+          "share" => %{
+            "href" => ^link,
+            "method" => "PATCH",
+            "input" => %{}
+          }
+        }
+      } = json_response(conn, 200)["data"]
+    end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
+    test "does not include share action if non-admin user does not have :share_with_domain permission", %{
+      conn: conn,
+      domain: %{id: domain_id} = domain,
+      claims: %{user_id: user_id}
+    } do
+      create_acl_entry(user_id, "domain", domain_id, [
+        :update_business_concept,
+        :view_draft_business_concepts
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
+
+      conn =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_id,
+            id
+          )
+        )
+
+      assert nil == Map.get(json_response(conn, 200)["data"]["actions"], "share")
+    end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
     test "show actions in shared domains", %{
       conn: conn,
       domain: domain,
