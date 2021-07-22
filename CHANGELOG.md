@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-3965] Allow domain filtering by view_dashboard permission
+
 ## [4.24.0] 2021-07-13
 
 ### Modified
