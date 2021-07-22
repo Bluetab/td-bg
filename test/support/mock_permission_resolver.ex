@@ -30,7 +30,8 @@ defmodule MockPermissionResolver do
       :view_rejected_business_concepts,
       :view_deprecated_business_concepts,
       :manage_confidential_business_concepts,
-      :view_dashboard
+      :view_dashboard,
+      :view_quality_rule
     ],
     "publish" => [
       :view_domain,
@@ -47,7 +48,8 @@ defmodule MockPermissionResolver do
       :view_versioned_business_concepts,
       :view_rejected_business_concepts,
       :view_deprecated_business_concepts,
-      :view_dashboard
+      :view_dashboard,
+      :view_quality_rule
     ],
     "watch" => [
       :view_domain,
@@ -56,7 +58,8 @@ defmodule MockPermissionResolver do
       :view_deprecated_business_concepts,
       :view_draft_business_concepts,
       :view_rejected_business_concepts,
-      :view_dashboard
+      :view_dashboard,
+      :view_quality_rule
     ],
     "create" => [
       :view_domain,
@@ -70,7 +73,8 @@ defmodule MockPermissionResolver do
       :view_versioned_business_concepts,
       :view_approval_pending_business_concepts,
       :view_deprecated_business_concepts,
-      :view_dashboard
+      :view_dashboard,
+      :view_quality_rule
     ]
   }
   @initial_state %{sessions: Map.new(), acls: []}
