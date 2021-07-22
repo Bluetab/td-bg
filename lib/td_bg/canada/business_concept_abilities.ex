@@ -35,6 +35,14 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     )
   end
 
+  def can?(%Claims{} = claims, :share_with_domain, %BusinessConcept{} = business_concept) do
+    authorized?(
+      claims,
+      :share_with_domain,
+      business_concept
+    )
+  end
+
   def can?(%Claims{} = claims, :create_business_concept, %Domain{
         id: domain_id
       }) do
