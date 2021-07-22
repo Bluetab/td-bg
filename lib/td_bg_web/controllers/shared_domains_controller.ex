@@ -24,7 +24,6 @@ defmodule TdBgWeb.SharedDomainController do
     domain_ids = Map.get(params, "domain_ids", [])
 
     with %BusinessConcept{} = concept <- BusinessConcepts.get_business_concept(id),
-         {:can, true} <- {:can, can?(claims, update(concept))},
          {:can, true} <- {:can, can?(claims, share_with_domain(concept))},
          {:ok, %{updated: updated}} <- BusinessConcepts.share(concept, domain_ids) do
       conn
