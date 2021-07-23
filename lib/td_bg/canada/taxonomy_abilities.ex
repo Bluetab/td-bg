@@ -85,4 +85,8 @@ defmodule TdBg.Canada.TaxonomyAbilities do
   def can?(%Claims{} = claims, :view_dashboard, %Domain{id: domain_id}) do
     Permissions.authorized?(claims, :view_dashboard, domain_id)
   end
+
+  def can?(%Claims{} = claims, :view_quality_rule, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :view_quality_rule, domain_id)
+  end
 end
