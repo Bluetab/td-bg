@@ -250,9 +250,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       links =
         business_concept_version
         |> Links.get_links()
-        |> Enum.filter(fn(%{domain_id: domain_id}) ->
-            can?(claims, view_data_structure(domain_id))
-          end)
+        |> Enum.filter(fn
+          %{domain_id: domain_id} -> can?(claims, view_data_structure(domain_id))
+          _ -> can?(claims, view_data_structure(:no_domain))
+        end)
 
       actions = get_actions(claims, business_concept_version)
 
@@ -327,7 +328,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         }
       }
     else
-        %{}
+      %{}
     end
   end
 
