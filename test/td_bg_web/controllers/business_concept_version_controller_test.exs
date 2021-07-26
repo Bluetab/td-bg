@@ -217,11 +217,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [user_name: @user_name]
     @tag :template
-    test "does not include share action if non-admin user does not have :share_with_domain permission", %{
-      conn: conn,
-      domain: %{id: domain_id} = domain,
-      claims: %{user_id: user_id}
-    } do
+    test "does not include share action if non-admin user does not have :share_with_domain permission",
+         %{
+           conn: conn,
+           domain: %{id: domain_id} = domain,
+           claims: %{user_id: user_id}
+         } do
       create_acl_entry(user_id, "domain", domain_id, [
         :update_business_concept,
         :view_draft_business_concepts
