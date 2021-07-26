@@ -12,6 +12,10 @@
 
 ## [4.24.0] 2021-07-13
 
+### Modified
+
+- [TD-3878] Concepts only show links to structures for which user has view_data_structure permission
+
 ### Added
 
 - [TD-3230] Taxonomy aggregations with enriched information
