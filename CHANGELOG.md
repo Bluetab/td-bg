@@ -1,10 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [4.25.0] 2021-07-26
 
 ### Added
 
-- [TD-3873] Include a specific permission to be able to share a concept with a domain
+- [TD-3873] Include a specific permission to be able to share a concept with a
+  domain
 
 ### Fixed
 
@@ -14,7 +15,8 @@
 
 ### Modified
 
-- [TD-3878] Concepts only show links to structures for which user has view_data_structure permission
+- [TD-3878] Concepts only show links to structures for which user has
+  view_data_structure permission
 
 ### Added
 
@@ -96,8 +98,10 @@
 ### Changed
 
 - [TD-3265]:
-  - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id` to `/business_concepts/:business_concept_id/versions/:id`
-  - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id/versions` to `/business_concepts/:business_concept_id/versions`
+  - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id` to
+    `/business_concepts/:business_concept_id/versions/:id`
+  - **BREAKING CHANGE** endpoint `/business_concepts_versions/:id/versions` to
+    `/business_concepts/:business_concept_id/versions`
 - [TD-3245] Tested compatibility with PostgreSQL 9.6, 10.15, 11.10, 12.5 and
   13.1. CI pipeline changed to use `postgres:12.5-alpine`.
 

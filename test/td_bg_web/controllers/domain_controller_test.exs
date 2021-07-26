@@ -113,23 +113,22 @@ defmodule TdBgWeb.DomainControllerTest do
       actions = "view_dashboard, view_quality_rule"
 
       assert %{"data" => data} =
-        conn
-        |> get(Routes.domain_path(conn, :index, %{actions: actions}))
-        |> validate_resp_schema(schema, "DomainsResponse")
-        |> json_response(:ok)
+               conn
+               |> get(Routes.domain_path(conn, :index, %{actions: actions}))
+               |> validate_resp_schema(schema, "DomainsResponse")
+               |> json_response(:ok)
 
       assert [] = data
 
       create_acl_entry(user_id, "domain", domain_id, "watch")
 
       assert %{"data" => data} =
-        conn
-        |> get(Routes.domain_path(conn, :index, %{actions: actions, filter: "all"}))
-        |> validate_resp_schema(schema, "DomainsResponse")
-        |> json_response(:ok)
+               conn
+               |> get(Routes.domain_path(conn, :index, %{actions: actions, filter: "all"}))
+               |> validate_resp_schema(schema, "DomainsResponse")
+               |> json_response(:ok)
 
       assert [%{"id" => ^domain_id}] = data
-
     end
 
     @tag authentication: [user_name: "non_admin_user"]
@@ -221,7 +220,7 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "update domain" do
-    setup [:create_domain]
+    setup :create_domain
 
     @tag authentication: [role: "admin"]
     test "renders domain when data is valid", %{
@@ -284,7 +283,7 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "delete domain" do
-    setup [:create_domain]
+    setup :create_domain
 
     @tag authentication: [role: "admin"]
     test "deletes chosen domain", %{conn: conn, domain: domain} do
@@ -299,7 +298,7 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "count business concept from domain given a user name" do
-    setup [:create_domain]
+    setup :create_domain
 
     @tag authentication: [role: "admin"]
     test "fetch counter", %{conn: conn, swagger_schema: schema, domain: domain} do
