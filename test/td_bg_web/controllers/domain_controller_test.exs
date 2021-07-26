@@ -103,16 +103,18 @@ defmodule TdBgWeb.DomainControllerTest do
     end
 
     @tag authentication: [user_name: "non_admin_user"]
-    test "list all domains user has view_dashboard permission over", %{
+    test "list all domains user has permission over specified actions", %{
       conn: conn,
       swagger_schema: schema,
       claims: %{user_id: user_id}
     } do
       %{id: domain_id} = insert(:domain)
 
+      actions = "view_dashboard, view_quality_rule"
+
       assert %{"data" => data} =
         conn
-        |> get(Routes.domain_path(conn, :index, %{actions: "view_dashboard"}))
+        |> get(Routes.domain_path(conn, :index, %{actions: actions}))
         |> validate_resp_schema(schema, "DomainsResponse")
         |> json_response(:ok)
 
@@ -122,7 +124,7 @@ defmodule TdBgWeb.DomainControllerTest do
 
       assert %{"data" => data} =
         conn
-        |> get(Routes.domain_path(conn, :index, %{actions: "view_dashboard"}))
+        |> get(Routes.domain_path(conn, :index, %{actions: actions, filter: "all"}))
         |> validate_resp_schema(schema, "DomainsResponse")
         |> json_response(:ok)
 
