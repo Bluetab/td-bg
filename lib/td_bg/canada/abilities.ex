@@ -33,30 +33,6 @@ defmodule TdBg.Canada.Abilities do
       LinkAbilities.can?(claims, action, resource)
     end
 
-    def can?(%Claims{} = claims, :list, Domain) do
-      TaxonomyAbilities.can?(claims, :list, Domain)
-    end
-
-    def can?(%Claims{} = claims, :create, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :create, domain)
-    end
-
-    def can?(%Claims{} = claims, :update, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :update, domain)
-    end
-
-    def can?(%Claims{} = claims, :show, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :show, domain)
-    end
-
-    def can?(%Claims{} = claims, :delete, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :delete, domain)
-    end
-
-    def can?(%Claims{} = claims, :move, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :move, domain)
-    end
-
     def can?(%Claims{} = claims, :create_business_concept, %Domain{} = domain) do
       BusinessConceptAbilities.can?(claims, :create_business_concept, domain)
     end
@@ -69,36 +45,12 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :create_ingest, domain)
     end
 
-    def can?(%Claims{} = claims, :manage_data_sources, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :manage_data_sources, domain)
+    def can?(%Claims{} = claims, :list, Domain) do
+      TaxonomyAbilities.can?(claims, :list, Domain)
     end
 
-    def can?(%Claims{} = claims, :manage_configurations, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :manage_configurations, domain)
-    end
-
-    def can?(%Claims{} = claims, :update_data_structure, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :update_data_structure, domain)
-    end
-
-    def can?(%Claims{} = claims, :manage_quality_rule, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :manage_quality_rule, domain)
-    end
-
-    def can?(%Claims{} = claims, :manage_structures_domain, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :manage_structures_domain, domain)
-    end
-
-    def can?(%Claims{} = claims, :update_ingest, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :update_ingest, domain)
-    end
-
-    def can?(%Claims{} = claims, :view_dashboard, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :view_dashboard, domain)
-    end
-
-    def can?(%Claims{} = claims, :view_quality_rule, %Domain{} = domain) do
-      TaxonomyAbilities.can?(claims, :view_quality_rule, domain)
+    def can?(%Claims{} = claims, permission, %Domain{} = domain) do
+      TaxonomyAbilities.can?(claims, permission, domain)
     end
 
     def can?(%Claims{} = claims, :create, BusinessConceptVersion) do
