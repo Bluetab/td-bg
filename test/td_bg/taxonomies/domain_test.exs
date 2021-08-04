@@ -15,7 +15,11 @@ defmodule TdBg.Taxonomies.DomainTest do
     test "validates unique constraint on name" do
       insert(:domain, name: "foo")
 
-      assert {:error, changeset} = %{name: "foo", external_id: "Eid#{:rand.uniform(100_000_000)}"} |> Domain.changeset() |> Repo.insert()
+      assert {:error, changeset} =
+               %{name: "foo", external_id: "Eid#{System.unique_integer([:positive])}"}
+               |> Domain.changeset()
+               |> Repo.insert()
+
       assert %{errors: [name: error]} = changeset
       assert {_msg, [constraint: :unique, constraint_name: "domains_name_index"]} = error
     end

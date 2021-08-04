@@ -14,6 +14,6 @@ defmodule TdBg.Groups.DomainGroup do
     domain_group
     |> cast(attrs, [:name])
     |> validate_required([:name])
-    |> unique_constraint(:name, [name: :index_domain_group_name])
+    |> unique_constraint(:name, name: :index_domain_group_name)
   end
 end

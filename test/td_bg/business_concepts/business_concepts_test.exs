@@ -784,7 +784,7 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   describe "add_parents/1" do
-    setup [:concept_taxonomy]
+    setup :concept_taxonomy
 
     test "add_parents/1 gets concept taxonomy", %{concept: concept, domains: parents} do
       parents =
@@ -995,7 +995,7 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   defp random_name do
-    id = :rand.uniform(100_000_000)
+    id = System.unique_integer([:positive])
     "Concept #{id}"
   end
 end

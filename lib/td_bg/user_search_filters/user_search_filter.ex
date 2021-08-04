@@ -6,9 +6,9 @@ defmodule TdBg.UserSearchFilters.UserSearchFilter do
   import Ecto.Changeset
 
   schema "user_search_filters" do
-    field :filters, :map
-    field :name, :string
-    field :user_id, :integer
+    field(:filters, :map)
+    field(:name, :string)
+    field(:user_id, :integer)
 
     timestamps()
   end
