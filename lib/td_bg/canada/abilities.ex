@@ -49,6 +49,10 @@ defmodule TdBg.Canada.Abilities do
       TaxonomyAbilities.can?(claims, :list, Domain)
     end
 
+    def can?(%Claims{} = claims, :view_data_structure, domain_id) do
+      TaxonomyAbilities.can?(claims, :view_data_structure, domain_id)
+    end
+
     def can?(%Claims{} = claims, permission, %Domain{} = domain) do
       TaxonomyAbilities.can?(claims, permission, domain)
     end
