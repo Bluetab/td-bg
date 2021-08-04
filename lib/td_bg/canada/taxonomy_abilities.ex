@@ -89,7 +89,7 @@ defmodule TdBg.Canada.TaxonomyAbilities do
     Permissions.authorized?(claims, :view_lineage, domain_id)
   end
 
-  def can?(_claims, permission, _domain) do
+  def can?(_claims, _permission, _domain) do
     false
   end
 end
