@@ -183,7 +183,7 @@ defmodule TdBg.TaxonomiesTest do
       assert {:error, changeset} =
                Taxonomies.create_domain(%{
                  name: name,
-                 external_id: "External id: #{:rand.uniform(100_000_000)}"
+                 external_id: "External id: #{System.unique_integer([:positive])}"
                })
 
       assert %{errors: [name: error], valid?: false} = changeset
@@ -214,7 +214,7 @@ defmodule TdBg.TaxonomiesTest do
       assert {:ok, %Domain{name: ^name}} =
                Taxonomies.create_domain(%{
                  name: name,
-                 external_id: "External id: #{:rand.uniform(100_000_000)}"
+                 external_id: "External id: #{System.unique_integer([:positive])}"
                })
     end
 

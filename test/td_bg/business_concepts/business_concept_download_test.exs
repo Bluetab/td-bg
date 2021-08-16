@@ -155,14 +155,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;inserted_at;#{url_label};#{
-                 key_value_label
-               }"
+               "Plantilla;name;domain;status;Descripción;inserted_at;#{url_label};#{key_value_label}"
 
       assert content ==
-               "#{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{
-                 url_fields
-               };#{key_value_fields}"
+               "#{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{url_fields};#{key_value_fields}"
     end
   end
 end

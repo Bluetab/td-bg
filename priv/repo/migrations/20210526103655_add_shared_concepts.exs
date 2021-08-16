@@ -13,6 +13,6 @@ defmodule TdBg.Repo.Migrations.AddSharedConcepts do
   end
 
   def down do
-    drop table(:shared_concepts)
+    drop(table(:shared_concepts))
   end
 end
