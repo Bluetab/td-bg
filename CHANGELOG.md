@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-3973] Update td-df-lib for default values in swith fields
+
 ## [4.25.0] 2021-07-26
 
 ### Added
