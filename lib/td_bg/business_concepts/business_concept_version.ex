@@ -24,6 +24,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     field(:current, :boolean, default: true)
     field(:version, :integer)
     field(:in_progress, :boolean, default: false)
+    field(:domain_ids, {:array, :integer}, virtual: true)
     field(:subscribable_fields, {:array, :string}, virtual: true)
     belongs_to(:business_concept, BusinessConcept, on_replace: :update)
 
