@@ -10,6 +10,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.Search.IndexWorker
   alias TdCache.Redix
   alias TdCache.Redix.Stream
+  alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
 
   @stream TdCache.Audit.stream()
@@ -387,12 +388,28 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "update_business_concept_version/2" do
     @tag template: @content
-    test "updates the business_concept_version if data is valid and publishes an event including subscribable fields from current version to the audit stream" do
+    test "updates the business_concept_version if data is valid and publishes an event to the audit stream" do
       %{user_id: user_id} = build(:claims)
+      domain_id = System.unique_integer([:positive])
+      on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
+      parent_ids = Enum.map(1..5, fn _ -> System.unique_integer([:positive]) end)
+      domain_ids = [domain_id | parent_ids]
+
+      domain = %{
+        id: domain_id,
+        name: "foo",
+        external_id: "foo",
+        updated_at: DateTime.utc_now(),
+        parent_ids: parent_ids
+      }
+
+      TaxonomyCache.put_domain(domain)
+      domain = build(:domain, id: domain_id)
+      concept = build(:business_concept, domain: domain, type: @template_name)
 
       business_concept_version =
         insert(:business_concept_version,
-          business_concept: insert(:business_concept, type: @template_name),
+          business_concept: concept,
           content: %{"foo" => "bar", "xyz" => "foo"}
         )
 
@@ -433,7 +450,8 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert {:ok, [%{payload: payload}]} = Stream.read(:redix, @stream, transform: true)
 
-      assert %{"subscribable_fields" => %{"foo" => "bar"}} = Jason.decode!(payload)
+      assert %{"subscribable_fields" => %{"foo" => "bar"}, "domain_ids" => ^domain_ids} =
+               Jason.decode!(payload)
     end
 
     test "updates the content with valid content data" do
