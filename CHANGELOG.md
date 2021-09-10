@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3780] Missing `domain_ids` in Audit events 
+
 ## [4.27.0] 2021-09-07
 
 ### Changed
