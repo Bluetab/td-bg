@@ -1,9 +1,10 @@
 # Changelog
 
-## [Unreleased] 
+## [Unreleased]
 
 ### Added
 
+- [TD-3780] Missing `domain_ids` in Audit events 
 - [TD-3971] Template mandatory dependent field
 
 ## [4.27.0] 2021-09-07

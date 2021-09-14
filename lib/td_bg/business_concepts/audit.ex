@@ -54,7 +54,11 @@ defmodule TdBg.BusinessConcepts.Audit do
       |> Map.put(:business_concept_id, id)
       |> subscribable_fields()
 
-    payload = Map.put(payload, :subscribable_fields, fields)
+    payload =
+      payload
+      |> Map.put(:subscribable_fields, fields)
+      |> Map.put(:domain_ids, get_domain_ids(payload))
+
     publish("create_concept_draft", "concept", id, user_id, payload)
   end
 
@@ -66,13 +70,11 @@ defmodule TdBg.BusinessConcepts.Audit do
   def business_concept_updated(_repo, %{updated: updated}, changeset) do
     case updated do
       %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} ->
-        fields = subscribable_fields(changeset)
-        changeset = Changeset.put_change(changeset, :subscribable_fields, fields)
+        changeset = do_changeset_updated(changeset, updated)
         publish("update_concept_draft", "concept", id, user_id, changeset)
 
       %BusinessConcept{id: id, last_change_by: user_id} ->
-        fields = subscribable_fields(changeset)
-        changeset = Changeset.put_change(changeset, :subscribable_fields, fields)
+        changeset = do_changeset_updated(changeset, updated)
         publish("update_concept", "concept", id, user_id, changeset)
     end
   end
@@ -117,6 +119,12 @@ defmodule TdBg.BusinessConcepts.Audit do
     changeset
     |> Changeset.fetch_change!(:status)
     |> do_status_updated(business_concept_version)
+  end
+
+  defp do_changeset_updated(changeset, updated) do
+    changeset
+    |> Changeset.put_change(:subscribable_fields, subscribable_fields(changeset))
+    |> Changeset.put_change(:domain_ids, get_domain_ids(updated))
   end
 
   defp do_status_updated("pending_approval", business_concept_version) do

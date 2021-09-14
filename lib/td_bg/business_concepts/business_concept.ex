@@ -18,6 +18,7 @@ defmodule TdBg.BusinessConcepts.BusinessConcept do
     field(:last_change_by, :integer)
     field(:last_change_at, :utc_datetime_usec)
     field(:subscribable_fields, {:array, :string}, virtual: true)
+    field(:domain_ids, {:array, :integer}, virtual: true)
 
     has_many(:versions, BusinessConceptVersion)
 

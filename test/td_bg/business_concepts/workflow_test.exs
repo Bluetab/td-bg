@@ -8,6 +8,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   alias TdBg.Search.IndexWorker
   alias TdCache.Redix
   alias TdCache.Redix.Stream
+  alias TdCache.TaxonomyCache
 
   @stream TdCache.Audit.stream()
 
@@ -59,6 +60,24 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
 
       assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
     end
+
+    setup [:create_concept_with_parents]
+
+    test "publishes an event to the audit stream with domain ids", %{
+      concept: concept,
+      domain_ids: domain_ids
+    } do
+      business_concept_version =
+        insert(:business_concept_version, status: "published", business_concept: concept)
+
+      assert {:ok, %{audit: event_id}} =
+               Workflow.new_version(business_concept_version, %Claims{user_id: 1234})
+
+      assert {:ok, [%{id: ^event_id, payload: payload}]} =
+               Stream.read(:redix, @stream, transform: true)
+
+      assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
+    end
   end
 
   describe "publish_business_concept/2" do
@@ -76,13 +95,20 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert DateTime.diff(last_change_at, ts, :microsecond) > 0
     end
 
-    test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
-      business_concept_version = insert(:business_concept_version, status: "draft")
+    setup [:create_concept_with_parents]
+
+    test "publishes an event including domain_ids to the audit stream", %{
+      claims: claims,
+      concept: concept,
+      domain_ids: domain_ids
+    } do
+      business_concept_version =
+        insert(:business_concept_version, status: "draft", business_concept: concept)
 
       assert {:ok, %{audit: event_id}} = Workflow.publish(business_concept_version, claims)
       assert {:ok, [event]} = Stream.read(:redix, @stream, transform: true)
       assert %{id: ^event_id, payload: payload} = event
-      assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
+      assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
     end
 
     test "publishes an event including subscribable_fields", %{claims: claims} do
@@ -106,15 +132,23 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert %{status: "rejected", reject_reason: ^reason} = business_concept_version
     end
 
-    test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
+    setup [:create_concept_with_parents]
+
+    test "publishes an event including domain_ids to the audit stream", %{
+      claims: claims,
+      concept: concept,
+      domain_ids: domain_ids
+    } do
       reason = "Because I want to"
-      business_concept_version = insert(:business_concept_version, status: "pending_approval")
+
+      business_concept_version =
+        insert(:business_concept_version, status: "pending_approval", business_concept: concept)
 
       assert {:ok, %{audit: event_id}} = Workflow.reject(business_concept_version, reason, claims)
 
       assert {:ok, [event]} = Stream.read(:redix, @stream, transform: true)
       assert %{id: ^event_id, payload: payload} = event
-      assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
+      assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
     end
   end
 
@@ -129,15 +163,41 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert %{status: "pending_approval", last_change_by: ^user_id} = business_concept_version
     end
 
-    test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
-      business_concept_version = insert(:business_concept_version)
+    setup [:create_concept_with_parents]
+
+    test "publishes an event including domain_ids to the audit stream", %{
+      claims: claims,
+      concept: concept,
+      domain_ids: domain_ids
+    } do
+      business_concept_version = insert(:business_concept_version, business_concept: concept)
 
       assert {:ok, %{audit: event_id}} =
                Workflow.submit_business_concept_version(business_concept_version, claims)
 
       assert {:ok, [event]} = Stream.read(:redix, @stream, transform: true)
       assert %{id: ^event_id, payload: payload} = event
-      assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
+      assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
     end
+  end
+
+  defp create_concept_with_parents(_) do
+    domain_id = System.unique_integer([:positive])
+    on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
+    parent_ids = Enum.map(1..5, fn _ -> System.unique_integer([:positive]) end)
+    domain_ids = [domain_id | parent_ids]
+
+    domain = %{
+      id: domain_id,
+      name: "foo",
+      external_id: "foo",
+      updated_at: DateTime.utc_now(),
+      parent_ids: parent_ids
+    }
+
+    TaxonomyCache.put_domain(domain)
+    domain = build(:domain, id: domain_id)
+    concept = build(:business_concept, domain: domain)
+    [concept: concept, domain_ids: domain_ids]
   end
 end
