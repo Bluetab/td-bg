@@ -58,7 +58,6 @@ defmodule TdBg.Cache.DomainLoader do
   @impl true
   def handle_cast(:refresh_deleted, state) do
     remove_deleted_domains()
-    load_domains(force: true)
     {:noreply, state}
   end
 
@@ -92,6 +91,7 @@ defmodule TdBg.Cache.DomainLoader do
 
       if remove_count > 0 do
         Logger.info("Removed #{remove_count} deleted domains")
+        load_domains(force: true)
       end
     end
   end
