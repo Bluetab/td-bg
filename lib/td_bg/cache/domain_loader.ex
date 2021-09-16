@@ -15,8 +15,8 @@ defmodule TdBg.Cache.DomainLoader do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  def refresh(domain_id) do
-    GenServer.call(__MODULE__, {:refresh, domain_id})
+  def refresh(domain_id, opts \\ []) do
+    GenServer.call(__MODULE__, {:refresh, domain_id, opts})
   end
 
   def refresh_deleted do
@@ -33,13 +33,13 @@ defmodule TdBg.Cache.DomainLoader do
   end
 
   @impl true
-  def handle_call({:refresh, :all}, _from, state) do
-    load_domains()
+  def handle_call({:refresh, :all, opts}, _from, state) do
+    load_domains(opts)
     {:reply, :ok, state}
   end
 
   @impl true
-  def handle_call({:refresh, domain_id}, _from, state) do
+  def handle_call({:refresh, domain_id, _opts}, _from, state) do
     load_domain(domain_id)
     {:reply, :ok, state}
   end
@@ -63,9 +63,9 @@ defmodule TdBg.Cache.DomainLoader do
     |> load_domain_data()
   end
 
-  defp load_domains do
+  defp load_domains(opts) do
     Taxonomies.list_domains()
-    |> load_domain_data()
+    |> load_domain_data(opts)
   end
 
   defp remove_deleted_domains do
@@ -90,14 +90,14 @@ defmodule TdBg.Cache.DomainLoader do
     end
   end
 
-  def load_domain_data(domains) do
+  def load_domain_data(domains, opts \\ []) do
     tree = Tree.graph()
 
     results =
       domains
-      |> Enum.map(&Map.take(&1, [:id, :name, :external_id, :updated_at]))
+      |> Enum.map(&Map.take(&1, [:id, :name, :external_id, :parent_id, :updated_at]))
       |> Enum.map(&Map.put(&1, :parent_ids, get_ancestor_ids(tree, &1.id)))
-      |> Enum.map(&TaxonomyCache.put_domain/1)
+      |> Enum.map(&TaxonomyCache.put_domain(&1, opts))
       |> Enum.map(fn {res, _} -> res end)
 
     if Enum.any?(results, &(&1 != :ok)) do

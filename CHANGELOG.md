@@ -7,6 +7,11 @@
 - [TD-3780] Missing `domain_ids` in Audit events 
 - [TD-3971] Template mandatory dependent field
 
+### Changed
+
+- [TD-4076] `DomainLoader` now force refreshes domain cache when the service
+  starts
+
 ## [4.27.0] 2021-09-07
 
 ### Changed
