@@ -3,7 +3,7 @@ defmodule TdBg.Search.Aggregations do
   Aggregations for elasticsearch
   """
 
-  alias TdBg.Taxonomies
+  alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
 
@@ -67,7 +67,7 @@ defmodule TdBg.Search.Aggregations do
   end
 
   defp get_domains_count do
-    case Taxonomies.count([]) do
+    case Enum.count(TaxonomyCache.get_domain_ids()) do
       0 -> 10
       count -> count
     end
