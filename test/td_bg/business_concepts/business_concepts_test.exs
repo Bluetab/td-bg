@@ -797,7 +797,7 @@ defmodule TdBg.BusinessConceptsTest do
 
     Enum.each(domains, &DomainLoader.refresh(&1.id))
 
-    on_exit(fn -> Enum.each(domains, &DomainLoader.delete(&1.id)) end)
+    on_exit(fn -> Enum.each(domains, &TaxonomyCache.delete_domain(&1.id)) end)
     [concept: concept, domains: domains]
   end
 
