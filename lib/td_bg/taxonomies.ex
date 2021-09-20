@@ -213,7 +213,7 @@ defmodule TdBg.Taxonomies do
   end
 
   defp refresh_cache({:ok, %{domain: %Domain{} = domain}}) do
-    DomainLoader.refresh(:all)
+    DomainLoader.refresh(:all, force: true)
     IndexWorker.reindex(:all)
     {:ok, domain}
   end

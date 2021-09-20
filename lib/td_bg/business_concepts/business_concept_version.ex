@@ -229,7 +229,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   defimpl Elasticsearch.Document do
     alias TdBg.Taxonomies
-    alias TdCache.{TaxonomyCache, TemplateCache}
+    alias TdCache.TaxonomyCache
+    alias TdCache.TemplateCache
     alias TdCache.UserCache
     alias TdDfLib.Format
     alias TdDfLib.RichText

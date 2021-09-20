@@ -4,8 +4,12 @@
 
 ### Added
 
-- [TD-3780] Missing `domain_ids` in Audit events 
 - [TD-3971] Template mandatory dependent field
+- [TD-3780] Cache domain `descendent_ids` 
+
+### Fixed
+
+- [TD-3780] Missing `domain_ids` in Audit events 
 
 ### Fixed
 

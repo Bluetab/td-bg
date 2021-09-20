@@ -30,6 +30,14 @@ defmodule TdBg.Taxonomies.Tree do
     |> ancestor_ids(id)
   end
 
+  def descendent_ids(g, id) do
+    with ids <- reachable(g, [id]),
+         sg <- Graph.subgraph(g, ids),
+         [_ | _] = ids <- Traversal.topsort(sg) do
+      ids
+    end
+  end
+
   def descendent_ids(id) do
     graph()
     |> reachable([id])
