@@ -39,14 +39,15 @@ defmodule TdBg.Cache.DomainLoader do
   end
 
   @impl true
-  def handle_call({:refresh, domain_id, _opts}, _from, state) do
-    load_domain(domain_id)
+  def handle_call({:refresh, domain_id, opts}, _from, state) do
+    load_domain(domain_id, opts)
     {:reply, :ok, state}
   end
 
   @impl true
   def handle_call({:delete, domain_id}, _from, state) do
     TaxonomyCache.delete_domain(domain_id)
+    load_domains(force: true, publish: false)
     {:reply, :ok, state}
   end
 
@@ -56,11 +57,11 @@ defmodule TdBg.Cache.DomainLoader do
     {:noreply, state}
   end
 
-  defp load_domain(domain_id) do
+  defp load_domain(domain_id, opts) do
     domain = Taxonomies.get_domain!(domain_id)
 
     [domain]
-    |> load_domain_data()
+    |> load_domain_data(opts)
   end
 
   defp load_domains(opts) do
@@ -86,17 +87,19 @@ defmodule TdBg.Cache.DomainLoader do
 
       if remove_count > 0 do
         Logger.info("Removed #{remove_count} deleted domains")
+        load_domains(force: true, publish: false)
       end
     end
   end
 
-  def load_domain_data(domains, opts \\ []) do
+  def load_domain_data(domains, opts) do
     tree = Tree.graph()
 
     results =
       domains
       |> Enum.map(&Map.take(&1, [:id, :name, :external_id, :updated_at]))
       |> Enum.map(&Map.put(&1, :parent_ids, get_ancestor_ids(tree, &1.id)))
+      |> Enum.map(&Map.put(&1, :descendent_ids, get_descendent_ids(tree, &1.id)))
       |> Enum.map(&TaxonomyCache.put_domain(&1, opts))
       |> Enum.map(fn {res, _} -> res end)
 
@@ -110,6 +113,12 @@ defmodule TdBg.Cache.DomainLoader do
   defp get_ancestor_ids(tree, domain_id) do
     tree
     |> Tree.ancestor_ids(domain_id)
+    |> tl()
+  end
+
+  defp get_descendent_ids(tree, domain_id) do
+    tree
+    |> Tree.descendent_ids(domain_id)
     |> tl()
   end
 end

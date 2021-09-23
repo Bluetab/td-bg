@@ -1,11 +1,19 @@
 # Changelog
 
-## [Unreleased]
+## [4.28.0] 2021-09-20
 
 ### Added
 
-- [TD-3780] Missing `domain_ids` in Audit events 
 - [TD-3971] Template mandatory dependent field
+- [TD-3780] Cache domain `descendent_ids`
+
+### Fixed
+
+- [TD-3780] Missing `domain_ids` in Audit events
+
+### Fixed
+
+- [TD-4037] change the limit on the taxonomy in aggregations
 
 ### Changed
 
