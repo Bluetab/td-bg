@@ -15,10 +15,6 @@ defmodule TdBg.Cache.DomainLoader do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  def refresh do
-    refresh(:all, force: true)
-  end
-
   def refresh(domain_id, opts \\ []) do
     GenServer.call(__MODULE__, {:refresh, domain_id, opts})
   end
@@ -51,7 +47,7 @@ defmodule TdBg.Cache.DomainLoader do
   @impl true
   def handle_call({:delete, domain_id}, _from, state) do
     TaxonomyCache.delete_domain(domain_id)
-    load_domains(force: true)
+    load_domains(force: true, publish: false)
     {:reply, :ok, state}
   end
 
@@ -91,7 +87,7 @@ defmodule TdBg.Cache.DomainLoader do
 
       if remove_count > 0 do
         Logger.info("Removed #{remove_count} deleted domains")
-        load_domains(force: true)
+        load_domains(force: true, publish: false)
       end
     end
   end
@@ -103,7 +99,7 @@ defmodule TdBg.Cache.DomainLoader do
       domains
       |> Enum.map(&Map.take(&1, [:id, :name, :external_id, :updated_at]))
       |> Enum.map(&Map.put(&1, :parent_ids, get_ancestor_ids(tree, &1.id)))
-      |> Enum.map(&Map.put(&1, :descendent_ids, get_descendet_ids(tree, &1.id)))
+      |> Enum.map(&Map.put(&1, :descendent_ids, get_descendent_ids(tree, &1.id)))
       |> Enum.map(&TaxonomyCache.put_domain(&1, opts))
       |> Enum.map(fn {res, _} -> res end)
 
@@ -120,7 +116,7 @@ defmodule TdBg.Cache.DomainLoader do
     |> tl()
   end
 
-  defp get_descendet_ids(tree, domain_id) do
+  defp get_descendent_ids(tree, domain_id) do
     tree
     |> Tree.descendent_ids(domain_id)
     |> tl()

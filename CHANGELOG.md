@@ -1,18 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-4076] `DomainLoader` now force refreshes domain cache when the service
+  starts
+
 ## [4.28.0] 2021-09-20
 
 ### Added
 
 - [TD-3971] Template mandatory dependent field
-- [TD-3780] Cache domain `descendent_ids` 
+- [TD-3780] Cache domain `descendent_ids`
 
 ### Fixed
 
-- [TD-3780] Missing `domain_ids` in Audit events 
-
-### Fixed
-
+- [TD-3780] Missing `domain_ids` in Audit events
 - [TD-4037] change the limit on the taxonomy in aggregations
 
 ## [4.27.0] 2021-09-07

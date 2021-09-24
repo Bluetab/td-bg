@@ -20,6 +20,16 @@ config :td_cache, :event_stream, consumer_id: System.fetch_env!("HOSTNAME")
 config :td_bg, TdBg.Scheduler,
   jobs: [
     [
+      schedule: "@reboot",
+      task: {TdBg.Cache.DomainLoader, :refresh_deleted, []},
+      run_strategy: Quantum.RunStrategy.Local
+    ],
+    [
+      schedule: "@reboot",
+      task: {TdBg.Cache.DomainLoader, :refresh, [:all, [force: true, publish: false]]},
+      run_strategy: Quantum.RunStrategy.Local
+    ],
+    [
       schedule: System.get_env("ES_REFRESH_SCHEDULE", "@daily"),
       task: {TdBg.Search.IndexWorker, :reindex, []},
       run_strategy: Quantum.RunStrategy.Local
