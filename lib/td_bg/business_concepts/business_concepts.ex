@@ -5,6 +5,7 @@ defmodule TdBg.BusinessConcepts do
 
   import Ecto.Query
 
+  alias Ecto.Changeset
   alias Ecto.Multi
   alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts.Audit
@@ -231,11 +232,13 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def create_business_concept(params, opts \\ []) do
+    domain_id = Map.get(params, "domain_id")
+
     params
     |> attrs_keys_to_atoms()
     |> raise_error_if_no_content_schema()
     |> format_content()
-    |> set_content_defaults()
+    |> set_content_defaults(domain_id)
     |> validate_new_concept()
     |> validate_description()
     |> validate_concept_content(opts[:in_progress])
@@ -323,16 +326,18 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def update_business_concept_version(
-        %BusinessConceptVersion{} = business_concept_version,
+        %BusinessConceptVersion{business_concept: concept} = business_concept_version,
         params
       ) do
+    domain_id = concept.domain_id
+
     result =
       params
       |> attrs_keys_to_atoms()
       |> raise_error_if_no_content_schema()
       |> add_content_if_not_exist()
       |> merge_content_with_concept(business_concept_version)
-      |> set_content_defaults()
+      |> set_content_defaults(domain_id)
       |> validate_concept(business_concept_version)
       |> validate_concept_content()
       |> validate_description()
@@ -627,7 +632,7 @@ defmodule TdBg.BusinessConcepts do
     Map.put(params, :content, new_content)
   end
 
-  defp set_content_defaults(params) do
+  defp set_content_defaults(params, domain_id) do
     content = Map.get(params, :content)
     content_schema = Map.get(params, :content_schema)
 
@@ -636,7 +641,7 @@ defmodule TdBg.BusinessConcepts do
         params
 
       _ ->
-        content = Format.apply_template(content, content_schema)
+        content = Format.apply_template(content, content_schema, domain_id: domain_id)
         Map.put(params, :content, content)
     end
   end
@@ -647,16 +652,17 @@ defmodule TdBg.BusinessConcepts do
     changeset = Map.get(params, :changeset)
 
     if changeset.valid? do
-      do_validate_concept_content(params, in_progress)
+      domain_id = changeset |> Changeset.get_field(:business_concept) |> Map.get(:domain_id)
+      do_validate_concept_content(params, in_progress, domain_id)
     else
       params
     end
   end
 
-  defp do_validate_concept_content(params, in_progress) do
+  defp do_validate_concept_content(params, in_progress, domain_id) do
     content = Map.get(params, :content)
     content_schema = Map.get(params, :content_schema)
-    changeset = Validation.build_changeset(content, content_schema)
+    changeset = Validation.build_changeset(content, content_schema, domain_id: domain_id)
 
     case in_progress do
       false -> validate_content(changeset, params)
