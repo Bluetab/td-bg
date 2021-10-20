@@ -255,7 +255,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       content =
         bcv
         |> Map.get(:content)
-        |> Format.search_values(template)
+        |> Format.search_values(template, domain_id: domain.id)
 
       bcv
       |> Map.take([
