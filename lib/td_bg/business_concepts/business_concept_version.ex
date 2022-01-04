@@ -31,7 +31,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     timestamps(type: :utc_datetime_usec)
   end
 
-  def create_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
+  def create_changeset(
+        %BusinessConceptVersion{} = business_concept_version,
+        params
+      ) do
     business_concept_version
     |> cast(params, [
       :content,
@@ -53,13 +56,17 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :business_concept,
       :in_progress
     ])
+    |> maybe_put_identifier(%{}, params)
     |> put_change(:status, "draft")
     |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
 
-  def update_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
+  def update_changeset(
+        %BusinessConceptVersion{content: current_content} = business_concept_version,
+        params
+      ) do
     business_concept_version
     |> cast(params, [
       :content,
@@ -79,16 +86,49 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :last_change_at,
       :in_progress
     ])
+    |> maybe_put_identifier(current_content, params)
     |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
 
-  def bulk_update_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
+  def bulk_update_changeset(
+        %BusinessConceptVersion{} = business_concept_version,
+        params
+      ) do
     business_concept_version
     |> update_changeset(params)
     |> delete_change(:status)
     |> validate_name(business_concept_version)
+  end
+
+  defp maybe_put_identifier(changeset, current_content, %{type: template_name}) do
+    maybe_put_identifier_aux(changeset, current_content, template_name)
+  end
+
+  defp maybe_put_identifier(
+         changeset,
+         current_content,
+         %{business_concept: %{type: template_name}}
+       ) do
+    maybe_put_identifier_aux(changeset, current_content, template_name)
+  end
+
+  defp maybe_put_identifier(changeset, _current_content, _attrs), do: changeset
+
+  defp maybe_put_identifier_aux(
+         %{valid?: true, changes: %{content: content}} = changeset,
+         current_content,
+         template_name
+       ) do
+    TdDfLib.Format.maybe_put_identifier(current_content, content, template_name)
+    |> (fn content ->
+          put_change(changeset, :content, content)
+        end).()
+  end
+
+  defp maybe_put_identifier_aux(changeset, _current_content, _template_name) do
+    changeset
   end
 
   defp validate_name(

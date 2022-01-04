@@ -2,6 +2,7 @@ defmodule TdBg.Factory do
   @moduledoc false
 
   use ExMachina.Ecto, repo: TdBg.Repo
+  use TdDfLib.TemplateFactory
 
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
