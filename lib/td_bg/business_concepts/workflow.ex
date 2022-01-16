@@ -143,7 +143,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
     result =
       draft_attrs
       |> BusinessConcepts.attrs_keys_to_atoms()
-      |> BusinessConcepts.validate_new_concept()
+      |> BusinessConcepts.validate_new_concept(business_concept_version)
       |> do_new_version()
 
     case result do

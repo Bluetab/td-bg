@@ -33,7 +33,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   def create_changeset(
         %BusinessConceptVersion{} = business_concept_version,
-        params
+        params,
+        old_business_concept_version \\ %BusinessConceptVersion{}
       ) do
     business_concept_version
     |> cast(params, [
@@ -56,7 +57,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :business_concept,
       :in_progress
     ])
-    |> maybe_put_identifier(%{}, params)
+    |> maybe_put_identifier(params, old_business_concept_version)
     |> put_change(:status, "draft")
     |> trim([:name])
     |> validate_length(:name, max: 255)
@@ -64,7 +65,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def update_changeset(
-        %BusinessConceptVersion{content: current_content} = business_concept_version,
+        business_concept_version,
         params
       ) do
     business_concept_version
@@ -86,7 +87,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :last_change_at,
       :in_progress
     ])
-    |> maybe_put_identifier(current_content, params)
+    |> maybe_put_identifier(business_concept_version)
     |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
@@ -99,35 +100,52 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> update_changeset(params)
     |> delete_change(:status)
+    |> maybe_put_identifier(business_concept_version)
     |> validate_name(business_concept_version)
-  end
-
-  defp maybe_put_identifier(changeset, current_content, %{type: template_name}) do
-    maybe_put_identifier_aux(changeset, current_content, template_name)
   end
 
   defp maybe_put_identifier(
          changeset,
-         current_content,
-         %{business_concept: %{type: template_name}}
+         _params,
+         %BusinessConceptVersion{content: _old_content, business_concept: %{type: _template_name}} =
+           business_concept_version
        ) do
-    maybe_put_identifier_aux(changeset, current_content, template_name)
+    maybe_put_identifier(changeset, business_concept_version)
   end
 
-  defp maybe_put_identifier(changeset, _current_content, _attrs), do: changeset
+  defp maybe_put_identifier(
+         changeset,
+         %{business_concept: %{type: _template_name}} = params,
+         _business_concept_version
+       ) do
+    maybe_put_identifier(changeset, params)
+  end
+
+  defp maybe_put_identifier(changeset, _params, _business_concept_version), do: changeset
+
+  defp maybe_put_identifier(changeset, %BusinessConceptVersion{
+         content: old_content,
+         business_concept: %{type: template_name}
+       }) do
+    maybe_put_identifier_aux(changeset, old_content, template_name)
+  end
+
+  defp maybe_put_identifier(changeset, %{business_concept: %{type: template_name}} = _params) do
+    maybe_put_identifier_aux(changeset, %{}, template_name)
+  end
 
   defp maybe_put_identifier_aux(
-         %{valid?: true, changes: %{content: content}} = changeset,
-         current_content,
+         %{valid?: true, changes: %{content: changeset_content}} = changeset,
+         old_content,
          template_name
        ) do
-    TdDfLib.Format.maybe_put_identifier(current_content, content, template_name)
-    |> (fn content ->
-          put_change(changeset, :content, content)
+    TdDfLib.Format.maybe_put_identifier(changeset_content, old_content, template_name)
+    |> (fn new_content ->
+          put_change(changeset, :content, new_content)
         end).()
   end
 
-  defp maybe_put_identifier_aux(changeset, _current_content, _template_name) do
+  defp maybe_put_identifier_aux(changeset, _old_content, _template_name) do
     changeset
   end
 
