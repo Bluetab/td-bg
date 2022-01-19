@@ -25,6 +25,37 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   end
 
   describe "new_version/2" do
+    setup do
+      identifier_name = "identifier"
+
+      with_identifier = %{
+        id: System.unique_integer([:positive]),
+        name: "Business concept template with identifier field",
+        label: "concept_with_identifier",
+        scope: "ie",
+        content: [
+          %{
+            "fields" => [
+              %{
+                "cardinality" => "1",
+                "default" => "",
+                "label" => "Identifier",
+                "name" => identifier_name,
+                "subscribable" => false,
+                "type" => "string",
+                "values" => nil,
+                "widget" => "identifier"
+              }
+            ],
+            "name" => ""
+          }
+        ]
+      }
+
+      template_with_identifier = CacheHelpers.insert_template(with_identifier)
+      [template_with_identifier: template_with_identifier, identifier_name: identifier_name]
+    end
+
     test "creates a new published version and the previous version remains the current" do
       business_concept_version =
         insert(:business_concept_version, status: "published", current: true)
@@ -32,6 +63,30 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert {:ok, res} = Workflow.new_version(business_concept_version, %Claims{user_id: 1234})
       assert %{current: %{current: false}} = res
       assert BusinessConcepts.get_business_concept_version!(business_concept_version.id).current
+    end
+
+    test "creates a new version and copies the identifier from the previous version one", %{
+      claims: claims,
+      template_with_identifier: template_with_identifier,
+      identifier_name: identifier_name
+    } do
+      existing_identifier = "00000000-0000-0000-0000-000000000000"
+      concept = build(:business_concept, %{type: template_with_identifier.name})
+
+      concept_version =
+        insert(:business_concept_version, %{
+          status: "published",
+          business_concept: concept,
+          content: %{"identifier" => existing_identifier}
+        })
+
+      assert {:ok, res} = Workflow.new_version(concept_version, claims)
+
+      assert %{
+               current: %{
+                 content: %{^identifier_name => ^existing_identifier}
+               }
+             } = res
     end
 
     test "creates a new published version and advance to a publish state will make it current" do
