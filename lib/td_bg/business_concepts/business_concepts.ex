@@ -605,8 +605,8 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  def validate_new_concept(params) do
-    changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
+  def validate_new_concept(params, old_business_concept_version \\ %BusinessConceptVersion{}) do
+    changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params, old_business_concept_version)
     Map.put(params, :changeset, changeset)
   end
 

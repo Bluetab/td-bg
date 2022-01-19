@@ -98,6 +98,10 @@ defmodule TdBg.Search.Mappings do
     {name, mapping_type("enriched_text")}
   end
 
+  defp field_mapping(%{"name" => name, "widget" => "identifier"}) do
+    {name, %{type: "keyword"}}
+  end
+
   defp field_mapping(%{"name" => name, "type" => type}) when type in ["domain", "system"] do
     {name,
      %{

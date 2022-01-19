@@ -129,6 +129,7 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs)
     end
 
+    @tag template: @content
     test "with content" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -147,7 +148,7 @@ defmodule TdBg.BusinessConceptsTest do
       content = %{"Field1" => "Hello", "Field2" => "World", "Field3" => ["Hellow", "World"]}
 
       concept_attrs = %{
-        type: "some_type",
+        type: @template_name,
         domain_id: domain.id,
         last_change_by: user_id,
         last_change_at: DateTime.utc_now()
@@ -218,6 +219,7 @@ defmodule TdBg.BusinessConceptsTest do
                concept_attrs.last_change_by
     end
 
+    @tag template: @content
     test "with content: default values" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -230,7 +232,7 @@ defmodule TdBg.BusinessConceptsTest do
       content = %{}
 
       concept_attrs = %{
-        type: "some_type",
+        type: @template_name,
         domain_id: domain.id,
         last_change_by: user_id,
         last_change_at: DateTime.utc_now()
@@ -255,6 +257,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert %{"Field1" => "Hello", "Field2" => "World"} = content
     end
 
+    @tag template: @content
     test "with invalid content: invalid variable list" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -263,7 +266,7 @@ defmodule TdBg.BusinessConceptsTest do
       content = %{"Field1" => ["World", "World2"]}
 
       concept_attrs = %{
-        type: "some_type",
+        type: @template_name,
         domain_id: domain.id,
         last_change_by: user_id,
         last_change_at: DateTime.utc_now()
@@ -814,6 +817,7 @@ defmodule TdBg.BusinessConceptsTest do
     end
   end
 
+  @tag template: @content
   test "with invalid content: required" do
     %{user_id: user_id} = build(:claims)
     domain = insert(:domain)
@@ -863,7 +867,7 @@ defmodule TdBg.BusinessConceptsTest do
     }
 
     concept_attrs = %{
-      type: "some_type",
+      type: @template_name,
       domain_id: domain.id,
       last_change_by: user_id,
       last_change_at: DateTime.utc_now()
