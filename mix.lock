@@ -1,6 +1,5 @@
 %{
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},
-  "cabbage": {:git, "https://github.com/Bluetab/cabbage", "c57cd05c7f3a3320919152498d7822a8a4602f46", [tag: "v0.3.8-alpha"]},
   "canada": {:hex, :canada, "2.0.0", "ce5e058f576a0625959fc5427fcde15311fb28a5ebc13775eafd13468ad16553", [:mix], [], "hexpm", "49a648c48d8b0864380f38f02a7f316bd30fd45602205c48197432b5225d8596"},
   "certifi": {:hex, :certifi, "2.6.1", "dbab8e5e155a0763eea978c913ca280a6b544bfa115633fa20249c3d396d9493", [:rebar3], [], "hexpm", "524c97b4991b3849dd5c17a631223896272c6b0af446778ba4675a1dff53bb7e"},
   "codepagex": {:hex, :codepagex, "0.1.6", "49110d09a25ee336a983281a48ef883da4c6190481e0b063afe2db481af6117e", [:mix], [], "hexpm", "1521461097dde281edf084062f525a4edc6a5e49f4fd1f5ec41c9c4955d5bd59"},

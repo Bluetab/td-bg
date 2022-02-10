@@ -56,7 +56,6 @@ defmodule TdBg.Mixfile do
       {:jason, "~> 1.0"},
       {:postgrex, "~> 0.15.0"},
       {:gettext, "~> 0.11"},
-      {:cabbage, only: :test, git: "https://github.com/Bluetab/cabbage", tag: "v0.3.8-alpha"},
       {:httpoison, "~> 1.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:guardian, "~> 2.0"},
