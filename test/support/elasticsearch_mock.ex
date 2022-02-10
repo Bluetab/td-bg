@@ -245,8 +245,7 @@ defmodule TdBg.ElasticsearchMock do
       |> wrap()
       |> must.()
       |> Enum.reject(fn el -> must_not.(el) end)
-      |> Enum.filter(fn el -> filter.(el) end)
-      |> Enum.filter(fn el -> should.(el) end)
+      |> Enum.filter(fn el -> filter.(el) and should.(el) end)
       |> unwrap(acc)
     end
   end
@@ -310,7 +309,7 @@ defmodule TdBg.ElasticsearchMock do
     ["#{domain_id}"]
     |> MapSet.new()
     |> MapSet.disjoint?(domain_ids)
-    |> (fn x -> not x end).()
+    |> Kernel.not()
   end
 
   defp list_all_concepts do
