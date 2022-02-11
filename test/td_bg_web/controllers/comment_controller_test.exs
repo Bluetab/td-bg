@@ -3,7 +3,7 @@ defmodule TdBgWeb.CommentControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    [conn: put_req_header(conn, "accept", "application/json")]
   end
 
   describe "GET /api/business_concepts/comments" do

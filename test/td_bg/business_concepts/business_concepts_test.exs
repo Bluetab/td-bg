@@ -1,16 +1,15 @@
 defmodule TdBg.BusinessConceptsTest do
   use TdBg.DataCase
 
+  import Assertions
+  import Mox
+
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Workflow
-  alias TdBg.Cache.ConceptLoader
-  alias TdBg.Cache.DomainLoader
   alias TdBg.Repo
-  alias TdBg.Search.IndexWorker
   alias TdCache.Redix
   alias TdCache.Redix.Stream
-  alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
 
   @stream TdCache.Audit.stream()
@@ -38,11 +37,15 @@ defmodule TdBg.BusinessConceptsTest do
 
   setup_all do
     Redix.del!(@stream)
-    start_supervised(ConceptLoader)
-    start_supervised(DomainLoader)
-    start_supervised(IndexWorker)
+    start_supervised!(TdBg.Cache.ConceptLoader)
+    start_supervised!(TdBg.Cache.DomainLoader)
+    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdBg.Search.IndexWorker)
     :ok
   end
+
+  setup :set_mox_from_context
+  setup :verify_on_exit!
 
   setup context do
     on_exit(fn -> Redix.del!(@stream) end)
@@ -392,23 +395,16 @@ defmodule TdBg.BusinessConceptsTest do
   describe "update_business_concept_version/2" do
     @tag template: @content
     test "updates the business_concept_version if data is valid and publishes an event to the audit stream" do
+      SearchHelpers.expect_bulk_index()
+
       %{user_id: user_id} = build(:claims)
-      domain_id = System.unique_integer([:positive])
-      on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
-      parent_ids = Enum.map(1..5, fn _ -> System.unique_integer([:positive]) end)
-      domain_ids = [domain_id | parent_ids]
 
-      domain = %{
-        id: domain_id,
-        name: "foo",
-        external_id: "foo",
-        updated_at: DateTime.utc_now(),
-        parent_ids: parent_ids
-      }
+      %{id: parent_id, parent_id: root_id} = parent = insert(:domain, parent: build(:domain))
+      %{id: domain_id} = domain = insert(:domain, parent_id: parent_id)
 
-      TaxonomyCache.put_domain(domain)
-      domain = build(:domain, id: domain_id)
-      concept = build(:business_concept, domain: domain, type: @template_name)
+      Enum.each([parent.parent, parent, domain], &CacheHelpers.put_domain/1)
+
+      concept = build(:business_concept, domain_id: domain_id, type: @template_name)
 
       business_concept_version =
         insert(:business_concept_version,
@@ -453,11 +449,15 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert {:ok, [%{payload: payload}]} = Stream.read(:redix, @stream, transform: true)
 
-      assert %{"subscribable_fields" => %{"foo" => "bar"}, "domain_ids" => ^domain_ids} =
+      assert %{"subscribable_fields" => %{"foo" => "bar"}, "domain_ids" => domain_ids} =
                Jason.decode!(payload)
+
+      assert_lists_equal(domain_ids, [root_id, parent_id, domain_id])
     end
 
     test "updates the content with valid content data" do
+      SearchHelpers.expect_bulk_index()
+
       content_schema = [
         %{"name" => "Field1", "type" => "string", "cardinality" => "1"},
         %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
@@ -670,6 +670,8 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "get_business_concept_version/2 returns the business_concept_version by concept id and version" do
+      SearchHelpers.expect_bulk_index(3)
+
       claims = build(:claims)
 
       %{id: id, business_concept_id: business_concept_id, version: version} =
@@ -798,9 +800,8 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: insert(:business_concept, domain: List.last(domains))
       )
 
-    Enum.each(domains, &DomainLoader.refresh(&1.id))
+    Enum.each(domains, &CacheHelpers.put_domain/1)
 
-    on_exit(fn -> Enum.each(domains, &TaxonomyCache.delete_domain(&1.id)) end)
     [concept: concept, domains: domains]
   end
 

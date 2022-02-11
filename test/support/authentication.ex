@@ -9,8 +9,6 @@ defmodule TdBgWeb.Authentication do
   alias TdBg.Auth.Claims
   alias TdBg.Auth.Guardian
 
-  @headers {"Content-type", "application/json"}
-
   def put_auth_headers(conn, jwt) do
     conn
     |> put_req_header("content-type", "application/json")
@@ -20,17 +18,16 @@ defmodule TdBgWeb.Authentication do
   def create_user_auth_conn(%{role: role} = claims) do
     {:ok, jwt, full_claims} = Guardian.encode_and_sign(claims, %{role: role})
     {:ok, claims} = Guardian.resource_from_claims(full_claims)
-    register_token(jwt)
 
     conn =
       ConnTest.build_conn()
       |> put_auth_headers(jwt)
 
-    {:ok, %{conn: conn, jwt: jwt, claims: claims}}
+    [conn: conn, jwt: jwt, claims: claims]
   end
 
   def get_header(token) do
-    [@headers, {"authorization", "Bearer #{token}"}]
+    [{"content-type", "application/json"}, {"authorization", "Bearer #{token}"}]
   end
 
   def create_claims(opts \\ []) do
@@ -47,58 +44,5 @@ defmodule TdBgWeb.Authentication do
       user_name: user_name,
       role: role
     }
-  end
-
-  def build_user_token(%Claims{role: role} = claims) do
-    case Guardian.encode_and_sign(claims, %{role: role}) do
-      {:ok, jwt, _full_claims} -> register_token(jwt)
-      _ -> raise "Problems encoding and signing a claims"
-    end
-  end
-
-  def build_user_token(opts) when is_list(opts) do
-    opts
-    |> create_claims()
-    |> build_user_token()
-  end
-
-  def build_user_token(user_name) when is_binary(user_name) do
-    user_name
-    |> role_opts()
-    |> build_user_token()
-  end
-
-  defp role_opts("app-admin"), do: [user_name: "app-admin", role: "admin"]
-  defp role_opts(user_name), do: [user_name: user_name, role: "user"]
-
-  defp register_token(token) do
-    case Guardian.decode_and_verify(token) do
-      {:ok, resource} -> MockPermissionResolver.register_token(resource)
-      _ -> raise "Problems decoding and verifying token"
-    end
-
-    token
-  end
-
-  def create_acl_entry(user_id, resource_type, resource_id, permissions)
-      when is_list(permissions) do
-    MockPermissionResolver.create_acl_entry(%{
-      principal_type: "user",
-      principal_id: user_id,
-      resource_type: resource_type,
-      resource_id: resource_id,
-      permissions: permissions
-    })
-  end
-
-  def create_acl_entry(user_id, resource_type, resource_id, role_name)
-      when is_binary(role_name) do
-    MockPermissionResolver.create_acl_entry(%{
-      principal_type: "user",
-      principal_id: user_id,
-      resource_type: resource_type,
-      resource_id: resource_id,
-      role_name: role_name
-    })
   end
 end

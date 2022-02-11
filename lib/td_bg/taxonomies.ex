@@ -116,7 +116,7 @@ defmodule TdBg.Taxonomies do
   def add_parents(other), do: other
 
   def get_parent_ids(nil), do: []
-  def get_parent_ids(id), do: TaxonomyCache.get_parent_ids(id)
+  def get_parent_ids(id), do: TaxonomyCache.reaching_domain_ids(id)
 
   def get_domain_by_external_id(external_id, preloads \\ []) do
     Domain
@@ -135,25 +135,29 @@ defmodule TdBg.Taxonomies do
     Repo.all(from(r in Domain, where: r.parent_id == ^id and is_nil(r.deleted_at)))
   end
 
+  @spec count_existing_users_with_roles(non_neg_integer, binary) :: non_neg_integer
   def count_existing_users_with_roles(domain_id, user_name) do
-    predefined_query = %{
+    domain_ids = TaxonomyCache.reachable_domain_ids(domain_id)
+    user_name = String.downcase(user_name)
+
+    query = %{
       bool: %{
         must_not: %{
           term: %{status: "deprecated"}
         },
-        must: %{
-          query_string: %{
-            query: "content.\\*:(\"#{user_name |> String.downcase()}\")"
+        filter: [
+          %{term: %{current: true}},
+          %{terms: %{domain_id: domain_ids}},
+          %{
+            query_string: %{
+              query: "content.\\*:(\"#{user_name}\")"
+            }
           }
-        },
-        filter: [%{term: %{current: true}}, %{term: %{domain_ids: domain_id}}]
+        ]
       }
     }
 
-    predefined_query
-    |> Search.get_business_concepts_from_query(0, 10_000)
-    |> Map.get(:results)
-    |> length()
+    Search.count(query)
   end
 
   @doc """
@@ -213,6 +217,7 @@ defmodule TdBg.Taxonomies do
   end
 
   defp refresh_cache({:ok, %{domain: %Domain{} = domain}}) do
+    # TODO: Refactor
     DomainLoader.refresh(:all, force: true)
     IndexWorker.reindex(:all)
     {:ok, domain}

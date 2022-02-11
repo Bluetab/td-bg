@@ -4,20 +4,33 @@ defmodule TdBg.Permissions do
   """
 
   alias TdBg.Auth.Claims
-  alias TdBg.Taxonomies.Domain
 
-  @permission_resolver Application.compile_env(:td_bg, :permission_resolver)
+  @defaults %{
+    "manage_business_concept_links" => :none,
+    "manage_confidential_business_concepts" => :none,
+    "view_approval_pending_business_concepts" => :none,
+    "view_deprecated_business_concepts" => :none,
+    "view_draft_business_concepts" => :none,
+    "view_published_business_concepts" => :none,
+    "view_rejected_business_concepts" => :none,
+    "view_versioned_business_concepts" => :none
+  }
 
-  def get_domain_permissions(%Claims{jti: jti}) do
-    @permission_resolver.get_acls_by_resource_type(jti, "domain")
+  def get_default_permissions do
+    {:ok, permissions} = TdCache.Permissions.get_default_permissions()
+    Enum.into(permissions, @defaults, fn permission -> {permission, :all} end)
   end
 
-  def has_any_permission_on_resource_type?(%Claims{} = claims, permissions, Domain) do
-    claims
-    |> get_domain_permissions()
-    |> Enum.flat_map(& &1.permissions)
-    |> Enum.uniq()
-    |> Enum.any?(&Enum.member?(permissions, &1))
+  def get_session_permissions(%Claims{jti: jti}) do
+    TdCache.Permissions.get_session_permissions(jti)
+  end
+
+  def has_permission?(%Claims{jti: jti}, permission) do
+    TdCache.Permissions.has_permission?(jti, permission)
+  end
+
+  def has_any_permission?(%Claims{jti: jti}, permissions) do
+    Enum.any?(permissions, &TdCache.Permissions.has_permission?(jti, &1))
   end
 
   @doc """
@@ -30,6 +43,6 @@ defmodule TdBg.Permissions do
 
   """
   def authorized?(%Claims{jti: jti}, permission, domain_id) do
-    @permission_resolver.has_permission?(jti, permission, "domain", domain_id)
+    TdCache.Permissions.has_permission?(jti, permission, "domain", domain_id)
   end
 end

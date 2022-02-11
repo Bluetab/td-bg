@@ -2,44 +2,21 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdBg.Cache.ConceptLoader
-  alias TdBg.Cache.DomainLoader
-  alias TdBg.Search.IndexWorker
+  import Mox
+
+  alias TdBg.ElasticsearchMock
 
   setup_all do
-    start_supervised(ConceptLoader)
-    start_supervised(DomainLoader)
-    start_supervised(IndexWorker)
+    start_supervised!(TdBg.Cache.ConceptLoader)
+    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdBg.Search.IndexWorker)
     :ok
   end
 
-  @user_name "some_username"
-  @template_name "foo_template"
-
-  setup context do
-    case context[:template] do
-      nil ->
-        :ok
-
-      true ->
-        Templates.create_template()
-
-      content ->
-        Templates.create_template(%{
-          id: 0,
-          name: @template_name,
-          label: "label",
-          scope: "test",
-          content: content
-        })
-    end
-
-    [domain: insert(:domain)]
-  end
+  setup :verify_on_exit!
 
   describe "GET /api/business_concepts/:business_concept_id/versions/:id" do
     @tag authentication: [role: "admin"]
-    @tag :template
     test "shows the specified business_concept_version including it's name, description, domain and content",
          %{conn: conn} do
       business_concept_version =
@@ -103,58 +80,47 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag authentication: [role: "admin"]
-    @tag :template
-    test "shows the domains in which it has been shared",
-         %{conn: conn} do
-      d1 = %{id: d1_id} = insert(:domain)
-      d2 = %{id: d2_id} = insert(:domain)
+    test "shows the domains in which it has been shared", %{conn: conn} do
+      %{id: domain_id1} = CacheHelpers.insert_domain()
+      %{id: domain_id2} = CacheHelpers.insert_domain()
 
-      %{business_concept: %{id: concept_id} = concept} =
-        insert(
-          :business_concept_version,
-          content: %{"foo" => "bar"}
-        )
+      %{business_concept_id: id} = insert(:business_concept_version)
 
-      insert(:shared_concept, business_concept: concept, domain: d1)
-      insert(:shared_concept, business_concept: concept, domain: d2)
+      insert(:shared_concept, business_concept_id: id, domain_id: domain_id1)
+      insert(:shared_concept, business_concept_id: id, domain_id: domain_id2)
 
-      conn =
-        get(
-          conn,
-          Routes.business_concept_business_concept_version_path(
-            conn,
-            :show,
-            concept_id,
-            "current"
-          )
-        )
+      link = "/api/business_concepts/#{id}/shared_domains"
 
-      link = "/api/business_concepts/#{concept_id}/shared_domains"
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   id,
+                   "current"
+                 )
+               )
+               |> json_response(:ok)
 
-      %{
-        "_embedded" => %{"shared_to" => [%{"id" => ^d1_id}, %{"id" => ^d2_id}]},
-        "actions" => %{
-          "share" => %{
-            "href" => ^link,
-            "method" => "PATCH",
-            "input" => %{}
-          }
-        }
-      } = json_response(conn, 200)["data"]
+      assert %{"_embedded" => embedded, "actions" => actions} = data
+      assert %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]} = embedded
+      assert %{"share" => share} = actions
+      assert %{"href" => ^link, "method" => "PATCH", "input" => %{}} = share
     end
 
-    @tag authentication: [user_name: @user_name]
-    @tag :template
-    test "show with actions", %{
-      conn: conn,
-      domain: %{id: domain_id} = domain,
-      claims: %{user_id: user_id}
-    } do
-      create_acl_entry(user_id, "domain", domain_id, "create")
+    @tag authentication: [user_name: "not_an_admin"]
+    test "show with actions", %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :manage_business_concept_links,
+        :view_draft_business_concepts
+      ])
 
       %{id: id, business_concept_id: business_concept_id} =
         insert(:business_concept_version,
-          business_concept: build(:business_concept, domain: domain)
+          business_concept: build(:business_concept, domain_id: domain_id)
         )
 
       assert %{"_actions" => actions} =
@@ -169,18 +135,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> json_response(:ok)
 
-      assert Map.has_key?(actions, "create_concept_link")
-      assert Map.has_key?(actions, "create_structure_link")
+      assert %{"create_concept_link" => _, "create_structure_link" => _} = actions
     end
 
-    @tag authentication: [user_name: @user_name]
-    @tag :template
-    test "includes share action if non-admin user has :share_with_domain permission", %{
-      conn: conn,
-      domain: %{id: domain_id} = domain,
-      claims: %{user_id: user_id}
-    } do
-      create_acl_entry(user_id, "domain", domain_id, [
+    @tag authentication: [user_name: "not_an_admin"]
+    test "includes share action if non-admin user has :share_with_domain permission",
+         %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
         :update_business_concept,
         :view_draft_business_concepts,
         :share_with_domain
@@ -188,78 +151,72 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       %{id: id, business_concept_id: business_concept_id} =
         insert(:business_concept_version,
-          business_concept: build(:business_concept, domain: domain)
-        )
-
-      conn =
-        get(
-          conn,
-          Routes.business_concept_business_concept_version_path(
-            conn,
-            :show,
-            business_concept_id,
-            id
-          )
+          business_concept: build(:business_concept, domain_id: domain_id)
         )
 
       link = "/api/business_concepts/#{business_concept_id}/shared_domains"
 
-      %{
-        "actions" => %{
-          "share" => %{
-            "href" => ^link,
-            "method" => "PATCH",
-            "input" => %{}
-          }
-        }
-      } = json_response(conn, 200)["data"]
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      assert %{"share" => share} = actions
+      assert %{"href" => ^link, "method" => "PATCH", "input" => %{}} = share
     end
 
-    @tag authentication: [user_name: @user_name]
-    @tag :template
+    @tag authentication: [user_name: "not_an_admin"]
     test "does not include share action if non-admin user does not have :share_with_domain permission",
-         %{
-           conn: conn,
-           domain: %{id: domain_id} = domain,
-           claims: %{user_id: user_id}
-         } do
-      create_acl_entry(user_id, "domain", domain_id, [
+         %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
         :update_business_concept,
         :view_draft_business_concepts
       ])
 
       %{id: id, business_concept_id: business_concept_id} =
         insert(:business_concept_version,
-          business_concept: build(:business_concept, domain: domain)
+          business_concept: build(:business_concept, domain_id: domain_id)
         )
 
-      conn =
-        get(
-          conn,
-          Routes.business_concept_business_concept_version_path(
-            conn,
-            :show,
-            business_concept_id,
-            id
-          )
-        )
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
 
-      assert nil == Map.get(json_response(conn, 200)["data"]["actions"], "share")
+      assert %{"actions" => actions} = data
+      refute Map.has_key?(actions, "share")
     end
 
-    @tag authentication: [user_name: @user_name]
-    @tag :template
-    test "show actions in shared domains", %{
-      conn: conn,
-      domain: domain,
-      claims: %{user_id: user_id}
-    } do
-      shared_to = %{id: domain_id} = insert(:domain)
-      create_acl_entry(user_id, "domain", domain_id, "create")
+    @tag authentication: [user_name: "not_an_admin"]
+    test "show actions in shared domains", %{conn: conn, claims: claims} do
+      %{id: shared_id} = shared = CacheHelpers.insert_domain()
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, %{
+        "view_draft_business_concepts" => [shared_id],
+        "manage_business_concept_links" => [shared_id]
+      })
 
       %{id: id, business_concept_id: business_concept_id} =
         insert(:business_concept_version,
-          business_concept: build(:business_concept, domain: domain, shared_to: [shared_to])
+          business_concept: build(:business_concept, domain_id: domain_id, shared_to: [shared])
         )
 
       assert %{"_actions" => actions} =
@@ -278,31 +235,21 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       refute Map.has_key?(actions, "create_concept_link")
     end
 
-    @tag authentication: [user_name: @user_name]
-    @tag :template
+    @tag authentication: [user_name: "not_an_admin"]
     test "shows concept when we have permissions over shared domain", %{
       conn: conn,
-      domain: domain,
-      claims: %{user_id: user_id}
+      claims: claims
     } do
-      %{id: domain_id} = shared = insert(:domain)
+      %{id: shared_id} = shared = CacheHelpers.insert_domain()
+      %{id: domain_id} = CacheHelpers.insert_domain()
+      put_session_permissions(claims, %{"view_draft_business_concepts" => [shared_id]})
 
       %{id: id, business_concept_id: business_concept_id} =
         insert(:business_concept_version,
-          business_concept: build(:business_concept, domain: domain, shared_to: [shared])
+          business_concept: build(:business_concept, domain_id: domain_id, shared_to: [shared])
         )
 
-      create_acl_entry(user_id, "domain", domain_id, "create")
-
-      assert %{
-               "data" => %{
-                 "id" => ^id,
-                 "business_concept_id" => ^business_concept_id,
-                 "_embedded" => %{
-                   "shared_to" => [%{"id" => ^domain_id}]
-                 }
-               }
-             } =
+      assert %{"data" => data} =
                conn
                |> get(
                  Routes.business_concept_business_concept_version_path(
@@ -313,98 +260,147 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  )
                )
                |> json_response(:ok)
+
+      assert %{
+               "id" => ^id,
+               "business_concept_id" => ^business_concept_id,
+               "_embedded" => %{
+                 "shared_to" => [%{"id" => ^shared_id}]
+               }
+             } = data
     end
   end
 
   describe "GET /api/business_concept_versions" do
-    setup do
-      insert(:business_concept_version)
-      :ok
-    end
+    for role <- ["admin", "service"] do
+      @tag authentication: [role: "admin"]
+      test "#{role} account can list all business_concept_versions", %{conn: conn} do
+        %{id: id} = bcv = insert(:business_concept_version)
 
-    @tag authentication: [role: "admin"]
-    test "admin user can list all business_concept_versions", %{conn: conn} do
-      assert %{"data" => [_]} =
-               conn
-               |> get(Routes.business_concept_version_path(conn, :index))
-               |> json_response(:ok)
-    end
+        expect(ElasticsearchMock, :request, fn
+          _,
+          :post,
+          "/concepts/_search",
+          %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+          [] ->
+            assert query == %{bool: %{filter: %{match_all: %{}}}}
+            SearchHelpers.hits_response([bcv])
+        end)
 
-    @tag authentication: [role: "service"]
-    test "service account can list all business_concept_versions", %{conn: conn} do
-      assert %{"data" => [_]} =
-               conn
-               |> get(Routes.business_concept_version_path(conn, :index))
-               |> json_response(:ok)
+        assert %{"data" => [%{"id" => ^id}]} =
+                 conn
+                 |> get(Routes.business_concept_version_path(conn, :index))
+                 |> json_response(:ok)
+      end
     end
   end
 
   describe "POST /api/business_concept_versions/search" do
-    @tag authentication: [role: "admin"]
-    test "find business_concepts by status", %{conn: conn, domain: domain} do
-      create_version(domain, "one", "draft")
-      create_version(domain, "two", "published")
-      create_version(domain, "three", "published")
+    @tag authentication: [user_name: "not_an_admin"]
+    test "user search with filters", %{conn: conn} do
+      CacheHelpers.put_default_permissions(["view_published_business_concepts"])
 
-      filter_params = %{"status" => ["published"]}
+      %{id: id} = bcv = insert(:business_concept_version)
 
-      assert %{"data" => [_, _]} =
+      expect(ElasticsearchMock, :request, fn
+        _,
+        :post,
+        "/concepts/_search",
+        %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
+        [] ->
+          assert %{
+                   filter: [_status_filter, _confidential_filter, %{term: %{"domain_id" => 1234}}],
+                   must: %{simple_query_string: %{query: "foo*"}}
+                 } = bool
+
+          SearchHelpers.hits_response([bcv])
+      end)
+
+      params = %{filters: %{"domain_id" => [1234]}, query: "foo"}
+
+      assert %{"data" => [%{"id" => ^id}]} =
                conn
-               |> post(Routes.business_concept_version_path(conn, :search), filters: filter_params)
+               |> post(Routes.business_concept_version_path(conn, :search), params)
                |> json_response(:ok)
     end
 
-    @tag authentication: [role: "service"]
-    test "service account filter by status", %{conn: conn, domain: domain} do
-      create_version(domain, "one", "draft")
-      create_version(domain, "two", "published")
-      create_version(domain, "three", "published")
+    for role <- ["admin", "service"] do
+      @tag authentication: [role: role]
+      test "#{role} account filter by status", %{conn: conn} do
+        %{id: id} = bcv = insert(:business_concept_version)
 
-      filter_params = %{"status" => ["published"]}
+        expect(ElasticsearchMock, :request, fn
+          _,
+          :post,
+          "/concepts/_search",
+          %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+          [] ->
+            assert query == %{bool: %{filter: %{terms: %{"status" => ["published", "rejected"]}}}}
+            SearchHelpers.hits_response([bcv])
+        end)
 
-      assert %{"data" => [_, _]} =
-               conn
-               |> post(Routes.business_concept_version_path(conn, :search), filters: filter_params)
-               |> json_response(:ok)
+        params = %{filters: %{"status" => ["published", "rejected"]}}
+
+        assert %{"data" => [%{"id" => ^id}]} =
+                 conn
+                 |> post(Routes.business_concept_version_path(conn, :search), params)
+                 |> json_response(:ok)
+      end
     end
 
-    @tag authentication: [user_name: @user_name]
-    test "find only linkable concepts", %{conn: conn, claims: %{user_id: user_id}} do
-      domain_watch = insert(:domain)
-      domain_create = insert(:domain)
+    @tag authentication: [user_name: "not_an_admin"]
+    test "find only linkable concepts", %{conn: conn, claims: claims} do
+      %{id: domain_id1} = CacheHelpers.insert_domain()
+      %{id: domain_id2} = CacheHelpers.insert_domain()
+      %{id: id} = bcv = insert(:business_concept_version)
 
-      create_acl_entry(user_id, "domain", domain_watch.id, "watch")
-      create_acl_entry(user_id, "domain", domain_create.id, "create")
+      expect(ElasticsearchMock, :request, fn
+        _, :post, "/concepts/_search", %{query: query}, [] ->
+          assert %{bool: %{filter: [_, _, %{term: %{"domain_id" => ^domain_id2}}]}} = query
+          SearchHelpers.hits_response([bcv])
+      end)
 
-      create_version(domain_watch, "bc_watch", "draft")
-      %{business_concept_id: id} = create_version(domain_create, "bc_create", "draft")
+      put_session_permissions(claims, %{
+        "view_draft_business_concepts" => [domain_id1, domain_id2],
+        "manage_business_concept_links" => [domain_id2]
+      })
 
       assert %{"data" => data} =
                conn
                |> post(Routes.business_concept_version_path(conn, :search), only_linkable: true)
                |> json_response(:ok)
 
-      assert [%{"business_concept_id" => ^id}] = data
+      assert [%{"id" => ^id}] = data
     end
   end
 
   describe "create business_concept" do
+    setup :set_mox_from_context
+
     @tag authentication: [role: "user"]
-    @tag :template
     test "renders business_concept when data is valid", %{
       conn: conn,
-      claims: %{user_id: user_id},
+      claims: claims,
       swagger_schema: schema
     } do
-      domain = insert(:domain)
-      create_acl_entry(user_id, "domain", domain.id, "create")
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
+      %{id: domain_id, name: domain_name} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :create_business_concept,
+        :view_draft_business_concepts
+      ])
 
       creation_attrs = %{
         "content" => %{},
         "type" => "some_type",
         "name" => "Some name",
         "description" => to_rich_text("Some description"),
-        "domain_id" => domain.id,
+        "domain_id" => domain_id,
         "in_progress" => false
       }
 
@@ -438,12 +434,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> Map.delete("domain_id")
       |> Enum.each(fn {k, v} -> assert data[k] == v end)
 
-      assert data["domain"]["id"] == domain.id
-      assert data["domain"]["name"] == domain.name
+      assert data["domain"]["id"] == domain_id
+      assert data["domain"]["name"] == domain_name
     end
 
     @tag authentication: [role: "user"]
-    @tag :template
     test "doesn't allow concept creation when not in domain", %{
       conn: conn,
       swagger_schema: schema
@@ -494,53 +489,80 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "index_by_name" do
     @tag authentication: [role: "admin"]
-    test "find business concept by name", %{conn: conn} do
-      domain = insert(:domain)
-      id = [create_version(domain, "one", "draft").business_concept.id]
-      id = [create_version(domain, "two", "published").business_concept.id | id]
-      [create_version(domain, "two", "published").business_concept.id | id]
+    test "search business concept prefix query", %{conn: conn} do
+      %{id: id} = bcv = insert(:business_concept_version)
+
+      ElasticsearchMock
+      |> expect(:request, fn
+        _,
+        :post,
+        "/concepts/_search",
+        %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+        [] ->
+          assert query == %{
+                   bool: %{
+                     filter: %{match_all: %{}},
+                     must: %{simple_query_string: %{query: "foo*"}}
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+      end)
 
       assert %{"data" => data} =
                conn
-               |> get(Routes.business_concept_version_path(conn, :index), %{query: "two"})
+               |> get(Routes.business_concept_version_path(conn, :index), %{query: "foo"})
                |> json_response(:ok)
 
-      assert length(data) == 2
-
-      assert %{"data" => data} =
-               conn
-               |> get(Routes.business_concept_version_path(conn, :index), %{query: "one"})
-               |> json_response(:ok)
-
-      assert length(data) == 1
+      assert [%{"id" => ^id}] = data
     end
   end
 
   describe "index by business concept id" do
     @tag authentication: [role: "admin"]
     test "lists business_concept_versions", %{conn: conn} do
-      business_concept_version = insert(:business_concept_version)
+      %{id: id, business_concept_id: business_concept_id} =
+        bcv = insert(:business_concept_version)
 
-      conn =
-        get(
-          conn,
-          Routes.business_concept_business_concept_version_path(
-            conn,
-            :index,
-            business_concept_version.business_concept.id
-          )
-        )
+      ElasticsearchMock
+      |> expect(:request, fn
+        _,
+        :post,
+        "/concepts/_search",
+        %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+        [] ->
+          assert query == %{
+                   bool: %{filter: %{term: %{"business_concept_id" => business_concept_id}}}
+                 }
 
-      [data | _] = json_response(conn, 200)["data"]
-      assert data["name"] == business_concept_version.name
+          SearchHelpers.hits_response([bcv])
+      end)
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :index,
+                   business_concept_id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert [%{"id" => ^id}] = data
     end
   end
 
   describe "create new versions" do
+    setup :set_mox_from_context
+
     @tag authentication: [role: "admin"]
-    test "create new version with modified template", %{
-      conn: conn
-    } do
+    test "create new version with modified template", %{conn: conn} do
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
       template_content = [
         %{
           "name" => "group",
@@ -599,24 +621,27 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "update business_concept_version" do
+    setup :set_mox_from_context
+
     @tag authentication: [role: "admin"]
-    @tag :template
     test "renders business_concept_version when data is valid", %{
       conn: conn,
       swagger_schema: schema
     } do
-      %{user_id: user_id} = build(:claims)
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
 
-      business_concept_version = insert(:business_concept_version, last_change_by: user_id)
+      %{name: template_name} = CacheHelpers.insert_template()
 
-      business_concept_version_id = business_concept_version.id
-      business_concept_id = business_concept_version.business_concept_id
+      %{id: id, business_concept_id: business_concept_id} =
+        business_concept_version = insert(:business_concept_version, type: template_name)
 
       update_attrs = %{
-        "content" => %{},
+        "content" => %{"list" => ["one"], "string" => "foo"},
         "name" => "The new name",
-        "description" => to_rich_text("The new description"),
-        "in_progress" => false
+        "description" => to_rich_text("The new description")
       }
 
       assert %{"data" => data} =
@@ -628,7 +653,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
-      assert %{"id" => ^business_concept_version_id} = data
+      assert %{"id" => ^id} = data
 
       assert %{"data" => data} =
                conn
@@ -637,23 +662,29 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                    conn,
                    :show,
                    business_concept_id,
-                   business_concept_version_id
+                   id
                  )
                )
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
-      Enum.each(update_attrs, fn {k, v} -> assert data[k] == v end)
+      assert_maps_equal(data, update_attrs, ["content", "name", "description"])
     end
   end
 
   describe "set business_concept_version confidential" do
+    setup :set_mox_from_context
+
     @tag authentication: [role: "admin"]
-    @tag :template
     test "updates business concept confidential and renders version", %{
       conn: conn,
       swagger_schema: schema
     } do
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
       %{user_id: user_id} = build(:claims)
 
       business_concept_version = insert(:business_concept_version, last_change_by: user_id)
@@ -692,7 +723,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag authentication: [role: "admin"]
-    @tag :template
     test "renders error if invalid value for confidential", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
 
@@ -713,126 +743,62 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   describe "bulk_update" do
+    setup :set_mox_from_context
+
     @tag authentication: [role: "admin"]
-    @tag template: [
-           %{
-             "name" => "group",
-             "fields" => [
-               %{
-                 "name" => "Field1",
-                 "type" => "string",
-                 "group" => "Multiple Group",
-                 "label" => "Multiple 1",
-                 "values" => nil,
-                 "cardinality" => "1"
-               },
-               %{
-                 "name" => "Field2",
-                 "type" => "string",
-                 "group" => "Multiple Group",
-                 "label" => "Multiple 1",
-                 "values" => nil,
-                 "cardinality" => "1"
-               }
-             ]
-           }
-         ]
     test "bulk update of business concept", %{conn: conn} do
-      domain = insert(:domain, name: "domain1")
-      domain_new = insert(:domain, name: "domain_new")
-      business_concept = insert(:business_concept, domain: domain, type: @template_name)
+      %{id: domain_id} = CacheHelpers.insert_domain()
+      %{name: template_name} = CacheHelpers.insert_template()
+      %{id: id} = bcv = insert(:business_concept_version, type: template_name)
 
-      insert(
-        :business_concept_version,
-        business_concept: business_concept,
-        name: "version_draft",
-        status: "draft"
-      )
+      ElasticsearchMock
+      |> expect(:request, fn
+        _,
+        :post,
+        "/concepts/_search",
+        %{from: 0, query: query, size: 10_000, sort: ["_score", "name.raw"]},
+        [] ->
+          assert query == %{bool: %{filter: %{term: %{"status" => "published"}}}}
+          SearchHelpers.hits_response([bcv])
+      end)
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
 
-      version_published =
-        insert(
-          :business_concept_version,
-          business_concept: business_concept,
-          name: "version_published",
-          status: "published"
-        )
+      params = %{
+        "update_attributes" => %{"domain_id" => domain_id},
+        "search_params" => %{"filters" => %{"status" => ["published"]}}
+      }
 
-      conn =
-        post(conn, Routes.business_concept_version_path(conn, :bulk_update), %{
-          "update_attributes" => %{
-            "domain_id" => domain_new.id
-          },
-          "search_params" => %{"filters" => %{"status" => ["published"]}}
-        })
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :bulk_update), params)
+               |> json_response(:ok)
 
-      %{"message" => updated_version_ids} = json_response(conn, 200)["data"]
-      assert Enum.at(updated_version_ids, 0) == version_published.id
+      assert %{"message" => updated_ids} = data
+      assert updated_ids == [id]
     end
 
     @tag authentication: [role: "admin"]
-    @tag template: [
-           %{
-             "name" => "group",
-             "fields" => [
-               %{
-                 "name" => "Field1",
-                 "type" => "string",
-                 "group" => "Multiple Group",
-                 "label" => "Multiple 1",
-                 "values" => nil,
-                 "cardinality" => "1"
-               },
-               %{
-                 "name" => "Field2",
-                 "type" => "string",
-                 "group" => "Multiple Group",
-                 "label" => "Multiple 1",
-                 "values" => nil,
-                 "cardinality" => "1"
-               }
-             ]
-           }
-         ]
-    test "bulk update of business concept with no domain", %{conn: conn} do
-      domain = insert(:domain, name: "domain1")
-      business_concept = insert(:business_concept, domain: domain, type: @template_name)
+    test "bulk update of business concept with invalid domain", %{conn: conn} do
+      %{name: template_name} = CacheHelpers.insert_template()
+      bcv = insert(:business_concept_version, type: template_name)
 
-      insert(
-        :business_concept_version,
-        business_concept: business_concept,
-        name: "version_draft",
-        status: "draft"
-      )
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_search", _, [] ->
+        SearchHelpers.hits_response([bcv])
+      end)
 
-      insert(
-        :business_concept_version,
-        business_concept: business_concept,
-        name: "version_published",
-        status: "published"
-      )
+      params = %{
+        "update_attributes" => %{"domain_id" => System.unique_integer([:positive])},
+        "search_params" => %{"filters" => %{"status" => ["published"]}}
+      }
 
-      conn =
-        post(conn, Routes.business_concept_version_path(conn, :bulk_update), %{
-          "update_attributes" => %{
-            "domain_id" => 78_482
-          },
-          "search_params" => %{"filters" => %{"status" => ["published"]}}
-        })
-
-      %{"error" => error} = json_response(conn, 422)
-      assert error == "missing_domain"
+      assert %{"error" => "missing_domain"} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :bulk_update), params)
+               |> json_response(:unprocessable_entity)
     end
-  end
-
-  defp create_version(domain, name, status) do
-    business_concept = insert(:business_concept, domain: domain)
-
-    insert(
-      :business_concept_version,
-      business_concept: business_concept,
-      name: name,
-      status: status
-    )
   end
 
   defp to_rich_text(plain) do

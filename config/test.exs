@@ -16,8 +16,6 @@ config :td_bg, TdBg.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_bg, permission_resolver: MockPermissionResolver
-
 config :td_bg, TdBg.Search.Cluster, api: TdBg.ElasticsearchMock
 
 config :td_cache, :audit, stream: "audit:events:test"

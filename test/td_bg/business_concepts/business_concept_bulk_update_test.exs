@@ -1,17 +1,21 @@
 defmodule TdBg.BusinessConceptBulkUpdateTest do
   use TdBg.DataCase
 
+  import Mox
+
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcepts
-  alias TdBg.Cache.ConceptLoader
-  alias TdBg.Search.IndexWorker
+  alias TdBg.ElasticsearchMock
   alias TdBg.Utils.CollectionUtils
 
   setup_all do
-    start_supervised(ConceptLoader)
-    start_supervised(IndexWorker)
+    start_supervised!(TdBg.Cache.ConceptLoader)
+    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdBg.Search.IndexWorker)
     :ok
   end
+
+  setup :verify_on_exit!
 
   setup _context do
     Templates.create_template(%{
@@ -71,8 +75,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     :ok
   end
 
-  describe "business_concepts_bulk_update" do
-    test "update_all/3 update all business concept versions with valid data" do
+  describe "BulkUpdate.update_all/3" do
+    setup :set_mox_from_context
+
+    test "update all business concept versions with valid data" do
+      ElasticsearchMock
+      |> expect(:request, 2, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -148,7 +159,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
              }
     end
 
-    test "update_all/3 update all business concept versions with invalid data: template does not exist" do
+    test "update all business concept versions with invalid data: template does not exist" do
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -184,7 +195,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert {:error, :template_not_found} = BulkUpdate.update_all(claims, bc_versions, params)
     end
 
-    test "update_all/3 update all business concept versions with invalid data: domain value to update does not exist" do
+    test "update all business concept versions with invalid data: domain value to update does not exist" do
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -224,7 +235,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert {:error, :missing_domain} = BulkUpdate.update_all(claims, bc_versions, params)
     end
 
-    test "update_all/3 update all business concept versions with invalid data: name exiting on target domain group" do
+    test "update all business concept versions with invalid data: name exiting on target domain group" do
       claims = build(:claims)
       group = insert(:domain_group)
 
@@ -268,7 +279,12 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert {"error.existing.business_concept.name", []} = error
     end
 
-    test "update_all/3 two versions of the same concept" do
+    test "two versions of the same concept" do
+      ElasticsearchMock
+      |> expect(:request, 2, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -326,7 +342,12 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
              }
     end
 
-    test "update_all/3 validates only updated fields and gives an error when they arec incorrect" do
+    test "validates only updated fields and gives an error when they arec incorrect" do
+      ElasticsearchMock
+      |> expect(:request, 3, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")

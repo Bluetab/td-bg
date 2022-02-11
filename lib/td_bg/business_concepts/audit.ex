@@ -163,7 +163,7 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   defp get_domain_ids(%{domain_id: domain_id}) do
-    TaxonomyCache.get_parent_ids(domain_id)
+    TaxonomyCache.reaching_domain_ids(domain_id)
   end
 
   defp get_domain_ids(_), do: []
