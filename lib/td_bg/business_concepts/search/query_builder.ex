@@ -20,29 +20,41 @@ defmodule TdBg.BusinessConcepts.Search.QueryBuilder do
   }
 
   def build_filters(%{} = permissions, opts \\ []) do
-    default_scope = Keyword.get(opts, :default_scope, :none)
-    status_filter = status_filter(permissions, default_scope)
-    confidential_filter = confidential_filter(permissions, default_scope)
+    status_filter = status_filter(permissions)
+    confidential_filter = confidential_filter(permissions)
     links_filter = if opts[:linkable], do: links_filter(permissions), else: nil
 
     [status_filter, confidential_filter, links_filter]
     |> Enum.flat_map(&List.wrap/1)
   end
 
-  def status_filter(permissions, default_scope \\ :none)
-
-  def status_filter(%{} = permissions, :all) when map_size(permissions) == 0 do
-    %{match_all: %{}}
-  end
-
-  def status_filter(%{} = permissions, default_scope) do
+  def status_filter(%{} = permissions) do
     @permissions_to_status
     |> Map.keys()
-    |> Enum.map(&{Map.get(permissions, &1, default_scope), &1})
+    |> Enum.map(&{Map.get(permissions, &1, :none), &1})
     |> Enum.group_by(
       fn {scope, _} -> scope end,
       fn {_, permission} -> Map.get(@permissions_to_status, permission) end
     )
+    |> do_status_filter()
+  end
+
+  defp do_status_filter(permissions_by_scope) when map_size(permissions_by_scope) == 0 do
+    %{match_none: %{}}
+  end
+
+  defp do_status_filter(%{none: _} = permissions_by_scope)
+       when map_size(permissions_by_scope) == 1 do
+    %{match_none: %{}}
+  end
+
+  defp do_status_filter(%{all: _} = permissions_by_scope)
+       when map_size(permissions_by_scope) == 1 do
+    %{match_all: %{}}
+  end
+
+  defp do_status_filter(permissions_by_scope) when map_size(permissions_by_scope) > 1 do
+    permissions_by_scope
     # :all < list < :none
     |> Enum.sort_by(fn
       {:all, _} -> 1
@@ -73,9 +85,9 @@ defmodule TdBg.BusinessConcepts.Search.QueryBuilder do
     |> maybe_bool_query()
   end
 
-  def confidential_filter(%{} = permissions, default_scope \\ :none) do
+  def confidential_filter(%{} = permissions) do
     permissions
-    |> Map.get("manage_confidential_business_concepts", default_scope)
+    |> Map.get("manage_confidential_business_concepts", :none)
     |> do_confidential_filter()
   end
 
@@ -95,9 +107,9 @@ defmodule TdBg.BusinessConcepts.Search.QueryBuilder do
     }
   end
 
-  def links_filter(%{} = permissions, default_scope \\ :none) do
+  def links_filter(%{} = permissions) do
     permissions
-    |> Map.get("manage_business_concept_links", default_scope)
+    |> Map.get("manage_business_concept_links", :none)
     |> do_links_filter()
   end
 

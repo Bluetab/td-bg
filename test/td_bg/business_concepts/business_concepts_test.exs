@@ -781,26 +781,16 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   defp concept_taxonomy(_) do
-    parent_id = fn
-      1 -> nil
-      id -> id - 1
-    end
+    import CacheHelpers, only: [insert_domain: 0, insert_domain: 1]
 
-    domains =
-      Enum.map(
-        1..5,
-        &insert(:domain,
-          id: &1,
-          parent_id: parent_id.(&1)
-        )
-      )
+    [%{id: domain_id} | _] =
+      domains =
+      Enum.reduce(1..5, nil, fn
+        _, nil -> [insert_domain()]
+        _, [%{id: id} | _] = acc -> [insert_domain(parent_id: id) | acc]
+      end)
 
-    concept =
-      insert(:business_concept_version,
-        business_concept: insert(:business_concept, domain: List.last(domains))
-      )
-
-    Enum.each(domains, &CacheHelpers.put_domain/1)
+    concept = insert(:business_concept_version, domain_id: domain_id)
 
     [concept: concept, domains: domains]
   end
@@ -808,11 +798,8 @@ defmodule TdBg.BusinessConceptsTest do
   describe "add_parents/1" do
     setup :concept_taxonomy
 
-    test "add_parents/1 gets concept taxonomy", %{concept: concept, domains: parents} do
-      parents =
-        parents
-        |> Enum.reverse()
-        |> Enum.map(&Map.take(&1, [:external_id, :id, :name]))
+    test "add_parents/1 gets concept taxonomy", %{concept: concept, domains: domains} do
+      parents = Enum.map(domains, &Map.take(&1, [:external_id, :id, :name]))
 
       assert %{domain_parents: ^parents} = BusinessConcepts.add_parents(concept)
     end

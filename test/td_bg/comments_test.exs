@@ -13,17 +13,16 @@ defmodule TdBg.CommentsTest do
   end
 
   setup do
-    domain = insert(:domain)
-    %{id: business_concept_id} = concept = insert(:business_concept, domain: domain)
-    insert(:business_concept_version, business_concept_id: business_concept_id)
-
-    CacheHelpers.put_domain(domain)
-    CacheHelpers.put_concept(concept)
-
     on_exit(fn -> Redix.del!(@stream) end)
 
-    claims = build(:claims, role: "admin")
-    [claims: claims, resource_id: business_concept_id]
+    %{id: domain_id} = CacheHelpers.insert_domain()
+
+    %{business_concept_id: concept_id, business_concept: concept} =
+      insert(:business_concept_version, domain_id: domain_id)
+
+    CacheHelpers.put_concept(concept)
+
+    [claims: build(:claims, role: "admin"), resource_id: concept_id]
   end
 
   describe "create_comment/2" do

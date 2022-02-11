@@ -9,11 +9,11 @@ defmodule TdBg.BusinessConcept.Search do
   alias TdBg.Search.Aggregations
 
   def get_filter_values(%Claims{} = claims, params) do
-    opts = builder_opts(params, claims)
+    opts = builder_opts(params)
 
     query =
       claims
-      |> get_permissions()
+      |> Permissions.get_search_permissions()
       |> QueryBuilder.build_filters(opts)
       |> QueryBuilder.build_query(params)
 
@@ -24,11 +24,11 @@ defmodule TdBg.BusinessConcept.Search do
   def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
 
   def search_business_concept_versions(params, %Claims{} = claims, page, size) do
-    opts = builder_opts(params, claims)
+    opts = builder_opts(params)
 
     query =
       claims
-      |> get_permissions()
+      |> Permissions.get_search_permissions()
       |> QueryBuilder.build_filters(opts)
       |> QueryBuilder.build_query(params)
 
@@ -38,29 +38,10 @@ defmodule TdBg.BusinessConcept.Search do
     |> do_search()
   end
 
-  defp get_permissions(%Claims{role: role}) when role in ["admin", "service"] do
-    %{}
-  end
-
-  defp get_permissions(%Claims{} = claims) do
-    Permissions.get_default_permissions()
-    |> Map.merge(Permissions.get_session_permissions(claims), fn
-      _, :all, _ -> :all
-      _, _, scope -> scope
-    end)
-  end
-
-  defp builder_opts(%{} = params, %Claims{role: role}) do
-    opts =
-      case params do
-        %{"only_linkable" => true} -> [linkable: true]
-        _ -> []
-      end
-
-    case role do
-      "admin" -> Keyword.put(opts, :default_scope, :all)
-      "service" -> Keyword.put(opts, :default_scope, :all)
-      _ -> opts
+  defp builder_opts(%{} = params) do
+    case params do
+      %{"only_linkable" => true} -> [linkable: true]
+      _ -> []
     end
   end
 
