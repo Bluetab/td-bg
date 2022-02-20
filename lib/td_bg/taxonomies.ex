@@ -303,7 +303,10 @@ defmodule TdBg.Taxonomies do
   end
 
   def enrich(domain_id) when is_integer(domain_id) do
-    TaxonomyCache.get_domain(domain_id)
+    case TaxonomyCache.get_domain(domain_id) do
+      %{} = domain -> Map.take(domain, [:id, :external_id, :name, :parent_id])
+      nil -> %{}
+    end
   end
 
   def enrich(ids), do: ids

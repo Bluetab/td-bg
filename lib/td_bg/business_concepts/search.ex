@@ -9,14 +9,7 @@ defmodule TdBg.BusinessConcept.Search do
   alias TdBg.Search.Aggregations
 
   def get_filter_values(%Claims{} = claims, params) do
-    opts = builder_opts(params)
-
-    query =
-      claims
-      |> Permissions.get_search_permissions()
-      |> QueryBuilder.build_filters(opts)
-      |> QueryBuilder.build_query(params)
-
+    query = build_query(claims, params)
     search = %{query: query, aggs: Aggregations.aggregation_terms(), size: 0}
     Search.get_filters(search)
   end
@@ -24,18 +17,19 @@ defmodule TdBg.BusinessConcept.Search do
   def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
 
   def search_business_concept_versions(params, %Claims{} = claims, page, size) do
-    opts = builder_opts(params)
-
-    query =
-      claims
-      |> Permissions.get_search_permissions()
-      |> QueryBuilder.build_filters(opts)
-      |> QueryBuilder.build_query(params)
-
+    query = build_query(claims, params)
     sort = Map.get(params, "sort", ["_score", "name.raw"])
-
     %{from: page * size, size: size, query: query, sort: sort}
     |> do_search()
+  end
+
+  defp build_query(%Claims{} = claims, params) do
+    opts = builder_opts(params)
+
+    claims
+    |> Permissions.get_search_permissions()
+    |> QueryBuilder.build_filters(opts)
+    |> QueryBuilder.build_query(params)
   end
 
   defp builder_opts(%{} = params) do
