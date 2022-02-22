@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [4.39.0] 2022-02-22
 
 - [TD-4481]  Allow to change domain in business concept
 
