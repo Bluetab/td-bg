@@ -249,6 +249,12 @@ defmodule TdBgWeb.SwaggerDefinitions do
             )
           end
         end,
+      BusinessConceptVersionDomainUpdate:
+        swagger_schema do
+          properties do
+            domain_id(:integer, "Business Concept Domain ID", required: true)
+          end
+        end,
       BusinessConceptVersionConfidentialUpdate:
         swagger_schema do
           properties do

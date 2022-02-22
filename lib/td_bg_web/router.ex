@@ -56,6 +56,7 @@ defmodule TdBgWeb.Router do
       post("/version", BusinessConceptVersionController, :version)
       post("/redraft", BusinessConceptVersionController, :undo_rejection)
       post("/set_confidential", BusinessConceptVersionController, :set_confidential)
+      post("/domain", BusinessConceptVersionController, :update_domain)
       resources("/links", BusinessConceptLinkController, only: [:delete])
       post("/links/concepts", BusinessConceptLinkController, :create_concept_link)
       post("/links/structures", BusinessConceptLinkController, :create_structure_link)

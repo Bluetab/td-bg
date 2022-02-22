@@ -53,6 +53,7 @@ defmodule TdBgWeb.ConnCase do
         auth_opts
         |> Authentication.create_claims()
         |> Authentication.create_user_auth_conn()
+        |> Authentication.assign_permissions(auth_opts[:permissions])
     end
   end
 

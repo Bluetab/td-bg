@@ -55,6 +55,10 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     Permissions.authorized?(claims, :create_ingest, domain_id)
   end
 
+  def can?(%Claims{} = claims, :manage_business_concepts_domain, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_business_concepts_domain, domain_id)
+  end
+
   def can?(%Claims{} = claims, :update_business_concept, %Domain{
         id: domain_id
       }) do

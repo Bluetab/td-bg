@@ -49,6 +49,14 @@ defmodule TdBgWeb.Authentication do
     }
   end
 
+  def assign_permissions({:ok, %{claims: %{user_id: user_id}} = state}, [_ | _] = permissions) do
+    domain = CacheHelpers.insert_domain()
+    create_acl_entry(user_id, domain.id, permissions)
+    {:ok, Map.put(state, :permissions_domain, domain)}
+  end
+
+  def assign_permissions(state, _), do: state
+
   def build_user_token(%Claims{role: role} = claims) do
     case Guardian.encode_and_sign(claims, %{role: role}) do
       {:ok, jwt, _full_claims} -> register_token(jwt)
@@ -78,6 +86,10 @@ defmodule TdBgWeb.Authentication do
     end
 
     token
+  end
+
+  def create_acl_entry(user_id, domain_id, permissions) do
+    create_acl_entry(user_id, "domain", domain_id, permissions)
   end
 
   def create_acl_entry(user_id, resource_type, resource_id, permissions)

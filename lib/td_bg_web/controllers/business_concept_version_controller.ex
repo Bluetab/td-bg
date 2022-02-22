@@ -238,41 +238,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     with %BusinessConcept{id: id} <- BusinessConcepts.get_business_concept(concept_id),
          %BusinessConceptVersion{} = business_concept_version <-
            BusinessConcepts.get_business_concept_version(id, version),
-         {:can, true} <- {:can, can?(claims, view_business_concept(business_concept_version))},
-         template <- BusinessConcepts.get_template(business_concept_version) do
-      business_concept_version =
-        business_concept_version
-        |> add_completeness()
-        |> add_counts()
-        |> add_taxonomy()
-        |> add_shared_to_parents()
-
-      links =
-        business_concept_version
-        |> Links.get_links()
-        |> Enum.filter(fn
-          %{domain_id: domain_id} -> can?(claims, view_data_structure(domain_id))
-          _ -> can?(claims, view_data_structure(:no_domain))
-        end)
-
-      actions = get_actions(claims, business_concept_version)
-
-      shared_to =
-        business_concept_version
-        |> Map.get(:business_concept)
-        |> Map.get(:shared_to)
-
-      render(
-        conn,
-        "show.json",
-        business_concept_version: business_concept_version,
-        links: links,
-        shared_to: shared_to,
-        links_hypermedia: links_hypermedia(conn, links, business_concept_version),
-        hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-        template: template,
-        actions: actions
-      )
+         {:can, true} <- {:can, can?(claims, view_business_concept(business_concept_version))} do
+      render_concept(conn, business_concept_version)
     else
       nil -> {:error, :not_found}
       error -> error
@@ -319,16 +286,20 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def get_actions(claims, %BusinessConceptVersion{business_concept: concept}) do
+    %{
+      share: can_share_concepts(claims, concept)
+    }
+  end
+
+  defp can_share_concepts(claims, concept) do
     if can?(claims, share_with_domain(concept)) do
       %{
-        share: %{
-          href: "/api/business_concepts/#{concept.id}/shared_domains",
-          method: "PATCH",
-          input: %{}
-        }
+        href: "/api/business_concepts/#{concept.id}/shared_domains",
+        method: "PATCH",
+        input: %{}
       }
     else
-      %{}
+      false
     end
   end
 
@@ -585,23 +556,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp render_concept(conn, concept) do
-    claims = conn.assigns[:current_resource]
-    template = BusinessConcepts.get_template(concept)
-    actions = get_actions(claims, concept)
-
-    business_concept_version = add_completeness(concept)
-
-    render(
-      conn,
-      "show.json",
-      business_concept_version: business_concept_version,
-      hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
-      template: template,
-      actions: actions
-    )
-  end
-
   swagger_path :update do
     description("Updates Business Concept Version")
     produces("application/json")
@@ -620,7 +574,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(400, "Client Error")
   end
 
-  def update(conn, %{"id" => id, "business_concept_version" => business_concept_version_params}) do
+  def update(
+        conn,
+        %{"id" => id, "business_concept_version" => business_concept_version_params}
+      ) do
     %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -669,6 +626,60 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         hypermedia: hypermedia("business_concept_version", conn, concept_version),
         template: template
       )
+    else
+      error -> handle_bc_errors(conn, error)
+    end
+  end
+
+  swagger_path :update_domain do
+    description("Updates Business Concept domain")
+    produces("application/json")
+
+    parameters do
+      domain_id(
+        :body,
+        Schema.ref(:BusinessConceptVersionDomainUpdate),
+        "Business Concept Domain update attrs"
+      )
+
+      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
+    end
+
+    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
+    response(400, "Client Error")
+  end
+
+  def update_domain(
+        conn,
+        %{"business_concept_version_id" => id, "domain_id" => domain_id}
+      ) do
+    %{user_id: user_id} = claims = conn.assigns[:current_resource]
+
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+
+    domain_before =
+      business_concept_version
+      |> Map.get(:business_concept)
+      |> Map.get(:domain)
+
+    domain_after = Taxonomies.get_domain!(domain_id)
+
+    business_concept_attrs =
+      %{}
+      |> Map.put("last_change_by", user_id)
+      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("domain_id", domain_id)
+
+    update_params = %{"business_concept" => business_concept_attrs}
+
+    with {:can, true} <- {:can, can?(claims, manage_business_concepts_domain(domain_before))},
+         {:can, true} <- {:can, can?(claims, manage_business_concepts_domain(domain_after))},
+         {:ok, %BusinessConceptVersion{} = concept_version} <-
+           BusinessConcepts.update_business_concept(
+             business_concept_version,
+             update_params
+           ) do
+      render_concept(conn, concept_version)
     else
       error -> handle_bc_errors(conn, error)
     end
@@ -839,4 +850,43 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp get_domain_group_id(%{domain_group: nil}), do: nil
 
   defp get_domain_group_id(%{domain_group: domain_group}), do: Map.get(domain_group, :id)
+
+  defp render_concept(conn, business_concept_version) do
+    claims = conn.assigns[:current_resource]
+    template = BusinessConcepts.get_template(business_concept_version)
+
+    business_concept_version =
+      business_concept_version
+      |> add_completeness()
+      |> add_counts()
+      |> add_taxonomy()
+      |> add_shared_to_parents()
+
+    links =
+      business_concept_version
+      |> Links.get_links()
+      |> Enum.filter(fn
+        %{domain_id: domain_id} -> can?(claims, view_data_structure(domain_id))
+        _ -> can?(claims, view_data_structure(:no_domain))
+      end)
+
+    actions = get_actions(claims, business_concept_version)
+
+    shared_to =
+      business_concept_version
+      |> Map.get(:business_concept)
+      |> Map.get(:shared_to)
+
+    render(
+      conn,
+      "show.json",
+      business_concept_version: business_concept_version,
+      links: links,
+      shared_to: shared_to,
+      links_hypermedia: links_hypermedia(conn, links, business_concept_version),
+      hypermedia: hypermedia("business_concept_version", conn, business_concept_version),
+      template: template,
+      actions: actions
+    )
+  end
 end

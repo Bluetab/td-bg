@@ -305,6 +305,7 @@ defmodule TdBg.BusinessConcepts do
     case result do
       {:ok, _} ->
         updated_version = get_business_concept_version!(business_concept_version.id)
+
         refresh_cache_and_elastic(updated_version)
         {:ok, updated_version}
 
@@ -606,7 +607,13 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def validate_new_concept(params, old_business_concept_version \\ %BusinessConceptVersion{}) do
-    changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params, old_business_concept_version)
+    changeset =
+      BusinessConceptVersion.create_changeset(
+        %BusinessConceptVersion{},
+        params,
+        old_business_concept_version
+      )
+
     Map.put(params, :changeset, changeset)
   end
 
