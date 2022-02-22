@@ -75,6 +75,17 @@ defmodule MockPermissionResolver do
       :view_deprecated_business_concepts,
       :view_dashboard,
       :view_quality_rule
+    ],
+    "manage_bc_domain" => [
+      :view_domain,
+      :manage_business_concepts_domain,
+      :view_draft_business_concepts,
+      :view_published_business_concepts,
+      :view_versioned_business_concepts,
+      :view_approval_pending_business_concepts,
+      :view_deprecated_business_concepts,
+      :view_dashboard,
+      :view_quality_rule
     ]
   }
   @initial_state %{sessions: Map.new(), acls: []}

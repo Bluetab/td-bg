@@ -175,6 +175,61 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [user_name: @user_name]
     @tag :template
+    test "user with manage_business_concepts_domain permission has update_domain action", %{
+      conn: conn,
+      domain: %{id: domain_id} = domain,
+      claims: %{user_id: user_id}
+    } do
+      create_acl_entry(user_id, "domain", domain_id, "manage_bc_domain")
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
+
+      assert %{"_actions" => actions} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert Map.has_key?(actions, "update_domain")
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "admin has update_domain action", %{
+      conn: conn,
+      domain: domain
+    } do
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
+
+      assert %{"_actions" => actions} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert Map.has_key?(actions, "update_domain")
+    end
+
+    @tag authentication: [user_name: @user_name]
+    @tag :template
     test "includes share action if non-admin user has :share_with_domain permission", %{
       conn: conn,
       domain: %{id: domain_id} = domain,
