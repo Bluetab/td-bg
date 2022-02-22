@@ -244,7 +244,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           )
         )
 
-      assert nil == Map.get(json_response(conn, 200)["data"]["actions"], "share")
+      assert false == Map.get(json_response(conn, 200)["data"]["actions"], "share")
     end
 
     @tag authentication: [user_name: @user_name]
@@ -644,6 +644,129 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       Enum.each(update_attrs, fn {k, v} -> assert data[k] == v end)
+    end
+  end
+
+  describe "update business_concept domain" do
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "renders business_concept_version with domain change", %{
+      conn: conn,
+      swagger_schema: schema
+    } do
+      business_concept_version = insert(:business_concept_version)
+
+      %{id: domain_id} = insert(:domain)
+
+      assert %{"data" => data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :update_domain,
+                   business_concept_version
+                 ),
+                 domain_id: domain_id
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
+
+      assert %{"domain" => %{"id" => ^domain_id}} = data
+    end
+
+    @tag authentication: [role: "user"]
+    @tag :template
+    test "doesn't allow concept update when in domain without permission", %{
+      conn: conn,
+      swagger_schema: schema
+    } do
+      business_concept_version = insert(:business_concept_version)
+
+      %{id: domain_id} = insert(:domain)
+
+      assert conn
+             |> post(
+               Routes.business_concept_version_business_concept_version_path(
+                 conn,
+                 :update_domain,
+                 business_concept_version
+               ),
+               domain_id: domain_id
+             )
+             |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+             |> json_response(:forbidden)
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [:update_business_concept, :manage_business_concepts_domain]
+         ]
+    @tag :template
+    test "user with permission in new domain, can update business concept domain", %{
+      conn: conn,
+      permissions_domain: domain,
+      claims: %{user_id: user_id},
+      swagger_schema: schema
+    } do
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
+
+      %{id: domain_id} = insert(:domain)
+
+      create_acl_entry(user_id, "domain", domain_id, [
+        :update_business_concept,
+        :manage_business_concepts_domain
+      ])
+
+      assert %{"data" => data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :update_domain,
+                   business_concept_version
+                 ),
+                 domain_id: domain_id
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
+
+      assert %{"domain" => %{"id" => ^domain_id}} = data
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [:update_business_concept, :manage_business_concepts_domain]
+         ]
+    @tag :template
+    test "user without permission in new domain, cannot update business concept domain", %{
+      conn: conn,
+      permissions_domain: domain,
+      claims: %{user_id: user_id},
+      swagger_schema: schema
+    } do
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain: domain)
+        )
+
+      %{id: domain_id} = insert(:domain)
+
+      create_acl_entry(user_id, "domain", domain_id, [:update_business_concept])
+
+      assert conn
+             |> post(
+               Routes.business_concept_version_business_concept_version_path(
+                 conn,
+                 :update_domain,
+                 business_concept_version
+               ),
+               domain_id: domain_id
+             )
+             |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+             |> json_response(:forbidden)
     end
   end
 
