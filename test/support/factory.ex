@@ -28,22 +28,25 @@ defmodule TdBg.Factory do
     }
   end
 
-  def business_concept_factory do
+  def business_concept_factory(attrs) do
+    attrs = default_assoc(attrs, :domain_id, :domain)
+
     %BusinessConcept{
-      domain: build(:domain),
       type: "some_type",
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
       confidential: false
     }
+    |> merge_attributes(attrs)
   end
 
   def business_concept_version_factory(attrs) do
-    attrs = default_assoc(attrs, :business_concept_id, :business_concept)
+    {concept_attrs, attrs} = Map.split(attrs, [:type, :domain, :domain_id])
+    attrs = default_assoc(attrs, :business_concept_id, :business_concept, concept_attrs)
 
     %BusinessConceptVersion{
       content: %{},
-      name: "My business term",
+      name: sequence("concept_name"),
       description: %{"document" => "My business term description"},
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
@@ -86,18 +89,21 @@ defmodule TdBg.Factory do
     }
   end
 
-  def shared_concept_factory do
-    %TdBg.SharedConcepts.SharedConcept{
-      business_concept: build(:business_concept),
-      domain: build(:domain)
-    }
+  def shared_concept_factory(attrs) do
+    attrs =
+      attrs
+      |> default_assoc(:domain_id, :domain)
+      |> default_assoc(:business_concept_id, :business_concept)
+
+    %TdBg.SharedConcepts.SharedConcept{}
+    |> merge_attributes(attrs)
   end
 
-  defp default_assoc(attrs, id_key, key) do
+  defp default_assoc(attrs, id_key, key, build_attrs \\ %{}) do
     if Enum.any?([key, id_key], &Map.has_key?(attrs, &1)) do
       attrs
     else
-      Map.put(attrs, key, build(key))
+      Map.put(attrs, key, build(key, build_attrs))
     end
   end
 end

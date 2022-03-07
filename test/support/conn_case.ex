@@ -22,10 +22,12 @@ defmodule TdBgWeb.ConnCase do
   using do
     quote do
       # Import conveniences for testing with connections
+      import Assertions
+      import CacheHelpers, only: [put_session_permissions: 2, put_session_permissions: 3]
       import Plug.Conn
       import Phoenix.ConnTest
       import TdBg.Factory
-      import TdBgWeb.Authentication, only: [create_acl_entry: 4, create_claims: 1]
+      import TdBgWeb.Authentication, only: [create_claims: 1]
 
       alias TdBgWeb.Router.Helpers, as: Routes
 
@@ -35,8 +37,6 @@ defmodule TdBgWeb.ConnCase do
   end
 
   setup tags do
-    start_supervised!(MockPermissionResolver)
-
     :ok = Sandbox.checkout(TdBg.Repo)
 
     unless tags[:async] do

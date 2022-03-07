@@ -72,6 +72,11 @@ config :td_bg, TdBg.Scheduler,
   jobs: [
     [
       schedule: "@reboot",
+      task: {TdCache.CacheCleaner, :clean, ["domains:root", "domains:id_to_parent_ids"]},
+      run_strategy: Quantum.RunStrategy.Local
+    ],
+    [
+      schedule: "@reboot",
       task: {TdBg.Cache.DomainLoader, :refresh_deleted, []},
       run_strategy: Quantum.RunStrategy.Local
     ],

@@ -226,8 +226,9 @@ defmodule TdBgWeb.DomainController do
     claims = conn.assigns[:current_resource]
 
     with {:ok, domain} <- Taxonomies.get_domain(id),
-         {:can, true} <- {:can, can?(claims, show(domain))} do
-      counter = Taxonomies.count_existing_users_with_roles(id, user_name)
+         {:can, true} <- {:can, can?(claims, show(domain))},
+         {domain_id, ""} <- Integer.parse(id) do
+      counter = Taxonomies.count_existing_users_with_roles(domain_id, user_name)
       render(conn, "domain_bc_count.json", counter: counter)
     end
   end

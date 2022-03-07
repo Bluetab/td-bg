@@ -1,16 +1,13 @@
 defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
-  alias TdBg.Cache.DomainLoader
   alias TdBg.Groups
   alias TdBg.Repo
-  alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
 
   setup_all do
-    start_supervised(DomainLoader)
-    start_supervised(IndexWorker)
+    start_supervised(TdBg.Cache.DomainLoader)
     :ok
   end
 
@@ -301,15 +298,15 @@ defmodule TdBg.TaxonomiesTest do
       group_name = "foo"
       root_group = insert(:domain_group)
       root_children_group = insert(:domain_group)
-      root = insert(:domain, id: 0, domain_group: root_group)
+      root = insert(:domain, id: 1, domain_group: root_group)
 
       root_children =
-        Enum.map(1..5, fn level ->
+        Enum.map(2..6, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_group)
         end)
 
       children =
-        Enum.map(6..10, fn level ->
+        Enum.map(7..11, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
         end)
 
@@ -334,13 +331,13 @@ defmodule TdBg.TaxonomiesTest do
     test "updates the domain group and its children's when its informed and they are not linked to some group" do
       group_name = "foo"
       root_children_group = insert(:domain_group)
-      root = insert(:domain, id: 0)
+      root = insert(:domain, id: 1)
 
       root_children =
-        Enum.map(1..5, fn level -> insert(:domain, id: level, parent_id: level - 1) end)
+        Enum.map(2..6, fn level -> insert(:domain, id: level, parent_id: level - 1) end)
 
       children =
-        Enum.map(6..10, fn level ->
+        Enum.map(7..11, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
         end)
 
@@ -365,15 +362,15 @@ defmodule TdBg.TaxonomiesTest do
     test "deletes the group when specified" do
       root_group = insert(:domain_group)
       root_children_group = insert(:domain_group)
-      root = insert(:domain, id: 0, domain_group: root_group)
+      root = insert(:domain, id: 1, domain_group: root_group)
 
       root_children =
-        Enum.map(1..5, fn level ->
+        Enum.map(2..6, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_group)
         end)
 
       children =
-        Enum.map(6..10, fn level ->
+        Enum.map(7..11, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
         end)
 
@@ -398,17 +395,17 @@ defmodule TdBg.TaxonomiesTest do
     test "inherits parent group on deletion" do
       root_group = insert(:domain_group)
       root_children_group = insert(:domain_group)
-      insert(:domain, id: 0, domain_group: root_group)
+      insert(:domain, id: 1, domain_group: root_group)
 
       root_children =
-        Enum.map(1..5, fn level ->
+        Enum.map(2..6, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_group)
         end)
 
-      root = insert(:domain, id: 6, domain_group: root_children_group, parent_id: 5)
+      root = insert(:domain, id: 7, domain_group: root_children_group, parent_id: 5)
 
       children =
-        Enum.map(7..10, fn level ->
+        Enum.map(8..11, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: root_children_group)
         end)
 
@@ -601,17 +598,17 @@ defmodule TdBg.TaxonomiesTest do
     test "manage only direct descendents" do
       g1 = insert(:domain_group)
       g2 = insert(:domain_group)
-      root = insert(:domain, id: 0, domain_group: g1)
+      root = insert(:domain, id: 1, domain_group: g1)
 
       root_children =
-        Enum.map(1..5, fn level ->
+        Enum.map(2..6, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: g1)
         end)
 
-      insert(:domain, id: 6, domain_group: g2, parent_id: 5)
+      insert(:domain, id: 7, domain_group: g2, parent_id: 5)
 
       children =
-        Enum.map(7..10, fn level ->
+        Enum.map(8..11, fn level ->
           insert(:domain, id: level, parent_id: level - 1, domain_group: g1)
         end)
 

@@ -16,7 +16,7 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
   end
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    [conn: put_req_header(conn, "accept", "application/json")]
   end
 
   describe "index" do

@@ -1,0 +1,85 @@
+defmodule TdBg.BusinessConcepts.SearchTest do
+  use TdBgWeb.ConnCase
+
+  import Mox
+
+  alias TdBg.BusinessConcept.Search
+  alias TdBg.ElasticsearchMock
+
+  setup do
+    start_supervised!(TdBg.Search.Cluster)
+    :ok
+  end
+
+  setup :verify_on_exit!
+
+  describe "Search.search_business_concept_versions/4" do
+    @tag authentication: [role: "user"]
+    test "posts a meaningful search request and handles response correctly", %{claims: claims} do
+      %{id: id} = bcv = insert(:business_concept_version)
+      %{id: domain_id0} = CacheHelpers.insert_domain()
+      %{id: domain_id1} = CacheHelpers.insert_domain(parent_id: domain_id0)
+      %{id: domain_id2} = CacheHelpers.insert_domain(parent_id: domain_id1)
+      %{id: domain_id3} = CacheHelpers.insert_domain()
+      %{id: domain_id4} = CacheHelpers.insert_domain()
+
+      CacheHelpers.put_default_permissions(["view_published_business_concepts"])
+
+      put_session_permissions(claims, %{
+        "view_approval_pending_business_concepts" => [domain_id3],
+        "view_draft_business_concepts" => [domain_id3],
+        "manage_confidential_business_concepts" => [domain_id1],
+        "view_rejected_business_concepts" => [domain_id4]
+      })
+
+      ElasticsearchMock
+      |> expect(:request, fn
+        _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, [] ->
+          assert %{bool: %{filter: [status_filter, confidential_filter]}} = query
+
+          assert status_filter == %{
+                   bool: %{
+                     should: [
+                       %{
+                         bool: %{
+                           filter: [
+                             %{term: %{"status" => "rejected"}},
+                             %{term: %{"domain_ids" => domain_id4}}
+                           ]
+                         }
+                       },
+                       %{
+                         bool: %{
+                           filter: [
+                             %{terms: %{"status" => ["draft", "pending_approval"]}},
+                             %{term: %{"domain_ids" => domain_id3}}
+                           ]
+                         }
+                       },
+                       %{term: %{"status" => "published"}}
+                     ]
+                   }
+                 }
+
+          assert confidential_filter == %{
+                   bool: %{
+                     should: [
+                       %{terms: %{"domain_ids" => [domain_id1, domain_id2]}},
+                       %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}}
+                     ]
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv], 55)
+      end)
+
+      assert %{results: [%{"id" => ^id}], total: 55} =
+               Search.search_business_concept_versions(
+                 %{"sort" => "foo", "query" => "bar"},
+                 claims,
+                 5,
+                 10
+               )
+    end
+  end
+end

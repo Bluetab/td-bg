@@ -1,23 +1,26 @@
 defmodule TdBg.BusinessConcepts.WorkflowTest do
   use TdBg.DataCase
 
+  import Mox
+
   alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.Workflow
-  alias TdBg.Cache.ConceptLoader
-  alias TdBg.Search.IndexWorker
   alias TdCache.Redix
   alias TdCache.Redix.Stream
-  alias TdCache.TaxonomyCache
 
   @stream TdCache.Audit.stream()
 
   setup_all do
     Redix.del!(@stream)
-    start_supervised(ConceptLoader)
-    start_supervised(IndexWorker)
+    start_supervised!(TdBg.Cache.ConceptLoader)
+    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdBg.Search.IndexWorker)
     :ok
   end
+
+  setup :verify_on_exit!
+  setup :set_mox_from_context
 
   setup do
     on_exit(fn -> Redix.del!(@stream) end)
@@ -25,6 +28,8 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   end
 
   describe "new_version/2" do
+    setup :create_concept_with_parents
+
     setup do
       identifier_name = "identifier"
 
@@ -57,6 +62,8 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
     end
 
     test "creates a new published version and the previous version remains the current" do
+      expect_bulk_index()
+
       business_concept_version =
         insert(:business_concept_version, status: "published", current: true)
 
@@ -70,6 +77,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       template_with_identifier: template_with_identifier,
       identifier_name: identifier_name
     } do
+      expect_bulk_index()
       existing_identifier = "00000000-0000-0000-0000-000000000000"
       concept = build(:business_concept, %{type: template_with_identifier.name})
 
@@ -90,6 +98,8 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
     end
 
     test "creates a new published version and advance to a publish state will make it current" do
+      expect_bulk_index(3)
+
       business_concept_version =
         insert(:business_concept_version, status: "published", current: true)
 
@@ -108,6 +118,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
     end
 
     test "publishes an event to the audit stream" do
+      expect_bulk_index()
       business_concept_version = insert(:business_concept_version, status: "published")
 
       assert {:ok, %{audit: event_id}} =
@@ -116,12 +127,12 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
     end
 
-    setup [:create_concept_with_parents]
-
     test "publishes an event to the audit stream with domain ids", %{
       concept: concept,
       domain_ids: domain_ids
     } do
+      expect_bulk_index()
+
       business_concept_version =
         insert(:business_concept_version, status: "published", business_concept: concept)
 
@@ -136,7 +147,11 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   end
 
   describe "publish_business_concept/2" do
+    setup :create_concept_with_parents
+
     test "changes the status and audit fields" do
+      expect_bulk_index(1)
+
       %{last_change_at: ts} =
         business_concept_version = insert(:business_concept_version, status: "draft")
 
@@ -150,13 +165,13 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert DateTime.diff(last_change_at, ts, :microsecond) > 0
     end
 
-    setup [:create_concept_with_parents]
-
     test "publishes an event including domain_ids to the audit stream", %{
       claims: claims,
       concept: concept,
       domain_ids: domain_ids
     } do
+      expect_bulk_index()
+
       business_concept_version =
         insert(:business_concept_version, status: "draft", business_concept: concept)
 
@@ -167,6 +182,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
     end
 
     test "publishes an event including subscribable_fields", %{claims: claims} do
+      expect_bulk_index()
       business_concept_version = insert(:business_concept_version, status: "draft")
 
       assert {:ok, %{audit: event_id}} = Workflow.publish(business_concept_version, claims)
@@ -177,7 +193,10 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   end
 
   describe "reject/3" do
+    setup :create_concept_with_parents
+
     test "rejects business_concept", %{claims: claims} do
+      expect_bulk_index()
       reason = "Because I want to"
       business_concept_version = insert(:business_concept_version, status: "pending_approval")
 
@@ -187,13 +206,12 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert %{status: "rejected", reject_reason: ^reason} = business_concept_version
     end
 
-    setup [:create_concept_with_parents]
-
     test "publishes an event including domain_ids to the audit stream", %{
       claims: claims,
       concept: concept,
       domain_ids: domain_ids
     } do
+      expect_bulk_index()
       reason = "Because I want to"
 
       business_concept_version =
@@ -208,7 +226,11 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   end
 
   describe "submit_business_concept_version/2" do
+    setup :create_concept_with_parents
+
     test "updates the business_concept", %{claims: claims} do
+      expect_bulk_index()
+
       %{user_id: user_id} = claims
       business_concept_version = insert(:business_concept_version)
 
@@ -218,13 +240,12 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert %{status: "pending_approval", last_change_by: ^user_id} = business_concept_version
     end
 
-    setup [:create_concept_with_parents]
-
     test "publishes an event including domain_ids to the audit stream", %{
       claims: claims,
       concept: concept,
       domain_ids: domain_ids
     } do
+      expect_bulk_index()
       business_concept_version = insert(:business_concept_version, business_concept: concept)
 
       assert {:ok, %{audit: event_id}} =
@@ -237,22 +258,26 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   end
 
   defp create_concept_with_parents(_) do
-    domain_id = System.unique_integer([:positive])
-    on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
-    parent_ids = Enum.map(1..5, fn _ -> System.unique_integer([:positive]) end)
-    domain_ids = [domain_id | parent_ids]
+    [domain | _] = domains = create_hierarchy(5, %{id: nil}) |> Enum.reverse()
 
-    domain = %{
-      id: domain_id,
-      name: "foo",
-      external_id: "foo",
-      updated_at: DateTime.utc_now(),
-      parent_ids: parent_ids
-    }
+    Enum.each(domains, &CacheHelpers.put_domain/1)
+    domain_ids = Enum.map(domains, & &1.id)
 
-    TaxonomyCache.put_domain(domain)
-    domain = build(:domain, id: domain_id)
     concept = build(:business_concept, domain: domain)
     [concept: concept, domain_ids: domain_ids]
+  end
+
+  defp create_hierarchy(0, _), do: []
+
+  defp create_hierarchy(depth, %{id: parent_id}) do
+    domain = insert(:domain, parent_id: parent_id)
+    [domain | create_hierarchy(depth - 1, domain)]
+  end
+
+  defp expect_bulk_index(n \\ 1) do
+    TdBg.ElasticsearchMock
+    |> expect(:request, n, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+      SearchHelpers.bulk_index_response()
+    end)
   end
 end

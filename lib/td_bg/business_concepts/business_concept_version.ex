@@ -139,10 +139,10 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
          old_content,
          template_name
        ) do
-    TdDfLib.Format.maybe_put_identifier(changeset_content, old_content, template_name)
-    |> (fn new_content ->
-          put_change(changeset, :content, new_content)
-        end).()
+    new_content =
+      TdDfLib.Format.maybe_put_identifier(changeset_content, old_content, template_name)
+
+    put_change(changeset, :content, new_content)
   end
 
   defp maybe_put_identifier_aux(changeset, _old_content, _template_name) do
@@ -306,8 +306,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
       template = TemplateCache.get_by_name!(type) || %{content: []}
       domain_parents = get_parents(domain.id)
+      domain_ids = get_domain_ids(domain, shared_to)
       shared_to = get_shared_to(shared_to)
-      domain_ids = get_domain_ids(domain_parents, shared_to)
       shared_to_names = shared_to_names(shared_to)
 
       content =
@@ -324,8 +324,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         :version,
         :last_change_at,
         :current,
-        :link_count,
-        :rule_count,
         :concept_count,
         :in_progress,
         :inserted_at
@@ -361,11 +359,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       |> Enum.uniq_by(& &1.id)
     end
 
-    defp get_domain_ids(parents, shared_to) do
-      parents
-      |> Enum.concat(shared_to)
-      |> Enum.map(& &1.id)
-      |> Enum.uniq()
+    defp get_domain_ids(domain, shared_to) do
+      Enum.map([domain | List.wrap(shared_to)], & &1.id)
     end
 
     defp get_parents(id) do

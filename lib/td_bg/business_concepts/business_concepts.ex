@@ -264,6 +264,7 @@ defmodule TdBg.BusinessConcepts do
         schema_type in ["url", "enriched_text"] or
           (schema_type in ["string", "user"] and cardinality in ["*", "+"])
       end)
+      # credo:disable-for-next-line Credo.Check.Refactor.FilterFilter
       |> Enum.filter(fn %{"name" => name} ->
         field_content = Map.get(content, name)
         not is_nil(field_content) and is_binary(field_content) and field_content != ""
@@ -790,6 +791,7 @@ defmodule TdBg.BusinessConcepts do
 
   def get_completeness(%BusinessConceptVersion{content: content} = bcv) do
     case get_template(bcv) do
+      nil -> nil
       template -> Templates.completeness(content, template)
     end
   end
