@@ -16,9 +16,7 @@ defmodule TdBg.Application do
         # Start the Ecto repository
         TdBg.Repo,
         # Start the endpoint when the application starts
-        TdBgWeb.Endpoint,
-        # Elasticsearch worker
-        TdBg.Search.Cluster
+        TdBgWeb.Endpoint
       ] ++ workers(env)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -38,6 +36,8 @@ defmodule TdBg.Application do
 
   defp workers(_env) do
     [
+      # Elasticsearch worker
+      TdBg.Search.Cluster,
       # Worker for background indexing
       TdBg.Search.IndexWorker,
       # Cache workers

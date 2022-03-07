@@ -1,16 +1,20 @@
 defmodule TdBg.UploadTest do
   use TdBg.DataCase
 
+  import Mox
+
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
-  alias TdBg.Cache.ConceptLoader
-  alias TdBg.Search.IndexWorker
+  alias TdBg.ElasticsearchMock
 
   setup_all do
-    start_supervised(ConceptLoader)
-    start_supervised(IndexWorker)
+    start_supervised!(TdBg.Cache.ConceptLoader)
+    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdBg.Search.IndexWorker)
     :ok
   end
+
+  setup :verify_on_exit!
 
   setup _context do
     %{id: template_id} =
@@ -54,7 +58,14 @@ defmodule TdBg.UploadTest do
   end
 
   describe "business_concept_upload" do
+    setup :set_mox_from_context
+
     test "from_csv/3 uploads business concept versions with valid data" do
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}

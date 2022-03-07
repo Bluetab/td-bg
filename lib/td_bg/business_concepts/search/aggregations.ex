@@ -1,29 +1,32 @@
-defmodule TdBg.Search.Aggregations do
+defmodule TdBg.BusinessConcepts.Search.Aggregations do
   @moduledoc """
-  Aggregations for elasticsearch
+  Support for search aggregations
   """
 
-  alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
 
-  def aggregation_terms do
+  def aggregations do
     static_keywords = [
       {"current", %{terms: %{field: "current"}}},
       {"shared_to_names", %{terms: %{field: "shared_to_names.raw"}}},
+      # {"domain_id", %{terms: %{field: "domain_id"}}},
       {"domain_ids", %{terms: %{field: "domain_ids"}}},
       {"status", %{terms: %{field: "status"}}},
       {"confidential.raw", %{terms: %{field: "confidential.raw"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
+      # TODO: Refactor, use boolean field instead of script
       {"rule_count",
        %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},
+      # TODO: Refactor, use boolean field instead of script
       {"link_count",
        %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}},
+      # TODO: Refactor? shouldn't need to index / aggregate parents, domain_id should be sufficient
       {"taxonomy",
        %{
          nested: %{path: "domain_parents"},
          aggs: %{
-           distinct_search: %{terms: %{field: "domain_parents.id", size: get_domains_count()}}
+           distinct_search: %{terms: %{field: "domain_parents.id", size: 500}}
          }
        }}
     ]
@@ -64,12 +67,5 @@ defmodule TdBg.Search.Aggregations do
 
   defp content_term(%{"name" => field}) do
     {field, %{terms: %{field: "content.#{field}.raw"}}}
-  end
-
-  defp get_domains_count do
-    case Enum.count(TaxonomyCache.get_domain_ids()) do
-      0 -> 10
-      count -> count
-    end
   end
 end

@@ -18,7 +18,7 @@ defmodule TdBg.Canada.TaxonomyAbilities do
       :view_domain
     ]
 
-    Permissions.has_any_permission_on_resource_type?(claims, permissions, Domain)
+    Permissions.has_any_permission?(claims, permissions)
   end
 
   def can?(%Claims{} = claims, :create, %Domain{id: domain_id}) do

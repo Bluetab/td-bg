@@ -41,8 +41,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def index(conn, %{"business_concept_id" => business_concept_id}) do
     claims = conn.assigns[:current_resource]
 
-    business_concept_id
-    |> Search.list_business_concept_versions(claims)
+    %{"filters" => %{"business_concept_id" => String.to_integer(business_concept_id)}}
+    |> Search.search_business_concept_versions(claims)
     |> render_search_results(conn)
   end
 

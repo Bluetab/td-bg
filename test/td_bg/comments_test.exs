@@ -2,8 +2,6 @@ defmodule TdBg.CommentsTest do
   use TdBg.DataCase
 
   alias TdBg.Comments
-  alias TdCache.ConceptCache
-  alias TdCache.DomainCache
   alias TdCache.Redix
   alias TdCache.Redix.Stream
 
@@ -15,21 +13,16 @@ defmodule TdBg.CommentsTest do
   end
 
   setup do
-    %{id: domain_id} = domain = insert(:domain)
-    %{id: business_concept_id} = concept = insert(:business_concept, domain: domain)
-    insert(:business_concept_version, business_concept_id: business_concept_id)
+    on_exit(fn -> Redix.del!(@stream) end)
 
-    DomainCache.put(domain)
-    ConceptCache.put(concept)
+    %{id: domain_id} = CacheHelpers.insert_domain()
 
-    on_exit(fn ->
-      ConceptCache.delete(business_concept_id)
-      DomainCache.delete(domain_id)
-      Redix.del!(@stream)
-    end)
+    %{business_concept_id: concept_id, business_concept: concept} =
+      insert(:business_concept_version, domain_id: domain_id)
 
-    claims = build(:claims, role: "admin")
-    [claims: claims, resource_id: business_concept_id]
+    CacheHelpers.put_concept(concept)
+
+    [claims: build(:claims, role: "admin"), resource_id: concept_id]
   end
 
   describe "create_comment/2" do

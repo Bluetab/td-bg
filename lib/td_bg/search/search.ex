@@ -11,7 +11,6 @@ defmodule TdBg.Search do
   @index "concepts"
 
   def search(query) do
-    Logger.debug(fn -> "Query: #{inspect(query)}" end)
     response = Elasticsearch.post(Cluster, "/#{@index}/_search", query)
 
     case response do
@@ -52,7 +51,7 @@ defmodule TdBg.Search do
   end
 
   defp filter_values({name, %{"buckets" => buckets}}) do
-    {name, buckets |> Enum.map(& &1["key"])}
+    {name, Enum.map(buckets, & &1["key"])}
   end
 
   defp filter_values({name, %{"distinct_search" => distinct_search}}) do

@@ -2,35 +2,15 @@ defmodule TdBgWeb.DomainControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdBg.TestOperators
+  import Assertions
+  import Mox
 
-  alias TdBg.Cache.ConceptLoader
-  alias TdBg.Cache.DomainLoader
-  alias TdBg.Search.IndexWorker
-  alias TdBg.Taxonomies
-  alias TdBg.Taxonomies.Domain
-
-  @create_attrs %{
-    description: "some description",
-    name: "some name",
-    external_id: "domain external id"
-  }
-  @update_attrs %{
-    description: "some updated description",
-    name: "some updated name",
-    external_id: "domain external id"
-  }
-  @invalid_attrs %{description: nil, name: nil}
-
-  def fixture(:domain) do
-    {:ok, domain} = Taxonomies.create_domain(@create_attrs)
-    domain
-  end
+  alias TdBg.ElasticsearchMock
 
   setup_all do
-    start_supervised(ConceptLoader)
-    start_supervised(DomainLoader)
-    start_supervised(IndexWorker)
+    start_supervised!(TdBg.Cache.ConceptLoader)
+    start_supervised!(TdBg.Cache.DomainLoader)
+    start_supervised!(TdBg.Search.Cluster)
     :ok
   end
 
@@ -65,15 +45,14 @@ defmodule TdBgWeb.DomainControllerTest do
   end
 
   describe "index with actions" do
-    @tag authentication: [user_name: "non_admin_user"]
-    test "list all domains user can view", %{
-      conn: conn,
-      swagger_schema: schema,
-      claims: %{user_id: user_id}
-    } do
-      %{id: domain_id} = insert(:domain)
+    setup :verify_on_exit!
 
-      create_acl_entry(user_id, "domain", domain_id, "watch")
+    @tag authentication: [user_name: "non_admin_user"]
+    test "list all domains user can view", %{conn: conn, swagger_schema: schema, claims: claims} do
+      %{id: domain_id} = domain = insert(:domain)
+      CacheHelpers.put_domain(domain)
+
+      put_session_permissions(claims, %{"view_domain" => [domain_id]})
 
       assert %{"data" => data} =
                conn
@@ -91,7 +70,7 @@ defmodule TdBgWeb.DomainControllerTest do
 
       assert [] = data
 
-      create_acl_entry(user_id, "domain", domain_id, "publish")
+      put_session_permissions(claims, domain_id, ["view_domain", "publish_business_concept"])
 
       assert %{"data" => data} =
                conn
@@ -106,9 +85,10 @@ defmodule TdBgWeb.DomainControllerTest do
     test "list all domains user has permission over specified actions", %{
       conn: conn,
       swagger_schema: schema,
-      claims: %{user_id: user_id}
+      claims: claims
     } do
-      %{id: domain_id} = insert(:domain)
+      %{id: domain_id} = domain = insert(:domain)
+      CacheHelpers.put_domain(domain)
 
       actions = "view_dashboard, view_quality_rule"
 
@@ -120,7 +100,10 @@ defmodule TdBgWeb.DomainControllerTest do
 
       assert [] = data
 
-      create_acl_entry(user_id, "domain", domain_id, "watch")
+      put_session_permissions(claims, %{
+        "view_dashboard" => [domain_id],
+        "view_quality_rule" => [domain_id]
+      })
 
       assert %{"data" => data} =
                conn
@@ -148,16 +131,20 @@ defmodule TdBgWeb.DomainControllerTest do
     test "includes parentable ids", %{
       conn: conn,
       swagger_schema: schema,
-      claims: %{user_id: user_id}
+      claims: claims
     } do
-      %{id: parent_id} = insert(:domain)
-      %{id: sibling_id} = insert(:domain, parent_id: parent_id)
-      %{id: domain_id} = domain = insert(:domain, parent_id: parent_id)
+      %{id: parent_id} = parent = insert(:domain)
+      %{id: sibling_id} = sibling = insert(:domain, parent_id: parent_id)
+      domain = insert(:domain, parent_id: parent_id)
 
-      Enum.each(
-        [parent_id, domain_id, sibling_id],
-        &create_acl_entry(user_id, "domain", &1, "admin")
-      )
+      for d <- [parent, sibling, domain], do: CacheHelpers.put_domain(d)
+
+      put_session_permissions(claims, %{
+        "view_domain" => [parent_id],
+        "create_domain" => [parent_id],
+        "delete_domain" => [parent_id],
+        "update_domain" => [parent_id]
+      })
 
       assert %{"data" => data} =
                conn
@@ -166,7 +153,7 @@ defmodule TdBgWeb.DomainControllerTest do
                |> json_response(:ok)
 
       assert %{"parentable_ids" => parentable_ids} = data
-      assert parentable_ids <|> [parent_id, sibling_id]
+      assert_lists_equal(parentable_ids, [parent_id, sibling_id])
     end
   end
 
@@ -190,8 +177,11 @@ defmodule TdBgWeb.DomainControllerTest do
                "description" => ^description,
                "external_id" => ^external_id,
                "name" => ^name,
-               "parent_id" => ^parent_id
+               "parent_id" => ^parent_id,
+               "id" => domain_id
              } = data
+
+      on_exit(fn -> TdCache.TaxonomyCache.delete_domain(domain_id, clean: true) end)
     end
 
     @tag authentication: [role: "admin"]
@@ -210,9 +200,11 @@ defmodule TdBgWeb.DomainControllerTest do
 
     @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn} do
+      params = %{"name" => nil}
+
       assert %{"errors" => errors} =
                conn
-               |> post(Routes.domain_path(conn, :create), domain: @invalid_attrs)
+               |> post(Routes.domain_path(conn, :create), domain: params)
                |> json_response(:unprocessable_entity)
 
       assert %{"name" => ["blank"]} = errors
@@ -226,11 +218,17 @@ defmodule TdBgWeb.DomainControllerTest do
     test "renders domain when data is valid", %{
       conn: conn,
       swagger_schema: schema,
-      domain: %Domain{id: id} = domain
+      domain: %{id: id} = domain
     } do
+      params = %{
+        description: "some updated description",
+        name: "some updated name",
+        external_id: "domain external id"
+      }
+
       assert %{"data" => data} =
                conn
-               |> put(Routes.domain_path(conn, :update, domain), domain: @update_attrs)
+               |> put(Routes.domain_path(conn, :update, domain), domain: params)
                |> validate_resp_schema(schema, "DomainResponse")
                |> json_response(:ok)
 
@@ -277,8 +275,14 @@ defmodule TdBgWeb.DomainControllerTest do
 
     @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn, domain: domain} do
-      conn = put conn, Routes.domain_path(conn, :update, domain), domain: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
+      params = %{"name" => nil}
+
+      assert %{"errors" => errors} =
+               conn
+               |> put(Routes.domain_path(conn, :update, domain), domain: params)
+               |> json_response(:unprocessable_entity)
+
+      assert %{"name" => ["blank"]} = errors
     end
   end
 
@@ -302,39 +306,46 @@ defmodule TdBgWeb.DomainControllerTest do
 
     @tag authentication: [role: "admin"]
     test "fetch counter", %{conn: conn, swagger_schema: schema, domain: domain} do
-      user_name = "My cool name"
-      business_concept_1 = insert(:business_concept, domain: domain)
-      business_concept_2 = insert(:business_concept, domain: domain)
-      business_concept_3 = insert(:business_concept, domain: domain)
+      bcv = insert(:business_concept_version)
+      %{id: child_id} = CacheHelpers.insert_domain(parent_id: domain.id)
 
-      insert(:business_concept_version,
-        business_concept: business_concept_1,
-        content: %{"data_owner" => user_name}
-      )
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_search", %{query: query, size: 0}, [] ->
+        assert %{
+                 bool: %{
+                   filter: [
+                     %{term: %{current: true}},
+                     %{terms: %{domain_id: domain_ids}},
+                     %{query_string: %{query: "content.\\*:(\"user name\")"}}
+                   ],
+                   must_not: %{term: %{status: "deprecated"}}
+                 }
+               } = query
 
-      insert(:business_concept_version, business_concept: business_concept_2)
+        assert_lists_equal(domain_ids, [domain.id, child_id])
+        SearchHelpers.hits_response([bcv])
+      end)
 
-      insert(:business_concept_version,
-        business_concept: business_concept_3,
-        content: %{"data_owner" => user_name},
-        status: "deprecated"
-      )
+      user_name = "User Name"
 
-      conn =
-        get(
-          conn,
-          Routes.domain_domain_path(conn, :count_bc_in_domain_for_user, domain.id, user_name)
-        )
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.domain_domain_path(
+                   conn,
+                   :count_bc_in_domain_for_user,
+                   domain.id,
+                   user_name
+                 )
+               )
+               |> validate_resp_schema(schema, "BCInDomainCountResponse")
+               |> json_response(:ok)
 
-      validate_resp_schema(conn, schema, "BCInDomainCountResponse")
-
-      counter = json_response(conn, 200)["data"] |> Map.fetch!("counter")
-      assert counter == 1
+      assert %{"counter" => 1} = data
     end
   end
 
   defp create_domain(_) do
-    domain = fixture(:domain)
-    {:ok, domain: domain}
+    [domain: CacheHelpers.insert_domain()]
   end
 end

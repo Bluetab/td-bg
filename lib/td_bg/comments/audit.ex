@@ -36,6 +36,10 @@ defmodule TdBg.Comments.Audit do
     publish("comment_deleted", "comment", id, user_id, payload)
   end
 
+  defp domain_ids(%{domain_id: domain_id}) when is_integer(domain_id) do
+    domain_ids(domain_id)
+  end
+
   defp domain_ids(%{domain_id: domain_id}) when is_binary(domain_id) do
     domain_id
     |> String.to_integer()
@@ -43,7 +47,7 @@ defmodule TdBg.Comments.Audit do
   end
 
   defp domain_ids(domain_id) when is_integer(domain_id) do
-    TaxonomyCache.get_parent_ids(domain_id)
+    TaxonomyCache.reaching_domain_ids(domain_id)
   end
 
   defp domain_ids(_), do: nil

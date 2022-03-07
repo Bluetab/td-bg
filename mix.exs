@@ -55,13 +55,10 @@ defmodule TdBg.Mixfile do
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.0"},
       {:postgrex, "~> 0.15.0"},
-      {:gettext, "~> 0.11"},
-      {:cabbage, only: :test, git: "https://github.com/Bluetab/cabbage", tag: "v0.3.8-alpha"},
+      {:gettext, "~> 0.18.2"},
       {:httpoison, "~> 1.0"},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:guardian, "~> 2.0"},
       {:canada, "~> 2.0"},
-      {:ex_machina, "~> 2.3", only: :test},
       {:corsica, "~> 1.0"},
       {:phoenix_swagger, "~> 0.8.3"},
       {:quantum, "~> 3.0"},
@@ -73,10 +70,14 @@ defmodule TdBg.Mixfile do
       {:elasticsearch,
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.38.1", override: true},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.36.0"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.40.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.40.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.0.0"},
-      {:graph, git: "https://github.com/Bluetab/graph.git", tag: "1.1.0"}
+      {:graph, git: "https://github.com/Bluetab/graph.git", tag: "1.2.0"},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:ex_machina, "~> 2.3", only: :test},
+      {:assertions, "~> 0.19", only: :test},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 
