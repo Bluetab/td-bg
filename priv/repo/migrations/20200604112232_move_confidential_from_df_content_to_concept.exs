@@ -6,15 +6,14 @@ defmodule TdBg.Repo.Migrations.MoveConfidentialFromDfContentToConcept do
   alias TdBg.Repo
 
   def up do
-    concepts =
-      from(bcv in "business_concept_versions")
-      |> join(:inner, [bcv, c], c in "business_concepts", on: bcv.business_concept_id == c.id)
-      |> select([bcv, c], %{concept_id: c.id, bcv_id: bcv.id, content: bcv.content})
-      |> Repo.all()
-      |> Enum.filter(&with_confidential/1)
-      |> Enum.map(&delete_confidential/1)
-      |> Enum.map(&update_content/1)
-      |> Enum.map(&update_concept_confidential/1)
+    from(bcv in "business_concept_versions")
+    |> join(:inner, [bcv, c], c in "business_concepts", on: bcv.business_concept_id == c.id)
+    |> select([bcv, c], %{concept_id: c.id, bcv_id: bcv.id, content: bcv.content})
+    |> Repo.all()
+    |> Enum.filter(&with_confidential/1)
+    |> Enum.map(&delete_confidential/1)
+    |> Enum.map(&update_content/1)
+    |> Enum.map(&update_concept_confidential/1)
   end
 
   def down do

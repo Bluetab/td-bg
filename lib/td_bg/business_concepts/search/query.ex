@@ -43,9 +43,15 @@ defmodule TdBg.BusinessConcepts.Search.Query do
 
   defp do_status_filter(%{} = permissions_by_scope) when map_size(permissions_by_scope) <= 1 do
     case Enum.at(permissions_by_scope, 0) do
-      nil -> @match_none
-      {:none, _statuses} -> @match_none
-      {:all, _statuses} -> @match_all
+      nil ->
+        @match_none
+
+      {:none, _statuses} ->
+        @match_none
+
+      {:all, _statuses} ->
+        @match_all
+
       {domain_ids, statuses} ->
         [
           term("status", statuses),
