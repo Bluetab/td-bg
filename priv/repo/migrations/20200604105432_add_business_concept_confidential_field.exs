@@ -13,14 +13,13 @@ defmodule TdBg.Repo.Migrations.AddBusinessConceptConfidentialField do
 
   # Concepts with false value in confidential will miss its previous content value in rollback
   def down do
-    confidential_concepts =
-      from(bcv in "business_concept_versions")
-      |> join(:inner, [bcv, c], c in "business_concepts", on: bcv.business_concept_id == c.id)
-      |> select([bcv, c], %{concept_id: c.id, bcv_id: bcv.id, content: bcv.content})
-      |> where([_, c], c.confidential == true)
-      |> Repo.all()
-      |> Enum.map(&add_confidential/1)
-      |> Enum.map(&update_content/1)
+    from(bcv in "business_concept_versions")
+    |> join(:inner, [bcv, c], c in "business_concepts", on: bcv.business_concept_id == c.id)
+    |> select([bcv, c], %{concept_id: c.id, bcv_id: bcv.id, content: bcv.content})
+    |> where([_, c], c.confidential == true)
+    |> Repo.all()
+    |> Enum.map(&add_confidential/1)
+    |> Enum.map(&update_content/1)
 
     alter table(:business_concepts) do
       remove(:confidential)
@@ -31,7 +30,7 @@ defmodule TdBg.Repo.Migrations.AddBusinessConceptConfidentialField do
     Map.put(params, :content, Map.put(content, "_confidential", "Si"))
   end
 
-  defp update_content(%{bcv_id: id, content: content} = params) do
+  defp update_content(%{bcv_id: id, content: content}) do
     from(bcv in "business_concept_versions")
     |> update([bcv], set: [content: ^content])
     |> where([bcv], bcv.id == ^id)

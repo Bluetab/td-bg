@@ -1,8 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-4491] Refactored search and permissions
+
 ## [4.38.0] 2022-02-22
 
-- [TD-4481]  Allow to change domain in business concept
+- [TD-4481] Allow to change domain in business concept
 
 ## [4.36.0] 2022-01-24
 
