@@ -12,7 +12,6 @@ defmodule TdBg.Taxonomies do
   alias TdBg.Groups
   alias TdBg.Groups.DomainGroup
   alias TdBg.Repo
-  alias TdBg.Search.IndexWorker
   alias TdBg.Taxonomies.Domain
   alias TdBg.Utils.CollectionUtils
   alias TdCache.TaxonomyCache
@@ -216,10 +215,8 @@ defmodule TdBg.Taxonomies do
     |> refresh_cache()
   end
 
-  defp refresh_cache({:ok, %{domain: %Domain{} = domain}}) do
-    # TODO: Refactor
-    DomainLoader.refresh(:all, force: true)
-    IndexWorker.reindex(:all)
+  defp refresh_cache({:ok, %{domain: %Domain{id: id} = domain}}) do
+    DomainLoader.refresh(id)
     {:ok, domain}
   end
 

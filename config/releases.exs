@@ -31,7 +31,7 @@ config :td_bg, TdBg.Scheduler,
     ],
     [
       schedule: "@reboot",
-      task: {TdBg.Cache.DomainLoader, :refresh, [:all, [force: true, publish: false]]},
+      task: {TdBg.Cache.DomainLoader, :refresh, [:all]},
       run_strategy: Quantum.RunStrategy.Local
     ],
     [

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- [TD-4461] Avoid reindexing when a domain is modified
 - [TD-4491] Refactored search and permissions
 
 ## [4.38.0] 2022-02-22

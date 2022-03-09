@@ -17,12 +17,7 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
                [%{range: %{"link_count" => %{lte: 0}}}]
 
       assert Filters.build_filters(%{"taxonomy" => [1, 2]}, aggs) == [
-               %{
-                 nested: %{
-                   path: "domain_parents",
-                   query: %{terms: %{"domain_parents.id" => [1, 2]}}
-                 }
-               }
+               %{terms: %{"domain_ids" => [1, 2]}}
              ]
 
       assert Filters.build_filters(%{"foo" => [1, 2]}, aggs) == [

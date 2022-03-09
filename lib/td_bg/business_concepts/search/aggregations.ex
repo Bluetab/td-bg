@@ -21,14 +21,7 @@ defmodule TdBg.BusinessConcepts.Search.Aggregations do
       # TODO: Refactor, use boolean field instead of script
       {"link_count",
        %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}},
-      # TODO: Refactor? shouldn't need to index / aggregate parents, domain_id should be sufficient
-      {"taxonomy",
-       %{
-         nested: %{path: "domain_parents"},
-         aggs: %{
-           distinct_search: %{terms: %{field: "domain_parents.id", size: 500}}
-         }
-       }}
+      {"taxonomy", %{terms: %{field: "domain_ids", size: 500}}}
     ]
 
     dynamic_keywords =
