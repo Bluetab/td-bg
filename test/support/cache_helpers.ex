@@ -25,7 +25,7 @@ defmodule CacheHelpers do
 
   def put_domain(%{id: id} = domain) do
     on_exit(fn -> TaxonomyCache.delete_domain(id, clean: true) end)
-    {:ok, _} = TaxonomyCache.put_domain(domain, publish: false)
+    {:ok, _} = TaxonomyCache.put_domain(domain)
   end
 
   def put_concept(%{id: id} = concept) do
