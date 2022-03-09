@@ -287,7 +287,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   defimpl Elasticsearch.Document do
     alias TdBg.Taxonomies
-    alias TdCache.TaxonomyCache
     alias TdCache.TemplateCache
     alias TdCache.UserCache
     alias TdDfLib.Format
@@ -305,7 +304,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
         business_concept
 
       template = TemplateCache.get_by_name!(type) || %{content: []}
-      domain_parents = get_parents(domain.id)
       domain_ids = get_domain_ids(domain, shared_to)
       shared_to = get_shared_to(shared_to)
       shared_to_names = shared_to_names(shared_to)
@@ -333,7 +331,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       |> Map.put(:description, RichText.to_plain_text(bcv.description))
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
-      |> Map.put(:domain_parents, domain_parents)
       |> Map.put(:last_change_by, get_last_change_by(bcv))
       |> Map.put(:template, Map.take(template, [:name, :label]))
       |> Map.put(:confidential, confidential)
@@ -361,19 +358,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
     defp get_domain_ids(domain, shared_to) do
       Enum.map([domain | List.wrap(shared_to)], & &1.id)
-    end
-
-    defp get_parents(id) do
-      id
-      |> Taxonomies.get_parent_ids()
-      |> Enum.map(&get_domain/1)
-    end
-
-    defp get_domain(id) do
-      case TaxonomyCache.get_domain(id) do
-        %{} = domain -> Map.take(domain, [:id, :external_id, :name])
-        nil -> %{id: id}
-      end
     end
 
     defp shared_to_names([]), do: nil

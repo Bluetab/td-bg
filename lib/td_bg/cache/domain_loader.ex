@@ -46,7 +46,6 @@ defmodule TdBg.Cache.DomainLoader do
   @impl true
   def handle_call({:delete, domain_id}, _from, state) do
     TaxonomyCache.delete_domain(domain_id)
-    load_domains(force: true, publish: false)
     {:reply, :ok, state}
   end
 
@@ -86,7 +85,6 @@ defmodule TdBg.Cache.DomainLoader do
 
       if remove_count > 0 do
         Logger.info("Removed #{remove_count} deleted domains")
-        load_domains(force: true, publish: false)
       end
     end
   end

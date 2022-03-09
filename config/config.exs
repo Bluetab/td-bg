@@ -54,8 +54,6 @@ config :td_bg, :phoenix_swagger,
     "priv/static/swagger.json" => [router: TdBgWeb.Router]
   }
 
-config :td_bg, permission_resolver: TdCache.Permissions
-
 config :td_cache, :audit,
   service: "td_bg",
   stream: "audit:events"
@@ -82,7 +80,7 @@ config :td_bg, TdBg.Scheduler,
     ],
     [
       schedule: "@reboot",
-      task: {TdBg.Cache.DomainLoader, :refresh, [:all, [force: true, publish: false]]},
+      task: {TdBg.Cache.DomainLoader, :refresh, [:all, [force: true]]},
       run_strategy: Quantum.RunStrategy.Local
     ],
     [

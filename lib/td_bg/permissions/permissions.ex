@@ -47,15 +47,6 @@ defmodule TdBg.Permissions do
     Enum.any?(permissions, &TdCache.Permissions.has_permission?(jti, &1))
   end
 
-  @doc """
-  Check if the authenticated user has a permission in a domain.
-
-  ## Examples
-
-      iex> authorized?(%Claims{}, "create", 12)
-      false
-
-  """
   def authorized?(%Claims{jti: jti}, permission, domain_id) do
     TdCache.Permissions.has_permission?(jti, permission, "domain", domain_id)
   end
