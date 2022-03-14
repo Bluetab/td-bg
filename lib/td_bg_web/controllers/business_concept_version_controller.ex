@@ -15,6 +15,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.Links
   alias TdBg.BusinessConcepts.Workflow
   alias TdBg.Taxonomies
+  alias TdBg.Taxonomies.Domain
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdCache.TemplateCache
@@ -281,7 +282,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     link
     |> Map.put(:shared_to, shared_to)
     |> Map.put(:business_concept_version_id, business_concept_version_id)
-    |> Map.put(:domain_id, domain_id)
+    |> Map.put_new(:domain_id, domain_id)
     |> Map.put(:hint, :link)
   end
 
@@ -865,10 +866,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     links =
       business_concept_version
       |> Links.get_links()
-      |> Enum.filter(fn
-        %{domain_id: domain_id} -> can?(claims, view_data_structure(domain_id))
-        _ -> can?(claims, view_data_structure(:no_domain))
-      end)
+      |> Enum.filter(fn link -> filter_link_by_permission(claims, link) end)
 
     actions = get_actions(claims, business_concept_version)
 
@@ -889,4 +887,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       actions: actions
     )
   end
+
+  defp filter_link_by_permission(claims, %{resource_type: :data_structure, domain_id: ""}),
+    do: can?(claims, view_data_structure(:no_domain))
+
+  defp filter_link_by_permission(claims, %{resource_type: :data_structure, domain_ids: domain_ids}),
+    do: can?(claims, view_data_structure(domain_ids))
+
+  defp filter_link_by_permission(claims, %{resource_type: :data_structure}),
+    do: can?(claims, view_data_structure(:no_domain))
+
+  defp filter_link_by_permission(claims, %{resource_type: :implementation, domain_id: domain_id}),
+    do: can?(claims, view_quality_rule(%Domain{id: domain_id}))
+
+  defp filter_link_by_permission(_claims, _), do: false
 end
