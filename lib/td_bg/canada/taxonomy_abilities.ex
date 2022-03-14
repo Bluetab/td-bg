@@ -69,10 +69,10 @@ defmodule TdBg.Canada.TaxonomyAbilities do
     Permissions.authorized?(claims, :update_data_structure, domain_id)
   end
 
-  def can?(%Claims{role: "admin"} = _claims, :view_data_structure, _domain_id), do: true
+  def can?(%Claims{role: "admin"} = _claims, :view_data_structure, _domain_ids), do: true
 
-  def can?(%Claims{} = claims, :view_data_structure, domain_id) do
-    Permissions.authorized?(claims, :view_data_structure, domain_id)
+  def can?(%Claims{} = claims, :view_data_structure, domain_ids) do
+    Permissions.authorized?(claims, :view_data_structure, domain_ids)
   end
 
   def can?(%Claims{} = claims, :manage_quality_rule, %Domain{id: domain_id}) do

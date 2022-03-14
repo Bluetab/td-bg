@@ -314,6 +314,175 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                }
              } = data
     end
+
+    @tag authentication: [user_name: "not_an_admin"]
+    test "show only links with correct permissions", %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+      %{id: domain_id_without_permission} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, %{
+        "view_quality_rule" => [domain_id],
+        "view_data_structure" => [domain_id],
+        "view_draft_business_concepts" => [domain_id]
+      })
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: domain_id)
+        )
+
+      %{id: data_structure_id} = CacheHelpers.insert_data_structure(%{domain_ids: [domain_id]})
+      %{id: implementation_id} = CacheHelpers.insert_implementation(%{domain_id: domain_id})
+
+      %{id: data_structure_id_without_permission} =
+        CacheHelpers.insert_data_structure(%{domain_ids: [domain_id_without_permission]})
+
+      %{id: implementation_id_without_permission} =
+        CacheHelpers.insert_implementation(%{domain_id: domain_id_without_permission})
+
+      CacheHelpers.insert_link(
+        business_concept_id,
+        "business_concept",
+        "data_structure",
+        data_structure_id
+      )
+
+      CacheHelpers.insert_link(
+        business_concept_id,
+        "business_concept",
+        "data_structure",
+        data_structure_id_without_permission
+      )
+
+      CacheHelpers.insert_link(
+        implementation_id,
+        "implementation",
+        "business_concept",
+        business_concept_id
+      )
+
+      CacheHelpers.insert_link(
+        implementation_id_without_permission,
+        "implementation",
+        "business_concept",
+        business_concept_id
+      )
+
+      string_data_structure_id = Integer.to_string(data_structure_id)
+
+      assert %{
+               "data" => %{
+                 "id" => ^id,
+                 "business_concept_id" => ^business_concept_id,
+                 "_embedded" => %{
+                   "links" => links
+                 }
+               }
+             } =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert Enum.count(links) == 2
+
+      assert string_data_structure_id ==
+               links
+               |> Enum.find(fn %{"resource_type" => resource_type} ->
+                 resource_type == "data_structure"
+               end)
+               |> Map.get("resource_id")
+
+      assert implementation_id ==
+               links
+               |> Enum.find(fn %{"resource_type" => resource_type} ->
+                 resource_type == "implementation"
+               end)
+               |> Map.get("resource_id")
+    end
+
+    @tag authentication: [user_name: "not_an_admin"]
+    test "render correct delete permissions for implementation links", %{
+      conn: conn,
+      claims: claims
+    } do
+      %{id: manage_perm_domain_id} = CacheHelpers.insert_domain()
+      %{id: view_perm_domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, %{
+        "view_quality_rule" => [view_perm_domain_id, manage_perm_domain_id],
+        "view_data_structure" => [view_perm_domain_id, manage_perm_domain_id],
+        "view_draft_business_concepts" => [view_perm_domain_id, manage_perm_domain_id],
+        "link_implementation_business_concept" => [manage_perm_domain_id]
+      })
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: view_perm_domain_id)
+        )
+
+      %{id: manage_perm_implementation_id} =
+        CacheHelpers.insert_implementation(%{domain_id: manage_perm_domain_id})
+
+      %{id: view_perm_implementation_id} =
+        CacheHelpers.insert_implementation(%{domain_id: view_perm_domain_id})
+
+      CacheHelpers.insert_link(
+        manage_perm_implementation_id,
+        "implementation",
+        "business_concept",
+        business_concept_id
+      )
+
+      CacheHelpers.insert_link(
+        view_perm_implementation_id,
+        "implementation",
+        "business_concept",
+        business_concept_id
+      )
+
+      assert %{
+               "data" => %{
+                 "id" => ^id,
+                 "business_concept_id" => ^business_concept_id,
+                 "_embedded" => %{
+                   "links" => links
+                 }
+               }
+             } =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert Enum.count(links) == 2
+
+      assert links
+             |> Enum.find(fn %{"resource_id" => resource_id} ->
+               resource_id == manage_perm_implementation_id
+             end)
+             |> Map.get("_actions")
+             |> Map.has_key?("delete")
+
+      refute links
+             |> Enum.find(fn %{"resource_id" => resource_id} ->
+               resource_id == view_perm_implementation_id
+             end)
+             |> Map.get("_actions")
+             |> Map.has_key?("delete")
+    end
   end
 
   describe "GET /api/business_concept_versions" do

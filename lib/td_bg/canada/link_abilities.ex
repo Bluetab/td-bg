@@ -57,6 +57,14 @@ defmodule TdBg.Canada.LinkAbilities do
     Permissions.authorized?(claims, :manage_business_concept_links, domain_ids)
   end
 
+  def can?(%Claims{} = claims, :delete, %{
+        hint: :link,
+        resource_type: :implementation,
+        domain_id: domain_id
+      }) do
+    Permissions.authorized?(claims, :link_implementation_business_concept, domain_id)
+  end
+
   def can?(%Claims{} = claims, :delete, %{hint: :link, domain_id: domain_id}) do
     TaxonomyAbilities.can?(claims, :delete_link, %Domain{id: domain_id})
   end
