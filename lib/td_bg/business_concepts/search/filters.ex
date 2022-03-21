@@ -3,57 +3,47 @@ defmodule TdBg.BusinessConcepts.Search.Filters do
   Functions for composing search query filters.
   """
 
-  import TdBg.Search.Query, only: [term: 2]
+  alias TdBg.Search.Query
+  alias TdCache.TaxonomyCache
 
   def build_filters(filters, aggs \\ %{}) do
     Enum.map(filters, &build_filter(&1, aggs))
   end
 
-  defp build_filter({filter, value_or_values}, _aggs)
-       when filter in ["domain_id", "business_concept_id"] do
-    term(filter, value_or_values)
+  defp build_filter({"taxonomy" = key, values}, aggs) do
+    values = TaxonomyCache.reachable_domain_ids(values)
+    build_filter(key, values, aggs)
   end
 
   defp build_filter({key, values}, aggs) do
-    aggs
-    |> Map.get(key)
-    |> build_filter(values, key)
+    build_filter(key, values, aggs)
   end
 
-  defp build_filter(nil, values, field) do
+  defp build_filter(%{terms: %{field: field}}, values) do
     term(field, values)
-  end
-
-  defp build_filter(%{terms: %{field: field}}, values, _) do
-    term(field, values)
-  end
-
-  defp build_filter(%{terms: %{script: _}}, values, name) do
-    %{range: create_range(name, values)}
   end
 
   defp build_filter(
          %{
            nested: %{path: path},
-           aggs: %{distinct_search: distinct_search}
+           aggs: %{distinct_search: %{terms: %{field: field}}}
          },
-         values,
-         _
+         values
        ) do
-    %{nested: %{path: path, query: build_nested_query(distinct_search, values)}}
+    %{nested: %{path: path, query: term(field, values)}}
   end
 
-  defp build_nested_query(%{terms: %{field: field}}, values) do
+  defp build_filter(field, values) when is_binary(field) do
     term(field, values)
   end
 
-  defp create_range(_filter, []), do: []
+  defp build_filter(key, values, aggs) do
+    aggs
+    |> Map.get(key, _field = key)
+    |> build_filter(values)
+  end
 
-  defp create_range("rule_count", ["rule_terms"]), do: %{"rule_count" => %{gt: 0}}
-  defp create_range("rule_count", ["not_rule_terms"]), do: %{"rule_count" => %{lte: 0}}
-  defp create_range("rule_count", [_, _]), do: %{"rule_count" => %{gte: 0}}
-
-  defp create_range("link_count", ["linked_terms"]), do: %{"link_count" => %{gt: 0}}
-  defp create_range("link_count", ["not_linked_terms"]), do: %{"link_count" => %{lte: 0}}
-  defp create_range("link_count", [_, _]), do: %{"link_count" => %{gte: 0}}
+  defp term(field, values) do
+    Query.term(field, values)
+  end
 end

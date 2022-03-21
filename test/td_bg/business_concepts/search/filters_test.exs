@@ -6,19 +6,9 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
 
   setup :create_template
 
-  describe "build_filters/1" do
+  describe "build_filters/2" do
     test "returns filter corresponding to aggregation terms" do
       aggs = Aggregations.aggregations()
-
-      assert Filters.build_filters(%{"rule_count" => ["rule_terms"]}, aggs) ==
-               [%{range: %{"rule_count" => %{gt: 0}}}]
-
-      assert Filters.build_filters(%{"link_count" => ["not_linked_terms"]}, aggs) ==
-               [%{range: %{"link_count" => %{lte: 0}}}]
-
-      assert Filters.build_filters(%{"taxonomy" => [1, 2]}, aggs) == [
-               %{terms: %{"domain_ids" => [1, 2]}}
-             ]
 
       assert Filters.build_filters(%{"foo" => [1, 2]}, aggs) == [
                %{
@@ -30,6 +20,17 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
              ]
 
       assert Filters.build_filters(%{"bar" => [1, 2]}, aggs) == [%{terms: %{"bar" => [1, 2]}}]
+    end
+
+    test "includes domain children in taxonomy filter" do
+      %{id: parent_id} = CacheHelpers.insert_domain()
+      %{id: domain_id} = CacheHelpers.insert_domain(parent_id: parent_id)
+
+      aggs = Aggregations.aggregations()
+
+      assert Filters.build_filters(%{"taxonomy" => [parent_id]}, aggs) == [
+        %{terms: %{"domain_ids" => [parent_id, domain_id]}}
+      ]
     end
   end
 

@@ -4,7 +4,7 @@ defmodule TdBg.Search do
   """
 
   alias TdBg.Search.Cluster
-  alias TdBg.Taxonomies
+  alias TdCache.TaxonomyCache
 
   require Logger
 
@@ -44,14 +44,18 @@ defmodule TdBg.Search do
   defp filter_values({"taxonomy", %{"buckets" => buckets}}) do
     domains =
       buckets
-      |> Enum.map(& &1["key"])
-      |> Taxonomies.enrich()
+      |> Enum.flat_map(fn %{"key" => domain_id} ->
+        TaxonomyCache.reaching_domain_ids(domain_id)
+      end)
+      |> Enum.uniq()
+      |> Enum.map(&get_domain/1)
+      |> Enum.reject(&is_nil/1)
 
     {"taxonomy", domains}
   end
 
   defp filter_values({name, %{"buckets" => buckets}}) do
-    {name, Enum.map(buckets, & &1["key"])}
+    {name, Enum.map(buckets, &bucket_key/1)}
   end
 
   defp filter_values({name, %{"distinct_search" => distinct_search}}) do
@@ -59,4 +63,10 @@ defmodule TdBg.Search do
   end
 
   defp filter_values({name, %{"doc_count" => 0}}), do: {name, []}
+
+  defp bucket_key(%{"key_as_string" => key}) when key in ["true", "false"], do: key
+  defp bucket_key(%{"key" => key}), do: key
+
+  defp get_domain(id) when is_integer(id), do: TaxonomyCache.get_domain(id)
+  defp get_domain(_), do: nil
 end

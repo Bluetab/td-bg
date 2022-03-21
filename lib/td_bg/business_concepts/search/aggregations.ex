@@ -7,29 +7,22 @@ defmodule TdBg.BusinessConcepts.Search.Aggregations do
   alias TdDfLib.Format
 
   def aggregations do
-    static_keywords = [
-      {"current", %{terms: %{field: "current"}}},
-      {"shared_to_names", %{terms: %{field: "shared_to_names.raw"}}},
-      # {"domain_id", %{terms: %{field: "domain_id"}}},
-      {"domain_ids", %{terms: %{field: "domain_ids"}}},
-      {"status", %{terms: %{field: "status"}}},
-      {"confidential.raw", %{terms: %{field: "confidential.raw"}}},
-      {"template", %{terms: %{field: "template.label.raw", size: 50}}},
-      # TODO: Refactor, use boolean field instead of script
-      {"rule_count",
-       %{terms: %{script: "doc['rule_count'].value > 0 ? 'rule_terms' : 'not_rule_terms'"}}},
-      # TODO: Refactor, use boolean field instead of script
-      {"link_count",
-       %{terms: %{script: "doc['link_count'].value > 0 ? 'linked_terms' : 'not_linked_terms'"}}},
-      {"taxonomy", %{terms: %{field: "domain_ids", size: 500}}}
-    ]
+    static_keywords = %{
+      "confidential.raw" => %{terms: %{field: "confidential.raw"}},
+      "current" => %{terms: %{field: "current"}},
+      "domain_ids" => %{terms: %{field: "domain_ids"}},
+      "has_links" => %{terms: %{field: "has_links"}},
+      "has_rules" => %{terms: %{field: "has_rules"}},
+      "shared_to_names" => %{terms: %{field: "shared_to_names.raw"}},
+      "status" => %{terms: %{field: "status"}},
+      "taxonomy" => %{terms: %{field: "domain_ids", size: 500}},
+      "template" => %{terms: %{field: "template.label.raw", size: 50}}
+    }
 
-    dynamic_keywords =
-      TemplateCache.list_by_scope!("bg")
-      |> Enum.flat_map(&template_terms/1)
-
-    (static_keywords ++ dynamic_keywords)
-    |> Enum.into(%{})
+    TemplateCache.list_by_scope!("bg")
+    |> Enum.flat_map(&template_terms/1)
+    |> Map.new()
+    |> Map.merge(static_keywords)
   end
 
   defp template_terms(%{content: content}) do
