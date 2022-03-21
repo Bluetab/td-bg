@@ -295,19 +295,6 @@ defmodule TdBg.Taxonomies do
     end
   end
 
-  def enrich([_ | _] = domain_ids) do
-    Enum.map(domain_ids, &enrich/1)
-  end
-
-  def enrich(domain_id) when is_integer(domain_id) do
-    case TaxonomyCache.get_domain(domain_id) do
-      %{} = domain -> Map.take(domain, [:id, :external_id, :name, :parent_id])
-      nil -> %{}
-    end
-  end
-
-  def enrich(ids), do: ids
-
   defp group_on_create(%{domain_group: domain_group} = attrs)
        when is_nil(domain_group) or domain_group == "" do
     group_on_create(Map.delete(attrs, :domain_group))

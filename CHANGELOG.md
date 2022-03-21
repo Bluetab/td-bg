@@ -4,8 +4,11 @@
 
 ### Added
 
-- [TD-4271]  Support for linking implementations with business concepts
+- [TD-4271] Support for linking implementations with business concepts
 
+### Fixed
+
+- [TD-4630] Domain filter was not working correctly
 
 ## [4.40.0] 2022-03-14
 
@@ -15,7 +18,6 @@
   `DB_TIMEOUT_MILLIS` and `DB_POOL_SIZE` environment variables
 - [TD-4461] Avoid reindexing when a domain is modified
 - [TD-4491] Refactored search and permissions
-
 
 ## [4.38.0] 2022-02-22
 
