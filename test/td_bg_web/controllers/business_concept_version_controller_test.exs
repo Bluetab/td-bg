@@ -512,9 +512,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   describe "POST /api/business_concept_versions/search" do
     @tag authentication: [user_name: "not_an_admin"]
     test "user search with filters", %{conn: conn} do
+      %{id: parent_id, external_id: parent_external_id, name: parent_name} =
+        CacheHelpers.insert_domain()
+
+      %{id: domain_id, external_id: domain_external_id, name: domain_name} =
+        CacheHelpers.insert_domain(parent_id: parent_id)
+
       CacheHelpers.put_default_permissions(["view_published_business_concepts"])
 
-      %{id: id} = bcv = insert(:business_concept_version)
+      %{id: id} = bcv = insert(:business_concept_version, domain_id: domain_id)
 
       expect(ElasticsearchMock, :request, fn
         _,
@@ -532,10 +538,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       params = %{filters: %{"domain_id" => [1234]}, query: "foo"}
 
-      assert %{"data" => [%{"id" => ^id}]} =
+      assert %{"data" => [%{"id" => ^id, "domain_parents" => domain_parents}]} =
                conn
                |> post(Routes.business_concept_version_path(conn, :search), params)
                |> json_response(:ok)
+
+      assert domain_parents == [
+               %{"id" => domain_id, "external_id" => domain_external_id, "name" => domain_name},
+               %{"id" => parent_id, "external_id" => parent_external_id, "name" => parent_name}
+             ]
     end
 
     for role <- ["admin", "service"] do

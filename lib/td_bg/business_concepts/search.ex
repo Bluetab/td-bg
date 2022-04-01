@@ -7,6 +7,7 @@ defmodule TdBg.BusinessConcept.Search do
   alias TdBg.BusinessConcepts.Search.Query
   alias TdBg.Permissions
   alias TdBg.Search
+  alias TdBg.Taxonomies
 
   def get_filter_values(%Claims{} = claims, params) do
     query = build_query(claims, params)
@@ -49,7 +50,18 @@ defmodule TdBg.BusinessConcept.Search do
   defp do_search(search) do
     case Search.search(search) do
       %{results: results, total: total} ->
-        %{results: Enum.map(results, &Map.get(&1, "_source", %{})), total: total}
+        %{results: Enum.map(results, &map_result/1), total: total}
     end
   end
+
+  defp map_result(%{"_source" => source}) do
+    map_result(source)
+  end
+
+  defp map_result(%{"domain" => %{"id" => domain_id}} = source) do
+    parents = Taxonomies.get_parents(domain_id)
+    Map.put(source, "domain_parents", parents)
+  end
+
+  defp map_result(%{} = source), do: source
 end

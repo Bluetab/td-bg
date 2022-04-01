@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-4666] Enrich business concept search results with `domain_parents`
+
 ## [4.40.1] 2022-03-21
 
 ### Added
