@@ -16,13 +16,13 @@ defmodule TdBg.BusinessConcepts.SearchTest do
   describe "Search.search_business_concept_versions/4" do
     @tag authentication: [role: "user"]
     test "posts a meaningful search request and handles response correctly", %{claims: claims} do
-      %{id: id} = bcv = insert(:business_concept_version)
       %{id: domain_id0} = CacheHelpers.insert_domain()
       %{id: domain_id1} = CacheHelpers.insert_domain(parent_id: domain_id0)
       %{id: domain_id2} = CacheHelpers.insert_domain(parent_id: domain_id1)
       %{id: domain_id3} = CacheHelpers.insert_domain()
       %{id: domain_id4} = CacheHelpers.insert_domain()
 
+      %{id: id} = bcv = insert(:business_concept_version, domain_id: domain_id2)
       CacheHelpers.put_default_permissions(["view_published_business_concepts"])
 
       put_session_permissions(claims, %{
@@ -73,13 +73,15 @@ defmodule TdBg.BusinessConcepts.SearchTest do
           SearchHelpers.hits_response([bcv], 55)
       end)
 
-      assert %{results: [%{"id" => ^id}], total: 55} =
+      assert %{results: [%{"id" => ^id, "domain_parents" => domain_parents}], total: 55} =
                Search.search_business_concept_versions(
                  %{"sort" => "foo", "query" => "bar"},
                  claims,
                  5,
                  10
                )
+
+      assert [%{id: ^domain_id2}, %{id: ^domain_id1}, %{id: ^domain_id0}] = domain_parents
     end
   end
 end

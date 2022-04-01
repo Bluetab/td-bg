@@ -17,7 +17,7 @@ defmodule SearchHelpers do
   def hits_response(bcvs, total \\ nil) do
     docs =
       bcvs
-      |> TdBg.Repo.preload(business_concept: [:shared_to])
+      |> TdBg.Repo.preload(business_concept: [:domain, :shared_to])
       |> Enum.map(&encode/1)
 
     total = total || Enum.count(docs)
