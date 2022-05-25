@@ -79,6 +79,18 @@ defmodule TdBg.Canada.TaxonomyAbilities do
     Permissions.authorized?(claims, :manage_quality_rule, domain_id)
   end
 
+  def can?(%Claims{} = claims, :manage_quality_rule_implementations, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_quality_rule_implementations, domain_id)
+  end
+
+  def can?(%Claims{} = claims, :manage_raw_quality_rule_implementations, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_raw_quality_rule_implementations, domain_id)
+  end
+
+  def can?(%Claims{} = claims, :manage_ruleless_implementations, %Domain{id: domain_id}) do
+    Permissions.authorized?(claims, :manage_ruleless_implementations, domain_id)
+  end
+
   def can?(%Claims{} = claims, :update_ingest, %Domain{id: domain_id}) do
     Permissions.authorized?(claims, :update_ingest, domain_id)
   end
