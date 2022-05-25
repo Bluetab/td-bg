@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-4089] Add abilities for ruleless_implementation when fetching domains
+
 ## [4.41.0] 2022-04-04
 
 ### Added
