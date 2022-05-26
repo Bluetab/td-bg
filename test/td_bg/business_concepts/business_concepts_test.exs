@@ -780,6 +780,27 @@ defmodule TdBg.BusinessConceptsTest do
     end
   end
 
+  describe "get_concept_counts/1" do
+    test "includes link count and link tags" do
+      %{business_concept_id: id, business_concept: concept} = insert(:business_concept_version)
+
+      CacheHelpers.put_concept(concept)
+      %{id: data_structure_id} = CacheHelpers.insert_data_structure()
+
+      assert %{link_count: 0, link_tags: ["_none"]} = BusinessConcepts.get_concept_counts(id)
+
+      CacheHelpers.insert_link(id, "business_concept", "data_structure", data_structure_id)
+
+      assert %{link_count: 1, link_tags: ["_tagless"]} = BusinessConcepts.get_concept_counts(id)
+
+      CacheHelpers.insert_link(id, "business_concept", "data_structure", data_structure_id, "foo")
+      CacheHelpers.insert_link(id, "business_concept", "data_structure", data_structure_id, "bar")
+
+      assert %{link_count: 3, link_tags: link_tags} = BusinessConcepts.get_concept_counts(id)
+      assert_lists_equal(link_tags, ["foo", "bar"])
+    end
+  end
+
   defp concept_taxonomy(_) do
     import CacheHelpers, only: [insert_domain: 0, insert_domain: 1]
 

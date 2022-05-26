@@ -29,8 +29,8 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
       aggs = Aggregations.aggregations()
 
       assert Filters.build_filters(%{"taxonomy" => [parent_id]}, aggs) == [
-        %{terms: %{"domain_ids" => [parent_id, domain_id]}}
-      ]
+               %{terms: %{"domain_ids" => [parent_id, domain_id]}}
+             ]
     end
   end
 

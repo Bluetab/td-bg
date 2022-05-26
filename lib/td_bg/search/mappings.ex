@@ -45,7 +45,7 @@ defmodule TdBg.Search.Mappings do
       },
       domain_ids: %{type: "long"},
       shared_to_names: %{type: "text", fields: %{raw: %{type: "keyword", null_value: ""}}},
-      has_links: %{type: "boolean"},
+      link_tags: %{type: "keyword"},
       has_rules: %{type: "boolean"},
       content: content_mappings
     }
