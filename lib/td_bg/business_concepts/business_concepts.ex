@@ -399,13 +399,19 @@ defmodule TdBg.BusinessConcepts do
 
   def get_concept_counts(business_concept_id) do
     case ConceptCache.get(business_concept_id, refresh: true) do
-      {:ok, %{rule_count: rule_count, link_count: link_count, concept_count: concept_count}} ->
+      {:ok,
+       %{
+         rule_count: rule_count,
+         link_count: link_count,
+         link_tags: link_tags,
+         concept_count: concept_count
+       }} ->
         %{
           rule_count: rule_count,
           link_count: link_count,
+          link_tags: link_tags,
           concept_count: concept_count,
           has_rules: rule_count > 0,
-          has_links: link_count > 0,
           has_concept_links: concept_count > 0
         }
 
@@ -415,10 +421,21 @@ defmodule TdBg.BusinessConcepts do
           link_count: 0,
           concept_count: 0,
           has_rules: false,
-          has_links: false,
           has_concept_links: false
         }
     end
+    |> maybe_update_link_tags()
+  end
+
+  defp maybe_update_link_tags(%{link_count: 0} = map) do
+    Map.put(map, :link_tags, ["_none"])
+  end
+
+  defp maybe_update_link_tags(%{link_count: n} = map) when n > 0 do
+    Map.update(map, :link_tags, ["_tagless"], fn
+      [] -> ["_tagless"]
+      tags -> tags
+    end)
   end
 
   @doc """

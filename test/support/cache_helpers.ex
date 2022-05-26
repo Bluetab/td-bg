@@ -59,7 +59,7 @@ defmodule CacheHelpers do
     ImplementationCache.delete(implementation_id)
   end
 
-  def insert_link(source_id, source_type, target_type, target_id \\ nil) do
+  def insert_link(source_id, source_type, target_type, target_id, tags \\ []) do
     id = System.unique_integer([:positive])
     target_id = if is_nil(target_id), do: System.unique_integer([:positive]), else: target_id
 
@@ -70,6 +70,7 @@ defmodule CacheHelpers do
         source_id: source_id,
         target_type: target_type,
         target_id: target_id,
+        tags: List.wrap(tags),
         updated_at: DateTime.utc_now()
       },
       publish: false

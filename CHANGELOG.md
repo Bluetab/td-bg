@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-4482] Support filtering by `link_tags` instead of `has_links`
+
 ## [4.44.0] 2022-05-25
 
 ### Added

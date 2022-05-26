@@ -88,6 +88,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "status",
       "rule_count",
       "link_count",
+      "link_tags",
       "concept_count",
       "content",
       "last_change_by",

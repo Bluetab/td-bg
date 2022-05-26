@@ -892,7 +892,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     do: can?(claims, view_data_structure(:no_domain))
 
   defp filter_link_by_permission(claims, %{resource_type: :data_structure, domain_ids: domain_ids}),
-    do: can?(claims, view_data_structure(domain_ids))
+       do: can?(claims, view_data_structure(domain_ids))
 
   defp filter_link_by_permission(claims, %{resource_type: :data_structure}),
     do: can?(claims, view_data_structure(:no_domain))

@@ -478,7 +478,7 @@ defmodule TdBgWeb.SwaggerDefinitions do
             user_id: 3,
             filters: %{
               "pais" => ["Australia", "", "Argelia"],
-              "link_count" => ["linked_terms", "not_linked_terms"]
+              "link_tags" => ["_tagless"]
             }
           })
         end,
