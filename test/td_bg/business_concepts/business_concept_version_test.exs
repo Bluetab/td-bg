@@ -4,6 +4,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
   alias Ecto.Changeset
   alias TdBg.BusinessConcepts.BusinessConceptVersion
 
+  @unsafe "javascript:alert(document)"
+
   setup do
     identifier_name = "identifier"
 
@@ -194,6 +196,30 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
       changeset = BusinessConceptVersion.bulk_update_changeset(bcv, attrs)
       assert changeset.valid?
       refute Changeset.get_change(changeset, :status)
+    end
+
+    test "create_changeset/2 validates unsafe content and description", %{create_attrs: params} do
+      params =
+        params
+        |> Map.put(:content, %{"foo" => [@unsafe]})
+        |> Map.put(:description, %{"doc" => %{"href" => @unsafe}})
+
+      assert %{valid?: false, errors: errors} =
+               BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
+
+      assert errors[:content] == {"invalid content", []}
+      assert errors[:description] == {"invalid content", []}
+    end
+
+    test "update_changeset/2 validates unsafe content and description" do
+      bcv = insert(:business_concept_version)
+      params = %{"description" => %{"doc" => @unsafe}, "content" => %{"foo" => [@unsafe]}}
+
+      assert %{valid?: false, errors: errors} =
+               BusinessConceptVersion.update_changeset(bcv, params)
+
+      assert errors[:content] == {"invalid content", []}
+      assert errors[:description] == {"invalid content", []}
     end
   end
 end
