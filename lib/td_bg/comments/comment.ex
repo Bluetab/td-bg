@@ -7,6 +7,8 @@ defmodule TdBg.Comments.Comment do
 
   import Ecto.Changeset
 
+  alias TdDfLib.Validation
+
   schema "comments" do
     field(:content, :string)
     field(:resource_id, :integer)
@@ -28,5 +30,6 @@ defmodule TdBg.Comments.Comment do
     struct
     |> cast(params, [:content, :resource_id, :resource_type, :user])
     |> validate_required([:content, :resource_id, :resource_type, :user])
+    |> validate_change(:user, &Validation.validate_safe/2)
   end
 end

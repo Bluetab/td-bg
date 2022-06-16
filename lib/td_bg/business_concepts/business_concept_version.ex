@@ -9,6 +9,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Taxonomies
+  alias TdDfLib.Validation
 
   @valid_status ["draft", "pending_approval", "rejected", "published", "versioned", "deprecated"]
 
@@ -62,6 +63,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
+    |> validate_change(:description, &Validation.validate_safe/2)
+    |> validate_change(:content, &Validation.validate_safe/2)
   end
 
   def update_changeset(
@@ -91,6 +94,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> trim([:name])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
+    |> validate_change(:description, &Validation.validate_safe/2)
+    |> validate_change(:content, &Validation.validate_safe/2)
   end
 
   def bulk_update_changeset(
@@ -189,7 +194,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def status_changeset(%BusinessConceptVersion{} = business_concept_version, status, user_id) do
     business_concept_version
     |> cast(%{status: status}, [:status])
-    |> validate_required([:status])
+    |> validate_required(:status)
     |> validate_inclusion(:status, @valid_status)
     |> put_audit(user_id)
   end
@@ -233,6 +238,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :in_progress
     ])
     |> trim([:name])
+    |> validate_change(:description, &Validation.validate_safe/2)
   end
 
   defp put_audit(%{changes: changes} = changeset, _user_id) when changes == %{}, do: changeset

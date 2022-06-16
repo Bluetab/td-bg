@@ -13,7 +13,7 @@ defmodule TdBg.Groups.DomainGroup do
   def changeset(domain_group, attrs) do
     domain_group
     |> cast(attrs, [:name])
-    |> validate_required([:name])
+    |> validate_required(:name)
     |> unique_constraint(:name, name: :index_domain_group_name)
   end
 end
