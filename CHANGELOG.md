@@ -6,6 +6,10 @@
 
 - [TD-4739] Validate dynamic content for safety to prevent XSS attacks
 
+### Fixed
+
+- [TD-4938] Issue fetching links when implementation has no rule
+
 ## [4.45.0] 2022-06-06
 
 ### Added
