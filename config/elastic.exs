@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :td_bg, TdBg.Search.Cluster,
   # The default URL where Elasticsearch is hosted on your system.

@@ -2,18 +2,13 @@ defmodule TdBgWeb.Router do
   use TdBgWeb, :router
 
   pipeline :api do
-    plug(TdBg.Auth.Pipeline.Unsecure)
-    plug(TdBgWeb.Locale)
-    plug(:accepts, ["json"])
+    plug TdBg.Auth.Pipeline.Unsecure
+    plug TdBgWeb.Locale
+    plug :accepts, ["json"]
   end
 
-  pipeline :api_secure do
-    plug(TdBg.Auth.Pipeline.Secure)
-  end
-
-  pipeline :api_authorized do
-    plug(TdBg.Auth.CurrentResource)
-    plug(Guardian.Plug.LoadResource)
+  pipeline :api_auth do
+    plug TdBg.Auth.Pipeline.Secure
   end
 
   scope "/api/swagger" do
@@ -21,13 +16,13 @@ defmodule TdBgWeb.Router do
   end
 
   scope "/api", TdBgWeb do
-    pipe_through(:api)
+    pipe_through :api
     get("/ping", PingController, :ping)
     post("/echo", EchoController, :echo)
   end
 
   scope "/api", TdBgWeb do
-    pipe_through([:api, :api_secure, :api_authorized])
+    pipe_through [:api, :api_auth]
 
     resources "/domains", DomainController, except: [:new, :edit] do
       get("/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user)
