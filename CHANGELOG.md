@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-3614] Support for access token revocation
+
 ## [4.46.0] 2022-06-20
 
 ### Changed

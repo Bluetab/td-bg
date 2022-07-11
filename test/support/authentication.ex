@@ -15,9 +15,8 @@ defmodule TdBgWeb.Authentication do
     |> put_req_header("authorization", "Bearer #{jwt}")
   end
 
-  def create_user_auth_conn(%{role: role} = claims) do
-    {:ok, jwt, full_claims} = Guardian.encode_and_sign(claims, %{role: role})
-    {:ok, claims} = Guardian.resource_from_claims(full_claims)
+  def create_user_auth_conn(%{} = claims) do
+    %{jwt: jwt, claims: claims} = authenticate(claims)
 
     conn =
       ConnTest.build_conn()
@@ -56,5 +55,15 @@ defmodule TdBgWeb.Authentication do
     context
     |> Keyword.put_new(:domain, domain)
     |> Keyword.put_new(:domain_id, domain_id)
+  end
+
+  defp authenticate(%{role: role} = claims) do
+    {:ok, jwt, %{"jti" => jti, "exp" => exp} = full_claims} =
+      Guardian.encode_and_sign(claims, %{role: role})
+
+    {:ok, claims} = Guardian.resource_from_claims(full_claims)
+    {:ok, _} = Guardian.decode_and_verify(jwt)
+    TdCache.SessionCache.put(jti, exp)
+    %{jwt: jwt, claims: claims}
   end
 end

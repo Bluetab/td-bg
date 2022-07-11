@@ -71,11 +71,12 @@ defmodule TdBg.Mixfile do
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
       {:td_cache,
-       git: "https://github.com/Bluetab/td-cache.git", tag: "4.46.0", override: true},
+       git: "https://github.com/Bluetab/td-cache.git", tag: "4.48.0", override: true},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.46.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.0.0"},
       {:graph, git: "https://github.com/Bluetab/graph.git", tag: "1.2.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.3", only: :test},
       {:assertions, "~> 0.19", only: :test},
       {:mox, "~> 1.0", only: :test}
