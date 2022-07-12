@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [TD-5011] `TemplateCache.list/0` was returning duplicate entries
+
 ### Changed
 
 - [TD-3614] Support for access token revocation
