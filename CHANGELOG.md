@@ -9,6 +9,7 @@
 ### Changed
 
 - [TD-3614] Support for access token revocation
+- [TD-3584] Allow longer domain descriptions
 
 ## [4.46.0] 2022-06-20
 
