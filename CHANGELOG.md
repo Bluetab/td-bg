@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5043] Add `last_change_at` to business concept versions CSV download
+
 ## [4.48.0] 2022-07-26
 
 ### Fixed

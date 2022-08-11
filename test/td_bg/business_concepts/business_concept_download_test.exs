@@ -41,6 +41,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
 
       concepts = [
         %{
@@ -50,16 +51,22 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "domain" => %{"name" => domain},
           "content" => %{field_name => field_value},
           "status" => status,
-          "inserted_at" => inserted_at
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
         }
       ]
 
-      header_labels = %{"template" => "Plantilla", "description" => "Descripción"}
+      header_labels = %{
+        "template" => "Plantilla",
+        "description" => "Descripción",
+        "last_change_at" => "Fecha de última modificación"
+      }
+
       csv = Download.to_csv(concepts, header_labels)
 
       assert csv == """
-             Plantilla;name;domain;status;Descripción;inserted_at;#{field_label}\r
-             #{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{field_value}\r
+             Plantilla;name;domain;status;Descripción;inserted_at;Fecha de última modificación;#{field_label}\r
+             #{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{last_change_at};#{field_value}\r
              """
     end
 
@@ -73,6 +80,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
 
       concepts = [
         %{
@@ -82,16 +90,22 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "domain" => %{"name" => domain},
           "content" => %{field_name => field_value},
           "status" => status,
-          "inserted_at" => inserted_at
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
         }
       ]
 
-      header_labels = %{"template" => "Plantilla", "description" => "Descripción"}
+      header_labels = %{
+        "template" => "Plantilla",
+        "description" => "Descripción",
+        "last_change_at" => "Fecha de última modificación"
+      }
+
       csv = Download.to_csv(concepts, header_labels)
 
       assert csv == """
-             Plantilla;name;domain;status;Descripción;inserted_at\r
-             #{template};#{name};#{domain};#{status};#{description};#{inserted_at}\r
+             Plantilla;name;domain;status;Descripción;inserted_at;Fecha de última modificación\r
+             #{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{last_change_at}\r
              """
     end
 
@@ -128,6 +142,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       domain = "domain_name"
       status = "draft"
       inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
 
       concepts = [
         %{
@@ -143,22 +158,28 @@ defmodule TdBg.BusinessConceptDownloadTests do
             key_value_field => ["1", "2"]
           },
           "status" => status,
-          "inserted_at" => inserted_at
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
         }
       ]
 
       url_fields = "www.com.com, www.net.net"
       key_value_fields = "First Element, Second Element"
 
-      header_labels = %{"template" => "Plantilla", "description" => "Descripción"}
+      header_labels = %{
+        "template" => "Plantilla",
+        "description" => "Descripción",
+        "last_change_at" => "Fecha de última modificación"
+      }
+
       csv = Download.to_csv(concepts, header_labels)
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;inserted_at;#{url_label};#{key_value_label}"
+               "Plantilla;name;domain;status;Descripción;inserted_at;Fecha de última modificación;#{url_label};#{key_value_label}"
 
       assert content ==
-               "#{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{url_fields};#{key_value_fields}"
+               "#{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{last_change_at};#{url_fields};#{key_value_fields}"
     end
   end
 end
