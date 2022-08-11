@@ -50,7 +50,8 @@ defmodule TdBg.BusinessConcept.Download do
         concept["domain"]["name"],
         concept["status"],
         concept["description"],
-        concept["inserted_at"]
+        concept["inserted_at"],
+        concept["last_change_at"]
       ]
 
       acc ++ [Enum.reduce(content_fields, values, &(&2 ++ [&1 |> get_content_field(content)]))]
@@ -74,7 +75,7 @@ defmodule TdBg.BusinessConcept.Download do
   end
 
   defp build_headers(header_labels) do
-    ["template", "name", "domain", "status", "description", "inserted_at"]
+    ["template", "name", "domain", "status", "description", "inserted_at", "last_change_at"]
     |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
   end
 
