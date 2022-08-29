@@ -9,6 +9,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Taxonomies
+  alias TdDfLib.Format
   alias TdDfLib.Validation
 
   @valid_status ["draft", "pending_approval", "rejected", "published", "versioned", "deprecated"]
@@ -60,17 +61,14 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     ])
     |> maybe_put_identifier(params, old_business_concept_version)
     |> put_change(:status, "draft")
-    |> trim([:name])
+    |> update_change(:name, &String.trim/1)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
     |> validate_change(:description, &Validation.validate_safe/2)
     |> validate_change(:content, &Validation.validate_safe/2)
   end
 
-  def update_changeset(
-        business_concept_version,
-        params
-      ) do
+  def update_changeset(business_concept_version, params) do
     business_concept_version
     |> cast(params, [
       :content,
@@ -91,7 +89,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :in_progress
     ])
     |> maybe_put_identifier(business_concept_version)
-    |> trim([:name])
+    |> update_change(:name, &String.trim/1)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
     |> validate_change(:description, &Validation.validate_safe/2)
@@ -144,8 +142,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
          old_content,
          template_name
        ) do
-    new_content =
-      TdDfLib.Format.maybe_put_identifier(changeset_content, old_content, template_name)
+    new_content = Format.maybe_put_identifier(changeset_content, old_content, template_name)
 
     put_change(changeset, :content, new_content)
   end
@@ -237,8 +234,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :mod_comments,
       :in_progress
     ])
-    |> trim([:name])
+    |> update_change(:name, &String.trim/1)
     |> validate_change(:description, &Validation.validate_safe/2)
+    |> validate_change(:content, &Validation.validate_safe/2)
   end
 
   defp put_audit(%{changes: changes} = changeset, _user_id) when changes == %{}, do: changeset
@@ -283,12 +281,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def is_deletable?(%BusinessConceptVersion{status: status} = bcv) do
     valid_statuses = ["draft", "rejected"]
     BusinessConcepts.last?(bcv) && Enum.member?(valid_statuses, status)
-  end
-
-  defp trim(changeset, fields) do
-    Enum.reduce(fields, changeset, fn field, changeset ->
-      update_change(changeset, field, &String.trim/1)
-    end)
   end
 
   defimpl Elasticsearch.Document do

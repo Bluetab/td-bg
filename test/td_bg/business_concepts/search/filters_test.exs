@@ -11,12 +11,7 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
       aggs = Aggregations.aggregations()
 
       assert Filters.build_filters(%{"foo" => [1, 2]}, aggs) == [
-               %{
-                 nested: %{
-                   path: "content.foo",
-                   query: %{terms: %{"content.foo.external_id.raw" => [1, 2]}}
-                 }
-               }
+               %{terms: %{"content.foo" => [1, 2]}}
              ]
 
       assert Filters.build_filters(%{"bar" => [1, 2]}, aggs) == [%{terms: %{"bar" => [1, 2]}}]

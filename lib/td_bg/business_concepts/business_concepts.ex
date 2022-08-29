@@ -269,10 +269,7 @@ defmodule TdBg.BusinessConcepts do
         field_content = Map.get(content, name)
         not is_nil(field_content) and is_binary(field_content) and field_content != ""
       end)
-      |> Enum.into(
-        content,
-        &format_field(&1, content)
-      )
+      |> Enum.into(content, &format_field(&1, content))
 
     Map.put(params, :content, content)
   end
@@ -293,10 +290,7 @@ defmodule TdBg.BusinessConcepts do
     Updates business_concept attributes
   """
 
-  def update_business_concept(
-        %BusinessConceptVersion{} = business_concept_version,
-        params
-      ) do
+  def update_business_concept(%BusinessConceptVersion{} = business_concept_version, params) do
     result =
       params
       |> attrs_keys_to_atoms()
@@ -687,25 +681,22 @@ defmodule TdBg.BusinessConcepts do
 
   defp validate_concept_content(params, in_progress \\ nil)
 
-  defp validate_concept_content(params, in_progress) do
-    changeset = Map.get(params, :changeset)
-
-    if changeset.valid? do
-      domain_id = changeset |> Changeset.get_field(:business_concept) |> Map.get(:domain_id)
-      do_validate_concept_content(params, in_progress, domain_id)
-    else
-      params
-    end
+  defp validate_concept_content(%{changeset: %{valid?: true} = changeset} = params, in_progress) do
+    domain_id = changeset |> Changeset.get_field(:business_concept) |> Map.get(:domain_id)
+    do_validate_concept_content(params, in_progress, domain_id)
   end
+
+  defp validate_concept_content(%{} = params, _in_progress), do: params
 
   defp do_validate_concept_content(params, in_progress, domain_id) do
     content = Map.get(params, :content)
     content_schema = Map.get(params, :content_schema)
-    changeset = Validation.build_changeset(content, content_schema, domain_id: domain_id)
+
+    content_changeset = Validation.build_changeset(content, content_schema, domain_id: domain_id)
 
     case in_progress do
-      false -> validate_content(changeset, params)
-      _ -> put_in_progress(changeset, params)
+      false -> validate_content(content_changeset, params)
+      _ -> put_in_progress(content_changeset, params)
     end
   end
 
@@ -718,32 +709,24 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp do_validate_description(params) do
+  defp do_validate_description(%{changeset: changeset, description: description} = params) do
     import Ecto.Changeset, only: [put_change: 3]
 
-    if !params.description == %{} do
-      params
-      |> Map.put(:changeset, put_change(params.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
-    else
-      params
-      |> Map.put(:changeset, put_change(params.changeset, :in_progress, false))
-      |> Map.put(:in_progress, false)
-    end
+    in_progress = description == %{}
+
+    params
+    |> Map.put(:changeset, put_change(changeset, :in_progress, in_progress))
+    |> Map.put(:in_progress, in_progress)
   end
 
-  defp put_in_progress(changeset, params) do
+  defp put_in_progress(%{valid?: valid}, %{changeset: changeset} = params) do
     import Ecto.Changeset, only: [put_change: 3]
 
-    if changeset.valid? do
-      params
-      |> Map.put(:changeset, put_change(params.changeset, :in_progress, false))
-      |> Map.put(:in_progress, false)
-    else
-      params
-      |> Map.put(:changeset, put_change(params.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
-    end
+    in_progress = !valid
+
+    params
+    |> Map.put(:changeset, put_change(changeset, :in_progress, in_progress))
+    |> Map.put(:in_progress, in_progress)
   end
 
   defp update_content_schema(changes, _params, %BusinessConceptVersion{status: "draft"}),
@@ -770,9 +753,9 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.transaction()
   end
 
-  defp validate_content(changeset, params) do
-    case changeset.valid? do
-      false -> Map.put(params, :changeset, changeset)
+  defp validate_content(content_changeset, params) do
+    case content_changeset.valid? do
+      false -> Map.put(params, :changeset, content_changeset)
       _ -> params
     end
   end
