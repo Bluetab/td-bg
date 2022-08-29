@@ -54,6 +54,15 @@ defmodule TdBg.Search do
     {"taxonomy", domains}
   end
 
+  defp filter_values({name, %{"meta" => %{"type" => "domain"}, "buckets" => buckets}}) do
+    domains =
+      buckets
+      |> Enum.map(fn %{"key" => domain_id} -> get_domain(domain_id) end)
+      |> Enum.reject(&is_nil/1)
+
+    {name, domains}
+  end
+
   defp filter_values({name, %{"buckets" => buckets}}) do
     {name, Enum.map(buckets, &bucket_key/1)}
   end
@@ -67,6 +76,7 @@ defmodule TdBg.Search do
   defp bucket_key(%{"key_as_string" => key}) when key in ["true", "false"], do: key
   defp bucket_key(%{"key" => key}), do: key
 
-  defp get_domain(id) when is_integer(id), do: TaxonomyCache.get_domain(id)
+  defp get_domain(""), do: nil
+  defp get_domain(id) when is_integer(id) or is_binary(id), do: TaxonomyCache.get_domain(id)
   defp get_domain(_), do: nil
 end

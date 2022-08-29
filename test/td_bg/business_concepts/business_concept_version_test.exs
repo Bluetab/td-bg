@@ -2,6 +2,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
   use TdBg.DataCase
 
   alias Ecto.Changeset
+  alias Elasticsearch.Document
   alias TdBg.BusinessConcepts.BusinessConceptVersion
 
   @unsafe "javascript:alert(document)"
@@ -63,8 +64,8 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
     ]
   end
 
-  describe "TdBg.BusinessConcepts.BusinessConceptVersion" do
-    test "create_changeset/2 trims name", %{create_attrs: create_attrs} do
+  describe "BusinessConceptVersion.create_changeset/2" do
+    test "trims name", %{create_attrs: create_attrs} do
       attrs = Map.put(create_attrs, :name, "  foo  ")
       changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, attrs)
       assert changeset.valid?
@@ -93,6 +94,21 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
       assert %{^identifier_name => _identifier} = new_content
     end
 
+    test "validates unsafe content and description", %{create_attrs: params} do
+      params =
+        params
+        |> Map.put(:content, %{"foo" => [@unsafe]})
+        |> Map.put(:description, %{"doc" => %{"href" => @unsafe}})
+
+      assert %{valid?: false, errors: errors} =
+               BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
+
+      assert errors[:content] == {"invalid content", []}
+      assert errors[:description] == {"invalid content", []}
+    end
+  end
+
+  describe "BusinessConceptVersion.update_changeset/2" do
     test "keeps an already present identifier (i.e., editing)", %{
       template_with_identifier: template_with_identifier,
       identifier_name: identifier_name
@@ -166,7 +182,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
       assert %{^identifier_name => _identifier} = new_content
     end
 
-    test "update_changeset/2 trims name" do
+    test "trims name" do
       bcv = insert(:business_concept_version)
       attrs = %{name: "   foo   "}
       changeset = BusinessConceptVersion.update_changeset(bcv, attrs)
@@ -174,7 +190,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
       assert Changeset.get_change(changeset, :name) == "foo"
     end
 
-    test "update_changeset/2 sets status to draft" do
+    test "sets status to draft" do
       bcv = insert(:business_concept_version, status: "published")
       attrs = %{name: "foo"}
       changeset = BusinessConceptVersion.update_changeset(bcv, attrs)
@@ -182,36 +198,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
       assert Changeset.get_change(changeset, :status) == "draft"
     end
 
-    test "bulk_update_changeset/2 trims name" do
-      bcv = insert(:business_concept_version)
-      attrs = %{name: "   foo   "}
-      changeset = BusinessConceptVersion.bulk_update_changeset(bcv, attrs)
-      assert changeset.valid?
-      assert Changeset.get_change(changeset, :name) == "foo"
-    end
-
-    test "bulk_update_changeset/2 does not change status" do
-      bcv = insert(:business_concept_version, status: "published")
-      attrs = %{name: "foo"}
-      changeset = BusinessConceptVersion.bulk_update_changeset(bcv, attrs)
-      assert changeset.valid?
-      refute Changeset.get_change(changeset, :status)
-    end
-
-    test "create_changeset/2 validates unsafe content and description", %{create_attrs: params} do
-      params =
-        params
-        |> Map.put(:content, %{"foo" => [@unsafe]})
-        |> Map.put(:description, %{"doc" => %{"href" => @unsafe}})
-
-      assert %{valid?: false, errors: errors} =
-               BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
-
-      assert errors[:content] == {"invalid content", []}
-      assert errors[:description] == {"invalid content", []}
-    end
-
-    test "update_changeset/2 validates unsafe content and description" do
+    test "validates unsafe content and description" do
       bcv = insert(:business_concept_version)
       params = %{"description" => %{"doc" => @unsafe}, "content" => %{"foo" => [@unsafe]}}
 
@@ -220,6 +207,54 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
 
       assert errors[:content] == {"invalid content", []}
       assert errors[:description] == {"invalid content", []}
+    end
+  end
+
+  describe "BusinessConceptVersion.bulk_update_changeset/2" do
+    test "trims name" do
+      bcv = insert(:business_concept_version)
+      attrs = %{name: "   foo   "}
+      changeset = BusinessConceptVersion.bulk_update_changeset(bcv, attrs)
+      assert changeset.valid?
+      assert Changeset.get_change(changeset, :name) == "foo"
+    end
+
+    test "does not change status" do
+      bcv = insert(:business_concept_version, status: "published")
+      attrs = %{name: "foo"}
+      changeset = BusinessConceptVersion.bulk_update_changeset(bcv, attrs)
+      assert changeset.valid?
+      refute Changeset.get_change(changeset, :status)
+    end
+  end
+
+  describe "Elasticsearch.Document.encode/2" do
+    setup do
+      template =
+        build(:template,
+          scope: "bg",
+          content: [
+            build(:template_group,
+              fields: [
+                build(:template_field, name: "domain", type: "domain", cardinality: "?"),
+                build(:template_field, name: "domains", type: "domain", cardinality: "*")
+              ]
+            )
+          ]
+        )
+
+      [template: CacheHelpers.insert_template(template)]
+    end
+
+    test "encodes a BusinessConceptVersion for indexing", %{template: template} do
+      content = %{"domain" => 1, "domains" => [1, 2]}
+
+      bcv =
+        insert(:business_concept_version, content: content, type: template.name)
+        |> Repo.preload(business_concept: :shared_to)
+
+      assert %{content: encoded_content} = Document.encode(bcv)
+      assert encoded_content == content
     end
   end
 end

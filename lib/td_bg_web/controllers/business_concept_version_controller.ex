@@ -603,7 +603,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       business_concept_version_params
       |> Map.put("business_concept", business_concept_attrs)
       |> Map.put("content_schema", content_schema)
-      |> Map.update("content", %{}, & &1)
+      |> Map.put_new("content", %{})
       |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
