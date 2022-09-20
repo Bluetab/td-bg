@@ -12,7 +12,7 @@ defmodule TdBg.ChangesetSupportTest do
       errors =
         {data, types}
         |> Changeset.cast(%{first_name: "Bob"}, Map.keys(types))
-        |> validate_required([:first_name])
+        |> validate_required(:first_name)
         |> ChangesetSupport.translate_errors()
 
       expected_errors = []
@@ -27,7 +27,7 @@ defmodule TdBg.ChangesetSupportTest do
       errors =
         {data, types}
         |> Changeset.cast(%{}, Map.keys(types))
-        |> validate_required([:first_name])
+        |> validate_required(:first_name)
         |> ChangesetSupport.translate_errors()
 
       expected_errors = [
@@ -47,7 +47,7 @@ defmodule TdBg.ChangesetSupportTest do
       errors =
         {data, types}
         |> Changeset.cast(%{}, Map.keys(types))
-        |> validate_required([:first_name])
+        |> validate_required(:first_name)
         |> ChangesetSupport.translate_errors("blah.blah.error")
 
       expected_errors = [
@@ -91,7 +91,7 @@ defmodule TdBg.ChangesetSupportTest do
       errors =
         {data, types}
         |> Changeset.cast(%{first_name: 1}, Map.keys(types))
-        |> validate_required([:first_name])
+        |> validate_required(:first_name)
         |> ChangesetSupport.translate_errors()
 
       expected_errors = [
