@@ -46,6 +46,7 @@ defmodule CacheHelpers do
       implementation =
       params
       |> Map.put_new(:id, impl_id)
+      |> Map.put_new(:implementation_ref, impl_id)
       |> Map.put_new(:domain_id, System.unique_integer([:positive]))
       |> Map.put_new(:implementation_key, "imple_key_#{impl_id}")
       |> Map.put_new(:updated_at, DateTime.utc_now())
