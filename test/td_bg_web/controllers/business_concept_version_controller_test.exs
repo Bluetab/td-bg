@@ -356,14 +356,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       CacheHelpers.insert_link(
         implementation_id,
-        "implementation",
+        "implementation_ref",
         "business_concept",
         business_concept_id
       )
 
       CacheHelpers.insert_link(
         implementation_id_without_permission,
-        "implementation",
+        "implementation_ref",
         "business_concept",
         business_concept_id
       )
@@ -435,14 +435,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       CacheHelpers.insert_link(
         manage_perm_implementation_id,
-        "implementation",
+        "implementation_ref",
         "business_concept",
         business_concept_id
       )
 
       CacheHelpers.insert_link(
         view_perm_implementation_id,
-        "implementation",
+        "implementation_ref",
         "business_concept",
         business_concept_id
       )

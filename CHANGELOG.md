@@ -6,6 +6,7 @@
 
 - [TD-4857] Completeness calculation now considers ratio of completed visible
   fields rather than completed optional fields
+- [TD-5140] Changed implementations ids by implementations refs   
 
 ## [4.52.0] 2022-10-03
 
