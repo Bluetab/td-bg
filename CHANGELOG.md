@@ -2,8 +2,10 @@
 
 ## [Unreleased]
 
-### Fixed
+### Changed
 
+- [TD-5254] Completeness calculation now considers conditional visibility of
+  "switch" fields
 - [TD-4857] Completeness calculation now considers ratio of completed visible
   fields rather than completed optional fields
 - [TD-5140] Changed implementations ids by implementations refs   
