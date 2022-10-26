@@ -7,7 +7,6 @@ defmodule TdBg.UserSearchFiltersTest do
     alias TdBg.UserSearchFilters.UserSearchFilter
 
     @valid_attrs %{filters: %{}, name: "some name", user_id: 42}
-    @update_attrs %{filters: %{}, name: "some updated name", user_id: 43}
     @invalid_attrs %{filters: nil, name: nil, user_id: nil}
 
     def user_search_filter_fixture(attrs \\ %{}) do
@@ -45,27 +44,6 @@ defmodule TdBg.UserSearchFiltersTest do
                UserSearchFilters.create_user_search_filter(@invalid_attrs)
     end
 
-    test "update_user_search_filter/2 with valid data updates the user_search_filter" do
-      user_search_filter = user_search_filter_fixture()
-
-      assert {:ok, %UserSearchFilter{} = user_search_filter} =
-               UserSearchFilters.update_user_search_filter(user_search_filter, @update_attrs)
-
-      assert user_search_filter.filters == %{}
-      assert user_search_filter.name == "some updated name"
-      assert user_search_filter.user_id == 43
-    end
-
-    test "update_user_search_filter/2 with invalid data returns error changeset" do
-      user_search_filter = user_search_filter_fixture()
-
-      assert {:error, %Ecto.Changeset{}} =
-               UserSearchFilters.update_user_search_filter(user_search_filter, @invalid_attrs)
-
-      assert user_search_filter ==
-               UserSearchFilters.get_user_search_filter!(user_search_filter.id)
-    end
-
     test "delete_user_search_filter/1 deletes the user_search_filter" do
       user_search_filter = user_search_filter_fixture()
 
@@ -75,11 +53,6 @@ defmodule TdBg.UserSearchFiltersTest do
       assert_raise Ecto.NoResultsError, fn ->
         UserSearchFilters.get_user_search_filter!(user_search_filter.id)
       end
-    end
-
-    test "change_user_search_filter/1 returns a user_search_filter changeset" do
-      user_search_filter = user_search_filter_fixture()
-      assert %Ecto.Changeset{} = UserSearchFilters.change_user_search_filter(user_search_filter)
     end
   end
 end

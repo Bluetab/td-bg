@@ -21,6 +21,7 @@ config :td_bg, TdBg.Repo,
   username: "postgres",
   password: "postgres",
   database: "td_bg_dev",
-  hostname: "postgres"
+  hostname: "postgres",
+  stacktrace: true
 
 config :td_cache, redis_host: "redis"

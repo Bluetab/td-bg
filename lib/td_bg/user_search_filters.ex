@@ -69,24 +69,6 @@ defmodule TdBg.UserSearchFilters do
   end
 
   @doc """
-  Updates a user_search_filter.
-
-  ## Examples
-
-      iex> update_user_search_filter(user_search_filter, %{field: new_value})
-      {:ok, %UserSearchFilter{}}
-
-      iex> update_user_search_filter(user_search_filter, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_user_search_filter(%UserSearchFilter{} = user_search_filter, attrs) do
-    user_search_filter
-    |> UserSearchFilter.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
   Deletes a user_search_filter.
 
   ## Examples
@@ -100,18 +82,5 @@ defmodule TdBg.UserSearchFilters do
   """
   def delete_user_search_filter(%UserSearchFilter{} = user_search_filter) do
     Repo.delete(user_search_filter)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user_search_filter changes.
-
-  ## Examples
-
-      iex> change_user_search_filter(user_search_filter)
-      %Ecto.Changeset{data: %UserSearchFilter{}}
-
-  """
-  def change_user_search_filter(%UserSearchFilter{} = user_search_filter, attrs \\ %{}) do
-    UserSearchFilter.changeset(user_search_filter, attrs)
   end
 end
