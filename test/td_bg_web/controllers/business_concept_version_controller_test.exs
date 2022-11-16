@@ -496,7 +496,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           :post,
           "/concepts/_search",
           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
-          [] ->
+          _ ->
             assert query == %{bool: %{filter: %{match_all: %{}}}}
             SearchHelpers.hits_response([bcv])
         end)
@@ -522,19 +522,22 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       %{id: id} = bcv = insert(:business_concept_version, domain_id: domain_id)
 
-      expect(ElasticsearchMock, :request, fn
-        _,
-        :post,
-        "/concepts/_search",
-        %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
-        [] ->
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
           assert %{
                    filter: [_status_filter, _confidential_filter, %{term: %{"domain_id" => 1234}}],
                    must: %{simple_query_string: %{query: "foo*"}}
                  } = bool
 
           SearchHelpers.hits_response([bcv])
-      end)
+        end
+      )
 
       params = %{filters: %{"domain_id" => [1234]}, query: "foo"}
 
@@ -554,15 +557,18 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       test "#{role} account filter by status", %{conn: conn} do
         %{id: id} = bcv = insert(:business_concept_version)
 
-        expect(ElasticsearchMock, :request, fn
-          _,
-          :post,
-          "/concepts/_search",
-          %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
-          [] ->
+        expect(
+          ElasticsearchMock,
+          :request,
+          fn _,
+             :post,
+             "/concepts/_search",
+             %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+             _ ->
             assert query == %{bool: %{filter: %{terms: %{"status" => ["published", "rejected"]}}}}
             SearchHelpers.hits_response([bcv])
-        end)
+          end
+        )
 
         params = %{filters: %{"status" => ["published", "rejected"]}}
 
@@ -580,7 +586,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       %{id: id} = bcv = insert(:business_concept_version)
 
       expect(ElasticsearchMock, :request, fn
-        _, :post, "/concepts/_search", %{query: query}, [] ->
+        _, :post, "/concepts/_search", %{query: query}, _ ->
           assert %{bool: %{filter: [_, _, %{term: %{"domain_ids" => ^domain_id2}}]}} = query
           SearchHelpers.hits_response([bcv])
       end)
@@ -723,7 +729,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         :post,
         "/concepts/_search",
         %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
-        [] ->
+        _ ->
           assert query == %{
                    bool: %{
                      filter: %{match_all: %{}},
@@ -750,18 +756,20 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         bcv = insert(:business_concept_version)
 
       ElasticsearchMock
-      |> expect(:request, fn
-        _,
-        :post,
-        "/concepts/_search",
-        %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
-        [] ->
+      |> expect(
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
           assert query == %{
                    bool: %{filter: %{term: %{"business_concept_id" => business_concept_id}}}
                  }
 
           SearchHelpers.hits_response([bcv])
-      end)
+        end
+      )
 
       assert %{"data" => data} =
                conn
@@ -1103,7 +1111,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         :post,
         "/concepts/_search",
         %{from: 0, query: query, size: 10_000, sort: ["_score", "name.raw"]},
-        [] ->
+        _ ->
           assert query == %{bool: %{filter: %{term: %{"status" => "published"}}}}
           SearchHelpers.hits_response([bcv])
       end)
@@ -1131,7 +1139,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       bcv = insert(:business_concept_version, type: template_name)
 
       ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_search", _, [] ->
+      |> expect(:request, fn _, :post, "/concepts/_search", _, _ ->
         SearchHelpers.hits_response([bcv])
       end)
 

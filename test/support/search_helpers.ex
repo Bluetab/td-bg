@@ -21,7 +21,7 @@ defmodule SearchHelpers do
       |> Enum.map(&encode/1)
 
     total = total || Enum.count(docs)
-    {:ok, %{"hits" => %{"hits" => docs, "total" => total}}}
+    {:ok, %{"hits" => %{"hits" => docs, "total" => %{"relation" => "eq", "value" => total}}}}
   end
 
   defp encode(target) do
