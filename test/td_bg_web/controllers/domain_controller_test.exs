@@ -295,9 +295,9 @@ defmodule TdBgWeb.DomainControllerTest do
              |> delete(Routes.domain_path(conn, :delete, domain))
              |> response(:no_content)
 
-      assert_error_sent :not_found, fn ->
+      assert_error_sent(:not_found, fn ->
         get(conn, Routes.domain_path(conn, :show, domain))
-      end
+      end)
     end
   end
 
@@ -310,7 +310,7 @@ defmodule TdBgWeb.DomainControllerTest do
       %{id: child_id} = CacheHelpers.insert_domain(parent_id: domain.id)
 
       ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_search", %{query: query, size: 0}, [] ->
+      |> expect(:request, fn _, :post, "/concepts/_search", %{query: query, size: 0}, _ ->
         assert %{
                  bool: %{
                    filter: [

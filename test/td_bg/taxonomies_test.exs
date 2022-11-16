@@ -35,8 +35,8 @@ defmodule TdBg.TaxonomiesTest do
     test "returns domains filtered by ids", %{domain: %{id: domain_id1}} do
       %{id: domain_id2} = insert(:domain)
 
-      assert [%{id: ^domain_id1}, %{id: ^domain_id2}] =
-               Taxonomies.list_domains(%{domain_ids: [domain_id1, domain_id2]})
+      domains = Taxonomies.list_domains(%{domain_ids: [domain_id1, domain_id2]})
+      assert_lists_equal(domains, [domain_id1, domain_id2], &(&1.id == &2))
 
       assert [%{id: ^domain_id1}] = Taxonomies.list_domains(%{domain_ids: [domain_id1]})
 

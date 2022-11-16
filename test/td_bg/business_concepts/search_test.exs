@@ -34,7 +34,9 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, [] ->
+        _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, opts ->
+          assert opts == [params: %{"track_total_hits" => "true"}]
+
           assert %{bool: %{filter: [status_filter, confidential_filter]}} = query
 
           assert status_filter == %{

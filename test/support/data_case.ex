@@ -20,6 +20,7 @@ defmodule TdBg.DataCase do
     quote do
       alias TdBg.Repo
 
+      import Assertions
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
