@@ -70,7 +70,9 @@ defmodule TdBg.Search.Indexer do
   end
 
   defp put_template(template, name) do
-    Elasticsearch.put(Cluster, "/_template/#{name}", template)
+    Elasticsearch.put(Cluster, "/_template/#{name}", template,
+      params: %{"include_type_name" => "false"}
+    )
   end
 
   defp alias_exists?(name) do
