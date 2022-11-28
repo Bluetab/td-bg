@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased]
+## [4.56.0] 2022-11-28
 
-### Changed
+### Added
 
 - [TD-5289] Elasticsearch 7 compatibility
 
