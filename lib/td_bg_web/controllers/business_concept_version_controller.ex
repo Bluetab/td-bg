@@ -4,6 +4,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
+  import Canada.Can, only: [can?: 3]
 
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcept.Download
@@ -287,9 +288,15 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def get_actions(claims, %BusinessConceptVersion{business_concept: concept}) do
-    %{
-      share: can_share_concepts(claims, concept)
-    }
+    %{share: can_share_concepts(claims, concept)}
+    |> maybe_add_implementation_actions(claims, concept)
+  end
+
+  defp maybe_add_implementation_actions(actions, claims, concept) do
+    [:create_implementation, :create_raw_implementation, :create_link_implementation]
+    |> Enum.filter(&can?(claims, &1, concept))
+    |> Enum.reduce(%{}, &Map.put(&2, &1, %{method: "POST"}))
+    |> Map.merge(actions)
   end
 
   defp can_share_concepts(claims, concept) do

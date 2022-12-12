@@ -43,6 +43,25 @@ defmodule TdBg.Canada.LinkAbilities do
     Permissions.authorized?(claims, :manage_business_concept_links, domain_ids)
   end
 
+  def can?(%Claims{} = claims, :create_implementation, %{} = concept) do
+    domain_ids = BusinessConcepts.get_domain_ids(concept)
+
+    Permissions.authorized?(claims, :manage_ruleless_implementations, domain_ids) &&
+      Permissions.authorized?(claims, :manage_quality_rule_implementations, domain_ids)
+  end
+
+  def can?(%Claims{} = claims, :create_raw_implementation, %{} = concept) do
+    domain_ids = BusinessConcepts.get_domain_ids(concept)
+
+    Permissions.authorized?(claims, :manage_raw_quality_rule_implementations, domain_ids) &&
+      Permissions.authorized?(claims, :manage_ruleless_implementations, domain_ids)
+  end
+
+  def can?(%Claims{} = claims, :create_link_implementation, %{} = concept) do
+    domain_ids = BusinessConcepts.get_domain_ids(concept)
+    Permissions.authorized?(claims, :link_implementation_business_concept, domain_ids)
+  end
+
   def can?(%Claims{role: "admin"}, _action, %{hint: :link}), do: true
 
   def can?(
