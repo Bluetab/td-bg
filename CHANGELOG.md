@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [4.57.0] 2022-12-12
 
 ### Added
 
@@ -26,7 +26,7 @@
   "switch" fields
 - [TD-4857] Completeness calculation now considers ratio of completed visible
   fields rather than completed optional fields
-- [TD-5140] Changed implementations ids by implementations refs   
+- [TD-5140] Changed implementations ids by implementations refs
 
 ## [4.52.0] 2022-10-03
 
