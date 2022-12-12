@@ -224,6 +224,104 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"href" => ^link, "method" => "PATCH", "input" => %{}} = share
     end
 
+    @tag authentication: [user_name: "not_an_admin"]
+    test "includes create_implementation action if non-admin user has permissions to create ruleless implementation",
+         %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :update_business_concept,
+        :view_draft_business_concepts,
+        :manage_ruleless_implementations,
+        :manage_quality_rule_implementations
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: domain_id)
+        )
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      assert Map.get(actions, "create_implementation") == %{"method" => "POST"}
+    end
+
+    @tag authentication: [user_name: "not_an_admin"]
+    test "includes create_raw_implementation action if non-admin user has permissions to create raw ruleless implementation",
+         %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :update_business_concept,
+        :view_draft_business_concepts,
+        :manage_raw_quality_rule_implementations,
+        :manage_ruleless_implementations
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: domain_id)
+        )
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      assert Map.get(actions, "create_raw_implementation") == %{"method" => "POST"}
+    end
+
+    @tag authentication: [user_name: "not_an_admin"]
+    test "includes create_link_implementation action if non-admin user has permissions to create links to implementations",
+         %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :update_business_concept,
+        :view_draft_business_concepts,
+        :link_implementation_business_concept
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: domain_id)
+        )
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      assert Map.get(actions, "create_link_implementation") == %{"method" => "POST"}
+    end
+
     @tag authentication: [
            user_name: "not_an_admin",
            permissions: [:update_business_concept, :view_draft_business_concepts]
@@ -246,7 +344,34 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"actions" => actions} = data
-      assert actions == %{"share" => false}
+      assert Map.get(actions, "share") == false
+    end
+
+    @tag authentication: [
+           user_name: "not_an_admin",
+           permissions: [:update_business_concept, :view_draft_business_concepts]
+         ]
+    test "no returns action for implementations if user does not have permissions",
+         %{conn: conn, domain_id: domain_id} do
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version, domain_id: domain_id)
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      refute Map.has_key?(actions, "create_implementation")
+      refute Map.has_key?(actions, "create_raw_implementation")
+      refute Map.has_key?(actions, "create_link_implementation")
     end
 
     @tag authentication: [user_name: "not_an_admin"]
