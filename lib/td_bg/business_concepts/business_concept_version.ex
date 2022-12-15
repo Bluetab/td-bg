@@ -330,7 +330,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
       |> Map.put(:last_change_by, get_last_change_by(bcv))
-      |> Map.put(:template, Map.take(template, [:name, :label]))
+      |> Map.put(:template, Map.take(template, [:name, :label, :scope, :subscope]))
       |> Map.put(:confidential, confidential)
       |> Map.put(:shared_to_names, shared_to_names)
     end

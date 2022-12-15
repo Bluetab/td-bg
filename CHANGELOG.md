@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3919] Index business concept version template subscope
+
 ## [4.57.0] 2022-12-12
 
 ### Added
