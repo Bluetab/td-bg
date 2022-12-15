@@ -20,7 +20,8 @@ defmodule TdBg.Search.Mappings do
       template: %{
         properties: %{
           name: %{type: "text"},
-          label: %{type: "text", fields: @raw}
+          label: %{type: "text", fields: @raw},
+          subscope: %{type: "keyword", null_value: ""}
         }
       },
       status: %{type: "keyword"},

@@ -16,7 +16,8 @@ defmodule TdBg.BusinessConcepts.Search.Aggregations do
       "shared_to_names" => %{terms: %{field: "shared_to_names.raw"}},
       "status" => %{terms: %{field: "status"}},
       "taxonomy" => %{terms: %{field: "domain_ids", size: 500}},
-      "template" => %{terms: %{field: "template.label.raw", size: 50}}
+      "template" => %{terms: %{field: "template.label.raw", size: 50}},
+      "template_subscope" => %{terms: %{field: "template.subscope", size: 50}}
     }
 
     TemplateCache.list_by_scope!("bg")
