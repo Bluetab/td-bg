@@ -4,9 +4,10 @@ defmodule TdBg.UserSearchFilters do
   """
 
   import Ecto.Query, warn: false
-  alias TdBg.Repo
 
+  alias TdBg.Repo
   alias TdBg.UserSearchFilters.UserSearchFilter
+  alias TdCache.Permissions
 
   @doc """
   Returns the list of user_search_filters.
@@ -30,9 +31,32 @@ defmodule TdBg.UserSearchFilters do
       [%UserSearchFilter{}, ...]
 
   """
-  def list_user_search_filters(user_id) do
-    Repo.all(from(f in UserSearchFilter, where: f.user_id == ^user_id))
+  def list_user_search_filters(%{user_id: user_id} = claims) do
+    UserSearchFilter
+    |> where([usf], usf.is_global or usf.user_id == ^user_id)
+    |> Repo.all()
+    |> maybe_filter(claims)
   end
+
+  defp maybe_filter(results, %{role: "admin"}), do: results
+
+  defp maybe_filter(results, %{jti: jti}) do
+    case Permissions.permitted_domain_ids(jti, "view_published_business_concepts") do
+      [] ->
+        []
+
+      domain_ids ->
+        Enum.reject(results, fn
+          %{filters: %{"taxonomy" => taxonomy}} ->
+            MapSet.disjoint?(MapSet.new(taxonomy), MapSet.new(domain_ids))
+
+          _ ->
+            false
+        end)
+    end
+  end
+
+  defp maybe_filter(_results, _claims), do: []
 
   @doc """
   Gets a single user_search_filter.

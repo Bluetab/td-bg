@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5242] Global filters for Business Concepts
+
 ## [4.58.1] 2022-12-27
 
 ### Added

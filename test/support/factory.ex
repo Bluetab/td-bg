@@ -84,8 +84,9 @@ defmodule TdBg.Factory do
     %UserSearchFilter{
       id: sequence(:user_search_filter, & &1),
       name: sequence("filter_name"),
-      filters: %{country: ["Sp"]},
-      user_id: sequence(:user_id, & &1)
+      filters: %{"country" => ["Sp"]},
+      user_id: sequence(:user_id, & &1),
+      is_global: false
     }
   end
 

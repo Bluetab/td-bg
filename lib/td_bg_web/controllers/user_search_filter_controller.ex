@@ -37,9 +37,9 @@ defmodule TdBgWeb.UserSearchFilterController do
   end
 
   def index_by_user(conn, _params) do
-    %{user_id: user_id} = conn.assigns[:current_resource]
+    claims = conn.assigns[:current_resource]
 
-    user_search_filters = UserSearchFilters.list_user_search_filters(user_id)
+    user_search_filters = UserSearchFilters.list_user_search_filters(claims)
     render(conn, "index.json", user_search_filters: user_search_filters)
   end
 
