@@ -31,13 +31,16 @@ defmodule TdBg.UserSearchFiltersTest do
       insert(:user_search_filter, user_id: 99)
 
       assert UserSearchFilters.list_user_search_filters(claims)
-              |> assert_lists_equal([usf1, usf2])
+             |> assert_lists_equal([usf1, usf2])
     end
 
     test "list_user_search_filters/1 filters by taxonomy for non-admin user" do
       %{id: domain_id} = CacheHelpers.insert_domain()
       %{user_id: user_id} = claims = build(:claims, role: "user")
-      CacheHelpers.put_session_permissions(claims, %{"view_published_business_concepts" => [domain_id]})
+
+      CacheHelpers.put_session_permissions(claims, %{
+        "view_published_business_concepts" => [domain_id]
+      })
 
       usf1 = insert(:user_search_filter, user_id: user_id)
       usf2 = insert(:user_search_filter, is_global: true)
@@ -51,7 +54,7 @@ defmodule TdBg.UserSearchFiltersTest do
       insert(:user_search_filter, is_global: true, filters: %{"taxonomy" => [99]})
 
       assert UserSearchFilters.list_user_search_filters(claims)
-              |> assert_lists_equal([usf1, usf2, usf3])
+             |> assert_lists_equal([usf1, usf2, usf3])
     end
 
     test "get_user_search_filter!/1 returns the user_search_filter with given id" do

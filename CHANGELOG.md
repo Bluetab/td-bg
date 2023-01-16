@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-5242] Global filters for Business Concepts
+- [TD-3930] includes `completeness` on `BusinessConceptVersion` csv download
 
 ## [4.58.1] 2022-12-27
 

@@ -3,7 +3,7 @@ defmodule TdBg.Repo.Migrations.AddGlobalFlagToUserSearchFilters do
 
   def change do
     alter table("user_search_filters") do
-      add :is_global, :boolean, default: false
+      add(:is_global, :boolean, default: false)
     end
   end
 end
