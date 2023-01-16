@@ -46,6 +46,59 @@ defmodule TdBgWeb.UserSearchFilterControllerTest do
       assert user_id == current_user_id
       assert length(user_filters) == 2
     end
+
+    @tag authentication: [
+           user_name: "non_admin",
+           permissions: ["view_published_business_concepts"]
+         ]
+    test "lists current user user_search_filters with global filters", %{
+      conn: conn,
+      claims: %{user_id: user_id}
+    } do
+      %{id: id1} = insert(:user_search_filter, name: "a", user_id: user_id)
+      %{id: id2} = insert(:user_search_filter, name: "b", is_global: true)
+      insert(:user_search_filter, name: "c", is_global: false)
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.user_search_filter_path(conn, :index_by_user))
+               |> json_response(:ok)
+
+      assert_lists_equal(data, [id1, id2], &(&1["id"] == &2))
+    end
+
+    @tag authentication: [
+           user_name: "non_admin",
+           permissions: ["view_published_business_concepts"]
+         ]
+    test "global filters with taxonomy will only appear for users with permission on any filter domain",
+         %{
+           conn: conn,
+           claims: %{user_id: user_id},
+           domain: %{id: domain_id}
+         } do
+      %{id: id1} = insert(:user_search_filter, user_id: user_id)
+
+      %{id: id2} =
+        insert(:user_search_filter,
+          filters: %{"taxonomy" => [domain_id]},
+          is_global: true
+        )
+
+      insert(:user_search_filter,
+        filters: %{"taxonomy" => [domain_id + 1]},
+        is_global: true
+      )
+
+      insert(:user_search_filter, is_global: false)
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.user_search_filter_path(conn, :index_by_user))
+               |> json_response(:ok)
+
+      assert_lists_equal(data, [id1, id2], &(&1["id"] == &2))
+    end
   end
 
   describe "create user_search_filter" do
