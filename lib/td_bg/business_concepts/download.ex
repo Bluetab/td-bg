@@ -5,6 +5,7 @@ defmodule TdBg.BusinessConcept.Download do
 
   alias TdCache.TemplateCache
   alias TdDfLib.Format
+  alias TdDfLib.Templates
 
   def to_csv(concepts, header_labels) do
     concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))
@@ -14,8 +15,12 @@ defmodule TdBg.BusinessConcept.Download do
 
     list =
       Enum.reduce(types, [], fn type, acc ->
-        concepts = Map.get(concepts_by_type, type)
         template = Map.get(templates_by_type, type)
+
+        concepts =
+          concepts_by_type
+          |> Map.get(type)
+          |> Enum.map(&add_completeness(template, &1))
 
         csv_list = template_concepts_to_csv(template, concepts, header_labels, !Enum.empty?(acc))
         acc ++ csv_list
@@ -23,6 +28,11 @@ defmodule TdBg.BusinessConcept.Download do
 
     to_string(list)
   end
+
+  defp add_completeness(%{} = template, %{"content" => content} = bcv),
+    do: Map.put(bcv, "completeness", Templates.completeness(content, template))
+
+  defp add_completeness(_, bcv), do: bcv
 
   defp template_concepts_to_csv(nil, concepts, header_labels, add_separation) do
     headers = build_headers(header_labels)
@@ -50,6 +60,7 @@ defmodule TdBg.BusinessConcept.Download do
         concept["domain"]["name"],
         concept["status"],
         concept["description"],
+        concept["completeness"],
         concept["inserted_at"],
         concept["last_change_at"]
       ]
@@ -75,7 +86,16 @@ defmodule TdBg.BusinessConcept.Download do
   end
 
   defp build_headers(header_labels) do
-    ["template", "name", "domain", "status", "description", "inserted_at", "last_change_at"]
+    [
+      "template",
+      "name",
+      "domain",
+      "status",
+      "description",
+      "completeness",
+      "inserted_at",
+      "last_change_at"
+    ]
     |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
   end
 

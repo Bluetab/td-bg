@@ -65,8 +65,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       csv = Download.to_csv(concepts, header_labels)
 
       assert csv == """
-             Plantilla;name;domain;status;Descripción;inserted_at;Fecha de última modificación;#{field_label}\r
-             #{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{last_change_at};#{field_value}\r
+             Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;#{field_label}\r
+             #{template};#{name};#{domain};#{status};#{description};100.0;#{inserted_at};#{last_change_at};#{field_value}\r
              """
     end
 
@@ -104,8 +104,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       csv = Download.to_csv(concepts, header_labels)
 
       assert csv == """
-             Plantilla;name;domain;status;Descripción;inserted_at;Fecha de última modificación\r
-             #{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{last_change_at}\r
+             Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación\r
+             #{template};#{name};#{domain};#{status};#{description};;#{inserted_at};#{last_change_at}\r
              """
     end
 
@@ -176,10 +176,62 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;inserted_at;Fecha de última modificación;#{url_label};#{key_value_label}"
+               "Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;#{url_label};#{key_value_label}"
 
       assert content ==
-               "#{template};#{name};#{domain};#{status};#{description};#{inserted_at};#{last_change_at};#{url_fields};#{key_value_fields}"
+               "#{template};#{name};#{domain};#{status};#{description};100.0;#{inserted_at};#{last_change_at};#{url_fields};#{key_value_fields}"
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "field1", "type" => "string", "label" => "field1"},
+               %{"name" => "field2", "type" => "string", "label" => "field2"},
+               %{"name" => "field3", "type" => "string", "label" => "field3"}
+             ]
+           }
+         ]
+    test "to_csv/1 return calculated completeness" do
+      template = @template_name
+
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            "field1" => "value",
+            "field2" => "value"
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      header_labels = %{
+        "template" => "Plantilla",
+        "description" => "Descripción",
+        "last_change_at" => "Fecha de última modificación"
+      }
+
+      csv = Download.to_csv(concepts, header_labels)
+      [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
+
+      assert headers ==
+               "Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;field1;field2;field3"
+
+      assert content ==
+               "#{template};#{name};#{domain};#{status};#{description};66.67;#{inserted_at};#{last_change_at};value;value;"
     end
   end
 end
