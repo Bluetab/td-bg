@@ -81,6 +81,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   def render("list_item.json", %{business_concept_version: business_concept_version}) do
     view_fields = [
+      "_actions",
       "id",
       "name",
       "description",
@@ -89,6 +90,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       "rule_count",
       "link_count",
       "link_tags",
+      "links",
       "concept_count",
       "content",
       "last_change_by",
