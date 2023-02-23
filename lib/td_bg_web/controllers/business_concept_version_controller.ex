@@ -75,9 +75,19 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     page = Map.get(params, "page", 0)
     size = Map.get(params, "size", 50)
 
-    params
-    |> Map.drop(["page", "size"])
-    |> Search.search_business_concept_versions(claims, page, size)
+    results =
+      %{results: business_concept_versions} =
+      params
+      |> Map.drop(["page", "size"])
+      |> Search.search_business_concept_versions(claims, page, size)
+
+    bcv_with_links =
+      business_concept_versions
+      |> Enum.map(&add_links(&1, claims))
+      |> Enum.map(&add_links_actions(&1, claims))
+
+    results
+    |> Map.put(:results, bcv_with_links)
     |> render_search_results(conn)
   end
 
@@ -246,6 +256,18 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       nil -> {:error, :not_found}
       error -> error
     end
+  end
+
+  defp add_links(
+         %{"business_concept_id" => business_concept_id} = business_concept_version,
+         claims
+       ) do
+    links =
+      business_concept_id
+      |> Links.get_links()
+      |> Enum.filter(fn link -> filter_link_by_permission(claims, link) end)
+
+    Map.put(business_concept_version, "links", links)
   end
 
   defp add_counts(%BusinessConceptVersion{} = business_concept_version) do
@@ -908,4 +930,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     do: can?(claims, view_quality_rule(%Domain{id: domain_id}))
 
   defp filter_link_by_permission(_claims, _), do: false
+
+  defp add_links_actions(business_concept_version, claims) do
+    can_create_link = can?(claims, create_structure_link(business_concept_version))
+
+    Map.put(business_concept_version, "_actions", %{
+      "can_create_structure_link" => can_create_link
+    })
+  end
 end

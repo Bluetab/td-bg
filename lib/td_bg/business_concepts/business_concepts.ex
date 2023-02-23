@@ -852,6 +852,10 @@ defmodule TdBg.BusinessConcepts do
     Enum.uniq([domain_id | shared_ids])
   end
 
+  def get_domain_ids(%{domain_ids: domain_ids}), do: domain_ids
+
+  def get_domain_ids(%{"domain_ids" => domain_ids}), do: domain_ids
+
   def get_domain_ids(_), do: []
 
   defp on_share({:ok, %{updated: %{id: id, shared_to: shared_to} = updated} = reply}) do

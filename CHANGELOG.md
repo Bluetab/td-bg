@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-4554] Links and actions to concepts search
+
 ## [4.59.0] 2023-01-16
 
 ### Added
