@@ -6,8 +6,11 @@ defmodule TdBg.Search.Mappings do
   alias TdCache.TemplateCache
   alias TdDfLib.Format
 
-  @raw %{raw: %{type: "keyword"}}
-  @raw_sort %{raw: %{type: "keyword"}, sort: %{type: "keyword", normalizer: "sortable"}}
+  @raw %{raw: %{type: "keyword", null_value: ""}}
+  @raw_sort %{
+    raw: %{type: "keyword", null_value: ""},
+    sort: %{type: "keyword", normalizer: "sortable"}
+  }
 
   def get_mappings do
     content_mappings = %{properties: get_dynamic_mappings()}
