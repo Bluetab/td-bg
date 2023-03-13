@@ -100,6 +100,28 @@ defmodule TdBg.Factory do
     |> merge_attributes(attrs)
   end
 
+  def hierarchy_factory(attrs) do
+    %{
+      id: System.unique_integer([:positive]),
+      name: sequence("family_"),
+      description: sequence("description_"),
+      nodes: [],
+      updated_at: DateTime.utc_now()
+    }
+    |> merge_attributes(attrs)
+  end
+
+  def node_factory(attrs) do
+    %{
+      node_id: System.unique_integer([:positive]),
+      hierarchy_id: System.unique_integer([:positive]),
+      parent_id: System.unique_integer([:positive]),
+      name: sequence("node_"),
+      description: sequence("description_")
+    }
+    |> merge_attributes(attrs)
+  end
+
   defp default_assoc(attrs, id_key, key, build_attrs \\ %{}) do
     if Enum.any?([key, id_key], &Map.has_key?(attrs, &1)) do
       attrs

@@ -4,7 +4,11 @@
 
 ### Changed
 
-- [TD-3879] All `raw keyword` indexing mappings uses empty string as null_value 
+- [TD-3879] All `raw keyword` indexing mappings uses empty string as null_value
+
+### Added
+
+- [TD-3806] Hierarchy template cache implementation 
 
 ## [5.2.0] 2023-02-28
 

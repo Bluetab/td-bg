@@ -675,6 +675,7 @@ defmodule TdBg.BusinessConcepts do
 
       _ ->
         content = Format.apply_template(content, content_schema, domain_id: domain_id)
+
         Map.put(params, :content, content)
     end
   end
