@@ -7,6 +7,7 @@ defmodule CacheHelpers do
   import TdBg.Factory
 
   alias TdCache.ConceptCache
+  alias TdCache.HierarchyCache
   alias TdCache.ImplementationCache
   alias TdCache.LinkCache
   alias TdCache.StructureCache
@@ -18,6 +19,13 @@ defmodule CacheHelpers do
     {:ok, _} = TemplateCache.put(template, publish: false)
     on_exit(fn -> TemplateCache.delete(template_id) end)
     template
+  end
+
+  def insert_hierarchy(params) do
+    %{id: hierarchy_id} = hierarchy = build(:hierarchy, params)
+    {:ok, _} = HierarchyCache.put(hierarchy, publish: false)
+    on_exit(fn -> HierarchyCache.delete(hierarchy_id) end)
+    hierarchy
   end
 
   def insert_domain(params \\ %{}) do

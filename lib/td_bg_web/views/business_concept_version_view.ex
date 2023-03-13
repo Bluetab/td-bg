@@ -186,7 +186,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         content =
           concept
           |> Map.get(:content)
-          |> Format.enrich_content_values(template)
+          |> Format.enrich_content_values(template, [:system, :hierarchy])
 
         Map.put(concept, :content, content)
     end

@@ -37,6 +37,7 @@ defmodule TdBg.BusinessConcepts.Search.Aggregations do
   defp filter_content_term(%{"name" => "_confidential"}), do: true
   defp filter_content_term(%{"type" => "domain"}), do: true
   defp filter_content_term(%{"type" => "system"}), do: true
+  defp filter_content_term(%{"type" => "hierarchy"}), do: true
   defp filter_content_term(%{"values" => values}) when is_map(values), do: true
   defp filter_content_term(_), do: false
 
@@ -54,6 +55,10 @@ defmodule TdBg.BusinessConcepts.Search.Aggregations do
 
   defp content_term(%{"name" => field, "type" => "domain"}) do
     {field, %{terms: %{field: "content.#{field}", size: 50}, meta: %{type: "domain"}}}
+  end
+
+  defp content_term(%{"name" => field, "type" => "hierarchy"}) do
+    {field, %{terms: %{field: "content.#{field}.raw"}, meta: %{type: "hierarchy"}}}
   end
 
   defp content_term(%{"name" => field}) do
