@@ -19,6 +19,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdCache.EventStream.Publisher
   alias TdCache.TemplateCache
   alias TdDfLib.Format
+  alias TdDfLib.Parser
   alias TdDfLib.Templates
   alias TdDfLib.Validation
   alias ValidationError
@@ -232,13 +233,11 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def create_business_concept(params, opts \\ []) do
-    domain_id = Map.get(params, "domain_id")
-
     params
     |> attrs_keys_to_atoms()
     |> raise_error_if_no_content_schema()
+    |> maybe_domain_ids()
     |> format_content()
-    |> set_content_defaults(domain_id)
     |> validate_new_concept()
     |> validate_description()
     |> validate_concept_content(opts[:in_progress])
@@ -256,34 +255,17 @@ defmodule TdBg.BusinessConcepts do
 
   defp index_on_success(result, _), do: result
 
-  defp format_content(%{content: content} = params) when not is_nil(content) do
-    content =
-      params
-      |> Map.get(:content_schema)
-      |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
-        schema_type in ["url", "enriched_text"] or
-          (schema_type in ["string", "user"] and cardinality in ["*", "+"])
-      end)
-      # credo:disable-for-next-line Credo.Check.Refactor.FilterFilter
-      |> Enum.filter(fn %{"name" => name} ->
-        field_content = Map.get(content, name)
-        not is_nil(field_content) and is_binary(field_content) and field_content != ""
-      end)
-      |> Enum.into(content, &format_field(&1, content))
+  defp maybe_domain_ids(%{domain_id: domain_id} = params),
+    do: Map.put(params, :domain_ids, [domain_id])
 
+  defp maybe_domain_ids(%{business_concept: %{domain_id: domain_id}} = params),
+    do: Map.put(params, :domain_ids, [domain_id])
+
+  defp maybe_domain_ids(params), do: Map.put(params, :domain_ids, nil)
+
+  defp format_content(params) do
+    content = Parser.format_content(params)
     Map.put(params, :content, content)
-  end
-
-  defp format_content(params), do: params
-
-  defp format_field(schema, content) do
-    {Map.get(schema, "name"),
-     Format.format_field(%{
-       "content" => Map.get(content, Map.get(schema, "name")),
-       "type" => Map.get(schema, "type"),
-       "cardinality" => Map.get(schema, "cardinality"),
-       "values" => Map.get(schema, "values")
-     })}
   end
 
   @doc """

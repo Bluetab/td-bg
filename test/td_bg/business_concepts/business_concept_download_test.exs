@@ -163,8 +163,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      url_fields = "www.com.com, www.net.net"
-      key_value_fields = "First Element, Second Element"
+      url_fields = "www.com.com|www.net.net"
+      key_value_fields = "First Element|Second Element"
 
       header_labels = %{
         "template" => "Plantilla",

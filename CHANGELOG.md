@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-4870] Concept csv download and upload uses unified df_content parsing
+
 ## [5.3.0] 2023-03-13
 
 ### Changed
