@@ -7,7 +7,8 @@ config :td_bg, TdBg.Repo,
   hostname: System.fetch_env!("DB_HOST"),
   port: System.get_env("DB_PORT", "5432") |> String.to_integer(),
   pool_size: System.get_env("DB_POOL_SIZE", "5") |> String.to_integer(),
-  timeout: System.get_env("DB_TIMEOUT_MILLIS", "15000") |> String.to_integer()
+  timeout: System.get_env("DB_TIMEOUT_MILLIS", "15000") |> String.to_integer(),
+  ssl: System.get_env("DB_SSL", "") |> String.downcase() == "true"
 
 config :td_bg, TdBg.Auth.Guardian, secret_key: System.fetch_env!("GUARDIAN_SECRET_KEY")
 
