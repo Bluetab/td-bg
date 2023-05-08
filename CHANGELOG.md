@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3807] search filters returns types
+
 ## [5.5.0] 2023-04-18
 
 ### Added
