@@ -33,7 +33,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
                |> get(Routes.business_concept_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => ["bar", "baz"]}
+      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
     end
 
     @tag authentication: [user_name: "not_an_admin"]
@@ -53,7 +53,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
                |> get(Routes.business_concept_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => ["bar", "baz"]}
+      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
     end
   end
 
