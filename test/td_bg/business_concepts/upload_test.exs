@@ -48,13 +48,13 @@ defmodule TdBg.UploadTest do
                 "name" => "hierarchy_name_1",
                 "type" => "hierarchy",
                 "cardinality" => "?",
-                "values" => %{"hierarchy" => 1}
+                "values" => %{"hierarchy" => %{"id" => 1}}
               },
               %{
                 "name" => "hierarchy_name_2",
                 "type" => "hierarchy",
                 "cardinality" => "*",
-                "values" => %{"hierarchy" => 1}
+                "values" => %{"hierarchy" => %{"id" => 1}}
               }
             ]
           }
