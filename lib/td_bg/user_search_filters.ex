@@ -43,7 +43,9 @@ defmodule TdBg.UserSearchFilters do
   defp maybe_filter(results, %{jti: jti}) do
     case Permissions.permitted_domain_ids(jti, "view_published_business_concepts") do
       [] ->
-        []
+        if Permissions.is_default_permission?("view_published_business_concepts"),
+          do: results,
+          else: []
 
       domain_ids ->
         Enum.reject(results, fn

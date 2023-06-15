@@ -88,5 +88,26 @@ defmodule TdBg.UserSearchFiltersTest do
         UserSearchFilters.get_user_search_filter!(user_search_filter.id)
       end
     end
+
+    test "retrive global filters when role by default " do
+      CacheHelpers.put_default_permissions(["view_published_business_concepts"])
+      %{user_id: user_id} = claims = build(:claims, role: "user")
+      %{user_id: user_id2} = build(:claims, role: "bad_user")
+
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      insert(:user_search_filter, user_id: user_id2, is_global: false)
+      usf1 = insert(:user_search_filter, user_id: user_id)
+      usf2 = insert(:user_search_filter, is_global: true)
+
+      usf3 =
+        insert(:user_search_filter,
+          is_global: true,
+          filters: %{"taxonomy" => [domain_id]}
+        )
+
+      assert UserSearchFilters.list_user_search_filters(claims)
+             |> assert_lists_equal([usf1, usf2, usf3])
+    end
   end
 end
