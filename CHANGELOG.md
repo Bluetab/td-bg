@@ -1,8 +1,14 @@
 # Changelog
 
+## [Ureleased]
+
+### Added
+
+- [TD-5787] Add multi_match param in elastic query for Boost option
+
 ## [5.9.0] 2023-06-20
 
-## Added
+### Added
 
 - [TD-5770] Add database TSL configuration
 - [TD-5577] Add retrive global filters for default user
