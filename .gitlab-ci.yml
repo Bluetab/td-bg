@@ -38,6 +38,7 @@ test:
 publish:
   stage: publish
   only:
+    - develop
     - master
     - tags
   tags:
@@ -50,6 +51,7 @@ publish:
 acceptance:
   stage: acceptance
   only:
+    - develop
     - master
     - tags
   tags:
@@ -67,6 +69,7 @@ acceptance:
 acceptance:branches:
   stage: acceptance
   except:
+    - develop
     - master
     - tags
   tags:
@@ -87,6 +90,7 @@ deploy:
   tags:
     - kubectl
   only:
+    - develop
     - master
     - tags
   dependencies: []
