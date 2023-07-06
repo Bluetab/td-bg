@@ -39,7 +39,6 @@ publish:
   stage: publish
   only:
     - develop
-    - master
     - tags
   tags:
     - docker
@@ -52,7 +51,6 @@ acceptance:
   stage: acceptance
   only:
     - develop
-    - master
     - tags
   tags:
     - docker-compose
@@ -70,7 +68,7 @@ acceptance:branches:
   stage: acceptance
   except:
     - develop
-    - master
+    - main
     - tags
   tags:
     - docker-compose
@@ -91,7 +89,6 @@ deploy:
     - kubectl
   only:
     - develop
-    - master
     - tags
   dependencies: []
   script:
