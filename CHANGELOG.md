@@ -1,8 +1,19 @@
 # Changelog
 
-## [5.9.0] 2023-06-20
+## [5.10.0] 2023-07-06
 
 ## Added
+
+- [TD-5787] Add multi_match param in elastic query for Boost option
+- [TD-5840] Update td-cache reference 
+
+## Changed
+
+- [TD-5912] `.gitlab-ci.yml` adaptations for develop and main branches
+
+## [5.9.0] 2023-06-20
+
+### Added
 
 - [TD-5770] Add database TSL configuration
 - [TD-5577] Add retrive global filters for default user

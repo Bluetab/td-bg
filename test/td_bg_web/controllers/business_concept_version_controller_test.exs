@@ -730,6 +730,82 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
   end
 
+  describe "POST /api/business_concept_versions/search with must params" do
+    @tag authentication: [user_name: "not_an_admin"]
+    test "user search with filters", %{conn: conn} do
+      %{id: parent_id, external_id: parent_external_id, name: parent_name} =
+        CacheHelpers.insert_domain()
+
+      %{id: domain_id, external_id: domain_external_id, name: domain_name} =
+        CacheHelpers.insert_domain(parent_id: parent_id)
+
+      CacheHelpers.put_default_permissions(["view_published_business_concepts"])
+
+      %{id: id} = bcv = insert(:business_concept_version, domain_id: domain_id)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert %{
+                   must: [
+                     %{simple_query_string: %{query: "foo*"}},
+                     _status_filter,
+                     _confidential_filter,
+                     %{term: %{"domain_id" => 1234}}
+                   ],
+                   should: %{multi_match: %{operator: "and", query: "foo*", type: "best_fields"}}
+                 } = bool
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"domain_id" => [1234]}, query: "foo"}
+
+      assert %{"data" => [%{"id" => ^id, "domain_parents" => domain_parents}]} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), params)
+               |> json_response(:ok)
+
+      assert domain_parents == [
+               %{"id" => domain_id, "external_id" => domain_external_id, "name" => domain_name},
+               %{"id" => parent_id, "external_id" => parent_external_id, "name" => parent_name}
+             ]
+    end
+
+    for role <- ["admin", "service"] do
+      @tag authentication: [role: role]
+      test "#{role} account filter by status", %{conn: conn} do
+        %{id: id} = bcv = insert(:business_concept_version)
+
+        expect(
+          ElasticsearchMock,
+          :request,
+          fn _,
+             :post,
+             "/concepts/_search",
+             %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+             _ ->
+            assert query == %{bool: %{must: %{terms: %{"status" => ["published", "rejected"]}}}}
+            SearchHelpers.hits_response([bcv])
+          end
+        )
+
+        params = %{must: %{"status" => ["published", "rejected"]}}
+
+        assert %{"data" => [%{"id" => ^id}]} =
+                 conn
+                 |> post(Routes.business_concept_version_path(conn, :search), params)
+                 |> json_response(:ok)
+      end
+    end
+  end
+
   describe "create business_concept" do
     setup :set_mox_from_context
 
@@ -1271,6 +1347,61 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       params = %{
         "update_attributes" => %{"domain_id" => System.unique_integer([:positive])},
         "search_params" => %{"filters" => %{"status" => ["published"]}}
+      }
+
+      assert %{"error" => "missing_domain"} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :bulk_update), params)
+               |> json_response(:unprocessable_entity)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "bulk update of business concept with must in params", %{conn: conn} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+      %{name: template_name} = CacheHelpers.insert_template()
+      %{id: id} = bcv = insert(:business_concept_version, type: template_name)
+
+      ElasticsearchMock
+      |> expect(:request, fn
+        _,
+        :post,
+        "/concepts/_search",
+        %{from: 0, query: query, size: 10_000, sort: ["_score", "name.raw"]},
+        _ ->
+          assert query == %{bool: %{must: %{term: %{"status" => "published"}}}}
+          SearchHelpers.hits_response([bcv])
+      end)
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
+      params = %{
+        "update_attributes" => %{"domain_id" => domain_id},
+        "search_params" => %{"must" => %{"status" => ["published"]}}
+      }
+
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :bulk_update), params)
+               |> json_response(:ok)
+
+      assert %{"message" => updated_ids} = data
+      assert updated_ids == [id]
+    end
+
+    @tag authentication: [role: "admin"]
+    test "bulk update of business concept with invalid domain wiht must in params", %{conn: conn} do
+      %{name: template_name} = CacheHelpers.insert_template()
+      bcv = insert(:business_concept_version, type: template_name)
+
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_search", _, _ ->
+        SearchHelpers.hits_response([bcv])
+      end)
+
+      params = %{
+        "update_attributes" => %{"domain_id" => System.unique_integer([:positive])},
+        "search_params" => %{"must" => %{"status" => ["published"]}}
       }
 
       assert %{"error" => "missing_domain"} =

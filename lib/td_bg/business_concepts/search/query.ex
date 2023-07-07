@@ -132,11 +132,37 @@ defmodule TdBg.BusinessConcepts.Search.Query do
 
   defp maybe_bool_query(%{} = bool) when map_size(bool) >= 1, do: %{bool: bool}
 
+  def build_query(filters, %{"must" => _} = params) do
+    query = Map.get(params, "query")
+
+    params
+    |> Map.take(["must", "query"])
+    |> Enum.reduce(%{must: filters}, &reduce_query/2)
+    |> add_query_should(query)
+    |> bool_query()
+  end
+
   def build_query(filters, params) do
     params
     |> Map.take(["filters", "query"])
     |> Enum.reduce(%{filter: filters}, &reduce_query/2)
     |> bool_query()
+  end
+
+  defp add_query_should(filters, nil), do: filters
+
+  defp add_query_should(filters, query) do
+    should = [
+      %{
+        multi_match: %{
+          query: maybe_wildcard(query),
+          type: "best_fields",
+          operator: "and"
+        }
+      }
+    ]
+
+    Map.put(filters, :should, should)
   end
 
   defp reduce_query({"filters", %{} = user_filters}, %{filter: filters} = acc)
@@ -145,6 +171,15 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   end
 
   defp reduce_query({"filters", %{}}, %{} = acc) do
+    acc
+  end
+
+  defp reduce_query({"must", %{} = user_filters}, %{must: filters} = acc)
+       when map_size(user_filters) > 0 do
+    %{acc | must: merge_filters(filters, user_filters)}
+  end
+
+  defp reduce_query({"must", %{}}, %{} = acc) do
     acc
   end
 
