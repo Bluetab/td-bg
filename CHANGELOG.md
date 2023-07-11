@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.10.1] 2023-07-10
+
+## Fixed
+
+- [TD-5840] Update td-cache version
+
 ## [5.10.0] 2023-07-06
 
 ## Added
