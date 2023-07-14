@@ -6,6 +6,10 @@
 
 - [TD-5872] Add link to concepts in downloaded files
 
+### Changed
+
+- [TD-5844] Concepts CSV dynamic content domain fields: as name instead of external id.
+
 ## [5.10.0] 2023-07-06
 
 ### Added

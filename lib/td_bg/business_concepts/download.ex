@@ -83,7 +83,7 @@ defmodule TdBg.BusinessConcept.Download do
           concept["last_change_at"]
         ]
         |> maybe_add_link_to_concept(concept, concept_url_schema)
-        |> Parser.append_parsed_fields(content_fields, content)
+        |> Parser.append_parsed_fields(content_fields, content, :with_domain_name)
 
       acc ++ [values]
     end)

@@ -28,7 +28,15 @@ defmodule TdBg.BusinessConceptDownloadTests do
     @tag template: [
            %{
              "name" => "group",
-             "fields" => [%{"name" => "field_name", "type" => "list", "label" => "field_label"}]
+             "fields" => [
+               %{"name" => "field_name", "type" => "list", "label" => "field_label"},
+               %{
+                 "name" => "domain_inside_note_field",
+                 "type" => "domain",
+                 "label" => "domain_inside_note_field_label",
+                 "cardinality" => "*"
+               }
+             ]
            }
          ]
     test "to_csv/1 return cvs content to download" do
@@ -44,13 +52,28 @@ defmodule TdBg.BusinessConceptDownloadTests do
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
 
+      %{id: domain_inside_note_1_id} =
+        CacheHelpers.insert_domain(%{
+          name: "domain_inside_note_1_name",
+          external_id: "domain_inside_note_1_external_id"
+        })
+
+      %{id: domain_inside_note_2_id} =
+        CacheHelpers.insert_domain(%{
+          name: "domain_inside_note_2_name",
+          external_id: "domain_inside_note_2_external_id"
+        })
+
       concepts = [
         %{
           "name" => name,
           "description" => description,
           "template" => %{"name" => template},
           "domain" => %{"name" => domain},
-          "content" => %{field_name => field_value},
+          "content" => %{
+            field_name => field_value,
+            "domain_inside_note_field" => [domain_inside_note_1_id, domain_inside_note_2_id]
+          },
           "status" => status,
           "inserted_at" => inserted_at,
           "last_change_at" => last_change_at
@@ -66,8 +89,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       csv = Download.to_csv(concepts, header_labels)
 
       assert csv == """
-             Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;#{field_label}\r
-             #{template};#{name};#{domain};#{status};#{description};100.0;#{inserted_at};#{last_change_at};#{field_value}\r
+             Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;#{field_label};domain_inside_note_field_label\r
+             #{template};#{name};#{domain};#{status};#{description};100.0;#{inserted_at};#{last_change_at};#{field_value};domain_inside_note_1_name|domain_inside_note_2_name\r
              """
     end
 
