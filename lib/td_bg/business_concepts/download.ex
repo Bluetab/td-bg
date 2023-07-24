@@ -8,7 +8,9 @@ defmodule TdBg.BusinessConcept.Download do
   alias TdDfLib.Parser
   alias TdDfLib.Templates
 
-  def to_csv(concepts, header_labels) do
+  @concept_url_insert_at 6
+
+  def to_csv(concepts, header_labels, concept_url_schema \\ nil) do
     concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))
     types = Map.keys(concepts_by_type)
 
@@ -28,7 +30,8 @@ defmodule TdBg.BusinessConcept.Download do
             template,
             concepts,
             header_labels,
-            !Enum.empty?(acc)
+            !Enum.empty?(acc),
+            concept_url_schema
           )
 
         acc ++ csv_list
@@ -42,9 +45,9 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp add_completeness(_, bcv), do: bcv
 
-  defp template_concepts_to_csv(nil, concepts, header_labels, add_separation) do
+  defp template_concepts_to_csv(nil, concepts, header_labels, add_separation, concept_url_schema) do
     headers = build_headers(header_labels)
-    concepts_list = concepts_to_list(concepts)
+    concepts_list = concepts_to_list(concepts, [], concept_url_schema)
     export_to_csv(headers, concepts_list, add_separation)
   end
 
@@ -52,18 +55,19 @@ defmodule TdBg.BusinessConcept.Download do
          template,
          concepts,
          header_labels,
-         add_separation
+         add_separation,
+         concept_url_schema
        ) do
     content = Format.flatten_content_fields(template.content)
     content_fields = Enum.reduce(content, [], &(&2 ++ [Map.take(&1, ["name", "values", "type"])]))
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
     headers = build_headers(header_labels)
     headers = headers ++ content_labels
-    concepts_list = concepts_to_list(concepts, content_fields)
+    concepts_list = concepts_to_list(concepts, content_fields, concept_url_schema)
     export_to_csv(headers, concepts_list, add_separation)
   end
 
-  defp concepts_to_list(concepts, content_fields \\ []) do
+  defp concepts_to_list(concepts, content_fields, concept_url_schema) do
     Enum.reduce(concepts, [], fn concept, acc ->
       content = concept["content"]
 
@@ -78,10 +82,30 @@ defmodule TdBg.BusinessConcept.Download do
           concept["inserted_at"],
           concept["last_change_at"]
         ]
-        |> Parser.append_parsed_fields(content_fields, content)
+        |> maybe_add_link_to_concept(concept, concept_url_schema)
+        |> Parser.append_parsed_fields(content_fields, content, :with_domain_name)
 
       acc ++ [values]
     end)
+  end
+
+  defp maybe_add_link_to_concept(values, _concept, nil), do: values
+
+  defp maybe_add_link_to_concept(values, concept, url_schema) do
+    if String.contains?(url_schema, ":business_concept_id") and
+         String.contains?(url_schema, "/:id") do
+      concept_url =
+        String.replace(
+          url_schema,
+          ":business_concept_id",
+          to_string(concept["business_concept_id"])
+        )
+        |> String.replace(":id", to_string(concept["id"]))
+
+      List.insert_at(values, @concept_url_insert_at, concept_url)
+    else
+      values
+    end
   end
 
   defp export_to_csv(headers, concepts_list, add_separation) do
@@ -111,8 +135,15 @@ defmodule TdBg.BusinessConcept.Download do
       "inserted_at",
       "last_change_at"
     ]
+    |> maybe_add_link_to_concept_header(header_labels)
     |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
   end
+
+  defp maybe_add_link_to_concept_header(header_label_list, %{"link_to_concept" => _}) do
+    List.insert_at(header_label_list, @concept_url_insert_at, "link_to_concept")
+  end
+
+  defp maybe_add_link_to_concept_header(header_label_list, _header_labels), do: header_label_list
 
   defp build_empty_list(acc, l) when l < 1, do: acc
   defp build_empty_list(acc, l), do: ["" | build_empty_list(acc, l - 1)]
