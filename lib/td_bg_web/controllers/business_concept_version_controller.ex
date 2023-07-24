@@ -113,6 +113,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     claims = conn.assigns[:current_resource]
 
     {header_labels, params} = Map.pop(params, "header_labels", %{})
+    concept_url_schema = Map.get(params, "concept_url_schema", nil)
 
     %{results: business_concept_versions} =
       Search.search_business_concept_versions(params, claims, 0, 10_000)
@@ -120,7 +121,10 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     conn
     |> put_resp_content_type("text/csv", "utf-8")
     |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
-    |> send_resp(:ok, Download.to_csv(business_concept_versions, header_labels))
+    |> send_resp(
+      :ok,
+      Download.to_csv(business_concept_versions, header_labels, concept_url_schema)
+    )
   end
 
   def upload(conn, params) do

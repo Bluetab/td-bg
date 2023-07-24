@@ -1,19 +1,29 @@
 # Changelog
 
+## [5.11.0] 2023-07-24
+
+### Added
+
+- [TD-5872] Add link to concepts in downloaded files
+
+### Changed
+
+- [TD-5844] Concepts CSV dynamic content domain fields: as name instead of external id.
+
 ## [5.10.1] 2023-07-10
 
-## Fixed
+### Fixed
 
 - [TD-5840] Update td-cache version
 
 ## [5.10.0] 2023-07-06
 
-## Added
+### Added
 
 - [TD-5787] Add multi_match param in elastic query for Boost option
-- [TD-5840] Update td-cache reference 
+- [TD-5840] Update td-cache reference
 
-## Changed
+### Changed
 
 - [TD-5912] `.gitlab-ci.yml` adaptations for develop and main branches
 
