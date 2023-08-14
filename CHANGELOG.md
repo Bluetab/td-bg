@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5891] Download csv i18n support
+
 ## [5.11.0] 2023-07-24
 
 ### Added

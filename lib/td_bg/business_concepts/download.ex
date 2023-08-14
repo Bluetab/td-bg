@@ -3,6 +3,7 @@ defmodule TdBg.BusinessConcept.Download do
   Helper module to download business concepts.
   """
 
+  alias TdCache.I18nCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
   alias TdDfLib.Parser
@@ -10,7 +11,7 @@ defmodule TdBg.BusinessConcept.Download do
 
   @concept_url_insert_at 6
 
-  def to_csv(concepts, header_labels, concept_url_schema \\ nil) do
+  def to_csv(concepts, header_labels, lang, concept_url_schema \\ nil) do
     concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))
     types = Map.keys(concepts_by_type)
 
@@ -30,8 +31,9 @@ defmodule TdBg.BusinessConcept.Download do
             template,
             concepts,
             header_labels,
-            !Enum.empty?(acc),
-            concept_url_schema
+            add_separation: !Enum.empty?(acc),
+            url_schema: concept_url_schema,
+            lang: lang
           )
 
         acc ++ csv_list
@@ -45,45 +47,59 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp add_completeness(_, bcv), do: bcv
 
-  defp template_concepts_to_csv(nil, concepts, header_labels, add_separation, concept_url_schema) do
+  defp template_concepts_to_csv(nil, concepts, header_labels, opts) do
     headers = build_headers(header_labels)
-    concepts_list = concepts_to_list(concepts, [], concept_url_schema)
-    export_to_csv(headers, concepts_list, add_separation)
+    concepts_list = concepts_to_list(concepts, [], opts[:lang], opts[:url_schema])
+    export_to_csv(headers, concepts_list, opts[:add_separation])
   end
 
   defp template_concepts_to_csv(
          template,
          concepts,
          header_labels,
-         add_separation,
-         concept_url_schema
+         opts
        ) do
-    content = Format.flatten_content_fields(template.content)
-    content_fields = Enum.reduce(content, [], &(&2 ++ [Map.take(&1, ["name", "values", "type"])]))
-    content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
+    content = Format.flatten_content_fields(template.content, opts[:lang])
+
+    content_fields =
+      Enum.reduce(content, [], &(&2 ++ [Map.take(&1, ["name", "values", "type", "label"])]))
+
+    content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "definition")]))
     headers = build_headers(header_labels)
     headers = headers ++ content_labels
-    concepts_list = concepts_to_list(concepts, content_fields, concept_url_schema)
-    export_to_csv(headers, concepts_list, add_separation)
+
+    concepts_list = concepts_to_list(concepts, content_fields, opts[:lang], opts[:url_schema])
+
+    export_to_csv(headers, concepts_list, opts[:add_separation])
   end
 
-  defp concepts_to_list(concepts, content_fields, concept_url_schema) do
+  defp concepts_to_list(concepts, content_fields, lang, concept_url_schema) do
     Enum.reduce(concepts, [], fn concept, acc ->
       content = concept["content"]
+
+      concept_status =
+        I18nCache.get_definition(
+          lang,
+          "concepts.status." <> concept["status"],
+          default_value: concept["status"]
+        )
 
       values =
         [
           concept["template"]["name"],
           concept["name"],
           concept["domain"]["name"],
-          concept["status"],
+          concept_status,
           concept["description"],
           concept["completeness"],
           concept["inserted_at"],
           concept["last_change_at"]
         ]
         |> maybe_add_link_to_concept(concept, concept_url_schema)
-        |> Parser.append_parsed_fields(content_fields, content, :with_domain_name)
+        |> Parser.append_parsed_fields(content_fields, content,
+          domain_type: :with_domain_name,
+          lang: lang
+        )
 
       acc ++ [values]
     end)
