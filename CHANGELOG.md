@@ -6,6 +6,10 @@
 
 - [TD-5891] Download csv i18n support
 
+## Changed
+
+- [TD-5913] Update td-df-lib to fix depends validation
+
 ## [5.11.0] 2023-07-24
 
 ### Added
