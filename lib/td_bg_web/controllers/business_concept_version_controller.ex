@@ -410,6 +410,22 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     response(422, "Business concept invalid state")
   end
 
+  def restore(conn, %{"business_concept_version_id" => id}) do
+    claims = conn.assigns[:current_resource]
+    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+
+    case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
+      {"deprecated", true} ->
+        do_publish(conn, claims, business_concept_version)
+
+      _ ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(ErrorView)
+        |> render("422.json")
+    end
+  end
+
   def publish(conn, %{"business_concept_version_id" => id}) do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -579,13 +595,22 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp do_publish(
          conn,
          claims,
-         %{name: concept_name, business_concept: %{id: id, domain: domain} = business_concept} =
-           business_concept_version
+         %{
+           name: concept_name,
+           business_concept: %{id: id, domain: domain} = business_concept,
+           status: status
+         } = business_concept_version
        ) do
     %{name: concept_type} = BusinessConcepts.get_template(business_concept)
     domain_group_id = get_domain_group_id(domain)
 
-    with {:can, true} <- {:can, can?(claims, publish(business_concept_version))},
+    can_publish =
+      case status do
+        "deprecated" -> {:can, can?(claims, restore(business_concept_version))}
+        _ -> {:can, can?(claims, publish(business_concept_version))}
+      end
+
+    with {:can, true} <- can_publish,
          :ok <-
            BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name,
              business_concept_id: id,
