@@ -166,6 +166,59 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert Map.has_key?(actions, "update_domain")
     end
 
+    @tag authentication: [
+           role: "user",
+           permissions: [
+             "view_approval_pending_business_concepts",
+             "view_deprecated_business_concepts",
+             "view_draft_business_concepts",
+             "publish_business_concept",
+             "reject_business_concept"
+           ]
+         ]
+    @tag :template
+    test "user with publish_business_concepts permission has publish actions", %{
+      conn: conn,
+      domain_id: domain_id
+    } do
+      [pending_actions, draft_actions, deprecated_actions] =
+        ["pending_approval", "draft", "deprecated"]
+        |> Enum.map(&insert(:business_concept_version, domain_id: domain_id, status: &1))
+        |> Enum.map(fn %{id: id, business_concept_id: business_concept_id} ->
+          conn
+          |> get(
+            Routes.business_concept_business_concept_version_path(
+              conn,
+              :show,
+              business_concept_id,
+              id
+            )
+          )
+          |> json_response(:ok)
+          |> Map.get("_actions")
+        end)
+
+      assert [true, false, true] =
+               Enum.map(
+                 [
+                   pending_actions,
+                   draft_actions,
+                   deprecated_actions
+                 ],
+                 &Map.has_key?(&1, "publish")
+               )
+
+      assert [true, false, false] =
+               Enum.map(
+                 [
+                   pending_actions,
+                   draft_actions,
+                   deprecated_actions
+                 ],
+                 &Map.has_key?(&1, "reject")
+               )
+    end
+
     @tag authentication: [role: "admin"]
     @tag :template
     test "admin has update_domain action", %{conn: conn} do
@@ -1191,6 +1244,75 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^id2}} = data
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [:publish_business_concept]
+         ]
+    test "user with permission, can publish a deprecated business concept domain", %{
+      conn: conn,
+      domain: domain
+    } do
+      SearchHelpers.expect_bulk_index()
+
+      %{name: template_name} = CacheHelpers.insert_template()
+
+      business_concept_version =
+        insert(:business_concept_version,
+          domain_id: domain.id,
+          status: "deprecated",
+          type: template_name
+        )
+
+      assert %{"data" => %{"status" => "published"}} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :publish,
+                   business_concept_version
+                 )
+               )
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [:publish_business_concept]
+         ]
+    test "user with permission, can not publish a deprecated business concept domain when there is other with the same name, type and domain",
+         %{
+           conn: conn,
+           domain: domain
+         } do
+      %{name: template_name} = CacheHelpers.insert_template()
+
+      %{name: business_concept_name} =
+        business_concept_version =
+        insert(:business_concept_version,
+          domain_id: domain.id,
+          status: "deprecated",
+          type: template_name
+        )
+
+      insert(:business_concept_version,
+        name: business_concept_name,
+        domain_id: domain.id,
+        status: "draft",
+        type: template_name
+      )
+
+      assert %{"errors" => [%{"name" => "concept.error.existing.business.concept"}]} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :publish,
+                   business_concept_version
+                 )
+               )
+               |> json_response(:unprocessable_entity)
     end
 
     @tag authentication: [

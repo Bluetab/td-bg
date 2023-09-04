@@ -418,6 +418,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       {"pending_approval", true} ->
         do_publish(conn, claims, business_concept_version)
 
+      {"deprecated", true} ->
+        do_publish(conn, claims, business_concept_version)
+
       _ ->
         conn
         |> put_status(:unprocessable_entity)
@@ -573,11 +576,26 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp do_publish(conn, claims, business_concept_version) do
+  defp do_publish(
+         conn,
+         claims,
+         %{name: concept_name, business_concept: %{id: id, domain: domain} = business_concept} =
+           business_concept_version
+       ) do
+    %{name: concept_type} = BusinessConcepts.get_template(business_concept)
+    domain_group_id = get_domain_group_id(domain)
+
     with {:can, true} <- {:can, can?(claims, publish(business_concept_version))},
+         :ok <-
+           BusinessConcepts.check_business_concept_name_availability(concept_type, concept_name,
+             business_concept_id: id,
+             domain_group_id: domain_group_id
+           ),
          {:ok, %{published: %BusinessConceptVersion{} = concept}} <-
            Workflow.publish(business_concept_version, claims) do
       render_concept(conn, concept)
+    else
+      error -> handle_bc_errors(conn, error)
     end
   end
 
