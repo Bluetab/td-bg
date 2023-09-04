@@ -198,7 +198,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           |> Map.get("_actions")
         end)
 
-      assert [true, false, true] =
+      assert [true, false, false] =
                Enum.map(
                  [
                    pending_actions,
@@ -206,6 +206,16 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                    deprecated_actions
                  ],
                  &Map.has_key?(&1, "publish")
+               )
+
+      assert [false, false, true] =
+               Enum.map(
+                 [
+                   pending_actions,
+                   draft_actions,
+                   deprecated_actions
+                 ],
+                 &Map.has_key?(&1, "restore")
                )
 
       assert [true, false, false] =
@@ -1250,7 +1260,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
            role: "user",
            permissions: [:publish_business_concept]
          ]
-    test "user with permission, can publish a deprecated business concept domain", %{
+
+    test "user with permission, can restore a deprecated business concept domain", %{
       conn: conn,
       domain: domain
     } do
@@ -1270,7 +1281,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> post(
                  Routes.business_concept_version_business_concept_version_path(
                    conn,
-                   :publish,
+                   :restore,
                    business_concept_version
                  )
                )
@@ -1281,7 +1292,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
            role: "user",
            permissions: [:publish_business_concept]
          ]
-    test "user with permission, can not publish a deprecated business concept domain when there is other with the same name, type and domain",
+
+    test "user with permission, can not restore a deprecated business concept domain when there is other with the same name, type and domain",
          %{
            conn: conn,
            domain: domain
@@ -1308,7 +1320,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> post(
                  Routes.business_concept_version_business_concept_version_path(
                    conn,
-                   :publish,
+                   :restore,
                    business_concept_version
                  )
                )
