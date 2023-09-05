@@ -133,6 +133,15 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       )
   end
 
+  def can?(%Claims{} = claims, :restore, %BusinessConceptVersion{} = business_concept_version) do
+    BusinessConceptVersion.is_restorable?(business_concept_version) &&
+      authorized?(
+        claims,
+        :publish_business_concept,
+        business_concept_version
+      )
+  end
+
   def can?(%Claims{} = claims, :version, %BusinessConceptVersion{} = business_concept_version) do
     BusinessConceptVersion.is_versionable?(business_concept_version) &&
       authorized?(

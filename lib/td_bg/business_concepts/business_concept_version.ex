@@ -261,10 +261,14 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   end
 
   def is_publishable?(%BusinessConceptVersion{status: status} = bcv) do
-    BusinessConcepts.last?(bcv) && status == "pending_approval"
+    BusinessConcepts.last?(bcv) && status in ["pending_approval"]
   end
 
-  def is_rejectable?(%BusinessConceptVersion{} = business_concept_version),
+  def is_restorable?(%BusinessConceptVersion{status: status} = bcv) do
+    BusinessConcepts.last?(bcv) && status in ["deprecated"]
+  end
+
+  def is_rejectable?(business_concept_version),
     do: is_publishable?(business_concept_version)
 
   def is_versionable?(%BusinessConceptVersion{status: status} = bcv) do

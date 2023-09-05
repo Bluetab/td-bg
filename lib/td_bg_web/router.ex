@@ -46,6 +46,7 @@ defmodule TdBgWeb.Router do
       except: [:show, :new, :edit, :update] do
       post("/submit", BusinessConceptVersionController, :send_for_approval)
       post("/publish", BusinessConceptVersionController, :publish)
+      post("/restore", BusinessConceptVersionController, :restore)
       post("/reject", BusinessConceptVersionController, :reject)
       post("/deprecate", BusinessConceptVersionController, :deprecate)
       post("/version", BusinessConceptVersionController, :version)
