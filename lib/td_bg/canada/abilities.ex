@@ -205,6 +205,10 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :publish, business_concept_version)
     end
 
+    def can?(%Claims{} = claims, :restore, %BusinessConceptVersion{} = business_concept_version) do
+      BusinessConceptAbilities.can?(claims, :restore, business_concept_version)
+    end
+
     def can?(%Claims{} = claims, :version, %BusinessConceptVersion{} = business_concept_version) do
       BusinessConceptAbilities.can?(claims, :version, business_concept_version)
     end
