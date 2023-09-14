@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.13.1] 2023-09-14
+
+### Fixed
+
+- [TD-6051] Searchable option for filters
+
 ## [5.13.0] 2023-09-05
 
 ### Added
