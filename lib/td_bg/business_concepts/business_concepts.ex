@@ -148,7 +148,6 @@ defmodule TdBg.BusinessConcepts do
   def get_active_ids do
     BusinessConceptVersion
     |> where([v], v.current == true)
-    |> where([v], v.status != "deprecated")
     |> select([v], v.business_concept_id)
     |> Repo.all()
   end

@@ -11,6 +11,7 @@ defmodule CacheHelpers do
   alias TdCache.I18nCache
   alias TdCache.ImplementationCache
   alias TdCache.LinkCache
+  alias TdCache.RuleCache
   alias TdCache.StructureCache
   alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
@@ -65,10 +66,26 @@ defmodule CacheHelpers do
     implementation
   end
 
+  def insert_rule(%{} = params \\ %{}) do
+    rule_id = System.unique_integer([:positive])
+
+    %{id: id} =
+      rule =
+      params
+      |> Map.put_new(:id, rule_id)
+      |> Map.put_new(:domain_id, System.unique_integer([:positive]))
+      |> Map.put_new(:updated_at, DateTime.utc_now())
+
+    {:ok, _} = RuleCache.put(rule)
+    on_exit(fn -> RuleCache.delete_rule(id) end)
+    rule
+  end
+
   def delete_implementation(implementation_id) do
     ImplementationCache.delete(implementation_id)
   end
 
+  @spec insert_link(any, any, any, any, any) :: :ok
   def insert_link(source_id, source_type, target_type, target_id, tags \\ []) do
     id = System.unique_integer([:positive])
     target_id = if is_nil(target_id), do: System.unique_integer([:positive]), else: target_id
@@ -130,4 +147,13 @@ defmodule CacheHelpers do
   end
 
   def put_i18n_message(lang, message), do: put_i18n_messages(lang, [message])
+
+  def get_business_concept(id) do
+    ConceptCache.get(id)
+  end
+
+  def put_business_concept(id) do
+    ConceptCache.put(id)
+    on_exit(fn -> ConceptCache.delete(id) end)
+  end
 end
