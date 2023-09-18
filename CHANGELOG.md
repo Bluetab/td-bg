@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5929] Upload csv concepts with fixed template values in browser language
+
 ## [5.13.1] 2023-09-14
 
 ### Fixed

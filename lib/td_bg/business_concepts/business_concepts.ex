@@ -24,6 +24,8 @@ defmodule TdBg.BusinessConcepts do
   alias TdDfLib.Validation
   alias ValidationError
 
+  @default_lang Application.compile_env(:td_bg, :lang, "en")
+
   @doc """
   check business concept name availability
   """
@@ -234,6 +236,7 @@ defmodule TdBg.BusinessConcepts do
   """
   def create_business_concept(params, opts \\ []) do
     params
+    |> Map.put_new(:lang, @default_lang)
     |> attrs_keys_to_atoms()
     |> raise_error_if_no_content_schema()
     |> maybe_domain_ids()

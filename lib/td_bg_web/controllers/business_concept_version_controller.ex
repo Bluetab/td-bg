@@ -24,7 +24,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   require Logger
 
-  @default_lang "es"
+  @default_lang Application.compile_env(:td_bg, :lang, "en")
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -136,11 +136,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def upload(conn, params) do
+    lang = Map.get(params, "lang", @default_lang)
     claims = conn.assigns[:current_resource]
     business_concepts_upload = Map.get(params, "business_concepts")
 
     with {:can, true} <- {:can, can?(claims, upload(BusinessConcept))},
-         {:ok, response} <- Upload.from_csv(business_concepts_upload, claims, &can_upload?/2),
+         {:ok, response} <-
+           Upload.from_csv(business_concepts_upload, claims, &can_upload?/2, lang),
          body <- Jason.encode!(%{data: %{message: response}}) do
       send_resp(conn, :ok, body)
     end
