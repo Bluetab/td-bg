@@ -8,6 +8,99 @@ defmodule TdBg.UploadTest do
   alias TdBg.ElasticsearchMock
   alias TdCache.HierarchyCache
 
+  @default_template %{
+    name: "term",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "cardinality" => "1",
+            "default" => "",
+            "description" => "description",
+            "label" => "critical term",
+            "name" => "critical",
+            "type" => "string",
+            "values" => %{
+              "fixed" => ["Yes", "No"]
+            }
+          },
+          %{
+            "cardinality" => "+",
+            "description" => "description",
+            "label" => "Role",
+            "name" => "role",
+            "type" => "user"
+          },
+          %{
+            "name" => "hierarchy_name_1",
+            "type" => "hierarchy",
+            "cardinality" => "?",
+            "label" => "hierarchy name 1",
+            "values" => %{"hierarchy" => %{"id" => 1}}
+          },
+          %{
+            "name" => "hierarchy_name_2",
+            "label" => "hierarchy name 2",
+            "type" => "hierarchy",
+            "cardinality" => "*",
+            "values" => %{"hierarchy" => %{"id" => 1}}
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "term",
+    id: "999"
+  }
+
+  @i18n_template %{
+    name: "i18n",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "cardinality" => "?",
+            "label" => "i18n_test.dropdown",
+            "name" => "i18n_test.dropdown",
+            "type" => "string",
+            "values" => %{"fixed" => ["pear", "banana", "apple"]},
+            "widget" => "dropdown"
+          },
+          %{
+            "cardinality" => "?",
+            "label" => "i18n_test.no_translate",
+            "name" => "i18n_test.no_translate",
+            "type" => "string",
+            "values" => nil,
+            "widget" => "string"
+          },
+          %{
+            "cardinality" => "?",
+            "label" => "i18n_test.radio",
+            "name" => "i18n_test.radio",
+            "type" => "string",
+            "values" => %{"fixed" => ["pear", "banana", "apple"]},
+            "widget" => "radio"
+          },
+          %{
+            "cardinality" => "*",
+            "label" => "i18n_test.checkbox",
+            "name" => "i18n_test.checkbox",
+            "type" => "string",
+            "values" => %{"fixed" => ["pear", "banana", "apple"]},
+            "widget" => "checkbox"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "i18n",
+    id: "1"
+  }
+  @default_lang "en"
+
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
     start_supervised!(TdBg.Search.Cluster)
@@ -18,67 +111,25 @@ defmodule TdBg.UploadTest do
   setup :verify_on_exit!
 
   setup _context do
-    %{id: template_id} =
-      template =
-      Templates.create_template(%{
-        name: "term",
-        content: [
-          %{
-            "name" => "group",
-            "fields" => [
-              %{
-                "cardinality" => "1",
-                "default" => "",
-                "description" => "description",
-                "label" => "critical term",
-                "name" => "critical",
-                "type" => "string",
-                "values" => %{
-                  "fixed" => ["Yes", "No"]
-                }
-              },
-              %{
-                "cardinality" => "+",
-                "description" => "description",
-                "label" => "Role",
-                "name" => "role",
-                "type" => "user"
-              },
-              %{
-                "name" => "hierarchy_name_1",
-                "type" => "hierarchy",
-                "cardinality" => "?",
-                "values" => %{"hierarchy" => %{"id" => 1}}
-              },
-              %{
-                "name" => "hierarchy_name_2",
-                "type" => "hierarchy",
-                "cardinality" => "*",
-                "values" => %{"hierarchy" => %{"id" => 1}}
-              }
-            ]
-          }
-        ],
-        scope: "test",
-        label: "term",
-        id: "999"
-      })
-
-    on_exit(fn ->
-      Templates.delete(template_id)
-    end)
+    %{id: template_id} = template = Templates.create_template(@default_template)
+    %{id: i18n_template_id} = i18n_template = Templates.create_template(@i18n_template)
 
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
-    on_exit(fn -> HierarchyCache.delete(hierarchy_id) end)
 
-    [template: template, hierarchy: hierarchy]
+    on_exit(fn ->
+      Templates.delete(template_id)
+      Templates.delete(i18n_template_id)
+      HierarchyCache.delete(hierarchy_id)
+    end)
+
+    [template: template, i18n_template: i18n_template, hierarchy: hierarchy]
   end
 
   describe "business_concept_upload" do
-    setup :set_mox_from_context
+    setup [:set_mox_from_context, :insert_i18n_messages]
 
-    test "from_csv/3 uploads business concept versions with valid data" do
+    test "from_csv/4 uploads business concept versions with valid data" do
       ElasticsearchMock
       |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
         SearchHelpers.bulk_index_response()
@@ -89,7 +140,12 @@ defmodule TdBg.UploadTest do
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
 
       assert {:ok, [concept_id | _]} =
-               Upload.from_csv(business_concept_upload, claims, fn _, _ -> true end)
+               Upload.from_csv(
+                 business_concept_upload,
+                 claims,
+                 fn _, _ -> true end,
+                 @default_lang
+               )
 
       version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
       concept = Map.get(version, :business_concept)
@@ -97,7 +153,7 @@ defmodule TdBg.UploadTest do
       assert version |> Map.get(:content) |> Map.get("role") == ["Role"]
     end
 
-    test "from_csv/3 uploads business concept versions with hierarchy data" do
+    test "from_csv/4 uploads business concept versions with hierarchy data" do
       ElasticsearchMock
       |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
         SearchHelpers.bulk_index_response()
@@ -108,7 +164,12 @@ defmodule TdBg.UploadTest do
       business_concept_upload = %{path: "test/fixtures/upload_hierarchy.csv"}
 
       assert {:ok, [concept_id | _]} =
-               Upload.from_csv(business_concept_upload, claims, fn _, _ -> true end)
+               Upload.from_csv(
+                 business_concept_upload,
+                 claims,
+                 fn _, _ -> true end,
+                 @default_lang
+               )
 
       version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
 
@@ -118,13 +179,18 @@ defmodule TdBg.UploadTest do
              } = Map.get(version, :content)
     end
 
-    test "from_csv/3 get error business concept versions with invalid hierarchy data" do
+    test "from_csv/4 get error business concept versions with invalid hierarchy data" do
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload_invalid_hierarchy.csv"}
 
       assert {:error, changeset} =
-               Upload.from_csv(business_concept_upload, claims, fn _, _ -> true end)
+               Upload.from_csv(
+                 business_concept_upload,
+                 claims,
+                 fn _, _ -> true end,
+                 @default_lang
+               )
 
       assert [
                hierarchy_name_1: {"has more than one node children_2"},
@@ -134,13 +200,41 @@ defmodule TdBg.UploadTest do
                |> Map.get(:errors)
     end
 
-    test "from_csv/3 returns error on invalid content" do
+    test "from_csv/4 uploads business concept with translation" do
+      ElasticsearchMock
+      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
+        SearchHelpers.bulk_index_response()
+      end)
+
+      claims = build(:claims)
+      insert(:domain, external_id: "domain")
+      business_concept_upload = %{path: "test/fixtures/upload_translation.csv"}
+
+      assert {:ok, [concept_id | _]} =
+               Upload.from_csv(business_concept_upload, claims, fn _, _ -> true end, "es")
+
+      version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
+
+      assert %{
+               "i18n_test.checkbox" => ["apple", "pear"],
+               "i18n_test.dropdown" => "pear",
+               "i18n_test.radio" => "banana",
+               "i18n_test.no_translate" => "NO TRANSLATION"
+             } = Map.get(version, :content)
+    end
+
+    test "from_csv/4 returns error on invalid content" do
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/incorrect_upload.csv"}
 
       assert {:error, changeset} =
-               Upload.from_csv(business_concept_upload, claims, fn _, _ -> true end)
+               Upload.from_csv(
+                 business_concept_upload,
+                 claims,
+                 fn _, _ -> true end,
+                 @default_lang
+               )
 
       message =
         changeset
@@ -151,13 +245,18 @@ defmodule TdBg.UploadTest do
       assert message == "is invalid"
     end
 
-    test "from_csv/3 Does not upload business concept versions without permissions" do
+    test "from_csv/4 Does not upload business concept versions without permissions" do
       claims = build(:claims)
       insert(:domain, external_id: "domain", name: "fobidden_domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
 
       assert {:error, %{error: :forbidden, domain: "fobidden_domain"}} =
-               Upload.from_csv(business_concept_upload, claims, fn _, _ -> false end)
+               Upload.from_csv(
+                 business_concept_upload,
+                 claims,
+                 fn _, _ -> false end,
+                 @default_lang
+               )
     end
   end
 
@@ -198,5 +297,22 @@ defmodule TdBg.UploadTest do
         })
       ]
     }
+  end
+
+  defp insert_i18n_messages(_) do
+    CacheHelpers.put_i18n_messages("es", [
+      %{message_id: "fields.i18n_test.dropdown", definition: "Dropdown Fijo"},
+      %{message_id: "fields.i18n_test.dropdown.pear", definition: "pera"},
+      %{message_id: "fields.i18n_test.dropdown.banana", definition: "plátano"},
+      %{message_id: "fields.i18n_test.dropdown.apple", definition: "manzana"},
+      %{message_id: "fields.i18n_test.radio", definition: "Radio Fijo"},
+      %{message_id: "fields.i18n_test.radio.pear", definition: "pera"},
+      %{message_id: "fields.i18n_test.radio.banana", definition: "plátano"},
+      %{message_id: "fields.i18n_test.radio.apple", definition: "manzana"},
+      %{message_id: "fields.i18n_test.checkbox", definition: "Checkbox Fijo"},
+      %{message_id: "fields.i18n_test.checkbox.pear", definition: "pera"},
+      %{message_id: "fields.i18n_test.checkbox.banana", definition: "plátano"},
+      %{message_id: "fields.i18n_test.checkbox.apple", definition: "manzana"}
+    ])
   end
 end
