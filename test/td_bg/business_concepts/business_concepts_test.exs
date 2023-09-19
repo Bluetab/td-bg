@@ -390,6 +390,232 @@ defmodule TdBg.BusinessConceptsTest do
         BusinessConcepts.create_business_concept(creation_attrs)
       end
     end
+
+    test "with content that include fixed values translated with single cardinality" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+
+      content_schema = [
+        %{
+          "cardinality" => "1",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]}
+        }
+      ]
+
+      content = %{"i18n" => "uno"}
+
+      concept_attrs = %{
+        type: @template_name,
+        domain_id: domain.id,
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now()
+      }
+
+      version_attrs = %{
+        business_concept: concept_attrs,
+        content: content,
+        name: "some name",
+        description: to_rich_text("some description"),
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      creation_attrs =
+        version_attrs
+        |> Map.put(:content_schema, content_schema)
+        |> Map.put(:lang, "es")
+
+      assert {:ok, %{business_concept_version: business_concept_version}} =
+               BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
+
+      assert %{content: content} = business_concept_version
+      assert %{"i18n" => "one"} = content
+    end
+
+    test "with content that include fixed values translated with multiple cardinality" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+
+      content_schema = [
+        %{
+          "cardinality" => "+",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]}
+        }
+      ]
+
+      content = %{"i18n" => "uno|dos"}
+
+      concept_attrs = %{
+        type: @template_name,
+        domain_id: domain.id,
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now()
+      }
+
+      version_attrs = %{
+        business_concept: concept_attrs,
+        content: content,
+        name: "some name",
+        description: to_rich_text("some description"),
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      creation_attrs =
+        version_attrs
+        |> Map.put(:content_schema, content_schema)
+        |> Map.put(:lang, "es")
+
+      assert {:ok, %{business_concept_version: business_concept_version}} =
+               BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
+
+      assert %{content: content} = business_concept_version
+      assert %{"i18n" => ["one", "two"]} = content
+    end
+
+    test "with content that include fixed values without i18n key with single cardinality" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      content_schema = [
+        %{
+          "cardinality" => "1",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]}
+        }
+      ]
+
+      content = %{"i18n" => "uno"}
+
+      concept_attrs = %{
+        type: @template_name,
+        domain_id: domain.id,
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now()
+      }
+
+      version_attrs = %{
+        business_concept: concept_attrs,
+        content: content,
+        name: "some name",
+        description: to_rich_text("some description"),
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      creation_attrs =
+        version_attrs
+        |> Map.put(:content_schema, content_schema)
+        |> Map.put(:lang, "es")
+
+      assert {:error, :business_concept_version, %{errors: [i18n: {"is invalid", _}]}, _} =
+               BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
+    end
+
+    test "with content that include fixed values without i18n key with multiple cardinality" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      content_schema = [
+        %{
+          "cardinality" => "+",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]}
+        }
+      ]
+
+      content = %{"i18n" => "uno|dos"}
+
+      concept_attrs = %{
+        type: @template_name,
+        domain_id: domain.id,
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now()
+      }
+
+      version_attrs = %{
+        business_concept: concept_attrs,
+        content: content,
+        name: "some name",
+        description: to_rich_text("some description"),
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      creation_attrs =
+        version_attrs
+        |> Map.put(:content_schema, content_schema)
+        |> Map.put(:lang, "es")
+
+      assert {:error, :business_concept_version, %{errors: [i18n: {"has an invalid entry", _}]},
+              _} = BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
+    end
+
+    test "with content that include fixed values some missing i18n keys with multiple cardinality" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
+      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.two", definition: "two"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+
+      content_schema = [
+        %{
+          "cardinality" => "+",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]}
+        }
+      ]
+
+      content = %{"i18n" => "uno|tres"}
+
+      concept_attrs = %{
+        type: @template_name,
+        domain_id: domain.id,
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now()
+      }
+
+      version_attrs = %{
+        business_concept: concept_attrs,
+        content: content,
+        name: "some name",
+        description: to_rich_text("some description"),
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      creation_attrs =
+        version_attrs
+        |> Map.put(:content_schema, content_schema)
+        |> Map.put(:lang, "es")
+
+      assert {:error, :business_concept_version, %{errors: [i18n: {"has an invalid entry", _}]},
+              _} = BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
+    end
   end
 
   describe "update_business_concept_version/2" do
