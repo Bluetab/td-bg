@@ -14,6 +14,8 @@ config :td_bg, TdBg.Repo, pool_size: 5
 
 config :td_bg, index_worker: TdBg.Search.IndexWorker
 
+config :td_bg, :lang, "en"
+
 config :codepagex, :encodings, [
   :ascii,
   ~r[iso8859]i,
@@ -52,6 +54,8 @@ config :td_bg, :phoenix_swagger,
   swagger_files: %{
     "priv/static/swagger.json" => [router: TdBgWeb.Router]
   }
+
+config :td_df_lib, lang: "en"
 
 config :td_cache, :audit,
   service: "td_bg",
