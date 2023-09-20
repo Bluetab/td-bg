@@ -13,7 +13,6 @@ defmodule TdBg.BusinessConcepts.Workflow do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
-  alias TdCache.ConceptCache
 
   def deprecate_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
@@ -22,7 +21,6 @@ defmodule TdBg.BusinessConcepts.Workflow do
     result =
       update_business_concept_version_status(business_concept_version, "deprecated", claims)
 
-    ConceptCache.delete(business_concept_version.business_concept_id)
     result
   end
 

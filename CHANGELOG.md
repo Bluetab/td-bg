@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-6025] When a business concept is deprecated, keep data in redis
+
 ## [5.14.0] 2023-09-19
 
 ### Added

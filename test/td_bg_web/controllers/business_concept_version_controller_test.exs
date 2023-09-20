@@ -1256,12 +1256,48 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"domain" => %{"id" => ^id2}} = data
     end
 
+    @tag authentication: [role: "admin"]
+
+    test "when restore a deprecated business concept version, will be surived in cache", %{
+      conn: conn
+    } do
+      SearchHelpers.expect_bulk_index()
+
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      %{user_id: user_id} = build(:claims)
+
+      %{id: bc_main_id} =
+        insert(:business_concept,
+          last_change_by: user_id
+        )
+
+      %{id: bcv_main_id} =
+        insert(:business_concept_version,
+          business_concept_id: bc_main_id,
+          domain_id: domain_id,
+          status: "published"
+        )
+
+      conn
+      |> post(
+        Routes.business_concept_version_business_concept_version_path(
+          conn,
+          :deprecate,
+          bcv_main_id
+        )
+      )
+      |> json_response(:ok)
+
+      assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
+    end
+
     @tag authentication: [
            role: "user",
            permissions: [:publish_business_concept]
          ]
 
-    test "user with permission, can restore a deprecated business concept domain", %{
+    test "when a business concept published is deprecated, related data is not deleted", %{
       conn: conn,
       domain: domain
     } do
