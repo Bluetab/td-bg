@@ -1256,6 +1256,74 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"domain" => %{"id" => ^id2}} = data
     end
 
+    @tag authentication: [role: "admin"]
+
+    test "when restore a deprecated business concept version, will be surived in cache", %{
+      conn: conn
+    } do
+      SearchHelpers.expect_bulk_index()
+
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      %{user_id: user_id} = build(:claims)
+
+      %{id: bc_main_id} =
+        insert(:business_concept,
+          last_change_by: user_id
+        )
+
+      %{id: bcv_main_id} =
+        insert(:business_concept_version,
+          business_concept_id: bc_main_id,
+          domain_id: domain_id,
+          status: "published"
+        )
+
+      conn
+      |> post(
+        Routes.business_concept_version_business_concept_version_path(
+          conn,
+          :deprecate,
+          bcv_main_id
+        )
+      )
+      |> json_response(:ok)
+
+      assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [:publish_business_concept]
+         ]
+
+    test "when a business concept published is deprecated, related data is not deleted", %{
+      conn: conn,
+      domain: domain
+    } do
+      SearchHelpers.expect_bulk_index()
+
+      %{name: template_name} = CacheHelpers.insert_template()
+
+      business_concept_version =
+        insert(:business_concept_version,
+          domain_id: domain.id,
+          status: "deprecated",
+          type: template_name
+        )
+
+      assert %{"data" => %{"status" => "published"}} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :restore,
+                   business_concept_version
+                 )
+               )
+               |> json_response(:ok)
+    end
+
     @tag authentication: [
            role: "user",
            permissions: [:publish_business_concept]
