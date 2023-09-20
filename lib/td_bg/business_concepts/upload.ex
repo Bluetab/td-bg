@@ -20,12 +20,12 @@ defmodule TdBg.BusinessConcept.Upload do
 
   NimbleCSV.define(ParserCSVUpload, separator: ";")
 
-  def from_csv(nil, _claims, _can?), do: {:error, %{message: :no_csv_uploaded}}
+  def from_csv(nil, _claims, _can?, _lang), do: {:error, %{message: :no_csv_uploaded}}
 
-  def from_csv(business_concept_upload, claims, can?) do
+  def from_csv(business_concept_upload, claims, can?, lang) do
     path = business_concept_upload.path
 
-    case create_concepts(path, claims, can?) do
+    case create_concepts(path, claims, can?, lang) do
       {:ok, concept_ids} ->
         Audit.business_concepts_created(concept_ids)
         ConceptLoader.refresh(concept_ids)
@@ -36,16 +36,16 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp create_concepts(path, claims, can?) do
+  defp create_concepts(path, claims, can?, lang) do
     Logger.info("Inserting business concepts...")
 
     Timer.time(
-      fn -> Repo.transaction(fn -> upload_in_transaction(path, claims, can?) end) end,
+      fn -> Repo.transaction(fn -> upload_in_transaction(path, claims, can?, lang) end) end,
       fn ms, _ -> Logger.info("Business concepts inserted in #{ms}ms") end
     )
   end
 
-  defp upload_in_transaction(path, claims, can?) do
+  defp upload_in_transaction(path, claims, can?, lang) do
     file =
       path
       |> Path.expand()
@@ -53,7 +53,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
     with {:ok, parsed_file} <- parse_file(file),
          {:ok, parsed_list} <- parse_data_list(parsed_file),
-         {:ok, uploaded_ids} <- upload_data(parsed_list, claims, can?, [], 2) do
+         {:ok, uploaded_ids} <- upload_data(parsed_list, claims, can?, [], 2, lang) do
       uploaded_ids
     else
       {:error, err} -> Repo.rollback(err)
@@ -106,10 +106,10 @@ defmodule TdBg.BusinessConcept.Upload do
     |> Enum.into(%{})
   end
 
-  defp upload_data([head | tail], claims, can?, acc, row_count) do
-    case insert_business_concept(head, claims, can?) do
+  defp upload_data([head | tail], claims, can?, acc, row_count, lang) do
+    case insert_business_concept(head, claims, can?, lang) do
       {:ok, %{business_concept_version: %{business_concept_id: concept_id}}} ->
-        upload_data(tail, claims, can?, [concept_id | acc], row_count + 1)
+        upload_data(tail, claims, can?, [concept_id | acc], row_count + 1, lang)
 
       {:error, :business_concept_version, error, _} ->
         {:error, Map.put(error, :row, row_count)}
@@ -119,9 +119,9 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp upload_data(_, _, _, acc, _), do: {:ok, acc}
+  defp upload_data(_, _, _, acc, _, _), do: {:ok, acc}
 
-  defp insert_business_concept(data, %Claims{user_id: user_id} = claims, can?) do
+  defp insert_business_concept(data, %Claims{user_id: user_id} = claims, can?, lang) do
     with {:ok, %{name: concept_type, content: content_schema}} <- validate_template(data),
          {:ok, %{id: domain_id} = domain} <- validate_domain(data),
          {:ok} <- validate_name(data, domain),
@@ -132,7 +132,7 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Enum.filter(fn {_field_name, value} -> is_empty?(value) end)
         |> Enum.map(&elem(&1, 0))
 
-      content_schema = Format.flatten_content_fields(content_schema)
+      content_schema = Format.flatten_content_fields(content_schema, lang)
 
       table_fields =
         content_schema
@@ -164,6 +164,7 @@ defmodule TdBg.BusinessConcept.Upload do
         |> Map.put("last_change_at", DateTime.utc_now())
         |> Map.put("status", "draft")
         |> Map.put("version", 1)
+        |> Map.put("lang", lang)
 
       BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
     else
