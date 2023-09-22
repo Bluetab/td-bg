@@ -49,16 +49,20 @@ defmodule TdBg.Search.Indexer do
   def migrate do
     unless alias_exists?(@index) do
       if can_migrate?() do
-        delete_existing_index("business_concept")
-
-        Timer.time(
-          fn -> reindex(:all) end,
-          fn millis, _ -> Logger.info("Created index #{@index} in #{millis}ms") end
-        )
+        do_migrate()
       else
-        Logger.warn("Another process is migrating")
+        Logger.warning("Another process is migrating")
       end
     end
+  end
+
+  defp do_migrate do
+    delete_existing_index("business_concept")
+
+    Timer.time(
+      fn -> reindex(:all) end,
+      fn millis, _ -> Logger.info("Created index #{@index} in #{millis}ms") end
+    )
   end
 
   defp bulk_page_size(index) do
@@ -106,14 +110,14 @@ defmodule TdBg.Search.Indexer do
 
   defp log({:ok, %{"errors" => true} = response}, action) do
     first_error = response["items"] |> Enum.find(& &1[action]["error"])
-    Logger.warn("Bulk indexing encountered errors #{inspect(first_error)}")
+    Logger.warning("Bulk indexing encountered errors #{inspect(first_error)}")
   end
 
   defp log({:error, error}, _action) do
-    Logger.warn("Bulk indexing encountered errors #{inspect(error)}")
+    Logger.warning("Bulk indexing encountered errors #{inspect(error)}")
   end
 
   defp log(error, _action) do
-    Logger.warn("Bulk indexing encountered errors #{inspect(error)}")
+    Logger.warning("Bulk indexing encountered errors #{inspect(error)}")
   end
 end

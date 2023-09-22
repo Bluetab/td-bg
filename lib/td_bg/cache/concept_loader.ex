@@ -152,7 +152,7 @@ defmodule TdBg.Cache.ConceptLoader do
         [id]
 
       _ ->
-        Logger.warn("Invalid format #{value}")
+        Logger.warning("Invalid format #{value}")
         []
     end
   end

@@ -434,6 +434,19 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
+  def list_business_concept_versions(criteria \\ []) do
+    base_query = join(BusinessConceptVersion, :left, [v], _ in assoc(v, :business_concept))
+
+    criteria
+    |> Enum.reduce(base_query, fn
+      :published, query -> where(query, [v, _], v.status == "published")
+      {:type, type}, query -> where(query, [_, c], c.type == ^type)
+    end)
+    |> preload([_, _], :business_concept)
+    |> Repo.all()
+    |> Enum.map(&Map.put(&1, :description, TdDfLib.RichText.to_plain_text(&1.description)))
+  end
+
   @doc """
   Returns the list of business_concept_versions_by_ids giving a
   list of ids

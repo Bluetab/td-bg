@@ -4,7 +4,7 @@ defmodule TdBg.TestOperators do
   """
 
   def a <~> b, do: approximately_equal(a, b)
-  def a <|> b, do: approximately_equal(Enum.sort(a), Enum.sort(b))
+  def a ||| b, do: approximately_equal(Enum.sort(a), Enum.sort(b))
 
   defp approximately_equal([h1 | t1], [h2 | t2]) do
     approximately_equal(h1, h2) && approximately_equal(t1, t2)

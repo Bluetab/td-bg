@@ -75,7 +75,7 @@ defmodule TdBg.Cache.DomainLoader do
       |> Enum.split_with(fn {:ok, _} -> true end)
 
     if length(errors) > 0 do
-      Logger.warn("Cache deletion failed with #{length(errors)} errors")
+      Logger.warning("Cache deletion failed with #{length(errors)} errors")
     else
       remove_count =
         Enum.reduce(results, 0, fn
@@ -97,7 +97,7 @@ defmodule TdBg.Cache.DomainLoader do
       |> Enum.map(fn {res, _} -> res end)
 
     if Enum.any?(results, &(&1 != :ok)) do
-      Logger.warn("Cache loading failed")
+      Logger.warning("Cache loading failed")
     else
       Logger.info("Cached #{length(results)} domains")
     end
