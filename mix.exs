@@ -9,7 +9,7 @@ defmodule TdBg.Mixfile do
           nil -> "5.14.0-local"
           v -> v
         end,
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix] ++ Mix.compilers() ++ [:phoenix_swagger],
       start_permanent: Mix.env() == :prod,
@@ -53,10 +53,10 @@ defmodule TdBg.Mixfile do
       {:plug_cowboy, "~> 2.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.8"},
-      {:jason, "~> 1.0"},
+      {:jason, "~> 1.1"},
       {:postgrex, "~> 0.16.3"},
       {:gettext, "~> 0.20"},
-      {:httpoison, "~> 1.0"},
+      {:httpoison, "~> 1.6"},
       {:guardian, "~> 2.0"},
       {:canada, "~> 2.0"},
       {:corsica, "~> 1.0"},
@@ -79,7 +79,8 @@ defmodule TdBg.Mixfile do
       {:ex_machina, "~> 2.3", only: :test},
       {:assertions, "~> 0.19", only: :test},
       {:mox, "~> 1.0", only: :test},
-      {:sobelow, "~> 0.11", only: [:dev, :test]}
+      {:sobelow, "~> 0.11", only: [:dev, :test]},
+      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.15.1"}
     ]
   end
 

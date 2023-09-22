@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-5495] Foreing keys columns should match original ID columns in all tables
+- [TD-6071] Updated to Elixir 1.14 and added support for TdCluster
 
 ## [5.14.1] 2023-09-20
 

@@ -18,7 +18,7 @@ defmodule TdBg.Taxonomies.TreeTest do
       assert graph = %Graph{} = Tree.graph()
       assert Graph.no_vertices(graph) == 1 + Enum.count(children)
       assert Graph.no_edges(graph) == Enum.count(children)
-      assert Graph.out_neighbours(graph, parent.id) <|> Enum.map(children, & &1.id)
+      assert Graph.out_neighbours(graph, parent.id) ||| Enum.map(children, & &1.id)
     end
   end
 
@@ -38,7 +38,7 @@ defmodule TdBg.Taxonomies.TreeTest do
     test "returns a list of descendent ids", %{parent: %{id: parent_id}, children: children} do
       child_ids = Enum.map(children, & &1.id)
       ids = Tree.descendent_ids(parent_id)
-      assert ids <|> [parent_id | child_ids]
+      assert ids ||| [parent_id | child_ids]
     end
   end
 end

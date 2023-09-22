@@ -25,7 +25,7 @@ defmodule TdBg.Search do
         %{results: results, total: get_total(total), aggregations: %{}}
 
       {:error, %Elasticsearch.Exception{message: message} = error} ->
-        Logger.warn("Error response from Elasticsearch: #{message}")
+        Logger.warning("Error response from Elasticsearch: #{message}")
         error
     end
   end
@@ -40,7 +40,7 @@ defmodule TdBg.Search do
         |> Enum.into(%{}, &filter_values/1)
 
       {:error, %Elasticsearch.Exception{message: message} = error} ->
-        Logger.warn("Error response from Elasticsearch: #{message}")
+        Logger.warning("Error response from Elasticsearch: #{message}")
         error
     end
   end
