@@ -1292,41 +1292,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
     end
 
-<<<<<<< HEAD
-=======
-    @tag authentication: [
-           role: "user",
-           permissions: [:publish_business_concept]
-         ]
-
-    test "when a business concept published is deprecated, related data is not deleted", %{
-      conn: conn,
-      domain: domain
-    } do
-      SearchHelpers.expect_bulk_index()
-
-      %{name: template_name} = CacheHelpers.insert_template()
-
-      business_concept_version =
-        insert(:business_concept_version,
-          domain_id: domain.id,
-          status: "deprecated",
-          type: template_name
-        )
-
-      assert %{"data" => %{"status" => "published"}} =
-               conn
-               |> post(
-                 Routes.business_concept_version_business_concept_version_path(
-                   conn,
-                   :restore,
-                   business_concept_version
-                 )
-               )
-               |> json_response(:ok)
-    end
-
->>>>>>> e53ea06c4919a4d8674ff4c0412611696f8f1bdb
     @tag authentication: [
            role: "user",
            permissions: [:publish_business_concept]
