@@ -16,3 +16,5 @@ local
 data
 config/local.exs
 config/runtime.exs
+
+.tool-versions

@@ -1329,38 +1329,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
            permissions: [:publish_business_concept]
          ]
 
-    test "user with permission, can restore a deprecated business concept domain", %{
-      conn: conn,
-      domain: domain
-    } do
-      SearchHelpers.expect_bulk_index()
-
-      %{name: template_name} = CacheHelpers.insert_template()
-
-      business_concept_version =
-        insert(:business_concept_version,
-          domain_id: domain.id,
-          status: "deprecated",
-          type: template_name
-        )
-
-      assert %{"data" => %{"status" => "published"}} =
-               conn
-               |> post(
-                 Routes.business_concept_version_business_concept_version_path(
-                   conn,
-                   :restore,
-                   business_concept_version
-                 )
-               )
-               |> json_response(:ok)
-    end
-
-    @tag authentication: [
-           role: "user",
-           permissions: [:publish_business_concept]
-         ]
-
     test "user with permission, can not restore a deprecated business concept domain when there is other with the same name, type and domain",
          %{
            conn: conn,

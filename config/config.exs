@@ -7,6 +7,8 @@ import Config
 
 # Environment
 config :td_bg, :env, Mix.env()
+config :td_cluster, :env, Mix.env()
+config :td_cluster, groups: [:bg]
 
 # General application configuration
 config :td_bg, ecto_repos: [TdBg.Repo]
@@ -34,7 +36,7 @@ config :td_bg, TdBgWeb.Endpoint,
 # EX_LOGGER_FORMAT='$date $time [$level] $message'
 config :logger, :console,
   format:
-    (System.get_env("EX_LOGGER_FORMAT") || "$date\T$time\Z [$level]$levelpad $metadata$message") <>
+    (System.get_env("EX_LOGGER_FORMAT") || "$date\T$time\Z [$level] $metadata$message") <>
       "\n",
   level: :info,
   metadata: [:pid, :module],
