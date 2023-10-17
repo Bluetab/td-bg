@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6082] Upload csv translation use template fields name instead of labels
+
 ## [5.15.0] 2023-10-02
 
 ### Added
