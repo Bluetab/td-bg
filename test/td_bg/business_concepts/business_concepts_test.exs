@@ -395,12 +395,15 @@ defmodule TdBg.BusinessConceptsTest do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
-      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{
+        message_id: "fields.label_i18n.one",
+        definition: "uno"
+      })
 
       content_schema = [
         %{
           "cardinality" => "1",
-          "label" => "i18n",
+          "label" => "label_i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]}
@@ -442,13 +445,20 @@ defmodule TdBg.BusinessConceptsTest do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
-      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
-      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+      CacheHelpers.put_i18n_message("es", %{
+        message_id: "fields.label_i18n.one",
+        definition: "uno"
+      })
+
+      CacheHelpers.put_i18n_message("es", %{
+        message_id: "fields.label_i18n.two",
+        definition: "dos"
+      })
 
       content_schema = [
         %{
           "cardinality" => "+",
-          "label" => "i18n",
+          "label" => "label_i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]}
@@ -493,7 +503,7 @@ defmodule TdBg.BusinessConceptsTest do
       content_schema = [
         %{
           "cardinality" => "1",
-          "label" => "i18n",
+          "label" => "label_i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]}
@@ -535,7 +545,7 @@ defmodule TdBg.BusinessConceptsTest do
       content_schema = [
         %{
           "cardinality" => "+",
-          "label" => "i18n",
+          "label" => "label_i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]}
@@ -574,15 +584,30 @@ defmodule TdBg.BusinessConceptsTest do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.two", definition: "two"})
-      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
-      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+      CacheHelpers.put_i18n_message("en", %{
+        message_id: "fields.label_i18n.one",
+        definition: "one"
+      })
+
+      CacheHelpers.put_i18n_message("en", %{
+        message_id: "fields.label_i18n.two",
+        definition: "two"
+      })
+
+      CacheHelpers.put_i18n_message("es", %{
+        message_id: "fields.label_i18n.one",
+        definition: "uno"
+      })
+
+      CacheHelpers.put_i18n_message("es", %{
+        message_id: "fields.label_i18n.two",
+        definition: "dos"
+      })
 
       content_schema = [
         %{
           "cardinality" => "+",
-          "label" => "i18n",
+          "label" => "label_i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]}
