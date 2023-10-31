@@ -102,6 +102,7 @@ defmodule TdBg.Search do
   defp bucket_key(%{"key" => key}), do: key
 
   defp get_domain(""), do: nil
+  defp get_domain(0), do: ""
   defp get_domain(id) when is_integer(id) or is_binary(id), do: TaxonomyCache.get_domain(id)
   defp get_domain(_), do: nil
 
