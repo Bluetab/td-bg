@@ -59,7 +59,7 @@ defmodule TdBg.BusinessConcepts.Audit do
       |> Map.put(:subscribable_fields, fields)
       |> Map.put(:domain_ids, get_domain_ids(payload))
 
-    publish("create_concept_draft", "concept", id, user_id, payload)
+    publish("new_concept_draft", "concept", id, user_id, payload)
   end
 
   def business_concept_updated(_repo, _payload, %Changeset{changes: changes})
