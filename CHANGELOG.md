@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.18.1] 2023-11-17
+
+## Fixed
+
+- [TD-6191] New Concept Draft notification not being sent
+
 ## [5.18.0] 2023-11-13
 
 ### Changed

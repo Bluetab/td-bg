@@ -109,9 +109,10 @@ defmodule TdBg.BusinessConceptsTest do
       assert business_concept_version.business_concept.last_change_by ==
                concept_attrs.last_change_by
 
-      assert {:ok, [%{payload: payload, id: ^event_id}]} =
+      assert {:ok, [%{event: event, payload: payload, id: ^event_id}]} =
                Stream.read(:redix, @stream, transform: true)
 
+      assert event == "new_concept_draft"
       assert %{"subscribable_fields" => %{"foo" => "bar"}} = Jason.decode!(payload)
     end
 
