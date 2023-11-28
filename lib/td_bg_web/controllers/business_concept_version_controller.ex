@@ -111,27 +111,41 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     )
   end
 
-  def csv(conn, params) do
+  def xlsx(conn, params) do
     claims = conn.assigns[:current_resource]
 
-    {header_labels, params} = Map.pop(params, "header_labels", %{})
     {lang, params} = Map.pop(params, "lang", @default_lang)
     concept_url_schema = Map.get(params, "concept_url_schema", nil)
 
     %{results: business_concept_versions} =
       Search.search_business_concept_versions(params, claims, 0, 10_000)
 
-    # TODO: Refactor download csv process to 3 steps:
-    # 1. search
-    # 2. text format (translate, order, renames )
-    # 3. generate csv data and do response with the file
+    with workbook <- Download.to_xlsx(business_concept_versions, lang, concept_url_schema),
+         {:ok, {file_name, file_binary}} <- Elixlsx.write_to_memory(workbook, "concepts.xlsx") do
+      conn
+      |> put_resp_content_type(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8"
+      )
+      |> put_resp_header("content-disposition", "attachment; filename=#{file_name}")
+      |> send_resp(:ok, file_binary)
+    end
+  end
+
+  def csv(conn, params) do
+    claims = conn.assigns[:current_resource]
+
+    {lang, params} = Map.pop(params, "lang", @default_lang)
+    concept_url_schema = Map.get(params, "concept_url_schema", nil)
+
+    %{results: business_concept_versions} =
+      Search.search_business_concept_versions(params, claims, 0, 10_000)
 
     conn
     |> put_resp_content_type("text/csv", "utf-8")
-    |> put_resp_header("content-disposition", "attachment; filename=\"concepts.zip\"")
+    |> put_resp_header("content-disposition", "attachment; filename=\"concepts.csv\"")
     |> send_resp(
       :ok,
-      Download.to_csv(business_concept_versions, header_labels, lang, concept_url_schema)
+      Download.to_csv(business_concept_versions, lang, concept_url_schema)
     )
   end
 
