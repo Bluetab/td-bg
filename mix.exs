@@ -80,7 +80,8 @@ defmodule TdBg.Mixfile do
       {:assertions, "~> 0.19", only: :test},
       {:mox, "~> 1.0", only: :test},
       {:sobelow, "~> 0.11", only: [:dev, :test]},
-      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.15.1"}
+      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.15.1"},
+      {:elixlsx, "~> 0.5.1"}
     ]
   end
 

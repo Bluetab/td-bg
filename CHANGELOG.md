@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-6124] Download concepts in xlsx format
+
 ## [5.18.1] 2023-11-17
 
 ## Fixed
