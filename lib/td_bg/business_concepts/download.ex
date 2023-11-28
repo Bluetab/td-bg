@@ -3,164 +3,132 @@ defmodule TdBg.BusinessConcept.Download do
   Helper module to download business concepts.
   """
 
-  alias TdCache.I18nCache
+  alias Elixlsx.{Sheet, Workbook}
   alias TdCache.TemplateCache
-  alias TdDfLib.Format
   alias TdDfLib.Parser
   alias TdDfLib.Templates
 
-  @concept_url_insert_at 6
+  @headers [
+    "id",
+    "name",
+    "domain",
+    "status",
+    "description",
+    "completeness"
+  ]
 
-  def to_csv(concepts, header_labels, lang, concept_url_schema \\ nil) do
-    concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))
-    types = Map.keys(concepts_by_type)
+  @url_schema_headers [
+    "link_to_concept"
+  ]
 
-    templates_by_type = Enum.reduce(types, %{}, &Map.put(&2, &1, TemplateCache.get_by_name!(&1)))
+  def to_xlsx(concepts, lang, concept_url_schema \\ nil) do
+    concepts
+    |> Enum.group_by(&(&1 |> Map.get("template") |> Map.get("name")))
+    |> Enum.map(fn {template_name, template_concepts} ->
+      template_fields =
+        case TemplateCache.get_by_name!(template_name) do
+          nil ->
+            []
 
-    list =
-      Enum.reduce(types, [], fn type, acc ->
-        template = Map.get(templates_by_type, type)
+          template ->
+            template
+            |> type_fields()
+            |> Enum.uniq_by(&Map.get(&1, "name"))
+        end
 
-        concepts =
-          concepts_by_type
-          |> Map.get(type)
-          |> Enum.map(&add_completeness(template, &1))
+      xlsx_headers = Enum.map(template_fields, &Map.get(&1, "name"))
+      all_headers = get_all_headers(xlsx_headers, concept_url_schema)
 
-        csv_list =
-          template_concepts_to_csv(
-            template,
-            concepts,
-            header_labels,
-            add_separation: !Enum.empty?(acc),
-            url_schema: concept_url_schema,
+      core =
+        Enum.map(template_concepts, fn %{"content" => content} = concept ->
+          @headers
+          |> Enum.map(&editable_concept_value(concept, &1))
+          |> add_extra_fields(concept, concept_url_schema)
+          |> Parser.append_parsed_fields(template_fields, content,
+            domain_type: :with_domain_external_id,
             lang: lang
           )
+        end)
 
-        acc ++ csv_list
+      template_name = if template_name !== nil, do: template_name, else: "null"
+
+      %Sheet{
+        name: template_name,
+        rows: [all_headers | core]
+      }
+    end)
+    |> then(&%Workbook{sheets: &1})
+  end
+
+  def to_csv(concepts, lang, concept_url_schema \\ nil) do
+    type_fields =
+      concepts
+      |> Enum.group_by(&(&1 |> Map.get("template") |> Map.get("name")))
+      |> Map.keys()
+      |> Enum.flat_map(fn type ->
+        TemplateCache.get_by_name!(type)
+        |> type_fields()
+        |> Enum.uniq_by(&Map.get(&1, "name"))
       end)
 
-    to_string(list)
-  end
+    type_headers = Enum.map(type_fields, &Map.get(&1, "name"))
 
-  defp add_completeness(%{} = template, %{"content" => content} = bcv),
-    do: Map.put(bcv, "completeness", Templates.completeness(content, template))
+    all_headers = get_all_headers(type_headers, concept_url_schema)
 
-  defp add_completeness(_, bcv), do: bcv
-
-  defp template_concepts_to_csv(nil, concepts, header_labels, opts) do
-    headers = build_headers(header_labels)
-    concepts_list = concepts_to_list(concepts, [], opts[:lang], opts[:url_schema])
-    export_to_csv(headers, concepts_list, opts[:add_separation])
-  end
-
-  defp template_concepts_to_csv(
-         template,
-         concepts,
-         header_labels,
-         opts
-       ) do
-    content = Format.flatten_content_fields(template.content, opts[:lang])
-
-    content_fields =
-      Enum.reduce(content, [], &(&2 ++ [Map.take(&1, ["name", "values", "type", "label"])]))
-
-    content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "definition")]))
-    headers = build_headers(header_labels)
-    headers = headers ++ content_labels
-
-    concepts_list = concepts_to_list(concepts, content_fields, opts[:lang], opts[:url_schema])
-
-    export_to_csv(headers, concepts_list, opts[:add_separation])
-  end
-
-  defp concepts_to_list(concepts, content_fields, lang, concept_url_schema) do
-    Enum.reduce(concepts, [], fn concept, acc ->
-      content = concept["content"]
-
-      concept_status =
-        I18nCache.get_definition(
-          lang,
-          "concepts.status." <> concept["status"],
-          default_value: concept["status"]
-        )
-
-      values =
-        [
-          concept["template"]["name"],
-          concept["name"],
-          concept["domain"]["name"],
-          concept_status,
-          concept["description"],
-          concept["completeness"],
-          concept["inserted_at"],
-          concept["last_change_at"]
-        ]
-        |> maybe_add_link_to_concept(concept, concept_url_schema)
-        |> Parser.append_parsed_fields(content_fields, content,
-          domain_type: :with_domain_name,
+    core =
+      Enum.map(concepts, fn %{"content" => content} = concept ->
+        @headers
+        |> Enum.map(&editable_concept_value(concept, &1))
+        |> add_extra_fields(concept, concept_url_schema)
+        |> Parser.append_parsed_fields(type_fields, content,
+          domain_type: :with_domain_external_id,
           lang: lang
         )
+      end)
 
-      acc ++ [values]
-    end)
+    [all_headers | core]
+    |> CSV.encode(separator: ?;)
+    |> Enum.to_list()
+    |> to_string()
   end
 
-  defp maybe_add_link_to_concept(values, _concept, nil), do: values
+  defp type_fields(%{content: content}) when is_list(content),
+    do: Enum.flat_map(content, &Map.get(&1, "fields"))
 
-  defp maybe_add_link_to_concept(values, concept, url_schema) do
+  defp type_fields(_type), do: []
+
+  defp editable_concept_value(%{"template" => template}, "template"),
+    do: Map.get(template, "name")
+
+  defp editable_concept_value(%{"domain" => domain}, "domain"), do: Map.get(domain, "name")
+
+  defp editable_concept_value(concept, "completeness"), do: get_completeness(concept)
+
+  defp editable_concept_value(concept, field), do: Map.get(concept, field)
+
+  defp get_completeness(%{"content" => content, "template" => %{"name" => template_name}}),
+    do: Templates.completeness(content, template_name)
+
+  defp get_completeness(_), do: 0.0
+
+  defp get_concept_url_schema(url_schema, concept) do
     if String.contains?(url_schema, ":business_concept_id") and
          String.contains?(url_schema, "/:id") do
-      concept_url =
-        String.replace(
-          url_schema,
-          ":business_concept_id",
-          to_string(concept["business_concept_id"])
-        )
-        |> String.replace(":id", to_string(concept["id"]))
-
-      List.insert_at(values, @concept_url_insert_at, concept_url)
+      url_schema
+      |> String.replace(":business_concept_id", to_string(concept["business_concept_id"]))
+      |> String.replace(":id", to_string(concept["id"]))
     else
-      values
+      nil
     end
   end
 
-  defp export_to_csv(headers, concepts_list, add_separation) do
-    list_to_encode =
-      case add_separation do
-        true ->
-          empty = build_empty_list([], length(headers))
-          [empty, empty, headers] ++ concepts_list
+  defp get_all_headers(type_headers, nil), do: @headers ++ type_headers
 
-        false ->
-          [headers | concepts_list]
-      end
+  defp get_all_headers(type_headers, _concepts_url_schema),
+    do: @headers ++ @url_schema_headers ++ type_headers
 
-    list_to_encode
-    |> CSV.encode(separator: ?;)
-    |> Enum.to_list()
-  end
+  defp add_extra_fields(editable_fields, _, nil), do: editable_fields
 
-  defp build_headers(header_labels) do
-    [
-      "template",
-      "name",
-      "domain",
-      "status",
-      "description",
-      "completeness",
-      "inserted_at",
-      "last_change_at"
-    ]
-    |> maybe_add_link_to_concept_header(header_labels)
-    |> Enum.map(fn h -> Map.get(header_labels, h, h) end)
-  end
-
-  defp maybe_add_link_to_concept_header(header_label_list, %{"link_to_concept" => _}) do
-    List.insert_at(header_label_list, @concept_url_insert_at, "link_to_concept")
-  end
-
-  defp maybe_add_link_to_concept_header(header_label_list, _header_labels), do: header_label_list
-
-  defp build_empty_list(acc, l) when l < 1, do: acc
-  defp build_empty_list(acc, l), do: ["" | build_empty_list(acc, l - 1)]
+  defp add_extra_fields(editable_fields, concept, concept_url_schema),
+    do: editable_fields ++ [get_concept_url_schema(concept_url_schema, concept)]
 end

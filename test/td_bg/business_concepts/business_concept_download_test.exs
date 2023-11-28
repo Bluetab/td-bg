@@ -1,6 +1,9 @@
 defmodule TdBg.BusinessConceptDownloadTests do
   use TdBg.DataCase
 
+  alias Elixlsx.{Sheet, Workbook}
+  alias TdBg.BusinessConcept.Download
+
   @template_name "download_template"
   @concept_url_schema "https://test.io/concepts/:business_concept_id/versions/:id"
   @lang "es"
@@ -23,9 +26,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
     :ok
   end
 
-  describe "business_concept_download" do
-    alias TdBg.BusinessConcept.Download
-
+  describe "business_concept_download to_csv" do
     @tag template: [
            %{
              "name" => "group",
@@ -40,10 +41,9 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_csv/1 return cvs content to download" do
+    test "to_csv/2 return cvs content to download" do
       template = @template_name
       field_name = "field_name"
-      field_label = "field_label"
 
       name = "concept_name"
       description = "concept_description"
@@ -65,8 +65,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
           external_id: "domain_inside_note_2_external_id"
         })
 
+      concept_id = 1
+
       concepts = [
         %{
+          "id" => concept_id,
           "name" => name,
           "description" => description,
           "template" => %{"name" => template},
@@ -81,17 +84,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang)
+      csv = Download.to_csv(concepts, @lang)
 
       assert csv == """
-             Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;#{field_label};domain_inside_note_field_label\r
-             #{template};#{name};#{domain};#{status};#{description};100.0;#{inserted_at};#{last_change_at};#{field_value};domain_inside_note_1_name|domain_inside_note_2_name\r
+             id;name;domain;status;description;completeness;#{field_name};domain_inside_note_field\r
+             #{concept_id};#{name};#{domain};#{status};#{description};100.0;#{field_value};domain_inside_note_1_external_id|domain_inside_note_2_external_id\r
              """
     end
 
@@ -101,91 +98,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              "fields" => [%{"name" => "field_name", "type" => "list", "label" => "field_label"}]
            }
          ]
-    test "to_csv/1 return cvs content to download with url" do
-      template = @template_name
-      field_name = "field_name"
-      field_label = "field_label"
-
-      business_concept_id = 123
-      business_concept_version_id = 456
-      name = "concept_name"
-      description = "concept_description"
-      domain = "domain_name"
-      field_value = "field_value"
-      status = "draft"
-      inserted_at = "2018-05-05"
-      last_change_at = "2018-05-06"
-
-      concepts = [
-        %{
-          "business_concept_id" => business_concept_id,
-          "id" => business_concept_version_id,
-          "name" => name,
-          "description" => description,
-          "template" => %{"name" => template},
-          "domain" => %{"name" => domain},
-          "content" => %{field_name => field_value},
-          "status" => status,
-          "inserted_at" => inserted_at,
-          "last_change_at" => last_change_at
-        }
-      ]
-
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "link_to_concept" => "Enlace a concepto",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang, @concept_url_schema)
-
-      assert csv == """
-             Plantilla;name;domain;status;Descripción;completeness;Enlace a concepto;inserted_at;Fecha de última modificación;#{field_label}\r
-             #{template};#{name};#{domain};#{status};#{description};100.0;https://test.io/concepts/#{business_concept_id}/versions/#{business_concept_version_id};#{inserted_at};#{last_change_at};#{field_value}\r
-             """
-    end
-
-    test "to_csv/1 return business concepts non-dynamic content when related template does not exist" do
-      template = @template_name
-      field_name = "field_name"
-
-      name = "concept_name"
-      description = "concept_description"
-      domain = "domain_name"
-      field_value = "field_value"
-      status = "draft"
-      inserted_at = "2018-05-05"
-      last_change_at = "2018-05-06"
-
-      concepts = [
-        %{
-          "name" => name,
-          "description" => description,
-          "template" => %{"name" => template},
-          "domain" => %{"name" => domain},
-          "content" => %{field_name => field_value},
-          "status" => status,
-          "inserted_at" => inserted_at,
-          "last_change_at" => last_change_at
-        }
-      ]
-
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang)
-
-      assert csv == """
-             Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación\r
-             #{template};#{name};#{domain};#{status};#{description};;#{inserted_at};#{last_change_at}\r
-             """
-    end
-
-    test "to_csv/1 return business concepts non-dynamic content when related template does not exist with url" do
+    test "to_csv/2 return cvs content to download with url" do
       template = @template_name
       field_name = "field_name"
 
@@ -214,18 +127,84 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "link_to_concept" => "Enlace a concepto",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang, @concept_url_schema)
+      csv = Download.to_csv(concepts, @lang, @concept_url_schema)
 
       assert csv == """
-             Plantilla;name;domain;status;Descripción;completeness;Enlace a concepto;inserted_at;Fecha de última modificación\r
-             #{template};#{name};#{domain};#{status};#{description};;https://test.io/concepts/123/versions/456;#{inserted_at};#{last_change_at}\r
+             id;name;domain;status;description;completeness;link_to_concept;#{field_name}\r
+             #{business_concept_version_id};#{name};#{domain};#{status};#{description};100.0;https://test.io/concepts/#{business_concept_id}/versions/#{business_concept_version_id};#{field_value}\r
+             """
+    end
+
+    test "to_csv/2 return business concepts non-dynamic content when related template does not exist" do
+      template = @template_name
+      field_name = "field_name"
+
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      field_value = "field_value"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concept_id = 1
+
+      concepts = [
+        %{
+          "id" => concept_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{field_name => field_value},
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      csv = Download.to_csv(concepts, @lang)
+
+      assert csv == """
+             id;name;domain;status;description;completeness\r
+             #{concept_id};#{name};#{domain};#{status};#{description};0.0\r
+             """
+    end
+
+    test "to_csv/2 return business concepts non-dynamic content when related template does not exist with url" do
+      template = @template_name
+      field_name = "field_name"
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      field_value = "field_value"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{field_name => field_value},
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      csv = Download.to_csv(concepts, @lang, @concept_url_schema)
+
+      assert csv == """
+             id;name;domain;status;description;completeness;link_to_concept\r
+             #{business_concept_version_id};#{name};#{domain};#{status};#{description};0.0;https://test.io/concepts/123/versions/456\r
              """
     end
 
@@ -248,14 +227,12 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_csv/1 return formatted fields in concepts with dynamic content" do
+    test "to_csv/2 return formatted fields in concepts with dynamic content" do
       template = @template_name
 
       url_field = "url_field"
-      url_label = "Url"
 
       key_value_field = "key_value"
-      key_value_label = "Key And Value"
 
       name = "concept_name"
       description = "concept_description"
@@ -264,8 +241,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
 
+      concept_id = 1
+
       concepts = [
         %{
+          "id" => concept_id,
           "name" => name,
           "description" => description,
           "template" => %{"name" => template},
@@ -286,20 +266,14 @@ defmodule TdBg.BusinessConceptDownloadTests do
       url_fields = "www.com.com|www.net.net"
       key_value_fields = "First Element|Second Element"
 
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang)
+      csv = Download.to_csv(concepts, @lang)
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;#{url_label};#{key_value_label}"
+               "id;name;domain;status;description;completeness;#{url_field};#{key_value_field}"
 
       assert content ==
-               "#{template};#{name};#{domain};#{status};#{description};100.0;#{inserted_at};#{last_change_at};#{url_fields};#{key_value_fields}"
+               "#{concept_id};#{name};#{domain};#{status};#{description};100.0;#{url_fields};#{key_value_fields}"
     end
 
     @tag template: [
@@ -321,14 +295,12 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_csv/1 return formatted fields in concepts with dynamic content with link" do
+    test "to_csv/2 return formatted fields in concepts with dynamic content with link" do
       template = @template_name
 
       url_field = "url_field"
-      url_label = "Url"
 
       key_value_field = "key_value"
-      key_value_label = "Key And Value"
 
       business_concept_id = 123
       business_concept_version_id = 456
@@ -363,21 +335,14 @@ defmodule TdBg.BusinessConceptDownloadTests do
       url_fields = "www.com.com|www.net.net"
       key_value_fields = "First Element|Second Element"
 
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "link_to_concept" => "Enlace a concepto",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang, @concept_url_schema)
+      csv = Download.to_csv(concepts, @lang, @concept_url_schema)
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;completeness;Enlace a concepto;inserted_at;Fecha de última modificación;#{url_label};#{key_value_label}"
+               "id;name;domain;status;description;completeness;link_to_concept;#{url_field};#{key_value_field}"
 
       assert content ==
-               "#{template};#{name};#{domain};#{status};#{description};100.0;https://test.io/concepts/123/versions/456;#{inserted_at};#{last_change_at};#{url_fields};#{key_value_fields}"
+               "#{business_concept_version_id};#{name};#{domain};#{status};#{description};100.0;https://test.io/concepts/123/versions/456;#{url_fields};#{key_value_fields}"
     end
 
     @tag template: [
@@ -390,7 +355,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_csv/1 return calculated completeness" do
+    test "to_csv/2 return calculated completeness" do
       template = @template_name
 
       name = "concept_name"
@@ -400,8 +365,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
 
+      concept_id = 1
+
       concepts = [
         %{
+          "id" => concept_id,
           "name" => name,
           "description" => description,
           "template" => %{"name" => template},
@@ -416,20 +384,14 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang)
+      csv = Download.to_csv(concepts, @lang)
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;completeness;inserted_at;Fecha de última modificación;field1;field2;field3"
+               "id;name;domain;status;description;completeness;field1;field2;field3"
 
       assert content ==
-               "#{template};#{name};#{domain};#{status};#{description};66.67;#{inserted_at};#{last_change_at};value;value;"
+               "#{concept_id};#{name};#{domain};#{status};#{description};66.67;value;value;"
     end
 
     @tag template: [
@@ -442,7 +404,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_csv/1 return calculated completeness with url" do
+    test "to_csv/2 return calculated completeness with url" do
       template = @template_name
 
       business_concept_id = 123
@@ -472,34 +434,32 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "link_to_concept" => "Enlace a concepto",
-        "last_change_at" => "Fecha de última modificación"
-      }
-
-      csv = Download.to_csv(concepts, header_labels, @lang, @concept_url_schema)
+      csv = Download.to_csv(concepts, @lang, @concept_url_schema)
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;completeness;Enlace a concepto;inserted_at;Fecha de última modificación;field1;field2;field3"
+               "id;name;domain;status;description;completeness;link_to_concept;field1;field2;field3"
 
       assert content ==
-               "#{template};#{name};#{domain};#{status};#{description};66.67;https://test.io/concepts/123/versions/456;#{inserted_at};#{last_change_at};value;value;"
+               "#{business_concept_version_id};#{name};#{domain};#{status};#{description};66.67;https://test.io/concepts/123/versions/456;value;value;"
     end
 
     @tag template: [
            %{
              "name" => "group",
              "fields" => [
-               %{"name" => "field1", "type" => "string", "label" => "field1"},
-               %{"name" => "field2", "type" => "string", "label" => "field2"},
-               %{"name" => "field3", "type" => "string", "label" => "field3"}
+               %{
+                 "name" => "field1_name",
+                 "type" => "string",
+                 "label" => "field1_label",
+                 "values" => %{"fixed" => ["value1", "value2"]}
+               },
+               %{"name" => "field2_name", "type" => "string", "label" => "field2_label"},
+               %{"name" => "field3_name", "type" => "string", "label" => "field3_label"}
              ]
            }
          ]
-    test "to_csv/1 return calculated completeness with url and translates column and data" do
+    test "to_csv/2 return calculated completeness with url and translates column and data" do
       template = @template_name
 
       business_concept_id = 123
@@ -520,35 +480,1007 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "template" => %{"name" => template},
           "domain" => %{"name" => domain},
           "content" => %{
-            "field1" => "value",
-            "field2" => "value"
+            "field1_name" => "value1",
+            "field2_name" => "value"
           },
           "status" => status,
           "inserted_at" => inserted_at,
           "last_change_at" => last_change_at
         }
       ]
-
-      header_labels = %{
-        "template" => "Plantilla",
-        "description" => "Descripción",
-        "link_to_concept" => "Enlace a concepto",
-        "last_change_at" => "Fecha de última modificación"
-      }
 
       CacheHelpers.put_i18n_messages(@lang, [
         %{message_id: "concepts.status.#{status}", definition: "Borrador"},
-        %{message_id: "fields.field1", definition: "columna_es"}
+        %{message_id: "fields.field1_label.value1", definition: "Valor 1"},
+        %{message_id: "fields.field1_label.value2", definition: "Valor 2"}
       ])
 
-      csv = Download.to_csv(concepts, header_labels, @lang, @concept_url_schema)
+      csv = Download.to_csv(concepts, @lang, @concept_url_schema)
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "Plantilla;name;domain;status;Descripción;completeness;Enlace a concepto;inserted_at;Fecha de última modificación;columna_es;field2;field3"
+               "id;name;domain;status;description;completeness;link_to_concept;field1_name;field2_name;field3_name"
 
       assert content ==
-               "#{template};#{name};#{domain};Borrador;#{description};66.67;https://test.io/concepts/123/versions/456;#{inserted_at};#{last_change_at};value;value;"
+               "#{business_concept_version_id};#{name};#{domain};draft;#{description};66.67;https://test.io/concepts/123/versions/456;Valor 1;value;"
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "cardinality" => "?",
+                 "default" => "",
+                 "label" => "label_i18n_test.dropdown.fixed",
+                 "name" => "i18n_test.dropdown.fixed",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed" => [
+                     "pear",
+                     "banana"
+                   ]
+                 },
+                 "widget" => "dropdown"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => "",
+                 "label" => "label_i18n_test_no_translate",
+                 "name" => "i18n_test_no_translate",
+                 "type" => "string",
+                 "values" => nil,
+                 "widget" => "string"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => "",
+                 "label" => "label_i18n_test.radio.fixed",
+                 "name" => "i18n_test.radio.fixed",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed" => [
+                     "pear",
+                     "banana"
+                   ]
+                 },
+                 "widget" => "radio"
+               },
+               %{
+                 "cardinality" => "*",
+                 "default" => "",
+                 "label" => "label_i18n_test.checkbox.fixed_tuple",
+                 "name" => "i18n_test.checkbox.fixed_tuple",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed_tuple" => [
+                     %{
+                       "text" => "pear",
+                       "value" => "option_1"
+                     },
+                     %{
+                       "text" => "banana",
+                       "value" => "option_2"
+                     }
+                   ]
+                 },
+                 "widget" => "checkbox"
+               }
+             ]
+           }
+         ]
+    test "to_editable_csv return editable csv translated" do
+      template = @template_name
+
+      CacheHelpers.put_i18n_messages("es", [
+        %{message_id: "fields.label_i18n_test.dropdown.fixed", definition: "Dropdown Fijo"},
+        %{message_id: "fields.label_i18n_test.dropdown.fixed.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.dropdown.fixed.banana", definition: "Platano"},
+        %{message_id: "fields.label_i18n_test.radio.fixed", definition: "Radio Fijo"},
+        %{message_id: "fields.label_i18n_test.radio.fixed.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.radio.fixed.banana", definition: "Platano"},
+        %{
+          message_id: "fields.label_i18n_test.checkbox.fixed_tuple",
+          definition: "Checkbox Tupla Fija"
+        },
+        %{message_id: "fields.label_i18n_test.checkbox.fixed_tuple.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.checkbox.fixed_tuple.banana", definition: "Platano"}
+      ])
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            "i18n_test.dropdown.fixed" => "pear",
+            "i18n_test_no_translate" => "Test no translate",
+            "i18n_test.radio.fixed" => "banana",
+            "i18n_test.checkbox.fixed_tuple" => ["option_1", "option_2"]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      csv = Download.to_csv(concepts, @lang, @concept_url_schema)
+      [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
+
+      assert headers ==
+               "id;name;domain;status;description;completeness;link_to_concept;i18n_test.dropdown.fixed;i18n_test_no_translate;i18n_test.radio.fixed;i18n_test.checkbox.fixed_tuple"
+
+      assert content ==
+               "#{business_concept_version_id};#{name};#{domain};draft;#{description};100.0;https://test.io/concepts/123/versions/456;Pera;Test no translate;Platano;Pera|Platano"
+    end
+  end
+
+  describe "business_concept_download to_xlsx" do
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "field_name", "type" => "list", "label" => "field_label"},
+               %{
+                 "name" => "domain_inside_note_field",
+                 "type" => "domain",
+                 "label" => "domain_inside_note_field_label",
+                 "cardinality" => "*"
+               }
+             ]
+           }
+         ]
+    test "to_xlsx/2 return cvs content to download" do
+      template = @template_name
+      field_name = "field_name"
+
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      field_value = "field_value"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      %{id: domain_inside_note_1_id} =
+        CacheHelpers.insert_domain(%{
+          name: "domain_inside_note_1_name",
+          external_id: "domain_inside_note_1_external_id"
+        })
+
+      %{id: domain_inside_note_2_id} =
+        CacheHelpers.insert_domain(%{
+          name: "domain_inside_note_2_name",
+          external_id: "domain_inside_note_2_external_id"
+        })
+
+      concept_id = 1
+
+      concepts = [
+        %{
+          "id" => concept_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            field_name => field_value,
+            "domain_inside_note_field" => [domain_inside_note_1_id, domain_inside_note_2_id]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          field_name,
+          "domain_inside_note_field"
+        ],
+        [
+          concept_id,
+          name,
+          domain,
+          status,
+          description,
+          100.0,
+          field_value,
+          "domain_inside_note_1_external_id|domain_inside_note_2_external_id"
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [%{"name" => "field_name", "type" => "list", "label" => "field_label"}]
+           }
+         ]
+    test "to_xlsx/2 return cvs content to download with url" do
+      template = @template_name
+      field_name = "field_name"
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      field_value = "field_value"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{field_name => field_value},
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          "link_to_concept",
+          field_name
+        ],
+        [
+          business_concept_version_id,
+          name,
+          domain,
+          status,
+          description,
+          100.0,
+          "https://test.io/concepts/#{business_concept_id}/versions/#{business_concept_version_id}",
+          field_value
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
+    test "to_xlsx/2 return business concepts non-dynamic content when related template does not exist" do
+      template = @template_name
+      field_name = "field_name"
+
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      field_value = "field_value"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concept_id = 1
+
+      concepts = [
+        %{
+          "id" => concept_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{field_name => field_value},
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness"
+        ],
+        [
+          concept_id,
+          name,
+          domain,
+          status,
+          description,
+          0.0
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang)
+    end
+
+    test "to_xlsx/2 return business concepts non-dynamic content when related template does not exist with url" do
+      template = @template_name
+      field_name = "field_name"
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      field_value = "field_value"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{field_name => field_value},
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          "link_to_concept"
+        ],
+        [
+          business_concept_version_id,
+          name,
+          domain,
+          status,
+          description,
+          0.0,
+          "https://test.io/concepts/123/versions/456"
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "url_field", "type" => "url", "label" => "Url"},
+               %{
+                 "name" => "key_value",
+                 "type" => "string",
+                 "label" => "Key And Value",
+                 "values" => %{
+                   "fixed_tuple" => [
+                     %{"text" => "First Element", "value" => "1"},
+                     %{"text" => "Second Element", "value" => "2"}
+                   ]
+                 }
+               }
+             ]
+           }
+         ]
+    test "to_xlsx/2 return formatted fields in concepts with dynamic content" do
+      template = @template_name
+
+      url_field = "url_field"
+
+      key_value_field = "key_value"
+
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concept_id = 1
+
+      concepts = [
+        %{
+          "id" => concept_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            url_field => [
+              %{"url_name" => "com", "url_value" => "www.com.com"},
+              %{"url_name" => "net", "url_value" => "www.net.net"}
+            ],
+            key_value_field => ["1", "2"]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      url_fields = "www.com.com|www.net.net"
+      key_value_fields = "First Element|Second Element"
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          url_field,
+          key_value_field
+        ],
+        [
+          concept_id,
+          name,
+          domain,
+          status,
+          description,
+          100.0,
+          url_fields,
+          key_value_fields
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "url_field", "type" => "url", "label" => "Url"},
+               %{
+                 "name" => "key_value",
+                 "type" => "string",
+                 "label" => "Key And Value",
+                 "values" => %{
+                   "fixed_tuple" => [
+                     %{"text" => "First Element", "value" => "1"},
+                     %{"text" => "Second Element", "value" => "2"}
+                   ]
+                 }
+               }
+             ]
+           }
+         ]
+    test "to_xlsx/2 return formatted fields in concepts with dynamic content with link" do
+      template = @template_name
+
+      url_field = "url_field"
+
+      key_value_field = "key_value"
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            url_field => [
+              %{"url_name" => "com", "url_value" => "www.com.com"},
+              %{"url_name" => "net", "url_value" => "www.net.net"}
+            ],
+            key_value_field => ["1", "2"]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      url_fields = "www.com.com|www.net.net"
+      key_value_fields = "First Element|Second Element"
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          "link_to_concept",
+          url_field,
+          key_value_field
+        ],
+        [
+          business_concept_version_id,
+          name,
+          domain,
+          status,
+          description,
+          100.0,
+          "https://test.io/concepts/123/versions/456",
+          url_fields,
+          key_value_fields
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "field1", "type" => "string", "label" => "field1"},
+               %{"name" => "field2", "type" => "string", "label" => "field2"},
+               %{"name" => "field3", "type" => "string", "label" => "field3"}
+             ]
+           }
+         ]
+    test "to_xlsx/2 return calculated completeness" do
+      template = @template_name
+
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concept_id = 1
+
+      concepts = [
+        %{
+          "id" => concept_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            "field1" => "value",
+            "field2" => "value"
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          "field1",
+          "field2",
+          "field3"
+        ],
+        [
+          concept_id,
+          name,
+          domain,
+          status,
+          description,
+          66.67,
+          "value",
+          "value",
+          ""
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "field1", "type" => "string", "label" => "field1"},
+               %{"name" => "field2", "type" => "string", "label" => "field2"},
+               %{"name" => "field3", "type" => "string", "label" => "field3"}
+             ]
+           }
+         ]
+    test "to_xlsx/2 return calculated completeness with url" do
+      template = @template_name
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            "field1" => "value",
+            "field2" => "value"
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          "link_to_concept",
+          "field1",
+          "field2",
+          "field3"
+        ],
+        [
+          business_concept_version_id,
+          name,
+          domain,
+          status,
+          description,
+          66.67,
+          "https://test.io/concepts/123/versions/456",
+          "value",
+          "value",
+          ""
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "name" => "field1_name",
+                 "type" => "string",
+                 "label" => "field1_label",
+                 "values" => %{"fixed" => ["value1", "value2"]}
+               },
+               %{"name" => "field2_name", "type" => "string", "label" => "field2_label"},
+               %{"name" => "field3_name", "type" => "string", "label" => "field3_label"}
+             ]
+           }
+         ]
+    test "to_xlsx/2 return calculated completeness with url and translates column and data" do
+      template = @template_name
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            "field1_name" => "value1",
+            "field2_name" => "value"
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      CacheHelpers.put_i18n_messages(@lang, [
+        %{message_id: "concepts.status.#{status}", definition: "Borrador"},
+        %{message_id: "fields.field1_label.value1", definition: "Valor 1"},
+        %{message_id: "fields.field1_label.value2", definition: "Valor 2"}
+      ])
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          "link_to_concept",
+          "field1_name",
+          "field2_name",
+          "field3_name"
+        ],
+        [
+          business_concept_version_id,
+          name,
+          domain,
+          status,
+          description,
+          66.67,
+          "https://test.io/concepts/123/versions/456",
+          "Valor 1",
+          "value",
+          ""
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "cardinality" => "?",
+                 "default" => "",
+                 "label" => "label_i18n_test.dropdown.fixed",
+                 "name" => "i18n_test.dropdown.fixed",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed" => [
+                     "pear",
+                     "banana"
+                   ]
+                 },
+                 "widget" => "dropdown"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => "",
+                 "label" => "label_i18n_test_no_translate",
+                 "name" => "i18n_test_no_translate",
+                 "type" => "string",
+                 "values" => nil,
+                 "widget" => "string"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => "",
+                 "label" => "label_i18n_test.radio.fixed",
+                 "name" => "i18n_test.radio.fixed",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed" => [
+                     "pear",
+                     "banana"
+                   ]
+                 },
+                 "widget" => "radio"
+               },
+               %{
+                 "cardinality" => "*",
+                 "default" => "",
+                 "label" => "label_i18n_test.checkbox.fixed_tuple",
+                 "name" => "i18n_test.checkbox.fixed_tuple",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed_tuple" => [
+                     %{
+                       "text" => "pear",
+                       "value" => "option_1"
+                     },
+                     %{
+                       "text" => "banana",
+                       "value" => "option_2"
+                     }
+                   ]
+                 },
+                 "widget" => "checkbox"
+               }
+             ]
+           }
+         ]
+    test "to_editable_csv return editable csv translated" do
+      template = @template_name
+
+      CacheHelpers.put_i18n_messages("es", [
+        %{message_id: "fields.label_i18n_test.dropdown.fixed", definition: "Dropdown Fijo"},
+        %{message_id: "fields.label_i18n_test.dropdown.fixed.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.dropdown.fixed.banana", definition: "Platano"},
+        %{message_id: "fields.label_i18n_test.radio.fixed", definition: "Radio Fijo"},
+        %{message_id: "fields.label_i18n_test.radio.fixed.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.radio.fixed.banana", definition: "Platano"},
+        %{
+          message_id: "fields.label_i18n_test.checkbox.fixed_tuple",
+          definition: "Checkbox Tupla Fija"
+        },
+        %{message_id: "fields.label_i18n_test.checkbox.fixed_tuple.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.checkbox.fixed_tuple.banana", definition: "Platano"}
+      ])
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      description = "concept_description"
+      domain = "domain_name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "description" => description,
+          "template" => %{"name" => template},
+          "domain" => %{"name" => domain},
+          "content" => %{
+            "i18n_test.dropdown.fixed" => "pear",
+            "i18n_test_no_translate" => "Test no translate",
+            "i18n_test.radio.fixed" => "banana",
+            "i18n_test.checkbox.fixed_tuple" => ["option_1", "option_2"]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          "id",
+          "name",
+          "domain",
+          "status",
+          "description",
+          "completeness",
+          "link_to_concept",
+          "i18n_test.dropdown.fixed",
+          "i18n_test_no_translate",
+          "i18n_test.radio.fixed",
+          "i18n_test.checkbox.fixed_tuple"
+        ],
+        [
+          business_concept_version_id,
+          name,
+          domain,
+          status,
+          description,
+          100.0,
+          "https://test.io/concepts/123/versions/456",
+          "Pera",
+          "Test no translate",
+          "Platano",
+          "Pera|Platano"
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
     end
   end
 end

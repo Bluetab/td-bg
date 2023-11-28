@@ -6,7 +6,7 @@ defmodule TdBg.Mixfile do
       app: :td_bg,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "5.18.1-local"
+          nil -> "5.19.0-local"
           v -> v
         end,
       elixir: "~> 1.14",
@@ -80,7 +80,8 @@ defmodule TdBg.Mixfile do
       {:assertions, "~> 0.19", only: :test},
       {:mox, "~> 1.0", only: :test},
       {:sobelow, "~> 0.11", only: [:dev, :test]},
-      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.15.1"}
+      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.15.1"},
+      {:elixlsx, "~> 0.5.1"}
     ]
   end
 
