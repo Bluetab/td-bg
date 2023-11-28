@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.19.0] 2023-11-28
+
+### Changed
+
+- [TD-6124] Download concepts in xlsx format
+
 ## [5.18.1] 2023-11-17
 
 ## Fixed
@@ -11,6 +17,12 @@
 ### Changed
 
 - [TD-6177] Update td-df-lib to fix format field
+
+## [5.17.1] 2023-11-17
+
+## Fixed
+
+- [TD-6191] New Concept Draft notification not being sent
 
 ## [5.17.0] 2023-10-31
 
