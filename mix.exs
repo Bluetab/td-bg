@@ -31,7 +31,7 @@ defmodule TdBg.Mixfile do
   def application do
     [
       mod: {TdBg.Application, []},
-      extra_applications: [:logger, :runtime_tools, :td_cache]
+      extra_applications: [:logger, :runtime_tools, :td_cache, :td_core]
     ]
   end
 
@@ -67,11 +67,6 @@ defmodule TdBg.Mixfile do
       {:csv, "~> 2.4"},
       {:nimble_csv, "~> 1.1"},
       {:codepagex, "~> 0.1.4"},
-      {:elasticsearch,
-       git: "https://github.com/Bluetab/elasticsearch-elixir.git",
-       branch: "feature/bulk-index-action"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "5.14.0"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "5.18.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.54.0"},
       {:graph, git: "https://github.com/Bluetab/graph.git", tag: "1.3.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
@@ -80,7 +75,10 @@ defmodule TdBg.Mixfile do
       {:assertions, "~> 0.19", only: :test},
       {:mox, "~> 1.0", only: :test},
       {:sobelow, "~> 0.11", only: [:dev, :test]},
-      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.15.1"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "5.20.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "5.20.0"},
+      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.17.0"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "5.20.0"},
       {:elixlsx, "~> 0.5.1"}
     ]
   end

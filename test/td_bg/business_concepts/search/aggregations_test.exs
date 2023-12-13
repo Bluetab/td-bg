@@ -1,7 +1,8 @@
 defmodule TdBg.BusinessConcepts.Search.AggregationsTest do
   use TdBg.DataCase
 
-  alias TdBg.BusinessConcepts.Search.Aggregations
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdCore.Search.ElasticDocumentProtocol
 
   setup do
     Templates.create_template(%{
@@ -24,9 +25,15 @@ defmodule TdBg.BusinessConcepts.Search.AggregationsTest do
     :ok
   end
 
+  setup_all do
+    start_supervised!(TdCore.Search.Cluster)
+
+    :ok
+  end
+
   describe "aggregations/0" do
     test "returns aggregation terms of type user with size 50" do
-      aggs = Aggregations.aggregations()
+      aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
 
       %{field: field, size: size} =
         aggs
