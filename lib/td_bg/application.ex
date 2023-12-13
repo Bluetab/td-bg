@@ -4,6 +4,7 @@ defmodule TdBg.Application do
   use Application
 
   alias TdBgWeb.Endpoint
+  alias TdCore.Search.IndexWorker
 
   @impl true
   def start(_type, _args) do
@@ -34,14 +35,12 @@ defmodule TdBg.Application do
 
   defp workers(_env) do
     [
-      # Elasticsearch worker
-      TdBg.Search.Cluster,
-      # Worker for background indexing
-      TdBg.Search.IndexWorker,
+      # Cluster
+      TdCore.Search.Cluster,
       # Cache workers
       TdBg.Cache.ConceptLoader,
       TdBg.Cache.DomainLoader,
       TdBg.Scheduler
-    ]
+    ] ++ IndexWorker.get_index_workers()
   end
 end

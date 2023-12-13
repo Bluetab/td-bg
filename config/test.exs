@@ -19,10 +19,15 @@ config :td_bg, TdBg.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_bg, TdBg.Search.Cluster, api: TdBg.ElasticsearchMock
+config :td_core, TdCore.Search.Cluster, api: ElasticsearchMock
+
+config :td_core, TdCore.Search.Cluster,
+  aggregations: %{
+    "domain" => 50,
+    "user" => 50,
+    "system" => 50
+  }
 
 config :td_cache, :audit, stream: "audit:events:test"
 
 config :td_cache, redis_host: "redis", port: 6380
-
-config :td_cache, :event_stream, streams: []

@@ -2,17 +2,26 @@ defmodule TdBg.BusinessConcept.Search do
   @moduledoc """
   Helper module to construct business concept search queries.
   """
+
   alias TdBg.Auth.Claims
-  alias TdBg.BusinessConcepts.Search.Aggregations
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Search.Query
-  alias TdBg.Permissions
-  alias TdBg.Search
+  alias TdBg.Permissions, as: TdBgPermissions
   alias TdBg.Taxonomies
+  alias TdCore.Search
+  alias TdCore.Search.ElasticDocumentProtocol
+  alias TdCore.Search.Permissions
+
+  @index :concepts
 
   def get_filter_values(%Claims{} = claims, params) do
     query = build_query(claims, params)
-    search = %{query: query, aggs: Aggregations.aggregations(), size: 0}
-    Search.get_filters(search)
+    aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
+    search = %{query: query, aggs: aggs, size: 0}
+
+    {:ok, response} = Search.get_filters(search, @index)
+
+    response
   end
 
   def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
@@ -27,9 +36,10 @@ defmodule TdBg.BusinessConcept.Search do
 
   defp build_query(%Claims{} = claims, params) do
     opts = builder_opts(params)
+    permissions = TdBgPermissions.get_default_permissions()
 
-    claims
-    |> Permissions.get_search_permissions()
+    permissions
+    |> Permissions.get_search_permissions(claims)
     |> Query.build_filters(opts)
     |> Query.build_query(params)
   end
@@ -48,8 +58,8 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   defp do_search(search) do
-    case Search.search(search) do
-      %{results: results, total: total} ->
+    case Search.search(search, :concepts) do
+      {:ok, %{results: results, total: total}} ->
         %{results: Enum.map(results, &map_result/1), total: total}
     end
   end

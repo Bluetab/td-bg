@@ -5,8 +5,8 @@ defmodule TdBg.UploadTest do
 
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
-  alias TdBg.ElasticsearchMock
   alias TdCache.HierarchyCache
+  alias TdCore.Search.MockIndexWorker
 
   @default_template %{
     name: "term",
@@ -103,8 +103,8 @@ defmodule TdBg.UploadTest do
 
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
-    start_supervised!(TdBg.Search.Cluster)
-    start_supervised!(TdBg.Search.IndexWorker)
+    start_supervised!(TdCore.Search.Cluster)
+    start_supervised!(TdCore.Search.IndexWorker)
     :ok
   end
 
@@ -118,6 +118,7 @@ defmodule TdBg.UploadTest do
     HierarchyCache.put(hierarchy)
 
     on_exit(fn ->
+      MockIndexWorker.clear()
       Templates.delete(template_id)
       Templates.delete(i18n_template_id)
       HierarchyCache.delete(hierarchy_id)
@@ -130,11 +131,6 @@ defmodule TdBg.UploadTest do
     setup [:set_mox_from_context, :insert_i18n_messages]
 
     test "from_csv/4 uploads business concept versions with valid data" do
-      ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload.csv"}
@@ -148,17 +144,13 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
+      assert MockIndexWorker.calls() == [{:reindex, :concepts, [concept_id]}]
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
       assert version |> Map.get(:content) |> Map.get("role") == ["Role"]
     end
 
     test "from_csv/4 uploads business concept versions with hierarchy data" do
-      ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload_hierarchy.csv"}
@@ -171,6 +163,7 @@ defmodule TdBg.UploadTest do
                  @default_lang
                )
 
+      assert MockIndexWorker.calls() == [{:reindex, :concepts, [concept_id]}]
       version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
 
       assert %{
@@ -201,11 +194,6 @@ defmodule TdBg.UploadTest do
     end
 
     test "from_csv/4 uploads business concept with translation" do
-      ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       claims = build(:claims)
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload_translation.csv"}
@@ -214,6 +202,7 @@ defmodule TdBg.UploadTest do
                Upload.from_csv(business_concept_upload, claims, fn _, _ -> true end, "es")
 
       version = BusinessConcepts.get_last_version_by_business_concept_id!(concept_id)
+      assert MockIndexWorker.calls() == [{:reindex, :concepts, [concept_id]}]
 
       assert %{
                "i18n_test.checkbox" => ["apple", "pear"],

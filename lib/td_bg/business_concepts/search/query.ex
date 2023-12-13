@@ -3,11 +3,12 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   Support for building business concept search queries.
   """
 
-  import TdBg.Search.Query,
-    only: [term: 2, must: 2, must_not: 2, should: 2, bool_query: 1]
+  import TdCore.Search.Query,
+    only: [term_or_terms: 2, must: 2, must_not: 2, should: 2, bool_query: 1]
 
-  alias TdBg.BusinessConcepts.Search.Aggregations
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Search.Filters
+  alias TdCore.Search.ElasticDocumentProtocol
 
   @match_all %{match_all: %{}}
   @match_none %{match_none: %{}}
@@ -54,8 +55,8 @@ defmodule TdBg.BusinessConcepts.Search.Query do
 
       {domain_ids, statuses} ->
         [
-          term("status", statuses),
-          term("domain_ids", domain_ids)
+          term_or_terms("status", statuses),
+          term_or_terms("domain_ids", domain_ids)
         ]
     end
   end
@@ -70,20 +71,20 @@ defmodule TdBg.BusinessConcepts.Search.Query do
     end)
     |> Enum.reduce(%{}, fn
       {:all, statuses}, acc ->
-        should(acc, term("status", statuses))
+        should(acc, term_or_terms("status", statuses))
 
       {:none, _statuses}, acc when map_size(acc) > 0 ->
         # We can avoid a must_not clause if any other status clause exists
         acc
 
       {:none, statuses}, acc ->
-        must_not(acc, term("status", statuses))
+        must_not(acc, term_or_terms("status", statuses))
 
       {domain_ids, statuses}, acc ->
         bool = %{
           filter: [
-            term("status", statuses),
-            term("domain_ids", domain_ids)
+            term_or_terms("status", statuses),
+            term_or_terms("domain_ids", domain_ids)
           ]
         }
 
@@ -107,7 +108,7 @@ defmodule TdBg.BusinessConcepts.Search.Query do
     %{
       bool: %{
         should: [
-          term("domain_ids", domain_ids),
+          term_or_terms("domain_ids", domain_ids),
           do_confidential_filter(:none)
         ]
       }
@@ -124,7 +125,7 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   defp do_links_filter(:none), do: %{match_none: %{}}
 
   defp do_links_filter(domain_ids) when is_list(domain_ids) do
-    term("domain_ids", domain_ids)
+    term_or_terms("domain_ids", domain_ids)
   end
 
   defp maybe_bool_query(%{should: [single_clause]} = bool) when map_size(bool) == 1,
@@ -188,7 +189,7 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   end
 
   defp merge_filters(filters, user_filters) do
-    aggs = Aggregations.aggregations()
+    aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
 
     case Enum.uniq(filters ++ Filters.build_filters(user_filters, aggs)) do
       [_, _ | _] = filters -> Enum.reject(filters, &(&1 == %{match_all: %{}}))

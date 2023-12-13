@@ -13,8 +13,8 @@ defmodule TdBg.Taxonomies do
   alias TdBg.Groups.DomainGroup
   alias TdBg.Repo
   alias TdBg.Taxonomies.Domain
-  alias TdBg.Utils.CollectionUtils
   alias TdCache.TaxonomyCache
+  alias TdCore.Utils.CollectionUtils
 
   @doc """
   Returns the list of domains.

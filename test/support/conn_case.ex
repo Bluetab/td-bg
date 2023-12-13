@@ -42,7 +42,7 @@ defmodule TdBgWeb.ConnCase do
     unless tags[:async] do
       Sandbox.mode(TdBg.Repo, {:shared, self()})
       parent = self()
-      allow(parent, [TdBg.Cache.ConceptLoader, TdBg.Search.IndexWorker])
+      allow(parent, [TdBg.Cache.ConceptLoader, TdCore.Search.IndexWorker])
     end
 
     case tags[:authentication] do

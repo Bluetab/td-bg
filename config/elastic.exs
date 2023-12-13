@@ -1,6 +1,6 @@
 import Config
 
-config :td_bg, TdBg.Search.Cluster,
+config :td_core, TdCore.Search.Cluster,
   # The default URL where Elasticsearch is hosted on your system.
   # Will be overridden by the `ES_URL` environment variable if set.
   url: "http://elastic:9200",
@@ -10,9 +10,18 @@ config :td_bg, TdBg.Search.Cluster,
   # here. It must implement the Elasticsearch.API behaviour.
   api: Elasticsearch.API.HTTP,
 
+  # Aggregations default
+  aggregations: %{
+    "domain" => 50,
+    "user" => 50,
+    "system" => 50
+  },
+
   # The library used for JSON encoding/decoding.
   json_library: Jason,
-
+  aliases: %{
+    concepts: "concepts"
+  },
   # You should configure each index which you maintain in Elasticsearch here.
   # This configuration will be read by the `mix elasticsearch.build` task,
   # described below.
@@ -21,6 +30,8 @@ config :td_bg, TdBg.Search.Cluster,
     # built with a timestamp included in the name, like "posts-5902341238".
     # It will then be aliased to "posts" for easy querying.
     concepts: %{
+      template_scope: :bg,
+
       # This map describes the mappings and settings for your index. It will
       # be posted as-is to Elasticsearch when you create your index, and
       # therefore allows all the settings you could post directly.

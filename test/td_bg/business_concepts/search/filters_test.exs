@@ -1,14 +1,21 @@
 defmodule TdBg.BusinessConcepts.Search.FiltersTest do
   use TdBg.DataCase
 
-  alias TdBg.BusinessConcepts.Search.Aggregations
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Search.Filters
+  alias TdCore.Search.ElasticDocumentProtocol
 
   setup :create_template
 
+  setup_all do
+    start_supervised!(TdCore.Search.Cluster)
+
+    :ok
+  end
+
   describe "build_filters/2" do
     test "returns filter corresponding to aggregation terms" do
-      aggs = Aggregations.aggregations()
+      aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
 
       assert Filters.build_filters(%{"foo" => [1, 2]}, aggs) == [
                %{terms: %{"content.foo" => [1, 2]}}
@@ -21,7 +28,7 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
       %{id: parent_id} = CacheHelpers.insert_domain()
       %{id: domain_id} = CacheHelpers.insert_domain(parent_id: parent_id)
 
-      aggs = Aggregations.aggregations()
+      aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
 
       assert Filters.build_filters(%{"taxonomy" => [parent_id]}, aggs) == [
                %{terms: %{"domain_ids" => [parent_id, domain_id]}}
