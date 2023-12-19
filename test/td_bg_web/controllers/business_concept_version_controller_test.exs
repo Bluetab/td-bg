@@ -13,6 +13,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     :ok
   end
 
+  setup _context do
+    on_exit(fn ->
+      MockIndexWorker.clear()
+    end)
+
+    :ok
+  end
+
   setup :set_mox_from_context
   setup :verify_on_exit!
 

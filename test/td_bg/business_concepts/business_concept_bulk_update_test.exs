@@ -16,8 +16,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     :ok
   end
 
-  setup :verify_on_exit!
-
   setup _context do
     Templates.create_template(%{
       name: "template_test",
@@ -79,6 +77,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
     :ok
   end
+
+  setup :verify_on_exit!
 
   describe "BulkUpdate.update_all/3" do
     setup :set_mox_from_context

@@ -28,6 +28,10 @@ defmodule TdBg.Cache.ConceptLoader do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
+  # def refresh([]) do
+  #   :ok
+  # end
+
   def refresh(business_concept_ids) when is_list(business_concept_ids) do
     GenServer.call(__MODULE__, {:refresh, business_concept_ids})
   end
@@ -105,7 +109,9 @@ defmodule TdBg.Cache.ConceptLoader do
       |> Enum.filter(&(&1.event != "add_rule"))
       |> Enum.flat_map(&read_concept_ids/1)
 
-    IndexWorker.reindex(:concepts, ids)
+    unless ids == [] do
+      IndexWorker.reindex(:concepts, ids)
+    end
 
     ids
   end
