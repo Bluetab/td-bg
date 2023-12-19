@@ -20,9 +20,6 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
     :ok
   end
 
-  setup :verify_on_exit!
-  setup :set_mox_from_context
-
   setup do
     on_exit(fn ->
       Redix.del!(@stream)
@@ -31,6 +28,9 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
 
     [claims: build(:claims)]
   end
+
+  setup :verify_on_exit!
+  setup :set_mox_from_context
 
   describe "new_version/2" do
     setup :create_concept_with_parents
