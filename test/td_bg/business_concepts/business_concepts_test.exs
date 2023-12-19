@@ -45,9 +45,6 @@ defmodule TdBg.BusinessConceptsTest do
     :ok
   end
 
-  setup :set_mox_from_context
-  setup :verify_on_exit!
-
   setup context do
     on_exit(fn ->
       Redix.del!(@stream)
@@ -70,6 +67,9 @@ defmodule TdBg.BusinessConceptsTest do
 
     :ok
   end
+
+  setup :set_mox_from_context
+  setup :verify_on_exit!
 
   describe "create_business_concept/1" do
     @tag template: @content

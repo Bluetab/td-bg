@@ -363,6 +363,7 @@ defmodule TdBg.BusinessConcepts do
 
   defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
+
     ConceptLoader.refresh(business_concept_id)
 
     Publisher.publish(
