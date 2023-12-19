@@ -108,8 +108,6 @@ defmodule TdBg.UploadTest do
     :ok
   end
 
-  setup :verify_on_exit!
-
   setup _context do
     %{id: template_id} = template = Templates.create_template(@default_template)
     %{id: i18n_template_id} = i18n_template = Templates.create_template(@i18n_template)
@@ -126,6 +124,8 @@ defmodule TdBg.UploadTest do
 
     [template: template, i18n_template: i18n_template, hierarchy: hierarchy]
   end
+
+  setup :verify_on_exit!
 
   describe "business_concept_upload" do
     setup [:set_mox_from_context, :insert_i18n_messages]
