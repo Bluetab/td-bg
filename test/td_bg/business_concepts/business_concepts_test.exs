@@ -10,6 +10,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.Repo
   alias TdCache.Redix
   alias TdCache.Redix.Stream
+  alias TdCore.Search.MockIndexWorker
   alias TdDfLib.RichText
 
   @stream TdCache.Audit.stream()
@@ -39,8 +40,8 @@ defmodule TdBg.BusinessConceptsTest do
     Redix.del!(@stream)
     start_supervised!(TdBg.Cache.ConceptLoader)
     start_supervised!(TdBg.Cache.DomainLoader)
-    start_supervised!(TdBg.Search.Cluster)
-    start_supervised!(TdBg.Search.IndexWorker)
+    start_supervised!(TdCore.Search.Cluster)
+    start_supervised!(TdCore.Search.IndexWorker)
     :ok
   end
 
@@ -48,7 +49,10 @@ defmodule TdBg.BusinessConceptsTest do
   setup :verify_on_exit!
 
   setup context do
-    on_exit(fn -> Redix.del!(@stream) end)
+    on_exit(fn ->
+      Redix.del!(@stream)
+      MockIndexWorker.clear()
+    end)
 
     case context[:template] do
       nil ->
@@ -647,8 +651,6 @@ defmodule TdBg.BusinessConceptsTest do
   describe "update_business_concept_version/2" do
     @tag template: @content
     test "updates the business_concept_version if data is valid and publishes an event to the audit stream" do
-      SearchHelpers.expect_bulk_index()
-
       %{user_id: user_id} = build(:claims)
 
       %{id: parent_id, parent_id: root_id} = parent = insert(:domain, parent: build(:domain))
@@ -705,11 +707,10 @@ defmodule TdBg.BusinessConceptsTest do
                Jason.decode!(payload)
 
       assert_lists_equal(domain_ids, [root_id, parent_id, domain_id])
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     test "updates the content with valid content data" do
-      SearchHelpers.expect_bulk_index()
-
       content_schema = [
         %{"name" => "Field1", "type" => "string", "cardinality" => "1"},
         %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
@@ -756,6 +757,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert %BusinessConceptVersion{} = business_concept_version
       assert business_concept_version.content["Field1"] == "New first field"
       assert business_concept_version.content["Field2"] == "Second field"
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     test "returns error and changeset if validation fails" do
@@ -922,8 +924,6 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "get_business_concept_version/2 returns the business_concept_version by concept id and version" do
-      SearchHelpers.expect_bulk_index(3)
-
       claims = build(:claims)
 
       %{id: id, business_concept_id: business_concept_id, version: version} =
@@ -956,6 +956,8 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.get_business_concept_version(business_concept_id, id)
 
       refute BusinessConcepts.get_business_concept_version(business_concept_id + 1, id)
+
+      assert [_, _, _] = MockIndexWorker.calls()
     end
 
     test "get_business_concept_version/2 returns preloads" do

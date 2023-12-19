@@ -5,12 +5,10 @@ defmodule TdBgWeb.DomainControllerTest do
   import Assertions
   import Mox
 
-  alias TdBg.ElasticsearchMock
-
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
     start_supervised!(TdBg.Cache.DomainLoader)
-    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdCore.Search.Cluster)
     :ok
   end
 

@@ -4,10 +4,9 @@ defmodule TdBg.BusinessConcepts.SearchTest do
   import Mox
 
   alias TdBg.BusinessConcept.Search
-  alias TdBg.ElasticsearchMock
 
   setup do
-    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdCore.Search.Cluster)
     :ok
   end
 

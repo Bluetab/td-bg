@@ -5,13 +5,14 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcepts
-  alias TdBg.ElasticsearchMock
-  alias TdBg.Utils.CollectionUtils
+  alias TdCore.Search.MockIndexWorker
+  alias TdCore.Utils.CollectionUtils
 
   setup_all do
+    start_supervised!(TdCore.Search.Cluster)
     start_supervised!(TdBg.Cache.ConceptLoader)
-    start_supervised!(TdBg.Search.Cluster)
-    start_supervised!(TdBg.Search.IndexWorker)
+    start_supervised!(TdCore.Search.IndexWorker)
+
     :ok
   end
 
@@ -72,6 +73,10 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       id: "999"
     })
 
+    on_exit(fn ->
+      MockIndexWorker.clear()
+    end)
+
     :ok
   end
 
@@ -79,11 +84,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     setup :set_mox_from_context
 
     test "update all business concept versions with valid data" do
-      ElasticsearchMock
-      |> expect(:request, 2, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -135,6 +135,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, bc_versions, params)
       assert length(bcv_ids) == 2
+
+      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = MockIndexWorker.calls()
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
                d3.id
@@ -280,11 +282,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     end
 
     test "two versions of the same concept" do
-      ElasticsearchMock
-      |> expect(:request, 2, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -324,6 +321,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, bc_versions, params)
       assert length(bcv_ids) == 2
+      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = MockIndexWorker.calls()
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
                d3.id
@@ -343,11 +341,6 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     end
 
     test "validates only updated fields and gives an error when they arec incorrect" do
-      ElasticsearchMock
-      |> expect(:request, 3, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -424,6 +417,12 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, [Enum.at(bc_versions, 1)], params)
       assert length(bcv_ids) == 1
+
+      assert [
+               {:reindex, :concepts, _},
+               {:reindex, :concepts, _},
+               {:reindex, :concepts, _}
+             ] = MockIndexWorker.calls()
 
       assert Enum.all?(
                bcv_ids,

@@ -4,10 +4,8 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
 
   import Mox
 
-  alias TdBg.ElasticsearchMock
-
   setup_all do
-    start_supervised!(TdBg.Search.Cluster)
+    start_supervised!(TdCore.Search.Cluster)
     :ok
   end
 
@@ -23,7 +21,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
     test "lists all filters (admin user)", %{conn: conn} do
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/concepts/_search", %{aggs: _, size: 0, query: query}, [] ->
+        _, :post, "/concepts/_search", %{aggs: _, size: 0, query: query}, [_] ->
           assert %{bool: %{filter: %{match_all: %{}}}} = query
           aggs_response()
       end)
@@ -33,7 +31,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
                |> get(Routes.business_concept_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
+      assert %{"foo" => %{"values" => ["bar", "baz"]}} = data
     end
 
     @tag authentication: [user_name: "not_an_admin"]
@@ -43,7 +41,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
 
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/concepts/_search", %{aggs: _, size: 0, query: query}, [] ->
+        _, :post, "/concepts/_search", %{aggs: _, size: 0, query: query}, [_] ->
           assert %{bool: %{filter: [_status_filter, _confidential_filter]}} = query
           aggs_response()
       end)
@@ -53,7 +51,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
                |> get(Routes.business_concept_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
+      assert %{"foo" => %{"values" => ["bar", "baz"]}} = data
     end
   end
 

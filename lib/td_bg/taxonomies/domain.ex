@@ -14,7 +14,7 @@ defmodule TdBg.Taxonomies.Domain do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.Groups.DomainGroup
   alias TdBg.Taxonomies
-  alias TdBg.Utils.CollectionUtils
+  alias TdCore.Utils.CollectionUtils
 
   schema "domains" do
     field(:description, :string)
