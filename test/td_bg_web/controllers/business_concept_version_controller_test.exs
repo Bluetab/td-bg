@@ -24,6 +24,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   setup :set_mox_from_context
   setup :verify_on_exit!
 
+  setup _context do
+    on_exit(fn ->
+      MockIndexWorker.clear()
+    end)
+
+    :ok
+  end
+
   describe "GET /api/business_concepts/:business_concept_id/versions/:id" do
     @tag authentication: [role: "admin"]
     test "shows the specified business_concept_version including it's name, description, domain and content",
