@@ -4,7 +4,7 @@ defmodule SearchHelpers do
   """
 
   def expect_bulk_index(n \\ 1) do
-    TdBg.ElasticsearchMock
+    ElasticsearchMock
     |> Mox.expect(:request, n, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
       bulk_index_response()
     end)

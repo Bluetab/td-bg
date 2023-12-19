@@ -5,39 +5,18 @@ defmodule TdBg.Permissions do
 
   alias TdBg.Auth.Claims
 
-  @defaults %{
-    "manage_business_concept_links" => :none,
-    "manage_confidential_business_concepts" => :none,
-    "view_approval_pending_business_concepts" => :none,
-    "view_deprecated_business_concepts" => :none,
-    "view_draft_business_concepts" => :none,
-    "view_published_business_concepts" => :none,
-    "view_rejected_business_concepts" => :none,
-    "view_versioned_business_concepts" => :none
-  }
+  @defaults [
+    "manage_business_concept_links",
+    "manage_confidential_business_concepts",
+    "view_approval_pending_business_concepts",
+    "view_deprecated_business_concepts",
+    "view_draft_business_concepts",
+    "view_published_business_concepts",
+    "view_rejected_business_concepts",
+    "view_versioned_business_concepts"
+  ]
 
-  def get_search_permissions(%Claims{role: role}) when role in ["admin", "service"] do
-    Map.new(@defaults, fn {p, _} -> {p, :all} end)
-  end
-
-  def get_search_permissions(%Claims{jti: jti}) do
-    session_permissions = TdCache.Permissions.get_session_permissions(jti)
-    default_permissions = get_default_permissions()
-
-    session_permissions
-    |> Map.take(Map.keys(@defaults))
-    |> Map.merge(default_permissions, fn
-      _, _, :all -> :all
-      _, scope, _ -> scope
-    end)
-  end
-
-  defp get_default_permissions do
-    case TdCache.Permissions.get_default_permissions() do
-      {:ok, permissions} -> Enum.reduce(permissions, @defaults, &Map.replace(&2, &1, :all))
-      _ -> @defaults
-    end
-  end
+  def get_default_permissions, do: @defaults
 
   def has_permission?(%Claims{jti: jti}, permission) do
     TdCache.Permissions.has_permission?(jti, permission)

@@ -9,12 +9,11 @@ import Config
 config :td_bg, :env, Mix.env()
 config :td_cluster, :env, Mix.env()
 config :td_cluster, groups: [:bg]
+config :td_core, :env, Mix.env()
 
 # General application configuration
 config :td_bg, ecto_repos: [TdBg.Repo]
 config :td_bg, TdBg.Repo, pool_size: 5
-
-config :td_bg, index_worker: TdBg.Search.IndexWorker
 
 config :td_bg, :lang, "en"
 
@@ -68,7 +67,7 @@ config :td_cache, :event_stream,
   consumer_group: "bg",
   streams: [
     [key: "business_concept:events", consumer: TdBg.Cache.ConceptLoader],
-    [key: "template:events", consumer: TdBg.Search.IndexWorker]
+    [key: "template:events", consumer: TdCore.Search.IndexWorker]
   ]
 
 config :td_bg, TdBg.Scheduler,
@@ -95,7 +94,7 @@ config :td_bg, TdBg.Scheduler,
     ],
     [
       schedule: "@daily",
-      task: {TdBg.Search.IndexWorker, :reindex, []},
+      task: {TdCore.Search.IndexWorker, :reindex, [:concepts, :all]},
       run_strategy: Quantum.RunStrategy.Local
     ]
   ]

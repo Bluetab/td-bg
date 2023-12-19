@@ -46,7 +46,7 @@ defmodule TdBg.DataCase do
         pid -> Sandbox.allow(TdBg.Repo, parent, pid)
       end
 
-      case Process.whereis(TdBg.Search.IndexWorker) do
+      case Process.whereis(TdCore.Search.IndexWorker) do
         nil -> nil
         pid -> Sandbox.allow(TdBg.Repo, parent, pid)
       end

@@ -1,12 +1,15 @@
 defmodule TdBg.PermissionsTest do
   use TdBgWeb.ConnCase
 
-  alias TdBg.Permissions
+  alias TdBg.Permissions, as: TdBgPermissions
+  alias TdCore.Search.Permissions
+
+  @permissions TdBgPermissions.get_default_permissions()
 
   describe "Permissions.get_search_permissions/1" do
     @tag authentication: [role: "admin"]
     test "returns a map with values :all for admin role", %{claims: claims} do
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "manage_business_concept_links" => :all,
                "manage_confidential_business_concepts" => :all,
                "view_approval_pending_business_concepts" => :all,
@@ -20,7 +23,7 @@ defmodule TdBg.PermissionsTest do
 
     @tag authentication: [user_name: "not_an_admin"]
     test "returns a map with :none values for regular users", %{claims: claims} do
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "manage_business_concept_links" => :none,
                "manage_confidential_business_concepts" => :none,
                "view_approval_pending_business_concepts" => :none,
@@ -36,7 +39,7 @@ defmodule TdBg.PermissionsTest do
     test "includes :all values for default permissions", %{claims: claims} do
       CacheHelpers.put_default_permissions(["view_published_business_concepts", "foo"])
 
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "manage_business_concept_links" => :none,
                "manage_confidential_business_concepts" => :none,
                "view_approval_pending_business_concepts" => :none,
@@ -64,7 +67,7 @@ defmodule TdBg.PermissionsTest do
         "view_deprecated_business_concepts" => [id3]
       })
 
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "manage_business_concept_links" => :none,
                "manage_confidential_business_concepts" => [id2, id1],
                "view_approval_pending_business_concepts" => :none,

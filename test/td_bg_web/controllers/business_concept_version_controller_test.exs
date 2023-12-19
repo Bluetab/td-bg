@@ -4,17 +4,25 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   import Mox
 
-  alias TdBg.ElasticsearchMock
+  alias TdCore.Search.MockIndexWorker
 
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
-    start_supervised!(TdBg.Search.Cluster)
-    start_supervised!(TdBg.Search.IndexWorker)
+    start_supervised!(TdCore.Search.Cluster)
+    start_supervised!(TdCore.Search.IndexWorker)
     :ok
   end
 
   setup :set_mox_from_context
   setup :verify_on_exit!
+
+  setup _context do
+    on_exit(fn ->
+      MockIndexWorker.clear()
+    end)
+
+    :ok
+  end
 
   describe "GET /api/business_concepts/:business_concept_id/versions/:id" do
     @tag authentication: [role: "admin"]
@@ -878,11 +886,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       claims: claims,
       swagger_schema: schema
     } do
-      ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       %{id: domain_id, name: domain_name} = CacheHelpers.insert_domain()
 
       put_session_permissions(claims, domain_id, [
@@ -931,6 +934,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [role: "user"]
@@ -1055,11 +1059,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [role: "admin"]
     test "create new version with modified template", %{conn: conn} do
-      ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       template_content = [
         %{
           "name" => "group",
@@ -1114,6 +1113,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       assert json_response(conn, 201)["data"]
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
   end
 
@@ -1125,11 +1125,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       %{name: template_name} = CacheHelpers.insert_template()
 
       %{id: id, business_concept_id: business_concept_id} =
@@ -1166,6 +1161,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert_maps_equal(data, update_attrs, ["content", "name", "description"])
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
   end
 
@@ -1176,8 +1172,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      SearchHelpers.expect_bulk_index()
-
       business_concept_version = insert(:business_concept_version)
 
       %{id: domain_id} = insert(:domain)
@@ -1196,6 +1190,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^domain_id}} = data
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [role: "user"]
@@ -1228,8 +1223,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       claims: claims,
       swagger_schema: schema
     } do
-      SearchHelpers.expect_bulk_index()
-
       %{id: id1} = CacheHelpers.insert_domain()
       %{id: id2} = CacheHelpers.insert_domain()
 
@@ -1254,6 +1247,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^id2}} = data
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1261,8 +1255,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "when restore a deprecated business concept version, will be surived in cache", %{
       conn: conn
     } do
-      SearchHelpers.expect_bulk_index()
-
       %{id: domain_id} = CacheHelpers.insert_domain()
 
       %{user_id: user_id} = build(:claims)
@@ -1290,6 +1282,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> json_response(:ok)
 
       assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [
@@ -1301,8 +1294,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       domain: domain
     } do
-      SearchHelpers.expect_bulk_index()
-
       %{name: template_name} = CacheHelpers.insert_template()
 
       business_concept_version =
@@ -1322,6 +1313,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  )
                )
                |> json_response(:ok)
+
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [
@@ -1405,11 +1398,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      ElasticsearchMock
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
-
       %{user_id: user_id} = build(:claims)
 
       business_concept_version = insert(:business_concept_version, last_change_by: user_id)
@@ -1445,6 +1433,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"confidential" => true} = data
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1486,9 +1475,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           assert query == %{bool: %{filter: %{term: %{"status" => "published"}}}}
           SearchHelpers.hits_response([bcv])
       end)
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
 
       params = %{
         "update_attributes" => %{"domain_id" => domain_id},
@@ -1502,6 +1488,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1541,9 +1528,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           assert query == %{bool: %{must: %{term: %{"status" => "published"}}}}
           SearchHelpers.hits_response([bcv])
       end)
-      |> expect(:request, fn _, :post, "/concepts/_doc/_bulk", _, [] ->
-        SearchHelpers.bulk_index_response()
-      end)
 
       params = %{
         "update_attributes" => %{"domain_id" => domain_id},
@@ -1557,6 +1541,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
+      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]

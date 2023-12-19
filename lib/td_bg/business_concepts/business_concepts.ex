@@ -13,11 +13,11 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
-  alias TdBg.Search.Indexer
   alias TdBg.Taxonomies
   alias TdCache.ConceptCache
   alias TdCache.EventStream.Publisher
   alias TdCache.TemplateCache
+  alias TdCore.Search.IndexWorker
   alias TdDfLib.Format
   alias TdDfLib.Parser
   alias TdDfLib.Templates
@@ -577,7 +577,7 @@ defmodule TdBg.BusinessConcepts do
 
           ConceptCache.delete(business_concept_id)
           # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
-          Indexer.delete(business_concept_version)
+          IndexWorker.delete(:concepts, business_concept_version)
           {:ok, version}
       end
     else
@@ -590,7 +590,7 @@ defmodule TdBg.BusinessConcepts do
          %{
            business_concept_version: %BusinessConceptVersion{} = deleted_version
          }} ->
-          Indexer.delete(deleted_version)
+          IndexWorker.delete(:concepts, deleted_version)
           {:ok, get_last_version_by_business_concept_id!(business_concept_id)}
       end
     end
