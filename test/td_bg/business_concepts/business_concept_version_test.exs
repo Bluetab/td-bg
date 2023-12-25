@@ -97,14 +97,14 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
     test "validates unsafe content and description", %{create_attrs: params} do
       params =
         params
-        |> Map.put(:content, %{"foo" => [@unsafe]})
-        |> Map.put(:description, %{"doc" => %{"href" => @unsafe}})
+        |> Map.put(:content, %{
+          "foo" => [@unsafe]
+        })
 
       assert %{valid?: false, errors: errors} =
                BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
 
       assert errors[:content] == {"invalid content", []}
-      assert errors[:description] == {"invalid content", []}
     end
   end
 
@@ -200,13 +200,15 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
 
     test "validates unsafe content and description" do
       bcv = insert(:business_concept_version)
-      params = %{"description" => %{"doc" => @unsafe}, "content" => %{"foo" => [@unsafe]}}
+
+      params = %{
+        "content" => %{"foo" => [@unsafe]}
+      }
 
       assert %{valid?: false, errors: errors} =
                BusinessConceptVersion.update_changeset(bcv, params)
 
       assert errors[:content] == {"invalid content", []}
-      assert errors[:description] == {"invalid content", []}
     end
   end
 

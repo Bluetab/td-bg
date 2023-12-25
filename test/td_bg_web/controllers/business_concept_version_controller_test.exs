@@ -40,8 +40,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         insert(
           :business_concept_version,
           content: %{"foo" => "bar"},
-          name: "Concept Name",
-          description: to_rich_text("The awesome concept")
+          name: "Concept Name"
         )
 
       conn =
@@ -57,7 +56,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       data = json_response(conn, 200)["data"]
       assert data["name"] == business_concept_version.name
-      assert data["description"] == business_concept_version.description
+
       assert data["business_concept_id"] == business_concept_version.business_concept.id
       assert data["content"] == business_concept_version.content
       assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
@@ -76,7 +75,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       data = json_response(conn, 200)["data"]
       assert data["name"] == business_concept_version.name
-      assert data["description"] == business_concept_version.description
+
       assert data["business_concept_id"] == business_concept_version.business_concept.id
       assert data["content"] == business_concept_version.content
       assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
@@ -905,7 +904,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "content" => %{},
         "type" => "some_type",
         "name" => "Some name",
-        "description" => to_rich_text("Some description"),
         "domain_id" => domain_id,
         "in_progress" => false
       }
@@ -1140,8 +1138,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       update_attrs = %{
         "content" => %{"list" => ["one"], "string" => "foo"},
-        "name" => "The new name",
-        "description" => to_rich_text("The new description")
+        "name" => "The new name"
       }
 
       assert %{"data" => data} =

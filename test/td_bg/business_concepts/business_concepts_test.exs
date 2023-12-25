@@ -15,6 +15,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   @stream TdCache.Audit.stream()
   @template_name "TestTemplate1234"
+
   @content [
     %{
       "name" => "group",
@@ -88,7 +89,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: %{"foo" => "bar", "xyz" => "foo"},
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -102,7 +102,7 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert business_concept_version.content == version_attrs.content
       assert business_concept_version.name == version_attrs.name
-      assert business_concept_version.description == version_attrs.description
+
       assert business_concept_version.last_change_by == version_attrs.last_change_by
       assert business_concept_version.current == true
       assert business_concept_version.version == version_attrs.version
@@ -202,7 +202,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -215,7 +214,6 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert business_concept_version.content == version_attrs.content
       assert business_concept_version.name == version_attrs.name
-      assert business_concept_version.description == version_attrs.description
       assert business_concept_version.last_change_by == version_attrs.last_change_by
       assert business_concept_version.current == true
       assert business_concept_version.in_progress == true
@@ -270,7 +268,10 @@ defmodule TdBg.BusinessConceptsTest do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
-      content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "1"}]
+      content_schema = [
+        %{"name" => "Field1", "type" => "string", "cardinality" => "1"}
+      ]
+
       content = %{"Field1" => ["World", "World2"]}
 
       concept_attrs = %{
@@ -284,7 +285,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -295,9 +295,9 @@ defmodule TdBg.BusinessConceptsTest do
       assert {:ok, %{business_concept_version: business_concept_version}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert business_concept_version.content == %{"Field1" => ["World", "World2"]}
+      assert business_concept_version.content == content
       assert business_concept_version.name == version_attrs.name
-      assert business_concept_version.description == version_attrs.description
+
       assert business_concept_version.last_change_by == version_attrs.last_change_by
       assert business_concept_version.current == true
       assert business_concept_version.in_progress == true
@@ -313,7 +313,9 @@ defmodule TdBg.BusinessConceptsTest do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
-      content_schema = [%{"name" => "Field1", "type" => "string", "cardinality" => "?"}]
+      content_schema = [
+        %{"name" => "Field1", "type" => "string", "cardinality" => "?"}
+      ]
 
       concept_attrs = %{
         type: "some_type",
@@ -325,7 +327,6 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -676,7 +677,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept_id: business_concept_version.business_concept.id,
         content: %{"foo" => "bar", "xyz" => "foo"},
         name: "updated name",
-        description: to_rich_text("updated description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -692,7 +692,6 @@ defmodule TdBg.BusinessConceptsTest do
                )
 
       assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
       assert object.last_change_by == version_attrs.last_change_by
       assert object.current == true
       assert object.version == version_attrs.version
@@ -1140,7 +1139,6 @@ defmodule TdBg.BusinessConceptsTest do
       business_concept: concept_attrs,
       content: content,
       name: "some name",
-      description: RichText.to_rich_text("some description"),
       last_change_by: user_id,
       last_change_at: DateTime.utc_now(),
       version: 1
@@ -1164,7 +1162,7 @@ defmodule TdBg.BusinessConceptsTest do
            }
 
     assert business_concept_version.name == version_attrs.name
-    assert business_concept_version.description == version_attrs.description
+
     assert business_concept_version.last_change_by == version_attrs.last_change_by
     assert business_concept_version.current == true
     assert business_concept_version.in_progress == false

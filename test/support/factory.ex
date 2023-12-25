@@ -47,7 +47,6 @@ defmodule TdBg.Factory do
     %BusinessConceptVersion{
       content: %{},
       name: sequence("concept_name"),
-      description: %{"document" => "My business term description"},
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
       status: "draft",

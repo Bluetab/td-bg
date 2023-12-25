@@ -13,7 +13,6 @@ defmodule TdBg.BusinessConcept.Download do
     "name",
     "domain",
     "status",
-    "description",
     "completeness"
   ]
 
