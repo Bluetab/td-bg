@@ -3,7 +3,7 @@ defmodule TdBg.BusinessConcept.Upload do
   Helper module to upload business concepts in csv format.
   """
 
-  @required_header ["template", "domain", "name", "description"]
+  @required_header ["template", "domain", "name"]
 
   alias Codepagex
   alias NimbleCSV
@@ -125,7 +125,6 @@ defmodule TdBg.BusinessConcept.Upload do
     with {:ok, %{name: concept_type, content: content_schema}} <- validate_template(data),
          {:ok, %{id: domain_id} = domain} <- validate_domain(data),
          {:ok} <- validate_name(data, domain),
-         {:ok} <- validate_description(data),
          {:ok} <- validate_permission(claims, domain, can?) do
       empty_fields =
         data
@@ -214,12 +213,6 @@ defmodule TdBg.BusinessConcept.Upload do
   end
 
   defp validate_domain(_), do: {:error, %{error: :missing_value, field: "domain"}}
-
-  defp validate_description(%{"description" => ""}),
-    do: {:error, %{error: :missing_value, field: "description"}}
-
-  defp validate_description(%{"description" => _}), do: {:ok}
-  defp validate_description(_), do: {:error, %{error: :missing_value, field: "description"}}
 
   defp validate_permission(claims, domain, can?) do
     if can?.(claims, domain) do

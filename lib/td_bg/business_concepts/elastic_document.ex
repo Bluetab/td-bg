@@ -17,7 +17,6 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     alias TdCache.TemplateCache
     alias TdCache.UserCache
     alias TdDfLib.Format
-    alias TdDfLib.RichText
 
     @impl Elasticsearch.Document
     def id(%BusinessConceptVersion{id: id}), do: id
@@ -55,7 +54,6 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       ])
       |> Map.merge(BusinessConcepts.get_concept_counts(bcv.business_concept_id))
       |> Map.put(:content, content)
-      |> Map.put(:description, RichText.to_plain_text(bcv.description))
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
       |> Map.put(:last_change_by, get_last_change_by(bcv))

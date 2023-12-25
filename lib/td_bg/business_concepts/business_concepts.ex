@@ -241,7 +241,6 @@ defmodule TdBg.BusinessConcepts do
     |> maybe_domain_ids()
     |> format_content()
     |> validate_new_concept()
-    |> validate_description()
     |> validate_concept_content(opts[:in_progress])
     |> insert_concept()
     |> index_on_success(opts[:index])
@@ -320,7 +319,6 @@ defmodule TdBg.BusinessConcepts do
       |> set_content_defaults(domain_id)
       |> validate_concept(business_concept_version)
       |> validate_concept_content()
-      |> validate_description()
       |> update_concept()
 
     case result do
@@ -348,7 +346,6 @@ defmodule TdBg.BusinessConcepts do
       |> update_content_schema(params, business_concept_version)
       |> bulk_validate_concept(business_concept_version)
       |> validate_concept_content(Map.get(business_concept_version, :status) != "published")
-      |> validate_description()
       |> update_concept()
 
     case result do
@@ -445,7 +442,6 @@ defmodule TdBg.BusinessConcepts do
     end)
     |> preload([_, _], :business_concept)
     |> Repo.all()
-    |> Enum.map(&Map.put(&1, :description, TdDfLib.RichText.to_plain_text(&1.description)))
   end
 
   @doc """
@@ -697,25 +693,6 @@ defmodule TdBg.BusinessConcepts do
       false -> validate_content(content_changeset, params)
       _ -> put_in_progress(content_changeset, params)
     end
-  end
-
-  defp validate_description(params) do
-    if Map.has_key?(params, :description) && Map.has_key?(params, :in_progress) &&
-         !params.in_progress do
-      do_validate_description(params)
-    else
-      params
-    end
-  end
-
-  defp do_validate_description(%{changeset: changeset, description: description} = params) do
-    import Ecto.Changeset, only: [put_change: 3]
-
-    in_progress = description == %{}
-
-    params
-    |> Map.put(:changeset, put_change(changeset, :in_progress, in_progress))
-    |> Map.put(:in_progress, in_progress)
   end
 
   defp put_in_progress(%{valid?: valid}, %{changeset: changeset} = params) do

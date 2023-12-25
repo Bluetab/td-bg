@@ -16,7 +16,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   schema "business_concept_versions" do
     field(:content, :map)
-    field(:description, :map)
     field(:last_change_at, :utc_datetime_usec)
     field(:mod_comments, :string)
     field(:last_change_by, :integer)
@@ -42,7 +41,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> cast(params, [
       :content,
       :name,
-      :description,
       :last_change_by,
       :last_change_at,
       :version,
@@ -64,7 +62,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> update_change(:name, &String.trim/1)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
-    |> validate_change(:description, &Validation.validate_safe/2)
     |> validate_change(:content, &Validation.validate_safe/2)
   end
 
@@ -73,7 +70,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> cast(params, [
       :content,
       :name,
-      :description,
       :last_change_by,
       :last_change_at,
       :mod_comments,
@@ -92,7 +88,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> update_change(:name, &String.trim/1)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
-    |> validate_change(:description, &Validation.validate_safe/2)
     |> validate_change(:content, &Validation.validate_safe/2)
   end
 
@@ -212,7 +207,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     business_concept_version
     |> cast(params, [
       :name,
-      :description,
       :content,
       :last_change_by,
       :last_change_at,
@@ -224,7 +218,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     ])
     |> validate_required([
       :name,
-      :description,
       :content,
       :last_change_by,
       :last_change_at,
@@ -235,7 +228,6 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
       :in_progress
     ])
     |> update_change(:name, &String.trim/1)
-    |> validate_change(:description, &Validation.validate_safe/2)
     |> validate_change(:content, &Validation.validate_safe/2)
   end
 
