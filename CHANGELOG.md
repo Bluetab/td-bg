@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## Added
+
+- [TD-6336] Get test-truedat-eks config on deploy stage
+
 ### Changed
 
 - [TD-6197] Migrate descriptions to new field in the template
@@ -11,7 +15,6 @@
 ### Changed
 
 - [TD-6215] Use td-core-lib for elastic search and reindex
-
 
 ## [5.19.0] 2023-11-28
 
