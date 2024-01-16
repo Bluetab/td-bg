@@ -32,6 +32,24 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     Permissions.has_permission?(claims, :create_business_concept)
   end
 
+  def can?(%Claims{role: "admin"}, :auto_publish, _), do: true
+
+  def can?(%Claims{} = claims, :auto_publish, BusinessConcept) do
+    Permissions.has_permission?(claims, :publish_business_concept)
+  end
+
+  def can?(
+        %Claims{} = claims,
+        :auto_publish,
+        %BusinessConceptVersion{} = business_concept_version
+      ) do
+    authorized?(
+      claims,
+      :publish_business_concept,
+      business_concept_version
+    )
+  end
+
   def can?(%Claims{} = claims, :share_with_domain, %BusinessConcept{} = business_concept) do
     authorized?(claims, :share_with_domain, business_concept)
   end

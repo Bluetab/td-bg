@@ -9,14 +9,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcept.Download
   alias TdBg.BusinessConcept.Search
-  alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.BulkUploader
+  alias TdBg.BusinessConcepts.BulkUploadEvent
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Links
   alias TdBg.BusinessConcepts.Workflow
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
+  alias TdBg.Utils.Hasher
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
   alias TdCache.TemplateCache
@@ -95,12 +97,13 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp render_search_results(%{results: business_concept_versions, total: total}, conn) do
     hypermedia =
-      collection_hypermedia(
-        "business_concept_version",
+      "business_concept_version"
+      |> collection_hypermedia(
         conn,
         business_concept_versions,
         BusinessConceptVersion
       )
+      |> put_actions(conn)
 
     conn
     |> put_resp_header("x-total-count", "#{total}")
@@ -150,20 +153,37 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   end
 
   def upload(conn, params) do
-    lang = Map.get(params, "lang", @default_lang)
     claims = conn.assigns[:current_resource]
+    {lang, params} = Map.pop(params, "lang", @default_lang)
     business_concepts_upload = Map.get(params, "business_concepts")
 
-    with {:can, true} <- {:can, can?(claims, upload(BusinessConcept))},
-         {:ok, response} <-
-           Upload.from_csv(business_concepts_upload, claims, &can_upload?/2, lang),
-         body <- Jason.encode!(%{data: %{message: response}}) do
-      send_resp(conn, :ok, body)
-    end
-  end
+    auto_publish = params |> Map.get("auto_publish", "false") |> String.to_existing_atom()
 
-  defp can_upload?(claims, domain) do
-    can?(claims, upload(domain))
+    with {:can, true} <- {:can, can?(claims, upload(BusinessConcept))},
+         file_hash <- Hasher.hash_file(business_concepts_upload.path) do
+      {code, response} =
+        case BulkUploader.bulk_upload(
+               file_hash,
+               business_concepts_upload,
+               claims,
+               auto_publish,
+               lang
+             ) do
+          {:started, ^file_hash, task_reference} ->
+            {
+              :accepted,
+              %{file_hash: file_hash, status: "STARTED", task_reference: task_reference}
+            }
+
+          {:running, %BulkUploadEvent{file_hash: ^file_hash} = event} ->
+            {:accepted,
+             TdBgWeb.BulkUploadEventView.render("show.json", %{bulk_upload_event: event})}
+        end
+
+      conn
+      |> put_resp_content_type("application/json", "utf-8")
+      |> send_resp(code, Jason.encode!(response))
+    end
   end
 
   swagger_path :create do
@@ -1008,5 +1028,40 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     Map.put(business_concept_version, "_actions", %{
       "can_create_structure_link" => can_create_link
     })
+  end
+
+  defp put_actions(hypermedia, conn) do
+    claims = conn.assigns[:current_resource]
+
+    [:upload, :auto_publish]
+    |> Enum.filter(&can?(claims, &1, BusinessConceptVersion))
+    |> Enum.reduce(%{}, fn
+      :upload, acc ->
+        Map.put(acc, "upload", %{
+          href: Routes.business_concept_version_path(conn, :upload),
+          method: "POST"
+        })
+
+      :auto_publish, acc ->
+        Map.put(acc, "autoPublish", %{
+          href: Routes.business_concept_version_path(conn, :upload),
+          method: "POST"
+        })
+    end)
+    |> Enum.map(fn {action, data} ->
+      %TdHypermedia.Link{
+        action: String.to_atom(action),
+        path: data.href,
+        method: String.to_atom(data.method),
+        schema: %{}
+      }
+    end)
+    |> then(
+      &Map.put(
+        hypermedia,
+        :collection_hypermedia,
+        Map.get(hypermedia, :collection_hypermedia) ++ &1
+      )
+    )
   end
 end

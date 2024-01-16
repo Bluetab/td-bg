@@ -6,6 +6,17 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   alias TdCore.Search.MockIndexWorker
 
+  @template_name "some_type"
+  @content [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{"name" => "Field1", "type" => "string", "cardinality" => "?"},
+        %{"name" => "Field2", "type" => "string", "cardinality" => "?"}
+      ]
+    }
+  ]
+
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
     start_supervised!(TdCore.Search.Cluster)
@@ -24,10 +35,39 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   setup :set_mox_from_context
   setup :verify_on_exit!
 
-  setup _context do
-    on_exit(fn ->
-      MockIndexWorker.clear()
-    end)
+  setup context do
+    case context[:template] do
+      nil ->
+        :ok
+
+      true ->
+        %{id: template_id} =
+          Templates.create_template(%{
+            id: 0,
+            name: @template_name,
+            label: "label",
+            scope: "test",
+            content: @content
+          })
+
+        on_exit(fn ->
+          Templates.delete(template_id)
+        end)
+
+      content ->
+        %{id: template_id} =
+          Templates.create_template(%{
+            id: 0,
+            name: @template_name,
+            label: "label",
+            scope: "test",
+            content: content
+          })
+
+        on_exit(fn ->
+          Templates.delete(template_id)
+        end)
+    end
 
     :ok
   end
@@ -782,6 +822,64 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       end
     end
 
+    @tag authentication: [user_name: "not_an_admin", permissions: ["publish_business_concept"]]
+    test "actions for non admin user", %{
+      conn: conn
+    } do
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: _, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          SearchHelpers.hits_response([])
+        end
+      )
+
+      assert %{"_actions" => actions} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), only_linkable: true)
+               |> json_response(:ok)
+
+      assert %{
+               "autoPublish" => %{
+                 "href" => "/api/business_concept_versions/upload",
+                 "input" => %{},
+                 "method" => "POST"
+               }
+             } = actions
+    end
+
+    @tag authentication: [role: "admin"]
+    test "actions for admin user", %{
+      conn: conn
+    } do
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: _, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          SearchHelpers.hits_response([])
+        end
+      )
+
+      assert %{"_actions" => actions} =
+               conn
+               |> post(Routes.business_concept_version_path(conn, :search), only_linkable: true)
+               |> json_response(:ok)
+
+      assert %{
+               "autoPublish" => %{},
+               "create" => %{},
+               "upload" => %{}
+             } = actions
+    end
+
     @tag authentication: [user_name: "not_an_admin"]
     test "find only linkable concepts", %{conn: conn, claims: claims} do
       %{id: domain_id1} = CacheHelpers.insert_domain()
@@ -888,6 +986,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     setup :set_mox_from_context
 
     @tag authentication: [role: "user"]
+    @tag :template
     test "renders business_concept when data is valid", %{
       conn: conn,
       claims: claims,
@@ -969,12 +1068,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag authentication: [role: "admin"]
+    @tag :template
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain = insert(:domain)
 
       creation_attrs = %{
         content: %{},
-        type: "some_type",
+        type: @template_name,
         name: nil,
         description: to_rich_text("Some description"),
         domain_id: domain.id,
@@ -1127,17 +1227,16 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     setup :set_mox_from_context
 
     @tag authentication: [role: "admin"]
+    @tag :template
     test "renders business_concept_version when data is valid", %{
       conn: conn,
       swagger_schema: schema
     } do
-      %{name: template_name} = CacheHelpers.insert_template()
-
       %{id: id, business_concept_id: business_concept_id} =
-        business_concept_version = insert(:business_concept_version, type: template_name)
+        business_concept_version = insert(:business_concept_version, type: @template_name)
 
       update_attrs = %{
-        "content" => %{"list" => ["one"], "string" => "foo"},
+        "content" => %{"Field1" => "Foo", "Field2" => "bar"},
         "name" => "The new name"
       }
 
@@ -1256,7 +1355,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag authentication: [role: "admin"]
-
+    @tag :template
     test "when restore a deprecated business concept version, will be surived in cache", %{
       conn: conn
     } do
@@ -1265,14 +1364,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       %{user_id: user_id} = build(:claims)
 
       %{id: bc_main_id} =
+        business_concept =
         insert(:business_concept,
-          last_change_by: user_id
+          last_change_by: user_id,
+          domain_id: domain_id
         )
 
       %{id: bcv_main_id} =
         insert(:business_concept_version,
-          business_concept_id: bc_main_id,
-          domain_id: domain_id,
+          business_concept: business_concept,
           status: "published"
         )
 

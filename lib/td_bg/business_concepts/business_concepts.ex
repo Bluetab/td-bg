@@ -110,7 +110,7 @@ defmodule TdBg.BusinessConcepts do
   def get_business_concept(business_concept_id) do
     BusinessConcept
     |> where([c], c.id == ^business_concept_id)
-    |> preload(:shared_to)
+    |> preload([:shared_to, :domain])
     |> Repo.one()
   end
 
@@ -235,15 +235,28 @@ defmodule TdBg.BusinessConcepts do
   """
   def create_business_concept(params, opts \\ []) do
     params
+    |> valid_creation_changeset(opts)
+    |> insert_concept()
+    |> index_on_success(opts[:index])
+  end
+
+  def new_concept_validations(params, opts \\ []) do
+    business_concept_version =
+      Keyword.get(opts, :business_concept_version, %BusinessConceptVersion{})
+
+    params
+    |> validate_new_concept(business_concept_version)
+    |> validate_concept_content(opts[:in_progress])
+  end
+
+  def valid_creation_changeset(params, opts \\ []) do
+    params
     |> Map.put_new(:lang, @default_lang)
     |> attrs_keys_to_atoms()
     |> raise_error_if_no_content_schema()
     |> maybe_domain_ids()
     |> format_content()
-    |> validate_new_concept()
-    |> validate_concept_content(opts[:in_progress])
-    |> insert_concept()
-    |> index_on_success(opts[:index])
+    |> new_concept_validations(opts)
   end
 
   defp index_on_success({:ok, %{} = res}, true) do
@@ -292,6 +305,12 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
+  def update_concept_validations(params, business_concept_version) do
+    params
+    |> validate_concept(business_concept_version)
+    |> validate_concept_content()
+  end
+
   @doc """
   Updates a business_concept_version.
 
@@ -317,8 +336,7 @@ defmodule TdBg.BusinessConcepts do
       |> add_content_if_not_exist()
       |> merge_content_with_concept(business_concept_version)
       |> set_content_defaults(domain_id)
-      |> validate_concept(business_concept_version)
-      |> validate_concept_content()
+      |> update_concept_validations(business_concept_version)
       |> update_concept()
 
     case result do
@@ -358,7 +376,7 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
+  def refresh_cache_and_elastic(%BusinessConceptVersion{} = business_concept_version) do
     business_concept_id = business_concept_version.business_concept_id
 
     ConceptLoader.refresh(business_concept_id)
@@ -652,7 +670,7 @@ defmodule TdBg.BusinessConcepts do
     Map.put(params, :changeset, changeset)
   end
 
-  defp merge_content_with_concept(params, %BusinessConceptVersion{} = business_concept_version) do
+  def merge_content_with_concept(params, %BusinessConceptVersion{} = business_concept_version) do
     content = Map.get(params, :content)
     concept_content = Map.get(business_concept_version, :content, %{})
     new_content = Map.merge(concept_content, content)
@@ -722,7 +740,7 @@ defmodule TdBg.BusinessConcepts do
     Map.put(changes, :content_schema, schema)
   end
 
-  defp update_concept(%{changeset: changeset}) do
+  def update_concept(%{changeset: changeset}) do
     Multi.new()
     |> Multi.update(:updated, changeset)
     |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
@@ -736,10 +754,34 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  defp insert_concept(%{changeset: changeset}) do
+  def insert_concept(%{changeset: changeset}) do
     Multi.new()
     |> Multi.insert(:business_concept_version, changeset)
     |> Multi.run(:audit, Audit, :business_concept_created, [])
+    |> Repo.transaction()
+  end
+
+  def version_concept(%{changeset: changeset}) do
+    Multi.new()
+    |> Multi.insert(:current, Changeset.change(changeset, current: false))
+    |> Multi.run(:audit, Audit, :business_concept_versioned, [])
+    |> Repo.transaction()
+  end
+
+  def publish_version_concept(%{
+        changeset: changeset,
+        params: %{"business_concept" => %{"id" => business_concept_id}}
+      }) do
+    query =
+      from(
+        c in BusinessConceptVersion,
+        where: c.business_concept_id == ^business_concept_id and c.status == "published"
+      )
+
+    Multi.new()
+    |> Multi.update_all(:versioned, query, set: [status: "versioned", current: false])
+    |> Multi.insert(:published, Changeset.change(changeset, current: true))
+    |> Multi.run(:audit_published, Audit, :business_concept_published, [])
     |> Repo.transaction()
   end
 

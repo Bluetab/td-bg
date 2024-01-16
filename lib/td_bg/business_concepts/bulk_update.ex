@@ -8,6 +8,10 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   alias TdBg.Cache.ConceptLoader
   alias TdBg.Repo
   alias TdBg.Taxonomies
+  alias TdDfLib.Format
+  alias TdDfLib.Parser
+
+  @default_lang Application.compile_env(:td_bg, :lang)
 
   def update_all(%Claims{} = claims, business_concept_versions, params) do
     business_concept_versions =
@@ -90,11 +94,12 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
        ) do
     business_concept_version = Enum.at(business_concept_versions, 0)
 
-    case BusinessConcepts.get_content_schema(business_concept_version) do
-      {:error, _} = e ->
-        e
+    case BusinessConcepts.get_template(business_concept_version) do
+      nil ->
+        {:error, :template_not_found}
 
-      content_schema ->
+      %{content: content} ->
+        content_schema = Format.flatten_content_fields(content, @default_lang)
         domain_id = Map.get(params, "domain_id", nil)
 
         case Taxonomies.get_domain(domain_id) do
@@ -109,7 +114,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
               params
               |> Map.put("business_concept", business_concept_attrs)
               |> Map.put("content_schema", content_schema)
-              |> Map.update("content", %{}, &content_fields/1)
+              |> Map.update("content", %{}, &content_fields(&1, content_schema, domain_id))
               |> Map.put("last_change_by", user_id)
               |> Map.put("last_change_at", DateTime.utc_now())
 
@@ -121,11 +126,23 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
     end
   end
 
-  defp content_fields(%{} = content) do
-    Enum.reduce(content, Map.new(), &non_empty/2)
+  defp content_fields(content, content_schema, domain_id, lang \\ @default_lang)
+
+  defp content_fields(%{} = content, content_schema, domain_id, lang) do
+    template_fields = Enum.filter(content_schema, &(Map.get(&1, "type") != "table"))
+
+    fields = Map.keys(content)
+    content_schema = Enum.filter(template_fields, &(Map.get(&1, "name") in fields))
+
+    Parser.format_content(%{
+      content: Enum.reduce(content, Map.new(), &non_empty/2),
+      content_schema: content_schema,
+      domain_ids: [domain_id],
+      lang: lang
+    })
   end
 
-  defp content_fields(content), do: content
+  defp content_fields(content, _, _, _), do: content
 
   defp non_empty({_k, nil}, acc), do: acc
 

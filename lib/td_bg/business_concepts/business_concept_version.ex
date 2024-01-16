@@ -62,7 +62,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> update_change(:name, &String.trim/1)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
-    |> validate_change(:content, &Validation.validate_safe/2)
+    |> validate_content(params)
   end
 
   def update_changeset(business_concept_version, params) do
@@ -88,7 +88,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> update_change(:name, &String.trim/1)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
-    |> validate_change(:content, &Validation.validate_safe/2)
+    |> validate_content()
   end
 
   def bulk_update_changeset(
@@ -177,6 +177,22 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
 
   defp validate_name(changeset, _business_concept_version), do: changeset
 
+  defp validate_content(%{data: %{business_concept: business_concept}} = changeset),
+    do: validate_content(changeset, business_concept)
+
+  defp validate_content(changeset, %{business_concept: business_concept}),
+    do: validate_content(changeset, business_concept)
+
+  defp validate_content(changeset, %{type: template, domain_id: domain_id}),
+    do:
+      validate_change(
+        changeset,
+        :content,
+        Validation.validator(template, domain_ids: [domain_id])
+      )
+
+  defp validate_content(changeset, _), do: changeset
+
   def confidential_changeset(%BusinessConceptVersion{} = business_concept_version, params) do
     business_concept_version
     |> update_changeset(params)
@@ -186,6 +202,11 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def status_changeset(%BusinessConceptVersion{} = business_concept_version, status, user_id) do
     business_concept_version
     |> cast(%{status: status}, [:status])
+    |> status_changeset(user_id)
+  end
+
+  def status_changeset(%Ecto.Changeset{} = changeset, user_id) do
+    changeset
     |> validate_required(:status)
     |> validate_inclusion(:status, @valid_status)
     |> put_audit(user_id)

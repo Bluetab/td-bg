@@ -17,6 +17,9 @@ config :td_bg, TdBg.Repo, pool_size: 5
 
 config :td_bg, :lang, "en"
 
+config :td_bg, TdBg.BusinessConcepts.BulkUploader, timeout: 600
+config :td_bg, TdBg.BusinessConcepts.BulkUploader, uploads_tmp_folder: "/tmp"
+
 config :codepagex, :encodings, [
   :ascii,
   ~r[iso8859]i,
@@ -75,6 +78,11 @@ config :td_bg, TdBg.Scheduler,
     [
       schedule: "@reboot",
       task: {TdBg.Jobs.UpdateDomainFields, :run, []},
+      run_strategy: Quantum.RunStrategy.Local
+    ],
+    [
+      schedule: "@reboot",
+      task: {TdBg.Jobs.UploadTmpFilesCleaner, :run, []},
       run_strategy: Quantum.RunStrategy.Local
     ],
     [

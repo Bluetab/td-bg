@@ -10,10 +10,13 @@ defmodule TdBg.BusinessConcept.Download do
 
   @headers [
     "id",
+    "current_version_id",
     "name",
     "domain",
     "status",
-    "completeness"
+    "completeness",
+    "last_change_at",
+    "inserted_at"
   ]
 
   @url_schema_headers [
@@ -99,9 +102,13 @@ defmodule TdBg.BusinessConcept.Download do
   defp editable_concept_value(%{"template" => template}, "template"),
     do: Map.get(template, "name")
 
-  defp editable_concept_value(%{"domain" => domain}, "domain"), do: Map.get(domain, "name")
+  defp editable_concept_value(%{"domain" => domain}, "domain"), do: Map.get(domain, "external_id")
 
   defp editable_concept_value(concept, "completeness"), do: get_completeness(concept)
+
+  defp editable_concept_value(%{"business_concept_id" => id}, "id"), do: id
+
+  defp editable_concept_value(%{"id" => id}, "current_version_id"), do: id
 
   defp editable_concept_value(concept, field), do: Map.get(concept, field)
 

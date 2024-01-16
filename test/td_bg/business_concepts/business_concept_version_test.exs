@@ -9,10 +9,11 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
 
   setup do
     identifier_name = "identifier"
+    template_name = "template_with_identifier"
 
     with_identifier = %{
       id: System.unique_integer([:positive]),
-      name: "Concept template with identifier field",
+      name: template_name,
       label: "concept_with_identifier",
       scope: "bg",
       content: [
@@ -45,22 +46,24 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
     }
 
     template_with_identifier = CacheHelpers.insert_template(with_identifier)
+    %{id: domain_id} = domain = CacheHelpers.insert_domain()
 
     create_attrs = %{
-      content: %{},
+      content: %{"text" => "foo"},
       content_schema: template_with_identifier.content,
       name: "some name",
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
       version: 1,
-      business_concept: %{id: 1, type: template_with_identifier.name},
+      business_concept: %{id: 1, type: template_with_identifier.name, domain_id: domain_id},
       in_progress: true
     }
 
     [
       template_with_identifier: template_with_identifier,
       identifier_name: identifier_name,
-      create_attrs: create_attrs
+      create_attrs: create_attrs,
+      domain: domain
     ]
   end
 
@@ -95,16 +98,21 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
     end
 
     test "validates unsafe content and description", %{create_attrs: params} do
-      params =
-        params
-        |> Map.put(:content, %{
-          "foo" => [@unsafe]
-        })
+      params = Map.put(params, :content, %{"foo" => [@unsafe], "text" => "bar"})
 
       assert %{valid?: false, errors: errors} =
                BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
 
       assert errors[:content] == {"invalid content", []}
+    end
+
+    test "create changeset validates content", %{create_attrs: params} do
+      params = Map.put(params, :content, %{"identifier" => "foo"})
+
+      assert %{valid?: false, errors: errors} =
+               BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, params)
+
+      assert {"text: can't be blank", _} = errors[:content]
     end
   end
 
@@ -198,17 +206,36 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
       assert Changeset.get_change(changeset, :status) == "draft"
     end
 
-    test "validates unsafe content and description" do
-      bcv = insert(:business_concept_version)
+    test "validates unsafe content and description", %{
+      domain: %{id: domain_id},
+      template_with_identifier: %{name: template_name}
+    } do
+      bc = build(:business_concept, type: template_name, domain_id: domain_id)
+      bcv = insert(:business_concept_version, business_concept: bc)
 
       params = %{
-        "content" => %{"foo" => [@unsafe]}
+        "content" => %{"foo" => [@unsafe], "text" => "bar"}
       }
 
       assert %{valid?: false, errors: errors} =
                BusinessConceptVersion.update_changeset(bcv, params)
 
-      assert errors[:content] == {"invalid content", []}
+      assert {"invalid content", _} = errors[:content]
+    end
+
+    test "update changeset validates content", %{
+      domain: %{id: domain_id},
+      template_with_identifier: %{name: template_name}
+    } do
+      bc = build(:business_concept, type: template_name, domain_id: domain_id)
+      bcv = insert(:business_concept_version, business_concept: bc)
+
+      params = %{"content" => %{"foo" => [@unsafe]}}
+
+      assert %{valid?: false, errors: errors} =
+               BusinessConceptVersion.update_changeset(bcv, params)
+
+      assert {"text: can't be blank", _} = errors[:content]
     end
   end
 
