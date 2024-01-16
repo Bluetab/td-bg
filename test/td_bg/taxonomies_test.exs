@@ -722,9 +722,11 @@ defmodule TdBg.TaxonomiesTest do
 
   describe "apply_changes/2" do
     test "returns a new Domain with changes applied" do
-      domain = build(:domain)
+      %{name: name, external_id: external_id, description: description} = domain = build(:domain)
       params = Map.take(domain, [:name, :external_id, :description])
-      assert Taxonomies.apply_changes(Domain, params) == domain
+
+      assert %{name: ^name, description: ^description, external_id: ^external_id} =
+               Taxonomies.apply_changes(Domain, params)
     end
 
     test "returns an existing Domain with changes applied" do

@@ -35,12 +35,16 @@ defmodule TdBg.Application do
 
   defp workers(_env) do
     [
+      # Task supervisor
+      {Task.Supervisor, name: TdBg.TaskSupervisor},
       # Cluster
       TdCore.Search.Cluster,
       # Cache workers
       TdBg.Cache.ConceptLoader,
       TdBg.Cache.DomainLoader,
-      TdBg.Scheduler
+      TdBg.Scheduler,
+      # Bulk Uploader worker
+      TdBg.BusinessConcepts.BulkUploader
     ] ++ IndexWorker.get_index_workers()
   end
 end

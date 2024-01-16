@@ -11,6 +11,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   alias TdCore.Search.MockIndexWorker
 
   @stream TdCache.Audit.stream()
+  @template_name "test_template"
 
   setup_all do
     Redix.del!(@stream)
@@ -31,6 +32,14 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
 
   setup :verify_on_exit!
   setup :set_mox_from_context
+
+  setup do
+    on_exit(fn -> Redix.del!(@stream) end)
+
+    Templates.create_template(@template_name)
+
+    [claims: build(:claims)]
+  end
 
   describe "new_version/2" do
     setup :create_concept_with_parents
@@ -68,7 +77,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
 
     test "creates a new published version and the previous version remains the current" do
       business_concept_version =
-        insert(:business_concept_version, status: "published", current: true)
+        insert(:business_concept_version, status: "published", current: true, type: @template_name)
 
       assert {:ok, res} = Workflow.new_version(business_concept_version, %Claims{user_id: 1234})
 
@@ -106,7 +115,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
 
     test "creates a new published version and advance to a publish state will make it current" do
       business_concept_version =
-        insert(:business_concept_version, status: "published", current: true)
+        insert(:business_concept_version, status: "published", current: true, type: @template_name)
 
       assert {:ok, res} = Workflow.new_version(business_concept_version, %Claims{user_id: 1234})
       assert %{current: %{current: false}} = res
@@ -125,7 +134,8 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
     end
 
     test "publishes an event to the audit stream" do
-      business_concept_version = insert(:business_concept_version, status: "published")
+      business_concept_version =
+        insert(:business_concept_version, status: "published", type: @template_name)
 
       assert {:ok, %{audit: event_id}} =
                Workflow.new_version(business_concept_version, %Claims{user_id: 1234})
@@ -139,7 +149,10 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       domain_ids: domain_ids
     } do
       business_concept_version =
-        insert(:business_concept_version, status: "published", business_concept: concept)
+        insert(:business_concept_version,
+          status: "published",
+          business_concept: concept
+        )
 
       assert {:ok, %{audit: event_id}} =
                Workflow.new_version(business_concept_version, %Claims{user_id: 1234})
@@ -270,7 +283,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
     Enum.each(domains, &CacheHelpers.put_domain/1)
     domain_ids = Enum.map(domains, & &1.id)
 
-    concept = build(:business_concept, domain: domain)
+    concept = build(:business_concept, domain: domain, type: @template_name)
     [concept: concept, domain_ids: domain_ids]
   end
 

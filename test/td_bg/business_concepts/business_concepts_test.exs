@@ -11,6 +11,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdCache.Redix
   alias TdCache.Redix.Stream
   alias TdCore.Search.MockIndexWorker
+  alias TdDfLib.Format
   alias TdDfLib.RichText
 
   @stream TdCache.Audit.stream()
@@ -57,13 +58,18 @@ defmodule TdBg.BusinessConceptsTest do
         :ok
 
       content ->
-        Templates.create_template(%{
-          id: 0,
-          name: @template_name,
-          label: "label",
-          scope: "test",
-          content: content
-        })
+        %{id: template_id} =
+          Templates.create_template(%{
+            id: 0,
+            name: @template_name,
+            label: "label",
+            scope: "test",
+            content: content
+          })
+
+        on_exit(fn ->
+          Templates.delete(template_id)
+        end)
     end
 
     :ok
@@ -180,6 +186,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert %{content: ^content} = business_concept_version
     end
 
+    @tag template: @content
     test "with invalid content: required" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -192,7 +199,7 @@ defmodule TdBg.BusinessConceptsTest do
       content = %{}
 
       concept_attrs = %{
-        type: "some_type",
+        type: @template_name,
         domain_id: domain.id,
         last_change_by: user_id,
         last_change_at: DateTime.utc_now()
@@ -231,8 +238,8 @@ defmodule TdBg.BusinessConceptsTest do
       domain = insert(:domain)
 
       content_schema = [
-        %{"name" => "Field1", "type" => "string", "default" => "Hello", "cardinality" => "?"},
-        %{"name" => "Field2", "type" => "string", "default" => "World", "cardinality" => "?"}
+        %{"name" => "Field1", "type" => "string", "default" => "foo", "cardinality" => "?"},
+        %{"name" => "Field2", "type" => "string", "default" => "bar", "cardinality" => "?"}
       ]
 
       content = %{}
@@ -260,7 +267,7 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs)
 
       assert %{content: content} = business_concept_version
-      assert %{"Field1" => "Hello", "Field2" => "World"} = content
+      assert %{"Field1" => "foo", "Field2" => "bar"} = content
     end
 
     @tag template: @content
@@ -397,6 +404,7 @@ defmodule TdBg.BusinessConceptsTest do
       end
     end
 
+    @tag template: @content
     test "with content that include fixed values translated with single cardinality" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -447,6 +455,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert %{"i18n" => "one"} = content
     end
 
+    @tag template: @content
     test "with content that include fixed values translated with multiple cardinality" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -502,6 +511,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert %{"i18n" => ["one", "two"]} = content
     end
 
+    @tag template: @content
     test "with content that include fixed values without i18n key with single cardinality" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -544,6 +554,7 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
     end
 
+    @tag template: @content
     test "with content that include fixed values without i18n key with multiple cardinality" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -586,6 +597,7 @@ defmodule TdBg.BusinessConceptsTest do
               _} = BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
     end
 
+    @tag template: @content
     test "with content that include fixed values some missing i18n keys with multiple cardinality" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -710,10 +722,29 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "updates the content with valid content data" do
+      %{id: domain_id} = insert(:domain)
+
+      template_name = "test_template"
+
       content_schema = [
-        %{"name" => "Field1", "type" => "string", "cardinality" => "1"},
-        %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "Field1", "type" => "string", "cardinality" => "1", "default" => ""},
+            %{"name" => "Field2", "type" => "string", "cardinality" => "1", "default" => ""}
+          ]
+        }
       ]
+
+      template = %{
+        id: 0,
+        name: template_name,
+        label: "label",
+        scope: "test",
+        content: content_schema
+      }
+
+      Templates.create_template(template)
 
       %{user_id: user_id} = build(:claims)
 
@@ -722,16 +753,24 @@ defmodule TdBg.BusinessConceptsTest do
         "Field2" => "Second field"
       }
 
+      concept_attrs = %{
+        type: template_name,
+        domain_id: domain_id,
+        last_change_by: 1000,
+        last_change_at: DateTime.utc_now()
+      }
+
+      business_concept = insert(:business_concept, concept_attrs)
+
       business_concept_version =
-        insert(:business_concept_version, last_change_by: user_id, content: content)
+        insert(:business_concept_version,
+          business_concept: business_concept,
+          last_change_by: user_id,
+          content: content
+        )
 
       update_content = %{
         "Field1" => "New first field"
-      }
-
-      concept_attrs = %{
-        last_change_by: 1000,
-        last_change_at: DateTime.utc_now()
       }
 
       version_attrs = %{
@@ -745,17 +784,18 @@ defmodule TdBg.BusinessConceptsTest do
         version: 1
       }
 
-      update_attrs = Map.put(version_attrs, :content_schema, content_schema)
+      update_attrs =
+        Map.put(version_attrs, :content_schema, Format.flatten_content_fields(content_schema))
 
-      assert {:ok, business_concept_version} =
+      assert {:ok, new_business_concept_version} =
                BusinessConcepts.update_business_concept_version(
                  business_concept_version,
                  update_attrs
                )
 
-      assert %BusinessConceptVersion{} = business_concept_version
-      assert business_concept_version.content["Field1"] == "New first field"
-      assert business_concept_version.content["Field2"] == "Second field"
+      assert %BusinessConceptVersion{} = new_business_concept_version
+      assert new_business_concept_version.content["Field1"] == "New first field"
+      assert new_business_concept_version.content["Field2"] == "Second field"
       assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
     end
 
@@ -815,12 +855,12 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "get_currently_published_version!/1 returns the published business_concept with given id" do
-      %{id: business_concept_id} = insert(:business_concept)
+      %{id: business_concept_id} = business_concept = insert(:business_concept)
 
       [_, _, published_id, _] =
         ["draft", "versioned", "published", "deprecated"]
         |> Enum.map(
-          &insert(:business_concept_version, business_concept_id: business_concept_id, status: &1)
+          &insert(:business_concept_version, business_concept: business_concept, status: &1)
         )
         |> Enum.map(& &1.id)
 
@@ -922,11 +962,16 @@ defmodule TdBg.BusinessConceptsTest do
       assert %BusinessConceptVersion{id: ^id} = BusinessConcepts.get_business_concept_version!(id)
     end
 
+    @tag template: @content
     test "get_business_concept_version/2 returns the business_concept_version by concept id and version" do
       claims = build(:claims)
+      %{id: domain_id} = insert(:domain)
 
-      %{id: id, business_concept_id: business_concept_id, version: version} =
-        bv1 = insert(:business_concept_version)
+      %{id: business_concept_id} =
+        business_concept = insert(:business_concept, type: @template_name, domain_id: domain_id)
+
+      %{id: id, version: version} =
+        bv1 = insert(:business_concept_version, business_concept: business_concept)
 
       assert %BusinessConceptVersion{id: ^id, version: ^version} =
                BusinessConcepts.get_business_concept_version(business_concept_id, "current")

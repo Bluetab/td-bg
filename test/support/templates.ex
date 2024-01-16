@@ -6,7 +6,32 @@ defmodule Templates do
   alias ExUnit.Callbacks
   alias TdCache.TemplateCache
 
-  def create_template(type, content) do
+  @content [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          name: "foo",
+          type: "string",
+          cardinality: "?",
+          values: %{"fixed" => ["bar"]},
+          subscribable: true
+        },
+        %{
+          name: "xyz",
+          type: "string",
+          cardinality: "?",
+          values: %{"fixed" => ["foo"]}
+        }
+      ]
+    }
+  ]
+
+  def create_template(%{id: _} = attrs) do
+    put_template(attrs)
+  end
+
+  def create_template(type, content \\ @content) do
     attrs = %{
       id: 0,
       label: type,
@@ -16,14 +41,6 @@ defmodule Templates do
     }
 
     put_template(attrs)
-  end
-
-  def create_template(attrs) do
-    put_template(attrs)
-  end
-
-  def delete(template_id) do
-    TemplateCache.delete(template_id)
   end
 
   def create_template do
@@ -36,6 +53,10 @@ defmodule Templates do
     }
 
     put_template(attrs)
+  end
+
+  def delete(template_id) do
+    TemplateCache.delete(template_id)
   end
 
   defp put_template(%{id: id, updated_at: _updated_at} = attrs) do
