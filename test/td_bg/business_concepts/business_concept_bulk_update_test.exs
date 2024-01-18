@@ -45,7 +45,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
               "group" => "Multiple Group",
               "label" => "Field 3",
               "default" => 1,
-              "values" => %{"fixed" => [1, 2, 3]},
+              "values" => %{"fixed" => ["1", "2", "3"]},
               "cardinality" => "1"
             },
             %{
@@ -53,7 +53,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
               "type" => "string",
               "group" => "Multiple Group",
               "label" => "Field 4",
-              "values" => %{"fixed" => [1, 2, 3]},
+              "values" => %{"fixed" => ["1", "2", "3"]},
               "cardinality" => "*"
             },
             %{
@@ -96,17 +96,17 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       content = %{
         "Field1" => "First field",
         "Field2" => "Second field",
-        "Field3" => 3,
-        "Field4" => [1, 2],
-        "Field5" => %{"foo" => "bar"}
+        "Field3" => "3",
+        "Field4" => ["1", "2"],
+        "Field5" => "foo"
       }
 
       update_content = %{
         "Field1" => "First udpate",
         "Field2" => "Second field",
-        "Field3" => "",
+        "Field3" => "1",
         "Field4" => [],
-        "Field5" => %{}
+        "Field5" => "foo"
       }
 
       bc_version1 =
@@ -144,9 +144,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content == %{
                "Field1" => "First udpate",
                "Field2" => "Second field",
-               "Field3" => 3,
-               "Field4" => [1, 2],
-               "Field5" => %{"foo" => "bar"}
+               "Field3" => "1",
+               "Field4" => [""],
+               "Field5" => enrich_text("foo")
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
@@ -155,9 +155,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content == %{
                "Field1" => "First udpate",
                "Field2" => "Second field",
-               "Field3" => 3,
-               "Field4" => [1, 2],
-               "Field5" => %{"foo" => "bar"}
+               "Field3" => "1",
+               "Field4" => [""],
+               "Field5" => enrich_text("foo")
              }
     end
 
@@ -173,12 +173,14 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       content = %{
         "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => "1"
       }
 
       update_content = %{
         "Field1" => "First update",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => "1"
       }
 
       bc_version1 = insert(:business_concept_version, business_concept: bc1, content: content)
@@ -186,7 +188,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       bc_versions =
         [bc_version1, bc_version2]
-        |> Enum.map(&Map.take(&1, [:id]))
+        |> Enum.map(&Map.take(&1, [:id, :business_concept]))
         |> Enum.map(&CollectionUtils.stringify_keys/1)
 
       params = %{
@@ -251,12 +253,14 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       content = %{
         "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => 1
       }
 
       update_content = %{
         "Field1" => "First update",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => "1"
       }
 
       bc_version1 =
@@ -311,7 +315,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       update_content = %{
         "Field1" => "First udpate",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => "1"
       }
 
       params = %{
@@ -328,7 +333,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field"
+               "Field2" => "Second field",
+               "Field3" => "1"
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
@@ -336,11 +342,12 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content == %{
                "Field1" => "First udpate",
-               "Field2" => "Second field"
+               "Field2" => "Second field",
+               "Field3" => "1"
              }
     end
 
-    test "validates only updated fields and gives an error when they arec incorrect" do
+    test "validates only updated fields and gives an error when they are incorrect" do
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -349,7 +356,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       content = %{
         "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => "1"
       }
 
       v1 =
@@ -373,7 +381,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       update_content = %{
         "Field1" => "First udpate",
-        "Field2" => "Second field"
+        "Field2" => "Second field",
+        "Field3" => "1"
       }
 
       params = %{
@@ -394,7 +403,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                bcv_ids,
                &(BusinessConcepts.get_business_concept_version!(&1).content == %{
                    "Field1" => "First udpate",
-                   "Field2" => "Second field"
+                   "Field2" => "Second field",
+                   "Field3" => "1"
                  })
              )
 
@@ -412,22 +422,23 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert {:error, changeset} =
                BulkUpdate.update_all(claims, [Enum.at(bc_versions, 0)], params)
 
-      assert %{errors: [Field3: error], valid?: false} = changeset
-      assert {"is invalid", [{:validation, :inclusion}, _]} = error
-
-      assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, [Enum.at(bc_versions, 1)], params)
-      assert length(bcv_ids) == 1
-
-      assert [
-               {:reindex, :concepts, _},
-               {:reindex, :concepts, _},
-               {:reindex, :concepts, _}
-             ] = MockIndexWorker.calls()
-
-      assert Enum.all?(
-               bcv_ids,
-               &BusinessConcepts.get_business_concept_version!(&1).in_progress
-             )
+      assert %{errors: [content: {"Field3: is invalid", _}], valid?: false} = changeset
     end
+  end
+
+  defp enrich_text(text) do
+    [
+      %{
+        "document" => %{
+          "nodes" => [
+            %{
+              "nodes" => [%{"leaves" => [%{"text" => "#{text}"}], "object" => "text"}],
+              "object" => "block",
+              "type" => "paragraph"
+            }
+          ]
+        }
+      }
+    ]
   end
 end

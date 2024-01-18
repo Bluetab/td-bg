@@ -26,6 +26,9 @@ if config_env() == :prod do
 
   config :td_bg, TdBg.Auth.Guardian, secret_key: System.fetch_env!("GUARDIAN_SECRET_KEY")
 
+  config :td_bg, TdBg.BusinessConcepts.BulkUploader,
+    timeout: System.get_env("BULK_UPLOADER_TIMEOUT", "600") |> String.to_integer()
+
   config :td_cache,
     redis_host: System.fetch_env!("REDIS_HOST"),
     port: System.get_env("REDIS_PORT", "6379") |> String.to_integer(),
@@ -38,6 +41,11 @@ if config_env() == :prod do
       [
         schedule: "@reboot",
         task: {TdBg.Jobs.UpdateDomainFields, :run, []},
+        run_strategy: Quantum.RunStrategy.Local
+      ],
+      [
+        schedule: "@reboot",
+        task: {TdBg.Jobs.UploadTmpFilesCleaner, :run, []},
         run_strategy: Quantum.RunStrategy.Local
       ],
       [

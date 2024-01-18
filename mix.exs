@@ -6,7 +6,7 @@ defmodule TdBg.Mixfile do
       app: :td_bg,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "5.20.0-local"
+          nil -> "6.0.0-local"
           v -> v
         end,
       elixir: "~> 1.14",
@@ -79,7 +79,8 @@ defmodule TdBg.Mixfile do
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "5.20.0"},
       {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.17.0"},
       {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "5.20.0"},
-      {:elixlsx, "~> 0.5.1"}
+      {:elixlsx, "~> 0.5.1"},
+      {:xlsx_reader, "~> 0.7.0"}
     ]
   end
 

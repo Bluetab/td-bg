@@ -14,7 +14,6 @@ defmodule TdBg.BusinessConcepts.Audit do
   def business_concepts_created(concept_ids) do
     audit_fields = [
       :content,
-      :description,
       :in_progress,
       :last_change_at,
       :last_change_by,

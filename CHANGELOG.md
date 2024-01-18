@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.0.0] 2023-01-17
+
+### Added
+
+- [TD-6336] Get test-truedat-eks config on deploy stage
+- [TD-6205] Upload and  auto publish of concepts for updating and creating
+  from xlsx
+
+### Changed
+
+- [TD-6197] Migrate descriptions to new field in the template
+
 ## [5.20.0] 2023-12-19
 
 ### Changed

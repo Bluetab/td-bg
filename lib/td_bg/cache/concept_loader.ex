@@ -28,10 +28,6 @@ defmodule TdBg.Cache.ConceptLoader do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
-  # def refresh([]) do
-  #   :ok
-  # end
-
   def refresh(business_concept_ids) when is_list(business_concept_ids) do
     GenServer.call(__MODULE__, {:refresh, business_concept_ids})
   end
@@ -67,7 +63,8 @@ defmodule TdBg.Cache.ConceptLoader do
   @impl GenServer
   def handle_info(:refresh_all, state) do
     # Full refresh on startup, only if last full refresh was more than one day ago
-    if acquire_lock?("TdBg.Cache.ConceptLoader:TD-3063", @seconds_in_day) do
+    if acquire_lock?("TdBg.Cache.ConceptLoader:TD-3063", @seconds_in_day) ||
+         acquire_lock?("TdBg.Cache.ConceptLoader:TD-6197") do
       Timer.time(
         fn ->
           BusinessConcepts.get_active_ids()
@@ -270,6 +267,10 @@ defmodule TdBg.Cache.ConceptLoader do
 
   defp acquire_lock?(key, expiry_seconds) do
     Redix.command!(["SET", key, node(), "NX", "EX", expiry_seconds])
+  end
+
+  defp acquire_lock?(key) do
+    Redix.command!(["SET", key, node(), "NX"])
   end
 
   defp get_content_fields do
