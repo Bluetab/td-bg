@@ -157,6 +157,18 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :create_business_concept, domain)
     end
 
+    def can?(%Claims{} = claims, :auto_publish, BusinessConceptVersion) do
+      BusinessConceptAbilities.can?(claims, :auto_publish, BusinessConcept)
+    end
+
+    def can?(
+          %Claims{} = claims,
+          :auto_publish,
+          %BusinessConceptVersion{} = business_concept_version
+        ) do
+      BusinessConceptAbilities.can?(claims, :auto_publish, business_concept_version)
+    end
+
     def can?(%Claims{} = claims, :manage_business_concepts_domain, %Domain{} = domain) do
       BusinessConceptAbilities.can?(claims, :manage_business_concepts_domain, domain)
     end

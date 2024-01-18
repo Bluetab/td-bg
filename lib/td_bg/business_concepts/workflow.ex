@@ -142,7 +142,7 @@ defmodule TdBg.BusinessConcepts.Workflow do
       draft_attrs
       |> BusinessConcepts.attrs_keys_to_atoms()
       |> BusinessConcepts.validate_new_concept(business_concept_version)
-      |> do_new_version()
+      |> BusinessConcepts.version_concept()
 
     case result do
       {:ok, %{current: new_version}} ->
@@ -153,12 +153,5 @@ defmodule TdBg.BusinessConcepts.Workflow do
       _ ->
         result
     end
-  end
-
-  defp do_new_version(%{changeset: changeset}) do
-    Multi.new()
-    |> Multi.insert(:current, Changeset.change(changeset, current: false))
-    |> Multi.run(:audit, Audit, :business_concept_versioned, [])
-    |> Repo.transaction()
   end
 end

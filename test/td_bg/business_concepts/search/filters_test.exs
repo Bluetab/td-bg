@@ -27,11 +27,12 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
     test "includes domain children in taxonomy filter" do
       %{id: parent_id} = CacheHelpers.insert_domain()
       %{id: domain_id} = CacheHelpers.insert_domain(parent_id: parent_id)
+      domains = Enum.sort([parent_id, domain_id])
 
       aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
 
       assert Filters.build_filters(%{"taxonomy" => [parent_id]}, aggs) == [
-               %{terms: %{"domain_ids" => [parent_id, domain_id]}}
+               %{terms: %{"domain_ids" => domains}}
              ]
     end
   end

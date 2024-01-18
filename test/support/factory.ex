@@ -4,6 +4,7 @@ defmodule TdBg.Factory do
   use ExMachina.Ecto, repo: TdBg.Repo
   use TdDfLib.TemplateFactory
 
+  alias TdBg.BusinessConcepts.BulkUploadEvent
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Comments.Comment
@@ -22,6 +23,7 @@ defmodule TdBg.Factory do
 
   def domain_factory do
     %TdBg.Taxonomies.Domain{
+      id: System.unique_integer([:positive]),
       name: sequence("domain_name"),
       description: sequence("domain_description"),
       external_id: sequence("domain_external_id")
@@ -46,8 +48,13 @@ defmodule TdBg.Factory do
 
     %BusinessConceptVersion{
       content: %{},
+      business_concept: %{
+        type: "some_type",
+        last_change_by: 1,
+        last_change_at: DateTime.utc_now(),
+        confidential: false
+      },
       name: sequence("concept_name"),
-      description: %{"document" => "My business term description"},
       last_change_by: 1,
       last_change_at: DateTime.utc_now(),
       status: "draft",
@@ -124,6 +131,30 @@ defmodule TdBg.Factory do
       description: sequence("description_"),
       path: "/#{name}",
       key: "#{hierarchy_id}_#{node_id}"
+    }
+    |> merge_attributes(attrs)
+  end
+
+  def bulk_upload_event_factory(attrs) do
+    %BulkUploadEvent{
+      file_hash: sequence("filehash"),
+      inserted_at: "2022-04-24T11:08:18.215905Z",
+      message: sequence("message_"),
+      response: %{
+        created: [
+          System.unique_integer([:positive]),
+          System.unique_integer([:positive])
+        ],
+        updated: [
+          System.unique_integer([:positive]),
+          System.unique_integer([:positive])
+        ],
+        errors: []
+      },
+      status: "COMPLETED",
+      task_reference: "0.262460172.3388211201.119663",
+      user_id: System.unique_integer([:positive]),
+      filename: sequence("filename_")
     }
     |> merge_attributes(attrs)
   end

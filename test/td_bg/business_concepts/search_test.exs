@@ -114,29 +114,35 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
           assert simple_query == %{simple_query_string: %{query: "bar*"}}
 
-          assert status_filter == %{
-                   bool: %{
-                     should: [
-                       %{
-                         bool: %{
-                           filter: [
-                             %{term: %{"status" => "rejected"}},
-                             %{term: %{"domain_ids" => domain_id4}}
-                           ]
-                         }
-                       },
-                       %{
-                         bool: %{
-                           filter: [
-                             %{terms: %{"status" => ["draft", "pending_approval"]}},
-                             %{term: %{"domain_ids" => domain_id3}}
-                           ]
-                         }
-                       },
-                       %{term: %{"status" => "published"}}
-                     ]
-                   }
-                 }
+          %{
+            bool: %{
+              should: [
+                %{
+                  bool: %{
+                    filter: first_terms
+                  }
+                },
+                %{
+                  bool: %{
+                    filter: second_terms
+                  }
+                },
+                %{term: %{"status" => "published"}}
+              ]
+            }
+          } = status_filter
+
+          assert Enum.sort(first_terms) ==
+                   Enum.sort([
+                     %{term: %{"status" => "rejected"}},
+                     %{term: %{"domain_ids" => domain_id4}}
+                   ])
+
+          assert Enum.sort(second_terms) ==
+                   Enum.sort([
+                     %{terms: %{"status" => ["draft", "pending_approval"]}},
+                     %{term: %{"domain_ids" => domain_id3}}
+                   ])
 
           assert confidential_filter == %{
                    bool: %{
