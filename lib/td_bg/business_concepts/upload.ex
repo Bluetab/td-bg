@@ -227,6 +227,22 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
+  defp to_valid_id(%{} = params) do
+    Map.put(params, "id", to_valid_id(Map.get(params, "id", "")))
+  end
+
+  defp to_valid_id(value) when is_binary(value) do
+    case Float.parse(value) do
+      {num, ""} ->
+        num
+
+      _ ->
+        ""
+    end
+  end
+
+  defp to_valid_id(value) when is_number(value), do: value
+
   defp parse_row(raw_data, headers, %{user_id: user_id}, index, %{name: template_name}) do
     {params, df_content} =
       headers
@@ -234,6 +250,7 @@ defmodule TdBg.BusinessConcept.Upload do
       |> Enum.filter(fn {headers, _} -> headers not in @ignored_headers end)
       |> Enum.split_with(fn {headers, _} -> headers in @headers end)
       |> then(fn {params, content} -> {Map.new(params), Map.new(content)} end)
+      |> then(fn {params, content} -> {to_valid_id(params), content} end)
 
     action = (is_number(Map.get(params, "id", "")) && :update) || :create
 

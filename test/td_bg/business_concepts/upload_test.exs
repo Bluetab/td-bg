@@ -34,6 +34,13 @@ defmodule TdBg.UploadTest do
             "type" => "user"
           },
           %{
+            "cardinality" => "+",
+            "description" => "description",
+            "label" => "Description",
+            "name" => "description",
+            "type" => "string"
+          },
+          %{
             "name" => "hierarchy_name_1",
             "type" => "hierarchy",
             "cardinality" => "?",
@@ -100,6 +107,34 @@ defmodule TdBg.UploadTest do
     label: "i18n",
     id: "1"
   }
+
+  @concept_template %{
+    name: "Business Term",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "cardinality" => "?",
+            "label" => "Description",
+            "name" => "df_description",
+            "type" => "string"
+          },
+          %{
+            "cardinality" => "?",
+            "label" => "GDRP",
+            "name" => "GDRP",
+            "values" => %{"fixed" => ["No", "Sí"]},
+            "type" => "string"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "concept_term",
+    id: "2"
+  }
+
   @default_lang "en"
 
   setup_all do
@@ -112,6 +147,7 @@ defmodule TdBg.UploadTest do
   setup _context do
     %{id: template_id} = template = Templates.create_template(@default_template)
     %{id: i18n_template_id} = i18n_template = Templates.create_template(@i18n_template)
+    %{id: concept_template_id} = concept_template = Templates.create_template(@concept_template)
 
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
@@ -120,10 +156,16 @@ defmodule TdBg.UploadTest do
       MockIndexWorker.clear()
       Templates.delete(template_id)
       Templates.delete(i18n_template_id)
+      Templates.delete(concept_template_id)
       HierarchyCache.delete(hierarchy_id)
     end)
 
-    [template: template, i18n_template: i18n_template, hierarchy: hierarchy]
+    [
+      template: template,
+      i18n_template: i18n_template,
+      concept_template: concept_template,
+      hierarchy: hierarchy
+    ]
   end
 
   setup :verify_on_exit!
@@ -333,6 +375,52 @@ defmodule TdBg.UploadTest do
                {:reindex, :concepts, [bc_draft.id]},
                {:reindex, :concepts, [bc_pending_a.id]},
                {:reindex, :concepts, [bc_rejected.id]}
+             ]
+    end
+
+    test "bulk_upload/3 uploads business concepts from excel file with binary ids (not numbers in origin)" do
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "aaa", name: "aaa")
+
+      concept_1 = insert(:business_concept, domain: domain, id: 23_704, type: "Business Term")
+
+      %{id: concept_1_version_id} =
+        insert(:business_concept_version,
+          name: "name 1",
+          status: "draft",
+          id: 24_073,
+          business_concept: concept_1
+        )
+
+      concept_2 = insert(:business_concept, domain: domain, id: 23_703, type: "Business Term")
+
+      %{id: concept_2_version_id} =
+        insert(:business_concept_version,
+          name: "name 2",
+          status: "draft",
+          id: 24_071,
+          business_concept: concept_2
+        )
+
+      business_concept_upload = %{path: "test/fixtures/upload_excel_with_binary_ids.xlsx"}
+
+      assert %{created: [], updated: [^concept_1_version_id, ^concept_2_version_id], errors: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: "en"
+               )
+
+      assert %{name: "Prueba hora"} =
+               BusinessConcepts.get_business_concept_version!(concept_1_version_id)
+
+      assert %{name: "Prueba hora new_name"} =
+               BusinessConcepts.get_business_concept_version!(concept_2_version_id)
+
+      assert MockIndexWorker.calls() == [
+               {:reindex, :concepts, [concept_1.id]},
+               {:reindex, :concepts, [concept_2.id]}
              ]
     end
 
