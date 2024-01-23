@@ -60,7 +60,7 @@ defmodule TdBg.Mixfile do
       {:guardian, "~> 2.0"},
       {:canada, "~> 2.0"},
       {:corsica, "~> 1.0"},
-      {:phoenix_swagger, "~> 0.8.3"},
+      {:phoenix_swagger, git: "https://github.com/Bluetab/phx_swagger.git", tag: "6.0.0"},
       {:quantum, "~> 3.0"},
       {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
