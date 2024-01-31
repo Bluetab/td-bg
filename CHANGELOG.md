@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6342] Add missing Elasticsearch.Document Integer implementation (in td-core)
+
 ## [6.0.0] 2023-01-17
 
 ### Added

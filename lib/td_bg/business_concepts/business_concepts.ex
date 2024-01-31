@@ -592,7 +592,7 @@ defmodule TdBg.BusinessConcepts do
 
           ConceptCache.delete(business_concept_id)
           # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
-          IndexWorker.delete(:concepts, business_concept_version)
+          IndexWorker.delete(:concepts, [business_concept_id])
           {:ok, version}
       end
     else
