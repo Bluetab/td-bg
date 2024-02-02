@@ -563,7 +563,7 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def delete_business_concept_version(
-        %BusinessConceptVersion{} = business_concept_version,
+        %BusinessConceptVersion{id: bcvid} = business_concept_version,
         %Claims{user_id: user_id}
       ) do
     business_concept = business_concept_version.business_concept
@@ -592,7 +592,7 @@ defmodule TdBg.BusinessConcepts do
 
           ConceptCache.delete(business_concept_id)
           # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
-          IndexWorker.delete(:concepts, [business_concept_id])
+          IndexWorker.delete(:concepts, [bcvid])
           {:ok, version}
       end
     else
