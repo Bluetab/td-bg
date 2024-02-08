@@ -1,11 +1,17 @@
 # Changelog
 
+## [6.1.0] 2023-02-08
+
+### Fixed
+
+- [TD-6342] Add missing Elasticsearch.Document Integer implementation (in td-core)
+
 ## [6.0.0] 2023-01-17
 
 ### Added
 
 - [TD-6336] Get test-truedat-eks config on deploy stage
-- [TD-6205] Upload and  auto publish of concepts for updating and creating
+- [TD-6205] Upload and auto publish of concepts for updating and creating
   from xlsx
 
 ### Changed
