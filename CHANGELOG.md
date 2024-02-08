@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [6.1.0] 2023-02-08
 
 ### Fixed
 
@@ -11,7 +11,7 @@
 ### Added
 
 - [TD-6336] Get test-truedat-eks config on deploy stage
-- [TD-6205] Upload and  auto publish of concepts for updating and creating
+- [TD-6205] Upload and auto publish of concepts for updating and creating
   from xlsx
 
 ### Changed
