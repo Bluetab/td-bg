@@ -603,9 +603,9 @@ defmodule TdBg.BusinessConcepts do
       |> case do
         {:ok,
          %{
-           business_concept_version: %BusinessConceptVersion{} = deleted_version
+           business_concept_version: %BusinessConceptVersion{id: bcv_id} = deleted_version
          }} ->
-          IndexWorker.delete(:concepts, deleted_version)
+          IndexWorker.delete(:concepts, [bcv_id])
           {:ok, get_last_version_by_business_concept_id!(business_concept_id)}
       end
     end

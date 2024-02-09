@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.1.1] 2023-02-08
+
+### Fixed
+
+- [TD-6342] Add correct id for delete elasticsearch index
+
 ## [6.1.0] 2023-02-08
 
 ### Fixed
