@@ -25,12 +25,6 @@ defmodule TdBg.BusinessConcepts.Search.AggregationsTest do
     :ok
   end
 
-  setup_all do
-    start_supervised!(TdCore.Search.Cluster)
-
-    :ok
-  end
-
   describe "aggregations/0" do
     test "returns aggregation terms of type user with size 50" do
       aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})

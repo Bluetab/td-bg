@@ -6,8 +6,6 @@ defmodule TdBgWeb.SharedDomainControllerTest do
 
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
-    start_supervised!(TdCore.Search.Cluster)
-    start_supervised!(TdCore.Search.IndexWorker)
     :ok
   end
 

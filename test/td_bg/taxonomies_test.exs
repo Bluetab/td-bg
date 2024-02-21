@@ -57,14 +57,19 @@ defmodule TdBg.TaxonomiesTest do
     test "returns the children domain of a domain" do
       parent = insert(:domain)
 
-      children = Enum.map(0..2, fn _ -> insert(:domain, parent: parent) end)
+      children =
+        0..2
+        |> Enum.map(fn _ -> insert(:domain, parent: parent) end)
+        |> Enum.map(& &1.id)
+        |> Enum.sort()
 
       domains =
         parent
         |> Taxonomies.get_children_domains()
-        |> Enum.sort_by(& &1.id)
+        |> Enum.map(& &1.id)
+        |> Enum.sort()
 
-      assert Enum.map(domains, & &1.id) == Enum.map(children, & &1.id)
+      assert domains == children
     end
   end
 

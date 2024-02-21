@@ -5,11 +5,6 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
   alias TdBg.BusinessConcept.Search
 
-  setup do
-    start_supervised!(TdCore.Search.Cluster)
-    :ok
-  end
-
   setup :verify_on_exit!
 
   describe "Search.search_business_concept_versions/4" do
