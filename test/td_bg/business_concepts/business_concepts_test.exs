@@ -10,7 +10,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.Repo
   alias TdCache.Redix
   alias TdCache.Redix.Stream
-  alias TdCore.Search.MockIndexWorker
+  alias TdCore.Search.IndexWorkerMock
   alias TdDfLib.Format
   alias TdDfLib.RichText
 
@@ -42,15 +42,13 @@ defmodule TdBg.BusinessConceptsTest do
     Redix.del!(@stream)
     start_supervised!(TdBg.Cache.ConceptLoader)
     start_supervised!(TdBg.Cache.DomainLoader)
-    start_supervised!(TdCore.Search.Cluster)
-    start_supervised!(TdCore.Search.IndexWorker)
     :ok
   end
 
   setup context do
     on_exit(fn ->
       Redix.del!(@stream)
-      MockIndexWorker.clear()
+      IndexWorkerMock.clear()
     end)
 
     case context[:template] do
@@ -664,6 +662,7 @@ defmodule TdBg.BusinessConceptsTest do
   describe "update_business_concept_version/2" do
     @tag template: @content
     test "updates the business_concept_version if data is valid and publishes an event to the audit stream" do
+      IndexWorkerMock.clear()
       %{user_id: user_id} = build(:claims)
 
       %{id: parent_id, parent_id: root_id} = parent = insert(:domain, parent: build(:domain))
@@ -718,10 +717,12 @@ defmodule TdBg.BusinessConceptsTest do
                Jason.decode!(payload)
 
       assert_lists_equal(domain_ids, [root_id, parent_id, domain_id])
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "updates the content with valid content data" do
+      IndexWorkerMock.clear()
       %{id: domain_id} = insert(:domain)
 
       template_name = "test_template"
@@ -796,7 +797,8 @@ defmodule TdBg.BusinessConceptsTest do
       assert %BusinessConceptVersion{} = new_business_concept_version
       assert new_business_concept_version.content["Field1"] == "New first field"
       assert new_business_concept_version.content["Field2"] == "Second field"
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "returns error and changeset if validation fails" do
@@ -964,6 +966,7 @@ defmodule TdBg.BusinessConceptsTest do
 
     @tag template: @content
     test "get_business_concept_version/2 returns the business_concept_version by concept id and version" do
+      IndexWorkerMock.clear()
       claims = build(:claims)
       %{id: domain_id} = insert(:domain)
 
@@ -1001,7 +1004,8 @@ defmodule TdBg.BusinessConceptsTest do
 
       refute BusinessConcepts.get_business_concept_version(business_concept_id + 1, id)
 
-      assert [_, _, _] = MockIndexWorker.calls()
+      assert [_, _, _] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "get_business_concept_version/2 returns preloads" do

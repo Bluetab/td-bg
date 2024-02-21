@@ -7,12 +7,6 @@ defmodule TdBg.BusinessConcepts.Search.FiltersTest do
 
   setup :create_template
 
-  setup_all do
-    start_supervised!(TdCore.Search.Cluster)
-
-    :ok
-  end
-
   describe "build_filters/2" do
     test "returns filter corresponding to aggregation terms" do
       aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})

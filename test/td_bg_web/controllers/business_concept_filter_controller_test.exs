@@ -4,11 +4,6 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
 
   import Mox
 
-  setup_all do
-    start_supervised!(TdCore.Search.Cluster)
-    :ok
-  end
-
   setup :verify_on_exit!
 
   setup %{conn: conn} do
