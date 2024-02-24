@@ -110,7 +110,6 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> Map.put("type_label", type_label)
   end
 
-  # TODO: update swagger with embedded
   def render(
         "business_concept_version.json",
         %{business_concept_version: business_concept_version} = assigns
@@ -150,6 +149,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_embedded_resources(assigns)
     |> add_cached_content(assigns)
     |> add_actions(assigns)
+    |> maybe_add_i18n_content(business_concept_version)
   end
 
   defp add_reject_reason(concept, reject_reason, :rejected) do
@@ -201,4 +201,15 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   end
 
   defp add_actions(concept, _assigns), do: concept
+
+  defp maybe_add_i18n_content(concept, %{i18n_content: i18n_content}) do
+    result =
+      Enum.reduce(i18n_content, %{}, fn %{lang: lang} = data, acc ->
+        Map.put(acc, "#{lang}", Map.take(data, [:content, :name, :completeness]))
+      end)
+
+    Map.put(concept, :i18n_content, result)
+  end
+
+  defp maybe_add_i18n_content(concept, _bcv), do: concept
 end

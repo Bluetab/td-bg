@@ -2,6 +2,7 @@ defmodule TdBg.BusinessConcepts.SearchTest do
   use TdBgWeb.ConnCase
 
   import Mox
+  import TdBg.TestOperators
 
   alias TdBg.BusinessConcept.Search
 
@@ -57,15 +58,16 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                    }
                  }
 
-          assert confidential_filter == %{
+          assert %{
                    bool: %{
                      should: [
-                       %{terms: %{"domain_ids" => [domain_id1, domain_id2]}},
+                       %{terms: %{"domain_ids" => domain_ids}},
                        %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}}
                      ]
                    }
-                 }
+                 } = confidential_filter
 
+          assert [domain_id1, domain_id2] ||| domain_ids
           SearchHelpers.hits_response([bcv], 55)
       end)
 
@@ -139,14 +141,16 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                      %{term: %{"domain_ids" => domain_id3}}
                    ])
 
-          assert confidential_filter == %{
+          assert %{
                    bool: %{
                      should: [
-                       %{terms: %{"domain_ids" => [domain_id1, domain_id2]}},
+                       %{terms: %{"domain_ids" => domain_ids}},
                        %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}}
                      ]
                    }
-                 }
+                 } = confidential_filter
+
+          assert [domain_id1, domain_id2] ||| domain_ids
 
           SearchHelpers.hits_response([bcv], 55)
       end)
