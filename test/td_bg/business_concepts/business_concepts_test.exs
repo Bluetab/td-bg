@@ -7,7 +7,9 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Workflow
+  alias TdBg.I18nContents.I18nContents
   alias TdBg.Repo
+  alias TdCache.I18nCache
   alias TdCache.Redix
   alias TdCache.Redix.Stream
   alias TdCore.Search.IndexWorkerMock
@@ -40,6 +42,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   setup_all do
     Redix.del!(@stream)
+    TdCache.Redix.del!("i18n:locales:*")
     start_supervised!(TdBg.Cache.ConceptLoader)
     start_supervised!(TdBg.Cache.DomainLoader)
     :ok
@@ -129,7 +132,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: nil,
         content: %{},
         name: nil,
-        description: nil,
         last_change_by: nil,
         last_change_at: nil,
         version: nil
@@ -170,7 +172,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -182,6 +183,48 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs)
 
       assert %{content: ^content} = business_concept_version
+    end
+
+    @tag template: @content
+    test "with i18n_content" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+      I18nCache.put_required_locales(["es"])
+
+      content_schema = [
+        %{"name" => "Field1", "type" => "string", "cardinality" => "?"},
+        %{
+          "name" => "Field2",
+          "type" => "string",
+          "cardinality" => "?",
+          "values" => %{"fixed" => ["Hello", "World"]}
+        },
+        %{"name" => "Field3", "type" => "string", "cardinality" => "?"}
+      ]
+
+      content = %{"Field1" => "Hello", "Field2" => "World", "Field3" => "Hellow"}
+      es_content = %{"Field1" => "Hola", "Field3" => "Hola"}
+
+      concept_attrs = %{
+        type: @template_name,
+        domain_id: domain.id,
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now()
+      }
+
+      creation_attrs = %{
+        business_concept: concept_attrs,
+        content: content,
+        name: "some name",
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1,
+        content_schema: content_schema,
+        i18n_content: %{"es" => %{"name" => "es_name", "content" => es_content}}
+      }
+
+      assert {:ok, %{i18n_content: {1, [%{name: "es_name", content: ^es_content}]}}} =
+               BusinessConcepts.create_business_concept(creation_attrs)
     end
 
     @tag template: @content
@@ -253,7 +296,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -362,7 +404,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: nil,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -391,7 +432,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: %{},
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -435,7 +475,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -491,7 +530,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -537,7 +575,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -580,7 +617,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -643,7 +679,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: concept_attrs,
         content: content,
         name: "some name",
-        description: to_rich_text("some description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -779,7 +814,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept_id: business_concept_version.business_concept.id,
         content: update_content,
         name: "updated name",
-        description: to_rich_text("updated description"),
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
@@ -801,6 +835,101 @@ defmodule TdBg.BusinessConceptsTest do
       IndexWorkerMock.clear()
     end
 
+    test "updates the content with valid i18n_content data" do
+      %{id: domain_id} = insert(:domain)
+
+      template_name = "test_template"
+
+      content_schema = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "Field1", "type" => "string", "cardinality" => "1", "default" => ""},
+            %{"name" => "Field2", "type" => "string", "cardinality" => "1", "default" => ""}
+          ]
+        }
+      ]
+
+      template = %{
+        id: 0,
+        name: template_name,
+        label: "label",
+        scope: "test",
+        content: content_schema
+      }
+
+      Templates.create_template(template)
+
+      %{user_id: user_id} = build(:claims)
+
+      concept_attrs = %{
+        type: template_name,
+        domain_id: domain_id,
+        last_change_by: 1000,
+        last_change_at: DateTime.utc_now()
+      }
+
+      content = %{
+        "Field1" => "First field",
+        "Field2" => "Second field"
+      }
+
+      %{id: bcv_id, name: name} =
+        business_concept_version =
+        insert(:business_concept_version,
+          business_concept: insert(:business_concept, concept_attrs),
+          last_change_by: user_id,
+          content: content
+        )
+
+      en_lang = "en"
+      en_name = "#{en_lang}_#{name}"
+      fr_lang = "fr"
+      fr_name = "#{fr_lang}_#{name}"
+
+      insert(:i18n_content,
+        business_concept_version_id: bcv_id,
+        name: en_name,
+        lang: en_lang,
+        content: content
+      )
+
+      update_content = %{
+        "Field1" => "New first field"
+      }
+
+      update_attrs = %{
+        business_concept: concept_attrs,
+        content: update_content,
+        content_schema: Format.flatten_content_fields(content_schema),
+        i18n_content: %{
+          en_lang => %{"name" => en_name, "content" => update_content},
+          fr_lang => %{"name" => fr_name, "content" => content}
+        }
+      }
+
+      assert {:ok, _} =
+               BusinessConcepts.update_business_concept_version(
+                 business_concept_version,
+                 update_attrs
+               )
+
+      assert [i18n_response_1, i18n_response_2] =
+               bcv_id
+               |> I18nContents.get_all_i18n_content_by_bcv_id()
+               |> Enum.sort_by(& &1.lang)
+
+      assert i18n_response_1.content["Field1"] == "New first field"
+      assert i18n_response_1.content["Field2"] == "Second field"
+      assert i18n_response_1.lang == en_lang
+      assert i18n_response_1.name == en_name
+
+      assert i18n_response_2.content["Field1"] == "First field"
+      assert i18n_response_2.content["Field2"] == "Second field"
+      assert i18n_response_2.lang == fr_lang
+      assert i18n_response_2.name == fr_name
+    end
+
     test "returns error and changeset if validation fails" do
       business_concept_version = insert(:business_concept_version)
 
@@ -808,7 +937,6 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept: nil,
         content: %{},
         name: nil,
-        description: nil,
         last_change_by: nil,
         last_change_at: nil,
         version: nil
@@ -1080,6 +1208,27 @@ defmodule TdBg.BusinessConceptsTest do
       assert Map.get(template, :name) == @template_name
       assert Map.get(content, "multiple_1") == [""]
     end
+
+    @tag template: @content
+    test "create new bc version with i18n_content" do
+      claims = build(:claims)
+      %{id: domain_id} = insert(:domain)
+
+      business_concept = insert(:business_concept, type: @template_name, domain_id: domain_id)
+
+      %{id: id} = bv1 = insert(:business_concept_version, business_concept: business_concept)
+
+      %{lang: lang, content: content} = insert(:i18n_content, business_concept_version_id: id)
+
+      assert {:ok, %{updated: bv2}} = Workflow.submit_business_concept_version(bv1, claims)
+
+      assert {:ok, %{published: bv3}} = Workflow.publish(bv2, claims)
+
+      assert {:ok, %{current: %{id: versioned_id}}} = Workflow.new_version(bv3, claims)
+
+      assert [%{business_concept_version_id: ^versioned_id, lang: ^lang, content: ^content}] =
+               I18nContents.get_all_i18n_content_by_bcv_id(versioned_id)
+    end
   end
 
   describe "get_concept_counts/1" do
@@ -1298,10 +1447,6 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert %{"shared_to" => []} = Jason.decode!(payload)
     end
-  end
-
-  defp to_rich_text(plain) do
-    %{"document" => plain}
   end
 
   defp business_concept_version_preload(business_concept_version, preload \\ [:domain]) do

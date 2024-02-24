@@ -15,7 +15,7 @@ config :td_core, :env, Mix.env()
 config :td_bg, ecto_repos: [TdBg.Repo]
 config :td_bg, TdBg.Repo, pool_size: 5
 
-config :td_bg, :lang, "en"
+config :td_cache, :lang, "en"
 
 config :td_bg, TdBg.BusinessConcepts.BulkUploader, timeout: 600
 config :td_bg, TdBg.BusinessConcepts.BulkUploader, uploads_tmp_folder: "/tmp"
@@ -58,8 +58,6 @@ config :td_bg, :phoenix_swagger,
   swagger_files: %{
     "priv/static/swagger.json" => [router: TdBgWeb.Router]
   }
-
-config :td_df_lib, lang: "en"
 
 config :td_cache, :audit,
   service: "td_bg",

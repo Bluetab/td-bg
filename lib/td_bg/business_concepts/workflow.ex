@@ -24,10 +24,6 @@ defmodule TdBg.BusinessConcepts.Workflow do
     result
   end
 
-  @spec submit_business_concept_version(
-          TdBg.BusinessConcepts.BusinessConceptVersion.t(),
-          TdBg.Auth.Claims.t()
-        ) :: any
   def submit_business_concept_version(
         %BusinessConceptVersion{} = business_concept_version,
         %Claims{} = claims
