@@ -9,6 +9,7 @@ defmodule TdBg.Factory do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Comments.Comment
   alias TdBg.Groups.DomainGroup
+  alias TdBg.I18nContents.I18nContent
   alias TdBg.UserSearchFilters.UserSearchFilter
 
   def claims_factory(attrs) do
@@ -155,6 +156,17 @@ defmodule TdBg.Factory do
       task_reference: "0.262460172.3388211201.119663",
       user_id: System.unique_integer([:positive]),
       filename: sequence("filename_")
+    }
+    |> merge_attributes(attrs)
+  end
+
+  def i18n_content_factory(attrs) do
+    attrs = default_assoc(attrs, :business_concept_version_id, :business_concept_version)
+
+    %I18nContent{
+      name: sequence("i18n_concept_name"),
+      lang: "en",
+      content: %{"foo" => "bar"}
     }
     |> merge_attributes(attrs)
   end

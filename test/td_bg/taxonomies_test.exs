@@ -1,6 +1,8 @@
 defmodule TdBg.TaxonomiesTest do
   use TdBg.DataCase
 
+  import TdBg.TestOperators
+
   alias TdBg.Groups
   alias TdBg.Repo
   alias TdBg.Taxonomies
@@ -59,12 +61,9 @@ defmodule TdBg.TaxonomiesTest do
 
       children = Enum.map(0..2, fn _ -> insert(:domain, parent: parent) end)
 
-      domains =
-        parent
-        |> Taxonomies.get_children_domains()
-        |> Enum.sort_by(& &1.id)
+      domains = Taxonomies.get_children_domains(parent)
 
-      assert Enum.map(domains, & &1.id) == Enum.map(children, & &1.id)
+      assert Enum.map(domains, & &1.id) ||| Enum.map(children, & &1.id)
     end
   end
 

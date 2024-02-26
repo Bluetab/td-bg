@@ -8,6 +8,13 @@ defmodule TdBg.Release do
   alias Ecto.Migrator
 
   def migrate do
+    :td_bg
+    |> Application.get_env(TdBg.Repo)
+    |> Keyword.get(:ssl, false)
+    |> if do
+      Application.ensure_all_started(:ssl)
+    end
+
     for repo <- repos() do
       {:ok, _, _} = Migrator.with_repo(repo, &Migrator.run(&1, :up, all: true))
     end

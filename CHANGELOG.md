@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.2.0] 2024-02-26
+
+### Added
+
+- [TD-6243] Support for deleting Elasticsearch indexes
+- [TD-6258] Support for I18n in templates
+
+### Fixed
+
+- [TD-6425] Ensure SSL if configured for release migration
+
 ## [6.1.1] 2023-02-08
 
 ### Fixed

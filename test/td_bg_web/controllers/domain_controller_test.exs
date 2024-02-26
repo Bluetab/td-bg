@@ -8,7 +8,6 @@ defmodule TdBgWeb.DomainControllerTest do
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
     start_supervised!(TdBg.Cache.DomainLoader)
-    start_supervised!(TdCore.Search.Cluster)
     :ok
   end
 

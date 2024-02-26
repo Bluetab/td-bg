@@ -4,7 +4,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   import Mox
 
-  alias TdCore.Search.MockIndexWorker
+  alias TdBg.I18nContents.I18nContents
+  alias TdCache.I18nCache
+
+  alias TdCore.Search.IndexWorkerMock
 
   @template_name "some_type"
   @content [
@@ -17,16 +20,149 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     }
   ]
 
+  @completeness_content [
+    %{
+      "name" => "Basic",
+      "fields" => [
+        %{
+          "name" => "df_description",
+          "type" => "enriched_text",
+          "label" => "Descripción",
+          "values" => nil,
+          "widget" => "enriched_text",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "basic_list",
+          "type" => "string",
+          "label" => "Basic List",
+          "values" => %{"fixed" => ["1", "2", "3", "4"]},
+          "widget" => "dropdown",
+          "cardinality" => "1"
+        },
+        %{
+          "name" => "basic_switch",
+          "type" => "string",
+          "label" => "Basic Switch",
+          "values" => %{
+            "switch" => %{
+              "on" => "basic_list",
+              "values" => %{
+                "1" => ["a", "b"],
+                "2" => ["c", "d"]
+              }
+            }
+          },
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "default_dependency",
+          "type" => "string",
+          "label" => "Dependent field with default values",
+          "values" => %{
+            "switch" => %{
+              "on" => "basic_list",
+              "values" => %{
+                "1" => ["1.1", "1..2", "1.3", "1.4", "1.5"],
+                "2" => ["2.1", "2.2", "2.3"],
+                "3" => ["3.1", "3.2", "3.3", "3.4", "3.5"]
+              }
+            }
+          },
+          "widget" => "dropdown",
+          "default" => %{"1" => "1.1", "2" => "2.2", "3" => "3.4"},
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "Identificador",
+          "type" => "string",
+          "label" => "Identificador",
+          "values" => nil,
+          "widget" => "identifier",
+          "cardinality" => "0"
+        },
+        %{
+          "name" => "multiple_values",
+          "type" => "string",
+          "label" => "Multiple values",
+          "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+          "widget" => "checkbox",
+          "cardinality" => "*"
+        },
+        %{
+          "name" => "user1",
+          "type" => "user",
+          "label" => "User 1",
+          "values" => %{"role_users" => "Data Owner", "processed_users" => []},
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "User Group",
+          "type" => "user_group",
+          "label" => "User Group",
+          "values" => %{
+            "role_groups" => "Data Owner",
+            "processed_users" => [],
+            "processed_groups" => []
+          },
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "text_area",
+          "type" => "string",
+          "label" => "Text area",
+          "values" => nil,
+          "widget" => "string",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "enriched_text",
+          "type" => "enriched_text",
+          "label" => "Enriched text",
+          "values" => nil,
+          "widget" => "enriched_text",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "text_input",
+          "type" => "string",
+          "label" => "Text input",
+          "values" => nil,
+          "widget" => "string",
+          "cardinality" => "1"
+        },
+        %{
+          "name" => "empty test",
+          "type" => "string",
+          "label" => "empty test",
+          "values" => %{"fixed" => ["a", "s", "d"]},
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "Hierarchie2",
+          "type" => "hierarchy",
+          "label" => "Hierarchie",
+          "values" => %{"hierarchy" => %{"id" => 4, "min_depth" => "2"}},
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        }
+      ]
+    }
+  ]
+
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
-    start_supervised!(TdCore.Search.Cluster)
-    start_supervised!(TdCore.Search.IndexWorker)
     :ok
   end
 
   setup _context do
     on_exit(fn ->
-      MockIndexWorker.clear()
+      IndexWorkerMock.clear()
+      TdCache.Redix.del!("i18n:locales:*")
     end)
 
     :ok
@@ -74,7 +210,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   describe "GET /api/business_concepts/:business_concept_id/versions/:id" do
     @tag authentication: [role: "admin"]
-    test "shows the specified business_concept_version including it's name, description, domain and content",
+    test "shows the specified business_concept_version including it's name, domain and content",
          %{conn: conn} do
       business_concept_version =
         insert(
@@ -133,6 +269,135 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       assert %{"errors" => %{"detail" => "Not found"}} = json_response(conn, 404)
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "shows the specified business_concept_version with i18n_content",
+         %{conn: conn} do
+      %{id: bcv_id, business_concept: %{id: bc_id}} =
+        insert(
+          :business_concept_version,
+          content: %{"foo" => "bar"},
+          name: "Concept Name",
+          type: @template_name
+        )
+
+      %{lang: lang, name: name, content: content} =
+        insert(:i18n_content, business_concept_version_id: bcv_id)
+
+      assert %{"data" => %{"i18n_content" => i18n_content}} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   bc_id,
+                   "current"
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{
+               ^lang => %{
+                 "name" => ^name,
+                 "content" => ^content
+               }
+             } = i18n_content
+
+      assert %{"data" => %{"i18n_content" => i18n_content}} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   bc_id,
+                   bcv_id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{
+               ^lang => %{
+                 "name" => ^name,
+                 "content" => ^content
+               }
+             } = i18n_content
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag template: @completeness_content
+    test "shows the completeness for i18n_content ",
+         %{conn: conn} do
+      no_text_content = %{"basic_list" => "1"}
+
+      busines_concept_content =
+        %{
+          "df_description" => %{
+            "document" => %{
+              "nodes" => [
+                %{
+                  "nodes" => [
+                    %{
+                      "marks" => [],
+                      "object" => "text",
+                      "text" => "enrich text"
+                    }
+                  ],
+                  "object" => "block",
+                  "type" => "paragraph"
+                }
+              ]
+            }
+          }
+        }
+        |> Map.merge(no_text_content)
+
+      %{id: bcv_id, business_concept: %{id: bc_id}} =
+        insert(
+          :business_concept_version,
+          content: busines_concept_content,
+          name: "Concept Name",
+          type: @template_name
+        )
+
+      i18n_content = %{"text_input" => "foo", "text_area" => "bar"}
+
+      %{lang: lang} =
+        insert(:i18n_content,
+          business_concept_version_id: bcv_id,
+          content: i18n_content
+        )
+
+      assert %{
+               "data" => %{
+                 "completeness" => bc_completeness,
+                 "i18n_content" => i18n_content
+               }
+             } =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   bc_id,
+                   "current"
+                 )
+               )
+               |> json_response(:ok)
+
+      assert bc_completeness == 15.38
+
+      assert %{^lang => %{"content" => i18n_content, "completeness" => i18n_completeness}} =
+               i18n_content
+
+      assert i18n_completeness == 23.08
+
+      assert %{
+               "basic_list" => "1",
+               "text_area" => "bar",
+               "text_input" => "foo"
+             } == Map.merge(i18n_content, no_text_content)
     end
 
     @tag authentication: [role: "admin"]
@@ -1039,7 +1304,52 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [:create_business_concept, :view_draft_business_concepts]
+         ]
+    @tag template: @completeness_content
+    test "insert i18n_content when data has i18n valid content", %{
+      conn: conn,
+      swagger_schema: schema,
+      domain: %{id: domain_id}
+    } do
+      lang = "es"
+      I18nCache.put_required_locales([lang])
+
+      es_name = "es_nombre"
+      es_content = %{"text_input" => "text_field1"}
+
+      creation_attrs = %{
+        "content" => %{"basic_list" => "1", "text_input" => "bc text"},
+        "i18n_content" => %{
+          lang => %{"name" => es_name, "content" => es_content}
+        },
+        "type" => @template_name,
+        "name" => "Some name",
+        "domain_id" => domain_id
+      }
+
+      assert %{"data" => data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_path(conn, :create),
+                 business_concept_version: creation_attrs
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:created)
+
+      assert %{"i18n_content" => i18n_content} = data
+
+      assert %{
+               ^lang => %{
+                 "name" => ^es_name,
+                 "content" => ^es_content
+               }
+             } = i18n_content
     end
 
     @tag authentication: [role: "user"]
@@ -1053,7 +1363,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "content" => %{},
         "type" => "some_type",
         "name" => "Some name",
-        "description" => to_rich_text("Some description"),
         "domain_id" => domain.id,
         "in_progress" => false
       }
@@ -1076,7 +1385,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         content: %{},
         type: @template_name,
         name: nil,
-        description: to_rich_text("Some description"),
         domain_id: domain.id,
         in_progress: false
       }
@@ -1089,6 +1397,49 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(422)
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [:create_business_concept, :view_draft_business_concepts]
+         ]
+    @tag template: @completeness_content
+    test "renders errors when  data has i18n invalid content", %{
+      conn: conn,
+      swagger_schema: schema,
+      domain: %{id: domain_id}
+    } do
+      lang = "es"
+      es_name = "es_nombre"
+      es_content = %{"text_area" => "text_field1"}
+
+      I18nCache.put_required_locales([lang])
+
+      creation_attrs = %{
+        "content" => %{"basic_list" => "1", "text_input" => "bc text"},
+        "i18n_content" => %{
+          lang => %{"name" => es_name, "content" => es_content}
+        },
+        "type" => @template_name,
+        "name" => "Some name",
+        "domain_id" => domain_id
+      }
+
+      assert %{"errors" => errors} =
+               conn
+               |> post(
+                 Routes.business_concept_version_path(conn, :create),
+                 business_concept_version: creation_attrs
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(422)
+
+      assert [
+               %{
+                 "code" => "undefined",
+                 "name" => "concept.error.text_input.language.es: can't be blank"
+               }
+             ] == errors
     end
   end
 
@@ -1219,7 +1570,62 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       assert json_response(conn, 201)["data"]
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+    end
+
+    @tag authentication: [role: "admin"]
+    test "create new version with i18n_content", %{
+      conn: conn,
+      claims: %{user_id: user_id}
+    } do
+      template_content = [
+        %{
+          "name" => "group",
+          "fields" => [%{"name" => "fieldname", "type" => "string", "cardinality" => "?"}]
+        }
+      ]
+
+      template =
+        Templates.create_template(%{
+          id: 0,
+          name: "onefield",
+          content: template_content,
+          label: "label",
+          scope: "test"
+        })
+
+      business_concept =
+        insert(:business_concept,
+          type: template.name,
+          last_change_by: user_id
+        )
+
+      %{id: bcv_id} =
+        insert(
+          :business_concept_version,
+          business_concept: business_concept,
+          last_change_by: user_id,
+          status: "published"
+        )
+
+      %{lang: lang, content: content, name: name} =
+        insert(:i18n_content, business_concept_version_id: bcv_id)
+
+      assert %{"data" => %{"id" => new_bcv_id, "i18n_content" => i18n_content}} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :version,
+                   bcv_id
+                 )
+               )
+               |> json_response(:created)
+
+      assert [%{name: ^name, content: ^content}] =
+               I18nContents.get_all_i18n_content_by_bcv_id(new_bcv_id)
+
+      assert %{^lang => %{"name" => ^name, "content" => ^content}} = i18n_content
     end
   end
 
@@ -1264,8 +1670,40 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
-      assert_maps_equal(data, update_attrs, ["content", "name", "description"])
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert_maps_equal(data, update_attrs, ["content", "name"])
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "renders business_concept_version when with i18n_content", %{
+      conn: conn,
+      swagger_schema: schema
+    } do
+      %{id: id} =
+        business_concept_version = insert(:business_concept_version, type: @template_name)
+
+      %{lang: lang} = insert(:i18n_content, business_concept_version_id: id, content: %{})
+
+      new_name = "The new name"
+      new_content = %{"Field1" => "Foo", "Field2" => "bar"}
+
+      update_attrs = %{
+        "content" => new_content,
+        "name" => new_name,
+        "i18n_content" => %{lang => %{"content" => new_content, "name" => new_name}}
+      }
+
+      assert %{"data" => %{"i18n_content" => i18n_content}} =
+               conn
+               |> put(
+                 Routes.business_concept_version_path(conn, :update, business_concept_version),
+                 business_concept_version: update_attrs
+               )
+               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
+               |> json_response(:ok)
+
+      assert %{^lang => %{"name" => ^new_name, "content" => ^new_content}} = i18n_content
     end
   end
 
@@ -1294,7 +1732,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^domain_id}} = data
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "user"]
@@ -1351,7 +1789,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^id2}} = data
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1387,7 +1825,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> json_response(:ok)
 
       assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -1419,7 +1857,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> json_response(:ok)
 
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -1538,7 +1976,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"confidential" => true} = data
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1593,7 +2031,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1646,7 +2084,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = MockIndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1669,9 +2107,5 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> post(Routes.business_concept_version_path(conn, :bulk_update), params)
                |> json_response(:unprocessable_entity)
     end
-  end
-
-  defp to_rich_text(plain) do
-    %{"document" => plain}
   end
 end

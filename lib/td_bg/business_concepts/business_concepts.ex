@@ -12,19 +12,21 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Cache.ConceptLoader
+  alias TdBg.I18nContents.I18nContent
+  alias TdBg.I18nContents.I18nContents
   alias TdBg.Repo
   alias TdBg.Taxonomies
   alias TdCache.ConceptCache
   alias TdCache.EventStream.Publisher
+  alias TdCache.I18nCache
   alias TdCache.TemplateCache
   alias TdCore.Search.IndexWorker
+  alias TdCore.Utils.ChangesetUtils
   alias TdDfLib.Format
   alias TdDfLib.Parser
   alias TdDfLib.Templates
   alias TdDfLib.Validation
   alias ValidationError
-
-  @default_lang Application.compile_env(:td_bg, :lang, "en")
 
   @doc """
   check business concept name availability
@@ -251,7 +253,7 @@ defmodule TdBg.BusinessConcepts do
 
   def valid_creation_changeset(params, opts \\ []) do
     params
-    |> Map.put_new(:lang, @default_lang)
+    |> Map.put_new(:lang, get_default_lang())
     |> attrs_keys_to_atoms()
     |> raise_error_if_no_content_schema()
     |> maybe_domain_ids()
@@ -335,6 +337,7 @@ defmodule TdBg.BusinessConcepts do
       |> raise_error_if_no_content_schema()
       |> add_content_if_not_exist()
       |> merge_content_with_concept(business_concept_version)
+      |> maybe_merge_i18n_content(business_concept_version)
       |> set_content_defaults(domain_id)
       |> update_concept_validations(business_concept_version)
       |> update_concept()
@@ -591,8 +594,8 @@ defmodule TdBg.BusinessConcepts do
           )
 
           ConceptCache.delete(business_concept_id)
-          # TODO: TD-1618 delete_search should be performed by a consumer of the event stream
           IndexWorker.delete(:concepts, [bcvid])
+
           {:ok, version}
       end
     else
@@ -603,7 +606,7 @@ defmodule TdBg.BusinessConcepts do
       |> case do
         {:ok,
          %{
-           business_concept_version: %BusinessConceptVersion{id: bcv_id} = deleted_version
+           business_concept_version: %BusinessConceptVersion{id: bcv_id}
          }} ->
           IndexWorker.delete(:concepts, [bcv_id])
           {:ok, get_last_version_by_business_concept_id!(business_concept_id)}
@@ -613,7 +616,7 @@ defmodule TdBg.BusinessConcepts do
 
   defp map_keys_to_atoms(key_values) do
     Map.new(key_values, fn
-      {key, value} when is_binary(key) -> {String.to_existing_atom(key), value}
+      {key, value} when is_binary(key) -> {String.to_atom(key), value}
       {key, value} when is_atom(key) -> {key, value}
     end)
   end
@@ -677,6 +680,36 @@ defmodule TdBg.BusinessConcepts do
     Map.put(params, :content, new_content)
   end
 
+  def maybe_merge_i18n_content(
+        %{i18n_content: i18n_content} = params,
+        %BusinessConceptVersion{id: bcv_id} = _bcv
+      ) do
+    i18n_bc_contents_with_lang_index =
+      bcv_id
+      |> I18nContents.get_all_i18n_content_by_bcv_id()
+      |> Map.new(fn %{lang: lang} = i18n_bc_content ->
+        {lang, i18n_bc_content}
+      end)
+
+    new_i18n_content =
+      i18n_content
+      |> Enum.map(fn {lang, %{"content" => content} = i18n_data} ->
+        case Map.get(i18n_bc_contents_with_lang_index, lang, nil) do
+          nil ->
+            {lang, Map.put(i18n_data, "content", content)}
+
+          %{content: i18n_bc_content} ->
+            new_content = Map.merge(i18n_bc_content, content)
+            {lang, Map.put(i18n_data, "content", new_content)}
+        end
+      end)
+      |> Map.new()
+
+    Map.put(params, :i18n_content, new_i18n_content)
+  end
+
+  def maybe_merge_i18n_content(params, _business_concept_version), do: params
+
   defp set_content_defaults(params, domain_id) do
     content = Map.get(params, :content)
     content_schema = Map.get(params, :content_schema)
@@ -701,6 +734,30 @@ defmodule TdBg.BusinessConcepts do
 
   defp validate_concept_content(%{} = params, _in_progress), do: params
 
+  defp do_validate_concept_content(
+         %{i18n_content: i18n_content} = params,
+         in_progress,
+         domain_id
+       ) do
+    bc_content = Map.get(params, :content)
+    default_lang = get_default_lang()
+    required_langs = get_requiered_langs()
+    content_schema = Map.get(params, :content_schema)
+
+    i18n_content
+    |> merge_content_with_i18n_content(bc_content, %{content_schema: content_schema})
+    |> Map.put(default_lang, %{"content" => bc_content})
+    |> Enum.map(fn {lang, %{"content" => content}} ->
+      if lang in required_langs || lang == default_lang do
+        {lang, Validation.build_changeset(content, content_schema, domain_id: domain_id)}
+      else
+        {lang, nil}
+      end
+    end)
+    |> Enum.reject(fn {_lang, content} -> is_nil(content) end)
+    |> verify_i18n_in_progress(params, in_progress)
+  end
+
   defp do_validate_concept_content(params, in_progress, domain_id) do
     content = Map.get(params, :content)
     content_schema = Map.get(params, :content_schema)
@@ -713,6 +770,38 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
+  defp verify_i18n_in_progress(content_changesets, params, in_progress) do
+    case in_progress do
+      false ->
+        validate_content(content_changesets, params)
+
+      _ ->
+        put_in_progress(content_changesets, params)
+    end
+  end
+
+  defp put_in_progress([_ | _] = i18_changesets, %{changeset: changeset} = params) do
+    i18_content_errors =
+      Enum.reduce(i18_changesets, [], fn
+        {lang, %{valid?: false} = changeset}, acc ->
+          [{lang, ChangesetUtils.error_message_list_on(changeset)} | acc]
+
+        {_lang, _}, acc ->
+          acc
+      end)
+
+    in_progress = i18_content_errors !== []
+
+    new_changeset =
+      changeset
+      |> Changeset.put_change(:in_progress, in_progress)
+      |> maybe_add_i18_content_errors(i18_content_errors)
+
+    params
+    |> Map.put(:changeset, new_changeset)
+    |> Map.put(:in_progress, in_progress)
+  end
+
   defp put_in_progress(%{valid?: valid}, %{changeset: changeset} = params) do
     import Ecto.Changeset, only: [put_change: 3]
 
@@ -721,6 +810,20 @@ defmodule TdBg.BusinessConcepts do
     params
     |> Map.put(:changeset, put_change(changeset, :in_progress, in_progress))
     |> Map.put(:in_progress, in_progress)
+  end
+
+  defp maybe_add_i18_content_errors(changeset, []), do: changeset
+
+  defp maybe_add_i18_content_errors(changeset, [{_, [_ | _]} | _] = i18_content_errors) do
+    Enum.reduce(i18_content_errors, changeset, fn {lang, errors}, acc ->
+      maybe_add_i18_content_errors(acc, {lang, errors})
+    end)
+  end
+
+  defp maybe_add_i18_content_errors(changeset, {lang, [_ | _] = errors}) do
+    Enum.reduce(errors, changeset, fn %{field: field, message: message}, acc ->
+      Changeset.add_error(acc, field, "language.#{lang}: " <> message, validation: :required)
+    end)
   end
 
   defp update_content_schema(changes, _params, %BusinessConceptVersion{status: "draft"}),
@@ -740,11 +843,31 @@ defmodule TdBg.BusinessConcepts do
     Map.put(changes, :content_schema, schema)
   end
 
-  def update_concept(%{changeset: changeset}) do
+  def update_concept(%{changeset: changeset} = params) do
     Multi.new()
     |> Multi.update(:updated, changeset)
+    |> maybe_upsert_i18n_content(params)
     |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
     |> Repo.transaction()
+  end
+
+  defp validate_content([_ | _] = i18_changesets, params) do
+    default_lang = get_default_lang()
+
+    valid = Enum.all?(i18_changesets, fn {_lang, %{valid?: valid}} -> valid end)
+
+    default_content =
+      Enum.reduce_while(i18_changesets, %{}, fn {lang, changeset}, acc ->
+        if lang == default_lang, do: {:halt, changeset}, else: {:cont, acc}
+      end)
+
+    case valid do
+      false ->
+        Map.put(params, :changeset, default_content)
+
+      _ ->
+        params
+    end
   end
 
   defp validate_content(content_changeset, params) do
@@ -754,16 +877,18 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  def insert_concept(%{changeset: changeset}) do
+  def insert_concept(%{changeset: changeset} = params) do
     Multi.new()
     |> Multi.insert(:business_concept_version, changeset)
+    |> maybe_upsert_i18n_content(params)
     |> Multi.run(:audit, Audit, :business_concept_created, [])
     |> Repo.transaction()
   end
 
-  def version_concept(%{changeset: changeset}) do
+  def version_concept(%{changeset: changeset} = params) do
     Multi.new()
     |> Multi.insert(:current, Changeset.change(changeset, current: false))
+    |> maybe_i18n_content_new_version(params)
     |> Multi.run(:audit, Audit, :business_concept_versioned, [])
     |> Repo.transaction()
   end
@@ -821,7 +946,7 @@ defmodule TdBg.BusinessConcepts do
     Templates.content_schema(type)
   end
 
-  def get_completeness(%BusinessConceptVersion{content: content} = bcv) do
+  def get_completeness(%BusinessConceptVersion{} = bcv, content) do
     case get_template(bcv) do
       nil -> nil
       template -> Templates.completeness(content, template)
@@ -876,10 +1001,143 @@ defmodule TdBg.BusinessConcepts do
 
   def get_domain_ids(_), do: []
 
+  def get_default_lang do
+    {:ok, lang} = I18nCache.get_default_locale()
+    lang
+  end
+
+  def get_requiered_langs do
+    {:ok, required_langs} = I18nCache.get_required_locales()
+    required_langs
+  end
+
   defp on_share({:ok, %{updated: %{id: id, shared_to: shared_to} = updated} = reply}) do
     ConceptLoader.refresh(id)
     {:ok, %{reply | updated: %{updated | shared_to: TdBg.Taxonomies.add_parents(shared_to)}}}
   end
 
   defp on_share(error), do: error
+
+  defp maybe_upsert_i18n_content(multi, %{i18n_content: i18n_content} = _params) do
+    Multi.run(multi, :i18n_content, fn _, map ->
+      bcv = get_bcv_from_multimap(map)
+
+      i18n_content_entries =
+        Enum.reduce(i18n_content, [], fn {lang, content}, acc ->
+          [validate_i18n_content(bcv, content, lang) | acc]
+        end)
+
+      if Enum.any?(i18n_content_entries, &(&1 == :error)) do
+        {:error, :insert_i18n_content}
+      else
+        result =
+          Repo.insert_all(I18nContent, i18n_content_entries,
+            conflict_target: [:business_concept_version_id, :lang],
+            on_conflict: {:replace, [:name, :content, :updated_at]},
+            returning: [:id, :name, :lang, :business_concept_version_id, :content]
+          )
+
+        {:ok, result}
+      end
+    end)
+  end
+
+  defp maybe_upsert_i18n_content(multi, _params), do: multi
+
+  defp validate_i18n_content(%{id: bcv_id}, content, lang) do
+    changeset =
+      content
+      |> Map.put("lang", lang)
+      |> Map.put("business_concept_version_id", bcv_id)
+      |> I18nContent.changeset()
+
+    if changeset.valid? do
+      ts = DateTime.utc_now()
+
+      changeset
+      |> Map.get(:changes)
+      |> Map.put(:inserted_at, ts)
+      |> Map.put(:updated_at, ts)
+    else
+      :error
+    end
+  end
+
+  defp maybe_i18n_content_new_version(multi, %{
+         business_concept_version: %BusinessConceptVersion{id: old_bcv_id}
+       }) do
+    maybe_i18n_content_new_version(multi, old_bcv_id)
+  end
+
+  defp maybe_i18n_content_new_version(multi, %{id: old_bcv_id}) do
+    maybe_i18n_content_new_version(multi, old_bcv_id)
+  end
+
+  defp maybe_i18n_content_new_version(multi, old_bcv_id) do
+    case I18nContents.get_all_i18n_content_by_bcv_id(old_bcv_id) do
+      [] ->
+        multi
+
+      i18n_bc_contents ->
+        Multi.run(multi, :i18n_content, fn _, %{current: %{id: current_bcv_id}} ->
+          i18n_content_entries = get_i18n_bc_entries(i18n_bc_contents, current_bcv_id)
+
+          result =
+            Repo.insert_all(I18nContent, i18n_content_entries,
+              returning: [:id, :name, :lang, :business_concept_version_id, :content]
+            )
+
+          {:ok, result}
+        end)
+    end
+  end
+
+  defp get_i18n_bc_entries(i18n_bc_contents, current_bcv_id) do
+    Enum.map(i18n_bc_contents, fn record ->
+      ts = DateTime.utc_now()
+
+      record
+      |> Map.from_struct()
+      |> Map.drop([:id, :__meta__, :business_concept_version])
+      |> Map.put(:business_concept_version_id, current_bcv_id)
+      |> Map.put(:inserted_at, ts)
+      |> Map.put(:updated_at, ts)
+    end)
+  end
+
+  defp get_bcv_from_multimap(%{updated: bcv}), do: bcv
+  defp get_bcv_from_multimap(%{business_concept_version: bcv}), do: bcv
+
+  def merge_content_with_i18n_content(i18n_content, bc_content, %{content: schema}) do
+    content_schema = Format.flatten_content_fields(schema)
+    merge_content_with_i18n_content(i18n_content, bc_content, %{content_schema: content_schema})
+  end
+
+  def merge_content_with_i18n_content(i18n_content, bc_content, %{content_schema: content_schema}) do
+    not_string_template_keys =
+      content_schema
+      |> Enum.filter(fn
+        %{"widget" => widget}
+        when widget not in ["enriched_text", "string"] ->
+          true
+
+        _ ->
+          false
+      end)
+      |> Enum.reduce([], fn %{"name" => name}, acc ->
+        [name | acc]
+      end)
+
+    not_string_values =
+      Enum.filter(bc_content, fn {name, _} ->
+        name in not_string_template_keys
+      end)
+      |> Map.new()
+
+    Enum.reduce(i18n_content, %{}, fn {lang, %{"content" => content} = data}, acc ->
+      new_content = Map.merge(not_string_values, content)
+      new_data = Map.put(data, "content", new_content)
+      Map.put(acc, lang, new_data)
+    end)
+  end
 end

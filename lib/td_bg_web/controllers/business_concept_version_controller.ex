@@ -16,6 +16,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Links
   alias TdBg.BusinessConcepts.Workflow
+  alias TdBg.I18nContents.I18nContents
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
   alias TdBg.Utils.Hasher
@@ -25,8 +26,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdDfLib.Format
 
   require Logger
-
-  @default_lang Application.compile_env(:td_bg, :lang, "en")
 
   action_fallback(TdBgWeb.FallbackController)
 
@@ -117,7 +116,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def xlsx(conn, params) do
     claims = conn.assigns[:current_resource]
 
-    {lang, params} = Map.pop(params, "lang", @default_lang)
+    {lang, params} = Map.pop(params, "lang", BusinessConcepts.get_default_lang())
     concept_url_schema = Map.get(params, "concept_url_schema", nil)
 
     %{results: business_concept_versions} =
@@ -137,7 +136,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def csv(conn, params) do
     claims = conn.assigns[:current_resource]
 
-    {lang, params} = Map.pop(params, "lang", @default_lang)
+    {lang, params} = Map.pop(params, "lang", BusinessConcepts.get_default_lang())
     concept_url_schema = Map.get(params, "concept_url_schema", nil)
 
     %{results: business_concept_versions} =
@@ -154,7 +153,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def upload(conn, params) do
     claims = conn.assigns[:current_resource]
-    {lang, params} = Map.pop(params, "lang", @default_lang)
+    {lang, params} = Map.pop(params, "lang", BusinessConcepts.get_default_lang())
     business_concepts_upload = Map.get(params, "business_concepts")
 
     auto_publish = params |> Map.get("auto_publish", "false") |> String.to_existing_atom()
@@ -248,6 +247,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
          {:ok,
           %BusinessConceptVersion{id: id, business_concept_id: business_concept_id} = version} <-
            BusinessConcepts.create_business_concept(creation_attrs, index: true) do
+      version = maybe_add_i18n_content(version)
+
       conn
       |> put_status(:created)
       |> put_resp_header(
@@ -598,11 +599,28 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  defp add_completeness(business_concept_version) do
-    case BusinessConcepts.get_completeness(business_concept_version) do
+  defp add_completeness(%{content: content} = business_concept_version) do
+    case BusinessConcepts.get_completeness(business_concept_version, content) do
       c -> Map.put(business_concept_version, :completeness, c)
     end
   end
+
+  defp maybe_add_i18n_content_completeness(
+         %{content: content, i18n_content: i18n_content} = bcv,
+         template
+       ) do
+    i18n_content_with_completeness =
+      i18n_content
+      |> merge_content_with_i18n_content(content, template)
+      |> Enum.map(fn %{merged_content: merged_content} = i18n_content ->
+        completeness = BusinessConcepts.get_completeness(bcv, merged_content)
+        Map.put(i18n_content, :completeness, completeness)
+      end)
+
+    Map.put(bcv, :i18n_content, i18n_content_with_completeness)
+  end
+
+  defp maybe_add_i18n_content_completeness(bcv, _template), do: bcv
 
   defp send_for_approval(conn, claims, business_concept_version) do
     with {:can, true} <- {:can, can?(claims, send_for_approval(business_concept_version))},
@@ -740,6 +758,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
              business_concept_version,
              update_params
            ) do
+      concept_version = maybe_add_i18n_content(concept_version)
+
       render(
         conn,
         "show.json",
@@ -982,6 +1002,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> add_counts()
       |> add_taxonomy()
       |> add_shared_to_parents()
+      |> maybe_add_i18n_content()
+      |> maybe_add_i18n_content_completeness(template)
 
     links =
       business_concept_version
@@ -1063,5 +1085,40 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         Map.get(hypermedia, :collection_hypermedia) ++ &1
       )
     )
+  end
+
+  defp maybe_add_i18n_content(%{id: bcv_id} = bcv) do
+    case I18nContents.get_all_i18n_content_by_bcv_id(bcv_id) do
+      [] -> bcv
+      i18n_content -> Map.put(bcv, :i18n_content, i18n_content)
+    end
+  end
+
+  def merge_content_with_i18n_content(i18n_content, bc_content, %{content: schema}) do
+    not_string_template_keys =
+      schema
+      |> Format.flatten_content_fields()
+      |> Enum.filter(fn
+        %{"widget" => widget}
+        when widget not in ["enriched_text", "string"] ->
+          true
+
+        _ ->
+          false
+      end)
+      |> Enum.reduce([], fn %{"name" => name}, acc ->
+        [name | acc]
+      end)
+
+    not_string_values =
+      Enum.filter(bc_content, fn {name, _} ->
+        name in not_string_template_keys
+      end)
+      |> Map.new()
+
+    Enum.map(i18n_content, fn %{content: content} = i18n_content ->
+      new_content = Map.merge(not_string_values, content)
+      Map.put(i18n_content, :merged_content, new_content)
+    end)
   end
 end
