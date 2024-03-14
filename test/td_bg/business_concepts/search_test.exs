@@ -129,17 +129,15 @@ defmodule TdBg.BusinessConcepts.SearchTest do
             }
           } = status_filter
 
-          assert Enum.sort(first_terms) ==
-                   Enum.sort([
-                     %{term: %{"status" => "rejected"}},
-                     %{term: %{"domain_ids" => domain_id4}}
-                   ])
+          assert [
+                   %{term: %{"status" => "rejected"}},
+                   %{term: %{"domain_ids" => domain_id4}}
+                 ] in [first_terms, second_terms]
 
-          assert Enum.sort(second_terms) ==
-                   Enum.sort([
-                     %{terms: %{"status" => ["draft", "pending_approval"]}},
-                     %{term: %{"domain_ids" => domain_id3}}
-                   ])
+          assert [
+                   %{terms: %{"status" => ["draft", "pending_approval"]}},
+                   %{term: %{"domain_ids" => domain_id3}}
+                 ] in [first_terms, second_terms]
 
           assert %{
                    bool: %{

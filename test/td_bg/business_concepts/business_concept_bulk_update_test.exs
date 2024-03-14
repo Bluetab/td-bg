@@ -287,6 +287,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     end
 
     test "two versions of the same concept" do
+      IndexWorkerMock.clear()
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")

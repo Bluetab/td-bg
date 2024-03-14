@@ -132,8 +132,11 @@ defmodule CacheHelpers do
   end
 
   def put_session_permissions(session_id, exp, permissions_by_domain_id) do
-    on_exit(fn -> TdCache.Redix.del!("session:#{session_id}:permissions") end)
-    TdCache.Permissions.cache_session_permissions!(session_id, exp, permissions_by_domain_id)
+    on_exit(fn -> TdCache.Redix.del!("session:#{session_id}:domain:permissions") end)
+
+    TdCache.Permissions.cache_session_permissions!(session_id, exp, %{
+      "domain" => permissions_by_domain_id
+    })
   end
 
   def put_default_permissions(permissions) do
