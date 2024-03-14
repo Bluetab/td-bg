@@ -85,7 +85,9 @@ defmodule TdBgWeb.SharedDomainControllerTest do
       CacheHelpers.put_domain(domain)
 
       TdCache.Permissions.cache_session_permissions!(jti, nil, %{
-        "view_domain" => [domain_id]
+        "domain" => %{
+          "view_domain" => [domain_id]
+        }
       })
 
       %{id: concept_id} = insert(:business_concept, domain: domain)
