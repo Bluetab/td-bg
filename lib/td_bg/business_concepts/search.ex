@@ -16,6 +16,7 @@ defmodule TdBg.BusinessConcept.Search do
 
   def get_filter_values(%Claims{} = claims, params) do
     query = build_query(claims, params)
+
     aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
     search = %{query: query, aggs: aggs, size: 0}
 
@@ -28,10 +29,10 @@ defmodule TdBg.BusinessConcept.Search do
 
   def search_business_concept_versions(params, %Claims{} = claims, page, size) do
     query = build_query(claims, params)
+
     sort = Map.get(params, "sort", ["_score", "name.raw"])
 
-    %{from: page * size, size: size, query: query, sort: sort}
-    |> do_search()
+    do_search(%{from: page * size, size: size, query: query, sort: sort})
   end
 
   defp build_query(%Claims{} = claims, params) do

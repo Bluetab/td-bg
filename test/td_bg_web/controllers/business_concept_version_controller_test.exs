@@ -2108,4 +2108,22 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:unprocessable_entity)
     end
   end
+
+  describe "get actions" do
+    @tag authentication: [role: "admin"]
+    test "actions for admin user", %{
+      conn: conn
+    } do
+      assert %{"_actions" => actions} =
+               conn
+               |> get(Routes.business_concept_version_path(conn, :actions))
+               |> json_response(:ok)
+
+      assert %{
+               "autoPublish" => %{},
+               "create" => %{},
+               "upload" => %{}
+             } = actions
+    end
+  end
 end
