@@ -4,6 +4,7 @@
 
 ### Added
 
+- [TD-6210] Get BC Actions via API
 - [TD-4110] Allow structure scoped permissions management
 
 ## [6.2.0] 2024-02-26
