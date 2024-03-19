@@ -115,6 +115,7 @@ defmodule TdBg.BusinessConcept.Upload do
     # ndexing in the data doesn't account for headers, and in XLSX, rows start from 1. That's why
     # we're adding 2 to the index to align it with the XLSX sheet index
     index = index + 2
+
     row_parsed = parse_row(raw_data, headers, claims, index, template)
 
     with {:ok, row_parsed} <- validate_and_set_domain(row_parsed),
@@ -517,7 +518,7 @@ defmodule TdBg.BusinessConcept.Upload do
          %{name: template_name},
          %{user_id: user_id} = claims
        ) do
-    case BusinessConcepts.get_business_concept_version(id, "current") do
+    case BusinessConcepts.get_business_concept_version(id, "latest") do
       nil ->
         error =
           {:business_concept_not_exists,
@@ -557,6 +558,13 @@ defmodule TdBg.BusinessConcept.Upload do
           )
           |> parse_changeset(row_parsed)
         else
+          row_parsed = %{
+            row_parsed
+            | business_concept_version:
+                BusinessConcepts.get_business_concept_version(id, "current"),
+              versioned: !Map.get(business_concept_version, :current)
+          }
+
           params
           |> BusinessConcepts.attrs_keys_to_atoms()
           |> BusinessConcepts.merge_content_with_concept(business_concept_version)
@@ -648,6 +656,26 @@ defmodule TdBg.BusinessConcept.Upload do
       bcv = BusinessConcepts.get_business_concept_version!(id)
       BusinessConcepts.refresh_cache_and_elastic(bcv)
       {:ok, Map.put(row_parsed, :business_concept_version, bcv)}
+    end
+  end
+
+  defp upsert(
+         %{
+           action: :update,
+           auto_publish: true,
+           versioned: true,
+           business_concept_version: old_business_concept_version,
+           errors: [],
+           changeset: %{valid?: true}
+         } = row_parsed
+       ) do
+    with {:ok, %{published: %{id: published_id}}} <-
+           BusinessConcepts.publish_version_concept(row_parsed) do
+      BusinessConcepts.refresh_cache_and_elastic(old_business_concept_version)
+      published_bcv = BusinessConcepts.get_business_concept_version!(published_id)
+      BusinessConcepts.refresh_cache_and_elastic(published_bcv)
+
+      {:ok, Map.put(row_parsed, :business_concept_version, published_bcv)}
     end
   end
 

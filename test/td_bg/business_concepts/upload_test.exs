@@ -375,7 +375,15 @@ defmodule TdBg.UploadTest do
       |> Enum.with_index()
       |> Enum.each(fn {bcv_id, i} ->
         assert Enum.at(bcv_versioned, i) == bcv_id
-        assert %{status: "draft"} = BusinessConcepts.get_business_concept_version!(bcv_id)
+
+        case bcv_id do
+          ^bcv_pending_a_id ->
+            assert %{status: "pending_approval"} =
+                     BusinessConcepts.get_business_concept_version!(bcv_id)
+
+          _ ->
+            assert %{status: "draft"} = BusinessConcepts.get_business_concept_version!(bcv_id)
+        end
       end)
 
       assert IndexWorkerMock.calls() == [
@@ -460,6 +468,7 @@ defmodule TdBg.UploadTest do
         insert(:business_concept_version,
           name: "Name2",
           status: "deprecated",
+          version: 1,
           business_concept: bc_deprecated,
           id: 22
         )
@@ -470,6 +479,7 @@ defmodule TdBg.UploadTest do
         insert(:business_concept_version,
           name: "Name3",
           status: "draft",
+          version: 1,
           business_concept: bc_draft,
           id: 33
         )
@@ -480,6 +490,7 @@ defmodule TdBg.UploadTest do
         insert(:business_concept_version,
           name: "Name4",
           status: "pending_approval",
+          version: 1,
           business_concept: bc_pending_a,
           id: 44
         )
@@ -490,6 +501,7 @@ defmodule TdBg.UploadTest do
         insert(:business_concept_version,
           name: "Name5",
           status: "rejected",
+          version: 1,
           business_concept: bc_rejected,
           id: 55
         )
@@ -518,7 +530,7 @@ defmodule TdBg.UploadTest do
       |> Enum.each(fn {bcv_id, i} ->
         assert Enum.at(bcv_versioned, i) == bcv_id
 
-        assert %{status: "published", current: true} =
+        assert %{status: "published", version: 1, current: true} =
                  BusinessConcepts.get_business_concept_version!(bcv_id)
       end)
 
@@ -532,6 +544,152 @@ defmodule TdBg.UploadTest do
              ]
 
       IndexWorkerMock.clear()
+    end
+
+    test "bulk_upload/3 update concept published with new draft/pending/rejected version and autopublish" do
+      IndexWorkerMock.clear()
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "domain")
+
+      %{id: bc_published_pending_id} =
+        bc_published_pending = insert(:business_concept, domain: domain, id: 1, type: "term")
+
+      %{id: bc_published_rejected_id} =
+        bc_published_rejected = insert(:business_concept, domain: domain, id: 2, type: "term")
+
+      %{id: bc_published_draft_id} =
+        bc_published_draft = insert(:business_concept, domain: domain, id: 3, type: "term")
+
+      %{id: bcv_published_pending_id} =
+        insert(:business_concept_version,
+          name: "Name1",
+          status: "published",
+          version: 1,
+          business_concept: bc_published_pending,
+          id: 11,
+          current: true
+        )
+
+      %{id: bcv_pending_id} =
+        insert(:business_concept_version,
+          name: "Name1",
+          status: "pending_aproval",
+          version: 2,
+          business_concept: bc_published_pending,
+          id: 111,
+          current: false
+        )
+
+      %{id: bcv_published_rejected_id} =
+        insert(:business_concept_version,
+          name: "Name2",
+          status: "published",
+          version: 1,
+          business_concept: bc_published_rejected,
+          id: 22,
+          current: true
+        )
+
+      %{id: bcv_rejected_id} =
+        insert(:business_concept_version,
+          name: "Name2",
+          status: "rejected",
+          version: 2,
+          business_concept: bc_published_rejected,
+          id: 222,
+          current: false
+        )
+
+      %{id: bcv_published_draft_id} =
+        insert(:business_concept_version,
+          name: "Name3",
+          status: "published",
+          version: 1,
+          business_concept: bc_published_draft,
+          id: 33,
+          current: true
+        )
+
+      %{id: bcv_draft_id} =
+        insert(:business_concept_version,
+          name: "Name3",
+          status: "draft",
+          version: 2,
+          business_concept: bc_published_draft,
+          id: 333,
+          current: false
+        )
+
+      business_concept_upload = %{path: "test/fixtures/upload_publish_status_changes.xlsx"}
+
+      assert %{
+               created: [],
+               updated:
+                 [_ | _] = [
+                   bcv_pending_to_published_id,
+                   bcv_rejected_to_published,
+                   bcv_draft_to_published
+                 ],
+               errors: []
+             } =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: "en",
+                 auto_publish: true
+               )
+
+      # Check pending approval changes
+
+      assert bcv_pending_to_published_id === bcv_pending_id
+
+      assert %{
+               id: ^bcv_pending_id,
+               current: true,
+               status: "published",
+               business_concept: %{id: ^bc_published_pending_id}
+             } = BusinessConcepts.get_business_concept_version!(bcv_pending_to_published_id)
+
+      assert %{
+               status: "versioned",
+               current: false,
+               business_concept: %{id: ^bc_published_pending_id}
+             } = BusinessConcepts.get_business_concept_version!(bcv_published_pending_id)
+
+      # Check rejected changes
+
+      assert bcv_rejected_to_published === bcv_rejected_id
+
+      assert %{
+               id: ^bcv_rejected_id,
+               current: true,
+               status: "published",
+               business_concept: %{id: ^bc_published_rejected_id}
+             } = BusinessConcepts.get_business_concept_version!(bcv_rejected_to_published)
+
+      assert %{
+               status: "versioned",
+               current: false,
+               business_concept: %{id: ^bc_published_rejected_id}
+             } = BusinessConcepts.get_business_concept_version!(bcv_published_rejected_id)
+
+      # Check draft changes
+
+      assert bcv_draft_to_published === bcv_draft_id
+
+      assert %{
+               id: ^bcv_draft_id,
+               current: true,
+               status: "published",
+               business_concept: %{id: ^bc_published_draft_id}
+             } = BusinessConcepts.get_business_concept_version!(bcv_draft_to_published)
+
+      assert %{
+               status: "versioned",
+               current: false,
+               business_concept: %{id: ^bc_published_draft_id}
+             } = BusinessConcepts.get_business_concept_version!(bcv_published_draft_id)
     end
 
     test "bulk_upload/3 returns error on invalid content" do

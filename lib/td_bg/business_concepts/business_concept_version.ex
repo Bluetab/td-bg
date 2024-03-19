@@ -65,6 +65,35 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     |> validate_content(params)
   end
 
+  def update_changeset(
+        %TdBg.BusinessConcepts.BusinessConceptVersion{status: "pending_approval"} =
+          business_concept_version,
+        params
+      ) do
+    business_concept_version
+    |> cast(params, [
+      :content,
+      :name,
+      :last_change_by,
+      :last_change_at,
+      :mod_comments,
+      :in_progress
+    ])
+    |> cast_assoc(:business_concept)
+    |> validate_required([
+      :content,
+      :name,
+      :last_change_by,
+      :last_change_at,
+      :in_progress
+    ])
+    |> maybe_put_identifier(business_concept_version)
+    |> update_change(:name, &String.trim/1)
+    |> validate_length(:name, max: 255)
+    |> validate_length(:mod_comments, max: 500)
+    |> validate_content()
+  end
+
   def update_changeset(business_concept_version, params) do
     business_concept_version
     |> cast(params, [
