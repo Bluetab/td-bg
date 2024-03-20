@@ -312,7 +312,7 @@ defmodule TdBgWeb.DomainControllerTest do
                  bool: %{
                    filter: [
                      %{term: %{current: true}},
-                     %{terms: %{domain_id: domain_ids}},
+                     %{terms: %{domain_ids: domain_ids}},
                      %{query_string: %{query: "content.\\*:(\"user name\")"}}
                    ],
                    must_not: %{term: %{status: "deprecated"}}

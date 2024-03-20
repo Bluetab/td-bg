@@ -60,6 +60,7 @@ defmodule TdBgWeb.Router do
     end
 
     post("/business_concept_versions/search", BusinessConceptVersionController, :search)
+    get("/business_concept_versions/actions", BusinessConceptVersionController, :actions)
 
     get("/business_concept_filters", BusinessConceptFilterController, :index)
     post("/business_concept_filters/search", BusinessConceptFilterController, :search)
