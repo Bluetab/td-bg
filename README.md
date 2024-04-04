@@ -31,6 +31,8 @@ Run all aplication tests with `mix test`
 - DB_SSL_CACERTFILE: path of the certification authority cert file "/path/to/ca.crt", required when DB_SSL is true.
 - DB_SSL_VERSION: available versions are tlsv1.2, tlsv1.3 by default is tlsv1.2.
 
+### Elastic bulk page size configuration
+- BULK_PAGE_SIZE_CONCEPTS: default 500
 
 ## Deployment
 
