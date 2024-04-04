@@ -113,6 +113,15 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     )
   end
 
+  def actions(conn, _params) do
+    hypermedia =
+      "business_concept_version"
+      |> collection_hypermedia(conn, [], BusinessConceptVersion)
+      |> put_actions(conn)
+
+    render(conn, "list.json", hypermedia: hypermedia)
+  end
+
   def xlsx(conn, params) do
     claims = conn.assigns[:current_resource]
 
@@ -215,7 +224,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     concept_type = Map.get(business_concept_params, "type")
     template = TemplateCache.get_by_name!(concept_type)
+
     content_schema = get_flat_template_content(template)
+
     concept_name = Map.get(business_concept_params, "name")
 
     domain_id = Map.get(business_concept_params, "domain_id")

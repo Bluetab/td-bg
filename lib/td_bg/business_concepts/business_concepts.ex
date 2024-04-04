@@ -549,6 +549,12 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.one()
   end
 
+  defp where_version(query, "latest"),
+    do:
+      query
+      |> order_by(desc: :version)
+      |> limit(1)
+
   defp where_version(query, "current"), do: where(query, [v], v.current == true)
 
   defp where_version(query, version), do: where(query, [v], v.id == ^version)
@@ -895,7 +901,8 @@ defmodule TdBg.BusinessConcepts do
 
   def publish_version_concept(%{
         changeset: changeset,
-        params: %{"business_concept" => %{"id" => business_concept_id}}
+        params: %{"business_concept" => %{"id" => business_concept_id}},
+        action: action
       }) do
     query =
       from(
@@ -903,9 +910,11 @@ defmodule TdBg.BusinessConcepts do
         where: c.business_concept_id == ^business_concept_id and c.status == "published"
       )
 
+    multi_upsert = if action === :create, do: &Multi.insert/3, else: &Multi.update/3
+
     Multi.new()
     |> Multi.update_all(:versioned, query, set: [status: "versioned", current: false])
-    |> Multi.insert(:published, Changeset.change(changeset, current: true))
+    |> multi_upsert.(:published, Changeset.change(changeset, current: true))
     |> Multi.run(:audit_published, Audit, :business_concept_published, [])
     |> Repo.transaction()
   end

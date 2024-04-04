@@ -3,8 +3,6 @@ defmodule TdBg.Application do
 
   use Application
 
-  alias TdBgWeb.Endpoint
-
   @impl true
   def start(_type, _args) do
     env = Application.get_env(:td_bg, :env)
@@ -26,7 +24,7 @@ defmodule TdBg.Application do
 
   @impl true
   def config_change(changed, _new, removed) do
-    Endpoint.config_change(changed, removed)
+    TdBgWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 
