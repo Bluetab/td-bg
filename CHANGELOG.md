@@ -1,5 +1,11 @@
 # Changelog
 
+# [6.3.1] 2024-04-04
+
+### Fixed
+
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+
 ## [6.3.0] 2024-03-20
 
 ### Added
