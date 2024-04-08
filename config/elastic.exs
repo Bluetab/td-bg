@@ -52,7 +52,7 @@ config :td_core, TdCore.Search.Cluster,
 
       # Controls the data ingestion rate by raising or lowering the number
       # of items to send in each bulk request.
-      bulk_page_size: 1000,
+      bulk_page_size: System.get_env("BULK_PAGE_SIZE_CONCEPTS", "1000") |> String.to_integer(),
 
       # Likewise, wait a given period between posting pages to give
       # Elasticsearch time to catch up.

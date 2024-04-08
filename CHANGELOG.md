@@ -1,6 +1,18 @@
 # Changelog
 
-## [Unreleased]
+# [Unreleased]
+
+### Fixed
+
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+
+# [6.3.1] 2024-04-04
+
+### Fixed
+
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+
+## [6.3.0] 2024-03-20
 
 ### Fixed
 
@@ -16,6 +28,12 @@
 ### Fixed
 
 - [TD-6350] Fix concepts file upgrade workflow keeping pending approval status
+
+# [6.2.1] 2024-04-04
+
+### Fixed
+
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
 
 ## [6.2.0] 2024-02-26
 
