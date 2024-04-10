@@ -1,6 +1,6 @@
 # Changelog
 
-# [Unreleased]
+## [6.4.0] 2024-04-09
 
 ### Fixed
 
@@ -16,18 +16,13 @@
 
 ### Fixed
 
+- [TD-6350] Fix concepts file upgrade workflow keeping pending approval status
 - [TD-6401] Fixed Content aggregations have a maximum of 10 values
-
-## [6.3.0] 2024-03-20
 
 ### Added
 
 - [TD-6210] Get BC Actions via API
 - [TD-4110] Allow structure scoped permissions management
-
-### Fixed
-
-- [TD-6350] Fix concepts file upgrade workflow keeping pending approval status
 
 # [6.2.1] 2024-04-04
 
