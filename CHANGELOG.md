@@ -1,15 +1,34 @@
 # Changelog
 
+## [6.4.0] 2024-04-09
+
+### Fixed
+
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+
+# [6.3.1] 2024-04-04
+
+### Fixed
+
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+
 ## [6.3.0] 2024-03-20
+
+### Fixed
+
+- [TD-6350] Fix concepts file upgrade workflow keeping pending approval status
+- [TD-6401] Fixed Content aggregations have a maximum of 10 values
 
 ### Added
 
 - [TD-6210] Get BC Actions via API
 - [TD-4110] Allow structure scoped permissions management
 
+# [6.2.1] 2024-04-04
+
 ### Fixed
 
-- [TD-6350] Fix concepts file upgrade workflow keeping pending approval status
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
 
 ## [6.2.0] 2024-02-26
 
