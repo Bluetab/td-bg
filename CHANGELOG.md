@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6401] Fixed Content aggregations have a maximum of 10 values
+- [TD-6424] Fixed switch on fields aren't translated when uploading and
+
 ## [6.4.0] 2024-04-09
 
 ### Fixed
@@ -11,6 +18,7 @@
 ### Fixed
 
 - [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+  > > > > > > > cf7e60e8a91e32735791517218b65dc9c28a2bc9
 
 ## [6.3.0] 2024-03-20
 

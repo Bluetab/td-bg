@@ -458,7 +458,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_version_id = 456
       name = "concept_name"
       domain = "domain_name"
-      status = "draft"
+      status = "Borrador"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
 
@@ -492,7 +492,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                "id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;link_to_concept;field1_name;field2_name;field3_name"
 
       assert content ==
-               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain};draft;66.67;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;Valor 1;value;"
+               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain};#{status};66.67;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;Valor 1;value;"
     end
 
     @tag template: [
@@ -1276,7 +1276,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_version_id = 456
       name = "concept_name"
       domain = "domain_name"
-      status = "draft"
+      status = "Borrador"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
 
