@@ -1,6 +1,6 @@
 # Changelog
 
-# [Unreleased]
+## [6.4.0] 2024-04-09
 
 ### Fixed
 
