@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.5.0] 2024-04-30
+
+### Added
+
+- [TD-6535] Update Td-core for Elasticsearch reindex improvements and fix index deletion by name
+- [TD-6492] Update td-df-lib
+
+### Fixed
+
+- [TD-6401] Fixed Content aggregations have a maximum of 10 values
+- [TD-6424] Fixed switch on fields aren't translated when uploading and downloading
+
 ## [6.4.0] 2024-04-09
 
 ### Fixed

@@ -4,6 +4,7 @@ defmodule TdBg.BusinessConcept.Download do
   """
 
   alias Elixlsx.{Sheet, Workbook}
+  alias TdCache.I18nCache
   alias TdCache.TemplateCache
   alias TdDfLib.Parser
   alias TdDfLib.Templates
@@ -44,7 +45,7 @@ defmodule TdBg.BusinessConcept.Download do
       core =
         Enum.map(template_concepts, fn %{"content" => content} = concept ->
           @headers
-          |> Enum.map(&editable_concept_value(concept, &1))
+          |> Enum.map(&editable_concept_value(concept, &1, lang))
           |> add_extra_fields(concept, concept_url_schema)
           |> Parser.append_parsed_fields(template_fields, content,
             domain_type: :with_domain_external_id,
@@ -80,7 +81,7 @@ defmodule TdBg.BusinessConcept.Download do
     core =
       Enum.map(concepts, fn %{"content" => content} = concept ->
         @headers
-        |> Enum.map(&editable_concept_value(concept, &1))
+        |> Enum.map(&editable_concept_value(concept, &1, lang))
         |> add_extra_fields(concept, concept_url_schema)
         |> Parser.append_parsed_fields(type_fields, content,
           domain_type: :with_domain_external_id,
@@ -99,18 +100,24 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp type_fields(_type), do: []
 
-  defp editable_concept_value(%{"template" => template}, "template"),
+  defp editable_concept_value(concept, header, lang)
+
+  defp editable_concept_value(%{"template" => template}, "template", _),
     do: Map.get(template, "name")
 
-  defp editable_concept_value(%{"domain" => domain}, "domain"), do: Map.get(domain, "external_id")
+  defp editable_concept_value(%{"domain" => domain}, "domain", _),
+    do: Map.get(domain, "external_id")
 
-  defp editable_concept_value(concept, "completeness"), do: get_completeness(concept)
+  defp editable_concept_value(concept, "completeness", _), do: get_completeness(concept)
 
-  defp editable_concept_value(%{"business_concept_id" => id}, "id"), do: id
+  defp editable_concept_value(%{"business_concept_id" => id}, "id", _), do: id
 
-  defp editable_concept_value(%{"id" => id}, "current_version_id"), do: id
+  defp editable_concept_value(%{"id" => id}, "current_version_id", _), do: id
 
-  defp editable_concept_value(concept, field), do: Map.get(concept, field)
+  defp editable_concept_value(%{"status" => status}, "status", lang),
+    do: I18nCache.get_definition(lang, "concepts.status.#{status}", default_value: status)
+
+  defp editable_concept_value(concept, field, _), do: Map.get(concept, field)
 
   defp get_completeness(%{"content" => content, "template" => %{"name" => template_name}}),
     do: Templates.completeness(content, template_name)
