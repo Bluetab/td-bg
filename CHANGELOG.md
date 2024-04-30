@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-6535] Update Td-core for Elasticsearch reindex improvements and fix index deletion by name
+- [TD-6492] Update td-df-lib
 
 ### Fixed
 
