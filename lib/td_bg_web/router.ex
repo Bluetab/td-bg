@@ -65,7 +65,7 @@ defmodule TdBgWeb.Router do
     get("/business_concept_filters", BusinessConceptFilterController, :index)
     post("/business_concept_filters/search", BusinessConceptFilterController, :search)
 
-    get("/business_concept_user_filters/user/me", UserSearchFilterController, :index_by_user)
+    get("/business_concept_user_filters/me", UserSearchFilterController, :index_by_user)
     resources("/business_concept_user_filters", UserSearchFilterController, except: [:new, :edit])
     get("/business_concepts/search/reindex_all", SearchController, :reindex_all)
 

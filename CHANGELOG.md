@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-6455] Router API for business_concept_user_filters 
+
 ## [6.5.0] 2024-04-30
 
 ### Added
