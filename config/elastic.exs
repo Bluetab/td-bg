@@ -12,10 +12,23 @@ config :td_core, TdCore.Search.Cluster,
 
   # Aggregations default
   aggregations: %{
-    "domain" => 50,
-    "user" => 50,
-    "system" => 50,
-    "default" => 50
+    "domain" => System.get_env("AGG_DOMAIN_SIZE", "500") |> String.to_integer(),
+    "user" => System.get_env("AGG_USER_SIZE", "500") |> String.to_integer(),
+    "system" => System.get_env("AGG_SYSTEM_SIZE", "500") |> String.to_integer(),
+    "default" => System.get_env("AGG_DEFAULT_SIZE", "500") |> String.to_integer(),
+    "taxonomy" => System.get_env("AGG_TAXONOMY_SIZE", "500") |> String.to_integer(),
+    "hierarchy" => System.get_env("AGG_HIERARCHY_SIZE", "500") |> String.to_integer(),
+    "template" => System.get_env("AGG_TEMPLATE_SIZE", "500") |> String.to_integer(),
+    "template_subscope" =>
+      System.get_env("AGG_TEMPLATE_SUBSCOPE_SIZE", "500") |> String.to_integer(),
+    "confidential.raw" =>
+      System.get_env("AGG_CONFIDENTIAL_RAW_SIZE", "500") |> String.to_integer(),
+    "current" => System.get_env("AGG_CURRENT_SIZE", "500") |> String.to_integer(),
+    "domain_ids" => System.get_env("AGG_DOMAIN_IDS_SIZE", "500") |> String.to_integer(),
+    "has_rules" => System.get_env("AGG_HAS_RULES_SIZE", "500") |> String.to_integer(),
+    "link_tags" => System.get_env("AGG_LINK_TAGS_SIZE", "500") |> String.to_integer(),
+    "shared_to_names" => System.get_env("AGG_SHARED_TO_NAMES_SIZE", "500") |> String.to_integer(),
+    "status" => System.get_env("AGG_STATUS_SIZE", "500") |> String.to_integer()
   },
 
   # The library used for JSON encoding/decoding.

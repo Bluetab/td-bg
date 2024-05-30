@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-6561] Standardise aggregations limits 
+
 ## [6.6.0] 2024-05-21
 
 ### Changed
