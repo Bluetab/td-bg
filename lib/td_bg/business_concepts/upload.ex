@@ -15,7 +15,7 @@ defmodule TdBg.BusinessConcept.Upload do
 
   require Logger
 
-  @default_lang Application.compile_env(:td_bg, :lang)
+  @default_lang Application.compile_env(:td_cache, :lang)
   @headers ["id", "name", "domain", "type", "confidential"]
   @required_headers ["name", "domain"]
   @ignored_headers [

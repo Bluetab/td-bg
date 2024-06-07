@@ -81,3 +81,58 @@ if config_env() == :prod do
       password: password
   end
 end
+
+config :td_core, TdCore.Search.Cluster,
+  delete_existing_index: System.get_env("DELETE_EXISTING_INDEX", "true") |> String.to_atom(),
+  default_options: [
+    timeout: System.get_env("ES_TIMEOUT", "5000") |> String.to_integer(),
+    recv_timeout: System.get_env("ES_RECV_TIMEOUT", "40000") |> String.to_integer()
+  ],
+  default_settings: %{
+    "number_of_shards" => System.get_env("ES_SHARDS", "1") |> String.to_integer(),
+    "number_of_replicas" => System.get_env("ES_REPLICAS", "1") |> String.to_integer(),
+    "refresh_interval" => System.get_env("ES_REFRESH_INTERVAL", "5s"),
+    "max_result_window" => System.get_env("ES_MAX_RESULT_WINDOW", "10000") |> String.to_integer(),
+    "index.indexing.slowlog.threshold.index.warn" =>
+      System.get_env("ES_INDEXING_SLOWLOG_THRESHOLD_WARN", "10s"),
+    "index.indexing.slowlog.threshold.index.info" =>
+      System.get_env("ES_INDEXING_SLOWLOG_THRESHOLD_INFO", "5s"),
+    "index.indexing.slowlog.threshold.index.debug" =>
+      System.get_env("ES_INDEXING_SLOWLOG_THRESHOLD_DEBUG", "2s"),
+    "index.indexing.slowlog.threshold.index.trace" =>
+      System.get_env("ES_INDEXING_SLOWLOG_THRESHOLD_TRACE", "500ms"),
+    "index.indexing.slowlog.level" => System.get_env("ES_INDEXING_SLOWLOG_LEVEL", "info"),
+    "index.indexing.slowlog.source" => System.get_env("ES_INDEXING_SLOWLOG_SOURCE", "1000"),
+    "index.mapping.total_fields.limit" => System.get_env("ES_MAPPING_TOTAL_FIELDS_LIMIT", "3000")
+  }
+
+config :td_core, TdCore.Search.Cluster,
+  indexes: [
+    concepts: [
+      # Controls the data ingestion rate by raising or lowering the number
+      # of items to send in each bulk request.
+      bulk_page_size: System.get_env("BULK_PAGE_SIZE_CONCEPTS", "1000") |> String.to_integer()
+    ]
+  ]
+
+config :td_core, TdCore.Search.Cluster,
+  # Aggregations default
+  aggregations: %{
+    "domain" => System.get_env("AGG_DOMAIN_SIZE", "500") |> String.to_integer(),
+    "user" => System.get_env("AGG_USER_SIZE", "500") |> String.to_integer(),
+    "system" => System.get_env("AGG_SYSTEM_SIZE", "500") |> String.to_integer(),
+    "default" => System.get_env("AGG_DEFAULT_SIZE", "500") |> String.to_integer(),
+    "taxonomy" => System.get_env("AGG_TAXONOMY_SIZE", "500") |> String.to_integer(),
+    "hierarchy" => System.get_env("AGG_HIERARCHY_SIZE", "500") |> String.to_integer(),
+    "template" => System.get_env("AGG_TEMPLATE_SIZE", "500") |> String.to_integer(),
+    "template_subscope" =>
+      System.get_env("AGG_TEMPLATE_SUBSCOPE_SIZE", "500") |> String.to_integer(),
+    "confidential.raw" =>
+      System.get_env("AGG_CONFIDENTIAL_RAW_SIZE", "500") |> String.to_integer(),
+    "current" => System.get_env("AGG_CURRENT_SIZE", "500") |> String.to_integer(),
+    "domain_ids" => System.get_env("AGG_DOMAIN_IDS_SIZE", "500") |> String.to_integer(),
+    "has_rules" => System.get_env("AGG_HAS_RULES_SIZE", "500") |> String.to_integer(),
+    "link_tags" => System.get_env("AGG_LINK_TAGS_SIZE", "500") |> String.to_integer(),
+    "shared_to_names" => System.get_env("AGG_SHARED_TO_NAMES_SIZE", "500") |> String.to_integer(),
+    "status" => System.get_env("AGG_STATUS_SIZE", "500") |> String.to_integer()
+  }
