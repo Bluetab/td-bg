@@ -11,7 +11,7 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   alias TdDfLib.Format
   alias TdDfLib.Parser
 
-  @default_lang Application.compile_env(:td_bg, :lang)
+  @default_lang Application.compile_env(:td_cache, :lang)
 
   def update_all(%Claims{} = claims, business_concept_versions, params) do
     business_concept_versions =
