@@ -20,6 +20,7 @@ config :td_bg, TdBg.Repo,
   pool_size: 1
 
 config :td_core, TdCore.Search.Cluster, api: ElasticsearchMock
+config :td_core, TdCore.Search.IndexWorker, TdCore.Search.IndexWorkerMock
 
 config :td_cache, :audit, stream: "audit:events:test"
 

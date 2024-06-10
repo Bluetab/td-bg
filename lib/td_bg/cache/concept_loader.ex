@@ -10,10 +10,10 @@ defmodule TdBg.Cache.ConceptLoader do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Search.Indexer
   alias TdCache.ConceptCache
   alias TdCache.Redix
   alias TdCache.TemplateCache
-  alias TdCore.Search.IndexWorker
   alias TdDfLib.Templates
 
   require Logger
@@ -89,7 +89,7 @@ defmodule TdBg.Cache.ConceptLoader do
   @impl GenServer
   def handle_call({:refresh, ids}, _from, state) do
     reply = cache_concepts(ids)
-    IndexWorker.reindex(:concepts, ids)
+    Indexer.reindex(ids)
     {:reply, reply, state}
   end
 
@@ -107,7 +107,7 @@ defmodule TdBg.Cache.ConceptLoader do
       |> Enum.flat_map(&read_concept_ids/1)
 
     unless ids == [] do
-      IndexWorker.reindex(:concepts, ids)
+      Indexer.reindex(ids)
     end
 
     ids
@@ -120,7 +120,7 @@ defmodule TdBg.Cache.ConceptLoader do
       |> Enum.flat_map(&read_concept_ids/1)
 
     unless ids == [] do
-      IndexWorker.reindex(:concepts, :all)
+      Indexer.reindex(:all)
     end
 
     ids
