@@ -5,7 +5,7 @@ defmodule TdBgWeb.SearchController do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBgWeb.ErrorView
 
-  alias TdCore.Search
+  alias TdBg.Search.Indexer
 
   swagger_path :reindex_all do
     description("Reindex all ES indexes with DB content")
@@ -19,7 +19,7 @@ defmodule TdBgWeb.SearchController do
     claims = conn.assigns[:current_resource]
 
     if can?(claims, reindex_all(BusinessConcept)) do
-      Search.IndexWorker.reindex(:concepts, :all)
+      Indexer.reindex(:all)
 
       send_resp(conn, :accepted, "")
     else
