@@ -2,12 +2,13 @@
 
 ## [Unreleased]
 
-### Changed
+### Fixed
 
-- [TD-6561] 
+- [TD-6561]
   - Standardise aggregations limits
   - Use keyword list for elastic search configuration
 - [TD-6402] IndexWorker improvement
+- [TD-6440] Fixed Hierarchy bugs
 
 ## [6.6.0] 2024-05-21
 
