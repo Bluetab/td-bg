@@ -94,7 +94,10 @@ defmodule TdBg.BusinessConceptsTest do
 
       version_attrs = %{
         business_concept: concept_attrs,
-        content: %{"foo" => "bar", "xyz" => "foo"},
+        content: %{
+          "foo" => %{"value" => "bar", "origin" => "user"},
+          "xyz" => %{"value" => "foo", "origin" => "user"}
+        },
         name: "some name",
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
@@ -124,7 +127,9 @@ defmodule TdBg.BusinessConceptsTest do
                Stream.read(:redix, @stream, transform: true)
 
       assert event == "new_concept_draft"
-      assert %{"subscribable_fields" => %{"foo" => "bar"}} = Jason.decode!(payload)
+
+      assert %{"subscribable_fields" => %{"foo" => %{"value" => "bar", "origin" => "user"}}} =
+               Jason.decode!(payload)
     end
 
     test "with invalid data returns error changeset" do
@@ -159,7 +164,11 @@ defmodule TdBg.BusinessConceptsTest do
         %{"name" => "Field3", "type" => "string", "cardinality" => "?"}
       ]
 
-      content = %{"Field1" => "Hello", "Field2" => "World", "Field3" => ["Hellow", "World"]}
+      content = %{
+        "Field1" => %{"value" => "Hello", "origin" => "user"},
+        "Field2" => %{"value" => "World", "origin" => "user"},
+        "Field3" => %{"value" => ["Hellow", "World"], "origin" => "user"}
+      }
 
       concept_attrs = %{
         type: @template_name,
@@ -202,8 +211,16 @@ defmodule TdBg.BusinessConceptsTest do
         %{"name" => "Field3", "type" => "string", "cardinality" => "?"}
       ]
 
-      content = %{"Field1" => "Hello", "Field2" => "World", "Field3" => "Hellow"}
-      es_content = %{"Field1" => "Hola", "Field3" => "Hola"}
+      content = %{
+        "Field1" => %{"value" => "Hello", "origin" => "user"},
+        "Field2" => %{"value" => "World", "origin" => "user"},
+        "Field3" => %{"value" => "Hellow", "origin" => "user"}
+      }
+
+      es_content = %{
+        "Field1" => %{"value" => "Hola", "origin" => "user"},
+        "Field3" => %{"value" => "Hola", "origin" => "user"}
+      }
 
       concept_attrs = %{
         type: @template_name,
@@ -279,8 +296,18 @@ defmodule TdBg.BusinessConceptsTest do
       domain = insert(:domain)
 
       content_schema = [
-        %{"name" => "Field1", "type" => "string", "default" => "foo", "cardinality" => "?"},
-        %{"name" => "Field2", "type" => "string", "default" => "bar", "cardinality" => "?"}
+        %{
+          "name" => "Field1",
+          "type" => "string",
+          "default" => %{"value" => "foo", "origin" => "default"},
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "Field2",
+          "type" => "string",
+          "default" => %{"value" => "bar", "origin" => "default"},
+          "cardinality" => "?"
+        }
       ]
 
       content = %{}
@@ -307,7 +334,11 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs)
 
       assert %{content: content} = business_concept_version
-      assert %{"Field1" => "foo", "Field2" => "bar"} = content
+
+      assert %{
+               "Field1" => %{"value" => "foo", "origin" => "default"},
+               "Field2" => %{"value" => "bar", "origin" => "default"}
+             } = content
     end
 
     @tag template: @content
@@ -319,7 +350,7 @@ defmodule TdBg.BusinessConceptsTest do
         %{"name" => "Field1", "type" => "string", "cardinality" => "1"}
       ]
 
-      content = %{"Field1" => ["World", "World2"]}
+      content = %{"Field1" => %{"value" => ["World", "World2"], "origin" => "user"}}
 
       concept_attrs = %{
         type: @template_name,
@@ -462,7 +493,7 @@ defmodule TdBg.BusinessConceptsTest do
         }
       ]
 
-      content = %{"i18n" => "uno"}
+      content = %{"i18n" => %{"value" => "uno", "origin" => "user"}}
 
       concept_attrs = %{
         type: @template_name,
@@ -489,7 +520,7 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
 
       assert %{content: content} = business_concept_version
-      assert %{"i18n" => "one"} = content
+      assert %{"i18n" => %{"value" => "one", "origin" => "user"}} = content
     end
 
     @tag template: @content
@@ -517,7 +548,7 @@ defmodule TdBg.BusinessConceptsTest do
         }
       ]
 
-      content = %{"i18n" => "uno|dos"}
+      content = %{"i18n" => %{"value" => "uno|dos", "origin" => "user"}}
 
       concept_attrs = %{
         type: @template_name,
@@ -544,7 +575,7 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
 
       assert %{content: content} = business_concept_version
-      assert %{"i18n" => ["one", "two"]} = content
+      assert %{"i18n" => %{"value" => ["one", "two"], "origin" => "user"}} = content
     end
 
     @tag template: @content
@@ -562,7 +593,7 @@ defmodule TdBg.BusinessConceptsTest do
         }
       ]
 
-      content = %{"i18n" => "uno"}
+      content = %{"i18n" => %{"value" => "uno", "origin" => "user"}}
 
       concept_attrs = %{
         type: @template_name,
@@ -604,7 +635,7 @@ defmodule TdBg.BusinessConceptsTest do
         }
       ]
 
-      content = %{"i18n" => "uno|dos"}
+      content = %{"i18n" => %{"value" => "uno|dos", "origin" => "user"}}
 
       concept_attrs = %{
         type: @template_name,
@@ -666,7 +697,7 @@ defmodule TdBg.BusinessConceptsTest do
         }
       ]
 
-      content = %{"i18n" => "uno|tres"}
+      content = %{"i18n" => %{"value" => "uno|tres", "origin" => "user"}}
 
       concept_attrs = %{
         type: @template_name,
@@ -710,7 +741,10 @@ defmodule TdBg.BusinessConceptsTest do
       business_concept_version =
         insert(:business_concept_version,
           business_concept: concept,
-          content: %{"foo" => "bar", "xyz" => "foo"}
+          content: %{
+            "foo" => %{"value" => "bar", "origin" => "user"},
+            "xyz" => %{"value" => "foo", "origin" => "user"}
+          }
         )
 
       concept_attrs = %{
@@ -721,7 +755,10 @@ defmodule TdBg.BusinessConceptsTest do
       version_attrs = %{
         business_concept: concept_attrs,
         business_concept_id: business_concept_version.business_concept.id,
-        content: %{"foo" => "bar", "xyz" => "foo"},
+        content: %{
+          "foo" => %{"value" => "bar", "origin" => "user"},
+          "xyz" => %{"value" => "foo", "origin" => "user"}
+        },
         name: "updated name",
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
@@ -748,8 +785,10 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert {:ok, [%{payload: payload}]} = Stream.read(:redix, @stream, transform: true)
 
-      assert %{"subscribable_fields" => %{"foo" => "bar"}, "domain_ids" => domain_ids} =
-               Jason.decode!(payload)
+      assert %{
+               "subscribable_fields" => %{"foo" => %{"value" => "bar", "origin" => "user"}},
+               "domain_ids" => domain_ids
+             } = Jason.decode!(payload)
 
       assert_lists_equal(domain_ids, [root_id, parent_id, domain_id])
       assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
@@ -766,8 +805,18 @@ defmodule TdBg.BusinessConceptsTest do
         %{
           "name" => "group",
           "fields" => [
-            %{"name" => "Field1", "type" => "string", "cardinality" => "1", "default" => ""},
-            %{"name" => "Field2", "type" => "string", "cardinality" => "1", "default" => ""}
+            %{
+              "name" => "Field1",
+              "type" => "string",
+              "cardinality" => "1",
+              "default" => %{"value" => "", "origin" => "user"}
+            },
+            %{
+              "name" => "Field2",
+              "type" => "string",
+              "cardinality" => "1",
+              "default" => %{"value" => "", "origin" => "user"}
+            }
           ]
         }
       ]
@@ -785,8 +834,8 @@ defmodule TdBg.BusinessConceptsTest do
       %{user_id: user_id} = build(:claims)
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"}
       }
 
       concept_attrs = %{
@@ -806,7 +855,7 @@ defmodule TdBg.BusinessConceptsTest do
         )
 
       update_content = %{
-        "Field1" => "New first field"
+        "Field1" => %{"value" => "New first field", "origin" => "user"}
       }
 
       version_attrs = %{
@@ -829,8 +878,17 @@ defmodule TdBg.BusinessConceptsTest do
                )
 
       assert %BusinessConceptVersion{} = new_business_concept_version
-      assert new_business_concept_version.content["Field1"] == "New first field"
-      assert new_business_concept_version.content["Field2"] == "Second field"
+
+      assert new_business_concept_version.content["Field1"] == %{
+               "value" => "New first field",
+               "origin" => "user"
+             }
+
+      assert new_business_concept_version.content["Field2"] == %{
+               "value" => "Second field",
+               "origin" => "user"
+             }
+
       assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
       IndexWorker.clear()
     end
@@ -844,8 +902,18 @@ defmodule TdBg.BusinessConceptsTest do
         %{
           "name" => "group",
           "fields" => [
-            %{"name" => "Field1", "type" => "string", "cardinality" => "1", "default" => ""},
-            %{"name" => "Field2", "type" => "string", "cardinality" => "1", "default" => ""}
+            %{
+              "name" => "Field1",
+              "type" => "string",
+              "cardinality" => "1",
+              "default" => %{"value" => "", "origin" => "default"}
+            },
+            %{
+              "name" => "Field2",
+              "type" => "string",
+              "cardinality" => "1",
+              "default" => %{"value" => "", "origin" => "default"}
+            }
           ]
         }
       ]
@@ -870,8 +938,8 @@ defmodule TdBg.BusinessConceptsTest do
       }
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"}
       }
 
       %{id: bcv_id, name: name} =
@@ -895,7 +963,7 @@ defmodule TdBg.BusinessConceptsTest do
       )
 
       update_content = %{
-        "Field1" => "New first field"
+        "Field1" => %{"value" => "New first field", "origin" => "user"}
       }
 
       update_attrs = %{
@@ -919,13 +987,17 @@ defmodule TdBg.BusinessConceptsTest do
                |> I18nContents.get_all_i18n_content_by_bcv_id()
                |> Enum.sort_by(& &1.lang)
 
-      assert i18n_response_1.content["Field1"] == "New first field"
-      assert i18n_response_1.content["Field2"] == "Second field"
+      assert i18n_response_1.content["Field1"] == %{
+               "value" => "New first field",
+               "origin" => "user"
+             }
+
+      assert i18n_response_1.content["Field2"] == %{"value" => "Second field", "origin" => "user"}
       assert i18n_response_1.lang == en_lang
       assert i18n_response_1.name == en_name
 
-      assert i18n_response_2.content["Field1"] == "First field"
-      assert i18n_response_2.content["Field2"] == "Second field"
+      assert i18n_response_2.content["Field1"] == %{"value" => "First field", "origin" => "user"}
+      assert i18n_response_2.content["Field2"] == %{"value" => "Second field", "origin" => "user"}
       assert i18n_response_2.lang == fr_lang
       assert i18n_response_2.name == fr_name
     end
@@ -1320,10 +1392,10 @@ defmodule TdBg.BusinessConceptsTest do
     ]
 
     content = %{
-      "data_owner" => "domain",
-      "link" => "https://google.es",
-      "lista" => "valor1",
-      "texto_libre" => "free text"
+      "data_owner" => %{"value" => "domain", "origin" => "user"},
+      "link" => %{"value" => "https://google.es", "origin" => "user"},
+      "lista" => %{"value" => "valor1", "origin" => "user"},
+      "texto_libre" => %{"value" => "free text", "origin" => "user"}
     }
 
     concept_attrs = %{
@@ -1348,15 +1420,18 @@ defmodule TdBg.BusinessConceptsTest do
              BusinessConcepts.create_business_concept(creation_attrs)
 
     assert business_concept_version.content == %{
-             "data_owner" => "domain",
-             "link" => [
-               %{
-                 "url_name" => "https://google.es",
-                 "url_value" => "https://google.es"
-               }
-             ],
-             "lista" => ["codigo1"],
-             "texto_libre" => RichText.to_rich_text("free text")
+             "data_owner" => %{"value" => "domain", "origin" => "user"},
+             "link" => %{
+               "value" => [
+                 %{
+                   "url_name" => "https://google.es",
+                   "url_value" => "https://google.es"
+                 }
+               ],
+               "origin" => "user"
+             },
+             "lista" => %{"value" => ["codigo1"], "origin" => "user"},
+             "texto_libre" => %{"value" => RichText.to_rich_text("free text"), "origin" => "user"}
            }
 
     assert business_concept_version.name == version_attrs.name

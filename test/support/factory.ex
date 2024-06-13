@@ -166,7 +166,7 @@ defmodule TdBg.Factory do
     %I18nContent{
       name: sequence("i18n_concept_name"),
       lang: "en",
-      content: %{"foo" => "bar"}
+      content: %{"foo" => %{"value" => "bar", "origin" => "user"}}
     }
     |> merge_attributes(attrs)
   end
