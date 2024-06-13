@@ -1,6 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-6499] Add Business Concept content data origin
+
 ## [6.7.0] 2024-06-13
+
+### Changed
+
+- [TD-6561] Standardise aggregations limits
 
 ### Fixed
 

@@ -39,6 +39,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         bcv
         |> Map.get(:content)
         |> Format.search_values(template, domain_id: domain.id)
+        |> Enum.map(fn {field, %{"value" => value}} -> {field, value} end)
+        |> Map.new()
 
       bcv
       |> Map.take([

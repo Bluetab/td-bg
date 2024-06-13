@@ -71,7 +71,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
             }
           },
           "widget" => "dropdown",
-          "default" => %{"1" => "1.1", "2" => "2.2", "3" => "3.4"},
+          "default" => %{
+            "value" => %{"1" => "1.1", "2" => "2.2", "3" => "3.4"},
+            "origin" => "default"
+          },
           "cardinality" => "?"
         },
         %{
@@ -215,7 +218,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       business_concept_version =
         insert(
           :business_concept_version,
-          content: %{"foo" => "bar"},
+          content: %{"foo" => %{"value" => "bar", "origin" => "user"}},
           name: "Concept Name"
         )
 
@@ -278,7 +281,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       %{id: bcv_id, business_concept: %{id: bc_id}} =
         insert(
           :business_concept_version,
-          content: %{"foo" => "bar"},
+          content: %{"foo" => %{"value" => "bar", "origin" => "user"}},
           name: "Concept Name",
           type: @template_name
         )
@@ -329,26 +332,29 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag template: @completeness_content
     test "shows the completeness for i18n_content ",
          %{conn: conn} do
-      no_text_content = %{"basic_list" => "1"}
+      no_text_content = %{"basic_list" => %{"value" => "1", "origin" => "user"}}
 
       busines_concept_content =
         %{
           "df_description" => %{
-            "document" => %{
-              "nodes" => [
-                %{
-                  "nodes" => [
-                    %{
-                      "marks" => [],
-                      "object" => "text",
-                      "text" => "enrich text"
-                    }
-                  ],
-                  "object" => "block",
-                  "type" => "paragraph"
-                }
-              ]
-            }
+            "value" => %{
+              "document" => %{
+                "nodes" => [
+                  %{
+                    "nodes" => [
+                      %{
+                        "marks" => [],
+                        "object" => "text",
+                        "text" => "enrich text"
+                      }
+                    ],
+                    "object" => "block",
+                    "type" => "paragraph"
+                  }
+                ]
+              }
+            },
+            "origin" => "user"
           }
         }
         |> Map.merge(no_text_content)
@@ -361,7 +367,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           type: @template_name
         )
 
-      i18n_content = %{"text_input" => "foo", "text_area" => "bar"}
+      i18n_content = %{
+        "text_input" => %{"value" => "foo", "origin" => "user"},
+        "text_area" => %{"value" => "bar", "origin" => "user"}
+      }
 
       %{lang: lang} =
         insert(:i18n_content,
@@ -394,9 +403,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert i18n_completeness == 23.08
 
       assert %{
-               "basic_list" => "1",
-               "text_area" => "bar",
-               "text_input" => "foo"
+               "basic_list" => %{"value" => "1", "origin" => "user"},
+               "text_area" => %{"value" => "bar", "origin" => "user"},
+               "text_input" => %{"value" => "foo", "origin" => "user"}
              } == Map.merge(i18n_content, no_text_content)
     end
 
@@ -1321,10 +1330,13 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       I18nCache.put_required_locales([lang])
 
       es_name = "es_nombre"
-      es_content = %{"text_input" => "text_field1"}
+      es_content = %{"text_input" => %{"value" => "text_field1", "origin" => "user"}}
 
       creation_attrs = %{
-        "content" => %{"basic_list" => "1", "text_input" => "bc text"},
+        "content" => %{
+          "basic_list" => %{"value" => "1", "origin" => "user"},
+          "text_input" => %{"value" => "bc text", "origin" => "user"}
+        },
         "i18n_content" => %{
           lang => %{"name" => es_name, "content" => es_content}
         },
@@ -1404,19 +1416,22 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
            permissions: [:create_business_concept, :view_draft_business_concepts]
          ]
     @tag template: @completeness_content
-    test "renders errors when  data has i18n invalid content", %{
+    test "renders errors when data has i18n invalid content", %{
       conn: conn,
       swagger_schema: schema,
       domain: %{id: domain_id}
     } do
       lang = "es"
       es_name = "es_nombre"
-      es_content = %{"text_area" => "text_field1"}
+      es_content = %{"text_area" => %{"value" => "text_field1", "origin" => "user"}}
 
       I18nCache.put_required_locales([lang])
 
       creation_attrs = %{
-        "content" => %{"basic_list" => "1", "text_input" => "bc text"},
+        "content" => %{
+          "basic_list" => %{"value" => "1", "origin" => "user"},
+          "text_input" => %{"value" => "bc text", "origin" => "user"}
+        },
         "i18n_content" => %{
           lang => %{"name" => es_name, "content" => es_content}
         },
@@ -1642,7 +1657,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         business_concept_version = insert(:business_concept_version, type: @template_name)
 
       update_attrs = %{
-        "content" => %{"Field1" => "Foo", "Field2" => "bar"},
+        "content" => %{
+          "Field1" => %{"value" => "Foo", "origin" => "user"},
+          "Field2" => %{"value" => "bar", "origin" => "user"}
+        },
         "name" => "The new name"
       }
 
@@ -1686,7 +1704,11 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       %{lang: lang} = insert(:i18n_content, business_concept_version_id: id, content: %{})
 
       new_name = "The new name"
-      new_content = %{"Field1" => "Foo", "Field2" => "bar"}
+
+      new_content = %{
+        "Field1" => %{"value" => "Foo", "origin" => "user"},
+        "Field2" => %{"value" => "bar", "origin" => "user"}
+      }
 
       update_attrs = %{
         "content" => new_content,

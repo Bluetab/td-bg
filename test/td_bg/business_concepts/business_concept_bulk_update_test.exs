@@ -93,19 +93,19 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc2 = insert(:business_concept, domain: d2, type: "template_test")
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field",
-        "Field3" => "3",
-        "Field4" => ["1", "2"],
-        "Field5" => "foo"
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "3", "origin" => "user"},
+        "Field4" => %{"value" => ["1", "2"], "origin" => "user"},
+        "Field5" => %{"value" => "foo", "origin" => "user"}
       }
 
       update_content = %{
-        "Field1" => "First udpate",
-        "Field2" => "Second field",
-        "Field3" => "1",
-        "Field4" => [],
-        "Field5" => "foo"
+        "Field1" => %{"value" => "First udpate", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "1", "origin" => "user"},
+        "Field4" => %{"value" => [], "origin" => "user"},
+        "Field5" => %{"value" => "foo", "origin" => "user"}
       }
 
       bc_version1 =
@@ -141,22 +141,22 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                d3.id
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content == %{
-               "Field1" => "First udpate",
-               "Field2" => "Second field",
-               "Field3" => "1",
-               "Field4" => [""],
-               "Field5" => enrich_text("foo")
+               "Field1" => %{"value" => "First udpate", "origin" => "user"},
+               "Field2" => %{"value" => "Second field", "origin" => "user"},
+               "Field3" => %{"value" => "1", "origin" => "user"},
+               "Field4" => %{"value" => [""], "origin" => "default"},
+               "Field5" => %{"value" => enrich_text("foo"), "origin" => "user"}
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
                d3.id
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content == %{
-               "Field1" => "First udpate",
-               "Field2" => "Second field",
-               "Field3" => "1",
-               "Field4" => [""],
-               "Field5" => enrich_text("foo")
+               "Field1" => %{"value" => "First udpate", "origin" => "user"},
+               "Field2" => %{"value" => "Second field", "origin" => "user"},
+               "Field3" => %{"value" => "1", "origin" => "user"},
+               "Field4" => %{"value" => [""], "origin" => "default"},
+               "Field5" => %{"value" => enrich_text("foo"), "origin" => "user"}
              }
 
       IndexWorker.clear()
@@ -173,15 +173,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc2 = insert(:business_concept, domain: d2, type: "template_test_x")
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field",
-        "Field3" => "1"
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "1", "origin" => "user"}
       }
 
       update_content = %{
-        "Field1" => "First update",
-        "Field2" => "Second field",
-        "Field3" => "1"
+        "Field1" => %{"value" => "First update", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "1", "origin" => "user"}
       }
 
       bc_version1 = insert(:business_concept_version, business_concept: bc1, content: content)
@@ -211,13 +211,13 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc2 = insert(:business_concept, domain: d2, type: "template_test")
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"}
       }
 
       update_content = %{
-        "Field1" => "First update",
-        "Field2" => "Second field"
+        "Field1" => %{"value" => "First update", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"}
       }
 
       bc_version1 = insert(:business_concept_version, business_concept: bc1, content: content)
@@ -253,15 +253,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       bc3 = insert(:business_concept, domain: d3, type: "template_test")
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field",
-        "Field3" => 1
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => 1, "origin" => "user"}
       }
 
       update_content = %{
-        "Field1" => "First update",
-        "Field2" => "Second field",
-        "Field3" => "1"
+        "Field1" => %{"value" => "First update", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "1", "origin" => "user"}
       }
 
       bc_version1 =
@@ -296,8 +296,8 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       concept = insert(:business_concept, domain: d1, type: "template_test")
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field"
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"}
       }
 
       bc_version_draft =
@@ -316,9 +316,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         |> Enum.map(&CollectionUtils.stringify_keys/1)
 
       update_content = %{
-        "Field1" => "First udpate",
-        "Field2" => "Second field",
-        "Field3" => "1"
+        "Field1" => %{"value" => "First udpate", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "1", "origin" => "user"}
       }
 
       params = %{
@@ -334,18 +334,18 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                d3.id
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).content == %{
-               "Field1" => "First udpate",
-               "Field2" => "Second field",
-               "Field3" => "1"
+               "Field1" => %{"value" => "First udpate", "origin" => "user"},
+               "Field2" => %{"value" => "Second field", "origin" => "user"},
+               "Field3" => %{"value" => "1", "origin" => "user"}
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
                d3.id
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).content == %{
-               "Field1" => "First udpate",
-               "Field2" => "Second field",
-               "Field3" => "1"
+               "Field1" => %{"value" => "First udpate", "origin" => "user"},
+               "Field2" => %{"value" => "Second field", "origin" => "user"},
+               "Field3" => %{"value" => "1", "origin" => "user"}
              }
     end
 
@@ -357,9 +357,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       c2 = insert(:business_concept, domain: d1, type: "template_test")
 
       content = %{
-        "Field1" => "First field",
-        "Field2" => "Second field",
-        "Field3" => "1"
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "1", "origin" => "user"}
       }
 
       v1 =
@@ -382,9 +382,9 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         |> Enum.map(&CollectionUtils.stringify_keys/1)
 
       update_content = %{
-        "Field1" => "First udpate",
-        "Field2" => "Second field",
-        "Field3" => "1"
+        "Field1" => %{"value" => "First udpate", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "1", "origin" => "user"}
       }
 
       params = %{
@@ -404,16 +404,16 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert Enum.all?(
                bcv_ids,
                &(BusinessConcepts.get_business_concept_version!(&1).content == %{
-                   "Field1" => "First udpate",
-                   "Field2" => "Second field",
-                   "Field3" => "1"
+                   "Field1" => %{"value" => "First udpate", "origin" => "user"},
+                   "Field2" => %{"value" => "Second field", "origin" => "user"},
+                   "Field3" => %{"value" => "1", "origin" => "user"}
                  })
              )
 
       update_content = %{
-        "Field1" => "First udpate",
-        "Field2" => "Second field",
-        "Field3" => "Wrong"
+        "Field1" => %{"value" => "First udpate", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"},
+        "Field3" => %{"value" => "Wrong", "origin" => "user"}
       }
 
       params = %{

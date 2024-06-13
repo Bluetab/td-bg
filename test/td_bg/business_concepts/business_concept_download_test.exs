@@ -501,7 +501,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              "fields" => [
                %{
                  "cardinality" => "?",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "default"},
                  "label" => "label_i18n_test.dropdown.fixed",
                  "name" => "i18n_test.dropdown.fixed",
                  "subscribable" => false,
@@ -516,7 +516,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                },
                %{
                  "cardinality" => "?",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "user"},
                  "label" => "label_i18n_test_no_translate",
                  "name" => "i18n_test_no_translate",
                  "type" => "string",
@@ -525,7 +525,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                },
                %{
                  "cardinality" => "?",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "user"},
                  "label" => "label_i18n_test.radio.fixed",
                  "name" => "i18n_test.radio.fixed",
                  "subscribable" => false,
@@ -540,7 +540,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                },
                %{
                  "cardinality" => "*",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "default"},
                  "label" => "label_i18n_test.checkbox.fixed_tuple",
                  "name" => "i18n_test.checkbox.fixed_tuple",
                  "subscribable" => false,
@@ -1350,7 +1350,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              "fields" => [
                %{
                  "cardinality" => "?",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "default"},
                  "label" => "label_i18n_test.dropdown.fixed",
                  "name" => "i18n_test.dropdown.fixed",
                  "subscribable" => false,
@@ -1365,7 +1365,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                },
                %{
                  "cardinality" => "?",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "default"},
                  "label" => "label_i18n_test_no_translate",
                  "name" => "i18n_test_no_translate",
                  "type" => "string",
@@ -1374,7 +1374,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                },
                %{
                  "cardinality" => "?",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "user"},
                  "label" => "label_i18n_test.radio.fixed",
                  "name" => "i18n_test.radio.fixed",
                  "subscribable" => false,
@@ -1389,7 +1389,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                },
                %{
                  "cardinality" => "*",
-                 "default" => "",
+                 "default" => %{"value" => "", "origin" => "user"},
                  "label" => "label_i18n_test.checkbox.fixed_tuple",
                  "name" => "i18n_test.checkbox.fixed_tuple",
                  "subscribable" => false,
