@@ -10,27 +10,21 @@ config :td_core, TdCore.Search.Cluster,
   # here. It must implement the Elasticsearch.API behaviour.
   api: Elasticsearch.API.HTTP,
 
-  # Aggregations default
-  aggregations: %{
-    "domain" => 50,
-    "user" => 50,
-    "system" => 50,
-    "default" => 50
-  },
-
   # The library used for JSON encoding/decoding.
   json_library: Jason,
   aliases: %{
     concepts: "concepts"
-  },
+  }
+
+config :td_core, TdCore.Search.Cluster,
   # You should configure each index which you maintain in Elasticsearch here.
   # This configuration will be read by the `mix elasticsearch.build` task,
   # described below.
-  indexes: %{
+  indexes: [
     # This is the base name of the Elasticsearch index. Each index will be
     # built with a timestamp included in the name, like "posts-5902341238".
     # It will then be aliased to "posts" for easy querying.
-    concepts: %{
+    concepts: [
       template_scope: :bg,
 
       # This map describes the mappings and settings for your index. It will
@@ -50,15 +44,11 @@ config :td_core, TdCore.Search.Cluster,
       # Elasticsearch.Document protocol.
       sources: [TdBg.BusinessConcepts.BusinessConceptVersion],
 
-      # Controls the data ingestion rate by raising or lowering the number
-      # of items to send in each bulk request.
-      bulk_page_size: System.get_env("BULK_PAGE_SIZE_CONCEPTS", "1000") |> String.to_integer(),
-
       # Likewise, wait a given period between posting pages to give
       # Elasticsearch time to catch up.
       bulk_wait_interval: 0,
 
       # Support create or replace
       bulk_action: "index"
-    }
-  }
+    ]
+  ]

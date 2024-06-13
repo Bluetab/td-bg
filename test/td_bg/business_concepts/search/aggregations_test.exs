@@ -35,7 +35,7 @@ defmodule TdBg.BusinessConcepts.Search.AggregationsTest do
         |> Map.get(:terms)
         |> Map.take([:field, :size])
 
-      assert size == 50
+      assert size == 500
       assert field == "content.userfield.raw"
     end
   end

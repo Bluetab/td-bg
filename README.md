@@ -34,6 +34,9 @@ Run all aplication tests with `mix test`
 ### Elastic bulk page size configuration
 - BULK_PAGE_SIZE_CONCEPTS: default 500
 
+### Elastic aggregations
+- The aggregation variables are defined as follows:  AGG_<AGGREGATION_NAME>_SIZE
+
 ## Deployment
 
 Ready to run in production? Please [check our deployment guides](http://www.phoenixframework.org/docs/deployment).

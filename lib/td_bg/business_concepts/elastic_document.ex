@@ -7,6 +7,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
   alias Elasticsearch.Document
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdCore.Search.Cluster
   alias TdCore.Search.ElasticDocument
   alias TdCore.Search.ElasticDocumentProtocol
 
@@ -100,7 +101,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         id: %{type: "long"},
         name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
         description: %{type: "text"},
-        version: %{type: "short"},
+        version: %{type: "long"},
         template: %{
           properties: %{
             name: %{type: "text"},
@@ -149,16 +150,26 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
 
     def aggregations(_) do
       %{
-        "confidential.raw" => %{terms: %{field: "confidential.raw"}},
-        "current" => %{terms: %{field: "current"}},
-        "domain_ids" => %{terms: %{field: "domain_ids"}},
-        "has_rules" => %{terms: %{field: "has_rules"}},
-        "link_tags" => %{terms: %{field: "link_tags"}},
-        "shared_to_names" => %{terms: %{field: "shared_to_names.raw"}},
-        "status" => %{terms: %{field: "status"}},
-        "taxonomy" => %{terms: %{field: "domain_ids", size: 500}},
-        "template" => %{terms: %{field: "template.label.raw", size: 50}},
-        "template_subscope" => %{terms: %{field: "template.subscope", size: 50}}
+        "confidential.raw" => %{
+          terms: %{field: "confidential.raw", size: Cluster.get_size_field("confidential.raw")}
+        },
+        "current" => %{terms: %{field: "current", size: Cluster.get_size_field("current")}},
+        "domain_ids" => %{
+          terms: %{field: "domain_ids", size: Cluster.get_size_field("domain_ids")}
+        },
+        "has_rules" => %{terms: %{field: "has_rules", size: Cluster.get_size_field("has_rules")}},
+        "link_tags" => %{terms: %{field: "link_tags", size: Cluster.get_size_field("link_tags")}},
+        "shared_to_names" => %{
+          terms: %{field: "shared_to_names.raw", size: Cluster.get_size_field("shared_to_names")}
+        },
+        "status" => %{terms: %{field: "status", size: Cluster.get_size_field("status")}},
+        "taxonomy" => %{terms: %{field: "domain_ids", size: Cluster.get_size_field("taxonomy")}},
+        "template" => %{
+          terms: %{field: "template.label.raw", size: Cluster.get_size_field("template")}
+        },
+        "template_subscope" => %{
+          terms: %{field: "template.subscope", size: Cluster.get_size_field("template_subscope")}
+        }
       }
       |> merge_dynamic_fields("bg", "content")
     end

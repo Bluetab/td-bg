@@ -7,7 +7,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   alias TdBg.I18nContents.I18nContents
   alias TdCache.I18nCache
 
-  alias TdCore.Search.IndexWorkerMock
+  alias TdCore.Search.IndexWorker
 
   @template_name "some_type"
   @content [
@@ -161,7 +161,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   setup _context do
     on_exit(fn ->
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       TdCache.Redix.del!("i18n:locales:*")
     end)
 
@@ -1304,7 +1304,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [
@@ -1570,7 +1570,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       assert json_response(conn, 201)["data"]
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1671,7 +1671,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert_maps_equal(data, update_attrs, ["content", "name"])
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1732,7 +1732,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^domain_id}} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [role: "user"]
@@ -1789,7 +1789,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^id2}} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1825,7 +1825,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> json_response(:ok)
 
       assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [
@@ -1857,7 +1857,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> json_response(:ok)
 
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [
@@ -1976,7 +1976,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"confidential" => true} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2031,7 +2031,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2084,7 +2084,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]

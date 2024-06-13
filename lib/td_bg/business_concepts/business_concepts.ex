@@ -15,12 +15,12 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.I18nContents.I18nContent
   alias TdBg.I18nContents.I18nContents
   alias TdBg.Repo
+  alias TdBg.Search.Indexer
   alias TdBg.Taxonomies
   alias TdCache.ConceptCache
   alias TdCache.EventStream.Publisher
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
-  alias TdCore.Search.IndexWorker
   alias TdCore.Utils.ChangesetUtils
   alias TdDfLib.Format
   alias TdDfLib.Parser
@@ -600,7 +600,7 @@ defmodule TdBg.BusinessConcepts do
           )
 
           ConceptCache.delete(business_concept_id)
-          IndexWorker.delete(:concepts, [bcvid])
+          Indexer.delete([bcvid])
 
           {:ok, version}
       end
@@ -614,7 +614,7 @@ defmodule TdBg.BusinessConcepts do
          %{
            business_concept_version: %BusinessConceptVersion{id: bcv_id}
          }} ->
-          IndexWorker.delete(:concepts, [bcv_id])
+          Indexer.delete([bcv_id])
           {:ok, get_last_version_by_business_concept_id!(business_concept_id)}
       end
     end

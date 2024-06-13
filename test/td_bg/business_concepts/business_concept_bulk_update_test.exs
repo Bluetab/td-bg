@@ -5,7 +5,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
   alias TdBg.BusinessConcept.BulkUpdate
   alias TdBg.BusinessConcepts
-  alias TdCore.Search.IndexWorkerMock
+  alias TdCore.Search.IndexWorker
   alias TdCore.Utils.CollectionUtils
 
   setup_all do
@@ -70,7 +70,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     })
 
     on_exit(fn ->
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
     end)
 
     :ok
@@ -82,7 +82,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     setup :set_mox_from_context
 
     test "update all business concept versions with valid data" do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -135,7 +135,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, bc_versions, params)
       assert length(bcv_ids) == 2
 
-      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = IndexWorker.calls()
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
                d3.id
@@ -159,7 +159,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                "Field5" => enrich_text("foo")
              }
 
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
     end
 
     test "update all business concept versions with invalid data: template does not exist" do
@@ -287,7 +287,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     end
 
     test "two versions of the same concept" do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       claims = build(:claims)
 
       d1 = insert(:domain, name: "d1")
@@ -328,7 +328,7 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, bc_versions, params)
       assert length(bcv_ids) == 2
-      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = IndexWorker.calls()
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
                d3.id
