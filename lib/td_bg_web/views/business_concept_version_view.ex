@@ -4,6 +4,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
 
   alias TdBgWeb.{BusinessConceptVersionView, DomainView, LinkView}
   alias TdCache.UserCache
+  alias TdDfLib.Content
   alias TdDfLib.Format
 
   def render("index.json", %{hypermedia: hypermedia}) do
@@ -150,6 +151,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     |> add_cached_content(assigns)
     |> add_actions(assigns)
     |> maybe_add_i18n_content(business_concept_version)
+    |> Content.legacy_content_support(:content)
   end
 
   defp add_reject_reason(concept, reject_reason, :rejected) do
