@@ -237,7 +237,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["name"] == business_concept_version.name
 
       assert data["business_concept_id"] == business_concept_version.business_concept.id
-      assert data["content"] == business_concept_version.content
+      assert data["content"] == %{"foo" => "bar"}
+      assert data["dynamic_content"] == business_concept_version.content
       assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
       assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
 
@@ -256,7 +257,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["name"] == business_concept_version.name
 
       assert data["business_concept_id"] == business_concept_version.business_concept.id
-      assert data["content"] == business_concept_version.content
+      assert data["content"] == %{"foo" => "bar"}
+      assert data["dynamic_content"] == business_concept_version.content
       assert data["domain"]["id"] == business_concept_version.business_concept.domain.id
       assert data["domain"]["name"] == business_concept_version.business_concept.domain.name
 
@@ -1688,7 +1690,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
-      assert_maps_equal(data, update_attrs, ["content", "name"])
+      assert data["name"] == update_attrs["name"]
+      assert data["content"] == %{"Field1" => "Foo", "Field2" => "bar"}
+      assert data["dynamic_content"] == update_attrs["content"]
       assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
     end
 
