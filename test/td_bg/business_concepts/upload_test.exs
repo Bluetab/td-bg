@@ -17,7 +17,7 @@ defmodule TdBg.UploadTest do
         "fields" => [
           %{
             "cardinality" => "1",
-            "default" => "",
+            "default" => %{"value" => "", "origin" => "default"},
             "description" => "description",
             "label" => "critical term",
             "name" => "critical",
@@ -190,7 +190,12 @@ defmodule TdBg.UploadTest do
 
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
-      assert version |> Map.get(:content) |> Map.get("role") == ["Role"]
+
+      assert version |> Map.get(:content) |> Map.get("role") == %{
+               "value" => ["Role"],
+               "origin" => "file"
+             }
+
       IndexWorker.clear()
     end
 
@@ -214,7 +219,12 @@ defmodule TdBg.UploadTest do
 
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
-      assert version |> Map.get(:content) |> Map.get("role") == ["Role"]
+
+      assert version |> Map.get(:content) |> Map.get("role") == %{
+               "value" => ["Role"],
+               "origin" => "file"
+             }
+
       assert version |> Map.get(:status) == "published"
       assert version |> Map.get(:current) == true
       IndexWorker.clear()
@@ -238,8 +248,14 @@ defmodule TdBg.UploadTest do
       assert IndexWorker.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
 
       assert %{
-               "hierarchy_name_1" => "1_2",
-               "hierarchy_name_2" => ["1_2", "1_1"]
+               "hierarchy_name_1" => %{
+                 "value" => "1_2",
+                 "origin" => "file"
+               },
+               "hierarchy_name_2" => %{
+                 "value" => ["1_2", "1_1"],
+                 "origin" => "file"
+               }
              } = Map.get(version, :content)
 
       IndexWorker.clear()
@@ -293,10 +309,10 @@ defmodule TdBg.UploadTest do
       assert IndexWorker.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
 
       assert %{
-               "i18n_test.checkbox" => ["apple", "pear"],
-               "i18n_test.dropdown" => "pear",
-               "i18n_test.radio" => "banana",
-               "i18n_test.no_translate" => "NO TRANSLATION"
+               "i18n_test.checkbox" => %{"value" => ["apple", "pear"], "origin" => "file"},
+               "i18n_test.dropdown" => %{"value" => "pear", "origin" => "file"},
+               "i18n_test.radio" => %{"value" => "banana", "origin" => "file"},
+               "i18n_test.no_translate" => %{"value" => "NO TRANSLATION", "origin" => "file"}
              } = Map.get(version, :content)
 
       IndexWorker.clear()

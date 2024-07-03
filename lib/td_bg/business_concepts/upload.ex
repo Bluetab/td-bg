@@ -228,6 +228,11 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
+  defp format_content_values(content) do
+    content
+    |> Enum.map(fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
+  end
+
   defp to_valid_id(%{} = params) do
     Map.put(params, "id", to_valid_id(Map.get(params, "id", "")))
   end
@@ -250,6 +255,7 @@ defmodule TdBg.BusinessConcept.Upload do
       |> Enum.zip(raw_data)
       |> Enum.filter(fn {headers, _} -> headers not in @ignored_headers end)
       |> Enum.split_with(fn {headers, _} -> headers in @headers end)
+      |> then(fn {params, content} -> {params, format_content_values(content)} end)
       |> then(fn {params, content} -> {Map.new(params), Map.new(content)} end)
       |> then(fn {params, content} -> {to_valid_id(params), content} end)
 

@@ -144,13 +144,13 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
 
   defp content_fields(content, _, _, _), do: content
 
-  defp non_empty({_k, nil}, acc), do: acc
+  defp non_empty({_k, %{"value" => nil}}, acc), do: acc
 
-  defp non_empty({_k, ""}, acc), do: acc
+  defp non_empty({_k, %{"value" => ""}}, acc), do: acc
 
-  defp non_empty({_k, []}, acc), do: acc
+  defp non_empty({_k, %{"value" => []}}, acc), do: acc
 
-  defp non_empty({_k, value}, acc) when value == %{}, do: acc
+  defp non_empty({_k, %{"value" => value}}, acc) when value == %{}, do: acc
 
   defp non_empty({key, value}, acc), do: Map.put(acc, key, value)
 end
