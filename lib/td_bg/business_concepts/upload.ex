@@ -16,9 +16,11 @@ defmodule TdBg.BusinessConcept.Upload do
   require Logger
 
   @default_lang Application.compile_env(:td_cache, :lang)
-  @headers ["id", "name", "domain", "type", "confidential"]
-  @required_headers ["name", "domain"]
+  @headers ["id", "name", "domain_external_id", "domain_name", "type", "confidential"]
+  @required_headers ["name", "domain_external_id"]
+  @required_update_headers ["id"]
   @ignored_headers [
+    "domain_name",
     "status",
     "current_version_id",
     "completeness",
@@ -37,6 +39,13 @@ defmodule TdBg.BusinessConcept.Upload do
       fn ms, _ -> Logger.info("Business concepts inserted in #{ms}ms") end
     )
   end
+
+  def get_headers,
+    do: %{
+      required: @required_headers,
+      update_required: @required_update_headers,
+      ignored: @ignored_headers
+    }
 
   defp do_bulk_upload(business_concepts_upload, claims, opts) do
     lang = Keyword.get(opts, :lang, @default_lang)
@@ -421,7 +430,9 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp validate_and_set_domain(%{params: %{"domain" => domain_external_id}} = row_parsed) do
+  defp validate_and_set_domain(
+         %{params: %{"domain_external_id" => domain_external_id}} = row_parsed
+       ) do
     case Taxonomies.get_domain_by_external_id(domain_external_id, [:domain_group]) do
       nil ->
         {:error, :domain_not_exists, domain_external_id}
