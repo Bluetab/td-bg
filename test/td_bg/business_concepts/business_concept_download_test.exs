@@ -46,7 +46,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_name = "field_name"
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -73,7 +74,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             field_name => field_value,
             "domain_inside_note_field" => [domain_inside_note_1_id, domain_inside_note_2_id]
@@ -87,8 +88,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       csv = Download.to_csv(concepts, @lang)
 
       assert csv == """
-             id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;#{field_name};domain_inside_note_field\r
-             #{concept_id};#{concept_version_id};#{name};#{domain};#{status};100.0;#{last_change_at};#{inserted_at};#{field_value};domain_inside_note_1_external_id|domain_inside_note_2_external_id\r
+             id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;#{field_name};domain_inside_note_field\r
+             #{concept_id};#{concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};100.0;#{last_change_at};#{inserted_at};#{field_value};domain_inside_note_1_external_id|domain_inside_note_2_external_id\r
              """
     end
 
@@ -105,7 +106,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "domain_name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -117,7 +119,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{field_name => field_value},
           "status" => status,
           "inserted_at" => inserted_at,
@@ -128,8 +130,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       csv = Download.to_csv(concepts, @lang, @concept_url_schema)
 
       assert csv == """
-             id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;link_to_concept;#{field_name}\r
-             #{business_concept_id};#{business_concept_version_id};#{name};#{domain};#{status};100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/#{business_concept_id}/versions/#{business_concept_version_id};#{field_value}\r
+             id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;link_to_concept;#{field_name}\r
+             #{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/#{business_concept_id}/versions/#{business_concept_version_id};#{field_value}\r
              """
     end
 
@@ -138,7 +140,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_name = "field_name"
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -153,7 +156,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{field_name => field_value},
           "status" => status,
           "inserted_at" => inserted_at,
@@ -164,8 +167,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       csv = Download.to_csv(concepts, @lang)
 
       assert csv == """
-             id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at\r
-             #{concept_id};#{concept_version_id};#{name};#{domain};#{status};0.0;#{last_change_at};#{inserted_at}\r
+             id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at\r
+             #{concept_id};#{concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};0.0;#{last_change_at};#{inserted_at}\r
              """
     end
 
@@ -176,7 +179,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -188,7 +192,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{field_name => field_value},
           "status" => status,
           "inserted_at" => inserted_at,
@@ -199,8 +203,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       csv = Download.to_csv(concepts, @lang, @concept_url_schema)
 
       assert csv == """
-             id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;link_to_concept\r
-             #{business_concept_id};#{business_concept_version_id};#{name};#{domain};#{status};0.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456\r
+             id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;link_to_concept\r
+             #{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};0.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456\r
              """
     end
 
@@ -231,7 +235,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       key_value_field = "key_value"
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -245,7 +250,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "business_concept_id" => concept_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             url_field => [
               %{"url_name" => "com", "url_value" => "www.com.com"},
@@ -266,10 +271,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;#{url_field};#{key_value_field}"
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;#{url_field};#{key_value_field}"
 
       assert content ==
-               "#{concept_id};#{concept_version_id};#{name};#{domain};#{status};100.0;#{last_change_at};#{inserted_at};#{url_fields};#{key_value_fields}"
+               "#{concept_id};#{concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};100.0;#{last_change_at};#{inserted_at};#{url_fields};#{key_value_fields}"
     end
 
     @tag template: [
@@ -301,7 +306,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -312,7 +318,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             url_field => [
               %{"url_name" => "com", "url_value" => "www.com.com"},
@@ -333,10 +339,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;link_to_concept;#{url_field};#{key_value_field}"
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;link_to_concept;#{url_field};#{key_value_field}"
 
       assert content ==
-               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain};#{status};100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;#{url_fields};#{key_value_fields}"
+               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;#{url_fields};#{key_value_fields}"
     end
 
     @tag template: [
@@ -353,7 +359,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       template = @template_name
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -367,7 +374,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "field1" => "value",
             "field2" => "value"
@@ -382,10 +389,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;field1;field2;field3"
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;field1;field2;field3"
 
       assert content ==
-               "#{concept_id};#{concept_version_id};#{name};#{domain};#{status};66.67;#{last_change_at};#{inserted_at};value;value;"
+               "#{concept_id};#{concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};66.67;#{last_change_at};#{inserted_at};value;value;"
     end
 
     @tag template: [
@@ -404,7 +411,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -415,7 +423,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "field1" => "value",
             "field2" => "value"
@@ -430,10 +438,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;link_to_concept;field1;field2;field3"
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;link_to_concept;field1;field2;field3"
 
       assert content ==
-               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain};#{status};66.67;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;value;value;"
+               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};66.67;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;value;value;"
     end
 
     @tag template: [
@@ -457,7 +465,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "Borrador"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -468,7 +477,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "field1_name" => "value1",
             "field2_name" => "value"
@@ -489,10 +498,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;link_to_concept;field1_name;field2_name;field3_name"
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;link_to_concept;field1_name;field2_name;field3_name"
 
       assert content ==
-               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain};#{status};66.67;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;Valor 1;value;"
+               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};66.67;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;Valor 1;value;"
     end
 
     @tag template: [
@@ -583,7 +592,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -594,7 +604,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "i18n_test.dropdown.fixed" => "pear",
             "i18n_test_no_translate" => "Test no translate",
@@ -611,10 +621,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
       [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
 
       assert headers ==
-               "id;current_version_id;name;domain;status;completeness;last_change_at;inserted_at;link_to_concept;i18n_test.dropdown.fixed;i18n_test_no_translate;i18n_test.radio.fixed;i18n_test.checkbox.fixed_tuple"
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;link_to_concept;i18n_test.dropdown.fixed;i18n_test_no_translate;i18n_test.radio.fixed;i18n_test.checkbox.fixed_tuple"
 
       assert content ==
-               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain};draft;100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;Pera;Test no translate;Platano;Pera|Platano"
+               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};draft;100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;Pera;Test no translate;Platano;Pera|Platano"
     end
   end
 
@@ -638,7 +648,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_name = "field_name"
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -665,7 +676,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             field_name => field_value,
             "domain_inside_note_field" => [domain_inside_note_1_id, domain_inside_note_2_id]
@@ -678,10 +689,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -693,7 +705,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           concept_id,
           concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           100.0,
           last_change_at,
@@ -726,7 +739,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -738,7 +752,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{field_name => field_value},
           "status" => status,
           "inserted_at" => inserted_at,
@@ -748,10 +762,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -763,7 +778,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           business_concept_id,
           business_concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           100.0,
           last_change_at,
@@ -788,7 +804,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       field_name = "field_name"
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -803,7 +820,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{field_name => field_value},
           "status" => status,
           "inserted_at" => inserted_at,
@@ -813,10 +830,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -826,7 +844,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           concept_id,
           concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           0.0,
           last_change_at,
@@ -851,7 +870,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       field_value = "field_value"
       status = "draft"
       inserted_at = "2018-05-05"
@@ -863,7 +883,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{field_name => field_value},
           "status" => status,
           "inserted_at" => inserted_at,
@@ -873,10 +893,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -887,7 +908,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           business_concept_id,
           business_concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           0.0,
           last_change_at,
@@ -933,7 +955,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       key_value_field = "key_value"
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -947,7 +970,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             url_field => [
               %{"url_name" => "com", "url_value" => "www.com.com"},
@@ -966,10 +989,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -981,7 +1005,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           concept_id,
           concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           100.0,
           last_change_at,
@@ -1030,7 +1055,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -1041,7 +1067,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             url_field => [
               %{"url_name" => "com", "url_value" => "www.com.com"},
@@ -1060,10 +1086,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -1076,7 +1103,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           business_concept_id,
           business_concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           100.0,
           last_change_at,
@@ -1111,7 +1139,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       template = @template_name
 
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -1125,7 +1154,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "field1" => "value",
             "field2" => "value"
@@ -1138,10 +1167,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -1154,7 +1184,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           concept_id,
           concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           66.67,
           last_change_at,
@@ -1191,7 +1222,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -1202,7 +1234,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "field1" => "value",
             "field2" => "value"
@@ -1215,10 +1247,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -1232,7 +1265,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           business_concept_id,
           business_concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           66.67,
           last_change_at,
@@ -1275,7 +1309,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "Borrador"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -1286,7 +1321,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "field1_name" => "value1",
             "field2_name" => "value"
@@ -1305,10 +1340,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -1322,7 +1358,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           business_concept_id,
           business_concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           66.67,
           last_change_at,
@@ -1432,7 +1469,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
       business_concept_id = 123
       business_concept_version_id = 456
       name = "concept_name"
-      domain = "domain_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
       status = "draft"
       inserted_at = "2018-05-05"
       last_change_at = "2018-05-06"
@@ -1443,7 +1481,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "id" => business_concept_version_id,
           "name" => name,
           "template" => %{"name" => template},
-          "domain" => %{"external_id" => domain},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "i18n_test.dropdown.fixed" => "pear",
             "i18n_test_no_translate" => "Test no translate",
@@ -1458,10 +1496,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       rows = [
         [
-          "id",
+          ["id", {:bg_color, "#ffe994"}],
           "current_version_id",
-          "name",
-          "domain",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
           "status",
           "completeness",
           "last_change_at",
@@ -1476,7 +1515,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           business_concept_id,
           business_concept_version_id,
           name,
-          domain,
+          domain_ext_id,
+          domain_name,
           status,
           100.0,
           last_change_at,
