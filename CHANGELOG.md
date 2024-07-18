@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.8.1] 2024-07-18
+
+### Added
+
+- [TD-6713] Update td-df-lib and td-core
+
 ## [6.8.0] 2024-07-03
 
 ### Added
