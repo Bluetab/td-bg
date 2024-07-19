@@ -7,6 +7,12 @@
 - [TD-6602] Update td-cache, td-core and td-df-lib
 - [TD-6649] Add Business Concept file manager domain name
 
+## [6.8.1] 2024-07-18
+
+### Added
+
+- [TD-6713] Update td-df-lib and td-core
+
 ## [6.8.0] 2024-07-03
 
 ### Added
