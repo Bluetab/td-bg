@@ -4,6 +4,7 @@ defmodule TdBg.BusinessConcept.Download do
   """
 
   alias Elixlsx.{Sheet, Workbook}
+  alias TdBg.BusinessConcept.Upload
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
   alias TdDfLib.Parser
@@ -13,7 +14,8 @@ defmodule TdBg.BusinessConcept.Download do
     "id",
     "current_version_id",
     "name",
-    "domain",
+    "domain_external_id",
+    "domain_name",
     "status",
     "completeness",
     "last_change_at",
@@ -40,7 +42,11 @@ defmodule TdBg.BusinessConcept.Download do
         end
 
       xlsx_headers = Enum.map(template_fields, &Map.get(&1, "name"))
-      all_headers = get_all_headers(xlsx_headers, concept_url_schema)
+
+      all_headers =
+        xlsx_headers
+        |> get_all_headers(concept_url_schema)
+        |> highlight_headers()
 
       core =
         Enum.map(template_concepts, fn %{"content" => content} = concept ->
@@ -105,8 +111,11 @@ defmodule TdBg.BusinessConcept.Download do
   defp editable_concept_value(%{"template" => template}, "template", _),
     do: Map.get(template, "name")
 
-  defp editable_concept_value(%{"domain" => domain}, "domain", _),
+  defp editable_concept_value(%{"domain" => domain}, "domain_external_id", _),
     do: Map.get(domain, "external_id")
+
+  defp editable_concept_value(%{"domain" => domain}, "domain_name", _),
+    do: Map.get(domain, "name")
 
   defp editable_concept_value(concept, "completeness", _), do: get_completeness(concept)
 
@@ -144,4 +153,18 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp add_extra_fields(editable_fields, concept, concept_url_schema),
     do: editable_fields ++ [get_concept_url_schema(concept_url_schema, concept)]
+
+  defp highlight_headers(headers) do
+    %{required: requireds, update_required: update_requireds} = Upload.get_headers()
+
+    headers
+    |> Enum.map(fn
+      h ->
+        cond do
+          h in requireds -> [h, bg_color: "#ffd428"]
+          h in update_requireds -> [h, bg_color: "#ffe994"]
+          true -> h
+        end
+    end)
+  end
 end

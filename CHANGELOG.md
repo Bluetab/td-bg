@@ -1,5 +1,24 @@
 # Changelog
 
+## [6.9.0] 2024-07-26 
+
+### Added
+
+- [TD-6649] Add Business Concept file manager domain name
+- [TD-6689] Add Implementations conditional linked concepts display
+
+### Changed
+
+- [TD-6602] Update td-cache, td-core and td-df-lib
+- [TD-6602], [TD-6723] Update td-cache, td-core and td-df-lib
+- [TD-6649] Add Business Concept file manager domain name
+
+## [6.8.1] 2024-07-18
+
+### Added
+
+- [TD-6713] Update td-df-lib and td-core
+
 ## [6.8.0] 2024-07-03
 
 ### Added

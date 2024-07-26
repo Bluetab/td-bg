@@ -976,6 +976,16 @@ defmodule TdBg.UploadTest do
     end
   end
 
+  describe "get_headers?/0" do
+    test "returns headers grouped by required" do
+      assert %{
+               required: ["name", "domain_external_id"],
+               update_required: ["id"],
+               ignored: ["domain_name" | _]
+             } = Upload.get_headers()
+    end
+  end
+
   defp create_hierarchy do
     hierarchy_id = 1
 
