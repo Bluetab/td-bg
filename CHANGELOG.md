@@ -1,5 +1,12 @@
 # Changelog
 
+ ## [6.9.2] 2024-07-29
+
+### Fixed
+
+- [TD-6734] Update td-df-lib and td-core, add tests for download concepts with visible options
+
+
 ## [6.9.1] 2024-07-26
 
 ### Added
