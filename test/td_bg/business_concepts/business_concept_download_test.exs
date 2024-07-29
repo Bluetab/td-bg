@@ -401,6 +401,86 @@ defmodule TdBg.BusinessConceptDownloadTests do
              "fields" => [
                %{"name" => "field1", "type" => "string", "label" => "field1"},
                %{"name" => "field2", "type" => "string", "label" => "field2"},
+               %{"name" => "field3", "type" => "string", "label" => "field3"},
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"origin" => "default", "value" => ""},
+                 "label" => "field4",
+                 "name" => "field4",
+                 "type" => "string",
+                 "values" => %{"fixed" => ["op1", "op2", "op3"]},
+                 "widget" => "dropdown"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"origin" => "default", "value" => ""},
+                 "label" => "field5",
+                 "name" => "field5",
+                 "type" => "string",
+                 "values" => %{
+                   "switch" => %{
+                     "on" => "field4",
+                     "values" => %{
+                       "opt1" => ["opt1-1", "opt1-2", "opt1-3"],
+                       "opt2" => ["opt2-1", "opt2-2", "opt2-3"],
+                       "opt3" => ["opt3-1", "opt3-2", "opt3-3"]
+                     }
+                   }
+                 },
+                 "widget" => "dropdown"
+               }
+             ]
+           }
+         ]
+    test "to_csv/2 return calculated completeness with is visible fields" do
+      template = @template_name
+
+      name = "concept_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concept_id = 1
+      concept_version_id = 2
+
+      concepts = [
+        %{
+          "business_concept_id" => concept_id,
+          "id" => concept_version_id,
+          "name" => name,
+          "template" => %{"name" => template},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
+          "content" => %{
+            "field1" => "",
+            "field2" => "",
+            "field3" => "",
+            "field4" => "",
+            "field5" => ""
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      csv = Download.to_csv(concepts, @lang)
+      [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
+
+      assert headers ==
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;field1;field2;field3;field4;field5"
+
+      assert content ==
+               "#{concept_id};#{concept_version_id};#{name};#{domain_ext_id};#{domain_name};#{status};0.0;#{last_change_at};#{inserted_at};;;;;"
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "field1", "type" => "string", "label" => "field1"},
+               %{"name" => "field2", "type" => "string", "label" => "field2"},
                %{"name" => "field3", "type" => "string", "label" => "field3"}
              ]
            }
@@ -1274,6 +1354,123 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "https://test.io/concepts/123/versions/456",
           "value",
           "value",
+          ""
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "field1", "type" => "string", "label" => "field1"},
+               %{"name" => "field2", "type" => "string", "label" => "field2"},
+               %{"name" => "field3", "type" => "string", "label" => "field3"},
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"origin" => "default", "value" => ""},
+                 "label" => "field4",
+                 "name" => "field4",
+                 "type" => "string",
+                 "values" => %{"fixed" => ["op1", "op2", "op3"]},
+                 "widget" => "dropdown"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"origin" => "default", "value" => ""},
+                 "label" => "field5",
+                 "name" => "field5",
+                 "type" => "string",
+                 "values" => %{
+                   "switch" => %{
+                     "on" => "field4",
+                     "values" => %{
+                       "opt1" => ["opt1-1", "opt1-2", "opt1-3"],
+                       "opt2" => ["opt2-1", "opt2-2", "opt2-3"],
+                       "opt3" => ["opt3-1", "opt3-2", "opt3-3"]
+                     }
+                   }
+                 },
+                 "widget" => "dropdown"
+               }
+             ]
+           }
+         ]
+
+    test "to_xlsx/2 return calculated completeness with is visible" do
+      template = @template_name
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "template" => %{"name" => template},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
+          "content" => %{
+            "field1" => "",
+            "field2" => "",
+            "field3" => "",
+            "field4" => "",
+            "field5" => ""
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          ["id", {:bg_color, "#ffe994"}],
+          "current_version_id",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
+          "status",
+          "completeness",
+          "last_change_at",
+          "inserted_at",
+          "link_to_concept",
+          "field1",
+          "field2",
+          "field3",
+          "field4",
+          "field5"
+        ],
+        [
+          business_concept_id,
+          business_concept_version_id,
+          name,
+          domain_ext_id,
+          domain_name,
+          status,
+          0.0,
+          last_change_at,
+          inserted_at,
+          "https://test.io/concepts/123/versions/456",
+          "",
+          "",
+          "",
+          "",
           ""
         ]
       ]
