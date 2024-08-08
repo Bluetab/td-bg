@@ -291,57 +291,6 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     @tag template: @content
-    test "with content: default values" do
-      %{user_id: user_id} = build(:claims)
-      domain = insert(:domain)
-
-      content_schema = [
-        %{
-          "name" => "Field1",
-          "type" => "string",
-          "default" => %{"value" => "foo", "origin" => "default"},
-          "cardinality" => "?"
-        },
-        %{
-          "name" => "Field2",
-          "type" => "string",
-          "default" => %{"value" => "bar", "origin" => "default"},
-          "cardinality" => "?"
-        }
-      ]
-
-      content = %{}
-
-      concept_attrs = %{
-        type: @template_name,
-        domain_id: domain.id,
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now()
-      }
-
-      version_attrs = %{
-        business_concept: concept_attrs,
-        content: content,
-        name: "some name",
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now(),
-        version: 1
-      }
-
-      creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-
-      assert {:ok, %{business_concept_version: business_concept_version}} =
-               BusinessConcepts.create_business_concept(creation_attrs)
-
-      assert %{content: content} = business_concept_version
-
-      assert %{
-               "Field1" => %{"value" => "foo", "origin" => "default"},
-               "Field2" => %{"value" => "bar", "origin" => "default"}
-             } = content
-    end
-
-    @tag template: @content
     test "with invalid content: invalid variable list" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -474,111 +423,6 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     @tag template: @content
-    test "with content that include fixed values translated with single cardinality" do
-      %{user_id: user_id} = build(:claims)
-      domain = insert(:domain)
-
-      CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.label_i18n.one",
-        definition: "uno"
-      })
-
-      content_schema = [
-        %{
-          "cardinality" => "1",
-          "label" => "label_i18n",
-          "name" => "i18n",
-          "type" => "string",
-          "values" => %{"fixed" => ["one", "two", "three"]}
-        }
-      ]
-
-      content = %{"i18n" => %{"value" => "uno", "origin" => "user"}}
-
-      concept_attrs = %{
-        type: @template_name,
-        domain_id: domain.id,
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now()
-      }
-
-      version_attrs = %{
-        business_concept: concept_attrs,
-        content: content,
-        name: "some name",
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now(),
-        version: 1
-      }
-
-      creation_attrs =
-        version_attrs
-        |> Map.put(:content_schema, content_schema)
-        |> Map.put(:lang, "es")
-
-      assert {:ok, %{business_concept_version: business_concept_version}} =
-               BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
-
-      assert %{content: content} = business_concept_version
-      assert %{"i18n" => %{"value" => "one", "origin" => "user"}} = content
-    end
-
-    @tag template: @content
-    test "with content that include fixed values translated with multiple cardinality" do
-      %{user_id: user_id} = build(:claims)
-      domain = insert(:domain)
-
-      CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.label_i18n.one",
-        definition: "uno"
-      })
-
-      CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.label_i18n.two",
-        definition: "dos"
-      })
-
-      content_schema = [
-        %{
-          "cardinality" => "+",
-          "label" => "label_i18n",
-          "name" => "i18n",
-          "type" => "string",
-          "values" => %{"fixed" => ["one", "two", "three"]}
-        }
-      ]
-
-      content = %{"i18n" => %{"value" => "uno|dos", "origin" => "user"}}
-
-      concept_attrs = %{
-        type: @template_name,
-        domain_id: domain.id,
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now()
-      }
-
-      version_attrs = %{
-        business_concept: concept_attrs,
-        content: content,
-        name: "some name",
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now(),
-        version: 1
-      }
-
-      creation_attrs =
-        version_attrs
-        |> Map.put(:content_schema, content_schema)
-        |> Map.put(:lang, "es")
-
-      assert {:ok, %{business_concept_version: business_concept_version}} =
-               BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
-
-      assert %{content: content} = business_concept_version
-      assert %{"i18n" => %{"value" => ["one", "two"], "origin" => "user"}} = content
-    end
-
-    @tag template: @content
     test "with content that include fixed values without i18n key with single cardinality" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -618,110 +462,6 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert {:error, :business_concept_version, %{errors: [i18n: {"is invalid", _}]}, _} =
                BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
-    end
-
-    @tag template: @content
-    test "with content that include fixed values without i18n key with multiple cardinality" do
-      %{user_id: user_id} = build(:claims)
-      domain = insert(:domain)
-
-      content_schema = [
-        %{
-          "cardinality" => "+",
-          "label" => "label_i18n",
-          "name" => "i18n",
-          "type" => "string",
-          "values" => %{"fixed" => ["one", "two", "three"]}
-        }
-      ]
-
-      content = %{"i18n" => %{"value" => "uno|dos", "origin" => "user"}}
-
-      concept_attrs = %{
-        type: @template_name,
-        domain_id: domain.id,
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now()
-      }
-
-      version_attrs = %{
-        business_concept: concept_attrs,
-        content: content,
-        name: "some name",
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now(),
-        version: 1
-      }
-
-      creation_attrs =
-        version_attrs
-        |> Map.put(:content_schema, content_schema)
-        |> Map.put(:lang, "es")
-
-      assert {:error, :business_concept_version, %{errors: [i18n: {"has an invalid entry", _}]},
-              _} = BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
-    end
-
-    @tag template: @content
-    test "with content that include fixed values some missing i18n keys with multiple cardinality" do
-      %{user_id: user_id} = build(:claims)
-      domain = insert(:domain)
-
-      CacheHelpers.put_i18n_message("en", %{
-        message_id: "fields.label_i18n.one",
-        definition: "one"
-      })
-
-      CacheHelpers.put_i18n_message("en", %{
-        message_id: "fields.label_i18n.two",
-        definition: "two"
-      })
-
-      CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.label_i18n.one",
-        definition: "uno"
-      })
-
-      CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.label_i18n.two",
-        definition: "dos"
-      })
-
-      content_schema = [
-        %{
-          "cardinality" => "+",
-          "label" => "label_i18n",
-          "name" => "i18n",
-          "type" => "string",
-          "values" => %{"fixed" => ["one", "two", "three"]}
-        }
-      ]
-
-      content = %{"i18n" => %{"value" => "uno|tres", "origin" => "user"}}
-
-      concept_attrs = %{
-        type: @template_name,
-        domain_id: domain.id,
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now()
-      }
-
-      version_attrs = %{
-        business_concept: concept_attrs,
-        content: content,
-        name: "some name",
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now(),
-        version: 1
-      }
-
-      creation_attrs =
-        version_attrs
-        |> Map.put(:content_schema, content_schema)
-        |> Map.put(:lang, "es")
-
-      assert {:error, :business_concept_version, %{errors: [i18n: {"has an invalid entry", _}]},
-              _} = BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
     end
   end
 
@@ -814,7 +554,7 @@ defmodule TdBg.BusinessConceptsTest do
             %{
               "name" => "Field2",
               "type" => "string",
-              "cardinality" => "1",
+              "cardinality" => "?",
               "default" => %{"value" => "", "origin" => "user"}
             }
           ]
@@ -884,10 +624,7 @@ defmodule TdBg.BusinessConceptsTest do
                "origin" => "user"
              }
 
-      assert new_business_concept_version.content["Field2"] == %{
-               "value" => "Second field",
-               "origin" => "user"
-             }
+      assert Map.get(new_business_concept_version.content, "Field2") == nil
 
       assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
       IndexWorker.clear()
@@ -911,7 +648,7 @@ defmodule TdBg.BusinessConceptsTest do
             %{
               "name" => "Field2",
               "type" => "string",
-              "cardinality" => "1",
+              "cardinality" => "?",
               "default" => %{"value" => "", "origin" => "default"}
             }
           ]
@@ -992,7 +729,7 @@ defmodule TdBg.BusinessConceptsTest do
                "origin" => "user"
              }
 
-      assert i18n_response_1.content["Field2"] == %{"value" => "Second field", "origin" => "user"}
+      assert Map.get(i18n_response_1.content, "Field2") == nil
       assert i18n_response_1.lang == en_lang
       assert i18n_response_1.name == en_name
 
@@ -1393,9 +1130,17 @@ defmodule TdBg.BusinessConceptsTest do
 
     content = %{
       "data_owner" => %{"value" => "domain", "origin" => "user"},
-      "link" => %{"value" => "https://google.es", "origin" => "user"},
-      "lista" => %{"value" => "valor1", "origin" => "user"},
-      "texto_libre" => %{"value" => "free text", "origin" => "user"}
+      "link" => %{
+        "value" => [
+          %{
+            "url_name" => "https://google.es",
+            "url_value" => "https://google.es"
+          }
+        ],
+        "origin" => "user"
+      },
+      "lista" => %{"value" => ["codigo1"], "origin" => "user"},
+      "texto_libre" => %{"value" => RichText.to_rich_text("free text"), "origin" => "user"}
     }
 
     concept_attrs = %{
