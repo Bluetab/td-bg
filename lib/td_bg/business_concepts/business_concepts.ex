@@ -23,7 +23,6 @@ defmodule TdBg.BusinessConcepts do
   alias TdCache.TemplateCache
   alias TdCore.Utils.ChangesetUtils
   alias TdDfLib.Format
-  alias TdDfLib.Parser
   alias TdDfLib.Templates
   alias TdDfLib.Validation
   alias ValidationError
@@ -257,7 +256,6 @@ defmodule TdBg.BusinessConcepts do
     |> attrs_keys_to_atoms()
     |> raise_error_if_no_content_schema()
     |> maybe_domain_ids()
-    |> format_content()
     |> new_concept_validations(opts)
   end
 
@@ -278,11 +276,6 @@ defmodule TdBg.BusinessConcepts do
     do: Map.put(params, :domain_ids, [domain_id])
 
   defp maybe_domain_ids(params), do: Map.put(params, :domain_ids, nil)
-
-  defp format_content(params) do
-    content = Parser.format_content(params)
-    Map.put(params, :content, content)
-  end
 
   @doc """
     Updates business_concept attributes
@@ -326,19 +319,14 @@ defmodule TdBg.BusinessConcepts do
 
   """
   def update_business_concept_version(
-        %BusinessConceptVersion{business_concept: concept} = business_concept_version,
+        %BusinessConceptVersion{} = business_concept_version,
         params
       ) do
-    domain_id = concept.domain_id
-
     result =
       params
       |> attrs_keys_to_atoms()
       |> raise_error_if_no_content_schema()
       |> add_content_if_not_exist()
-      |> merge_content_with_concept(business_concept_version)
-      |> maybe_merge_i18n_content(business_concept_version)
-      |> set_content_defaults(domain_id)
       |> update_concept_validations(business_concept_version)
       |> update_concept()
 
@@ -684,51 +672,6 @@ defmodule TdBg.BusinessConcepts do
     concept_content = Map.get(business_concept_version, :content, %{})
     new_content = Map.merge(concept_content, content)
     Map.put(params, :content, new_content)
-  end
-
-  def maybe_merge_i18n_content(
-        %{i18n_content: i18n_content} = params,
-        %BusinessConceptVersion{id: bcv_id} = _bcv
-      ) do
-    i18n_bc_contents_with_lang_index =
-      bcv_id
-      |> I18nContents.get_all_i18n_content_by_bcv_id()
-      |> Map.new(fn %{lang: lang} = i18n_bc_content ->
-        {lang, i18n_bc_content}
-      end)
-
-    new_i18n_content =
-      i18n_content
-      |> Enum.map(fn {lang, %{"content" => content} = i18n_data} ->
-        case Map.get(i18n_bc_contents_with_lang_index, lang, nil) do
-          nil ->
-            {lang, Map.put(i18n_data, "content", content)}
-
-          %{content: i18n_bc_content} ->
-            new_content = Map.merge(i18n_bc_content, content)
-            {lang, Map.put(i18n_data, "content", new_content)}
-        end
-      end)
-      |> Map.new()
-
-    Map.put(params, :i18n_content, new_i18n_content)
-  end
-
-  def maybe_merge_i18n_content(params, _business_concept_version), do: params
-
-  defp set_content_defaults(params, domain_id) do
-    content = Map.get(params, :content)
-    content_schema = Map.get(params, :content_schema)
-
-    case content do
-      nil ->
-        params
-
-      _ ->
-        content = Format.apply_template(content, content_schema, domain_id: domain_id)
-
-        Map.put(params, :content, content)
-    end
   end
 
   defp validate_concept_content(params, in_progress \\ nil)

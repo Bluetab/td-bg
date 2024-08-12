@@ -1,11 +1,15 @@
 # Changelog
 
- ## [6.9.2] 2024-07-29
+## [6.10.0] 2024-08-12
+
+- [TD-6735] Automate redis recache for task TD-6689
+- [TD-6718] Avoid to save empty values for dynamic content
+
+## [6.9.2] 2024-07-29
 
 ### Fixed
 
 - [TD-6734] Update td-df-lib and td-core, add tests for download concepts with visible options
-
 
 ## [6.9.1] 2024-07-26
 
@@ -13,7 +17,7 @@
 
 - [TD-6733] Update td-df-lib and td-core
 
-## [6.9.0] 2024-07-26 
+## [6.9.0] 2024-07-26
 
 ### Added
 
