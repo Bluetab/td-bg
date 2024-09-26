@@ -391,9 +391,17 @@ defmodule TdBg.BusinessConcept.Upload do
       |> Enum.map(fn {key, value} -> {String.to_existing_atom(key), value} end)
       |> then(&struct(BusinessConcept, &1))
 
+    version_fields =
+      Enum.map(
+        BusinessConceptVersion.__schema__(:fields) ++
+          BusinessConceptVersion.__schema__(:associations),
+        &to_string/1
+      )
+
     business_concept_version =
       params
       |> Map.put("business_concept", business_concept_struct)
+      |> Map.take(version_fields)
       |> Enum.map(fn {key, value} -> {String.to_existing_atom(key), value} end)
       |> then(&struct(BusinessConceptVersion, &1))
 
@@ -522,7 +530,7 @@ defmodule TdBg.BusinessConcept.Upload do
     |> Map.put("status", get_status(auto_publish))
     |> Map.put("version", 1)
     |> BusinessConcepts.attrs_keys_to_atoms()
-    |> BusinessConcepts.new_concept_validations()
+    |> BusinessConcepts.new_concept_validations(in_progress: !auto_publish)
     |> parse_changeset(row_parsed)
   end
 
@@ -571,7 +579,8 @@ defmodule TdBg.BusinessConcept.Upload do
           |> BusinessConcepts.attrs_keys_to_atoms()
           |> BusinessConcepts.merge_content_with_concept(business_concept_version)
           |> BusinessConcepts.new_concept_validations(
-            business_concept_version: business_concept_version
+            business_concept_version: business_concept_version,
+            in_progress: business_concept_version.status == "draft"
           )
           |> parse_changeset(row_parsed)
         else
@@ -592,7 +601,7 @@ defmodule TdBg.BusinessConcept.Upload do
   end
 
   defp add_publish_status(
-         %{changeset: changeset, auto_publish: true} = row_parsed,
+         %{changeset: %{valid?: true} = changeset, auto_publish: true} = row_parsed,
          %{user_id: user_id}
        ) do
     publish_changeset =
@@ -603,6 +612,9 @@ defmodule TdBg.BusinessConcept.Upload do
 
     {:ok, Map.put(row_parsed, :changeset, publish_changeset)}
   end
+
+  defp add_publish_status(%{changeset: %{valid?: false}} = row_parsed, _),
+    do: {:ok, row_parsed}
 
   defp add_publish_status(%{auto_publish: false} = row_parsed, _), do: {:ok, row_parsed}
 

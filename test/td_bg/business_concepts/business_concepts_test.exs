@@ -40,6 +40,46 @@ defmodule TdBg.BusinessConceptsTest do
     }
   ]
 
+  @content_with_mandatory_fields [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          name: "Field1",
+          type: "string",
+          cardinality: "1",
+          values: nil,
+          subscribable: true,
+          label: "Field1"
+        },
+        %{
+          name: "Field2",
+          type: "string",
+          cardinality: "1",
+          values: nil,
+          subscribable: true,
+          label: "Field2"
+        }
+      ]
+    }
+  ]
+
+  @i18n_content [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          name: "i18n",
+          type: "string",
+          label: "label_i18n",
+          cardinality: "1",
+          values: %{"fixed" => ["one", "two", "three"]},
+          subscribable: true
+        }
+      ]
+    }
+  ]
+
   setup_all do
     Redix.del!(@stream)
     TdCache.Redix.del!("i18n:locales:*")
@@ -244,7 +284,7 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.create_business_concept(creation_attrs)
     end
 
-    @tag template: @content
+    @tag template: @content_with_mandatory_fields
     test "with invalid content: required" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -254,7 +294,9 @@ defmodule TdBg.BusinessConceptsTest do
         %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
       ]
 
-      content = %{}
+      content = %{
+        "Field1" => %{"value" => "Hola", "origin" => "default"}
+      }
 
       concept_attrs = %{
         type: @template_name,
@@ -290,7 +332,7 @@ defmodule TdBg.BusinessConceptsTest do
                concept_attrs.last_change_by
     end
 
-    @tag template: @content
+    @tag template: @content_with_mandatory_fields
     test "with invalid content: invalid variable list" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
@@ -319,21 +361,13 @@ defmodule TdBg.BusinessConceptsTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %{business_concept_version: business_concept_version}} =
+      assert {:error, :business_concept_version, %{valid?: false, errors: errors}, %{}} =
                BusinessConcepts.create_business_concept(creation_attrs)
 
-      assert business_concept_version.content == content
-      assert business_concept_version.name == version_attrs.name
+      assert {_message, fields} = errors[:content]
 
-      assert business_concept_version.last_change_by == version_attrs.last_change_by
-      assert business_concept_version.current == true
-      assert business_concept_version.in_progress == true
-      assert business_concept_version.version == version_attrs.version
-      assert business_concept_version.business_concept.type == concept_attrs.type
-      assert business_concept_version.business_concept.domain_id == concept_attrs.domain_id
-
-      assert business_concept_version.business_concept.last_change_by ==
-               concept_attrs.last_change_by
+      assert fields[:Field2] == {"can't be blank", [validation: :required]}
+      assert fields[:Field1] == {"is invalid", [type: :string, validation: :cast]}
     end
 
     test "with no content" do
@@ -422,8 +456,8 @@ defmodule TdBg.BusinessConceptsTest do
       end
     end
 
-    @tag template: @content
-    test "with content that include fixed values without i18n key with single cardinality" do
+    @tag template: @i18n_content
+    test "with content including invalid i18n value returns validation error" do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
@@ -460,8 +494,12 @@ defmodule TdBg.BusinessConceptsTest do
         |> Map.put(:content_schema, content_schema)
         |> Map.put(:lang, "es")
 
-      assert {:error, :business_concept_version, %{errors: [i18n: {"is invalid", _}]}, _} =
+      assert {:error, :business_concept_version, %{errors: errors}, _} =
                BusinessConcepts.create_business_concept(creation_attrs, in_progress: false)
+
+      assert {"i18n: is invalid",
+              [i18n: {"is invalid", [validation: :inclusion, enum: ["one", "two", "three"]]}]} ==
+               errors[:content]
     end
   end
 
@@ -793,29 +831,6 @@ defmodule TdBg.BusinessConceptsTest do
       assert object |> business_concept_version_preload() == business_concept_version
     end
 
-    test "get_currently_published_version!/1 returns the published business_concept with given id" do
-      %{id: business_concept_id} = business_concept = insert(:business_concept)
-
-      [_, _, published_id, _] =
-        ["draft", "versioned", "published", "deprecated"]
-        |> Enum.map(
-          &insert(:business_concept_version, business_concept: business_concept, status: &1)
-        )
-        |> Enum.map(& &1.id)
-
-      assert %{id: ^published_id} =
-               BusinessConcepts.get_currently_published_version!(business_concept_id)
-    end
-
-    test "get_currently_published_version!/1 returns the last when there are no published" do
-      bcv_draft = insert(:business_concept_version, status: "draft")
-
-      bcv_current =
-        BusinessConcepts.get_currently_published_version!(bcv_draft.business_concept.id)
-
-      assert bcv_current.id == bcv_draft.id
-    end
-
     test "check_business_concept_name_availability/2 check not available" do
       name = random_name()
       %{business_concept: %{type: type}} = insert(:business_concept_version, name: name)
@@ -849,18 +864,6 @@ defmodule TdBg.BusinessConceptsTest do
                BusinessConcepts.check_business_concept_name_availability(type, name,
                  business_concept_id: exclude_id
                )
-    end
-
-    test "count_published_business_concepts/2 check count" do
-      %{business_concept: %{id: id, type: type}} =
-        insert(:business_concept_version, status: "published")
-
-      assert 1 == BusinessConcepts.count_published_business_concepts(type, [id])
-    end
-
-    test "list_all_business_concepts/0 return all business_concetps" do
-      fixture()
-      assert length(BusinessConcepts.list_all_business_concepts()) == 2
     end
 
     test "load_business_concept/1 return the expected business_concept" do

@@ -21,10 +21,8 @@ defmodule TdBg.BusinessConcepts do
   alias TdCache.EventStream.Publisher
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
-  alias TdCore.Utils.ChangesetUtils
   alias TdDfLib.Format
   alias TdDfLib.Templates
-  alias TdDfLib.Validation
   alias ValidationError
 
   @doc """
@@ -98,14 +96,6 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  list all business concepts
-  """
-  def list_all_business_concepts do
-    BusinessConcept
-    |> Repo.all()
-  end
-
-  @doc """
   Fetch an exsisting business_concept by its id
   """
   def get_business_concept(business_concept_id) do
@@ -113,19 +103,6 @@ defmodule TdBg.BusinessConcepts do
     |> where([c], c.id == ^business_concept_id)
     |> preload([:shared_to, :domain])
     |> Repo.one()
-  end
-
-  @doc """
-  count published business concepts
-  business concept must be of indicated type
-  business concept are resticted to indicated id list
-  """
-  def count_published_business_concepts(type, ids) do
-    BusinessConcept
-    |> join(:left, [c], _ in assoc(c, :versions))
-    |> where([c, v], c.type == ^type and c.id in ^ids and v.status == "published")
-    |> select([c, _v], count(c.id))
-    |> Repo.one!()
   end
 
   @doc """
@@ -193,34 +170,6 @@ defmodule TdBg.BusinessConcepts do
   end
 
   @doc """
-  Gets a single business_concept searching for the published version instead of the latest.
-
-  Raises `Ecto.NoResultsError` if the Business concept does not exist.
-
-  ## Examples
-
-      iex> get_currently_published_version!(123)
-      %BusinessConcept{}
-
-      iex> get_currently_published_version!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_currently_published_version!(business_concept_id) do
-    version =
-      BusinessConceptVersion
-      |> where([v], v.business_concept_id == ^business_concept_id)
-      |> where([v], v.status == "published")
-      |> preload(business_concept: [:domain])
-      |> Repo.one()
-
-    case version do
-      nil -> get_last_version_by_business_concept_id!(business_concept_id)
-      _ -> version
-    end
-  end
-
-  @doc """
   Creates a business_concept and publishes the corresponding audit event. If the
   `:index` option is set to `true`, the concept will be reindexed on successful
   creation.
@@ -250,7 +199,7 @@ defmodule TdBg.BusinessConcepts do
     |> validate_concept_content(opts[:in_progress])
   end
 
-  def valid_creation_changeset(params, opts \\ []) do
+  defp valid_creation_changeset(params, opts) do
     params
     |> Map.put_new(:lang, get_default_lang())
     |> attrs_keys_to_atoms()
@@ -303,7 +252,7 @@ defmodule TdBg.BusinessConcepts do
   def update_concept_validations(params, business_concept_version) do
     params
     |> validate_concept(business_concept_version)
-    |> validate_concept_content()
+    |> validate_concept_content(in_progress: business_concept_version.status == "draft")
   end
 
   @doc """
@@ -634,11 +583,7 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp add_content_if_not_exist(params) do
-    if Map.has_key?(params, :content) do
-      params
-    else
-      Map.put(params, :content, %{})
-    end
+    Map.put_new(params, :content, %{})
   end
 
   def validate_new_concept(params, old_business_concept_version \\ %BusinessConceptVersion{}) do
@@ -674,104 +619,124 @@ defmodule TdBg.BusinessConcepts do
     Map.put(params, :content, new_content)
   end
 
-  defp validate_concept_content(params, in_progress \\ nil)
-
-  defp validate_concept_content(%{changeset: %{valid?: true} = changeset} = params, in_progress) do
-    domain_id = changeset |> Changeset.get_field(:business_concept) |> Map.get(:domain_id)
-    do_validate_concept_content(params, in_progress, domain_id)
-  end
-
-  defp validate_concept_content(%{} = params, _in_progress), do: params
-
-  defp do_validate_concept_content(
-         %{i18n_content: i18n_content} = params,
-         in_progress,
-         domain_id
+  defp validate_concept_content(
+         %{changeset: %{valid?: true} = changeset, i18n_content: i18n_content} = params,
+         in_progress
        ) do
     bc_content = Map.get(params, :content)
     default_lang = get_default_lang()
     required_langs = get_requiered_langs()
     content_schema = Map.get(params, :content_schema)
 
-    i18n_content
-    |> merge_content_with_i18n_content(bc_content, %{content_schema: content_schema})
-    |> Map.put(default_lang, %{"content" => bc_content})
-    |> Enum.map(fn {lang, %{"content" => content}} ->
-      if lang in required_langs || lang == default_lang do
-        {lang, Validation.build_changeset(content, content_schema, domain_id: domain_id)}
-      else
-        {lang, nil}
-      end
-    end)
-    |> Enum.reject(fn {_lang, content} -> is_nil(content) end)
-    |> verify_i18n_in_progress(params, in_progress)
-  end
+    updated_changeset =
+      i18n_content
+      |> merge_content_with_i18n_content(bc_content, %{content_schema: content_schema})
+      |> Map.put(default_lang, %{"content" => bc_content})
+      |> Enum.map(fn {lang, %{"content" => content}} ->
+        if lang in required_langs || lang == default_lang do
+          changeset =
+            changeset
+            |> Changeset.put_change(:content, content)
+            |> BusinessConceptVersion.validate_content()
 
-  defp do_validate_concept_content(params, in_progress, domain_id) do
-    content = Map.get(params, :content)
-    content_schema = Map.get(params, :content_schema)
-
-    content_changeset = Validation.build_changeset(content, content_schema, domain_id: domain_id)
-
-    case in_progress do
-      false -> validate_content(content_changeset, params)
-      _ -> put_in_progress(content_changeset, params)
-    end
-  end
-
-  defp verify_i18n_in_progress(content_changesets, params, in_progress) do
-    case in_progress do
-      false ->
-        validate_content(content_changesets, params)
-
-      _ ->
-        put_in_progress(content_changesets, params)
-    end
-  end
-
-  defp put_in_progress([_ | _] = i18_changesets, %{changeset: changeset} = params) do
-    i18_content_errors =
-      Enum.reduce(i18_changesets, [], fn
-        {lang, %{valid?: false} = changeset}, acc ->
-          [{lang, ChangesetUtils.error_message_list_on(changeset)} | acc]
-
-        {_lang, _}, acc ->
-          acc
+          {lang, changeset}
+        else
+          {lang, nil}
+        end
       end)
+      |> Enum.reject(fn {_lang, content} -> is_nil(content) end)
+      |> maybe_put_in_progress(changeset, in_progress)
 
-    in_progress = i18_content_errors !== []
+    %{params | changeset: updated_changeset}
+  end
 
-    new_changeset =
+  defp validate_concept_content(%{changeset: %{valid?: true} = changeset} = params, in_progress) do
+    updated_changeset =
       changeset
-      |> Changeset.put_change(:in_progress, in_progress)
-      |> maybe_add_i18_content_errors(i18_content_errors)
+      |> BusinessConceptVersion.validate_content()
+      |> maybe_put_in_progress(changeset, in_progress)
 
-    params
-    |> Map.put(:changeset, new_changeset)
-    |> Map.put(:in_progress, in_progress)
+    %{params | changeset: updated_changeset}
   end
 
-  defp put_in_progress(%{valid?: valid}, %{changeset: changeset} = params) do
-    import Ecto.Changeset, only: [put_change: 3]
+  defp validate_concept_content(%{} = params, _in_progress), do: params
 
-    in_progress = !valid
+  defp maybe_put_in_progress([_ | _] = i18_changesets, _source_changeset, false) do
+    invalid = Enum.find(i18_changesets, fn {_lang, %{valid?: valid}} -> !valid end)
 
-    params
-    |> Map.put(:changeset, put_change(changeset, :in_progress, in_progress))
-    |> Map.put(:in_progress, in_progress)
+    case invalid do
+      %Changeset{} ->
+        invalid
+
+      nil ->
+        find_default_i18n_changeset(i18_changesets)
+    end
   end
 
-  defp maybe_add_i18_content_errors(changeset, []), do: changeset
+  defp maybe_put_in_progress(
+         [_ | _] = i18_changesets,
+         changeset,
+         _in_progress
+       ) do
+    i18_changesets
+    |> Enum.filter(fn {_lang, %{valid?: valid}} -> !valid end)
+    |> then(fn
+      [] ->
+        find_default_i18n_changeset(i18_changesets)
 
-  defp maybe_add_i18_content_errors(changeset, [{_, [_ | _]} | _] = i18_content_errors) do
-    Enum.reduce(i18_content_errors, changeset, fn {lang, errors}, acc ->
-      maybe_add_i18_content_errors(acc, {lang, errors})
+      [_ | _] = invalid_changesets ->
+        invalid_changeset =
+          Enum.find(invalid_changesets, fn {_lang, changeset} ->
+            !only_content_completion_errors?(changeset)
+          end)
+
+        case invalid_changeset do
+          {_lang, %Changeset{} = invalid_changeset} -> invalid_changeset
+          nil -> Changeset.put_change(changeset, :in_progress, true)
+        end
     end)
   end
 
-  defp maybe_add_i18_content_errors(changeset, {lang, [_ | _] = errors}) do
-    Enum.reduce(errors, changeset, fn %{field: field, message: message}, acc ->
-      Changeset.add_error(acc, field, "language.#{lang}: " <> message, validation: :required)
+  defp maybe_put_in_progress(changeset_with_content_validation, _source_changeset, false),
+    do: changeset_with_content_validation
+
+  defp maybe_put_in_progress(
+         %{valid?: true} = changeset_with_content_validation,
+         _source_changeset,
+         _in_progress
+       ) do
+    changeset_with_content_validation
+  end
+
+  defp maybe_put_in_progress(
+         %{errors: [_ | _]} = changeset_with_content_validation,
+         changeset,
+         _in_progress
+       ) do
+    if only_content_completion_errors?(changeset_with_content_validation) do
+      Changeset.put_change(changeset, :in_progress, true)
+    else
+      changeset_with_content_validation
+    end
+  end
+
+  defp find_default_i18n_changeset(i18_changesets) do
+    default_lang = get_default_lang()
+
+    Enum.reduce_while(i18_changesets, %{}, fn {lang, changeset}, acc ->
+      if lang == default_lang, do: {:halt, changeset}, else: {:cont, acc}
+    end)
+  end
+
+  defp only_content_completion_errors?(%{errors: [_ | _] = errors}) do
+    {_message, content_errors} = errors[:content]
+
+    Enum.all?(content_errors, fn
+      {_field, {_message, detail}} when is_list(detail) ->
+        detail[:validation] == :required
+
+      _other ->
+        false
     end)
   end
 
@@ -798,32 +763,6 @@ defmodule TdBg.BusinessConcepts do
     |> maybe_upsert_i18n_content(params)
     |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
     |> Repo.transaction()
-  end
-
-  defp validate_content([_ | _] = i18_changesets, params) do
-    default_lang = get_default_lang()
-
-    valid = Enum.all?(i18_changesets, fn {_lang, %{valid?: valid}} -> valid end)
-
-    default_content =
-      Enum.reduce_while(i18_changesets, %{}, fn {lang, changeset}, acc ->
-        if lang == default_lang, do: {:halt, changeset}, else: {:cont, acc}
-      end)
-
-    case valid do
-      false ->
-        Map.put(params, :changeset, default_content)
-
-      _ ->
-        params
-    end
-  end
-
-  defp validate_content(content_changeset, params) do
-    case content_changeset.valid? do
-      false -> Map.put(params, :changeset, content_changeset)
-      _ -> params
-    end
   end
 
   def insert_concept(%{changeset: changeset} = params) do
@@ -867,16 +806,6 @@ defmodule TdBg.BusinessConcepts do
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [v, c], _ in assoc(c, :domain))
     |> where([v], ilike(v.name, ^"%#{name}%"))
-    |> preload([_, c, d], business_concept: {c, domain: d})
-    |> order_by(asc: :version)
-    |> Repo.all()
-  end
-
-  def get_business_concept_by_term(term) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> where([v], ilike(v.name, ^"%#{term}%") or ilike(v.description, ^"%#{term}%"))
     |> preload([_, c, d], business_concept: {c, domain: d})
     |> order_by(asc: :version)
     |> Repo.all()

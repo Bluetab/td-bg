@@ -5,6 +5,7 @@ defmodule TdBg.UploadTest do
 
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.Authentication
   alias TdCache.HierarchyCache
   alias TdCore.Search.IndexWorker
@@ -195,8 +196,6 @@ defmodule TdBg.UploadTest do
                "value" => ["Role"],
                "origin" => "file"
              }
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 uploads with auto publish create business concept and publish" do
@@ -227,7 +226,6 @@ defmodule TdBg.UploadTest do
 
       assert version |> Map.get(:status) == "published"
       assert version |> Map.get(:current) == true
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 uploads business concept versions as admin with hierarchy data" do
@@ -257,8 +255,6 @@ defmodule TdBg.UploadTest do
                  "origin" => "file"
                }
              } = Map.get(version, :content)
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 get error business concept versions with invalid hierarchy data" do
@@ -314,8 +310,6 @@ defmodule TdBg.UploadTest do
                "i18n_test.radio" => %{"value" => "banana", "origin" => "file"},
                "i18n_test.no_translate" => %{"value" => "NO TRANSLATION", "origin" => "file"}
              } = Map.get(version, :content)
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 uploads business concept in differents status without auto publish" do
@@ -409,8 +403,6 @@ defmodule TdBg.UploadTest do
                {:reindex, :concepts, [bc_pending_a.id]},
                {:reindex, :concepts, [bc_rejected.id]}
              ]
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 uploads business concepts from excel file with binary ids (not numbers in origin)" do
@@ -458,8 +450,35 @@ defmodule TdBg.UploadTest do
                {:reindex, :concepts, [concept_1.id]},
                {:reindex, :concepts, [concept_2.id]}
              ]
+    end
 
+    test "bulk_upload/3 updates business concepts taking into account their progress status when field in content is missing" do
       IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "domain", name: "domain")
+
+      concept = insert(:business_concept, domain: domain, type: "term", id: 3_244)
+
+      %{id: version_id} =
+        insert(:business_concept_version,
+          name: "name 1",
+          status: "draft",
+          business_concept: concept,
+          in_progress: false
+        )
+
+      business_concept_upload = %{path: "test/fixtures/incorrect_upload_update.xlsx"}
+
+      assert %{created: [], errors: [], updated: [^version_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: "en"
+               )
+
+      business_concept_version = Repo.get!(BusinessConceptVersion, version_id)
+      assert business_concept_version.in_progress
     end
 
     test "bulk_upload/3 uploads business concept in differents status with auto publish" do
@@ -558,8 +577,6 @@ defmodule TdBg.UploadTest do
                {:reindex, :concepts, [bc_pending_a.id]},
                {:reindex, :concepts, [bc_rejected.id]}
              ]
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 update concept published with new draft/pending/rejected version and autopublish" do
@@ -708,10 +725,10 @@ defmodule TdBg.UploadTest do
              } = BusinessConcepts.get_business_concept_version!(bcv_published_draft_id)
     end
 
-    test "bulk_upload/3 returns error on invalid content" do
+    test "bulk_upload/3 returns error on missing content field for auto-published version, creates it as `in_progress` otherwise" do
       claims = build(:claims, role: "admin")
       insert(:domain, external_id: "domain")
-      business_concept_upload = %{path: "test/fixtures/incorrect_upload.xlsx"}
+      business_concept_upload = %{path: "test/fixtures/incorrect_upload_missing_field.xlsx"}
 
       assert %{
                created: [],
@@ -719,7 +736,7 @@ defmodule TdBg.UploadTest do
                  %{
                    body: %{
                      context: %{
-                       error: "role: can't be blank - critical: is invalid",
+                       error: "role: can't be blank",
                        field: :content,
                        row: 2,
                        type: "term"
@@ -734,8 +751,19 @@ defmodule TdBg.UploadTest do
                Upload.bulk_upload(
                  business_concept_upload,
                  claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      assert %{created: [id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
                  lang: @default_lang
                )
+
+      created_business_concept_version = Repo.get!(BusinessConceptVersion, id)
+      assert created_business_concept_version.in_progress
     end
 
     test "bulk_upload/3 Does not upload business concept versions without permissions" do
