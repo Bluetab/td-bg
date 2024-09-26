@@ -1418,7 +1418,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
            permissions: [:create_business_concept, :view_draft_business_concepts]
          ]
     @tag template: @completeness_content
-    test "renders errors when data has i18n invalid content", %{
+    test "set concept in progress under i18n invalid content", %{
       conn: conn,
       swagger_schema: schema,
       domain: %{id: domain_id}
@@ -1442,21 +1442,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "domain_id" => domain_id
       }
 
-      assert %{"errors" => errors} =
+      assert %{"data" => %{"in_progress" => true, "status" => "draft"}} =
                conn
                |> post(
                  Routes.business_concept_version_path(conn, :create),
                  business_concept_version: creation_attrs
                )
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
-               |> json_response(422)
-
-      assert [
-               %{
-                 "code" => "undefined",
-                 "name" => "concept.error.text_input.language.es: can't be blank"
-               }
-             ] == errors
+               |> json_response(:created)
     end
   end
 

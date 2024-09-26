@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6735] Allow to save concepts in progress:
+  - Only takes into account valildation for required information in the concept content.
+  - Enable it for bulk upload.
+
 ## [6.10.0] 2024-08-12
 
 - [TD-6735] Automate redis recache for task TD-6689
