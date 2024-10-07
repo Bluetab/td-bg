@@ -136,6 +136,60 @@ defmodule TdBg.UploadTest do
     id: "2"
   }
 
+  @concept_user_group_validation %{
+    name: "User and group validation",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "cardinality" => "?",
+            "default" => %{"value" => "", "origin" => "user"},
+            "label" => "List of users/groups",
+            "name" => "data_owner",
+            "type" => "user_group",
+            "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+            "widget" => "dropdown"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "user_group_validation",
+    id: "3"
+  }
+
+  @concept_multiple_user_group_validation %{
+    name: "Multiple User Group validation",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "cardinality" => "*",
+            "default" => %{"value" => "", "origin" => "user"},
+            "label" => "List of users/groups",
+            "name" => "data_owner",
+            "type" => "user_group",
+            "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+            "widget" => "dropdown"
+          },
+          %{
+            "name" => "multiple_values",
+            "type" => "string",
+            "label" => "Multiple values",
+            "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+            "widget" => "checkbox",
+            "cardinality" => "*"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "multiple_user_group_validation",
+    id: "4"
+  }
+
   @default_lang "en"
 
   setup_all do
@@ -148,6 +202,12 @@ defmodule TdBg.UploadTest do
     %{id: i18n_template_id} = i18n_template = Templates.create_template(@i18n_template)
     %{id: concept_template_id} = concept_template = Templates.create_template(@concept_template)
 
+    %{id: user_group_template_id} =
+      user_group_template = Templates.create_template(@concept_user_group_validation)
+
+    %{id: multiple_user_group_template_id} =
+      Templates.create_template(@concept_multiple_user_group_validation)
+
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
 
@@ -156,6 +216,8 @@ defmodule TdBg.UploadTest do
       Templates.delete(template_id)
       Templates.delete(i18n_template_id)
       Templates.delete(concept_template_id)
+      Templates.delete(user_group_template_id)
+      Templates.delete(multiple_user_group_template_id)
       HierarchyCache.delete(hierarchy_id)
     end)
 
@@ -163,6 +225,7 @@ defmodule TdBg.UploadTest do
       template: template,
       i18n_template: i18n_template,
       concept_template: concept_template,
+      user_group_template: user_group_template,
       hierarchy: hierarchy
     ]
   end
@@ -196,6 +259,57 @@ defmodule TdBg.UploadTest do
                "value" => ["Role"],
                "origin" => "file"
              }
+    end
+
+    test "bulk_upload/3 returns error under user/group invalid role" do
+      IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+      domain = CacheHelpers.insert_domain(external_id: "domain")
+      user = CacheHelpers.insert_user(full_name: "user")
+      group = CacheHelpers.insert_group(name: "group")
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      business_concept_upload = %{path: "test/fixtures/upload_invalid_user_group_for_role.xlsx"}
+
+      %{created: created, errors: errors} =
+        Upload.bulk_upload(
+          business_concept_upload,
+          claims
+        )
+
+      assert Enum.count(created) == 2
+      assert Enum.count(errors) == 1
+
+      assert Enum.all?(created, fn version_id ->
+               %{content: %{"data_owner" => %{"value" => data_owner}}} =
+                 Repo.get!(BusinessConceptVersion, version_id)
+
+               data_owner in ["user:user", "group:group"]
+             end)
+    end
+
+    test "bulk_upload/3 creates content with multiple cardinality user/group field" do
+      IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+      domain = CacheHelpers.insert_domain(external_id: "domain")
+      user = CacheHelpers.insert_user(full_name: "user")
+      group = CacheHelpers.insert_group(name: "group")
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      business_concept_upload = %{path: "test/fixtures/upload_multiple_user_group_for_role.xlsx"}
+
+      %{created: [created], errors: [], updated: []} =
+        Upload.bulk_upload(
+          business_concept_upload,
+          claims
+        )
+
+      assert %{content: %{"data_owner" => %{"value" => data_owners}}} =
+               Repo.get!(BusinessConceptVersion, created)
+
+      assert data_owners == ["user:user", "group:group"]
     end
 
     test "bulk_upload/3 uploads with auto publish create business concept and publish" do

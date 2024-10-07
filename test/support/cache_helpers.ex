@@ -6,6 +6,7 @@ defmodule CacheHelpers do
   import ExUnit.Callbacks, only: [on_exit: 1]
   import TdBg.Factory
 
+  alias TdCache.AclCache
   alias TdCache.ConceptCache
   alias TdCache.HierarchyCache
   alias TdCache.I18nCache
@@ -15,6 +16,7 @@ defmodule CacheHelpers do
   alias TdCache.StructureCache
   alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
+  alias TdCache.UserCache
 
   def insert_template(params \\ %{}) do
     %{id: template_id} = template = build(:template, params)
@@ -158,5 +160,41 @@ defmodule CacheHelpers do
   def put_business_concept(id) do
     ConceptCache.put(id)
     on_exit(fn -> ConceptCache.delete(id) end)
+  end
+
+  def insert_user(params \\ %{}) do
+    %{id: id} = user = build(:user, params)
+    on_exit(fn -> UserCache.delete(id) end)
+    {:ok, _} = UserCache.put(user)
+    user
+  end
+
+  def insert_group(params \\ %{}) do
+    %{id: id} = group = build(:group, params)
+    on_exit(fn -> UserCache.delete_group(id) end)
+    {:ok, _} = UserCache.put_group(group)
+    group
+  end
+
+  def insert_acl(resource_id, role, user_ids, resource_type \\ "domain") do
+    on_exit(fn ->
+      AclCache.delete_acl_roles(resource_type, resource_id)
+      AclCache.delete_acl_role_users(resource_type, resource_id, role)
+    end)
+
+    AclCache.set_acl_roles(resource_type, resource_id, [role])
+    AclCache.set_acl_role_users(resource_type, resource_id, role, user_ids)
+    :ok
+  end
+
+  def insert_group_acl(resource_id, role, group_ids, resource_type \\ "domain") do
+    on_exit(fn ->
+      AclCache.delete_acl_roles(resource_type, resource_id)
+      AclCache.delete_acl_role_groups(resource_type, resource_id, role)
+    end)
+
+    AclCache.set_acl_group_roles(resource_type, resource_id, [role])
+    AclCache.set_acl_role_groups(resource_type, resource_id, role, group_ids)
+    :ok
   end
 end

@@ -171,6 +171,25 @@ defmodule TdBg.Factory do
     |> merge_attributes(attrs)
   end
 
+  def user_factory do
+    %{
+      id: System.unique_integer([:positive]),
+      role: "user",
+      user_name: sequence("user_name"),
+      full_name: sequence("full_name"),
+      external_id: sequence("user_external_id"),
+      email: sequence("email") <> "@example.com"
+    }
+  end
+
+  def group_factory do
+    %{
+      id: System.unique_integer([:positive]),
+      name: sequence(:group, ["Europe", "Asia", "USA", "UK"]),
+      description: "group_description"
+    }
+  end
+
   defp default_assoc(attrs, id_key, key, build_attrs \\ %{}) do
     if Enum.any?([key, id_key], &Map.has_key?(attrs, &1)) do
       attrs
