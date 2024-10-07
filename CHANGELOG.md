@@ -8,6 +8,10 @@
   - Only takes into account valildation for required information in the concept content.
   - Enable it for bulk upload.
 
+### Added
+
+- [TD-6817] `td-df-lib` update to validate `user` and `user_group` template fields in business concept version's content.
+
 ## [6.10.0] 2024-08-12
 
 - [TD-6735] Automate redis recache for task TD-6689
