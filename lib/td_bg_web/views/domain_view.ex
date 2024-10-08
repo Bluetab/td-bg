@@ -36,6 +36,7 @@ defmodule TdBgWeb.DomainView do
     domain
     |> Map.take([
       :id,
+      :node_id,
       :parent_id,
       :name,
       :type,
