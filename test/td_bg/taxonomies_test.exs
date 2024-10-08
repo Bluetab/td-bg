@@ -22,7 +22,7 @@ defmodule TdBg.TaxonomiesTest do
     end
 
     test "returns non-deleted domains", %{domain: %{id: id}} do
-      assert [%{id: ^id}] = Taxonomies.list_domains()
+      assert [%{id: ^id, node_id: _node_id}] = Taxonomies.list_domains()
     end
 
     test "returns deleted domains", %{deleted_domain: %{id: id}} do
