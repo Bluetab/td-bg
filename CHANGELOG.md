@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [TD-6469] Concept links in browser language
+
 ### Fixed
 
 - [TD-6735] Allow to save concepts in progress:

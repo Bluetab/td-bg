@@ -1045,9 +1045,10 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "get_concept_counts/1" do
     test "includes link count and link tags" do
-      %{business_concept_id: id, business_concept: concept} = insert(:business_concept_version)
+      %{business_concept_id: id, business_concept: concept} =
+        bcv = insert(:business_concept_version)
 
-      CacheHelpers.put_concept(concept)
+      CacheHelpers.put_concept(concept, bcv)
       %{id: data_structure_id} = CacheHelpers.insert_data_structure()
 
       assert %{link_count: 0, link_tags: ["_none"]} = BusinessConcepts.get_concept_counts(id)
