@@ -3,12 +3,13 @@ defmodule TdBgWeb.Router do
 
   pipeline :api do
     plug TdBg.Auth.Pipeline.Unsecure
-    plug TdBgWeb.Locale
+    plug TdCore.I18n.Plug.Language
     plug :accepts, ["json"]
   end
 
   pipeline :api_auth do
     plug TdBg.Auth.Pipeline.Secure
+    plug TdCore.I18n.Plug.Language
   end
 
   scope "/api/swagger" do

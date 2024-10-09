@@ -119,6 +119,17 @@ defmodule CacheHelpers do
     ConceptCache.put(concept)
   end
 
+  def put_concept(%{id: id} = concept, concept_version) do
+    on_exit(fn -> ConceptCache.delete(id) end)
+
+    concept_entry =
+      concept_version
+      |> Map.take([:name, :status, :version, :i18n])
+      |> Map.merge(concept)
+
+    ConceptCache.put(concept_entry)
+  end
+
   def put_implementation(%{id: id} = implementation) do
     on_exit(fn -> ImplementationCache.delete(id) end)
     ImplementationCache.put(implementation)

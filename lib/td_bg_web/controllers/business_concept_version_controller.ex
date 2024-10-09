@@ -1005,6 +1005,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   defp render_concept(conn, business_concept_version) do
     claims = conn.assigns[:current_resource]
+    locale = conn.assigns[:locale]
     template = BusinessConcepts.get_template(business_concept_version)
 
     business_concept_version =
@@ -1018,7 +1019,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     links =
       business_concept_version
-      |> Links.get_links()
+      |> Links.get_links(lang: locale)
       |> Enum.filter(fn link -> filter_link_by_permission(claims, link) end)
 
     actions = get_actions(claims, business_concept_version)
