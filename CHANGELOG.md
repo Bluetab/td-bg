@@ -11,7 +11,6 @@
 ### Added
 
 - [TD-6817] `td-df-lib` update to validate `user` and `user_group` template fields in business concept version's content.
-- [TD-3612] Added 'node_id' to taxonomy list_domains to use in tree component
 
 ## [6.10.0] 2024-08-12
 
