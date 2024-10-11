@@ -80,6 +80,28 @@ defmodule TdBg.BusinessConceptsTest do
     }
   ]
 
+  @table_content [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          name: "table_field",
+          type: "table",
+          label: "Table Field",
+          cardinality: "*",
+          subscribable: false,
+          values: %{
+            "table_columns" => [
+              %{"mandatory" => true, "name" => "First Column"},
+              %{"mandatory" => false, "name" => "Second Column"},
+              %{"mandatory" => true, "name" => "Third Column"}
+            ]
+          }
+        }
+      ]
+    }
+  ]
+
   setup_all do
     Redix.del!(@stream)
     TdCache.Redix.del!("i18n:locales:*")
@@ -501,6 +523,75 @@ defmodule TdBg.BusinessConceptsTest do
               [i18n: {"is invalid", [validation: :inclusion, enum: ["one", "two", "three"]]}]} ==
                errors[:content]
     end
+
+    @tag template: @table_content
+    test "sets concept in progress when table field has blank columns" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      attrs = %{
+        business_concept: %{
+          type: @template_name,
+          domain_id: domain.id,
+          last_change_by: user_id,
+          last_change_at: DateTime.utc_now()
+        },
+        content: %{
+          "table_field" => %{
+            "origin" => "user",
+            "value" => [
+              %{"First Column" => nil, "Second Column" => "Bar"},
+              %{"First Column" => "Foo", "Second Column" => "Bar"},
+              %{"Second Column" => "Bar"},
+              %{"First Column" => "", "Second Column" => "Bar"}
+            ]
+          }
+        },
+        name: "some name",
+        content_schema: [],
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      # when in_progress: false => content is validated
+      assert {:error, :business_concept_version, changeset, %{}} =
+               BusinessConcepts.create_business_concept(attrs, in_progress: false)
+
+      assert {_message, content_errors} = changeset.errors[:content]
+
+      assert Enum.count(content_errors) == 2
+
+      for {:table_field, error} <- content_errors do
+        {message, validation} = error
+
+        case message do
+          "First Column can't be blank" ->
+            assert validation == [validation: :required, rows: [0, 2, 3]]
+
+          "Third Column can't be blank" ->
+            assert validation == [validation: :required, rows: [0, 1, 2, 3]]
+        end
+      end
+
+      # set in progress as default bahvior
+      assert {:ok, %{audit: _audit, business_concept_version: version}} =
+               BusinessConcepts.create_business_concept(attrs)
+
+      assert version.in_progress
+
+      assert version.content == %{
+               "table_field" => %{
+                 "origin" => "user",
+                 "value" => [
+                   %{"First Column" => nil, "Second Column" => "Bar"},
+                   %{"First Column" => "Foo", "Second Column" => "Bar"},
+                   %{"Second Column" => "Bar"},
+                   %{"First Column" => "", "Second Column" => "Bar"}
+                 ]
+               }
+             }
+    end
   end
 
   describe "update_business_concept_version/2" do
@@ -803,6 +894,65 @@ defmodule TdBg.BusinessConceptsTest do
         )
 
       assert object |> business_concept_version_preload() == business_concept_version
+    end
+
+    @tag template: @content_with_mandatory_fields
+    test "updates content a sets in progress as false when concept is valid" do
+      %{user_id: user_id} = build(:claims)
+
+      %{id: domain_id} = insert(:domain)
+
+      concept = build(:business_concept, domain_id: domain_id, type: @template_name)
+
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          in_progress: true,
+          content: %{
+            "Field1" => %{"value" => "bar", "origin" => "user"}
+          }
+        )
+
+      version_attrs = %{
+        business_concept: %{
+          last_change_by: 1000,
+          last_change_at: DateTime.utc_now()
+        },
+        business_concept_id: business_concept_version.business_concept.id,
+        content: %{
+          "Field1" => %{"value" => "bar", "origin" => "user"},
+          "Field2" => %{"value" => "foo", "origin" => "user"}
+        },
+        name: "updated name",
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      content_schema = TdDfLib.Templates.content_schema(@template_name)
+      update_attrs = Map.put(version_attrs, :content_schema, content_schema)
+
+      assert business_concept_version.in_progress
+
+      assert {:ok, %BusinessConceptVersion{} = object} =
+               BusinessConcepts.update_business_concept_version(
+                 business_concept_version,
+                 update_attrs
+               )
+
+      assert object.content == %{
+               "Field1" => %{"origin" => "user", "value" => "bar"},
+               "Field2" => %{"origin" => "user", "value" => "foo"}
+             }
+
+      assert object.name == version_attrs.name
+      assert object.last_change_by == version_attrs.last_change_by
+      assert object.current == true
+      assert object.version == version_attrs.version
+      assert object.in_progress == false
+
+      assert object.business_concept.id == business_concept_version.business_concept.id
+      assert object.business_concept.last_change_by == 1000
     end
   end
 

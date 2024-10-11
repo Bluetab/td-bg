@@ -54,6 +54,26 @@ defmodule TdBg.UploadTest do
             "type" => "hierarchy",
             "cardinality" => "*",
             "values" => %{"hierarchy" => %{"id" => 1}}
+          },
+          %{
+            "cardinality" => "?",
+            "default" => %{"value" => "", "origin" => "default"},
+            "description" => "Input your integer",
+            "label" => "Number",
+            "name" => "input_integer",
+            "type" => "integer",
+            "widget" => "number",
+            "values" => nil
+          },
+          %{
+            "cardinality" => "?",
+            "default" => %{"value" => "", "origin" => "default"},
+            "description" => "Input your float",
+            "label" => "Number",
+            "name" => "input_float",
+            "type" => "float",
+            "widget" => "number",
+            "values" => nil
           }
         ]
       }
@@ -255,10 +275,30 @@ defmodule TdBg.UploadTest do
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
 
-      assert version |> Map.get(:content) |> Map.get("role") == %{
-               "value" => ["Role"],
-               "origin" => "file"
+      assert Map.get(version, :content) == %{
+               "critical" => %{"origin" => "file", "value" => "Yes"},
+               "description" => %{"origin" => "file", "value" => ["Test"]},
+               "input_float" => %{"origin" => "file", "value" => 12.5},
+               "input_integer" => %{"origin" => "file", "value" => 12},
+               "role" => %{"origin" => "file", "value" => ["Role"]}
              }
+    end
+
+    test "bulk_upload/3 returns error under invalid number" do
+      IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+
+      insert(:domain, external_id: "domain")
+      business_concept_upload = %{path: "test/fixtures/upload_invalid_number.xlsx"}
+
+      assert %{errors: errors} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      assert hd(errors).error_type == "field_error"
     end
 
     test "bulk_upload/3 returns error under user/group invalid role" do

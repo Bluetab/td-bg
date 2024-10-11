@@ -2,9 +2,14 @@
 
 ## [Unreleased]
 
-### Changed
+### Added
 
+- [TD-6773] Require validation for `table` template fields columns.
+
+### Changed
+ 
 - [TD-6469] Concept links in browser language
+- [TD-6773] Parse numbers from Excel uploads as strings to enable casting in `td-df-lib`.
 
 ### Fixed
 
