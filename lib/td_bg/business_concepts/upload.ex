@@ -108,7 +108,9 @@ defmodule TdBg.BusinessConcept.Upload do
       workbook
       |> XlsxReader.sheet_names()
       |> Enum.map(fn sheet ->
-        {:ok, [headers | data]} = XlsxReader.sheet(workbook, sheet)
+        # The library parses all numbers as floats by default.
+        # The df library will cast the strings to their corresponding type.
+        {:ok, [headers | data]} = XlsxReader.sheet(workbook, sheet, number_type: String)
 
         %{
           template: sheet,

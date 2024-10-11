@@ -682,7 +682,9 @@ defmodule TdBg.BusinessConcepts do
     |> Enum.filter(fn {_lang, %{valid?: valid}} -> !valid end)
     |> then(fn
       [] ->
-        find_default_i18n_changeset(i18_changesets)
+        i18_changesets
+        |> find_default_i18n_changeset()
+        |> Changeset.put_change(:in_progress, false)
 
       [_ | _] = invalid_changesets ->
         invalid_changeset =
@@ -691,8 +693,11 @@ defmodule TdBg.BusinessConcepts do
           end)
 
         case invalid_changeset do
-          {_lang, %Changeset{} = invalid_changeset} -> invalid_changeset
-          nil -> Changeset.put_change(changeset, :in_progress, true)
+          {_lang, %Changeset{} = invalid_changeset} ->
+            Changeset.put_change(invalid_changeset, :in_progress, false)
+
+          nil ->
+            Changeset.put_change(changeset, :in_progress, true)
         end
     end)
   end
@@ -705,7 +710,7 @@ defmodule TdBg.BusinessConcepts do
          _source_changeset,
          _in_progress
        ) do
-    changeset_with_content_validation
+    Changeset.put_change(changeset_with_content_validation, :in_progress, false)
   end
 
   defp maybe_put_in_progress(
@@ -716,7 +721,7 @@ defmodule TdBg.BusinessConcepts do
     if only_content_completion_errors?(changeset_with_content_validation) do
       Changeset.put_change(changeset, :in_progress, true)
     else
-      changeset_with_content_validation
+      Changeset.put_change(changeset_with_content_validation, :in_progress, false)
     end
   end
 
