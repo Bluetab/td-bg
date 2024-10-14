@@ -210,6 +210,35 @@ defmodule TdBg.UploadTest do
     id: "4"
   }
 
+  @concept_multiple_cardinality_validation %{
+    name: "Multiple cardinality validation",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "name" => "hierarchy_name",
+            "label" => "hierarchy name",
+            "type" => "hierarchy",
+            "cardinality" => "+",
+            "values" => %{"hierarchy" => %{"id" => 1}}
+          },
+          %{
+            "name" => "multiple_values",
+            "type" => "string",
+            "label" => "Multiple values",
+            "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+            "widget" => "checkbox",
+            "cardinality" => "+"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "multiple_cardinality_validation",
+    id: "5"
+  }
+
   @default_lang "en"
 
   setup_all do
@@ -228,6 +257,9 @@ defmodule TdBg.UploadTest do
     %{id: multiple_user_group_template_id} =
       Templates.create_template(@concept_multiple_user_group_validation)
 
+    %{id: multiple_cardinality_template_id} =
+      Templates.create_template(@concept_multiple_cardinality_validation)
+
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
 
@@ -238,6 +270,7 @@ defmodule TdBg.UploadTest do
       Templates.delete(concept_template_id)
       Templates.delete(user_group_template_id)
       Templates.delete(multiple_user_group_template_id)
+      Templates.delete(multiple_cardinality_template_id)
       HierarchyCache.delete(hierarchy_id)
     end)
 
@@ -423,7 +456,8 @@ defmodule TdBg.UploadTest do
                  %{
                    body: %{
                      context: %{
-                       error: "invalid content - invalid content",
+                       error:
+                         "hierarchy_name_2: has more than one node children_2 - hierarchy_name_1: has more than one node children_2",
                        field: :content,
                        row: 2,
                        type: "term"
@@ -1155,6 +1189,60 @@ defmodule TdBg.UploadTest do
                  claims,
                  lang: @default_lang
                )
+    end
+
+    test "bulk_upload/3 doesn't return validation errors when concept is in draft" do
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "domain")
+
+      business_concept_upload = %{
+        path: "test/fixtures/upload_invalid_multiple_cardinality_fields.xlsx"
+      }
+
+      assert %{created: [], errors: [error]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      assert error.body.context.error == "multiple_values: has an invalid entry"
+      assert error.body.context.field == :content
+      assert error.body.message == "concepts.upload.failed.invalid_field_value"
+    end
+
+    test "bulk_upload/3 does not publish concept when content is invalid and there are no changes over the preious version" do
+      claims = build(:claims, role: "admin")
+      domain = insert(:domain, external_id: "domain")
+
+      concept =
+        insert(:business_concept, domain: domain, id: 50, type: "Multiple cardinality validation")
+
+      %{id: _id} =
+        insert(:business_concept_version,
+          status: "draft",
+          business_concept: concept,
+          content: %{
+            "hierarchy_name_multiple" => %{"value" => [], "origin" => "file"},
+            "multiple_values" => %{"value" => [], "origin" => "file"}
+          },
+          id: 11
+        )
+
+      business_concept_upload = %{
+        path: "test/fixtures/upload_empty_multiple_cardinality_fields.xlsx"
+      }
+
+      assert %{created: [], errors: [error]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      assert error.body.context.error ==
+               "multiple_values: should have at least %{count} item(s) - hierarchy_name: can't be blank"
     end
   end
 
