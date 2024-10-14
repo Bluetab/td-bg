@@ -13,9 +13,10 @@
 
 ### Fixed
 
-- [TD-6735] Allow to save concepts in progress:
+- [TD-6617] Allow to save concepts in progress:
   - Only takes into account valildation for required information in the concept content.
   - Enable it for bulk upload.
+  - Exclude required field errors when concept is in progress in bulk upload.
 
 ### Added
 

@@ -249,10 +249,12 @@ defmodule TdBg.BusinessConcepts do
     end
   end
 
-  def update_concept_validations(params, business_concept_version) do
+  def update_concept_validations(params, business_concept_version, opts \\ []) do
+    in_progress = Keyword.get(opts, :in_progress, business_concept_version.status == "draft")
+
     params
     |> validate_concept(business_concept_version)
-    |> validate_concept_content(in_progress: business_concept_version.status == "draft")
+    |> validate_concept_content(in_progress)
   end
 
   @doc """
@@ -599,6 +601,7 @@ defmodule TdBg.BusinessConcepts do
 
   defp validate_concept(params, %BusinessConceptVersion{} = business_concept_version) do
     changeset = BusinessConceptVersion.update_changeset(business_concept_version, params)
+
     Map.put(params, :changeset, changeset)
   end
 
@@ -636,6 +639,7 @@ defmodule TdBg.BusinessConcepts do
         if lang in required_langs || lang == default_lang do
           changeset =
             changeset
+            |> Changeset.put_change(:in_progress, false)
             |> Changeset.put_change(:content, content)
             |> BusinessConceptVersion.validate_content()
 
@@ -653,6 +657,8 @@ defmodule TdBg.BusinessConcepts do
   defp validate_concept_content(%{changeset: %{valid?: true} = changeset} = params, in_progress) do
     updated_changeset =
       changeset
+      |> Changeset.put_change(:in_progress, false)
+      |> force_content_change(params)
       |> BusinessConceptVersion.validate_content()
       |> maybe_put_in_progress(changeset, in_progress)
 
@@ -660,6 +666,12 @@ defmodule TdBg.BusinessConcepts do
   end
 
   defp validate_concept_content(%{} = params, _in_progress), do: params
+
+  defp force_content_change(changeset, %{content: %{} = content}) do
+    Changeset.force_change(changeset, :content, content)
+  end
+
+  defp force_content_change(changeset, _params), do: changeset
 
   defp maybe_put_in_progress([_ | _] = i18_changesets, _source_changeset, false) do
     invalid = Enum.find(i18_changesets, fn {_lang, %{valid?: valid}} -> !valid end)
@@ -682,19 +694,17 @@ defmodule TdBg.BusinessConcepts do
     |> Enum.filter(fn {_lang, %{valid?: valid}} -> !valid end)
     |> then(fn
       [] ->
-        i18_changesets
-        |> find_default_i18n_changeset()
-        |> Changeset.put_change(:in_progress, false)
+        find_default_i18n_changeset(i18_changesets)
 
       [_ | _] = invalid_changesets ->
         invalid_changeset =
           Enum.find(invalid_changesets, fn {_lang, changeset} ->
-            !only_content_completion_errors?(changeset)
+            not Enum.empty?(reject_content_completion_errors(changeset))
           end)
 
         case invalid_changeset do
           {_lang, %Changeset{} = invalid_changeset} ->
-            Changeset.put_change(invalid_changeset, :in_progress, false)
+            invalid_changeset
 
           nil ->
             Changeset.put_change(changeset, :in_progress, true)
@@ -710,7 +720,7 @@ defmodule TdBg.BusinessConcepts do
          _source_changeset,
          _in_progress
        ) do
-    Changeset.put_change(changeset_with_content_validation, :in_progress, false)
+    changeset_with_content_validation
   end
 
   defp maybe_put_in_progress(
@@ -718,10 +728,10 @@ defmodule TdBg.BusinessConcepts do
          changeset,
          _in_progress
        ) do
-    if only_content_completion_errors?(changeset_with_content_validation) do
+    if Enum.empty?(reject_content_completion_errors(changeset_with_content_validation)) do
       Changeset.put_change(changeset, :in_progress, true)
     else
-      Changeset.put_change(changeset_with_content_validation, :in_progress, false)
+      changeset_with_content_validation
     end
   end
 
@@ -733,12 +743,18 @@ defmodule TdBg.BusinessConcepts do
     end)
   end
 
-  defp only_content_completion_errors?(%{errors: [_ | _] = errors}) do
+  def reject_content_completion_errors(%{errors: [_ | _] = errors}) do
     {_message, content_errors} = errors[:content]
 
-    Enum.all?(content_errors, fn
+    Enum.reject(content_errors, fn
       {_field, {_message, detail}} when is_list(detail) ->
-        detail[:validation] == :required
+        detail[:validation] == :required or
+          Keyword.equal?(detail,
+            validation: :length,
+            kind: :min,
+            type: :list,
+            count: 1
+          )
 
       _other ->
         false

@@ -59,6 +59,14 @@ defmodule TdBg.BusinessConceptsTest do
           values: nil,
           subscribable: true,
           label: "Field2"
+        },
+        %{
+          name: "Field3",
+          type: "string",
+          cardinality: "+",
+          values: nil,
+          subscribable: true,
+          label: "Field3"
         }
       ]
     }
@@ -311,35 +319,29 @@ defmodule TdBg.BusinessConceptsTest do
       %{user_id: user_id} = build(:claims)
       domain = insert(:domain)
 
-      content_schema = [
-        %{"name" => "Field1", "type" => "string", "cardinality" => "1"},
-        %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
-      ]
-
       content = %{
-        "Field1" => %{"value" => "Hola", "origin" => "default"}
-      }
-
-      concept_attrs = %{
-        type: @template_name,
-        domain_id: domain.id,
-        last_change_by: user_id,
-        last_change_at: DateTime.utc_now()
+        "Field1" => %{"value" => "Hola", "origin" => "default"},
+        "Field2" => %{"value" => "", "origin" => "default"},
+        "Field3" => %{"value" => [], "origin" => "default"}
       }
 
       version_attrs = %{
-        business_concept: concept_attrs,
+        business_concept: %{
+          type: @template_name,
+          domain_id: domain.id,
+          last_change_by: user_id,
+          last_change_at: DateTime.utc_now()
+        },
         content: content,
         name: "some name",
         last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
-        version: 1
+        version: 1,
+        content_schema: []
       }
 
-      creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-
       assert {:ok, %{business_concept_version: business_concept_version}} =
-               BusinessConcepts.create_business_concept(creation_attrs)
+               BusinessConcepts.create_business_concept(version_attrs)
 
       assert business_concept_version.content == version_attrs.content
       assert business_concept_version.name == version_attrs.name
@@ -347,11 +349,13 @@ defmodule TdBg.BusinessConceptsTest do
       assert business_concept_version.current == true
       assert business_concept_version.in_progress == true
       assert business_concept_version.version == version_attrs.version
-      assert business_concept_version.business_concept.type == concept_attrs.type
-      assert business_concept_version.business_concept.domain_id == concept_attrs.domain_id
+      assert business_concept_version.business_concept.type == version_attrs.business_concept.type
+
+      assert business_concept_version.business_concept.domain_id ==
+               version_attrs.business_concept.domain_id
 
       assert business_concept_version.business_concept.last_change_by ==
-               concept_attrs.last_change_by
+               version_attrs.business_concept.last_change_by
     end
 
     @tag template: @content_with_mandatory_fields
@@ -921,7 +925,8 @@ defmodule TdBg.BusinessConceptsTest do
         business_concept_id: business_concept_version.business_concept.id,
         content: %{
           "Field1" => %{"value" => "bar", "origin" => "user"},
-          "Field2" => %{"value" => "foo", "origin" => "user"}
+          "Field2" => %{"value" => "foo", "origin" => "user"},
+          "Field3" => %{"value" => ["baz"], "origin" => "user"}
         },
         name: "updated name",
         last_change_by: user_id,
@@ -942,7 +947,8 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert object.content == %{
                "Field1" => %{"origin" => "user", "value" => "bar"},
-               "Field2" => %{"origin" => "user", "value" => "foo"}
+               "Field2" => %{"origin" => "user", "value" => "foo"},
+               "Field3" => %{"origin" => "user", "value" => ["baz"]}
              }
 
       assert object.name == version_attrs.name

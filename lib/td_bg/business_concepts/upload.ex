@@ -282,13 +282,15 @@ defmodule TdBg.BusinessConcept.Upload do
       index: index,
       template_name: template_name,
       auto_publish: false,
+      in_progress: false,
       errors: []
     }
   end
 
-  defp parse_changeset(%{changeset: %{errors: errors, valid?: false} = changeset}, row_parsed) do
+  defp parse_changeset(%{changeset: %{valid?: false} = changeset}, row_parsed) do
     errors =
-      errors
+      changeset
+      |> traverse_errors(row_parsed.in_progress)
       |> Enum.map(fn {field, {error, _}} ->
         {:field_error,
          %{
@@ -310,6 +312,32 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp parse_changeset(%{changeset: %{valid?: true} = changeset}, row_parsed),
     do: {:ok, Map.put(row_parsed, :changeset, changeset)}
+
+  defp traverse_errors(%{errors: errors} = changeset, in_progress) do
+    if Keyword.has_key?(errors, :content) and in_progress do
+      changeset
+      |> BusinessConcepts.reject_content_completion_errors()
+      |> Enum.reduce({[], []}, fn
+        {field, {message, _detail}} = validation, {acc_message, acc_validations} ->
+          {["#{field}: #{message}" | acc_message], [validation | acc_validations]}
+
+        {field, {message}} = validation, {acc_message, acc_validations} ->
+          {["#{field}: #{message}" | acc_message], [validation | acc_validations]}
+
+        {field, message} = validation, {acc_message, acc_validations} ->
+          {["#{field}: #{message}" | acc_message], [validation | acc_validations]}
+      end)
+      |> then(fn
+        {[], []} ->
+          Keyword.delete(errors, :content)
+
+        {messages, validations} ->
+          Keyword.put(errors, :content, {Enum.join(messages, " - "), validations})
+      end)
+    else
+      errors
+    end
+  end
 
   defp format_content(
          %{df_content: content, domain: %{id: domain_id}, params: params} = row_parsed,
@@ -523,6 +551,8 @@ defmodule TdBg.BusinessConcept.Upload do
          %{name: template_name},
          _claims
        ) do
+    row_parsed = %{row_parsed | in_progress: !auto_publish}
+
     params
     |> Map.update!("business_concept", fn business_concept ->
       business_concept
@@ -532,7 +562,7 @@ defmodule TdBg.BusinessConcept.Upload do
     |> Map.put("status", get_status(auto_publish))
     |> Map.put("version", 1)
     |> BusinessConcepts.attrs_keys_to_atoms()
-    |> BusinessConcepts.new_concept_validations(in_progress: !auto_publish)
+    |> BusinessConcepts.new_concept_validations(in_progress: row_parsed.in_progress)
     |> parse_changeset(row_parsed)
   end
 
@@ -540,7 +570,8 @@ defmodule TdBg.BusinessConcept.Upload do
          %{
            params: %{"business_concept" => %{"id" => id}} = params,
            action: :update,
-           index: index
+           index: index,
+           auto_publish: auto_publish
          } = row_parsed,
          %{name: template_name},
          %{user_id: user_id} = claims
@@ -566,7 +597,8 @@ defmodule TdBg.BusinessConcept.Upload do
             row_parsed
             | action: :create,
               versioned: true,
-              business_concept_version: business_concept_version
+              business_concept_version: business_concept_version,
+              in_progress: !auto_publish and business_concept_version.status == "draft"
           }
 
           business_concept =
@@ -582,7 +614,7 @@ defmodule TdBg.BusinessConcept.Upload do
           |> BusinessConcepts.merge_content_with_concept(business_concept_version)
           |> BusinessConcepts.new_concept_validations(
             business_concept_version: business_concept_version,
-            in_progress: business_concept_version.status == "draft"
+            in_progress: row_parsed.in_progress
           )
           |> parse_changeset(row_parsed)
         else
@@ -590,13 +622,16 @@ defmodule TdBg.BusinessConcept.Upload do
             row_parsed
             | business_concept_version:
                 BusinessConcepts.get_business_concept_version(id, "current"),
-              versioned: !Map.get(business_concept_version, :current)
+              versioned: !Map.get(business_concept_version, :current),
+              in_progress: !auto_publish and business_concept_version.status == "draft"
           }
 
           params
           |> BusinessConcepts.attrs_keys_to_atoms()
           |> BusinessConcepts.merge_content_with_concept(business_concept_version)
-          |> BusinessConcepts.update_concept_validations(business_concept_version)
+          |> BusinessConcepts.update_concept_validations(business_concept_version,
+            in_progress: row_parsed.in_progress
+          )
           |> parse_changeset(row_parsed)
         end
     end
