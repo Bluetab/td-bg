@@ -1,6 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [6.10.0] 2024-08-12
+
+- [TD-6735] Automate redis recache for task TD-6689
+- [TD-6718] Avoid to save empty values for dynamic content
+
+## [6.9.2] 2024-07-29
 
 ### Added
 
