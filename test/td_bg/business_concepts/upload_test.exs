@@ -5,6 +5,7 @@ defmodule TdBg.UploadTest do
 
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.Authentication
   alias TdCache.HierarchyCache
   alias TdCore.Search.IndexWorker
@@ -53,6 +54,26 @@ defmodule TdBg.UploadTest do
             "type" => "hierarchy",
             "cardinality" => "*",
             "values" => %{"hierarchy" => %{"id" => 1}}
+          },
+          %{
+            "cardinality" => "?",
+            "default" => %{"value" => "", "origin" => "default"},
+            "description" => "Input your integer",
+            "label" => "Number",
+            "name" => "input_integer",
+            "type" => "integer",
+            "widget" => "number",
+            "values" => nil
+          },
+          %{
+            "cardinality" => "?",
+            "default" => %{"value" => "", "origin" => "default"},
+            "description" => "Input your float",
+            "label" => "Number",
+            "name" => "input_float",
+            "type" => "float",
+            "widget" => "number",
+            "values" => nil
           }
         ]
       }
@@ -135,6 +156,89 @@ defmodule TdBg.UploadTest do
     id: "2"
   }
 
+  @concept_user_group_validation %{
+    name: "User and group validation",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "cardinality" => "?",
+            "default" => %{"value" => "", "origin" => "user"},
+            "label" => "List of users/groups",
+            "name" => "data_owner",
+            "type" => "user_group",
+            "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+            "widget" => "dropdown"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "user_group_validation",
+    id: "3"
+  }
+
+  @concept_multiple_user_group_validation %{
+    name: "Multiple User Group validation",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "cardinality" => "*",
+            "default" => %{"value" => "", "origin" => "user"},
+            "label" => "List of users/groups",
+            "name" => "data_owner",
+            "type" => "user_group",
+            "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+            "widget" => "dropdown"
+          },
+          %{
+            "name" => "multiple_values",
+            "type" => "string",
+            "label" => "Multiple values",
+            "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+            "widget" => "checkbox",
+            "cardinality" => "*"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "multiple_user_group_validation",
+    id: "4"
+  }
+
+  @concept_multiple_cardinality_validation %{
+    name: "Multiple cardinality validation",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "name" => "hierarchy_name",
+            "label" => "hierarchy name",
+            "type" => "hierarchy",
+            "cardinality" => "+",
+            "values" => %{"hierarchy" => %{"id" => 1}}
+          },
+          %{
+            "name" => "multiple_values",
+            "type" => "string",
+            "label" => "Multiple values",
+            "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+            "widget" => "checkbox",
+            "cardinality" => "+"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "multiple_cardinality_validation",
+    id: "5"
+  }
+
   @default_lang "en"
 
   setup_all do
@@ -147,6 +251,15 @@ defmodule TdBg.UploadTest do
     %{id: i18n_template_id} = i18n_template = Templates.create_template(@i18n_template)
     %{id: concept_template_id} = concept_template = Templates.create_template(@concept_template)
 
+    %{id: user_group_template_id} =
+      user_group_template = Templates.create_template(@concept_user_group_validation)
+
+    %{id: multiple_user_group_template_id} =
+      Templates.create_template(@concept_multiple_user_group_validation)
+
+    %{id: multiple_cardinality_template_id} =
+      Templates.create_template(@concept_multiple_cardinality_validation)
+
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
 
@@ -155,6 +268,9 @@ defmodule TdBg.UploadTest do
       Templates.delete(template_id)
       Templates.delete(i18n_template_id)
       Templates.delete(concept_template_id)
+      Templates.delete(user_group_template_id)
+      Templates.delete(multiple_user_group_template_id)
+      Templates.delete(multiple_cardinality_template_id)
       HierarchyCache.delete(hierarchy_id)
     end)
 
@@ -162,6 +278,7 @@ defmodule TdBg.UploadTest do
       template: template,
       i18n_template: i18n_template,
       concept_template: concept_template,
+      user_group_template: user_group_template,
       hierarchy: hierarchy
     ]
   end
@@ -191,12 +308,81 @@ defmodule TdBg.UploadTest do
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
 
-      assert version |> Map.get(:content) |> Map.get("role") == %{
-               "value" => ["Role"],
-               "origin" => "file"
+      assert Map.get(version, :content) == %{
+               "critical" => %{"origin" => "file", "value" => "Yes"},
+               "description" => %{"origin" => "file", "value" => ["Test"]},
+               "input_float" => %{"origin" => "file", "value" => 12.5},
+               "input_integer" => %{"origin" => "file", "value" => 12},
+               "role" => %{"origin" => "file", "value" => ["Role"]}
              }
+    end
 
+    test "bulk_upload/3 returns error under invalid number" do
       IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+
+      insert(:domain, external_id: "domain")
+      business_concept_upload = %{path: "test/fixtures/upload_invalid_number.xlsx"}
+
+      assert %{errors: errors} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      assert hd(errors).error_type == "field_error"
+    end
+
+    test "bulk_upload/3 returns error under user/group invalid role" do
+      IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+      domain = CacheHelpers.insert_domain(external_id: "domain")
+      user = CacheHelpers.insert_user(full_name: "user")
+      group = CacheHelpers.insert_group(name: "group")
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      business_concept_upload = %{path: "test/fixtures/upload_invalid_user_group_for_role.xlsx"}
+
+      %{created: created, errors: errors} =
+        Upload.bulk_upload(
+          business_concept_upload,
+          claims
+        )
+
+      assert Enum.count(created) == 2
+      assert Enum.count(errors) == 1
+
+      assert Enum.all?(created, fn version_id ->
+               %{content: %{"data_owner" => %{"value" => data_owner}}} =
+                 Repo.get!(BusinessConceptVersion, version_id)
+
+               data_owner in ["user:user", "group:group"]
+             end)
+    end
+
+    test "bulk_upload/3 creates content with multiple cardinality user/group field" do
+      IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+      domain = CacheHelpers.insert_domain(external_id: "domain")
+      user = CacheHelpers.insert_user(full_name: "user")
+      group = CacheHelpers.insert_group(name: "group")
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      business_concept_upload = %{path: "test/fixtures/upload_multiple_user_group_for_role.xlsx"}
+
+      %{created: [created], errors: [], updated: []} =
+        Upload.bulk_upload(
+          business_concept_upload,
+          claims
+        )
+
+      assert %{content: %{"data_owner" => %{"value" => data_owners}}} =
+               Repo.get!(BusinessConceptVersion, created)
+
+      assert data_owners == ["user:user", "group:group"]
     end
 
     test "bulk_upload/3 uploads with auto publish create business concept and publish" do
@@ -227,7 +413,6 @@ defmodule TdBg.UploadTest do
 
       assert version |> Map.get(:status) == "published"
       assert version |> Map.get(:current) == true
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 uploads business concept versions as admin with hierarchy data" do
@@ -257,8 +442,6 @@ defmodule TdBg.UploadTest do
                  "origin" => "file"
                }
              } = Map.get(version, :content)
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 get error business concept versions with invalid hierarchy data" do
@@ -273,7 +456,8 @@ defmodule TdBg.UploadTest do
                  %{
                    body: %{
                      context: %{
-                       error: "invalid content - invalid content",
+                       error:
+                         "hierarchy_name_2: has more than one node children_2 - hierarchy_name_1: has more than one node children_2",
                        field: :content,
                        row: 2,
                        type: "term"
@@ -314,8 +498,6 @@ defmodule TdBg.UploadTest do
                "i18n_test.radio" => %{"value" => "banana", "origin" => "file"},
                "i18n_test.no_translate" => %{"value" => "NO TRANSLATION", "origin" => "file"}
              } = Map.get(version, :content)
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 uploads business concept in differents status without auto publish" do
@@ -409,8 +591,6 @@ defmodule TdBg.UploadTest do
                {:reindex, :concepts, [bc_pending_a.id]},
                {:reindex, :concepts, [bc_rejected.id]}
              ]
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 uploads business concepts from excel file with binary ids (not numbers in origin)" do
@@ -458,8 +638,35 @@ defmodule TdBg.UploadTest do
                {:reindex, :concepts, [concept_1.id]},
                {:reindex, :concepts, [concept_2.id]}
              ]
+    end
 
+    test "bulk_upload/3 updates business concepts taking into account their progress status when field in content is missing" do
       IndexWorker.clear()
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "domain", name: "domain")
+
+      concept = insert(:business_concept, domain: domain, type: "term", id: 3_244)
+
+      %{id: version_id} =
+        insert(:business_concept_version,
+          name: "name 1",
+          status: "draft",
+          business_concept: concept,
+          in_progress: false
+        )
+
+      business_concept_upload = %{path: "test/fixtures/incorrect_upload_update.xlsx"}
+
+      assert %{created: [], errors: [], updated: [^version_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: "en"
+               )
+
+      business_concept_version = Repo.get!(BusinessConceptVersion, version_id)
+      assert business_concept_version.in_progress
     end
 
     test "bulk_upload/3 uploads business concept in differents status with auto publish" do
@@ -558,8 +765,6 @@ defmodule TdBg.UploadTest do
                {:reindex, :concepts, [bc_pending_a.id]},
                {:reindex, :concepts, [bc_rejected.id]}
              ]
-
-      IndexWorker.clear()
     end
 
     test "bulk_upload/3 update concept published with new draft/pending/rejected version and autopublish" do
@@ -708,10 +913,10 @@ defmodule TdBg.UploadTest do
              } = BusinessConcepts.get_business_concept_version!(bcv_published_draft_id)
     end
 
-    test "bulk_upload/3 returns error on invalid content" do
+    test "bulk_upload/3 returns error on missing content field for auto-published version, creates it as `in_progress` otherwise" do
       claims = build(:claims, role: "admin")
       insert(:domain, external_id: "domain")
-      business_concept_upload = %{path: "test/fixtures/incorrect_upload.xlsx"}
+      business_concept_upload = %{path: "test/fixtures/incorrect_upload_missing_field.xlsx"}
 
       assert %{
                created: [],
@@ -719,7 +924,7 @@ defmodule TdBg.UploadTest do
                  %{
                    body: %{
                      context: %{
-                       error: "role: can't be blank - critical: is invalid",
+                       error: "role: can't be blank",
                        field: :content,
                        row: 2,
                        type: "term"
@@ -734,8 +939,19 @@ defmodule TdBg.UploadTest do
                Upload.bulk_upload(
                  business_concept_upload,
                  claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      assert %{created: [id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
                  lang: @default_lang
                )
+
+      created_business_concept_version = Repo.get!(BusinessConceptVersion, id)
+      assert created_business_concept_version.in_progress
     end
 
     test "bulk_upload/3 Does not upload business concept versions without permissions" do
@@ -973,6 +1189,60 @@ defmodule TdBg.UploadTest do
                  claims,
                  lang: @default_lang
                )
+    end
+
+    test "bulk_upload/3 doesn't return validation errors when concept is in draft" do
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "domain")
+
+      business_concept_upload = %{
+        path: "test/fixtures/upload_invalid_multiple_cardinality_fields.xlsx"
+      }
+
+      assert %{created: [], errors: [error]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      assert error.body.context.error == "multiple_values: has an invalid entry"
+      assert error.body.context.field == :content
+      assert error.body.message == "concepts.upload.failed.invalid_field_value"
+    end
+
+    test "bulk_upload/3 does not publish concept when content is invalid and there are no changes over the preious version" do
+      claims = build(:claims, role: "admin")
+      domain = insert(:domain, external_id: "domain")
+
+      concept =
+        insert(:business_concept, domain: domain, id: 50, type: "Multiple cardinality validation")
+
+      %{id: _id} =
+        insert(:business_concept_version,
+          status: "draft",
+          business_concept: concept,
+          content: %{
+            "hierarchy_name_multiple" => %{"value" => [], "origin" => "file"},
+            "multiple_values" => %{"value" => [], "origin" => "file"}
+          },
+          id: 11
+        )
+
+      business_concept_upload = %{
+        path: "test/fixtures/upload_empty_multiple_cardinality_fields.xlsx"
+      }
+
+      assert %{created: [], errors: [error]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      assert error.body.context.error ==
+               "multiple_values: should have at least %{count} item(s) - hierarchy_name: can't be blank"
     end
   end
 

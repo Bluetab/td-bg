@@ -3,6 +3,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
+  import TdBg.TestOperators
 
   alias TdBg.I18nContents.I18nContents
   alias TdCache.I18nCache
@@ -439,6 +440,122 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert %{"shared_to" => [%{"id" => ^domain_id1}, %{"id" => ^domain_id2}]} = embedded
       assert %{"share" => share} = actions
       assert %{"href" => ^link, "method" => "PATCH", "input" => %{}} = share
+    end
+
+    @tag authentication: [role: "admin"]
+    test "show links with browser language", %{conn: conn} do
+      template_name = "template_test"
+
+      template_content = [
+        %{
+          "name" => "group_name",
+          "fields" => [
+            %{
+              "name" => "foo",
+              "type" => "string",
+              "label" => "Foo",
+              "values" => nil,
+              "widget" => "string",
+              "cardinality" => "1"
+            }
+          ]
+        }
+      ]
+
+      Templates.create_template(%{
+        id: 0,
+        name: template_name,
+        label: "label",
+        scope: "test",
+        content: template_content
+      })
+
+      en_content = %{"foo" => %{"value" => "en_bar", "origin" => "user"}}
+      es_content = %{"foo" => %{"value" => "es_bar", "origin" => "user"}}
+
+      %{business_concept_id: business_concept_id, business_concept: business_concept} =
+        bcv =
+        insert(:business_concept_version,
+          name: "name_en",
+          type: template_name,
+          content: en_content
+        )
+
+      %{
+        business_concept_id: related_bc_implementation_id,
+        business_concept: related_business_concept
+      } =
+        related_bcv =
+        insert(:business_concept_version,
+          name: "related_name_en",
+          type: template_name,
+          content: en_content
+        )
+
+      i18n = %{
+        "es" => %{
+          "content" => es_content,
+          "name" => "name_es"
+        }
+      }
+
+      related_i18n = %{
+        "es" => %{
+          "content" => es_content,
+          "name" => "related_name_es"
+        }
+      }
+
+      %{id: implementation_id} = CacheHelpers.insert_implementation()
+      {:ok, _} = CacheHelpers.put_concept(Map.put(business_concept, :i18n, i18n), bcv)
+
+      {:ok, _} =
+        CacheHelpers.put_concept(
+          Map.put(related_business_concept, :i18n, related_i18n),
+          related_bcv
+        )
+
+      CacheHelpers.insert_link(
+        implementation_id,
+        "implementation_ref",
+        "business_concept",
+        business_concept_id
+      )
+
+      CacheHelpers.insert_link(
+        implementation_id,
+        "implementation_ref",
+        "business_concept",
+        related_bc_implementation_id
+      )
+
+      assert %{
+               "data" => %{
+                 "_embedded" => %{
+                   "links" => [
+                     %{
+                       "concepts_links" => concepts_links
+                     }
+                   ]
+                 }
+               }
+             } =
+               conn
+               |> put_req_header("accept-language", "es")
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   "current"
+                 )
+               )
+               |> json_response(:ok)
+
+      assert [
+               %{"id" => "#{business_concept_id}", "name" => "name_es"},
+               %{"id" => "#{related_bc_implementation_id}", "name" => "related_name_es"}
+             ] ||| concepts_links
     end
 
     @tag authentication: [user_name: "not_an_admin"]
@@ -1418,7 +1535,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
            permissions: [:create_business_concept, :view_draft_business_concepts]
          ]
     @tag template: @completeness_content
-    test "renders errors when data has i18n invalid content", %{
+    test "set concept in progress under i18n invalid content", %{
       conn: conn,
       swagger_schema: schema,
       domain: %{id: domain_id}
@@ -1442,21 +1559,14 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "domain_id" => domain_id
       }
 
-      assert %{"errors" => errors} =
+      assert %{"data" => %{"in_progress" => true, "status" => "draft"}} =
                conn
                |> post(
                  Routes.business_concept_version_path(conn, :create),
                  business_concept_version: creation_attrs
                )
                |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
-               |> json_response(422)
-
-      assert [
-               %{
-                 "code" => "undefined",
-                 "name" => "concept.error.text_input.language.es: can't be blank"
-               }
-             ] == errors
+               |> json_response(:created)
     end
   end
 

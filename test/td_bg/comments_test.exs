@@ -18,9 +18,9 @@ defmodule TdBg.CommentsTest do
     %{id: domain_id} = CacheHelpers.insert_domain()
 
     %{business_concept_id: concept_id, business_concept: concept} =
-      insert(:business_concept_version, domain_id: domain_id)
+      bcv = insert(:business_concept_version, domain_id: domain_id)
 
-    CacheHelpers.put_concept(concept)
+    CacheHelpers.put_concept(concept, bcv)
 
     [claims: build(:claims, role: "admin"), resource_id: concept_id]
   end

@@ -10,17 +10,16 @@ defmodule TdBg.Cache.ConceptLoader do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.I18nContents.I18nContents
   alias TdBg.Search.Indexer
   alias TdCache.ConceptCache
   alias TdCache.Redix
-  alias TdCache.TemplateCache
-  alias TdDfLib.Templates
 
   require Logger
 
   @seconds_in_day 60 * 60 * 24
   @concept_props [:id, :domain_id, :type, :confidential]
-  @version_props [:id, :name, :status, :version]
+  @version_props [:name, :status, :version]
 
   ## Client API
 
@@ -65,7 +64,8 @@ defmodule TdBg.Cache.ConceptLoader do
     # Full refresh on startup, only if last full refresh was more than one day ago
     if acquire_lock?("TdBg.Cache.ConceptLoader:TD-3063", @seconds_in_day) ||
          acquire_lock?("TdBg.Cache.ConceptLoader:TD-6197") ||
-         acquire_lock?("TdBg.Cache.ConceptLoader:TD-6735") do
+         acquire_lock?("TdBg.Cache.ConceptLoader:TD-6735") ||
+         acquire_lock?("TdBg.Cache.ConceptLoader:TD-6469") do
       Timer.time(
         fn ->
           BusinessConcepts.get_active_ids()
@@ -172,13 +172,9 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp cache_concepts(business_concept_ids) do
-    content_fields = get_content_fields()
-
     business_concept_ids
     |> get_published_or_current_versions()
-    |> Enum.group_by(& &1.business_concept.type)
-    |> Enum.map(fn {type, concepts} -> {Map.get(content_fields, type, []), concepts} end)
-    |> Enum.flat_map(fn {fields, concepts} -> Enum.map(concepts, &to_cache_entry(&1, fields)) end)
+    |> Enum.map(&to_cache_entry(&1))
     |> Enum.map(&put_cache/1)
   end
 
@@ -200,22 +196,30 @@ defmodule TdBg.Cache.ConceptLoader do
   defp is_published_or_current?(%BusinessConceptVersion{current: true}), do: true
   defp is_published_or_current?(_), do: false
 
-  defp to_cache_entry(%BusinessConceptVersion{business_concept: c} = bcv, content_fields) do
+  defp get_business_concept_i18n(%BusinessConceptVersion{id: id}) do
+    id
+    |> I18nContents.get_all_i18n_content_by_bcv_id()
+    |> Enum.group_by(& &1.lang, &Map.take(&1, [:name, :content]))
+    |> Enum.map(fn {lang, [i18n]} -> {lang, i18n} end)
+    |> Map.new()
+  end
+
+  defp to_cache_entry(%BusinessConceptVersion{business_concept: c} = bcv) do
     bcv
     |> version_props()
     |> Map.merge(concept_props(c))
-    |> Map.put(:content, get_content(bcv, content_fields))
+    |> Map.put(:content, get_content(bcv))
+    |> Map.put(:i18n, get_business_concept_i18n(bcv))
   end
 
-  defp get_content(%BusinessConceptVersion{} = bcv, fields) do
+  defp get_content(%BusinessConceptVersion{} = bcv) do
     bcv
     |> Map.get(:content, %{})
-    |> Map.take(fields)
     |> Enum.filter(&valid_value?/1)
     |> Map.new()
   end
 
-  defp valid_value?({_key, value}) when is_binary(value) do
+  defp valid_value?({_key, %{"value" => value}}) when is_binary(value) do
     valid?(value)
   end
 
@@ -272,15 +276,5 @@ defmodule TdBg.Cache.ConceptLoader do
 
   defp acquire_lock?(key) do
     Redix.command!(["SET", key, node(), "NX"])
-  end
-
-  defp get_content_fields do
-    by_type = TemplateCache.fields_by_type!("bg", "user")
-    subscribable = Templates.subscribable_fields_by_type("bg")
-
-    by_type
-    |> Map.merge(subscribable, fn _k, v1, v2 -> v1 ++ v2 end)
-    |> Enum.map(fn {type, names} -> {type, Enum.uniq(names)} end)
-    |> Map.new()
   end
 end

@@ -1,5 +1,27 @@
 # Changelog
 
+## [6.13.0] 2024-10-15
+
+### Added
+
+- [TD-6773] Require validation for `table` template fields columns.
+
+### Changed
+ 
+- [TD-6469] Concept links in browser language
+- [TD-6773] Parse numbers from Excel uploads as strings to enable casting in `td-df-lib`.
+
+### Fixed
+
+- [TD-6617] Allow to save concepts in progress:
+  - Only takes into account valildation for required information in the concept content.
+  - Enable it for bulk upload.
+  - Exclude required field errors when concept is in progress in bulk upload.
+
+### Added
+
+- [TD-6817] `td-df-lib` update to validate `user` and `user_group` template fields in business concept version's content.
+
 ## [6.10.0] 2024-08-12
 
 - [TD-6735] Automate redis recache for task TD-6689
