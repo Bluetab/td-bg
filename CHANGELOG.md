@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6894] Changeset validations overwrite existing content 
+
 ## [6.13.0] 2024-10-15
 
 ### Added

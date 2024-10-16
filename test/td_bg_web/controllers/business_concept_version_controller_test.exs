@@ -7,7 +7,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   alias TdBg.I18nContents.I18nContents
   alias TdCache.I18nCache
-
   alias TdCore.Search.IndexWorker
 
   @template_name "some_type"
