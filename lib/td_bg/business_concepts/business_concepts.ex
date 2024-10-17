@@ -21,7 +21,6 @@ defmodule TdBg.BusinessConcepts do
   alias TdCache.EventStream.Publisher
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
-  alias TdDfLib.Format
   alias TdDfLib.Templates
   alias ValidationError
 
@@ -626,14 +625,15 @@ defmodule TdBg.BusinessConcepts do
          %{changeset: %{valid?: true} = changeset, i18n_content: i18n_content} = params,
          in_progress
        ) do
-    bc_content = Map.get(params, :content)
+    # content might be updated at this point from BusinessConceptVersion.create_changeset/2
+    bc_content = Changeset.get_field(changeset, :content, params.content)
     default_lang = get_default_lang()
     required_langs = get_requiered_langs()
     content_schema = Map.get(params, :content_schema)
 
     updated_changeset =
       i18n_content
-      |> merge_content_with_i18n_content(bc_content, %{content_schema: content_schema})
+      |> merge_content_with_i18n_content(bc_content, content_schema)
       |> Map.put(default_lang, %{"content" => bc_content})
       |> Enum.map(fn {lang, %{"content" => content}} ->
         if lang in required_langs || lang == default_lang do
@@ -668,7 +668,8 @@ defmodule TdBg.BusinessConcepts do
   defp validate_concept_content(%{} = params, _in_progress), do: params
 
   defp force_content_change(changeset, %{content: %{} = content}) do
-    Changeset.force_change(changeset, :content, content)
+    concept_content = changeset |> Changeset.get_field(:content, content) |> Map.merge(content)
+    Changeset.force_change(changeset, :content, concept_content)
   end
 
   defp force_content_change(changeset, _params), do: changeset
@@ -1010,31 +1011,19 @@ defmodule TdBg.BusinessConcepts do
   defp get_bcv_from_multimap(%{updated: bcv}), do: bcv
   defp get_bcv_from_multimap(%{business_concept_version: bcv}), do: bcv
 
-  def merge_content_with_i18n_content(i18n_content, bc_content, %{content: schema}) do
-    content_schema = Format.flatten_content_fields(schema)
-    merge_content_with_i18n_content(i18n_content, bc_content, %{content_schema: content_schema})
-  end
-
-  def merge_content_with_i18n_content(i18n_content, bc_content, %{content_schema: content_schema}) do
+  defp merge_content_with_i18n_content(i18n_content, bc_content, content_schema) do
     not_string_template_keys =
       content_schema
       |> Enum.filter(fn
-        %{"widget" => widget}
-        when widget not in ["enriched_text", "string"] ->
-          true
+        %{"widget" => widget} ->
+          widget not in ["enriched_text", "string"]
 
         _ ->
           false
       end)
-      |> Enum.reduce([], fn %{"name" => name}, acc ->
-        [name | acc]
-      end)
+      |> Enum.map(& &1["name"])
 
-    not_string_values =
-      Enum.filter(bc_content, fn {name, _} ->
-        name in not_string_template_keys
-      end)
-      |> Map.new()
+    not_string_values = Map.take(bc_content, not_string_template_keys)
 
     Enum.reduce(i18n_content, %{}, fn {lang, %{"content" => content} = data}, acc ->
       new_content = Map.merge(not_string_values, content)

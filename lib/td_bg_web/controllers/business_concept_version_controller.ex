@@ -1106,7 +1106,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  def merge_content_with_i18n_content(i18n_content, bc_content, %{content: schema}) do
+  defp merge_content_with_i18n_content(i18n_content, bc_content, %{content: schema}) do
     not_string_template_keys =
       schema
       |> Format.flatten_content_fields()

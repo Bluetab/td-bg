@@ -110,6 +110,29 @@ defmodule TdBg.BusinessConceptsTest do
     }
   ]
 
+  @content_with_identifier [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          name: "mandatory_string",
+          type: "string",
+          label: "Mandatory String",
+          cardinality: "1",
+          subscribable: false
+        },
+        %{
+          name: "indentifier",
+          type: "string",
+          widget: "identifier",
+          cardinality: "0",
+          values: nil,
+          subscribable: false
+        }
+      ]
+    }
+  ]
+
   setup_all do
     Redix.del!(@stream)
     TdCache.Redix.del!("i18n:locales:*")
@@ -595,6 +618,97 @@ defmodule TdBg.BusinessConceptsTest do
                  ]
                }
              }
+    end
+
+    @tag template: @content_with_identifier
+    test "identifier field generated in content" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      attrs = %{
+        business_concept: %{
+          type: @template_name,
+          domain_id: domain.id,
+          last_change_by: user_id,
+          last_change_at: DateTime.utc_now()
+        },
+        content: %{},
+        name: "name",
+        content_schema: [],
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      # returns changeset with identifier when concept is in progress
+      {:ok, %{business_concept_version: version}} =
+        BusinessConcepts.create_business_concept(attrs)
+
+      assert version.in_progress
+      assert get_in(version.content, ["indentifier", "value"])
+
+      content = %{"mandatory_string" => %{"origin" => "user", "value" => "foo"}}
+
+      attrs =
+        attrs
+        |> Map.put(:content, content)
+        |> Map.put(:name, "updated")
+
+      # returns changeset with identifier when concept is not in progress
+      {:ok, %{business_concept_version: version}} =
+        BusinessConcepts.create_business_concept(attrs)
+
+      refute version.in_progress
+      assert get_in(version.content, ["indentifier", "value"])
+    end
+
+    @tag template: @content_with_identifier
+    test "identifier field generated in i18n content" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      attrs = %{
+        business_concept: %{
+          type: @template_name,
+          domain_id: domain.id,
+          last_change_by: user_id,
+          last_change_at: DateTime.utc_now()
+        },
+        content: %{},
+        i18n_content: %{
+          "es" => %{
+            "name" => "nombre",
+            "content" => %{}
+          }
+        },
+        name: "name",
+        content_schema: [],
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      # returns source changeset without merging with i18n content
+      {:ok, %{business_concept_version: version}} =
+        BusinessConcepts.create_business_concept(attrs)
+
+      assert version.in_progress
+      assert get_in(version.content, ["indentifier", "value"])
+
+      content = %{"mandatory_string" => %{"origin" => "user", "value" => "foo"}}
+
+      attrs =
+        attrs
+        |> Map.put(:content, content)
+        |> put_in([:i18n_content, "es", "content"], content)
+        |> Map.put(:name, "updated")
+
+      # gets default i18n changeset when there are not failures
+      {:ok, %{business_concept_version: version}} =
+        BusinessConcepts.create_business_concept(attrs)
+
+      refute version.in_progress
+      assert get_in(version.content, ["indentifier", "value"])
     end
   end
 
