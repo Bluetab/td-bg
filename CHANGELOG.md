@@ -1,10 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-6743] Remove incompatibilities with Elasticsearch v8
+
 ## [6.13.1] 2024-10-17
 
 ### Fixed
 
-- [TD-6894] Changeset validations overwrite existing content 
+- [TD-6894] Changeset validations overwrite existing content
 
 ## [6.13.0] 2024-10-15
 
@@ -13,7 +19,7 @@
 - [TD-6773] Require validation for `table` template fields columns.
 
 ### Changed
- 
+
 - [TD-6469] Concept links in browser language
 - [TD-6773] Parse numbers from Excel uploads as strings to enable casting in `td-df-lib`.
 
