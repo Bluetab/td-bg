@@ -879,6 +879,98 @@ defmodule TdBg.BusinessConceptDownloadTests do
              } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
     end
 
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "name" => "field_name",
+                 "type" => "table",
+                 "label" => "field_label",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "colA", "mandatory" => true},
+                     %{"name" => "colB", "mandatory" => true}
+                   ]
+                 }
+               }
+             ]
+           }
+         ]
+    test "to_xlsx/2 handles table fields" do
+      template = @template_name
+      field_name = "field_name"
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
+      field_value = "colA;colB\nvalueA1;valueB1\nvalueA2;valueB2"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "template" => %{"name" => template},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
+          "content" => %{
+            "field_name" => %{
+              "origin" => "file",
+              "value" => [
+                %{"colA" => "valueA1", "colB" => "valueB1"},
+                %{"colA" => "valueA2", "colB" => "valueB2"}
+              ]
+            }
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          ["id", {:bg_color, "#ffe994"}],
+          "current_version_id",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
+          "status",
+          "completeness",
+          "last_change_at",
+          "inserted_at",
+          "link_to_concept",
+          field_name
+        ],
+        [
+          business_concept_id,
+          business_concept_version_id,
+          name,
+          domain_ext_id,
+          domain_name,
+          status,
+          100.0,
+          last_change_at,
+          inserted_at,
+          "https://test.io/concepts/#{business_concept_id}/versions/#{business_concept_version_id}",
+          [field_value, {:align_vertical, :top}]
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
     test "to_xlsx/2 return business concepts non-dynamic content when related template does not exist" do
       template = @template_name
       field_name = "field_name"
