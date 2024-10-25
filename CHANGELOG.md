@@ -5,6 +5,7 @@
 ### Changed
 
 - [TD-6743] Remove incompatibilities with Elasticsearch v8
+- [TD-6880] Add Concepts download and upload table type fields for XLSX
 
 ## [6.13.1] 2024-10-17
 

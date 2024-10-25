@@ -55,7 +55,8 @@ defmodule TdBg.BusinessConcept.Download do
           |> add_extra_fields(concept, concept_url_schema)
           |> Parser.append_parsed_fields(template_fields, content,
             domain_type: :with_domain_external_id,
-            lang: lang
+            lang: lang,
+            xlsx: true
           )
         end)
 

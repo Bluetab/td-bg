@@ -240,8 +240,7 @@ defmodule TdBg.BusinessConcept.Upload do
   end
 
   defp format_content_values(content) do
-    content
-    |> Enum.map(fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
+    Enum.map(content, fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
   end
 
   defp to_valid_id(%{} = params) do
@@ -344,11 +343,12 @@ defmodule TdBg.BusinessConcept.Upload do
          %{content: content_schemas},
          lang
        ) do
-    content_schema = Format.flatten_content_fields(content_schemas, lang)
-    template_fields = Enum.filter(content_schema, &(Map.get(&1, "type") != "table"))
-
     fields = Map.keys(content)
-    content_schema = Enum.filter(template_fields, &(Map.get(&1, "name") in fields))
+
+    content_schema =
+      content_schemas
+      |> Format.flatten_content_fields(lang)
+      |> Enum.filter(&(Map.get(&1, "name") in fields))
 
     content =
       Parser.format_content(%{
