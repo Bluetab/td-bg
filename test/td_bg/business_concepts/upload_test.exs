@@ -1364,6 +1364,49 @@ defmodule TdBg.UploadTest do
 
       assert business_concept_version.in_progress
     end
+
+    test "bulk_upload/3 for table values upload" do
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      business_concept_upload = %{
+        path: "test/fixtures/table_field_upload.xlsx"
+      }
+
+      assert %{created: version_ids, errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      expected_results = [
+        [],
+        [],
+        [],
+        [%{"First Column" => "Value A1", "Second Column" => "Value B1"}],
+        [%{"First Column" => "Value A1", "Second Column" => "Value B1"}],
+        [
+          %{"First Column" => "Value A1", "Second Column" => "Value B1"},
+          %{"First Column" => "Value A2", "Second Column" => "Value B2"}
+        ],
+        [
+          %{"First Column" => "Value A1", "Second Column" => "Value B1"},
+          %{"First Column" => "Value A2", "Second Column" => "Value B2"}
+        ]
+      ]
+
+      [version_ids, expected_results]
+      |> Enum.zip()
+      |> Enum.map(fn {version_id, expected_result} ->
+        assert expected_result ==
+                 BusinessConceptVersion
+                 |> Repo.get!(version_id)
+                 |> Map.get(:content)
+                 |> Map.get("Table Field")
+                 |> Map.get("value")
+      end)
+    end
   end
 
   describe "get_headers?/0" do
