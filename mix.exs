@@ -6,7 +6,7 @@ defmodule TdBg.Mixfile do
       app: :td_bg,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "6.13.2-local"
+          nil -> "6.14.0-local"
           v -> v
         end,
       elixir: "~> 1.14",
