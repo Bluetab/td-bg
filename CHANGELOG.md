@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.14.0] 2024-11-07
+
+### Changed
+
+- [TD-6880] Add Concepts download and upload table type fields for XLSX
+
 ## [6.13.2] 2024-11-05
 
 ### Changed

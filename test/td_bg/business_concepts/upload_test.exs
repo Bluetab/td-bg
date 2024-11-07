@@ -239,6 +239,40 @@ defmodule TdBg.UploadTest do
     id: "5"
   }
 
+  @concept_table_validation %{
+    name: "Table Template",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "name" => "Table Field",
+            "label" => "Table Field",
+            "type" => "table",
+            "cardinality" => "*",
+            "values" => %{
+              "table_columns" => [
+                %{"mandatory" => true, "name" => "First Column"},
+                %{"mandatory" => true, "name" => "Second Column"}
+              ]
+            }
+          },
+          %{
+            "name" => "Multiple values",
+            "type" => "string",
+            "label" => "Multiple values",
+            "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+            "widget" => "checkbox",
+            "cardinality" => "*"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "table_template",
+    id: "6"
+  }
+
   @default_lang "en"
 
   setup_all do
@@ -260,6 +294,8 @@ defmodule TdBg.UploadTest do
     %{id: multiple_cardinality_template_id} =
       Templates.create_template(@concept_multiple_cardinality_validation)
 
+    %{id: table_template_id} = Templates.create_template(@concept_table_validation)
+
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
 
@@ -271,6 +307,7 @@ defmodule TdBg.UploadTest do
       Templates.delete(user_group_template_id)
       Templates.delete(multiple_user_group_template_id)
       Templates.delete(multiple_cardinality_template_id)
+      Templates.delete(table_template_id)
       HierarchyCache.delete(hierarchy_id)
     end)
 
@@ -1211,7 +1248,7 @@ defmodule TdBg.UploadTest do
       assert error.body.message == "concepts.upload.failed.invalid_field_value"
     end
 
-    test "bulk_upload/3 does not publish concept when content is invalid and there are no changes over the preious version" do
+    test "bulk_upload/3 does not publish concept when content is invalid and there are no changes over the previous version" do
       claims = build(:claims, role: "admin")
       domain = insert(:domain, external_id: "domain")
 
@@ -1243,6 +1280,132 @@ defmodule TdBg.UploadTest do
 
       assert error.body.context.error ==
                "multiple_values: should have at least %{count} item(s) - hierarchy_name: can't be blank"
+    end
+
+    test "bulk_upload/3 upload table type values" do
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      business_concept_upload = %{
+        path: "test/fixtures/upload_table.xlsx"
+      }
+
+      assert %{created: [version_id], errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      assert Repo.get!(BusinessConceptVersion, version_id).content == %{
+               "Multiple values" => %{"origin" => "file", "value" => ["v-1", "v-2"]},
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"First Column" => "First Field", "Second Column" => "Second Field"},
+                   %{"First Column" => "Third Field", "Second Column" => "Fourth Field"}
+                 ]
+               }
+             }
+    end
+
+    test "bulk_upload/3 invalid table values upload" do
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      business_concept_upload = %{
+        path: "test/fixtures/invalid_table_upload.xlsx"
+      }
+
+      # on auto publish required columns should be validated
+      assert %{created: [], errors: [error], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      assert error == %{
+               body: %{
+                 context: %{
+                   error:
+                     "Table Field: Second Column can't be blank - Table Field: First Column can't be blank",
+                   field: :content,
+                   row: 2,
+                   type: "Table Template"
+                 },
+                 message: "concepts.upload.failed.invalid_field_value"
+               },
+               error_type: "field_error"
+             }
+
+      # when auto publish is disabled, the version is saved in progress for further
+      assert %{created: [version_id], errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      business_concept_version = Repo.get!(BusinessConceptVersion, version_id)
+
+      assert business_concept_version.content == %{
+               "Multiple values" => %{"origin" => "file", "value" => ["v-1", "v-2"]},
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"First Column" => "", "Second Column" => "Second Field"},
+                   %{"First Column" => "Third Field", "Second Column" => ""},
+                   %{"First Column" => "", "Second Column" => ""}
+                 ]
+               }
+             }
+
+      assert business_concept_version.in_progress
+    end
+
+    test "bulk_upload/3 for table values upload" do
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      business_concept_upload = %{
+        path: "test/fixtures/table_field_upload.xlsx"
+      }
+
+      assert %{created: version_ids, errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      expected_results = [
+        [],
+        [],
+        [],
+        [%{"First Column" => "Value A1", "Second Column" => "Value B1"}],
+        [%{"First Column" => "Value A1", "Second Column" => "Value B1"}],
+        [
+          %{"First Column" => "Value A1", "Second Column" => "Value B1"},
+          %{"First Column" => "Value A2", "Second Column" => "Value B2"}
+        ],
+        [
+          %{"First Column" => "Value A1", "Second Column" => "Value B1"},
+          %{"First Column" => "Value A2", "Second Column" => "Value B2"}
+        ]
+      ]
+
+      [version_ids, expected_results]
+      |> Enum.zip()
+      |> Enum.map(fn {version_id, expected_result} ->
+        assert expected_result ==
+                 BusinessConceptVersion
+                 |> Repo.get!(version_id)
+                 |> Map.get(:content)
+                 |> Map.get("Table Field")
+                 |> Map.get("value")
+      end)
     end
   end
 
