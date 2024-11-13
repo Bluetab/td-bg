@@ -3,6 +3,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   use TdHypermedia, :view
 
   alias TdBgWeb.{BusinessConceptVersionView, DomainView, LinkView}
+  alias TdCache.I18nCache
   alias TdCache.UserCache
   alias TdDfLib.Content
   alias TdDfLib.Format
@@ -72,15 +73,24 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     }
   end
 
-  def render("list.json", %{hypermedia: hypermedia}) do
-    render_many_hypermedia(hypermedia, BusinessConceptVersionView, "list_item.json")
+  def render("list.json", %{hypermedia: hypermedia} = assigns) do
+    render_many_hypermedia(hypermedia, BusinessConceptVersionView, "list_item.json", %{
+      lang: Map.get(assigns, :locale)
+    })
   end
 
-  def render("list.json", %{business_concept_versions: business_concept_versions}) do
-    %{data: render_many(business_concept_versions, BusinessConceptVersionView, "list_item.json")}
+  def render("list.json", %{business_concept_versions: business_concept_versions} = assigns) do
+    %{
+      data:
+        render_many(business_concept_versions, BusinessConceptVersionView, "list_item.json", %{
+          lang: Map.get(assigns, :locale)
+        })
+    }
   end
 
-  def render("list_item.json", %{business_concept_version: business_concept_version}) do
+  def render("list_item.json", %{business_concept_version: business_concept_version} = assigns) do
+    lang = Map.get(assigns, :lang)
+
     view_fields = [
       "_actions",
       "id",
@@ -106,6 +116,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     test_fields = ["business_concept_id", "current", "version"]
 
     business_concept_version
+    |> set_i18n_property("name", lang)
+    |> set_i18n_content(lang)
     |> Map.take(view_fields ++ test_fields)
     |> Map.put("type", type)
     |> Map.put("type_label", type_label)
@@ -203,6 +215,34 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   end
 
   defp add_actions(concept, _assigns), do: concept
+
+  defp set_i18n_property(concept, property, lang) do
+    default_value = Map.get(concept, property)
+
+    Map.put(concept, property, Map.get(concept, "#{property}_#{lang}", default_value))
+  end
+
+  defp set_i18n_content(%{"content" => content} = concept, lang) do
+    {:ok, default_lang} = I18nCache.get_default_locale()
+
+    if lang == default_lang do
+      new_content =
+        content
+        |> Enum.filter(fn {key, _value} -> not String.match?(key, ~r/_[a-z]{2}$/) end)
+        |> Enum.into(%{})
+
+      Map.put(concept, "content", new_content)
+    else
+      suffix = "_#{lang}"
+      new_content =
+        content
+        |> Enum.filter(fn {key, _value} -> String.ends_with?(key, suffix) end)
+        |> Enum.map(fn {key, value} -> {String.replace_suffix(key, suffix, ""), value} end)
+        |> Enum.into(%{})
+
+      Map.put(concept, "content", new_content)
+    end
+  end
 
   defp maybe_add_i18n_content(concept, %{i18n_content: i18n_content}) do
     result =

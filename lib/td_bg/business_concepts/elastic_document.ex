@@ -12,6 +12,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
   alias TdCore.Search.ElasticDocumentProtocol
 
   defimpl Document, for: BusinessConceptVersion do
+    alias TdCache.ConceptCache
+    alias TdCache.I18nCache
     use ElasticDocument
 
     alias TdBg.Taxonomies
@@ -26,7 +28,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     def routing(_), do: false
 
     @impl Elasticsearch.Document
-    def encode(%BusinessConceptVersion{business_concept: business_concept} = bcv) do
+    def encode(%BusinessConceptVersion{business_concept: %{id: bc_id} = business_concept} = bcv) do
       %{type: type, domain: domain, confidential: confidential, shared_to: shared_to} =
         business_concept
 
@@ -40,13 +42,14 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         |> Map.get(:content)
         |> Format.search_values(template, domain_id: domain.id)
         |> Enum.map(fn {field, %{"value" => value}} -> {field, value} end)
+        |> put_i18n_content(bc_id, template, domain.id)
         |> Map.new()
 
       bcv
       |> Map.take([
         :id,
-        :business_concept_id,
         :name,
+        :business_concept_id,
         :status,
         :version,
         :last_change_at,
@@ -56,6 +59,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         :inserted_at
       ])
       |> Map.merge(BusinessConcepts.get_concept_counts(bcv.business_concept_id))
+      |> put_i18n_concept_property(:name, bcv)
       |> Map.put(:content, content)
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
@@ -63,6 +67,60 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:template, Map.take(template, [:name, :label, :scope, :subscope]))
       |> Map.put(:confidential, confidential)
       |> Map.put(:shared_to_names, shared_to_names)
+    end
+
+    defp put_i18n_concept_property(bcv_to_index, property, %{business_concept_id: id}) do
+      {:ok, default_locale} = I18nCache.get_default_locale()
+
+      case ConceptCache.get_i18n(id) do
+        {:ok, nil} ->
+          bcv_to_index
+
+        {:ok, i18n} ->
+          i18n
+          |> Enum.map(&map_property_locale(&1, property, default_locale))
+          |> Enum.reject(fn {_, v} -> v == nil end)
+          |> Map.new()
+          |> Map.merge(bcv_to_index)
+      end
+    end
+
+    defp map_property_locale({locale, value}, property, default_locale) do
+      locale_property =
+        if locale == default_locale,
+          do: property,
+          else: String.to_atom("#{property}_#{locale}")
+
+      i18n_value = Map.get(value, Atom.to_string(property))
+      {locale_property, i18n_value}
+    end
+
+    defp put_i18n_content(content, bc_id, template, domain_id) do
+      case ConceptCache.get_i18n(bc_id) do
+        {:ok, nil} ->
+          content
+
+        {:ok, i18n} ->
+          content
+          |> Enum.map(& map_content_locale(i18n, template, domain_id, &1))
+          |> List.flatten()
+          |> Map.new()
+      end
+    end
+
+    defp map_content_locale(i18n, template, domain_id, {field_name, value}) do
+      i18n
+      |> Enum.map(fn {locale, locale_value} ->
+        %{"value" => i18n_value} =
+          locale_value
+          |> Map.get("content", %{})
+          |> Format.search_values(template, domain_id: domain_id)
+          |> Map.get(field_name, %{"value" => nil})
+
+        {"#{field_name}_#{locale}", i18n_value}
+      end)
+      |> Enum.reject(fn {_, v} -> v == nil end)
+      |> then(&(&1 ++ [{"#{field_name}", value}]))
     end
 
     defp get_last_change_by(%BusinessConceptVersion{last_change_by: last_change_by}) do
@@ -96,47 +154,51 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
   defimpl ElasticDocumentProtocol, for: BusinessConceptVersion do
     use ElasticDocument
 
+    @translatable_fields [:name]
+
     def mappings(_) do
       content_mappings = %{properties: get_dynamic_mappings("bg")}
 
-      mapping_type = %{
-        id: %{type: "long"},
-        name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
-        description: %{type: "text"},
-        version: %{type: "long"},
-        template: %{
-          properties: %{
-            name: %{type: "text"},
-            label: %{type: "text", fields: @raw},
-            subscope: %{type: "keyword", null_value: ""}
-          }
-        },
-        status: %{type: "keyword"},
-        last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
-        inserted_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
-        current: %{type: "boolean"},
-        confidential: %{type: "boolean", fields: @raw},
-        in_progress: %{type: "boolean"},
-        domain: %{
-          properties: %{
-            id: %{type: "long"},
-            name: %{type: "text", fields: @raw_sort},
-            external_id: %{type: "text", fields: @raw}
-          }
-        },
-        last_change_by: %{
-          properties: %{
-            id: %{type: "long"},
-            user_name: %{type: "text", fields: @raw},
-            full_name: %{type: "text", fields: @raw}
-          }
-        },
-        domain_ids: %{type: "long"},
-        shared_to_names: %{type: "text", fields: %{raw: %{type: "keyword", null_value: ""}}},
-        link_tags: %{type: "keyword"},
-        has_rules: %{type: "boolean"},
-        content: content_mappings
-      }
+      mapping_type =
+        %{
+          id: %{type: "long"},
+          name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
+          description: %{type: "text"},
+          version: %{type: "long"},
+          template: %{
+            properties: %{
+              name: %{type: "text"},
+              label: %{type: "text", fields: @raw},
+              subscope: %{type: "keyword", null_value: ""}
+            }
+          },
+          status: %{type: "keyword"},
+          last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
+          inserted_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
+          current: %{type: "boolean"},
+          confidential: %{type: "boolean", fields: @raw},
+          in_progress: %{type: "boolean"},
+          domain: %{
+            properties: %{
+              id: %{type: "long"},
+              name: %{type: "text", fields: @raw_sort},
+              external_id: %{type: "text", fields: @raw}
+            }
+          },
+          last_change_by: %{
+            properties: %{
+              id: %{type: "long"},
+              user_name: %{type: "text", fields: @raw},
+              full_name: %{type: "text", fields: @raw}
+            }
+          },
+          domain_ids: %{type: "long"},
+          shared_to_names: %{type: "text", fields: %{raw: %{type: "keyword", null_value: ""}}},
+          link_tags: %{type: "keyword"},
+          has_rules: %{type: "boolean"},
+          content: content_mappings
+        }
+        |> add_locales_fields_mapping(@translatable_fields)
 
       settings = %{
         number_of_shards: 1,
