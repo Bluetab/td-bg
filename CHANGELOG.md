@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- [TD-6783] Concept searchable in any active language
+
 ## [6.14.0] 2024-11-07
 
 ### Changed
