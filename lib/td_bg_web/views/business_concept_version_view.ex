@@ -234,6 +234,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       Map.put(concept, "content", new_content)
     else
       suffix = "_#{lang}"
+
       new_content =
         content
         |> Enum.filter(fn {key, _value} -> String.ends_with?(key, suffix) end)
