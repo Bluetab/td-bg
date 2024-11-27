@@ -102,7 +102,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
 
         {:ok, i18n} ->
           content
-          |> Enum.map(& map_content_locale(i18n, template, domain_id, &1))
+          |> Enum.map(&map_content_locale(i18n, template, domain_id, &1))
           |> List.flatten()
           |> Map.new()
       end

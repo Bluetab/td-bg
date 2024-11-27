@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [6.15.0] 2024-11-27
 
 - [TD-6783] Concept searchable in any active language
 
