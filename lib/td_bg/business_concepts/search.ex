@@ -27,12 +27,18 @@ defmodule TdBg.BusinessConcept.Search do
 
   def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
 
+  def search_business_concept_versions(%{"scroll_id" => _} = params, _claims, _page, _size) do
+    params
+    |> Map.take(["scroll", "scroll_id"])
+    |> do_search()
+  end
+
   def search_business_concept_versions(params, %Claims{} = claims, page, size) do
     query = build_query(claims, params)
 
     sort = Map.get(params, "sort", ["_score", "name.raw"])
 
-    do_search(%{from: page * size, size: size, query: query, sort: sort})
+    do_search(%{from: page * size, size: size, query: query, sort: sort}, params)
   end
 
   defp build_query(%Claims{} = claims, params) do
@@ -45,12 +51,8 @@ defmodule TdBg.BusinessConcept.Search do
     |> Query.build_query(params)
   end
 
-  defp builder_opts(%{} = params) do
-    case params do
-      %{"only_linkable" => true} -> [linkable: true]
-      _ -> []
-    end
-  end
+  defp builder_opts(%{"only_linkable" => true}), do: [linkable: true]
+  defp builder_opts(_), do: []
 
   def count(query) do
     %{query: query, size: 0}
@@ -58,12 +60,37 @@ defmodule TdBg.BusinessConcept.Search do
     |> Map.get(:total)
   end
 
-  defp do_search(search) do
-    case Search.search(search, :concepts) do
+  defp do_search(search, params \\ %{})
+
+  defp do_search(%{"scroll_id" => _scroll_id} = search, _params) do
+    case Search.scroll(search) do
+      {:ok, %{results: results, total: total, scroll_id: scroll_id}} ->
+        results
+        |> map_results(total)
+        |> Map.put(:scroll_id, scroll_id)
+
       {:ok, %{results: results, total: total}} ->
-        %{results: Enum.map(results, &map_result/1), total: total}
+        map_results(results, total)
     end
   end
+
+  defp do_search(search, %{"scroll" => scroll}) do
+    case Search.search(search, :concepts, params: %{"scroll" => scroll}) do
+      {:ok, %{results: results, total: total, scroll_id: scroll_id}} ->
+        results
+        |> map_results(total)
+        |> Map.put(:scroll_id, scroll_id)
+    end
+  end
+
+  defp do_search(search, _params) do
+    case Search.search(search, :concepts) do
+      {:ok, %{results: results, total: total}} ->
+        map_results(results, total)
+    end
+  end
+
+  defp map_results(results, total), do: %{results: Enum.map(results, &map_result/1), total: total}
 
   defp map_result(%{"_source" => source}) do
     map_result(source)

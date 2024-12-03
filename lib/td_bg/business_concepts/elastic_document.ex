@@ -28,9 +28,14 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     def routing(_), do: false
 
     @impl Elasticsearch.Document
-    def encode(%BusinessConceptVersion{business_concept: %{id: bc_id} = business_concept} = bcv) do
-      %{type: type, domain: domain, confidential: confidential, shared_to: shared_to} =
-        business_concept
+    def encode(%BusinessConceptVersion{business_concept: business_concept} = bcv) do
+      %{
+        id: bc_id,
+        type: type,
+        domain: domain,
+        confidential: confidential,
+        shared_to: shared_to
+      } = business_concept
 
       template = TemplateCache.get_by_name!(type) || %{content: []}
       domain_ids = get_domain_ids(domain, shared_to)
@@ -45,6 +50,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         |> put_i18n_content(bc_id, template, domain.id)
         |> Map.new()
 
+      {last_change_at, last_change_by} = BusinessConceptVersion.get_last_change(bcv)
+
       bcv
       |> Map.take([
         :id,
@@ -52,7 +59,6 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         :business_concept_id,
         :status,
         :version,
-        :last_change_at,
         :current,
         :concept_count,
         :in_progress,
@@ -63,7 +69,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:content, content)
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
-      |> Map.put(:last_change_by, get_last_change_by(bcv))
+      |> Map.put(:last_change_by, get_user(last_change_by))
+      |> Map.put(:last_change_at, last_change_at)
       |> Map.put(:template, Map.take(template, [:name, :label, :scope, :subscope]))
       |> Map.put(:confidential, confidential)
       |> Map.put(:shared_to_names, shared_to_names)
@@ -121,10 +128,6 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       end)
       |> Enum.reject(fn {_, v} -> v == nil end)
       |> then(&(&1 ++ [{"#{field_name}", value}]))
-    end
-
-    defp get_last_change_by(%BusinessConceptVersion{last_change_by: last_change_by}) do
-      get_user(last_change_by)
     end
 
     defp get_user(user_id) do

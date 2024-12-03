@@ -33,95 +33,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     SwaggerDefinitions.business_concept_version_definitions()
   end
 
-  swagger_path :index do
-    description("List Business Concept Versions by business concept id")
-
-    parameters do
-      business_concept_id(:path, :integer, "Business Concept ID")
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
-  end
-
-  def index(conn, %{"business_concept_id" => business_concept_id}) do
-    claims = conn.assigns[:current_resource]
-
-    %{"filters" => %{"business_concept_id" => String.to_integer(business_concept_id)}}
-    |> Search.search_business_concept_versions(claims)
-    |> render_search_results(conn)
-  end
-
-  def index(conn, params) do
-    claims = conn.assigns[:current_resource]
-
-    params
-    |> Search.search_business_concept_versions(claims)
-    |> render_search_results(conn)
-  end
-
-  swagger_path :search do
-    description("Business Concept Versions")
-
-    parameters do
-      search(
-        :body,
-        Schema.ref(:BusinessConceptVersionFilterRequest),
-        "Search query and filter parameters"
-      )
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
-  end
-
-  def search(conn, params) do
-    claims = conn.assigns[:current_resource]
-    page = Map.get(params, "page", 0)
-    size = Map.get(params, "size", 50)
-
-    results =
-      %{results: business_concept_versions} =
-      params
-      |> Map.drop(["page", "size"])
-      |> Search.search_business_concept_versions(claims, page, size)
-
-    bcv_with_links =
-      business_concept_versions
-      |> Enum.map(&add_links(&1, claims))
-      |> Enum.map(&add_links_actions(&1, claims))
-
-    results
-    |> Map.put(:results, bcv_with_links)
-    |> render_search_results(conn)
-  end
-
-  defp render_search_results(%{results: business_concept_versions, total: total}, conn) do
-    hypermedia =
-      "business_concept_version"
-      |> collection_hypermedia(
-        conn,
-        business_concept_versions,
-        BusinessConceptVersion
-      )
-      |> put_actions(conn)
-
-    conn
-    |> put_resp_header("x-total-count", "#{total}")
-    |> render(
-      "list.json",
-      business_concept_versions: business_concept_versions,
-      hypermedia: hypermedia
-    )
-  end
-
-  def actions(conn, _params) do
-    hypermedia =
-      "business_concept_version"
-      |> collection_hypermedia(conn, [], BusinessConceptVersion)
-      |> put_actions(conn)
-
-    render(conn, "list.json", hypermedia: hypermedia)
-  end
-
   def xlsx(conn, params) do
     claims = conn.assigns[:current_resource]
 
@@ -316,18 +227,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       nil -> {:error, :not_found}
       error -> error
     end
-  end
-
-  defp add_links(
-         %{"business_concept_id" => business_concept_id} = business_concept_version,
-         claims
-       ) do
-    links =
-      business_concept_id
-      |> Links.get_links()
-      |> Enum.filter(fn link -> filter_link_by_permission(claims, link) end)
-
-    Map.put(business_concept_version, "links", links)
   end
 
   defp add_counts(%BusinessConceptVersion{} = business_concept_version) do
@@ -860,19 +759,19 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "confidential" => confidential
       }) do
     %{user_id: user_id} = claims = conn.assigns[:current_resource]
-    business_concept_version = BusinessConcepts.get_business_concept_version!(id)
-    business_concept = business_concept_version.business_concept
+
+    %{business_concept: business_concept} =
+      business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+
     template = BusinessConcepts.get_template(business_concept_version)
 
-    business_concept_attrs =
-      %{}
-      |> Map.put("last_change_by", user_id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-      |> Map.put("confidential", confidential)
+    business_concept_attrs = %{
+      "last_change_by" => user_id,
+      "last_change_at" => DateTime.utc_now(),
+      "confidential" => confidential
+    }
 
-    update_params =
-      %{}
-      |> Map.put("business_concept", business_concept_attrs)
+    update_params = %{"business_concept" => business_concept_attrs}
 
     with {:can, true} <-
            {:can,
@@ -1042,62 +941,19 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     )
   end
 
-  defp filter_link_by_permission(claims, %{resource_type: :data_structure, domain_id: ""}),
+  def filter_link_by_permission(claims, %{resource_type: :data_structure, domain_id: ""}),
     do: can?(claims, view_data_structure(:no_domain))
 
-  defp filter_link_by_permission(claims, %{resource_type: :data_structure, domain_ids: domain_ids}),
-       do: can?(claims, view_data_structure(domain_ids))
+  def filter_link_by_permission(claims, %{resource_type: :data_structure, domain_ids: domain_ids}),
+    do: can?(claims, view_data_structure(domain_ids))
 
-  defp filter_link_by_permission(claims, %{resource_type: :data_structure}),
+  def filter_link_by_permission(claims, %{resource_type: :data_structure}),
     do: can?(claims, view_data_structure(:no_domain))
 
-  defp filter_link_by_permission(claims, %{resource_type: :implementation, domain_id: domain_id}),
+  def filter_link_by_permission(claims, %{resource_type: :implementation, domain_id: domain_id}),
     do: can?(claims, view_quality_rule(%Domain{id: domain_id}))
 
-  defp filter_link_by_permission(_claims, _), do: false
-
-  defp add_links_actions(business_concept_version, claims) do
-    can_create_link = can?(claims, create_structure_link(business_concept_version))
-
-    Map.put(business_concept_version, "_actions", %{
-      "can_create_structure_link" => can_create_link
-    })
-  end
-
-  defp put_actions(hypermedia, conn) do
-    claims = conn.assigns[:current_resource]
-
-    [:upload, :auto_publish]
-    |> Enum.filter(&can?(claims, &1, BusinessConceptVersion))
-    |> Enum.reduce(%{}, fn
-      :upload, acc ->
-        Map.put(acc, "upload", %{
-          href: Routes.business_concept_version_path(conn, :upload),
-          method: "POST"
-        })
-
-      :auto_publish, acc ->
-        Map.put(acc, "autoPublish", %{
-          href: Routes.business_concept_version_path(conn, :upload),
-          method: "POST"
-        })
-    end)
-    |> Enum.map(fn {action, data} ->
-      %TdHypermedia.Link{
-        action: String.to_atom(action),
-        path: data.href,
-        method: String.to_atom(data.method),
-        schema: %{}
-      }
-    end)
-    |> then(
-      &Map.put(
-        hypermedia,
-        :collection_hypermedia,
-        Map.get(hypermedia, :collection_hypermedia) ++ &1
-      )
-    )
-  end
+  def filter_link_by_permission(_claims, _), do: false
 
   defp maybe_add_i18n_content(%{id: bcv_id} = bcv) do
     case I18nContents.get_all_i18n_content_by_bcv_id(bcv_id) do

@@ -2,6 +2,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
   use TdHypermedia, :view
 
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.{BusinessConceptVersionView, DomainView, LinkView}
   alias TdCache.I18nCache
   alias TdCache.UserCache
@@ -73,6 +74,12 @@ defmodule TdBgWeb.BusinessConceptVersionView do
     }
   end
 
+  def render("list.json", %{scroll_id: scroll_id} = assigns) do
+    "list.json"
+    |> render(Map.delete(assigns, :scroll_id))
+    |> Map.put("scroll_id", scroll_id)
+  end
+
   def render("list.json", %{hypermedia: hypermedia} = assigns) do
     render_many_hypermedia(hypermedia, BusinessConceptVersionView, "list_item.json", %{
       lang: Map.get(assigns, :locale)
@@ -129,6 +136,9 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       ) do
     {:ok, user} = UserCache.get(business_concept_version.last_change_by)
 
+    {last_change_at, last_change_by} =
+      BusinessConceptVersion.get_last_change(business_concept_version)
+
     %{
       id: business_concept_version.id,
       business_concept_id: business_concept_version.business_concept.id,
@@ -137,8 +147,8 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       confidential: business_concept_version.business_concept.confidential,
       completeness: Map.get(business_concept_version, :completeness),
       name: business_concept_version.name,
-      last_change_by: business_concept_version.last_change_by,
-      last_change_at: business_concept_version.last_change_at,
+      last_change_by: last_change_by,
+      last_change_at: last_change_at,
       domain: Map.take(business_concept_version.business_concept.domain, [:id, :name]),
       status: business_concept_version.status,
       current: business_concept_version.current,

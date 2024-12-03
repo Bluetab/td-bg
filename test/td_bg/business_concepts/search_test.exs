@@ -32,7 +32,9 @@ defmodule TdBg.BusinessConcepts.SearchTest do
         _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
 
-          assert %{bool: %{filter: [status_filter, confidential_filter]}} = query
+          assert %{bool: %{must: [query_filter, confidential_filter, status_filter]}} = query
+
+          assert query_filter == %{simple_query_string: %{query: "bar*"}}
 
           assert status_filter == %{
                    bool: %{
@@ -107,7 +109,7 @@ defmodule TdBg.BusinessConcepts.SearchTest do
         _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
 
-          assert %{bool: %{must: [simple_query, status_filter, confidential_filter]}} = query
+          assert %{bool: %{must: [simple_query, confidential_filter, status_filter]}} = query
 
           assert simple_query == %{simple_query_string: %{query: "bar*"}}
 
