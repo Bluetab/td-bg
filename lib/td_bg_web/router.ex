@@ -34,7 +34,8 @@ defmodule TdBgWeb.Router do
     )
 
     resources "/business_concepts", BusinessConceptController, only: [] do
-      resources("/versions", BusinessConceptVersionController, only: [:show, :index])
+      get("/versions", BusinessConceptVersionSearchController, :index)
+      get("/versions/:id", BusinessConceptVersionController, :show)
       resources("/shared_domains", SharedDomainController, only: [:update], singleton: true)
     end
 
@@ -45,7 +46,7 @@ defmodule TdBgWeb.Router do
     put("/business_concept_versions/:id", BusinessConceptVersionController, :update)
 
     resources "/business_concept_versions", BusinessConceptVersionController,
-      except: [:show, :new, :edit, :update] do
+      except: [:show, :new, :edit, :update, :index] do
       post("/submit", BusinessConceptVersionController, :send_for_approval)
       post("/publish", BusinessConceptVersionController, :publish)
       post("/restore", BusinessConceptVersionController, :restore)
@@ -60,8 +61,9 @@ defmodule TdBgWeb.Router do
       post("/links/structures", BusinessConceptLinkController, :create_structure_link)
     end
 
-    post("/business_concept_versions/search", BusinessConceptVersionController, :search)
-    get("/business_concept_versions/actions", BusinessConceptVersionController, :actions)
+    get("/business_concept_versions", BusinessConceptVersionSearchController, :index)
+    post("/business_concept_versions/search", BusinessConceptVersionSearchController, :search)
+    get("/business_concept_versions/actions", BusinessConceptVersionSearchController, :actions)
 
     get("/business_concept_filters", BusinessConceptFilterController, :index)
     post("/business_concept_filters/search", BusinessConceptFilterController, :search)

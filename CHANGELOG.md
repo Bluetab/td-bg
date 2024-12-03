@@ -1,14 +1,27 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-6938] Refactor query builder to use TdCore
+
 ## [6.15.0] 2024-11-27
+
+### Added
 
 - [TD-6783] Concept searchable in any active language
 
 ## [6.14.0] 2024-11-07
 
+### Added
+
+- [TD-6938] Add Concept Search by updated_at as range
+
 ### Changed
 
 - [TD-6880] Add Concepts download and upload table type fields for XLSX
+- [TD-6938] Refactor Concept Version Controller to move search to new Controller
 
 ## [6.13.2] 2024-11-05
 

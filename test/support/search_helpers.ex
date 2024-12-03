@@ -24,6 +24,11 @@ defmodule SearchHelpers do
     {:ok, %{"hits" => %{"hits" => docs, "total" => %{"relation" => "eq", "value" => total}}}}
   end
 
+  def scroll_response(hits, total \\ nil) do
+    {:ok, resp} = hits_response(hits, total)
+    {:ok, Map.put(resp, "_scroll_id", "some_scroll_id")}
+  end
+
   defp encode(target) do
     id = Elasticsearch.Document.id(target)
 
