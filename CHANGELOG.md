@@ -6,6 +6,10 @@
 
 - [TD-6938] Refactor query builder to use TdCore
 
+### Fixed
+
+- [TD-6996] Set lang from assigns locale in business_concept_version_search_view
+
 ## [6.15.0] 2024-11-27
 
 ### Added

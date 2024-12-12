@@ -2,6 +2,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
   use TdBgWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
+  import ExUnit.CaptureLog
   import Mox
 
   alias TdCore.Search.IndexWorker
@@ -116,6 +117,42 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
                %{"id" => domain_id, "external_id" => domain_external_id, "name" => domain_name},
                %{"id" => parent_id, "external_id" => parent_external_id, "name" => parent_name}
              ]
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "show default lang content when conn locale is nil ", %{conn: conn} do
+      content = %{
+        "Field1" => %{"value" => "First field", "origin" => "user"},
+        "Field2" => %{"value" => "Second field", "origin" => "user"}
+      }
+
+      bcv = insert(:business_concept_version, content: content, type: @template_name)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _, :post, "/concepts/_search", %{from: 0, query: _}, _ ->
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      log =
+        capture_log(fn ->
+          assert %{
+                   "data" => [
+                     %{"content" => %{"Field1" => "First field", "Field2" => "Second field"}}
+                   ]
+                 } =
+                   conn
+                   |> Plug.Conn.assign(:locale, nil)
+                   |> post(Routes.business_concept_version_search_path(conn, :search), %{})
+                   |> json_response(:ok)
+        end)
+
+      assert log =~ """
+             Language is not defined in the business_concept_version_search_view
+             """
     end
 
     for role <- ["admin", "service"] do

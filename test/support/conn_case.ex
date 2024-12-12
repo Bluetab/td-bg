@@ -27,7 +27,6 @@ defmodule TdBgWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import TdBg.Factory
-      import TdBgWeb.Authentication, only: [create_claims: 1]
 
       alias TdBgWeb.Router.Helpers, as: Routes
 
@@ -45,14 +44,20 @@ defmodule TdBgWeb.ConnCase do
       allow(parent, [TdBg.Cache.ConceptLoader, TdCore.Search.IndexWorker])
     end
 
+    locale = tags[:locale] || "en"
+
+    conn =
+      ConnTest.build_conn()
+      |> Plug.Conn.assign(:locale, locale)
+
     case tags[:authentication] do
       nil ->
-        [conn: ConnTest.build_conn()]
+        [conn: conn]
 
       auth_opts ->
         auth_opts
         |> Authentication.create_claims()
-        |> Authentication.create_user_auth_conn()
+        |> Authentication.create_user_auth_conn(conn)
         |> Authentication.assign_permissions(auth_opts[:permissions])
     end
   end
