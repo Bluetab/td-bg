@@ -22,6 +22,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Utils.Hasher
   alias TdBgWeb.ErrorView
   alias TdBgWeb.SwaggerDefinitions
+  alias TdCache.TagCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
 
@@ -916,9 +917,37 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> maybe_add_i18n_content()
       |> maybe_add_i18n_content_completeness(template)
 
+    expandable_tags = TagCache.list_types(expandable: "true")
+
+    original_links =
+      Links.get_links(business_concept_version,
+        lang: locale,
+        without_parent_business_concepts: true
+      )
+
+    linked_links =
+      original_links
+      |> Enum.filter(fn
+        %{resource_type: :concept, tags: tags} ->
+          length(expandable_tags -- expandable_tags -- tags) > 0
+
+        _ ->
+          false
+      end)
+      |> Enum.flat_map(fn data ->
+        data
+        |> Map.get(:resource_id)
+        |> Links.get_links(lang: locale)
+        |> Enum.map(
+          &(&1
+            |> Map.put(:business_concept_name, data.name)
+            |> Map.put(:business_concept_id, data.resource_id))
+        )
+      end)
+
     links =
-      business_concept_version
-      |> Links.get_links(lang: locale)
+      original_links
+      |> Enum.concat(linked_links)
       |> Enum.filter(fn link -> filter_link_by_permission(claims, link) end)
 
     actions = get_actions(claims, business_concept_version)

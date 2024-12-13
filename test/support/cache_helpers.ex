@@ -14,6 +14,7 @@ defmodule CacheHelpers do
   alias TdCache.LinkCache
   alias TdCache.RuleCache
   alias TdCache.StructureCache
+  alias TdCache.TagCache
   alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
   alias TdCache.UserCache
@@ -107,6 +108,21 @@ defmodule CacheHelpers do
 
     on_exit(fn -> LinkCache.delete(id, publish: false) end)
     :ok
+  end
+
+  def insert_tag(type, target_type, expandable) do
+    id = System.unique_integer([:positive])
+
+    tag = %{
+      id: id,
+      value: %{"type" => type, "target_type" => target_type, "expandable" => expandable},
+      updated_at: DateTime.utc_now()
+    }
+
+    TagCache.put(tag)
+
+    on_exit(fn -> TagCache.delete(id) end)
+    tag
   end
 
   def put_domain(%{id: id} = domain) do

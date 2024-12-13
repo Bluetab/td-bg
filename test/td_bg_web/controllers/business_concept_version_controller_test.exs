@@ -557,6 +557,126 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
              ] ||| concepts_links
     end
 
+    @tag authentication: [role: "admin"]
+    test "show links with expandable tags", %{conn: conn} do
+      %{business_concept_id: business_concept_id, business_concept: business_concept} =
+        bcv = insert(:business_concept_version)
+
+      %{
+        business_concept_id: bc_expandable_id,
+        business_concept: expandable_business_concept,
+        name: bc_name
+      } = expandable_bcv = insert(:business_concept_version)
+
+      %{
+        business_concept_id: bc_non_expandable_id,
+        business_concept: non_expandable_business_concept
+      } = non_expandable_bcv = insert(:business_concept_version)
+
+      {:ok, _} = CacheHelpers.put_concept(business_concept, bcv)
+      {:ok, _} = CacheHelpers.put_concept(expandable_business_concept, expandable_bcv)
+      {:ok, _} = CacheHelpers.put_concept(non_expandable_business_concept, non_expandable_bcv)
+
+      type_expandable = "expandable"
+      CacheHelpers.insert_tag(type_expandable, "business_concept", true)
+
+      CacheHelpers.insert_link(
+        business_concept_id,
+        "business_concept",
+        "business_concept",
+        bc_expandable_id,
+        type_expandable
+      )
+
+      CacheHelpers.insert_link(
+        business_concept_id,
+        "business_concept",
+        "business_concept",
+        bc_non_expandable_id
+      )
+
+      %{id: implementation_original_id} = CacheHelpers.insert_implementation()
+      %{id: implementation_expandable_id} = CacheHelpers.insert_implementation()
+      %{id: implementation_non_expandable_id} = CacheHelpers.insert_implementation()
+
+      CacheHelpers.insert_link(
+        implementation_original_id,
+        "implementation_ref",
+        "business_concept",
+        business_concept_id
+      )
+
+      CacheHelpers.insert_link(
+        implementation_expandable_id,
+        "implementation_ref",
+        "business_concept",
+        bc_expandable_id
+      )
+
+      CacheHelpers.insert_link(
+        implementation_non_expandable_id,
+        "implementation_ref",
+        "business_concept",
+        bc_non_expandable_id
+      )
+
+      %{id: structure_id} = CacheHelpers.insert_data_structure()
+      %{id: structure_expandable_id} = CacheHelpers.insert_data_structure()
+      %{id: structure_non_expandable_id} = CacheHelpers.insert_data_structure()
+
+      CacheHelpers.insert_link(
+        business_concept_id,
+        "business_concept",
+        "data_structure",
+        structure_id
+      )
+
+      CacheHelpers.insert_link(
+        bc_expandable_id,
+        "business_concept",
+        "data_structure",
+        structure_expandable_id
+      )
+
+      CacheHelpers.insert_link(
+        bc_non_expandable_id,
+        "business_concept",
+        "data_structure",
+        structure_non_expandable_id
+      )
+
+      text_bc_expandable_id = "#{bc_expandable_id}"
+
+      assert %{
+               "data" => %{
+                 "_embedded" => %{
+                   "links" => [
+                     %{},
+                     %{},
+                     %{
+                       "business_concept_id" => ^text_bc_expandable_id,
+                       "business_concept_name" => ^bc_name
+                     },
+                     %{
+                       "business_concept_id" => ^text_bc_expandable_id,
+                       "business_concept_name" => ^bc_name
+                     }
+                   ]
+                 }
+               }
+             } =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   "current"
+                 )
+               )
+               |> json_response(:ok)
+    end
+
     @tag authentication: [user_name: "not_an_admin"]
     test "show with actions", %{conn: conn, claims: claims} do
       %{id: domain_id} = CacheHelpers.insert_domain()
