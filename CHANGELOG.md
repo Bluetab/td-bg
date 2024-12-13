@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-6938] Refactor query builder to use TdCore
+- [TD-6888] Support for expandable Concept links
 
 ### Fixed
 

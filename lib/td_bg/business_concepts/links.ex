@@ -23,7 +23,7 @@ defmodule TdBg.BusinessConcepts.Links do
 
   def get_links(%BusinessConcept{id: id}, opts), do: get_links(id, opts)
 
-  def get_links(business_concept_id, opts) when is_integer(business_concept_id) do
+  def get_links(business_concept_id, opts) do
     {:ok, links} = LinkCache.list("business_concept", business_concept_id, opts)
     links
   end
