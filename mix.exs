@@ -75,9 +75,15 @@ defmodule TdBg.Mixfile do
       {:assertions, "~> 0.19", only: :test},
       {:mox, "~> 1.0", only: :test},
       {:sobelow, "~> 0.11", only: [:dev, :test]},
+<<<<<<< HEAD
       {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "6.16.0", override: true},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "6.15.0"},
       {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "6.16.0"},
+=======
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "6.15.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "6.15.0"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "6.15.1"},
+>>>>>>> 7e3fcbf569ecdb9bd8a59bf9cf32e00dfe9d8f11
       {:elixlsx, "~> 0.5.1"},
       {:xlsx_reader, "~> 0.7.0"}
     ]
