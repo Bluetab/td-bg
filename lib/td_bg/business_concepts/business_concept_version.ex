@@ -320,4 +320,24 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     valid_statuses = ["draft", "rejected"]
     BusinessConcepts.last?(bcv) && Enum.member?(valid_statuses, status)
   end
+
+  def get_last_change(%__MODULE__{
+        last_change_at: %DateTime{} = bcv_at,
+        last_change_by: bcv_by,
+        business_concept: %{last_change_at: %DateTime{} = bc_at, last_change_by: bc_by}
+      }) do
+    case DateTime.compare(bcv_at, bc_at) do
+      :gt -> {bcv_at, bcv_by}
+      _ -> {bc_at, bc_by}
+    end
+  end
+
+  def get_last_change(%__MODULE__{
+        last_change_at: nil,
+        business_concept: %{last_change_at: last_change_at, last_change_by: last_change_by}
+      }),
+      do: {last_change_at, last_change_by}
+
+  def get_last_change(%__MODULE__{last_change_at: last_change_at, last_change_by: last_change_by}),
+    do: {last_change_at, last_change_by}
 end

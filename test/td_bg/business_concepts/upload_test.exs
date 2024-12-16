@@ -1133,7 +1133,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 row errors" do
-      claims = get_auth_claims()
+      %{claims: claims} = Authentication.create_claims(user_name: "not_an_admin")
       CacheHelpers.insert_domain(%{external_id: "creation"})
       domain_update = CacheHelpers.insert_domain(%{external_id: "update"})
       %{id: domain_auto_publish_id} = CacheHelpers.insert_domain(%{external_id: "auto_publish"})
@@ -1456,16 +1456,6 @@ defmodule TdBg.UploadTest do
         })
       ]
     }
-  end
-
-  defp get_auth_claims do
-    auth_opts = [user_name: "not_an_admin", permissions: []]
-
-    auth_opts
-    |> Authentication.create_claims()
-    |> Authentication.create_user_auth_conn()
-    |> Authentication.assign_permissions(auth_opts[:permissions])
-    |> Keyword.get(:claims)
   end
 
   defp insert_i18n_messages(_) do

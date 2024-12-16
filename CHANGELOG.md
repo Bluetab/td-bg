@@ -1,14 +1,33 @@
 # Changelog
 
+## [6.16.0] 2024-12-16
+
+### Added
+
+- [TD-6938] Refactor query builder to use TdCore
+- [TD-6888] Support for expandable Concept links
+- [TD-6982] Added SSL and ApiKey configuration for Elasticsearch
+
+### Fixed
+
+- [TD-6996] Set lang from assigns locale in business_concept_version_search_view
+
 ## [6.15.0] 2024-11-27
+
+### Added
 
 - [TD-6783] Concept searchable in any active language
 
 ## [6.14.0] 2024-11-07
 
+### Added
+
+- [TD-6938] Add Concept Search by updated_at as range
+
 ### Changed
 
 - [TD-6880] Add Concepts download and upload table type fields for XLSX
+- [TD-6938] Refactor Concept Version Controller to move search to new Controller
 
 ## [6.13.2] 2024-11-05
 

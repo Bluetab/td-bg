@@ -4,11 +4,11 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   """
 
   import TdCore.Search.Query,
-    only: [term_or_terms: 2, must: 2, must_not: 2, should: 2, bool_query: 1]
+    only: [term_or_terms: 2, must_not: 2, should: 2]
 
   alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdBg.BusinessConcepts.Search.Filters
   alias TdCore.Search.ElasticDocumentProtocol
+  alias TdCore.Search.Query
 
   @match_all %{match_all: %{}}
   @match_none %{match_none: %{}}
@@ -133,77 +133,8 @@ defmodule TdBg.BusinessConcepts.Search.Query do
 
   defp maybe_bool_query(%{} = bool) when map_size(bool) >= 1, do: %{bool: bool}
 
-  def build_query(filters, %{"must" => _} = params) do
-    query = Map.get(params, "query")
-
-    params
-    |> Map.take(["must", "query"])
-    |> Enum.reduce(%{must: filters}, &reduce_query/2)
-    |> add_query_should(query)
-    |> bool_query()
-  end
-
   def build_query(filters, params) do
-    params
-    |> Map.take(["filters", "query"])
-    |> Enum.reduce(%{filter: filters}, &reduce_query/2)
-    |> bool_query()
-  end
-
-  defp add_query_should(filters, nil), do: filters
-
-  defp add_query_should(filters, query) do
-    should = [
-      %{
-        multi_match: %{
-          query: maybe_wildcard(query),
-          type: "best_fields",
-          operator: "and"
-        }
-      }
-    ]
-
-    Map.put(filters, :should, should)
-  end
-
-  defp reduce_query({"filters", %{} = user_filters}, %{filter: filters} = acc)
-       when map_size(user_filters) > 0 do
-    %{acc | filter: merge_filters(filters, user_filters)}
-  end
-
-  defp reduce_query({"filters", %{}}, %{} = acc) do
-    acc
-  end
-
-  defp reduce_query({"must", %{} = user_filters}, %{must: filters} = acc)
-       when map_size(user_filters) > 0 do
-    %{acc | must: merge_filters(filters, user_filters)}
-  end
-
-  defp reduce_query({"must", %{}}, %{} = acc) do
-    acc
-  end
-
-  defp reduce_query({"query", query}, acc) do
-    must(acc, %{simple_query_string: %{query: maybe_wildcard(query)}})
-  end
-
-  defp merge_filters(filters, user_filters) do
     aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
-
-    case Enum.uniq(filters ++ Filters.build_filters(user_filters, aggs)) do
-      [_, _ | _] = filters -> Enum.reject(filters, &(&1 == %{match_all: %{}}))
-      filters -> filters
-    end
-  end
-
-  defp maybe_wildcard(query) do
-    case String.last(query) do
-      nil -> query
-      "\"" -> query
-      ")" -> query
-      " " -> query
-      _ -> "#{query}*"
-    end
+    Query.build_query(filters, params, aggs)
   end
 end

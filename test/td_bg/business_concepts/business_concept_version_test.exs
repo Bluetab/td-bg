@@ -281,5 +281,41 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersionTest do
 
       assert encoded_content == %{"domain" => 1, "domains" => [1, 2]}
     end
+
+    test "encodes the latest last_changes" do
+      %{id: last_user_id, email: email} = CacheHelpers.insert_user()
+      %{id: old_user_id} = CacheHelpers.insert_user()
+
+      last_datetime = DateTime.utc_now()
+      old_datetime = DateTime.add(last_datetime, -5, :day)
+
+      bcv =
+        insert(:business_concept_version,
+          last_change_at: last_datetime,
+          last_change_by: last_user_id,
+          business_concept:
+            build(:business_concept, last_change_at: old_datetime, last_change_by: old_user_id)
+        )
+        |> Repo.preload(business_concept: :shared_to)
+
+      assert %{
+               last_change_at: ^last_datetime,
+               last_change_by: %{id: ^last_user_id, email: ^email}
+             } = Document.encode(bcv)
+
+      bcv =
+        insert(:business_concept_version,
+          last_change_at: old_datetime,
+          last_change_by: old_user_id,
+          business_concept:
+            build(:business_concept, last_change_at: last_datetime, last_change_by: last_user_id)
+        )
+        |> Repo.preload(business_concept: :shared_to)
+
+      assert %{
+               last_change_at: ^last_datetime,
+               last_change_by: %{id: ^last_user_id, email: ^email}
+             } = Document.encode(bcv)
+    end
   end
 end

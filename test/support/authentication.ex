@@ -5,7 +5,6 @@ defmodule TdBgWeb.Authentication do
   """
   import Plug.Conn
 
-  alias Phoenix.ConnTest
   alias TdBg.Auth.Claims
   alias TdBg.Auth.Guardian
 
@@ -15,12 +14,8 @@ defmodule TdBgWeb.Authentication do
     |> put_req_header("authorization", "Bearer #{jwt}")
   end
 
-  def create_user_auth_conn(%{} = claims) do
-    %{jwt: jwt, claims: claims} = authenticate(claims)
-
-    conn =
-      ConnTest.build_conn()
-      |> put_auth_headers(jwt)
+  def create_user_auth_conn(%{jwt: jwt, claims: claims}, conn) do
+    conn = put_auth_headers(conn, jwt)
 
     [conn: conn, jwt: jwt, claims: claims]
   end
@@ -43,6 +38,7 @@ defmodule TdBgWeb.Authentication do
       user_name: user_name,
       role: role
     }
+    |> authenticate()
   end
 
   def assign_permissions(context, nil), do: context
