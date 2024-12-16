@@ -6,6 +6,7 @@
 
 - [TD-6938] Refactor query builder to use TdCore
 - [TD-6888] Support for expandable Concept links
+- [TD-6982] Added SSL and ApiKey configuration for Elasticsearch
 
 ### Fixed
 
