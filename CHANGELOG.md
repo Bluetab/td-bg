@@ -6,7 +6,6 @@
 
 - [TD-7011] Add i18n content non-translatable fields
 
-
 ## [6.16.0] 2024-12-16
 
 ### Added
