@@ -1259,38 +1259,6 @@ defmodule TdBg.BusinessConceptsTest do
       assert BusinessConcepts.get_confidential_ids() == [bc1.id]
     end
 
-    @tag template: [
-           %{
-             "name" => "group",
-             "fields" => [
-               %{
-                 "name" => "multiple_1",
-                 "type" => "string",
-                 "group" => "Multiple Group",
-                 "label" => "Multiple 1",
-                 "values" => %{
-                   "fixed" => ["1", "2", "3", "4", "5"]
-                 },
-                 "widget" => "dropdown",
-                 "cardinality" => "*"
-               }
-             ]
-           }
-         ]
-    test "search_fields/1 returns a business_concept_version with default values in its content" do
-      alias Elasticsearch.Document
-
-      business_concept = insert(:business_concept, type: @template_name, shared_to: [])
-
-      business_concept_version =
-        insert(:business_concept_version, business_concept: business_concept)
-
-      %{template: template, content: content} = Document.encode(business_concept_version)
-
-      assert Map.get(template, :name) == @template_name
-      assert Map.get(content, "multiple_1") == [""]
-    end
-
     @tag template: @content
     test "create new bc version with i18n_content" do
       claims = build(:claims)

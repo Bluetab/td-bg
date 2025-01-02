@@ -12,11 +12,11 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
   alias TdCore.Search.ElasticDocumentProtocol
 
   defimpl Document, for: BusinessConceptVersion do
-    alias TdCache.ConceptCache
-    alias TdCache.I18nCache
     use ElasticDocument
 
+    alias TdBg.I18nContents.I18nContents
     alias TdBg.Taxonomies
+    alias TdCache.I18nCache
     alias TdCache.TemplateCache
     alias TdCache.UserCache
     alias TdDfLib.Format
@@ -28,9 +28,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     def routing(_), do: false
 
     @impl Elasticsearch.Document
-    def encode(%BusinessConceptVersion{business_concept: business_concept} = bcv) do
+    def encode(%BusinessConceptVersion{id: bcv_id, business_concept: business_concept} = bcv) do
       %{
-        id: bc_id,
         type: type,
         domain: domain,
         confidential: confidential,
@@ -46,9 +45,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         bcv
         |> Map.get(:content)
         |> Format.search_values(template, domain_id: domain.id)
-        |> Enum.map(fn {field, %{"value" => value}} -> {field, value} end)
-        |> put_i18n_content(bc_id, template, domain.id)
-        |> Map.new()
+        |> put_i18n_content(bcv_id, template)
+        |> Enum.into(%{}, fn {field, %{"value" => value}} -> {field, value} end)
 
       {last_change_at, last_change_by} = BusinessConceptVersion.get_last_change(bcv)
 
@@ -76,58 +74,59 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:shared_to_names, shared_to_names)
     end
 
-    defp put_i18n_concept_property(bcv_to_index, property, %{business_concept_id: id}) do
+    defp put_i18n_concept_property(bcv_to_index, property, %{id: id}) do
       {:ok, default_locale} = I18nCache.get_default_locale()
 
-      case ConceptCache.get_i18n(id) do
-        {:ok, nil} ->
-          bcv_to_index
-
-        {:ok, i18n} ->
+      case I18nContents.get_all_i18n_content_by_bcv_id(id) do
+        [_ | _] = i18n ->
           i18n
           |> Enum.map(&map_property_locale(&1, property, default_locale))
           |> Enum.reject(fn {_, v} -> v == nil end)
           |> Map.new()
           |> Map.merge(bcv_to_index)
+
+        _ ->
+          bcv_to_index
       end
     end
 
-    defp map_property_locale({locale, value}, property, default_locale) do
+    defp map_property_locale(%{lang: locale} = i18n, property, default_locale) do
       locale_property =
         if locale == default_locale,
           do: property,
           else: String.to_atom("#{property}_#{locale}")
 
-      i18n_value = Map.get(value, Atom.to_string(property))
+      i18n_value = Map.get(i18n, property)
+
       {locale_property, i18n_value}
     end
 
-    defp put_i18n_content(content, bc_id, template, domain_id) do
-      case ConceptCache.get_i18n(bc_id) do
-        {:ok, nil} ->
-          content
+    defp put_i18n_content(content, bcv_id, template) do
+      case I18nContents.get_all_i18n_content_by_bcv_id(bcv_id) do
+        [_ | _] = i18n ->
+          i18n
+          |> map_content_locale(template)
+          |> Map.merge(content)
 
-        {:ok, i18n} ->
+        _ ->
           content
-          |> Enum.map(&map_content_locale(i18n, template, domain_id, &1))
-          |> List.flatten()
-          |> Map.new()
       end
     end
 
-    defp map_content_locale(i18n, template, domain_id, {field_name, value}) do
+    defp map_content_locale(i18n, template) do
       i18n
-      |> Enum.map(fn {locale, locale_value} ->
-        %{"value" => i18n_value} =
-          locale_value
-          |> Map.get("content", %{})
-          |> Format.search_values(template, domain_id: domain_id)
-          |> Map.get(field_name, %{"value" => nil})
-
-        {"#{field_name}_#{locale}", i18n_value}
+      |> Enum.map(fn %{lang: locale, content: i18n_content} ->
+        i18n_content
+        |> Format.search_values(template, apply_default_values?: false)
+        |> add_lang_suffix(locale)
       end)
-      |> Enum.reject(fn {_, v} -> v == nil end)
-      |> then(&(&1 ++ [{"#{field_name}", value}]))
+      |> Enum.reduce(%{}, fn map, acc -> Map.merge(acc, map) end)
+    end
+
+    defp add_lang_suffix(formatted_content, locale) do
+      Enum.into(formatted_content, %{}, fn {key, value} ->
+        {"#{key}_#{locale}", value}
+      end)
     end
 
     defp get_user(user_id) do

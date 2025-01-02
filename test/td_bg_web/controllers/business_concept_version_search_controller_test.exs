@@ -18,6 +18,143 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
     }
   ]
 
+  @complete_content [
+    %{
+      "name" => "Basic",
+      "fields" => [
+        %{
+          "name" => "df_description",
+          "type" => "enriched_text",
+          "label" => "Descripción",
+          "values" => nil,
+          "widget" => "enriched_text",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "basic_list",
+          "type" => "string",
+          "label" => "Basic List",
+          "values" => %{"fixed" => ["1", "2", "3", "4"]},
+          "widget" => "dropdown",
+          "cardinality" => "1"
+        },
+        %{
+          "name" => "basic_switch",
+          "type" => "string",
+          "label" => "Basic Switch",
+          "values" => %{
+            "switch" => %{
+              "on" => "basic_list",
+              "values" => %{
+                "1" => ["a", "b"],
+                "2" => ["c", "d"]
+              }
+            }
+          },
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "default_dependency",
+          "type" => "string",
+          "label" => "Dependent field with default values",
+          "values" => %{
+            "switch" => %{
+              "on" => "basic_list",
+              "values" => %{
+                "1" => ["1.1", "1..2", "1.3", "1.4", "1.5"],
+                "2" => ["2.1", "2.2", "2.3"],
+                "3" => ["3.1", "3.2", "3.3", "3.4", "3.5"]
+              }
+            }
+          },
+          "widget" => "dropdown",
+          "default" => %{
+            "value" => %{"1" => "1.1", "2" => "2.2", "3" => "3.4"},
+            "origin" => "default"
+          },
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "Identificador",
+          "type" => "string",
+          "label" => "Identificador",
+          "values" => nil,
+          "widget" => "identifier",
+          "cardinality" => "0"
+        },
+        %{
+          "name" => "multiple_values",
+          "type" => "string",
+          "label" => "Multiple values",
+          "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+          "widget" => "checkbox",
+          "cardinality" => "*"
+        },
+        %{
+          "name" => "user1",
+          "type" => "user",
+          "label" => "User 1",
+          "values" => %{"role_users" => "Data Owner", "processed_users" => []},
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "User Group",
+          "type" => "user_group",
+          "label" => "User Group",
+          "values" => %{
+            "role_groups" => "Data Owner",
+            "processed_users" => [],
+            "processed_groups" => []
+          },
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "text_area",
+          "type" => "string",
+          "label" => "Text area",
+          "values" => "",
+          "widget" => "string",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "enriched_text",
+          "type" => "enriched_text",
+          "label" => "Enriched text",
+          "values" => "",
+          "widget" => "enriched_text",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "text_input",
+          "type" => "string",
+          "label" => "Text input",
+          "values" => "",
+          "widget" => "string",
+          "cardinality" => "1"
+        },
+        %{
+          "name" => "empty test",
+          "type" => "string",
+          "label" => "empty test",
+          "values" => %{"fixed" => ["a", "s", "d"]},
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        },
+        %{
+          "name" => "Hierarchie2",
+          "type" => "hierarchy",
+          "label" => "Hierarchie",
+          "values" => %{"hierarchy" => %{"id" => 4, "min_depth" => "2"}},
+          "widget" => "dropdown",
+          "cardinality" => "?"
+        }
+      ]
+    }
+  ]
+
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
     :ok
@@ -153,6 +290,89 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
       assert log =~ """
              Language is not defined in the business_concept_version_search_view
              """
+    end
+
+    @tag authentication: [role: "admin"]
+    test "return i18n content non-translatable fields ", %{conn: conn} do
+      template_name = "complete_template"
+
+      template = %{
+        id: System.unique_integer([:positive]),
+        label: "df_test",
+        name: template_name,
+        scope: "bg",
+        content: @complete_content
+      }
+
+      CacheHelpers.insert_template(template)
+
+      busines_concept_content = %{
+        "df_description" => %{
+          "value" => %{
+            "document" => %{
+              "nodes" => [
+                %{
+                  "nodes" => [
+                    %{
+                      "marks" => [],
+                      "object" => "text",
+                      "text" => "enrich text"
+                    }
+                  ],
+                  "object" => "block",
+                  "type" => "paragraph"
+                }
+              ]
+            }
+          },
+          "origin" => "user"
+        },
+        "basic_list" => %{"value" => "1", "origin" => "user"},
+        "Identificador" => %{"value" => "foo", "origin" => "user"},
+        "text_area" => %{"value" => "default_foo", "origin" => "user"}
+      }
+
+      %{id: bcv_id} =
+        bcv =
+        insert(:business_concept_version, content: busines_concept_content, type: template_name)
+
+      i18n_content = %{
+        "text_input" => %{"value" => "foo_translatable", "origin" => "user"},
+        "text_area" => %{"value" => "bar_translatable", "origin" => "user"}
+      }
+
+      i18n_name = "i18n_name"
+
+      %{lang: lang} =
+        insert(:i18n_content,
+          business_concept_version_id: bcv_id,
+          content: i18n_content,
+          lang: "es",
+          name: i18n_name
+        )
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _, :post, "/concepts/_search", %{from: 0, query: _}, _ ->
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      assert %{"data" => [%{"name" => ^i18n_name, "content" => content}]} =
+               conn
+               |> Plug.Conn.assign(:locale, lang)
+               |> post(Routes.business_concept_version_search_path(conn, :search), %{})
+               |> json_response(:ok)
+
+      assert %{
+               "Identificador" => "foo",
+               "basic_list" => "1",
+               "df_description" => "",
+               "enriched_text" => "",
+               "text_area" => "bar_translatable",
+               "text_input" => "foo_translatable"
+             } = content
     end
 
     for role <- ["admin", "service"] do
