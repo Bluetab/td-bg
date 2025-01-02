@@ -67,13 +67,13 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
 
     {:ok, default_lang} = I18nCache.get_default_locale()
 
-    if lang == default_lang or is_nil(lang) do
-      new_content =
-        content
-        |> Enum.filter(fn {key, _value} -> not String.match?(key, ~r/_[a-z]{2}$/) end)
-        |> Enum.into(%{})
+    default_content =
+      content
+      |> Enum.filter(fn {key, _value} -> not String.match?(key, ~r/_[a-z]{2}$/) end)
+      |> Enum.into(%{})
 
-      Map.put(concept, "content", new_content)
+    if lang == default_lang or is_nil(lang) do
+      Map.put(concept, "content", default_content)
     else
       suffix = "_#{lang}"
 
@@ -82,6 +82,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
         |> Enum.filter(fn {key, _value} -> String.ends_with?(key, suffix) end)
         |> Enum.map(fn {key, value} -> {String.replace_suffix(key, suffix, ""), value} end)
         |> Enum.into(%{})
+        |> then(&Map.merge(default_content, &1))
 
       Map.put(concept, "content", new_content)
     end
