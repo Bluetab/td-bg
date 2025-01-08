@@ -1,7 +1,6 @@
 defmodule TdBgWeb.BusinessConceptVersionSearchController do
   use TdBgWeb, :controller
   use TdHypermedia, :controller
-  use PhoenixSwagger
 
   import Canada, only: [can?: 2]
   import Canada.Can, only: [can?: 3]
@@ -10,25 +9,10 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Links
   alias TdBgWeb.BusinessConceptVersionController
-  alias TdBgWeb.SwaggerDefinitions
 
   require Logger
 
   action_fallback(TdBgWeb.FallbackController)
-
-  def swagger_definitions do
-    SwaggerDefinitions.business_concept_version_definitions()
-  end
-
-  swagger_path :index do
-    description("List Business Concept Versions by business concept id")
-
-    parameters do
-      business_concept_id(:path, :integer, "Business Concept ID")
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
-  end
 
   def index(conn, %{"business_concept_id" => business_concept_id}) do
     claims = conn.assigns[:current_resource]
@@ -44,20 +28,6 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     params
     |> Search.search_business_concept_versions(claims)
     |> render_search_results(conn)
-  end
-
-  swagger_path :search do
-    description("Business Concept Versions")
-
-    parameters do
-      search(
-        :body,
-        Schema.ref(:BusinessConceptVersionFilterRequest),
-        "Search query and filter parameters"
-      )
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionsResponse))
   end
 
   def search(conn, params) do

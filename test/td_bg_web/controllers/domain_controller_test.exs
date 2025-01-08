@@ -1,6 +1,5 @@
 defmodule TdBgWeb.DomainControllerTest do
   use TdBgWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Assertions
   import Mox
@@ -45,7 +44,7 @@ defmodule TdBgWeb.DomainControllerTest do
     setup :verify_on_exit!
 
     @tag authentication: [user_name: "non_admin_user"]
-    test "list all domains user can view", %{conn: conn, swagger_schema: schema, claims: claims} do
+    test "list all domains user can view", %{conn: conn, claims: claims} do
       %{id: domain_id} = domain = insert(:domain)
       CacheHelpers.put_domain(domain)
 
@@ -54,7 +53,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.domain_path(conn, :index, %{actions: "show, update"}))
-               |> validate_resp_schema(schema, "DomainsResponse")
                |> json_response(:ok)
 
       assert [%{"id" => ^domain_id}] = data
@@ -62,7 +60,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.domain_path(conn, :index, %{actions: "show, update", filter: "all"}))
-               |> validate_resp_schema(schema, "DomainsResponse")
                |> json_response(:ok)
 
       assert [] = data
@@ -72,7 +69,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.domain_path(conn, :index, %{actions: "show, update"}))
-               |> validate_resp_schema(schema, "DomainsResponse")
                |> json_response(:ok)
 
       assert [%{"id" => ^domain_id}] = data
@@ -81,7 +77,6 @@ defmodule TdBgWeb.DomainControllerTest do
     @tag authentication: [user_name: "non_admin_user"]
     test "list all domains user has permission over specified actions", %{
       conn: conn,
-      swagger_schema: schema,
       claims: claims
     } do
       %{id: domain_id} = domain = insert(:domain)
@@ -92,7 +87,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.domain_path(conn, :index, %{actions: actions}))
-               |> validate_resp_schema(schema, "DomainsResponse")
                |> json_response(:ok)
 
       assert [] = data
@@ -105,20 +99,18 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.domain_path(conn, :index, %{actions: actions, filter: "all"}))
-               |> validate_resp_schema(schema, "DomainsResponse")
                |> json_response(:ok)
 
       assert [%{"id" => ^domain_id}] = data
     end
 
     @tag authentication: [user_name: "non_admin_user"]
-    test "user cant view any domain", %{conn: conn, swagger_schema: schema} do
+    test "user cant view any domain", %{conn: conn} do
       insert(:domain)
 
       assert %{"data" => []} =
                conn
                |> get(Routes.domain_path(conn, :index, %{actions: "show"}))
-               |> validate_resp_schema(schema, "DomainsResponse")
                |> json_response(:ok)
     end
   end
@@ -127,7 +119,6 @@ defmodule TdBgWeb.DomainControllerTest do
     @tag authentication: [user_name: "non_admin_user"]
     test "includes parentable ids", %{
       conn: conn,
-      swagger_schema: schema,
       claims: claims
     } do
       %{id: parent_id} = parent = insert(:domain)
@@ -146,7 +137,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.domain_path(conn, :show, domain))
-               |> validate_resp_schema(schema, "DomainResponse")
                |> json_response(:ok)
 
       assert %{"parentable_ids" => parentable_ids} = data
@@ -156,7 +146,7 @@ defmodule TdBgWeb.DomainControllerTest do
 
   describe "create domain" do
     @tag authentication: [role: "admin"]
-    test "renders domain when data is valid", %{conn: conn, swagger_schema: schema} do
+    test "renders domain when data is valid", %{conn: conn} do
       %{id: parent_id} = insert(:domain)
 
       %{description: description, name: name, external_id: external_id, parent_id: ^parent_id} =
@@ -167,7 +157,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> post(Routes.domain_path(conn, :create), domain: params)
-               |> validate_resp_schema(schema, "DomainResponse")
                |> json_response(:created)
 
       assert %{
@@ -204,7 +193,7 @@ defmodule TdBgWeb.DomainControllerTest do
                |> post(Routes.domain_path(conn, :create), domain: params)
                |> json_response(:unprocessable_entity)
 
-      assert %{"name" => ["blank"]} = errors
+      assert %{"name" => ["can't be blank"]} = errors
     end
   end
 
@@ -214,7 +203,6 @@ defmodule TdBgWeb.DomainControllerTest do
     @tag authentication: [role: "admin"]
     test "renders domain when data is valid", %{
       conn: conn,
-      swagger_schema: schema,
       domain: %{id: id} = domain
     } do
       params = %{
@@ -226,7 +214,6 @@ defmodule TdBgWeb.DomainControllerTest do
       assert %{"data" => data} =
                conn
                |> put(Routes.domain_path(conn, :update, domain), domain: params)
-               |> validate_resp_schema(schema, "DomainResponse")
                |> json_response(:ok)
 
       assert data["id"] == id
@@ -239,7 +226,6 @@ defmodule TdBgWeb.DomainControllerTest do
     @tag authentication: [role: "admin"]
     test "updates parent_id if user has permission to update domain parent", %{
       conn: conn,
-      swagger_schema: schema,
       domain: domain
     } do
       %{id: parent_id} = insert(:domain)
@@ -249,7 +235,6 @@ defmodule TdBgWeb.DomainControllerTest do
                |> patch(Routes.domain_path(conn, :update, domain),
                  domain: %{"parent_id" => parent_id}
                )
-               |> validate_resp_schema(schema, "DomainResponse")
                |> json_response(:ok)
 
       assert %{"parent_id" => ^parent_id} = data
@@ -279,7 +264,7 @@ defmodule TdBgWeb.DomainControllerTest do
                |> put(Routes.domain_path(conn, :update, domain), domain: params)
                |> json_response(:unprocessable_entity)
 
-      assert %{"name" => ["blank"]} = errors
+      assert %{"name" => ["can't be blank"]} = errors
     end
   end
 
@@ -302,7 +287,7 @@ defmodule TdBgWeb.DomainControllerTest do
     setup :create_domain
 
     @tag authentication: [role: "admin"]
-    test "fetch counter", %{conn: conn, swagger_schema: schema, domain: domain} do
+    test "fetch counter", %{conn: conn, domain: domain} do
       bcv = insert(:business_concept_version)
       %{id: child_id} = CacheHelpers.insert_domain(parent_id: domain.id)
 
@@ -335,7 +320,6 @@ defmodule TdBgWeb.DomainControllerTest do
                    user_name
                  )
                )
-               |> validate_resp_schema(schema, "BCInDomainCountResponse")
                |> json_response(:ok)
 
       assert %{"counter" => 1} = data

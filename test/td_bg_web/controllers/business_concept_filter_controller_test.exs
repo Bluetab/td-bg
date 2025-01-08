@@ -1,6 +1,5 @@
 defmodule TdBgWeb.BusinessConceptFilterControllerTest do
   use TdBgWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
 

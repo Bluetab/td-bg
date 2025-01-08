@@ -12,10 +12,6 @@ defmodule TdBgWeb.Router do
     plug TdCore.I18n.Plug.Language
   end
 
-  scope "/api/swagger" do
-    forward("/", PhoenixSwagger.Plug.SwaggerUI, otp_app: :td_bg, swagger_file: "swagger.json")
-  end
-
   scope "/api", TdBgWeb do
     pipe_through :api
     get("/ping", PingController, :ping)
@@ -73,27 +69,5 @@ defmodule TdBgWeb.Router do
     get("/business_concepts/search/reindex_all", SearchController, :reindex_all)
 
     resources("/business_concepts/bulk_upload_event", BulkUploadEventController, only: [:index])
-  end
-
-  def swagger_info do
-    %{
-      schemes: ["http", "https"],
-      info: %{
-        version: Application.spec(:td_bg, :vsn),
-        title: "Truedat Business Glossary Service"
-      },
-      securityDefinitions: %{
-        bearer: %{
-          type: "apiKey",
-          name: "Authorization",
-          in: "header"
-        }
-      },
-      security: [
-        %{
-          bearer: []
-        }
-      ]
-    }
   end
 end

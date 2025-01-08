@@ -79,7 +79,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%Claims{} = claims, :update, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    BusinessConceptVersion.updatable?(business_concept_version) &&
       authorized?(
         claims,
         :update_business_concept,
@@ -112,7 +112,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
         :send_for_approval,
         %BusinessConceptVersion{} = business_concept_version
       ) do
-    BusinessConceptVersion.is_updatable?(business_concept_version) &&
+    BusinessConceptVersion.updatable?(business_concept_version) &&
       authorized?(
         claims,
         :send_business_concept_for_approval,
@@ -121,7 +121,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%Claims{} = claims, :reject, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_rejectable?(business_concept_version) &&
+    BusinessConceptVersion.rejectable?(business_concept_version) &&
       authorized?(
         claims,
         :reject_business_concept,
@@ -134,7 +134,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
         :undo_rejection,
         %BusinessConceptVersion{} = business_concept_version
       ) do
-    BusinessConceptVersion.is_undo_rejectable?(business_concept_version) &&
+    BusinessConceptVersion.undo_rejectable?(business_concept_version) &&
       authorized?(
         claims,
         :update_business_concept,
@@ -143,7 +143,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%Claims{} = claims, :publish, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_publishable?(business_concept_version) &&
+    BusinessConceptVersion.publishable?(business_concept_version) &&
       authorized?(
         claims,
         :publish_business_concept,
@@ -152,7 +152,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%Claims{} = claims, :restore, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_restorable?(business_concept_version) &&
+    BusinessConceptVersion.restorable?(business_concept_version) &&
       authorized?(
         claims,
         :publish_business_concept,
@@ -161,7 +161,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%Claims{} = claims, :version, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_versionable?(business_concept_version) &&
+    BusinessConceptVersion.versionable?(business_concept_version) &&
       authorized?(
         claims,
         :update_business_concept,
@@ -170,7 +170,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%Claims{} = claims, :deprecate, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_deprecatable?(business_concept_version) &&
+    BusinessConceptVersion.deprecatable?(business_concept_version) &&
       authorized?(
         claims,
         :deprecate_business_concept,
@@ -179,7 +179,7 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
   end
 
   def can?(%Claims{} = claims, :delete, %BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.is_deletable?(business_concept_version) &&
+    BusinessConceptVersion.deletable?(business_concept_version) &&
       authorized?(
         claims,
         :delete_business_concept,

@@ -1,6 +1,5 @@
 defmodule TdBgWeb.SharedDomainControllerTest do
   use TdBgWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Assertions
 
@@ -11,7 +10,7 @@ defmodule TdBgWeb.SharedDomainControllerTest do
 
   describe "patch" do
     @tag authentication: [role: "admin"]
-    test "shares a business concept with domains", %{conn: conn, swagger_schema: schema} do
+    test "shares a business concept with domains", %{conn: conn} do
       %{id: concept_id} = insert(:business_concept)
       %{id: domain_id1} = insert(:domain)
       %{id: domain_id2} = insert(:domain)
@@ -27,7 +26,6 @@ defmodule TdBgWeb.SharedDomainControllerTest do
                }
              } =
                conn
-               |> validate_resp_schema(schema, "BusinessConceptResponse")
                |> json_response(:ok)
 
       assert Enum.find(shared_domains, fn domain -> domain["id"] == domain_id1 end)
@@ -50,8 +48,7 @@ defmodule TdBgWeb.SharedDomainControllerTest do
     @tag authentication: [user_name: "foo"]
     test "shares a business concept with domains when user has permissions", %{
       conn: conn,
-      claims: claims,
-      swagger_schema: schema
+      claims: claims
     } do
       %{id: domain_id} = domain = insert(:domain)
       CacheHelpers.put_domain(domain)
@@ -68,7 +65,6 @@ defmodule TdBgWeb.SharedDomainControllerTest do
                  Routes.business_concept_shared_domain_path(conn, :update, concept_id),
                  %{"domain_ids" => domain_ids}
                )
-               |> validate_resp_schema(schema, "BusinessConceptResponse")
                |> json_response(:ok)
 
       assert %{

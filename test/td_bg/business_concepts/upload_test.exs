@@ -8,7 +8,7 @@ defmodule TdBg.UploadTest do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBgWeb.Authentication
   alias TdCache.HierarchyCache
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
 
   @default_template %{
     name: "term",
@@ -300,7 +300,7 @@ defmodule TdBg.UploadTest do
     HierarchyCache.put(hierarchy)
 
     on_exit(fn ->
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       Templates.delete(template_id)
       Templates.delete(i18n_template_id)
       Templates.delete(concept_template_id)
@@ -326,7 +326,7 @@ defmodule TdBg.UploadTest do
     setup [:set_mox_from_context, :insert_i18n_messages]
 
     test "bulk_upload/3 uploads business concept versions as admin with valid data" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       insert(:domain, external_id: "domain")
@@ -340,7 +340,7 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorker.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
 
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
@@ -355,7 +355,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 returns error under invalid number" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       insert(:domain, external_id: "domain")
@@ -372,7 +372,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 returns error under user/group invalid role" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
       domain = CacheHelpers.insert_domain(external_id: "domain")
       user = CacheHelpers.insert_user(full_name: "user")
@@ -400,7 +400,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 creates content with multiple cardinality user/group field" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
       domain = CacheHelpers.insert_domain(external_id: "domain")
       user = CacheHelpers.insert_user(full_name: "user")
@@ -423,7 +423,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 uploads with auto publish create business concept and publish" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       insert(:domain, external_id: "domain")
@@ -438,7 +438,7 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorker.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
 
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
@@ -453,7 +453,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 uploads business concept versions as admin with hierarchy data" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       insert(:domain, external_id: "domain")
@@ -467,7 +467,7 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorker.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
 
       assert %{
                "hierarchy_name_1" => %{
@@ -513,7 +513,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 uploads business concept with translation" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       insert(:domain, external_id: "domain")
@@ -527,7 +527,7 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorker.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
 
       assert %{
                "i18n_test.checkbox" => %{"value" => ["apple", "pear"], "origin" => "file"},
@@ -538,7 +538,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 uploads business concept in differents status without auto publish" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       domain = insert(:domain, external_id: "domain")
@@ -621,7 +621,7 @@ defmodule TdBg.UploadTest do
         end
       end)
 
-      assert IndexWorker.calls() == [
+      assert IndexWorkerMock.calls() == [
                {:reindex, :concepts, [bc_published.id]},
                {:reindex, :concepts, [bc_deprecated.id]},
                {:reindex, :concepts, [bc_draft.id]},
@@ -631,7 +631,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 uploads business concepts from excel file with binary ids (not numbers in origin)" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       domain = insert(:domain, external_id: "aaa", name: "aaa")
@@ -671,14 +671,14 @@ defmodule TdBg.UploadTest do
       assert %{name: "Prueba hora new_name"} =
                BusinessConcepts.get_business_concept_version!(concept_2_version_id)
 
-      assert IndexWorker.calls() == [
+      assert IndexWorkerMock.calls() == [
                {:reindex, :concepts, [concept_1.id]},
                {:reindex, :concepts, [concept_2.id]}
              ]
     end
 
     test "bulk_upload/3 updates business concepts taking into account their progress status when field in content is missing" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       domain = insert(:domain, external_id: "domain", name: "domain")
@@ -707,7 +707,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 uploads business concept in differents status with auto publish" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       domain = insert(:domain, external_id: "domain")
@@ -794,7 +794,7 @@ defmodule TdBg.UploadTest do
                  BusinessConcepts.get_business_concept_version!(bcv_id)
       end)
 
-      assert IndexWorker.calls() == [
+      assert IndexWorkerMock.calls() == [
                {:reindex, :concepts, [bc_published.id]},
                {:reindex, :concepts, [bc_published.id]},
                {:reindex, :concepts, [bc_deprecated.id]},
@@ -805,7 +805,7 @@ defmodule TdBg.UploadTest do
     end
 
     test "bulk_upload/3 update concept published with new draft/pending/rejected version and autopublish" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       domain = insert(:domain, external_id: "domain")

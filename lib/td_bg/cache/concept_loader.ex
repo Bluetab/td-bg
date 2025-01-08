@@ -189,12 +189,12 @@ defmodule TdBg.Cache.ConceptLoader do
   defp published_or_current_version({_id, versions}) do
     versions
     |> Enum.sort(&(&1.version > &2.version))
-    |> Enum.find(&is_published_or_current?/1)
+    |> Enum.find(&published_or_current?/1)
   end
 
-  defp is_published_or_current?(%BusinessConceptVersion{status: "published"}), do: true
-  defp is_published_or_current?(%BusinessConceptVersion{current: true}), do: true
-  defp is_published_or_current?(_), do: false
+  defp published_or_current?(%BusinessConceptVersion{status: "published"}), do: true
+  defp published_or_current?(%BusinessConceptVersion{current: true}), do: true
+  defp published_or_current?(_), do: false
 
   defp get_business_concept_i18n(%BusinessConceptVersion{id: id}) do
     id

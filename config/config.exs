@@ -46,18 +46,12 @@ config :logger, :console,
 
 # Configuration for Phoenix
 config :phoenix, :json_library, Jason
-config :phoenix_swagger, json_library: Jason
 
 config :td_bg, TdBg.Auth.Guardian,
   allowed_algos: ["HS512"],
   issuer: "tdauth",
   ttl: {1, :hours},
   secret_key: "SuperSecretTruedat"
-
-config :td_bg, :phoenix_swagger,
-  swagger_files: %{
-    "priv/static/swagger.json" => [router: TdBgWeb.Router]
-  }
 
 config :td_cache, :audit,
   service: "td_bg",

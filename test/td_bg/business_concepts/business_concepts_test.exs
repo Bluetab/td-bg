@@ -12,7 +12,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdCache.I18nCache
   alias TdCache.Redix
   alias TdCache.Redix.Stream
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
   alias TdDfLib.Format
   alias TdDfLib.RichText
 
@@ -144,7 +144,7 @@ defmodule TdBg.BusinessConceptsTest do
   setup context do
     on_exit(fn ->
       Redix.del!(@stream)
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
     end)
 
     case context[:template] do
@@ -715,7 +715,7 @@ defmodule TdBg.BusinessConceptsTest do
   describe "update_business_concept_version/2" do
     @tag template: @content
     test "updates the business_concept_version if data is valid and publishes an event to the audit stream" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       %{user_id: user_id} = build(:claims)
 
       %{id: parent_id, parent_id: root_id} = parent = insert(:domain, parent: build(:domain))
@@ -778,12 +778,12 @@ defmodule TdBg.BusinessConceptsTest do
              } = Jason.decode!(payload)
 
       assert_lists_equal(domain_ids, [root_id, parent_id, domain_id])
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "updates the content with valid content data" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       %{id: domain_id} = insert(:domain)
 
       template_name = "test_template"
@@ -873,8 +873,8 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert Map.get(new_business_concept_version.content, "Field2") == nil
 
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "updates the content with valid i18n_content data" do
@@ -1176,7 +1176,7 @@ defmodule TdBg.BusinessConceptsTest do
 
     @tag template: @content
     test "get_business_concept_version/2 returns the business_concept_version by concept id and version" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       claims = build(:claims)
       %{id: domain_id} = insert(:domain)
 
@@ -1214,8 +1214,8 @@ defmodule TdBg.BusinessConceptsTest do
 
       refute BusinessConcepts.get_business_concept_version(business_concept_id + 1, id)
 
-      assert [_, _, _] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [_, _, _] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "get_business_concept_version/2 returns preloads" do
