@@ -21,7 +21,6 @@ defmodule TdBgWeb do
     quote do
       use Phoenix.Controller, namespace: TdBgWeb
       import Plug.Conn
-      import TdBgWeb.Gettext
       alias TdBgWeb.Router.Helpers, as: Routes
     end
   end
@@ -37,7 +36,6 @@ defmodule TdBgWeb do
         only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
 
       import TdBgWeb.ErrorHelpers
-      import TdBgWeb.Gettext
       alias TdBgWeb.Router.Helpers, as: Routes
     end
   end
@@ -53,7 +51,6 @@ defmodule TdBgWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import TdBgWeb.Gettext
     end
   end
 

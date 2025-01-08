@@ -1,6 +1,5 @@
 defmodule TdBgWeb.CommentControllerTest do
   use TdBgWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   setup %{conn: conn} do
     [conn: put_req_header(conn, "accept", "application/json")]
@@ -8,13 +7,12 @@ defmodule TdBgWeb.CommentControllerTest do
 
   describe "GET /api/business_concepts/comments" do
     @tag authentication: [role: "admin"]
-    test "returns ok and json if comment exists", %{conn: conn, swagger_schema: schema} do
+    test "returns ok and json if comment exists", %{conn: conn} do
       %{id: id, content: content, resource_id: resource_id} = insert(:comment)
 
       assert %{"data" => data} =
                conn
                |> get(Routes.comment_path(conn, :show, id))
-               |> validate_resp_schema(schema, "CommentResponse")
                |> json_response(:ok)
 
       assert %{"content" => ^content, "resource_id" => ^resource_id} = data
@@ -23,7 +21,7 @@ defmodule TdBgWeb.CommentControllerTest do
 
   describe "POST /api/business_concepts/comments" do
     @tag authentication: [role: "admin"]
-    test "returns created and json if comment was created", %{conn: conn, swagger_schema: schema} do
+    test "returns created and json if comment was created", %{conn: conn} do
       %{id: resource_id} = insert(:business_concept)
 
       %{"content" => content, "resource_id" => resource_id} =
@@ -32,7 +30,6 @@ defmodule TdBgWeb.CommentControllerTest do
       assert %{"data" => data} =
                conn
                |> post(Routes.comment_path(conn, :create, %{"comment" => params}))
-               |> validate_resp_schema(schema, "CommentResponse")
                |> json_response(:created)
 
       assert %{"content" => ^content, "resource_id" => ^resource_id} = data

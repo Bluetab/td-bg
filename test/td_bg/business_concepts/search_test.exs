@@ -36,29 +36,27 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
           assert query_filter == %{simple_query_string: %{query: "bar*"}}
 
-          assert status_filter == %{
-                   bool: %{
-                     should: [
-                       %{
-                         bool: %{
-                           filter: [
-                             %{term: %{"status" => "rejected"}},
-                             %{term: %{"domain_ids" => domain_id4}}
-                           ]
-                         }
-                       },
-                       %{
-                         bool: %{
-                           filter: [
-                             %{terms: %{"status" => ["draft", "pending_approval"]}},
-                             %{term: %{"domain_ids" => domain_id3}}
-                           ]
-                         }
-                       },
-                       %{term: %{"status" => "published"}}
-                     ]
-                   }
-                 }
+          assert %{bool: %{should: should}} = status_filter
+
+          assert_lists_equal(should, [
+            %{
+              bool: %{
+                filter: [
+                  %{term: %{"status" => "rejected"}},
+                  %{term: %{"domain_ids" => domain_id4}}
+                ]
+              }
+            },
+            %{
+              bool: %{
+                filter: [
+                  %{terms: %{"status" => ["draft", "pending_approval"]}},
+                  %{term: %{"domain_ids" => domain_id3}}
+                ]
+              }
+            },
+            %{term: %{"status" => "published"}}
+          ])
 
           assert %{
                    bool: %{

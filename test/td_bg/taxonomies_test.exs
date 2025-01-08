@@ -662,9 +662,15 @@ defmodule TdBg.TaxonomiesTest do
       business_concept_1 = insert(:business_concept, domain: domain)
       business_concept_2 = insert(:business_concept, domain: domain)
 
-      insert(:business_concept_version, status: "deprecated", business_concept: business_concept_1)
+      insert(:business_concept_version,
+        status: "deprecated",
+        business_concept: business_concept_1
+      )
 
-      insert(:business_concept_version, status: "deprecated", business_concept: business_concept_2)
+      insert(:business_concept_version,
+        status: "deprecated",
+        business_concept: business_concept_2
+      )
 
       assert {:ok, %Domain{}} = Taxonomies.delete_domain(domain)
       assert %{deleted_at: deleted_at} = Repo.get(Domain, domain.id)
@@ -677,7 +683,10 @@ defmodule TdBg.TaxonomiesTest do
       business_concept_2 = insert(:business_concept, domain: domain)
       business_concept_3 = insert(:business_concept, domain: domain)
 
-      insert(:business_concept_version, status: "deprecated", business_concept: business_concept_1)
+      insert(:business_concept_version,
+        status: "deprecated",
+        business_concept: business_concept_1
+      )
 
       insert(:business_concept_version, status: "draft", business_concept: business_concept_2)
       insert(:business_concept_version, status: "draft", business_concept: business_concept_3)

@@ -1,11 +1,10 @@
 defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
   use TdBgWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import ExUnit.CaptureLog
   import Mox
 
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
 
   @template_name "some_type"
   @content [
@@ -162,7 +161,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
   setup _context do
     on_exit(fn ->
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       TdCache.Redix.del!("i18n:locales:*")
     end)
 

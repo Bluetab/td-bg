@@ -1,31 +1,13 @@
 defmodule TdBgWeb.DomainController do
   use TdBgWeb, :controller
   use TdHypermedia, :controller
-  use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
   alias TdBg.Taxonomies
   alias TdBg.Taxonomies.Domain
-  alias TdBgWeb.SwaggerDefinitions
 
   action_fallback(TdBgWeb.FallbackController)
-
-  def swagger_definitions do
-    SwaggerDefinitions.domain_swagger_definitions()
-  end
-
-  swagger_path :index do
-    description("List Domains")
-
-    parameters do
-      actions(:query, :string, "List of actions the user must be able to run over the domains",
-        required: false
-      )
-    end
-
-    response(200, "OK", Schema.ref(:DomainsResponse))
-  end
 
   def index(conn, params) do
     claims = conn.assigns[:current_resource]
@@ -78,18 +60,6 @@ defmodule TdBgWeb.DomainController do
     |> Enum.reject(&(&1 == ""))
   end
 
-  swagger_path :create do
-    description("Creates a Domain")
-    produces("application/json")
-
-    parameters do
-      domain(:body, Schema.ref(:DomainCreate), "Domain create attrs")
-    end
-
-    response(201, "Created", Schema.ref(:DomainResponse))
-    response(400, "Client Error")
-  end
-
   def create(conn, %{"domain" => domain_params}) do
     claims = conn.assigns[:current_resource]
 
@@ -117,18 +87,6 @@ defmodule TdBgWeb.DomainController do
     can?(claims, create(domain))
   end
 
-  swagger_path :show do
-    description("Show Domain")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Domain ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:DomainResponse))
-    response(400, "Client Error")
-  end
-
   def show(conn, %{"id" => id}) do
     claims = conn.assigns[:current_resource]
 
@@ -141,19 +99,6 @@ defmodule TdBgWeb.DomainController do
         hypermedia: hypermedia("domain", conn, domain)
       )
     end
-  end
-
-  swagger_path :update do
-    description("Updates Domain")
-    produces("application/json")
-
-    parameters do
-      data_domain(:body, Schema.ref(:DomainUpdate), "Domain update attrs")
-      id(:path, :integer, "Domain ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:DomainResponse))
-    response(400, "Client Error")
   end
 
   def update(conn, %{"id" => id, "domain" => domain_params}) do
@@ -184,18 +129,6 @@ defmodule TdBgWeb.DomainController do
     can_update?(claims, domain, new_domain)
   end
 
-  swagger_path :delete do
-    description("Delete Domain")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Domain ID", required: true)
-    end
-
-    response(200, "OK")
-    response(400, "Client Error")
-  end
-
   def delete(conn, %{"id" => id}) do
     claims = conn.assigns[:current_resource]
 
@@ -204,22 +137,6 @@ defmodule TdBgWeb.DomainController do
          {:ok, %Domain{}} <- Taxonomies.delete_domain(domain) do
       send_resp(conn, :no_content, "")
     end
-  end
-
-  swagger_path :count_bc_in_domain_for_user do
-    description(
-      "Counts the number of Business Concepts where the given claims has any role in the provided domain"
-    )
-
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Domain ID", required: true)
-      user_name(:path, :integer, "User Name", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BCInDomainCountResponse))
-    response(400, "Client Error")
   end
 
   def count_bc_in_domain_for_user(conn, %{"domain_id" => id, "user_name" => user_name}) do

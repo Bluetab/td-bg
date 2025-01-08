@@ -73,7 +73,6 @@ Ready to run in production? Please [check our deployment guides](http://www.phoe
 - [Phoenix](http://www.phoenixframework.org/) - Web framework
 - [Ecto](http://www.phoenixframework.org/) - Phoenix and Ecto integration
 - [Postgrex](http://hexdocs.pm/postgrex/) - PostgreSQL driver for Elixir
-- [Gettext](https://hexdocs.pm/gettext) - Internationalization and localization support for Elixir
 - [Cowboy](https://ninenines.eu) - HTTP server for Erlang/OTP
 - [httpoison](https://hex.pm/packages/httpoison) - HTTP client for Elixir
 - [credo](http://credo-ci.org/) - Static code analysis tool for the Elixir language
@@ -81,10 +80,6 @@ Ready to run in production? Please [check our deployment guides](http://www.phoe
 - [canary](https://github.com/cpjk/canary) - Elixir authorization and resource-loading library
 - [canada](https://github.com/jarednorman/canada) - Permission definitions in Elixir apps
 - [ex_machina](https://hex.pm/packages/ex_machina) - Create test data for Elixir applications
-- [corsica](https://hex.pm/packages/corsica) - Elixir Plug to add CORS
-- [phoenix_swagger](https://github.com/xerions/phoenix_swagger) - Swagger integration to Phoenix framework
-- [ex_json_schema](https://github.com/jonasschmidt/ex_json_schema) - Elixir JSON Schema validator
-- [json_diff](https://github.com/jonasschmidt/ex_json_schema) - Elixir JSON Schema validator
 
 ## Authors
 
