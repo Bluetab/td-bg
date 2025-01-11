@@ -1462,10 +1462,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         _ ->
           assert query == %{
                    bool: %{
-                     should: %{
-                       multi_match: %{operator: "and", query: "foo*", type: "best_fields"}
-                     },
-                     must: %{simple_query_string: %{query: "foo*"}}
+                     must: %{
+                       multi_match: %{
+                         fields: ["ngram_name*^3"],
+                         query: "foo",
+                         type: "bool_prefix",
+                         lenient: true,
+                         fuzziness: "AUTO"
+                       }
+                     }
                    }
                  }
 

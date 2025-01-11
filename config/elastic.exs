@@ -30,7 +30,36 @@ config :td_core, TdCore.Search.Cluster,
       # This map describes the mappings and settings for your index. It will
       # be posted as-is to Elasticsearch when you create your index, and
       # therefore allows all the settings you could post directly.
-      settings: %{},
+      settings: %{
+        analysis: %{
+          analyzer: %{
+            default: %{
+              type: "custom",
+              tokenizer: "standard",
+              filter: ["lowercase", "asciifolding"]
+            },
+            es_analyzer: %{
+              type: "custom",
+              tokenizer: "standard",
+              filter: ["lowercase", "asciifolding", "es_stem"]
+            },
+            en_analyzer: %{
+              type: "custom",
+              tokenizer: "standard",
+              filter: ["lowercase", "asciifolding", "porter_stem"]
+            }
+          },
+          normalizer: %{
+            sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}
+          },
+          filter: %{
+            es_stem: %{
+              type: "stemmer",
+              language: "light_spanish"
+            }
+          }
+        }
+      },
 
       # This store module must implement a store behaviour. It will be used to
       # fetch data for each source in each indexes' `sources` list, below:

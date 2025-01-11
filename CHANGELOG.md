@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-5713]
+  - Updates analyzers to take `asciifolding` and multiple languages into account.
+  - `search_as_you_type` type in concept name.
+  - Defines scope for native and dynamic fields search.
+  - Use query data in `ElasticDocumentProtocol` to build queries.
+
 ### Changed
 
 - [TD-6911]

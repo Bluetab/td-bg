@@ -15,9 +15,8 @@ defmodule TdBg.BusinessConcept.Search do
   @index :concepts
 
   def get_filter_values(%Claims{} = claims, params) do
-    query = build_query(claims, params)
-
-    aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
+    query_data = %{aggs: aggs} = ElasticDocumentProtocol.query_data(%BusinessConceptVersion{})
+    query = build_query(claims, params, query_data)
     search = %{query: query, aggs: aggs, size: 0}
 
     {:ok, response} = Search.get_filters(search, @index)
@@ -34,21 +33,22 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   def search_business_concept_versions(params, %Claims{} = claims, page, size) do
-    query = build_query(claims, params)
+    query_data = ElasticDocumentProtocol.query_data(%BusinessConceptVersion{})
+    query = build_query(claims, params, query_data)
 
     sort = Map.get(params, "sort", ["_score", "name.raw"])
 
     do_search(%{from: page * size, size: size, query: query, sort: sort}, params)
   end
 
-  defp build_query(%Claims{} = claims, params) do
+  defp build_query(%Claims{} = claims, params, query_data) do
     opts = builder_opts(params)
     permissions = TdBgPermissions.get_default_permissions()
 
     permissions
     |> Permissions.get_search_permissions(claims)
     |> Query.build_filters(opts)
-    |> Query.build_query(params)
+    |> Query.build_query(params, query_data)
   end
 
   defp builder_opts(%{"only_linkable" => true}), do: [linkable: true]
