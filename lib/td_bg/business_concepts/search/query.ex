@@ -6,8 +6,6 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   import TdCore.Search.Query,
     only: [term_or_terms: 2, must_not: 2, should: 2]
 
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
-  alias TdCore.Search.ElasticDocumentProtocol
   alias TdCore.Search.Query
 
   @match_all %{match_all: %{}}
@@ -133,8 +131,23 @@ defmodule TdBg.BusinessConcepts.Search.Query do
 
   defp maybe_bool_query(%{} = bool) when map_size(bool) >= 1, do: %{bool: bool}
 
-  def build_query(filters, params) do
-    aggs = ElasticDocumentProtocol.aggregations(%BusinessConceptVersion{})
-    Query.build_query(filters, params, aggs)
+  def build_query(filters, params, query_data) do
+    query_data = query_data |> with_search_clauses() |> Keyword.new()
+    Query.build_query(filters, params, query_data)
+  end
+
+  defp with_search_clauses(%{fields: fields} = query_data) do
+    multi_match_bool_prefix = %{
+      multi_match: %{
+        type: "bool_prefix",
+        fields: fields,
+        lenient: true,
+        fuzziness: "AUTO"
+      }
+    }
+
+    query_data
+    |> Map.take([:aggs])
+    |> Map.put(:clauses, [multi_match_bool_prefix])
   end
 end
