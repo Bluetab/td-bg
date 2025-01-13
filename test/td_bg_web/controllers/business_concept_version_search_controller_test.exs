@@ -1,11 +1,10 @@
 defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
   use TdBgWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import ExUnit.CaptureLog
   import Mox
 
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
 
   @template_name "some_type"
   @content [
@@ -162,7 +161,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
   setup _context do
     on_exit(fn ->
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       TdCache.Redix.del!("i18n:locales:*")
     end)
 
@@ -232,7 +231,13 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert %{
                    must: [
-                     %{simple_query_string: %{query: "foo*"}},
+                     %{
+                       multi_match: %{
+                         fields: ["ngram_name*^3"],
+                         query: "foo",
+                         type: "bool_prefix"
+                       }
+                     },
                      %{term: %{"domain_id" => 1234}},
                      %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                      %{term: %{"status" => "published"}}
@@ -515,12 +520,17 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert %{
                    must: [
-                     %{simple_query_string: %{query: "foo*"}},
+                     %{
+                       multi_match: %{
+                         fields: ["ngram_name*^3"],
+                         query: "foo",
+                         type: "bool_prefix"
+                       }
+                     },
                      %{term: %{"domain_id" => 1234}},
                      _status_filter,
                      _confidential_filter
-                   ],
-                   should: %{multi_match: %{operator: "and", query: "foo*", type: "best_fields"}}
+                   ]
                  } = bool
 
           SearchHelpers.hits_response([bcv])

@@ -1,5 +1,24 @@
 # Changelog
 
+## [7.0.0] 2025-01-13
+
+### Added
+
+- [TD-5713]
+  - Updates analyzers to take `asciifolding` and multiple languages into account.
+  - `search_as_you_type` type in concept name.
+  - Defines scope for native and dynamic fields search.
+  - Use query data in `ElasticDocumentProtocol` to build queries.
+
+### Changed
+
+- [TD-6911]
+  - update Elixir 1.18
+  - update dependencies
+  - update Docker RUNTIME_BASE=alpine:3.21
+  - remove unused dependencies
+  - remove swagger
+
 ## [6.16.1] 2025-01-02
 
 ### Fixed

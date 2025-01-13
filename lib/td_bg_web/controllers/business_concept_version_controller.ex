@@ -1,7 +1,6 @@
 defmodule TdBgWeb.BusinessConceptVersionController do
   use TdBgWeb, :controller
   use TdHypermedia, :controller
-  use PhoenixSwagger
 
   import Canada, only: [can?: 2]
   import Canada.Can, only: [can?: 3]
@@ -21,7 +20,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   alias TdBg.Taxonomies.Domain
   alias TdBg.Utils.Hasher
   alias TdBgWeb.ErrorView
-  alias TdBgWeb.SwaggerDefinitions
+
   alias TdCache.TagCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
@@ -29,10 +28,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   require Logger
 
   action_fallback(TdBgWeb.FallbackController)
-
-  def swagger_definitions do
-    SwaggerDefinitions.business_concept_version_definitions()
-  end
 
   def xlsx(conn, params) do
     claims = conn.assigns[:current_resource]
@@ -104,22 +99,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       |> put_resp_content_type("application/json", "utf-8")
       |> send_resp(code, Jason.encode!(response))
     end
-  end
-
-  swagger_path :create do
-    description("Creates a Business Concept version child of Data Domain")
-    produces("application/json")
-
-    parameters do
-      business_concept(
-        :body,
-        Schema.ref(:BusinessConceptVersionCreate),
-        "Business Concept create attrs"
-      )
-    end
-
-    response(201, "Created", Schema.ref(:BusinessConceptVersionResponse))
-    response(400, "Client Error")
   end
 
   defp get_flat_template_content(%{content: content}) do
@@ -204,18 +183,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :show do
-    description("Show Business Concept Version")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(400, "Client Error")
-  end
-
   def show(conn, %{"business_concept_id" => concept_id, "id" => version}) do
     claims = conn.assigns[:current_resource]
 
@@ -293,18 +260,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :delete do
-    description("Delete a business concept version")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(204, "No Content")
-    response(400, "Client Error")
-  end
-
   def delete(conn, %{"id" => id}) do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -314,19 +269,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
            BusinessConcepts.delete_business_concept_version(business_concept_version, claims) do
       send_resp(conn, :no_content, "")
     end
-  end
-
-  swagger_path :send_for_approval do
-    description("Submit a draft business concept for approval")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Business concept invalid state")
   end
 
   def send_for_approval(conn, %{"business_concept_version_id" => id}) do
@@ -343,19 +285,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_view(ErrorView)
         |> render("422.json")
     end
-  end
-
-  swagger_path :publish do
-    description("Publish a business concept which is pending approval")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Business concept invalid state")
   end
 
   def restore(conn, %{"business_concept_version_id" => id}) do
@@ -393,20 +322,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :reject do
-    description("Reject a business concept which is pending approval")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-      reject_reason(:body, :string, "Rejection reason")
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Business concept invalid state")
-  end
-
   def reject(conn, %{"business_concept_version_id" => id} = params) do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -421,19 +336,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_view(ErrorView)
         |> render("422.json")
     end
-  end
-
-  swagger_path :undo_rejection do
-    description("Create a draft from a rejected business concept")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Business concept invalid state")
   end
 
   def undo_rejection(conn, %{"business_concept_version_id" => id}) do
@@ -452,19 +354,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :version do
-    description("Create a new draft from a published business concept")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Business concept invalid state")
-  end
-
   def version(conn, %{"business_concept_version_id" => id}) do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -479,19 +368,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         |> put_view(ErrorView)
         |> render("422.json")
     end
-  end
-
-  swagger_path :deprecate do
-    description("Deprecate a published business concept")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Business concept invalid state")
   end
 
   def deprecate(conn, %{"business_concept_version_id" => id}) do
@@ -606,24 +482,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :update do
-    description("Updates Business Concept Version")
-    produces("application/json")
-
-    parameters do
-      business_concept_version(
-        :body,
-        Schema.ref(:BusinessConceptVersionUpdate),
-        "Business Concept Version update attrs"
-      )
-
-      id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(400, "Client Error")
-  end
-
   def update(
         conn,
         %{"id" => id, "business_concept_version" => business_concept_version_params}
@@ -683,24 +541,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     end
   end
 
-  swagger_path :update_domain do
-    description("Updates Business Concept domain")
-    produces("application/json")
-
-    parameters do
-      domain_id(
-        :body,
-        Schema.ref(:BusinessConceptVersionDomainUpdate),
-        "Business Concept Domain update attrs"
-      )
-
-      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(400, "Client Error")
-  end
-
   def update_domain(
         conn,
         %{"business_concept_version_id" => id, "domain_id" => domain_id}
@@ -735,24 +575,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     else
       error -> handle_bc_errors(conn, error)
     end
-  end
-
-  swagger_path :set_confidential do
-    description("Sets Business Concept Version related concept as confidential")
-    produces("application/json")
-
-    parameters do
-      confidential(
-        :body,
-        Schema.ref(:BusinessConceptVersionConfidentialUpdate),
-        "Business Concept Version update attrs"
-      )
-
-      business_concept_version_id(:path, :integer, "Business Concept Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptVersionResponse))
-    response(400, "Client Error")
   end
 
   def set_confidential(conn, %{
@@ -791,23 +613,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         template: template
       )
     end
-  end
-
-  swagger_path :bulk_update do
-    description("Bulk Update of Business Concept Versions")
-    produces("application/json")
-
-    parameters do
-      bulk_update_request(
-        :body,
-        Schema.ref(:BulkUpdateRequest),
-        "Search query filter parameters and update attributes"
-      )
-    end
-
-    response(200, "OK", Schema.ref(:BulkUpdateResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Error while bulk update")
   end
 
   def bulk_update(conn, %{

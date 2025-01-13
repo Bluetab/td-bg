@@ -41,11 +41,17 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       shared_to = get_shared_to(shared_to)
       shared_to_names = shared_to_names(shared_to)
 
+      ### TODO: This function get_all_i18n_content_by_bcv_id retrieves all
+      ## contents of all languages inserted in the database,
+      ## but it should only retrieve those languages that are active.
+      i18n_contents = I18nContents.get_all_i18n_content_by_bcv_id(bcv_id)
+      {:ok, default_locale} = I18nCache.get_default_locale()
+
       content =
         bcv
         |> Map.get(:content)
         |> Format.search_values(template, domain_id: domain.id)
-        |> put_i18n_content(bcv_id, template)
+        |> put_i18n_content(i18n_contents, template)
         |> Enum.into(%{}, fn {field, %{"value" => value}} -> {field, value} end)
 
       {last_change_at, last_change_by} = BusinessConceptVersion.get_last_change(bcv)
@@ -62,8 +68,10 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         :in_progress,
         :inserted_at
       ])
+      |> Map.put(:ngram_name, bcv.name)
       |> Map.merge(BusinessConcepts.get_concept_counts(bcv.business_concept_id))
-      |> put_i18n_concept_property(:name, bcv)
+      |> put_i18n_concept_property(:name, i18n_contents, default_locale)
+      |> put_i18n_concept_property(:ngram_name, i18n_contents, default_locale)
       |> Map.put(:content, content)
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
@@ -74,53 +82,49 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:shared_to_names, shared_to_names)
     end
 
-    defp put_i18n_concept_property(bcv_to_index, property, %{id: id}) do
-      {:ok, default_locale} = I18nCache.get_default_locale()
-
-      case I18nContents.get_all_i18n_content_by_bcv_id(id) do
-        [_ | _] = i18n ->
-          i18n
-          |> Enum.map(&map_property_locale(&1, property, default_locale))
-          |> Enum.reject(fn {_, v} -> v == nil end)
-          |> Map.new()
-          |> Map.merge(bcv_to_index)
-
-        _ ->
-          bcv_to_index
-      end
+    defp put_i18n_concept_property(bcv_to_index, property, [_ | _] = i18n, default_locale) do
+      i18n
+      |> Enum.map(&map_property_locale(&1, property, default_locale))
+      |> Enum.reject(fn {_, v} -> v == nil end)
+      |> Map.new()
+      |> Map.merge(bcv_to_index)
     end
 
-    defp map_property_locale(%{lang: locale} = i18n, property, default_locale) do
-      locale_property =
-        if locale == default_locale,
-          do: property,
-          else: String.to_atom("#{property}_#{locale}")
+    defp put_i18n_concept_property(bcv_to_index, _property, _i18n, _default_locale),
+      do: bcv_to_index
 
-      i18n_value = Map.get(i18n, property)
-
+    defp map_property_locale(%{lang: locale} = i18n, :ngram_name = property, default_locale) do
+      locale_property = property_with_locale(property, locale, default_locale)
+      i18n_value = Map.get(i18n, :name)
       {locale_property, i18n_value}
     end
 
-    defp put_i18n_content(content, bcv_id, template) do
-      case I18nContents.get_all_i18n_content_by_bcv_id(bcv_id) do
-        [_ | _] = i18n ->
-          i18n
-          |> map_content_locale(template)
-          |> Map.merge(content)
-
-        _ ->
-          content
-      end
+    defp map_property_locale(%{lang: locale} = i18n, property, default_locale) do
+      locale_property = property_with_locale(property, locale, default_locale)
+      i18n_value = Map.get(i18n, property)
+      {locale_property, i18n_value}
     end
 
-    defp map_content_locale(i18n, template) do
+    defp property_with_locale(property, locale, default_locale) when locale == default_locale,
+      do: property
+
+    defp property_with_locale(property, locale, _default_locale) do
+      String.to_atom("#{property}_#{locale}")
+    end
+
+    defp put_i18n_content(content, [_ | _] = i18n, template) do
       i18n
-      |> Enum.map(fn %{lang: locale, content: i18n_content} ->
-        i18n_content
-        |> Format.search_values(template, apply_default_values?: false)
-        |> add_lang_suffix(locale)
-      end)
+      |> Enum.map(&format_content_locale(&1, template))
       |> Enum.reduce(%{}, fn map, acc -> Map.merge(acc, map) end)
+      |> Map.merge(content)
+    end
+
+    defp put_i18n_content(content, _i18n, _template), do: content
+
+    defp format_content_locale(%{lang: locale, content: i18n_content}, template) do
+      i18n_content
+      |> Format.search_values(template, apply_default_values?: false)
+      |> add_lang_suffix(locale)
     end
 
     defp add_lang_suffix(formatted_content, locale) do
@@ -156,15 +160,17 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
   defimpl ElasticDocumentProtocol, for: BusinessConceptVersion do
     use ElasticDocument
 
-    @translatable_fields [:name]
+    @translatable_fields [:name, :ngram_name]
+    @search_fields ~w(ngram_name*^3)
 
     def mappings(_) do
-      content_mappings = %{properties: get_dynamic_mappings("bg")}
+      content_mappings = %{properties: get_dynamic_mappings("bg", add_locales?: true)}
 
       mapping_type =
         %{
           id: %{type: "long"},
           name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
+          ngram_name: %{type: "search_as_you_type"},
           description: %{type: "text"},
           version: %{type: "long"},
           template: %{
@@ -202,19 +208,26 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         }
         |> add_locales_fields_mapping(@translatable_fields)
 
-      settings = %{
-        number_of_shards: 1,
-        analysis: %{
-          normalizer: %{
-            sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}
-          }
-        }
-      }
+      settings = :concepts |> Cluster.setting() |> apply_lang_settings()
 
       %{mappings: %{properties: mapping_type}, settings: settings}
     end
 
     def aggregations(_) do
+      merged_aggregations("bg")
+    end
+
+    def query_data(_) do
+      content_schema = Templates.content_schema_for_scope("bg")
+      dynamic_fields = content_schema |> dynamic_search_fields("content") |> add_locales()
+
+      %{
+        fields: @search_fields ++ dynamic_fields,
+        aggs: merged_aggregations(content_schema)
+      }
+    end
+
+    defp native_aggregations do
       %{
         "confidential.raw" => %{
           terms: %{field: "confidential.raw", size: Cluster.get_size_field("confidential.raw")}
@@ -237,7 +250,11 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
           terms: %{field: "template.subscope", size: Cluster.get_size_field("template_subscope")}
         }
       }
-      |> merge_dynamic_fields("bg", "content")
+    end
+
+    defp merged_aggregations(scope_or_schema) do
+      native_aggregations = native_aggregations()
+      merge_dynamic_aggregations(native_aggregations, scope_or_schema, "content")
     end
   end
 end

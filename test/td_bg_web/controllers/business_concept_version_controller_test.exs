@@ -1,13 +1,12 @@
 defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   use TdBgWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
   import TdBg.TestOperators
 
   alias TdBg.I18nContents.I18nContents
   alias TdCache.I18nCache
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
 
   @template_name "some_type"
   @content [
@@ -164,7 +163,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
   setup _context do
     on_exit(fn ->
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       TdCache.Redix.del!("i18n:locales:*")
     end)
 
@@ -1271,8 +1270,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :template
     test "renders business_concept when data is valid", %{
       conn: conn,
-      claims: claims,
-      swagger_schema: schema
+      claims: claims
     } do
       %{id: domain_id, name: domain_name} = CacheHelpers.insert_domain()
 
@@ -1295,7 +1293,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  Routes.business_concept_version_path(conn, :create),
                  business_concept_version: creation_attrs
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:created)
 
       assert %{"id" => id, "business_concept_id" => business_concept_id} = data
@@ -1310,7 +1307,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                    id
                  )
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert %{"id" => ^id, "last_change_by" => _, "version" => 1} = data
@@ -1321,7 +1317,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -1331,7 +1327,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag template: @completeness_content
     test "insert i18n_content when data has i18n valid content", %{
       conn: conn,
-      swagger_schema: schema,
       domain: %{id: domain_id}
     } do
       lang = "es"
@@ -1359,7 +1354,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  Routes.business_concept_version_path(conn, :create),
                  business_concept_version: creation_attrs
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:created)
 
       assert %{"i18n_content" => i18n_content} = data
@@ -1374,8 +1368,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [role: "user"]
     test "doesn't allow concept creation when not in domain", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
       domain = insert(:domain)
 
@@ -1392,13 +1385,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                Routes.business_concept_version_path(conn, :create),
                business_concept_version: creation_attrs
              )
-             |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
              |> json_response(:forbidden)
     end
 
     @tag authentication: [role: "admin"]
     @tag :template
-    test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
+    test "renders errors when data is invalid", %{conn: conn} do
       domain = insert(:domain)
 
       creation_attrs = %{
@@ -1415,7 +1407,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  Routes.business_concept_version_path(conn, :create),
                  business_concept_version: creation_attrs
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(422)
     end
 
@@ -1426,7 +1417,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag template: @completeness_content
     test "set concept in progress under i18n invalid content", %{
       conn: conn,
-      swagger_schema: schema,
       domain: %{id: domain_id}
     } do
       lang = "es"
@@ -1454,7 +1444,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  Routes.business_concept_version_path(conn, :create),
                  business_concept_version: creation_attrs
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:created)
     end
   end
@@ -1473,10 +1462,15 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         _ ->
           assert query == %{
                    bool: %{
-                     should: %{
-                       multi_match: %{operator: "and", query: "foo*", type: "best_fields"}
-                     },
-                     must: %{simple_query_string: %{query: "foo*"}}
+                     must: %{
+                       multi_match: %{
+                         fields: ["ngram_name*^3"],
+                         query: "foo",
+                         type: "bool_prefix",
+                         lenient: true,
+                         fuzziness: "AUTO"
+                       }
+                     }
                    }
                  }
 
@@ -1588,7 +1582,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       assert json_response(conn, 201)["data"]
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1653,8 +1647,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag authentication: [role: "admin"]
     @tag :template
     test "renders business_concept_version when data is valid", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
       %{id: id, business_concept_id: business_concept_id} =
         business_concept_version = insert(:business_concept_version, type: @template_name)
@@ -1673,7 +1666,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  Routes.business_concept_version_path(conn, :update, business_concept_version),
                  business_concept_version: update_attrs
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert %{"id" => ^id} = data
@@ -1688,20 +1680,18 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                    id
                  )
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert data["name"] == update_attrs["name"]
       assert data["content"] == %{"Field1" => "Foo", "Field2" => "bar"}
       assert data["dynamic_content"] == update_attrs["content"]
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
     @tag :template
     test "renders business_concept_version when with i18n_content", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
       %{id: id} =
         business_concept_version = insert(:business_concept_version, type: @template_name)
@@ -1727,7 +1717,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  Routes.business_concept_version_path(conn, :update, business_concept_version),
                  business_concept_version: update_attrs
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert %{^lang => %{"name" => ^new_name, "content" => ^new_content}} = i18n_content
@@ -1738,8 +1727,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag authentication: [role: "admin"]
     @tag :template
     test "renders business_concept_version with domain change", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
       business_concept_version = insert(:business_concept_version)
 
@@ -1755,11 +1743,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  ),
                  domain_id: domain_id
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^domain_id}} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1800,8 +1787,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag authentication: [role: "user"]
     @tag :template
     test "doesn't allow concept update when in domain without permission", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
       business_concept_version = insert(:business_concept_version)
 
@@ -1816,7 +1802,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                ),
                domain_id: domain_id
              )
-             |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
              |> json_response(:forbidden)
     end
 
@@ -1824,8 +1809,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     @tag :template
     test "user with permission in new domain, can update business concept domain", %{
       conn: conn,
-      claims: claims,
-      swagger_schema: schema
+      claims: claims
     } do
       %{id: id1} = CacheHelpers.insert_domain()
       %{id: id2} = CacheHelpers.insert_domain()
@@ -1847,11 +1831,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  ),
                  domain_id: id2
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^id2}} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1887,7 +1870,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> json_response(:ok)
 
       assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -1919,7 +1902,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> json_response(:ok)
 
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -1969,8 +1952,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "user without permission in new domain, cannot update business concept domain", %{
       conn: conn,
       domain: domain,
-      claims: claims,
-      swagger_schema: schema
+      claims: claims
     } do
       business_concept_version =
         insert(:business_concept_version,
@@ -1990,7 +1972,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                ),
                domain_id: domain_id
              )
-             |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
              |> json_response(:forbidden)
     end
   end
@@ -2000,8 +1981,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
     @tag authentication: [role: "admin"]
     test "updates business concept confidential and renders version", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
       %{user_id: user_id} = build(:claims)
 
@@ -2019,7 +1999,6 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                  ),
                  confidential: true
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert %{"id" => ^business_concept_version_id} = data
@@ -2034,11 +2013,10 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                    business_concept_version_id
                  )
                )
-               |> validate_resp_schema(schema, "BusinessConceptVersionResponse")
                |> json_response(:ok)
 
       assert %{"confidential" => true} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2127,7 +2105,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2180,7 +2158,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = IndexWorker.calls()
+      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]

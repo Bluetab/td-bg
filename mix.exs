@@ -6,12 +6,12 @@ defmodule TdBg.Mixfile do
       app: :td_bg,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "6.16.1-local"
+          nil -> "7.0.0-local"
           v -> v
         end,
-      elixir: "~> 1.14",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix] ++ Mix.compilers() ++ [:phoenix_swagger],
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -49,37 +49,29 @@ defmodule TdBg.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.6.0"},
-      {:plug_cowboy, "~> 2.1"},
-      {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.8"},
-      {:jason, "~> 1.1"},
-      {:postgrex, "~> 0.16.3"},
-      {:gettext, "~> 0.20"},
-      {:httpoison, "~> 1.6"},
-      {:guardian, "~> 2.0"},
+      {:phoenix, "~> 1.7.18"},
+      {:phoenix_ecto, "~> 4.6.3"},
+      {:plug_cowboy, "~> 2.7"},
+      {:ecto_sql, "~> 3.12.1"},
+      {:postgrex, "~> 0.19.3"},
+      {:jason, "~> 1.4.4"},
+      {:guardian, "~> 2.3.2"},
       {:canada, "~> 2.0"},
-      {:corsica, "~> 1.0"},
-      {:phoenix_swagger, git: "https://github.com/Bluetab/phx_swagger.git", tag: "6.0.0"},
-      {:quantum, "~> 3.0"},
-      {:ex_json_schema, "~> 0.7.3"},
-      {:json_diff, "~> 0.1.0"},
-      {:csv, "~> 2.4"},
-      {:nimble_csv, "~> 1.1"},
-      {:codepagex, "~> 0.1.4"},
-      {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.54.0"},
-      {:graph, git: "https://github.com/Bluetab/graph.git", tag: "1.3.0"},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      {:ex_machina, "~> 2.3", only: :test},
-      {:assertions, "~> 0.19", only: :test},
-      {:mox, "~> 1.0", only: :test},
-      {:sobelow, "~> 0.11", only: [:dev, :test]},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "6.16.0", override: true},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "7.0.0", override: true},
-      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "6.16.0"},
-      {:elixlsx, "~> 0.5.1"},
-      {:xlsx_reader, "~> 0.7.0"}
+      {:corsica, "~> 2.1.3"},
+      {:quantum, "~> 3.5.3"},
+      {:csv, "~> 3.2.1"},
+      {:nimble_csv, "~> 1.2"},
+      {:elixlsx, "~> 0.6"},
+      {:xlsx_reader, "~> 0.8.7"},
+      {:codepagex, "~> 0.1.9"},
+      {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "7.0.0"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "7.0.1"},
+      {:credo, "~> 1.7.11", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4.5", only: :dev, runtime: false},
+      {:ex_machina, "~> 2.8", only: :test},
+      {:assertions, "~> 0.20.1", only: :test},
+      {:mox, "~> 1.2", only: :test},
+      {:sobelow, "~> 0.13", only: [:dev, :test]}
     ]
   end
 

@@ -1,23 +1,12 @@
 defmodule TdBgWeb.SharedDomainController do
   use TdBgWeb, :controller
   import Canada, only: [can?: 2]
-  use PhoenixSwagger
+
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBgWeb.BusinessConceptView
 
   action_fallback(TdBgWeb.FallbackController)
-
-  swagger_path :update do
-    description("Updates domain relations to a business concept")
-
-    parameters do
-      business_concept_id(:path, :integer, "Business Id", required: true)
-      domain_ids(:body, :array, "List of domain ids")
-    end
-
-    response(200, "OK", Schema.ref(:BusinessConceptResponse))
-  end
 
   def update(conn, %{"business_concept_id" => id} = params) do
     claims = conn.assigns[:current_resource]

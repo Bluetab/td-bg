@@ -290,33 +290,33 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     status == h || has_any_status?(status, t)
   end
 
-  def is_updatable?(%BusinessConceptVersion{status: status} = bcv) do
+  def updatable?(%BusinessConceptVersion{status: status} = bcv) do
     BusinessConcepts.last?(bcv) && status == "draft"
   end
 
-  def is_publishable?(%BusinessConceptVersion{status: status} = bcv) do
+  def publishable?(%BusinessConceptVersion{status: status} = bcv) do
     BusinessConcepts.last?(bcv) && status in ["pending_approval"]
   end
 
-  def is_restorable?(%BusinessConceptVersion{status: status} = bcv) do
+  def restorable?(%BusinessConceptVersion{status: status} = bcv) do
     BusinessConcepts.last?(bcv) && status in ["deprecated"]
   end
 
-  def is_rejectable?(business_concept_version),
-    do: is_publishable?(business_concept_version)
+  def rejectable?(business_concept_version),
+    do: publishable?(business_concept_version)
 
-  def is_versionable?(%BusinessConceptVersion{status: status} = bcv) do
+  def versionable?(%BusinessConceptVersion{status: status} = bcv) do
     BusinessConcepts.last?(bcv) && status == "published"
   end
 
-  def is_deprecatable?(%BusinessConceptVersion{} = business_concept_version),
-    do: is_versionable?(business_concept_version)
+  def deprecatable?(%BusinessConceptVersion{} = business_concept_version),
+    do: versionable?(business_concept_version)
 
-  def is_undo_rejectable?(%BusinessConceptVersion{status: status} = bcv) do
+  def undo_rejectable?(%BusinessConceptVersion{status: status} = bcv) do
     BusinessConcepts.last?(bcv) && status == "rejected"
   end
 
-  def is_deletable?(%BusinessConceptVersion{status: status} = bcv) do
+  def deletable?(%BusinessConceptVersion{status: status} = bcv) do
     valid_statuses = ["draft", "rejected"]
     BusinessConcepts.last?(bcv) && Enum.member?(valid_statuses, status)
   end

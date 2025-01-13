@@ -95,7 +95,7 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
   def handle_info({:timeout, %{ref: ref} = task}, state) when is_reference(ref) do
     {%{file_hash: file_hash} = task_info, state} = pop_in(state.tasks[ref])
 
-    Logger.warn(
+    Logger.warning(
       "Task timeout, reference: #{inspect(ref)}}, trying to shut it down in #{@shutdown_timeout}..."
     )
 

@@ -34,31 +34,37 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
           assert %{bool: %{must: [query_filter, confidential_filter, status_filter]}} = query
 
-          assert query_filter == %{simple_query_string: %{query: "bar*"}}
-
-          assert status_filter == %{
-                   bool: %{
-                     should: [
-                       %{
-                         bool: %{
-                           filter: [
-                             %{term: %{"status" => "rejected"}},
-                             %{term: %{"domain_ids" => domain_id4}}
-                           ]
-                         }
-                       },
-                       %{
-                         bool: %{
-                           filter: [
-                             %{terms: %{"status" => ["draft", "pending_approval"]}},
-                             %{term: %{"domain_ids" => domain_id3}}
-                           ]
-                         }
-                       },
-                       %{term: %{"status" => "published"}}
-                     ]
+          assert query_filter == %{
+                   multi_match: %{
+                     fields: ["ngram_name*^3"],
+                     query: "bar",
+                     type: "bool_prefix",
+                     lenient: true,
+                     fuzziness: "AUTO"
                    }
                  }
+
+          assert %{bool: %{should: should}} = status_filter
+
+          assert_lists_equal(should, [
+            %{
+              bool: %{
+                filter: [
+                  %{term: %{"status" => "rejected"}},
+                  %{term: %{"domain_ids" => domain_id4}}
+                ]
+              }
+            },
+            %{
+              bool: %{
+                filter: [
+                  %{terms: %{"status" => ["draft", "pending_approval"]}},
+                  %{term: %{"domain_ids" => domain_id3}}
+                ]
+              }
+            },
+            %{term: %{"status" => "published"}}
+          ])
 
           assert %{
                    bool: %{
@@ -109,9 +115,17 @@ defmodule TdBg.BusinessConcepts.SearchTest do
         _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
 
-          assert %{bool: %{must: [simple_query, confidential_filter, status_filter]}} = query
+          assert %{bool: %{must: [ngram_query, confidential_filter, status_filter]}} = query
 
-          assert simple_query == %{simple_query_string: %{query: "bar*"}}
+          assert ngram_query == %{
+                   multi_match: %{
+                     fields: ["ngram_name*^3"],
+                     query: "bar",
+                     type: "bool_prefix",
+                     lenient: true,
+                     fuzziness: "AUTO"
+                   }
+                 }
 
           %{
             bool: %{
