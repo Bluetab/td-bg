@@ -264,7 +264,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      url_fields = "www.com.com|www.net.net"
+      url_fields = "[com] (www.com.com)|[net] (www.net.net)"
       key_value_fields = "First Element|Second Element"
 
       csv = Download.to_csv(concepts, @lang)
@@ -332,7 +332,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      url_fields = "www.com.com|www.net.net"
+      url_fields = "[com] (www.com.com)|[net] (www.net.net)"
       key_value_fields = "First Element|Second Element"
 
       csv = Download.to_csv(concepts, @lang, @concept_url_schema)
@@ -705,6 +705,61 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       assert content ==
                "#{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};draft;100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;Pera;Test no translate;Platano;Pera|Platano"
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "url_field", "type" => "url", "label" => "Url"}
+             ]
+           }
+         ]
+
+    test "to_xlsx/2 return formatted links with names" do
+      template = @template_name
+
+      url_field = "url_field"
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "template" => %{"name" => template},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
+          "content" => %{
+            url_field => [
+              %{"url_name" => "com", "url_value" => "www.com.com"},
+              %{"url_name" => "", "url_value" => "www.net.net"},
+              %{"url_value" => "www.org.org"}
+            ]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      url_fields = "[com] (www.com.com)|www.net.net|www.org.org"
+
+      csv = Download.to_csv(concepts, @lang, @concept_url_schema)
+      [headers, content] = csv |> String.split("\r\n") |> Enum.filter(&(&1 != ""))
+
+      assert headers ==
+               "id;current_version_id;name;domain_external_id;domain_name;status;completeness;last_change_at;inserted_at;link_to_concept;url_field"
+
+      assert content ==
+               "#{business_concept_id};#{business_concept_version_id};#{name};#{domain_ext_id};#{domain_name};draft;100.0;#{last_change_at};#{inserted_at};https://test.io/concepts/123/versions/456;#{url_fields}"
     end
   end
 
@@ -1235,7 +1290,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "content" => %{
             url_field => [
               %{"url_name" => "com", "url_value" => "www.com.com"},
-              %{"url_name" => "net", "url_value" => "www.net.net"}
+              %{"url_name" => "", "url_value" => "www.net.net"},
+              %{"url_value" => "www.org.org"}
             ],
             key_value_field => ["1", "2"]
           },
@@ -1245,7 +1301,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      url_fields = "www.com.com|www.net.net"
+      url_fields = "[com] (www.com.com)|www.net.net|www.org.org"
       key_value_fields = "First Element|Second Element"
 
       rows = [
@@ -1342,7 +1398,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
         }
       ]
 
-      url_fields = "www.com.com|www.net.net"
+      url_fields = "[com] (www.com.com)|[net] (www.net.net)"
       key_value_fields = "First Element|Second Element"
 
       rows = [
@@ -1384,6 +1440,91 @@ defmodule TdBg.BusinessConceptDownloadTests do
                  }
                ]
              } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{"name" => "url_field", "type" => "url", "label" => "Url"}
+             ]
+           }
+         ]
+
+    test "to_xlsx/2 return formatted links with names" do
+      template = @template_name
+
+      url_field = "url_field"
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name = "concept_name"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "template" => %{"name" => template},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
+          "content" => %{
+            url_field => [
+              %{"url_name" => "com", "url_value" => "www.com.com"},
+              %{"url_name" => "", "url_value" => "www.net.net"},
+              %{"url_value" => "www.org.org"}
+            ]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      url_fields = "[com] (www.com.com)|www.net.net|www.org.org"
+
+      rows = [
+        [
+          ["id", {:bg_color, "#ffe994"}],
+          "current_version_id",
+          ["name", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
+          "status",
+          "completeness",
+          "last_change_at",
+          "inserted_at",
+          "link_to_concept",
+          url_field
+        ],
+        [
+          business_concept_id,
+          business_concept_version_id,
+          name,
+          domain_ext_id,
+          domain_name,
+          status,
+          100.0,
+          last_change_at,
+          inserted_at,
+          "https://test.io/concepts/123/versions/456",
+          url_fields
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: ^rows
+                 }
+               ]
+             } =
+               Download.to_xlsx(concepts, @lang, @concept_url_schema)
     end
 
     @tag template: [

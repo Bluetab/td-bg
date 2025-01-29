@@ -18,51 +18,60 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
     Templates.create_template(%{
       name: "template_test",
       content: [
-        %{
-          "name" => "group",
-          "fields" => [
-            %{
-              "name" => "Field1",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Field 1",
-              "values" => nil,
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field2",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Field 2",
-              "values" => nil,
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field3",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Field 3",
-              "default" => 1,
-              "values" => %{"fixed" => ["1", "2", "3"]},
-              "cardinality" => "1"
-            },
-            %{
-              "name" => "Field4",
-              "type" => "string",
-              "group" => "Multiple Group",
-              "label" => "Field 4",
-              "values" => %{"fixed" => ["1", "2", "3"]},
-              "cardinality" => "*"
-            },
-            %{
-              "name" => "Field5",
-              "type" => "enriched_text",
-              "group" => "Multiple Group",
-              "label" => "Field 5",
-              "cardinality" => "*"
-            }
+        build(:template_group,
+          name: "group",
+          fields: [
+            build(:template_field,
+              name: "Field1",
+              type: "string",
+              group: "Multiple Group",
+              label: "Field 1",
+              values: nil,
+              cardinality: "1"
+            ),
+            build(:template_field,
+              name: "Field2",
+              type: "string",
+              group: "Multiple Group",
+              label: "Field 2",
+              values: nil,
+              cardinality: "1"
+            ),
+            build(:template_field,
+              name: "Field3",
+              type: "string",
+              group: "Multiple Group",
+              label: "Field 3",
+              default: 1,
+              values: %{fixed: ["1", "2", "3"]},
+              cardinality: "1"
+            ),
+            build(:template_field,
+              name: "Field4",
+              type: "string",
+              group: "Multiple Group",
+              label: "Field 4",
+              values: %{fixed: ["1", "2", "3"]},
+              cardinality: "*"
+            ),
+            build(:template_field,
+              name: "Field5",
+              type: "enriched_text",
+              group: "Multiple Group",
+              label: "Field 5",
+              cardinality: "*"
+            ),
+            build(:template_field,
+              cardinality: "*",
+              default: %{origin: "default", value: ""},
+              label: "Field 6",
+              name: "Field6",
+              type: "url",
+              widget: "pair_list",
+              values: nil
+            )
           ]
-        }
+        )
       ],
       scope: "test",
       label: "template_label",
@@ -97,7 +106,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "Field2" => %{"value" => "Second field", "origin" => "user"},
         "Field3" => %{"value" => "3", "origin" => "user"},
         "Field4" => %{"value" => ["1", "2"], "origin" => "user"},
-        "Field5" => %{"value" => "foo", "origin" => "user"}
+        "Field5" => %{"value" => "foo", "origin" => "user"},
+        "Field6" => %{
+          "value" => [
+            %{"url_name" => "com", "url_value" => "www.com.com"},
+            %{"url_name" => "", "url_value" => "www.net.net"},
+            %{"url_name" => "org", "url_value" => "www.org.org"}
+          ],
+          "origin" => "user"
+        }
       }
 
       update_content = %{
@@ -105,7 +122,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
         "Field2" => %{"value" => "Second field", "origin" => "user"},
         "Field3" => %{"value" => "1", "origin" => "user"},
         "Field4" => %{"value" => [], "origin" => "user"},
-        "Field5" => %{"value" => "foo", "origin" => "user"}
+        "Field5" => %{"value" => "foo", "origin" => "user"},
+        "Field6" => %{
+          "value" => [
+            %{"url_name" => "com updated", "url_value" => "www.com.com"},
+            %{"url_name" => "net updated", "url_value" => "www.net.net"},
+            %{"url_name" => "", "url_value" => "www.org.org"}
+          ],
+          "origin" => "user"
+        }
       }
 
       bc_version1 =
@@ -145,7 +170,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                "Field2" => %{"value" => "Second field", "origin" => "user"},
                "Field3" => %{"value" => "1", "origin" => "user"},
                "Field4" => %{"value" => [""], "origin" => "default"},
-               "Field5" => %{"value" => enrich_text("foo"), "origin" => "user"}
+               "Field5" => %{"value" => enrich_text("foo"), "origin" => "user"},
+               "Field6" => %{
+                 "value" => [
+                   %{"url_name" => "com updated", "url_value" => "www.com.com"},
+                   %{"url_name" => "net updated", "url_value" => "www.net.net"},
+                   %{"url_name" => "", "url_value" => "www.org.org"}
+                 ],
+                 "origin" => "user"
+               }
              }
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 1)).business_concept.domain_id ==
@@ -156,7 +189,15 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
                "Field2" => %{"value" => "Second field", "origin" => "user"},
                "Field3" => %{"value" => "1", "origin" => "user"},
                "Field4" => %{"value" => [""], "origin" => "default"},
-               "Field5" => %{"value" => enrich_text("foo"), "origin" => "user"}
+               "Field5" => %{"value" => enrich_text("foo"), "origin" => "user"},
+               "Field6" => %{
+                 "value" => [
+                   %{"url_name" => "com updated", "url_value" => "www.com.com"},
+                   %{"url_name" => "net updated", "url_value" => "www.net.net"},
+                   %{"url_name" => "", "url_value" => "www.org.org"}
+                 ],
+                 "origin" => "user"
+               }
              }
 
       IndexWorkerMock.clear()
