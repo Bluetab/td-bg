@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-6921] Download/Upload of fields of type link must include both name and url
+
 ## [7.0.0] 2025-01-13
 
 ### Added
@@ -18,6 +24,7 @@
   - update Docker RUNTIME_BASE=alpine:3.21
   - remove unused dependencies
   - remove swagger
+- [TD-6921] change Download and Upload URL file type format
 
 ## [6.16.1] 2025-01-02
 

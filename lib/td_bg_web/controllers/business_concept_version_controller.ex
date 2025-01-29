@@ -734,7 +734,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       original_links
       |> Enum.filter(fn
         %{resource_type: :concept, tags: tags} ->
-          length(expandable_tags -- expandable_tags -- tags) > 0
+          length(expandable_tags -- (expandable_tags -- tags)) > 0
 
         _ ->
           false

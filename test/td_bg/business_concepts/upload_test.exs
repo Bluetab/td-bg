@@ -74,6 +74,15 @@ defmodule TdBg.UploadTest do
             "type" => "float",
             "widget" => "number",
             "values" => nil
+          },
+          %{
+            "cardinality" => "*",
+            "default" => %{"origin" => "default", "value" => ""},
+            "label" => "URL",
+            "name" => "input_url",
+            "type" => "url",
+            "widget" => "pair_list",
+            "values" => nil
           }
         ]
       }
@@ -350,6 +359,14 @@ defmodule TdBg.UploadTest do
                "description" => %{"origin" => "file", "value" => ["Test"]},
                "input_float" => %{"origin" => "file", "value" => 12.5},
                "input_integer" => %{"origin" => "file", "value" => 12},
+               "input_url" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"url_name" => "com", "url_value" => "www.com.com"},
+                   %{"url_name" => "", "url_value" => "www.net.net"},
+                   %{"url_name" => "", "url_value" => "www.org.org"}
+                 ]
+               },
                "role" => %{"origin" => "file", "value" => ["Role"]}
              }
     end
