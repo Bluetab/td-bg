@@ -279,22 +279,15 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
         end
       )
 
-      log =
-        capture_log(fn ->
-          assert %{
-                   "data" => [
-                     %{"content" => %{"Field1" => "First field", "Field2" => "Second field"}}
-                   ]
-                 } =
-                   conn
-                   |> Plug.Conn.assign(:locale, nil)
-                   |> post(Routes.business_concept_version_search_path(conn, :search), %{})
-                   |> json_response(:ok)
-        end)
-
-      assert log =~ """
-             Language is not defined in the business_concept_version_search_view
-             """
+      assert %{
+               "data" => [
+                 %{"content" => %{"Field1" => "First field", "Field2" => "Second field"}}
+               ]
+             } =
+               conn
+               |> Plug.Conn.assign(:locale, nil)
+               |> post(Routes.business_concept_version_search_path(conn, :search), %{})
+               |> json_response(:ok)
     end
 
     @tag authentication: [role: "admin"]

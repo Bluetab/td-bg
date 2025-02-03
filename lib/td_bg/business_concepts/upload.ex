@@ -135,6 +135,7 @@ defmodule TdBg.BusinessConcept.Upload do
          :ok <- validate_business_concept_name(row_parsed, template),
          {:ok, row_parsed} <- format_content(row_parsed, template, lang),
          {:ok, row_parsed} <- validate_changeset(row_parsed, template, claims),
+         {:ok, row_parsed} <- validate_template_content(row_parsed),
          {:ok, row_parsed} <- add_publish_status(row_parsed, claims),
          {:ok, row_parsed} <- upsert(row_parsed) do
       row_parsed
@@ -236,6 +237,23 @@ defmodule TdBg.BusinessConcept.Upload do
            }}
 
         put_errors(row_parsed, error)
+
+      {:error, :hierarchy_value_error, values} ->
+        errors =
+          Enum.map(values, fn %{name: name, value: value} ->
+            {:hierarchy_value_error,
+             %{
+               context: %{
+                 name: name,
+                 value: value,
+                 type: Map.get(template, :name),
+                 row: index
+               },
+               message: "concepts.upload.failed.hierarchy_value_error"
+             }}
+          end)
+
+        put_errors(row_parsed, errors)
     end
   end
 
@@ -634,6 +652,27 @@ defmodule TdBg.BusinessConcept.Upload do
           )
           |> parse_changeset(row_parsed)
         end
+    end
+  end
+
+  defp validate_template_content(
+         %{df_content: df_content, params: %{"content" => content}} = row_parsed
+       ) do
+    case(filter_invalid_template_content(df_content, content)) do
+      [] ->
+        {:ok, row_parsed}
+
+      values ->
+        {:error, :hierarchy_value_error, values}
+    end
+  end
+
+  defp filter_invalid_template_content(df_content, content) do
+    for(
+      {key, %{"value" => nil}} <- content,
+      %{"value" => value} <- [Map.get(df_content, key)]
+    ) do
+      %{name: key, value: value}
     end
   end
 
