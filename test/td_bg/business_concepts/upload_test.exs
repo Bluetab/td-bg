@@ -510,15 +510,27 @@ defmodule TdBg.UploadTest do
                  %{
                    body: %{
                      context: %{
-                       error:
-                         "hierarchy_name_2: has more than one node children_2 - hierarchy_name_1: has more than one node children_2",
-                       field: :content,
                        row: 2,
-                       type: "term"
+                       type: "term",
+                       error: "hierarchy_name_2: hierarchy - hierarchy_name_1: hierarchy",
+                       field: :content
                      },
                      message: "concepts.upload.failed.invalid_field_value"
                    },
                    error_type: "field_error"
+                 },
+                 %{
+                   error_type: "field_error",
+                   body: %{
+                     message: "concepts.upload.failed.invalid_field_value",
+                     context: %{
+                       error:
+                         "hierarchy_name_2: has more than one node children_2 - hierarchy_name_1: has more than one node children_2",
+                       type: "term",
+                       field: :content,
+                       row: 3
+                     }
+                   }
                  }
                ]
              } =
