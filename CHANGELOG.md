@@ -1,18 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [7.1.0] 2025-02-04
 
 ### Changed
 
 - [TD-6921] Download/Upload of fields of type link must include both name and url
-- [TD-6022] Upload of hierarchy fields should validate that the value is a valid one
 - [TD-5119] Bulk uploads are not validating the values of the fields that depend on the value of another field
+- [TD-6022] 
+  - Upload of hierarchy fields should validate that the value is a valid one
+  - Add hierarchy validation during business concept Excel load
 
 ## [7.0.0] 2025-01-13
-
-### Added
-
-- [TD-6022] Add hierarchy validation during business concept Excel load
 
 ### Added
 
@@ -30,7 +28,6 @@
   - update Docker RUNTIME_BASE=alpine:3.21
   - remove unused dependencies
   - remove swagger
-- [TD-6921] change Download and Upload URL file type format
 
 ## [6.16.1] 2025-01-02
 
