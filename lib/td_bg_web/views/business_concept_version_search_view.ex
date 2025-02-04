@@ -62,10 +62,13 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
   end
 
   defp set_i18n_content(%{"content" => content} = concept, lang) do
-    if is_nil(lang),
-      do: Logger.error("Language is not defined in the business_concept_version_search_view")
-
     {:ok, default_lang} = I18nCache.get_default_locale()
+
+    if is_nil(lang),
+      do:
+        Logger.info(
+          "Header accept-language is not defined, setting default locale '#{default_lang}' "
+        )
 
     default_content =
       content

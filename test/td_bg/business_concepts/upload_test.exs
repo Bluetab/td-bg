@@ -74,6 +74,47 @@ defmodule TdBg.UploadTest do
             "type" => "float",
             "widget" => "number",
             "values" => nil
+          },
+          %{
+            "cardinality" => "*",
+            "default" => %{"origin" => "default", "value" => ""},
+            "label" => "URL",
+            "name" => "input_url",
+            "type" => "url",
+            "widget" => "pair_list",
+            "values" => nil
+          },
+          %{
+            "name" => "father",
+            "type" => "string",
+            "label" => "father",
+            "values" => %{"fixed" => ["a1", "a2", "b1", "b2"]},
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
+          },
+          %{
+            "name" => "son",
+            "type" => "string",
+            "label" => "son",
+            "values" => %{
+              "switch" => %{
+                "on" => "father",
+                "values" => %{
+                  "a1" => ["a11", "a12", "a13"],
+                  "a2" => ["a21", "a22", "a23"],
+                  "b1" => ["b11", "b12", "b13"],
+                  "b2" => ["b21", "b22", "b23"]
+                }
+              }
+            },
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
           }
         ]
       }
@@ -350,6 +391,14 @@ defmodule TdBg.UploadTest do
                "description" => %{"origin" => "file", "value" => ["Test"]},
                "input_float" => %{"origin" => "file", "value" => 12.5},
                "input_integer" => %{"origin" => "file", "value" => 12},
+               "input_url" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"url_name" => "com", "url_value" => "www.com.com"},
+                   %{"url_name" => "", "url_value" => "www.net.net"},
+                   %{"url_name" => "", "url_value" => "www.org.org"}
+                 ]
+               },
                "role" => %{"origin" => "file", "value" => ["Role"]}
              }
     end
@@ -452,36 +501,40 @@ defmodule TdBg.UploadTest do
       assert version |> Map.get(:current) == true
     end
 
-    test "bulk_upload/3 uploads business concept versions as admin with hierarchy data" do
+    test "bulk_upload/3 returns an error for business concept versions with valid hierarchy and dependent data" do
       IndexWorkerMock.clear()
       claims = build(:claims, role: "admin")
 
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload_hierarchy.xlsx"}
 
-      assert %{created: [concept_id], updated: _, errors: _} =
-               Upload.bulk_upload(
-                 business_concept_upload,
-                 claims,
-                 lang: @default_lang
-               )
+      assert %{created: [concept_id_1, concept_id_2], updated: _, errors: _} =
+               Upload.bulk_upload(business_concept_upload, claims, lang: @default_lang)
 
-      version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+      version_1 = BusinessConcepts.get_business_concept_version!(concept_id_1)
+      version_2 = BusinessConcepts.get_business_concept_version!(concept_id_2)
+
+      assert IndexWorkerMock.calls() == [
+               {:reindex, :concepts, [version_1.business_concept.id]},
+               {:reindex, :concepts, [version_2.business_concept.id]}
+             ]
 
       assert %{
-               "hierarchy_name_1" => %{
-                 "value" => "1_2",
-                 "origin" => "file"
-               },
-               "hierarchy_name_2" => %{
-                 "value" => ["1_2", "1_1"],
-                 "origin" => "file"
-               }
-             } = Map.get(version, :content)
+               "hierarchy_name_1" => %{"value" => "1_2", "origin" => "file"},
+               "hierarchy_name_2" => %{"value" => ["1_2", "1_1"], "origin" => "file"},
+               "father" => %{"origin" => "file", "value" => ""},
+               "son" => %{"origin" => "file", "value" => ""}
+             } = Map.get(version_1, :content)
+
+      assert %{
+               "hierarchy_name_1" => %{"value" => "1_2", "origin" => "file"},
+               "hierarchy_name_2" => %{"value" => ["1_2", "1_1"], "origin" => "file"},
+               "father" => %{"origin" => "file", "value" => "a1"},
+               "son" => %{"origin" => "file", "value" => "a11"}
+             } = Map.get(version_2, :content)
     end
 
-    test "bulk_upload/3 get error business concept versions with invalid hierarchy data" do
+    test "bulk_upload/3 returns an error for business concept versions with an invalid hierarchy and dependent data" do
       claims = build(:claims, role: "admin")
       insert(:domain, external_id: "domain")
       business_concept_upload = %{path: "test/fixtures/upload_invalid_hierarchy.xlsx"}
@@ -494,10 +547,10 @@ defmodule TdBg.UploadTest do
                    body: %{
                      context: %{
                        error:
-                         "hierarchy_name_2: has more than one node children_2 - hierarchy_name_1: has more than one node children_2",
-                       field: :content,
+                         "hierarchy_name_2: has more than one node children_2 - hierarchy_name_1: has more than one node children_2 - son: is invalid",
                        row: 2,
-                       type: "term"
+                       type: "term",
+                       field: :content
                      },
                      message: "concepts.upload.failed.invalid_field_value"
                    },
