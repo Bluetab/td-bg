@@ -1,7 +1,6 @@
 defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
   use TdBgWeb.ConnCase
 
-  import ExUnit.CaptureLog
   import Mox
 
   alias TdCore.Search.IndexWorkerMock
