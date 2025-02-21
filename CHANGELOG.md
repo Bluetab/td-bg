@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7069] Add parents for Domains Index API
+
 ## [7.1.0] 2025-02-04
 
 ### Changed
