@@ -1,12 +1,18 @@
 # Changelog
 
+## [7.2.0] 2025-02-25
+
+### Added
+
+- [TD-7069] Add parents for Domains Index API
+
 ## [7.1.0] 2025-02-04
 
 ### Changed
 
 - [TD-6921] Download/Upload of fields of type link must include both name and url
 - [TD-5119] Bulk uploads are not validating the values of the fields that depend on the value of another field
-- [TD-6022] 
+- [TD-6022]
   - Upload of hierarchy fields should validate that the value is a valid one
   - Add hierarchy validation during business concept Excel load
 

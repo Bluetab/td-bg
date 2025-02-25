@@ -46,6 +46,24 @@ defmodule TdBg.TaxonomiesTest do
 
       assert [] = Taxonomies.list_domains(%{domain_ids: []})
     end
+
+    test "returns domains with parents" do
+      %{id: granpa_id} = CacheHelpers.insert_domain()
+      %{id: parent_id} = CacheHelpers.insert_domain(parent_id: granpa_id)
+      %{id: domain_id} = CacheHelpers.insert_domain(parent_id: parent_id)
+
+      [
+        %{
+          id: ^domain_id,
+          parents: [
+            %{id: ^domain_id},
+            %{id: ^parent_id},
+            %{id: ^granpa_id}
+          ],
+          parent_id: ^parent_id
+        }
+      ] = Taxonomies.list_domains(%{domain_ids: [domain_id]})
+    end
   end
 
   describe "get_domain!/1" do
