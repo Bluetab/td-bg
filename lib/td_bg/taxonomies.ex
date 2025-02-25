@@ -43,6 +43,7 @@ defmodule TdBg.Taxonomies do
     |> where_deleted(deleted)
     |> preload(^preloads)
     |> Repo.all()
+    |> Enum.map(&add_parents/1)
   end
 
   @doc """
