@@ -487,6 +487,95 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
       assert [%{"id" => ^id}] = data
     end
+
+    @tag authentication: [role: "admin"]
+    test "search with include_links", %{conn: conn} do
+      %{business_concept_id: business_concept_id_source} =
+        bcv_source = insert(:business_concept_version)
+
+      %{business_concept_id: business_concept_id_target} =
+        bcv_target = insert(:business_concept_version)
+
+      %{id: implementation_id} =
+        CacheHelpers.insert_implementation()
+
+      CacheHelpers.insert_link(
+        implementation_id,
+        "implementation_ref",
+        "business_concept",
+        business_concept_id_target
+      )
+
+      CacheHelpers.insert_link(
+        implementation_id,
+        "implementation_ref",
+        "business_concept",
+        business_concept_id_source
+      )
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _, :post, "/concepts/_search", %{from: 0, query: _}, _ ->
+          SearchHelpers.hits_response([bcv_source, bcv_target])
+        end
+      )
+
+      params = %{include_links: true}
+
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+
+      assert [
+               %{"links" => [%{"implementation_ref" => ^implementation_id} | _]},
+               %{"links" => [%{"implementation_ref" => ^implementation_id} | _]}
+             ] = data
+    end
+
+    @tag authentication: [role: "admin"]
+    test "search without include_links", %{conn: conn} do
+      %{business_concept_id: business_concept_id_source} =
+        bcv_source = insert(:business_concept_version)
+
+      %{business_concept_id: business_concept_id_target} =
+        bcv_target = insert(:business_concept_version)
+
+      %{id: implementation_id} =
+        CacheHelpers.insert_implementation()
+
+      CacheHelpers.insert_link(
+        implementation_id,
+        "implementation_ref",
+        "business_concept",
+        business_concept_id_target
+      )
+
+      CacheHelpers.insert_link(
+        implementation_id,
+        "implementation_ref",
+        "business_concept",
+        business_concept_id_source
+      )
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _, :post, "/concepts/_search", %{from: 0, query: _}, _ ->
+          SearchHelpers.hits_response([bcv_source, bcv_target])
+        end
+      )
+
+      params = %{include_links: false}
+
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+
+      refute Enum.any?(data, &Map.has_key?(&1, "links"))
+    end
   end
 
   describe "POST /api/business_concept_versions/search with must params" do
