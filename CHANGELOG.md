@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7130] Add include_links to concept search
+
 ## [7.2.0] 2025-02-25
 
 ### Added
