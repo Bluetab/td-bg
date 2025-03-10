@@ -162,6 +162,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
 
     @translatable_fields [:name, :ngram_name]
     @search_fields ~w(ngram_name*^3)
+    @simple_search_fields ~w(name*)
 
     def mappings(_) do
       content_mappings = %{properties: get_dynamic_mappings("bg", add_locales?: true)}
@@ -223,6 +224,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
 
       %{
         fields: @search_fields ++ dynamic_fields,
+        simple_search_fields: @simple_search_fields,
         aggs: merged_aggregations(content_schema)
       }
     end

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7155] Introduce simple query string query for concepts
+
 ## [7.2.0] 2025-02-25
 
 ### Added
