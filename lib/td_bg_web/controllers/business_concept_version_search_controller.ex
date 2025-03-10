@@ -35,15 +35,17 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     page = Map.get(params, "page", 0)
     size = Map.get(params, "size", 50)
 
+    include_links = Map.get(params, "include_links", false)
+
     results =
       %{results: business_concept_versions} =
       params
-      |> Map.drop(["page", "size"])
+      |> Map.drop(["page", "size", "include_links"])
       |> Search.search_business_concept_versions(claims, page, size)
 
     bcv_with_links =
       business_concept_versions
-      |> Enum.map(&add_links(&1, claims))
+      |> Enum.map(&add_links(&1, claims, include_links))
       |> Enum.map(&add_links_actions(&1, claims))
 
     results
@@ -82,7 +84,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
 
   defp add_links(
          %{"business_concept_id" => business_concept_id} = business_concept_version,
-         claims
+         claims,
+         true
        ) do
     links =
       business_concept_id
@@ -93,6 +96,9 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
 
     Map.put(business_concept_version, "links", links)
   end
+
+  defp add_links(business_concept_version, _claims, false),
+    do: business_concept_version
 
   defp add_links_actions(business_concept_version, claims) do
     can_create_link = can?(claims, create_structure_link(business_concept_version))
