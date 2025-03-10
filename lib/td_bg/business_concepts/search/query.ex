@@ -10,6 +10,7 @@ defmodule TdBg.BusinessConcepts.Search.Query do
 
   @match_all %{match_all: %{}}
   @match_none %{match_none: %{}}
+  @accepted_wildcards ["\"", ")"]
 
   @permissions_to_status %{
     "view_draft_business_concepts" => "draft",
@@ -132,22 +133,37 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   defp maybe_bool_query(%{} = bool) when map_size(bool) >= 1, do: %{bool: bool}
 
   def build_query(filters, params, query_data) do
-    query_data = query_data |> with_search_clauses() |> Keyword.new()
+    query_data =
+      query_data
+      |> with_search_clauses(params)
+      |> Keyword.new()
+
     Query.build_query(filters, params, query_data)
   end
 
-  defp with_search_clauses(%{fields: fields} = query_data) do
-    multi_match_bool_prefix = %{
-      multi_match: %{
-        type: "bool_prefix",
-        fields: fields,
-        lenient: true,
-        fuzziness: "AUTO"
-      }
-    }
-
+  defp with_search_clauses(query_data, params) do
     query_data
     |> Map.take([:aggs])
-    |> Map.put(:clauses, [multi_match_bool_prefix])
+    |> Map.put(:clauses, [clause_for_query(query_data, params)])
+  end
+
+  defp clause_for_query(query_data, %{"query" => query}) when is_binary(query) do
+    if String.last(query) in @accepted_wildcards do
+      simple_query_string_clause(query_data)
+    else
+      multi_match_boolean_prefix(query_data)
+    end
+  end
+
+  defp clause_for_query(query_data, _params) do
+    multi_match_boolean_prefix(query_data)
+  end
+
+  defp multi_match_boolean_prefix(%{fields: fields}) do
+    %{multi_match: %{type: "bool_prefix", fields: fields, lenient: true, fuzziness: "AUTO"}}
+  end
+
+  defp simple_query_string_clause(%{simple_search_fields: fields}) do
+    %{simple_query_string: %{fields: fields}}
   end
 end
