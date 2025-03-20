@@ -576,6 +576,385 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
       refute Enum.any?(data, &Map.has_key?(&1, "links"))
     end
+
+    @tag authentication: [
+           user_name: "not_an_admin",
+           permissions: ["view_published_business_concepts"]
+         ]
+    test "get 'download_published_concepts' action when send filters of 'published' section with 'view_published_business_concepts' permission",
+         %{
+           conn: conn,
+           domain: %{id: domain_id}
+         } do
+      bcv = insert(:business_concept_version, domain_id: domain_id)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: [
+                       %{term: %{"status" => "published"}},
+                       %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
+                       %{
+                         bool: %{
+                           filter: [
+                             %{term: %{"status" => "published"}},
+                             %{term: %{"domain_ids" => domain_id}}
+                           ]
+                         }
+                       }
+                     ]
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["published"]}}
+
+      assert %{
+               "_actions" => %{
+                 "downloadPublishedConcepts" => %{}
+               }
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [
+           user_name: "not_an_admin",
+           permissions: ["view_deprecated_business_concepts"]
+         ]
+    test "get 'download_deprecated_concepts' action when send filters of 'deprecated' section with respective permissions",
+         %{
+           conn: conn,
+           domain: %{id: domain_id}
+         } do
+      bcv = insert(:business_concept_version, domain_id: domain_id)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: [
+                       %{term: %{"status" => "deprecated"}},
+                       %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
+                       %{
+                         bool: %{
+                           filter: [
+                             %{term: %{"status" => "deprecated"}},
+                             %{term: %{"domain_ids" => domain_id}}
+                           ]
+                         }
+                       }
+                     ]
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["deprecated"]}}
+
+      assert %{
+               "_actions" => %{
+                 "downloadDeprecatedConcepts" => %{}
+               }
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [
+           user_name: "not_an_admin",
+           permissions: [
+             "view_draft_business_concepts",
+             "view_rejected_business_concepts",
+             "view_approval_pending_business_concepts"
+           ]
+         ]
+    test "get 'download_draft_concepts' action when send filters of 'draft' section with respective permissions",
+         %{
+           conn: conn,
+           domain: %{id: domain_id}
+         } do
+      bcv = insert(:business_concept_version, domain_id: domain_id)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: _query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["draft", "pending_approval", "rejected"]}}
+
+      assert %{
+               "_actions" => %{
+                 "downloadDraftConcepts" => %{}
+               }
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [
+           user_name: "not_an_admin",
+           permissions: []
+         ]
+    test "get 'download_published_concepts' action when send filters of 'published' section without permissions ",
+         %{
+           conn: conn,
+           domain: %{id: domain_id}
+         } do
+      bcv = insert(:business_concept_version, domain_id: domain_id)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: [
+                       %{term: %{"status" => "published"}},
+                       %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
+                       %{match_none: %{}}
+                     ]
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["published"]}}
+
+      assert %{
+               "_actions" => %{}
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [
+           user_name: "not_an_admin",
+           permissions: []
+         ]
+    test "get 'download_deprecated_concepts' action when send filters of 'deprecated' section without permissions",
+         %{
+           conn: conn,
+           domain: %{id: domain_id}
+         } do
+      bcv = insert(:business_concept_version, domain_id: domain_id)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: [
+                       %{term: %{"status" => "deprecated"}},
+                       %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
+                       %{match_none: %{}}
+                     ]
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["deprecated"]}}
+
+      assert %{
+               "_actions" => %{}
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [
+           user_name: "not_an_admin",
+           permissions: []
+         ]
+    test "get 'download_draft_concepts' action when send filters of 'draft' section without permissions",
+         %{
+           conn: conn,
+           domain: %{id: domain_id}
+         } do
+      bcv = insert(:business_concept_version, domain_id: domain_id)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: [
+                       %{terms: %{"status" => ["draft", "pending_approval", "rejected"]}},
+                       %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
+                       %{match_none: %{}}
+                     ]
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["draft", "pending_approval", "rejected"]}}
+
+      assert %{
+               "_actions" => %{}
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "get 'download_published_concepts' action when send filters of 'published' being admin",
+         %{conn: conn} do
+      CacheHelpers.put_default_permissions(["view_published_business_concepts"])
+      bcv = insert(:business_concept_version)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: %{term: %{"status" => "published"}}
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["published"]}}
+
+      assert %{
+               "_actions" => %{
+                 "downloadPublishedConcepts" => %{}
+               }
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "get 'download_deprecated_concepts' action when send filters of 'deprecated' being admin",
+         %{conn: conn} do
+      CacheHelpers.put_default_permissions(["view_deprecated_business_concepts"])
+      bcv = insert(:business_concept_version)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: %{term: %{"status" => "deprecated"}}
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["deprecated"]}}
+
+      assert %{
+               "_actions" => %{
+                 "downloadDeprecatedConcepts" => %{}
+               }
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "get 'download_draft_concepts' action when send filters of 'draft' section being admin",
+         %{conn: conn} do
+      bcv = insert(:business_concept_version)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert query == %{
+                   bool: %{
+                     must: %{terms: %{"status" => ["draft", "pending_approval", "rejected"]}}
+                   }
+                 }
+
+          SearchHelpers.hits_response([bcv])
+        end
+      )
+
+      params = %{must: %{"status" => ["draft", "pending_approval", "rejected"]}}
+
+      assert %{
+               "_actions" => %{
+                 "downloadDraftConcepts" => %{}
+               }
+             } =
+               conn
+               |> post(Routes.business_concept_version_search_path(conn, :search), params)
+               |> json_response(:ok)
+    end
   end
 
   describe "POST /api/business_concept_versions/search with must params" do

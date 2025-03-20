@@ -35,6 +35,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     page = Map.get(params, "page", 0)
     size = Map.get(params, "size", 50)
 
+    permission_by_status = get_permissions_by_status(params)
+
     include_links = Map.get(params, "include_links", false)
 
     results =
@@ -50,7 +52,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
 
     results
     |> Map.put(:results, bcv_with_links)
-    |> render_search_results(conn)
+    |> render_search_results(conn, permission_by_status)
   end
 
   def actions(conn, _params) do
@@ -62,7 +64,32 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     render(conn, "list.json", hypermedia: hypermedia)
   end
 
-  defp render_search_results(%{results: business_concept_versions, total: total} = assigns, conn) do
+  defp get_permissions_by_status(params) do
+    status =
+      params
+      |> Map.get("must", %{})
+      |> Map.get("status", [])
+
+    cond do
+      Enum.any?(status, &(&1 == "published")) ->
+        :download_published_concepts
+
+      Enum.any?(status, &(&1 == "deprecated")) ->
+        :download_deprecated_concepts
+
+      Enum.any?(status, &(&1 in ["draft", "pending_approval", "rejected"])) ->
+        :download_draft_concepts
+
+      true ->
+        nil
+    end
+  end
+
+  defp render_search_results(
+         %{results: business_concept_versions, total: total} = assigns,
+         conn,
+         permission_by_status \\ nil
+       ) do
     hypermedia =
       "business_concept_version"
       |> collection_hypermedia(
@@ -70,7 +97,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
         business_concept_versions,
         BusinessConceptVersion
       )
-      |> put_actions(conn)
+      |> put_actions(conn, permission_by_status)
 
     conn
     |> put_resp_header("x-total-count", "#{total}")
@@ -108,31 +135,36 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     })
   end
 
-  defp put_actions(hypermedia, conn) do
+  defp put_actions(hypermedia, conn, permission_by_status \\ nil) do
     claims = conn.assigns[:current_resource]
 
-    [:upload, :auto_publish]
+    [:upload, :auto_publish, permission_by_status]
     |> Enum.filter(&can?(claims, &1, BusinessConceptVersion))
-    |> Enum.reduce(%{}, fn
-      :upload, acc ->
-        Map.put(acc, "upload", %{
-          href: Routes.business_concept_version_path(conn, :upload),
-          method: "POST"
-        })
+    |> Enum.map(fn action ->
+      case action do
+        :upload ->
+          %TdHypermedia.Link{
+            action: "upload",
+            path: Routes.business_concept_version_path(conn, :upload),
+            method: :POST,
+            schema: %{}
+          }
 
-      :auto_publish, acc ->
-        Map.put(acc, "autoPublish", %{
-          href: Routes.business_concept_version_path(conn, :upload),
-          method: "POST"
-        })
-    end)
-    |> Enum.map(fn {action, data} ->
-      %TdHypermedia.Link{
-        action: String.to_atom(action),
-        path: data.href,
-        method: String.to_atom(data.method),
-        schema: %{}
-      }
+        :auto_publish ->
+          %TdHypermedia.Link{
+            action: "autoPublish",
+            path: Routes.business_concept_version_path(conn, :upload),
+            method: :POST,
+            schema: %{}
+          }
+
+        ^permission_by_status ->
+          %TdHypermedia.Link{
+            action: normalize_action(action),
+            method: :POST,
+            schema: %{}
+          }
+      end
     end)
     |> then(
       &Map.put(
@@ -142,4 +174,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
       )
     )
   end
+
+  defp normalize_action(:download_published_concepts), do: "downloadPublishedConcepts"
+  defp normalize_action(:download_draft_concepts), do: "downloadDraftConcepts"
+  defp normalize_action(:download_deprecated_concepts), do: "downloadDeprecatedConcepts"
 end

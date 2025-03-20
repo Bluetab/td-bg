@@ -11,7 +11,6 @@ defmodule TdBg.Canada.Abilities do
   alias TdCache.Link
 
   defimpl Canada.Can, for: Claims do
-    # administrator can manage all domains and concepts
     def can?(%Claims{role: "admin"}, _action, BusinessConcept), do: true
     def can?(%Claims{role: "admin"}, _action, %BusinessConcept{}), do: true
     def can?(%Claims{role: "admin"}, _action, Domain), do: true
@@ -141,6 +140,15 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
 
+    def can?(%Claims{} = claims, action, BusinessConceptVersion)
+        when action in [
+               :download_published_concepts,
+               :download_deprecated_concepts,
+               :download_draft_concepts
+             ] do
+      BusinessConceptAbilities.can?(claims, action)
+    end
+
     def can?(%Claims{} = claims, :upload, BusinessConceptVersion) do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
@@ -149,12 +157,12 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
 
-    def can?(%Claims{} = claims, :share_with_domain, %BusinessConcept{} = business_concept) do
-      BusinessConceptAbilities.can?(claims, :share_with_domain, business_concept)
-    end
-
     def can?(%Claims{} = claims, :upload, %Domain{} = domain) do
       BusinessConceptAbilities.can?(claims, :create_business_concept, domain)
+    end
+
+    def can?(%Claims{} = claims, :share_with_domain, %BusinessConcept{} = business_concept) do
+      BusinessConceptAbilities.can?(claims, :share_with_domain, business_concept)
     end
 
     def can?(%Claims{} = claims, :auto_publish, BusinessConceptVersion) do
