@@ -32,6 +32,24 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
     Permissions.has_permission?(claims, :create_business_concept)
   end
 
+  def can?(%Claims{role: "admin"}, :download_published_concepts), do: true
+  def can?(%Claims{role: "admin"}, :download_deprecated_concepts), do: true
+  def can?(%Claims{role: "admin"}, :download_draft_concepts), do: true
+
+  def can?(%Claims{} = claims, :download_published_concepts) do
+    Permissions.has_permission?(claims, :view_published_business_concepts)
+  end
+
+  def can?(%Claims{} = claims, :download_deprecated_concepts) do
+    Permissions.has_permission?(claims, :view_deprecated_business_concepts)
+  end
+
+  def can?(%Claims{} = claims, :download_draft_concepts) do
+    Permissions.has_permission?(claims, :view_draft_business_concepts) ||
+      Permissions.has_permission?(claims, :view_rejected_business_concepts) ||
+      Permissions.has_permission?(claims, :view_approval_pending_business_concepts)
+  end
+
   def can?(%Claims{role: "admin"}, :auto_publish, _), do: true
 
   def can?(%Claims{} = claims, :auto_publish, BusinessConcept) do

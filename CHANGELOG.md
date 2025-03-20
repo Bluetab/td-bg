@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5388] New action to download concepts based on viewing permissions
+
 ## [7.3.0] 2025-03-18
 
 ### Added
