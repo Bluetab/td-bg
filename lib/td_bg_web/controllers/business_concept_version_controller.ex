@@ -239,12 +239,20 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def get_actions(claims, %BusinessConceptVersion{business_concept: concept}) do
     %{share: can_share_concepts(claims, concept)}
     |> maybe_add_implementation_actions(claims, concept)
+    |> maybe_add_grant_requests_actions(claims)
   end
 
   defp maybe_add_implementation_actions(actions, claims, concept) do
     [:create_implementation, :create_raw_implementation, :create_link_implementation]
     |> Enum.filter(&can?(claims, &1, concept))
     |> Enum.reduce(%{}, &Map.put(&2, &1, %{method: "POST"}))
+    |> Map.merge(actions)
+  end
+
+  defp maybe_add_grant_requests_actions(actions, claims) do
+    [:manage_grant_requests]
+    |> Enum.filter(&can?(claims, &1, %{}))
+    |> Enum.reduce(%{}, &Map.put(&2, &1, %{}))
     |> Map.merge(actions)
   end
 

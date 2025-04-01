@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-5388] New action to download concepts based on viewing permissions
+- [TD-6959] Add action to allow manage Grant Requests on concept linking view
 
 ## [7.3.0] 2025-03-18
 
