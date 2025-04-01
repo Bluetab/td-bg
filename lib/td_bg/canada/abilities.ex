@@ -7,6 +7,7 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.Canada.BusinessConceptAbilities
   alias TdBg.Canada.LinkAbilities
   alias TdBg.Canada.TaxonomyAbilities
+  alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
   alias TdCache.Link
 
@@ -15,6 +16,16 @@ defmodule TdBg.Canada.Abilities do
     def can?(%Claims{role: "admin"}, _action, %BusinessConcept{}), do: true
     def can?(%Claims{role: "admin"}, _action, Domain), do: true
     def can?(%Claims{role: "admin"}, _action, %Domain{}), do: true
+    def can?(%Claims{role: "admin"}, :manage_grant_requests, %{}), do: true
+
+    def can?(%Claims{} = claims, :manage_grant_requests, %{}) do
+      Permissions.has_any_permission?(claims, [
+        "create_grant_request",
+        "create_foreign_grant_request",
+        "manage_grant_removal",
+        "manage_foreign_grant_removal"
+      ])
+    end
 
     def can?(%Claims{} = claims, action, %Link{} = link) do
       LinkAbilities.can?(claims, action, link)
