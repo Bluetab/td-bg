@@ -35,18 +35,18 @@ config :td_core, TdCore.Search.Cluster,
           analyzer: %{
             default: %{
               type: "custom",
-              tokenizer: "standard",
-              filter: ["lowercase", "asciifolding"]
+              tokenizer: "whitespace",
+              filter: ["lowercase", "word_delimiter", "asciifolding"]
             },
             es_analyzer: %{
               type: "custom",
-              tokenizer: "standard",
-              filter: ["lowercase", "asciifolding", "es_stem"]
+              tokenizer: "whitespace",
+              filter: ["lowercase", "word_delimiter", "asciifolding", "es_stem"]
             },
             en_analyzer: %{
               type: "custom",
-              tokenizer: "standard",
-              filter: ["lowercase", "asciifolding", "porter_stem"]
+              tokenizer: "whitespace",
+              filter: ["lowercase", "word_delimiter", "asciifolding", "porter_stem"]
             }
           },
           normalizer: %{
