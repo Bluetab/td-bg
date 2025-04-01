@@ -66,7 +66,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         :current,
         :concept_count,
         :in_progress,
-        :inserted_at
+        :inserted_at,
+        :updated_at
       ])
       |> Map.put(:ngram_name, bcv.name)
       |> Map.merge(BusinessConcepts.get_concept_counts(bcv.business_concept_id))
@@ -184,6 +185,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
           status: %{type: "keyword"},
           last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
           inserted_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
+          updated_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
           current: %{type: "boolean"},
           confidential: %{type: "boolean", fields: @raw},
           in_progress: %{type: "boolean"},

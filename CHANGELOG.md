@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [TD-7167] Index updated_at field for business concept
+
 ### Added
 
 - [TD-5388] New action to download concepts based on viewing permissions
