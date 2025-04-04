@@ -2,10 +2,6 @@
 
 ## [Unreleased]
 
-### Changed
-
-- [TD-7167] Index updated_at field for business concept
-
 ### Added
 
 - [TD-5388] New action to download concepts based on viewing permissions
@@ -14,6 +10,11 @@
 ### Changed
 
 - [TD-7192] Use whitespace tokenizer with word delimiter filter to ignore `_` on text search
+- [TD-7167] Index updated_at field for business concept
+
+### Fixed
+
+- [TD-4565] Correct audit Event for update domains concepts
 
 ## [7.3.0] 2025-03-18
 
