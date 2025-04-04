@@ -7,6 +7,7 @@ defmodule TdBg.Audit.AuditSupport do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdCache.Audit
+  alias TdCache.TaxonomyCache
   alias TdDfLib.{MapDiff, Masks, Templates}
 
   def publish(event, resource_type, resource_id, user_id, payload \\ %{})
@@ -122,5 +123,26 @@ defmodule TdBg.Audit.AuditSupport do
     |> Map.put(:shared_to, updated)
   end
 
+  defp payload(%{domain_id: domain_id} = changes, data) do
+    changes
+    |> Map.put(:domain_new, get_domain(domain_id))
+    |> Map.put(:domain_old, get_domain(data))
+  end
+
   defp payload(changes, _data), do: changes
+
+  defp get_domain(%{business_concept: %{domain: %{id: domain_id}}}) do
+    get_domain(domain_id)
+  end
+
+  defp get_domain(%{domain: %{id: domain_id}}), do: get_domain(domain_id)
+
+  defp get_domain(id) when is_integer(id) do
+    case TaxonomyCache.get_domain(id) do
+      nil -> nil
+      domain -> Map.take(domain, [:external_id, :id, :name])
+    end
+  end
+
+  defp get_domain(_), do: nil
 end
