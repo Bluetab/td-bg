@@ -234,7 +234,7 @@ defmodule TdBg.BusinessConcepts do
       params
       |> attrs_keys_to_atoms()
       |> confidential_changeset(business_concept_version)
-      |> update_concept()
+      |> update_concept(:business_concept_updated)
 
     case result do
       {:ok, _} ->
@@ -779,11 +779,14 @@ defmodule TdBg.BusinessConcepts do
     Map.put(changes, :content_schema, schema)
   end
 
-  def update_concept(%{changeset: changeset} = params) do
+  def update_concept(
+        %{changeset: changeset} = params,
+        concept_or_version \\ :business_concept_version_updated
+      ) do
     Multi.new()
     |> Multi.update(:updated, changeset)
     |> maybe_upsert_i18n_content(params)
-    |> Multi.run(:audit, Audit, :business_concept_updated, [changeset])
+    |> Multi.run(:audit, Audit, concept_or_version, [changeset])
     |> Repo.transaction()
   end
 

@@ -7,15 +7,25 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.Canada.BusinessConceptAbilities
   alias TdBg.Canada.LinkAbilities
   alias TdBg.Canada.TaxonomyAbilities
+  alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
   alias TdCache.Link
 
   defimpl Canada.Can, for: Claims do
-    # administrator can manage all domains and concepts
     def can?(%Claims{role: "admin"}, _action, BusinessConcept), do: true
     def can?(%Claims{role: "admin"}, _action, %BusinessConcept{}), do: true
     def can?(%Claims{role: "admin"}, _action, Domain), do: true
     def can?(%Claims{role: "admin"}, _action, %Domain{}), do: true
+    def can?(%Claims{role: "admin"}, :manage_grant_requests, %{}), do: true
+
+    def can?(%Claims{} = claims, :manage_grant_requests, %{}) do
+      Permissions.has_any_permission?(claims, [
+        "create_grant_request",
+        "create_foreign_grant_request",
+        "manage_grant_removal",
+        "manage_foreign_grant_removal"
+      ])
+    end
 
     def can?(%Claims{} = claims, action, %Link{} = link) do
       LinkAbilities.can?(claims, action, link)
@@ -141,6 +151,15 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
 
+    def can?(%Claims{} = claims, action, BusinessConceptVersion)
+        when action in [
+               :download_published_concepts,
+               :download_deprecated_concepts,
+               :download_draft_concepts
+             ] do
+      BusinessConceptAbilities.can?(claims, action)
+    end
+
     def can?(%Claims{} = claims, :upload, BusinessConceptVersion) do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
@@ -149,12 +168,12 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end
 
-    def can?(%Claims{} = claims, :share_with_domain, %BusinessConcept{} = business_concept) do
-      BusinessConceptAbilities.can?(claims, :share_with_domain, business_concept)
-    end
-
     def can?(%Claims{} = claims, :upload, %Domain{} = domain) do
       BusinessConceptAbilities.can?(claims, :create_business_concept, domain)
+    end
+
+    def can?(%Claims{} = claims, :share_with_domain, %BusinessConcept{} = business_concept) do
+      BusinessConceptAbilities.can?(claims, :share_with_domain, business_concept)
     end
 
     def can?(%Claims{} = claims, :auto_publish, BusinessConceptVersion) do

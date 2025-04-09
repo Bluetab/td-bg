@@ -66,16 +66,39 @@ defmodule TdBg.BusinessConcepts.Audit do
     {:ok, :unchanged}
   end
 
-  def business_concept_updated(_repo, %{updated: updated}, changeset) do
-    case updated do
-      %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} ->
-        changeset = do_changeset_updated(changeset, updated)
-        publish("update_concept_draft", "concept", id, user_id, changeset)
+  def business_concept_updated(
+        repo,
+        %{updated: %BusinessConceptVersion{business_concept: business_concept}},
+        changeset
+      ) do
+    business_concept_updated(repo, business_concept, changeset)
+  end
 
-      %BusinessConcept{id: id, last_change_by: user_id} ->
-        changeset = do_changeset_updated(changeset, updated)
-        publish("update_concept", "concept", id, user_id, changeset)
-    end
+  def business_concept_updated(
+        repo,
+        %{updated: %BusinessConcept{} = business_concept},
+        changeset
+      ) do
+    business_concept_updated(repo, business_concept, changeset)
+  end
+
+  def business_concept_updated(_repo, %BusinessConcept{} = updated, changeset) do
+    %{id: id, last_change_by: user_id} = updated
+
+    changeset = do_changeset_updated(changeset, updated)
+
+    publish("update_concept", "concept", id, user_id, changeset)
+  end
+
+  def business_concept_version_updated(_repo, _payload, %Changeset{changes: changes})
+      when map_size(changes) == 0 do
+    {:ok, :unchanged}
+  end
+
+  def business_concept_version_updated(_repo, %{updated: updated}, changeset) do
+    %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} = updated
+    changeset = do_changeset_updated(changeset, updated)
+    publish("update_concept_draft", "concept", id, user_id, changeset)
   end
 
   def business_concept_published(_repo, %{published: business_concept_version}) do

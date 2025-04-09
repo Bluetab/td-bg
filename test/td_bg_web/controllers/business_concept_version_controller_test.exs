@@ -2054,6 +2054,84 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     end
 
     @tag authentication: [role: "admin"]
+    test "admin has manage_grant_requests action",
+         %{conn: conn} do
+      business_concept_version =
+        insert(
+          :business_concept_version,
+          content: %{"foo" => %{"value" => "bar", "origin" => "user"}},
+          name: "Concept Name"
+        )
+
+      %{"data" => data} =
+        get(
+          conn,
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id,
+            "current"
+          )
+        )
+        |> json_response(200)
+
+      assert %{"actions" => %{"manage_grant_requests" => %{}}} = data
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [
+             "view_published_business_concepts",
+             "create_grant_request"
+           ]
+         ]
+    test "user with permission has manage_grant_requests action",
+         %{conn: conn, domain_id: domain_id} do
+      business_concept_version =
+        insert(:business_concept_version, domain_id: domain_id, status: "published")
+
+      %{"data" => data} =
+        conn
+        |> get(
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id,
+            "current"
+          )
+        )
+        |> json_response(200)
+
+      assert %{"actions" => %{"manage_grant_requests" => %{}}} = data
+    end
+
+    @tag authentication: [
+           role: "user",
+           permissions: [
+             "view_published_business_concepts"
+           ]
+         ]
+    test "user without permission hasn't manage_grant_requests action",
+         %{conn: conn, domain_id: domain_id} do
+      business_concept_version =
+        insert(:business_concept_version, domain_id: domain_id, status: "published")
+
+      %{"data" => %{"actions" => actions}} =
+        conn
+        |> get(
+          Routes.business_concept_business_concept_version_path(
+            conn,
+            :show,
+            business_concept_version.business_concept_id,
+            "current"
+          )
+        )
+        |> json_response(200)
+
+      refute Map.has_key?(actions, "manage_grant_requests")
+    end
+
+    @tag authentication: [role: "admin"]
     test "renders error if invalid value for confidential", %{conn: conn} do
       business_concept_version = insert(:business_concept_version)
 
