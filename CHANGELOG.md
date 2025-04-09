@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [7.4.0] 2025-04-09
+
+### Changed
+
+- License and td-core
 
 ### Added
 
