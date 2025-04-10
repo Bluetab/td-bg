@@ -57,6 +57,7 @@ defmodule TdBgWeb.Router do
       post("/links/structures", BusinessConceptLinkController, :create_structure_link)
     end
 
+    post("/business_concept_versions/links/download", BusinessConceptLinkController, :download)
     get("/business_concept_versions", BusinessConceptVersionSearchController, :index)
     post("/business_concept_versions/search", BusinessConceptVersionSearchController, :search)
     get("/business_concept_versions/actions", BusinessConceptVersionSearchController, :actions)

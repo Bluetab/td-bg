@@ -7,6 +7,7 @@ defmodule TdBgWeb.BusinessConceptLinkController do
   require Logger
 
   alias TdBg.BusinessConcepts.Links
+  alias TdBg.XLSX.Download
   alias TdBgWeb.ErrorView
 
   action_fallback(TdBgWeb.FallbackController)
@@ -36,6 +37,20 @@ defmodule TdBgWeb.BusinessConceptLinkController do
         |> put_status(:unprocessable_entity)
         |> put_view(ErrorView)
         |> render("422.json")
+    end
+  end
+
+  def download(conn, params) do
+    claims = conn.assigns[:current_resource]
+    lang = conn.assigns[:locale]
+
+    with {:ok, {name, binary}} <- Download.links(claims, params, lang: lang) do
+      conn
+      |> put_resp_content_type(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8"
+      )
+      |> put_resp_header("content-disposition", "attachment; filename=#{name}")
+      |> send_resp(:ok, binary)
     end
   end
 

@@ -24,6 +24,29 @@ defmodule TdBg.BusinessConcept.Search do
     response
   end
 
+  def search_all(%Claims{} = claims, params) do
+    params
+    |> Map.drop(["page", "size"])
+    |> search_business_concept_versions(claims, 0, 10_000)
+  end
+
+  def stream_all(%Claims{} = claims, params, size \\ 1_000) do
+    sort = Map.get(params, "sort", ["_id"])
+    keep_alive = Map.get(params, "keep_alive", "1m")
+
+    query_data = ElasticDocumentProtocol.query_data(%BusinessConceptVersion{})
+    query = build_query(claims, params, query_data)
+
+    Stream.resource(
+      fn ->
+        {:ok, %{id: id}} = Search.create_pit(:concepts, %{"keep_alive" => keep_alive})
+        %{query: query, sort: sort, pit: %{id: id, keep_alive: keep_alive}, size: size}
+      end,
+      &stream_paginate/1,
+      fn %{pit: %{id: id}} -> Search.delete_pit(id) end
+    )
+  end
+
   def search_business_concept_versions(params, claims, page \\ 0, size \\ 50)
 
   def search_business_concept_versions(%{"scroll_id" => _} = params, _claims, _page, _size) do
@@ -90,6 +113,13 @@ defmodule TdBg.BusinessConcept.Search do
     end
   end
 
+  defp do_search_after(search) do
+    case Search.search_after(search) do
+      {:ok, %{results: results, pit_id: _pit_id}} ->
+        search_after_results(results)
+    end
+  end
+
   defp map_results(results, total), do: %{results: Enum.map(results, &map_result/1), total: total}
 
   defp map_result(%{"_source" => source}) do
@@ -102,4 +132,23 @@ defmodule TdBg.BusinessConcept.Search do
   end
 
   defp map_result(%{} = source), do: source
+
+  defp stream_paginate(%{search_after: nil} = body), do: {:halt, body}
+
+  defp stream_paginate(body) do
+    case do_search_after(body) do
+      %{results: []} ->
+        {:halt, body}
+
+      %{results: [_ | _] = results, search_after: search_after} ->
+        {[results], Map.put(body, :search_after, search_after)}
+    end
+  end
+
+  defp search_after_results([]), do: %{results: []}
+
+  defp search_after_results([_ | _] = results) do
+    search_after = results |> List.last() |> Map.get("sort")
+    %{search_after: search_after, results: Enum.map(results, &map_result/1)}
+  end
 end

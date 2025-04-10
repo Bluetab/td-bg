@@ -138,7 +138,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
   defp put_actions(hypermedia, conn, permission_by_status \\ nil) do
     claims = conn.assigns[:current_resource]
 
-    [:upload, :auto_publish, permission_by_status]
+    [:upload, :auto_publish, :download_links, permission_by_status]
     |> Enum.filter(&can?(claims, &1, BusinessConceptVersion))
     |> Enum.map(fn action ->
       case action do
@@ -154,6 +154,14 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
           %TdHypermedia.Link{
             action: "autoPublish",
             path: Routes.business_concept_version_path(conn, :upload),
+            method: :POST,
+            schema: %{}
+          }
+
+        :download_links ->
+          %TdHypermedia.Link{
+            action: "downloadLinks",
+            path: Routes.business_concept_link_path(conn, :download),
             method: :POST,
             schema: %{}
           }

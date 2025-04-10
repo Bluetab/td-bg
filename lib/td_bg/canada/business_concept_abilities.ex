@@ -50,6 +50,10 @@ defmodule TdBg.Canada.BusinessConceptAbilities do
       Permissions.has_permission?(claims, :view_approval_pending_business_concepts)
   end
 
+  def can?(%Claims{} = claims, :download_links) do
+    Permissions.has_permission?(claims, :manage_business_concept_links)
+  end
+
   def can?(%Claims{role: "admin"}, :auto_publish, _), do: true
 
   def can?(%Claims{} = claims, :auto_publish, BusinessConcept) do
