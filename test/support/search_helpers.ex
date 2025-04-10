@@ -29,6 +29,11 @@ defmodule SearchHelpers do
     {:ok, Map.put(resp, "_scroll_id", "some_scroll_id")}
   end
 
+  def search_after_response(hits) do
+    {:ok, resp} = hits_response(hits)
+    {:ok, Map.put(resp, "pit_id", "foo")}
+  end
+
   defp encode(target) do
     id = Elasticsearch.Document.id(target)
 
@@ -38,6 +43,6 @@ defmodule SearchHelpers do
       |> Jason.encode!()
       |> Jason.decode!()
 
-    %{"id" => id, "_source" => source}
+    %{"id" => id, "_source" => source, "sort" => ["search after cursor"]}
   end
 end

@@ -160,6 +160,10 @@ defmodule TdBg.Canada.Abilities do
       BusinessConceptAbilities.can?(claims, action)
     end
 
+    def can?(%Claims{} = claims, :download_links, BusinessConceptVersion) do
+      LinkAbilities.can?(claims, :download_links)
+    end
+
     def can?(%Claims{} = claims, :upload, BusinessConceptVersion) do
       BusinessConceptAbilities.can?(claims, :create_business_concept)
     end

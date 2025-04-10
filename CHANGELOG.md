@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Added
+
+- [TD-7074] Download links from concepts to structures
+
 ## [7.4.0] 2025-04-09
 
 ### Changed
