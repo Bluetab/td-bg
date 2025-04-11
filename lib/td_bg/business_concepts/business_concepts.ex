@@ -852,7 +852,7 @@ defmodule TdBg.BusinessConcepts do
     Templates.content_schema(type)
   end
 
-  def get_completeness(%BusinessConceptVersion{} = bcv, content) do
+  def get_completeness(bcv, content) do
     case get_template(bcv) do
       nil -> nil
       template -> Templates.completeness(content, template)
@@ -906,6 +906,23 @@ defmodule TdBg.BusinessConcepts do
   def get_domain_ids(%{"domain_ids" => domain_ids}), do: domain_ids
 
   def get_domain_ids(_), do: []
+
+  def get_last_change(%BusinessConceptVersion{
+        last_change_at: bcv_at,
+        last_change_by: bcv_by,
+        business_concept: %{last_change_at: bc_at, last_change_by: bc_by}
+      }) do
+    case DateTime.compare(bcv_at, bc_at) do
+      :gt -> {bcv_at, bcv_by}
+      _ -> {bc_at, bc_by}
+    end
+  end
+
+  def get_last_change_version(%BusinessConceptVersion{
+        last_change_at: last_change_at,
+        last_change_by: last_change_by
+      }),
+      do: {last_change_at, last_change_by}
 
   def get_default_lang do
     {:ok, lang} = I18nCache.get_default_locale()
