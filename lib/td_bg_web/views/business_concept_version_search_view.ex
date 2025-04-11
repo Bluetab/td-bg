@@ -37,6 +37,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
       "content",
       "last_change_by",
       "last_change_at",
+      "bcv_last_change_at",
+      "bcv_last_change_by",
       "inserted_at",
       "updated_at",
       "domain_parents",

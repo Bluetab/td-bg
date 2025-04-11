@@ -2024,7 +2024,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       %{user_id: user_id} = build(:claims)
 
       %{id: id, business_concept_id: business_concept_id, last_change_at: last_change_at} =
-        business_concept_version = insert(:business_concept_version, last_change_by: user_id)
+        business_concept_version =
+        insert(:business_concept_version, last_change_by: user_id, status: "published")
 
       assert conn
              |> post(

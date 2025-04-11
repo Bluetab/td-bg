@@ -2,7 +2,7 @@ defmodule TdBgWeb.BusinessConceptVersionView do
   use TdBgWeb, :view
   use TdHypermedia, :view
 
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts
   alias TdBgWeb.{BusinessConceptVersionView, DomainView, LinkView}
   alias TdCache.UserCache
   alias TdDfLib.Content
@@ -58,10 +58,13 @@ defmodule TdBgWeb.BusinessConceptVersionView do
         "business_concept_version.json",
         %{business_concept_version: business_concept_version} = assigns
       ) do
-    {:ok, user} = UserCache.get(business_concept_version.last_change_by)
+    {last_change_at, last_change_by} = BusinessConcepts.get_last_change(business_concept_version)
 
-    {last_change_at, last_change_by} =
-      BusinessConceptVersion.get_last_change(business_concept_version)
+    {bcv_last_change_at, bcv_last_change_by} =
+      BusinessConcepts.get_last_change_version(business_concept_version)
+
+    {:ok, user} = UserCache.get(last_change_by)
+    {:ok, bcv_user} = UserCache.get(bcv_last_change_by)
 
     %{
       id: business_concept_version.id,
@@ -73,12 +76,14 @@ defmodule TdBgWeb.BusinessConceptVersionView do
       name: business_concept_version.name,
       last_change_by: last_change_by,
       last_change_at: last_change_at,
+      bcv_last_change_at: bcv_last_change_at,
       domain: Map.take(business_concept_version.business_concept.domain, [:id, :name]),
       status: business_concept_version.status,
       current: business_concept_version.current,
       version: business_concept_version.version,
       in_progress: business_concept_version.in_progress,
       last_change_user: user,
+      bcv_last_change_user: bcv_user,
       rule_count: Map.get(business_concept_version, :rule_count),
       link_count: Map.get(business_concept_version, :link_count),
       concept_count: Map.get(business_concept_version, :concept_count),
