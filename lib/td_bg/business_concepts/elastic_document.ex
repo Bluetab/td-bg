@@ -54,7 +54,9 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         |> put_i18n_content(i18n_contents, template)
         |> Enum.into(%{}, fn {field, %{"value" => value}} -> {field, value} end)
 
-      {last_change_at, last_change_by} = BusinessConceptVersion.get_last_change(bcv)
+      {last_change_at, last_change_by} = BusinessConcepts.get_last_change(bcv)
+
+      {bcv_last_change_at, bcv_last_change_by} = BusinessConcepts.get_last_change_version(bcv)
 
       bcv
       |> Map.take([
@@ -76,8 +78,10 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:content, content)
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
-      |> Map.put(:last_change_by, get_user(last_change_by))
+      |> Map.put(:bcv_last_change_by, get_user(bcv_last_change_by))
+      |> Map.put(:bcv_last_change_at, bcv_last_change_at)
       |> Map.put(:last_change_at, last_change_at)
+      |> Map.put(:last_change_by, get_user(last_change_by))
       |> Map.put(:template, Map.take(template, [:name, :label, :scope, :subscope]))
       |> Map.put(:confidential, confidential)
       |> Map.put(:shared_to_names, shared_to_names)
@@ -184,6 +188,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
           },
           status: %{type: "keyword"},
           last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
+          bcv_last_change_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
           inserted_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
           updated_at: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
           current: %{type: "boolean"},

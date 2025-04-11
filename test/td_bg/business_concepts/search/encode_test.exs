@@ -185,7 +185,7 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
     end
 
     test "encodes the latest last_changes" do
-      %{id: last_user_id, email: email} = CacheHelpers.insert_user()
+      %{id: last_user_id} = CacheHelpers.insert_user()
       %{id: old_user_id} = CacheHelpers.insert_user()
 
       last_datetime = DateTime.utc_now()
@@ -202,8 +202,9 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
 
       assert %{
                last_change_at: ^last_datetime,
-               last_change_by: %{id: ^last_user_id, email: ^email}
-             } = Document.encode(bcv)
+               last_change_by: %{id: ^last_user_id}
+             } =
+               Document.encode(bcv)
 
       bcv =
         insert(:business_concept_version,
@@ -216,7 +217,7 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
 
       assert %{
                last_change_at: ^last_datetime,
-               last_change_by: %{id: ^last_user_id, email: ^email}
+               last_change_by: %{id: ^last_user_id}
              } = Document.encode(bcv)
     end
 

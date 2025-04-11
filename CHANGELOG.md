@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.4.1] 2025-04-11
+
+### Fixed
+
+- [TD-7223] History users and dates for versions
+
 ## [7.4.0] 2025-04-09
 
 ### Changed
