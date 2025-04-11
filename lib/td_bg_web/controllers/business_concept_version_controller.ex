@@ -509,14 +509,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
     content_schema = get_flat_template_content(template)
 
-    business_concept_attrs =
-      %{}
-      |> Map.put("last_change_by", user_id)
-      |> Map.put("last_change_at", DateTime.utc_now())
-
     update_params =
       business_concept_version_params
-      |> Map.put("business_concept", business_concept_attrs)
+      |> Map.put("business_concept", %{})
       |> Map.put("content_schema", content_schema)
       |> Map.put_new("content", %{})
       |> Map.put("last_change_by", user_id)
