@@ -221,7 +221,7 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
              } = Document.encode(bcv)
     end
 
-    test "encodes only translatable fields in i18n" do
+    test "encodes only translatable fields in i18n with default translation values" do
       busines_concept_content = %{
         "df_description" => %{
           "value" => %{
@@ -278,7 +278,81 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
                "Identificador" => "foo",
                "basic_list" => "1",
                "df_description" => "enrich text",
-               "df_description_es" => "",
+               "df_description_es" => "enrich text",
+               "text_area" => "default_foo",
+               "text_area_es" => "bar_translatable",
+               "text_input_es" => "foo_translatable",
+               "enriched_text" => "",
+               "enriched_text_es" => "",
+               "Hierarchie2" => "",
+               "User Group" => "",
+               "basic_switch" => "",
+               "default_dependency" => "1.1",
+               "empty test" => "",
+               "multiple_values" => [""],
+               "text_input" => "",
+               "user1" => ""
+             } == content
+    end
+
+    test "encodes only translatable fields in i18n without default translation values" do
+      busines_concept_content = %{
+        "df_description" => %{
+          "value" => %{
+            "document" => %{
+              "nodes" => [
+                %{
+                  "nodes" => [
+                    %{
+                      "marks" => [],
+                      "object" => "text",
+                      "text" => "enrich text"
+                    }
+                  ],
+                  "object" => "block",
+                  "type" => "paragraph"
+                }
+              ]
+            }
+          },
+          "origin" => "user"
+        },
+        "basic_list" => %{"value" => "1", "origin" => "user"},
+        "Identificador" => %{"value" => "foo", "origin" => "user"},
+        "text_area" => %{"value" => "default_foo", "origin" => "user"}
+      }
+
+      %{id: bcv_id} =
+        bcv =
+        :business_concept_version
+        |> insert(
+          content: busines_concept_content,
+          name: "Concept Name",
+          type: @template_name
+        )
+        |> Repo.preload(business_concept: :shared_to)
+
+      i18n_content = %{
+        "text_input" => %{"value" => "foo_translatable", "origin" => "user"},
+        "text_area" => %{"value" => "bar_translatable", "origin" => "user"}
+      }
+
+      i18n_name = "i18n_name"
+
+      insert(:i18n_content,
+        business_concept_version_id: bcv_id,
+        content: i18n_content,
+        lang: "es",
+        name: i18n_name
+      )
+
+      assert %{name_es: ^i18n_name, content: content} = Document.encode(bcv)
+
+      assert %{
+               "Identificador" => "foo",
+               "basic_list" => "1",
+               "df_description" => "enrich text",
+               "df_description_es" => "enrich text",
                "text_area" => "default_foo",
                "text_area_es" => "bar_translatable",
                "text_input_es" => "foo_translatable",

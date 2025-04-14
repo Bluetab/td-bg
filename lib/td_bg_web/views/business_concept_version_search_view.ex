@@ -75,7 +75,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
     default_content =
       content
       |> Enum.filter(fn {key, _value} -> not String.match?(key, ~r/_[a-z]{2}$/) end)
-      |> Enum.into(%{})
+      |> Map.new()
 
     if lang == default_lang or is_nil(lang) do
       Map.put(concept, "content", default_content)
@@ -85,8 +85,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
       new_content =
         content
         |> Enum.filter(fn {key, _value} -> String.ends_with?(key, suffix) end)
-        |> Enum.map(fn {key, value} -> {String.replace_suffix(key, suffix, ""), value} end)
-        |> Enum.into(%{})
+        |> Enum.into(%{}, fn {key, value} -> {String.replace_suffix(key, suffix, ""), value} end)
         |> then(&Map.merge(default_content, &1))
 
       Map.put(concept, "content", new_content)
