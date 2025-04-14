@@ -3,6 +3,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
   import Mox
 
+  alias TdCache.I18nCache
   alias TdCore.Search.IndexWorkerMock
 
   @template_name "some_type"
@@ -291,6 +292,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
     @tag authentication: [role: "admin"]
     test "return i18n content non-translatable fields ", %{conn: conn} do
+      I18nCache.put("es", %{message_id: "foo", definition: "definition"})
       template_name = "complete_template"
 
       template = %{
@@ -351,7 +353,19 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
       expect(
         ElasticsearchMock,
         :request,
-        fn _, :post, "/concepts/_search", %{from: 0, query: _}, _ ->
+        fn _, :post, "/concepts/_search", %{from: 0, query: _} = query, _ ->
+          assert query == %{
+                   size: 50,
+                   sort: %{
+                     "content.enriched_text_es.raw" => "desc",
+                     "domain.name.sort" => "asc",
+                     "last_change_at" => "desc",
+                     "name_es.raw" => "desc"
+                   },
+                   from: 0,
+                   query: %{bool: %{must: %{match_all: %{}}}}
+                 }
+
           SearchHelpers.hits_response([bcv])
         end
       )
@@ -359,16 +373,30 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
       assert %{"data" => [%{"name" => ^i18n_name, "content" => content}]} =
                conn
                |> Plug.Conn.assign(:locale, lang)
-               |> post(Routes.business_concept_version_search_path(conn, :search), %{})
+               |> post(Routes.business_concept_version_search_path(conn, :search), %{
+                 sort: %{
+                   "name.raw" => "desc",
+                   "domain.name.sort" => "asc",
+                   "last_change_at" => "desc",
+                   "content.enriched_text.raw" => "desc"
+                 }
+               })
                |> json_response(:ok)
 
       assert %{
                "Identificador" => "foo",
                "basic_list" => "1",
-               "df_description" => "",
+               "df_description" => "enrich text",
                "enriched_text" => "",
                "text_area" => "bar_translatable",
-               "text_input" => "foo_translatable"
+               "text_input" => "foo_translatable",
+               "Hierarchie2" => "",
+               "User Group" => "",
+               "basic_switch" => "",
+               "default_dependency" => "1.1",
+               "empty test" => "",
+               "multiple_values" => [""],
+               "user1" => ""
              } = content
     end
 

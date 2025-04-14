@@ -21,6 +21,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     alias TdCache.UserCache
     alias TdDfLib.Format
 
+    @translatable_widgets ~w(enriched_text string textarea)
+
     @impl Elasticsearch.Document
     def id(%BusinessConceptVersion{id: id}), do: id
 
@@ -44,8 +46,15 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       ### TODO: This function get_all_i18n_content_by_bcv_id retrieves all
       ## contents of all languages inserted in the database,
       ## but it should only retrieve those languages that are active.
-      i18n_contents = I18nContents.get_all_i18n_content_by_bcv_id(bcv_id)
+
       {:ok, default_locale} = I18nCache.get_default_locale()
+      active_locales = I18nCache.get_active_locales!() -- [default_locale]
+
+      i18n_contents =
+        bcv_id
+        |> I18nContents.get_all_i18n_content_by_bcv_id()
+        |> Enum.into(%{}, &{&1.lang, &1})
+        |> default_for_active_langs(active_locales)
 
       content =
         bcv
@@ -87,9 +96,11 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:shared_to_names, shared_to_names)
     end
 
-    defp put_i18n_concept_property(bcv_to_index, property, [_ | _] = i18n, default_locale) do
+    defp put_i18n_concept_property(bcv_to_index, property, %{} = i18n, default_locale) do
+      original_value = Map.get(bcv_to_index, property)
+
       i18n
-      |> Enum.map(&map_property_locale(&1, property, default_locale))
+      |> Enum.map(&map_property_locale(&1, property, original_value, default_locale))
       |> Enum.reject(fn {_, v} -> v == nil end)
       |> Map.new()
       |> Map.merge(bcv_to_index)
@@ -98,15 +109,20 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     defp put_i18n_concept_property(bcv_to_index, _property, _i18n, _default_locale),
       do: bcv_to_index
 
-    defp map_property_locale(%{lang: locale} = i18n, :ngram_name = property, default_locale) do
+    defp map_property_locale(
+           {locale, i18n},
+           :ngram_name = property,
+           original_value,
+           default_locale
+         ) do
       locale_property = property_with_locale(property, locale, default_locale)
-      i18n_value = Map.get(i18n, :name)
+      i18n_value = Map.get(i18n, :name) || original_value
       {locale_property, i18n_value}
     end
 
-    defp map_property_locale(%{lang: locale} = i18n, property, default_locale) do
+    defp map_property_locale({locale, i18n}, property, original_value, default_locale) do
       locale_property = property_with_locale(property, locale, default_locale)
-      i18n_value = Map.get(i18n, property)
+      i18n_value = Map.get(i18n, property) || original_value
       {locale_property, i18n_value}
     end
 
@@ -117,18 +133,26 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       String.to_atom("#{property}_#{locale}")
     end
 
-    defp put_i18n_content(content, [_ | _] = i18n, template) do
+    defp put_i18n_content(content, %{} = i18n, template) do
       i18n
-      |> Enum.map(&format_content_locale(&1, template))
+      |> Enum.map(&format_content_locale(&1, template, content))
       |> Enum.reduce(%{}, fn map, acc -> Map.merge(acc, map) end)
       |> Map.merge(content)
     end
 
     defp put_i18n_content(content, _i18n, _template), do: content
 
-    defp format_content_locale(%{lang: locale, content: i18n_content}, template) do
+    defp format_content_locale({locale, %{content: i18n_content}}, template, content) do
+      translatable_fields =
+        template
+        |> Map.get(:content)
+        |> Format.flatten_content_fields()
+        |> Enum.filter(&(&1["widget"] in @translatable_widgets))
+        |> Enum.map(& &1["name"])
+
       i18n_content
       |> Format.search_values(template, apply_default_values?: false)
+      |> translatable_defaults(translatable_fields, content)
       |> add_lang_suffix(locale)
     end
 
@@ -136,6 +160,24 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       Enum.into(formatted_content, %{}, fn {key, value} ->
         {"#{key}_#{locale}", value}
       end)
+    end
+
+    defp translatable_defaults(i18n_content, translatable_fields, content) do
+      Enum.reduce(translatable_fields, i18n_content, fn field, acc ->
+        original_value = Map.get(content, field)
+
+        case Map.get(acc, field) do
+          %{"value" => ""} -> Map.put(acc, field, original_value)
+          nil -> Map.put(acc, field, original_value)
+          _ -> acc
+        end
+      end)
+    end
+
+    defp default_for_active_langs(i18n_content, active_locales) do
+      active_locales
+      |> Enum.into(%{}, fn locale -> {locale, %{content: %{}}} end)
+      |> Map.merge(i18n_content)
     end
 
     defp get_user(user_id) do
@@ -216,7 +258,10 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         }
         |> add_locales_fields_mapping(@translatable_fields)
 
-      settings = :concepts |> Cluster.setting() |> apply_lang_settings()
+      settings =
+        :concepts
+        |> Cluster.setting()
+        |> apply_lang_settings()
 
       %{mappings: %{properties: mapping_type}, settings: settings}
     end
