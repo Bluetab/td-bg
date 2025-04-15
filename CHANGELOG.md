@@ -6,6 +6,10 @@
 
 - [TD-7074] Download links from concepts to structures
 
+### Fixed
+
+[TD-7226] Enhance SSL configuration handling in production
+
 ## [7.4.1] 2025-04-11
 
 ### Fixed
