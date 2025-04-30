@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [7.5.0] 2025-040-30
 
 ## Added
 
@@ -8,7 +8,7 @@
 
 ### Fixed
 
-[TD-7226] Enhance SSL configuration handling in production
+- [TD-7226] Enhance SSL configuration handling in production
 
 ## [7.4.1] 2025-04-11
 
@@ -1233,7 +1233,6 @@
 - Modify endpoint from `/api/search/reindex_all` to
   `/api/business_concepts/search/reindex_all`
 - Verify if the user is admin while calling reindex_all
-
 
 ### Fixed
 
