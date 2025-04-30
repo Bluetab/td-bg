@@ -9,10 +9,15 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Links
   alias TdBgWeb.BusinessConceptVersionController
+  alias TdCache.I18nCache
+  alias TdCore.Search.ElasticDocumentProtocol
 
   require Logger
 
   action_fallback(TdBgWeb.FallbackController)
+
+  @default_page 0
+  @default_size 50
 
   def index(conn, %{"business_concept_id" => business_concept_id}) do
     claims = conn.assigns[:current_resource]
@@ -30,19 +35,42 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     |> render_search_results(conn)
   end
 
+  def search(%{assigns: %{locale: language}} = conn, params) do
+    claims = conn.assigns[:current_resource]
+    search_params = extract_search_params(params)
+
+    params_with_sort =
+      search_params.filters
+      |> maybe_update_sort_field(language)
+
+    do_search(params_with_sort, claims, conn, search_params)
+  end
+
   def search(conn, params) do
     claims = conn.assigns[:current_resource]
-    page = Map.get(params, "page", 0)
-    size = Map.get(params, "size", 50)
+    search_params = extract_search_params(params)
+    do_search(search_params.filters, claims, conn, search_params)
+  end
 
-    permission_by_status = get_permissions_by_status(params)
+  defp extract_search_params(params) do
+    %{
+      page: Map.get(params, "page", @default_page),
+      size: Map.get(params, "size", @default_size),
+      include_links: Map.get(params, "include_links", false),
+      filters: Map.drop(params, ["page", "size", "include_links"]),
+      permission_by_status: get_permissions_by_status(params)
+    }
+  end
 
-    include_links = Map.get(params, "include_links", false)
-
+  defp do_search(params, claims, conn, %{
+         page: page,
+         size: size,
+         include_links: include_links,
+         permission_by_status: permission_by_status
+       }) do
     results =
       %{results: business_concept_versions} =
       params
-      |> Map.drop(["page", "size", "include_links"])
       |> Search.search_business_concept_versions(claims, page, size)
 
     bcv_with_links =
@@ -53,6 +81,94 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     results
     |> Map.put(:results, bcv_with_links)
     |> render_search_results(conn, permission_by_status)
+  end
+
+  defp maybe_update_sort_field(%{"sort" => sort} = params, language) do
+    {:ok, default_locale} = I18nCache.get_default_locale()
+    active_locales = I18nCache.get_active_locales!()
+
+    cond do
+      language == default_locale ->
+        params
+
+      language in active_locales ->
+        sort =
+          update_sort_with_locale(sort, language)
+
+        Map.put(params, "sort", sort)
+
+      true ->
+        params
+    end
+  end
+
+  defp maybe_update_sort_field(params, _language), do: params
+
+  defp update_sort_with_locale(sort, language) do
+    mappings = ElasticDocumentProtocol.mappings(%BusinessConceptVersion{})
+    properties = get_in(mappings, [:mappings, :properties])
+
+    Enum.into(sort, %{}, fn {key, direction} ->
+      localized_key = get_localized_key(key, language)
+
+      update_sort_key(key, localized_key, direction, properties)
+    end)
+  end
+
+  defp get_localized_key(key, language) do
+    cond do
+      String.ends_with?(key, ".raw") ->
+        base = String.replace(key, ".raw", "")
+        "#{base}_#{language}.raw"
+
+      String.ends_with?(key, ".sort") ->
+        base = String.replace(key, ".sort", "")
+        "#{base}_#{language}.sort"
+
+      true ->
+        key
+    end
+  end
+
+  defp update_sort_key(key, localized_key, direction, properties) do
+    if field_exists?(key, localized_key, properties) do
+      {localized_key, direction}
+    else
+      {key, direction}
+    end
+  end
+
+  defp field_exists?(key, localized_key, properties) do
+    localized_key == key or check_field_in_properties(localized_key, properties) != nil
+  end
+
+  defp check_field_in_properties(localized_key, properties) do
+    case String.split(localized_key, ".") do
+      ["content", mapping, field] ->
+        get_in(properties, [
+          :content,
+          :properties,
+          mapping,
+          :fields,
+          String.to_existing_atom(field)
+        ])
+
+      ["domain", prop, field] ->
+        properties
+        |> get_in([String.to_existing_atom("domain"), :properties])
+        |> get_in([String.to_existing_atom(prop), :fields])
+        |> get_in([String.to_existing_atom(field)])
+
+      [mapping, field] ->
+        get_in(properties, [
+          String.to_existing_atom(mapping),
+          :fields,
+          String.to_existing_atom(field)
+        ])
+
+      parts ->
+        get_in(properties, parts)
+    end
   end
 
   def actions(conn, _params) do
@@ -138,7 +254,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
   defp put_actions(hypermedia, conn, permission_by_status \\ nil) do
     claims = conn.assigns[:current_resource]
 
-    [:upload, :auto_publish, permission_by_status]
+    [:upload, :auto_publish, :download_links, permission_by_status]
     |> Enum.filter(&can?(claims, &1, BusinessConceptVersion))
     |> Enum.map(fn action ->
       case action do
@@ -154,6 +270,14 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
           %TdHypermedia.Link{
             action: "autoPublish",
             path: Routes.business_concept_version_path(conn, :upload),
+            method: :POST,
+            schema: %{}
+          }
+
+        :download_links ->
+          %TdHypermedia.Link{
+            action: "downloadLinks",
+            path: Routes.business_concept_link_path(conn, :download),
             method: :POST,
             schema: %{}
           }

@@ -1,5 +1,15 @@
 # Changelog
 
+## [7.5.0] 2025-040-30
+
+## Added
+
+- [TD-7074] Download links from concepts to structures
+
+### Fixed
+
+- [TD-7226] Enhance SSL configuration handling in production
+
 ## [7.4.1] 2025-04-11
 
 ### Fixed
@@ -16,6 +26,7 @@
 
 - [TD-5388] New action to download concepts based on viewing permissions
 - [TD-6959] Add action to allow manage Grant Requests on concept linking view
+- [TD-7053] Add language-dependent ordering in search and index concepts with default language values when translations are missing
 
 ### Changed
 
@@ -348,13 +359,13 @@
 
 - [TD-6051] Searchable option for filters
 
-## [5.13.0] 2023-09-05
+## [5.13.0] 2023-09-05
 
 ### Added
 
 - [TD-5928] Allow to publish deprecated concepts
 
-## [5.12.0] 2023-08-16
+## [5.12.0] 2023-08-16
 
 ### Added
 
@@ -1222,3 +1233,11 @@
 - Modify endpoint from `/api/search/reindex_all` to
   `/api/business_concepts/search/reindex_all`
 - Verify if the user is admin while calling reindex_all
+
+### Fixed
+
+- [TD-2084] Update `rule_count` when a rule is removed
+
+### Added
+
+- [TD-1625] Support for df `

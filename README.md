@@ -25,11 +25,14 @@ Run all aplication tests with `mix test`
 
 ## Environment variables
 
-### SSL conection
+### SSL Connection
 
-- DB_SSL: boolean value, to enable TSL config, by default is false.
-- DB_SSL_CACERTFILE: path of the certification authority cert file "/path/to/ca.crt", required when DB_SSL is true.
-- DB_SSL_VERSION: available versions are tlsv1.2, tlsv1.3 by default is tlsv1.2.
+- `DB_SSL`: Boolean value to enable SSL configuration. Default is `false`.
+- `DB_SSL_CACERTFILE`: Path to the Certification Authority (CA) certificate file, e.g. `/path/to/ca.crt`.
+- `DB_SSL_VERSION`: Supported versions are `tlsv1.2` and `tlsv1.3`. Default is `tlsv1.2`.
+- `DB_SSL_CLIENT_CERT`: Path to the client SSL certificate file.
+- `DB_SSL_CLIENT_KEY`: Path to the client SSL private key file.
+- `DB_SSL_VERIFY`: Specifies whether server certificates should be verified (`true`/`false`).
 
 ### Elastic bulk page size configuration
 

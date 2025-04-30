@@ -625,7 +625,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     claims = conn.assigns[:current_resource]
 
     with {:can, true} <- {:can, can?(claims, bulk_update(BusinessConcept))},
-         %{results: results} <- search_all_business_concept_versions(claims, search_params),
+         %{results: results} <- Search.search_all(claims, search_params),
          {:ok, response} <- BulkUpdate.update_all(claims, results, update_attributes) do
       body = Jason.encode!(%{data: %{message: response}})
 
@@ -649,12 +649,6 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
         error
     end
-  end
-
-  defp search_all_business_concept_versions(claims, params) do
-    params
-    |> Map.drop(["page", "size"])
-    |> Search.search_business_concept_versions(claims, 0, 10_000)
   end
 
   defp handle_bc_errors(conn, error) do

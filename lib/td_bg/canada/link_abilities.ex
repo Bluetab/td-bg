@@ -12,6 +12,12 @@ defmodule TdBg.Canada.LinkAbilities do
   alias TdBg.Taxonomies.Domain
   alias TdCache.Link
 
+  def can?(%Claims{role: "admin"}, :download_links), do: true
+
+  def can?(%Claims{} = claims, :download_links) do
+    Permissions.has_permission?(claims, :manage_business_concept_links)
+  end
+
   def can?(%Claims{role: "admin"}, :create_concept_link, _resource), do: true
   def can?(%Claims{role: "admin"}, :create_structure_link, _resource), do: true
   def can?(%Claims{role: "admin"}, _action, %Link{}), do: true

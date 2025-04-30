@@ -254,4 +254,117 @@ defmodule TdBg.BusinessConcepts.SearchTest do
       assert [%{id: ^domain_id2}, %{id: ^domain_id1}, %{id: ^domain_id0}] = domain_parents
     end
   end
+
+  describe "Search.stream_all/3" do
+    @tag authentication: [role: "admin"]
+    test "streams over a list of business concept versions", %{claims: claims} do
+      bcv1 = insert(:business_concept_version)
+      bcv2 = insert(:business_concept_version)
+
+      expect(ElasticsearchMock, :request, fn _, :post, "/concepts/_pit", %{}, opts ->
+        assert opts == [params: %{"keep_alive" => "1m"}]
+        {:ok, %{"id" => "foo"}}
+      end)
+
+      expect(ElasticsearchMock, :request, fn _, :post, "/_search", query, _opts ->
+        assert query == %{
+                 size: 1,
+                 sort: "foo",
+                 query: %{
+                   bool: %{
+                     must: %{
+                       multi_match: %{
+                         type: "bool_prefix",
+                         fields: ["ngram_name*^3"],
+                         query: "bar",
+                         lenient: true,
+                         fuzziness: "AUTO"
+                       }
+                     }
+                   }
+                 },
+                 pit: %{id: "foo", keep_alive: "1m"}
+               }
+
+        SearchHelpers.search_after_response([bcv1])
+      end)
+
+      expect(ElasticsearchMock, :request, fn _, :post, "/_search", query, _opts ->
+        assert query == %{
+                 size: 1,
+                 sort: "foo",
+                 query: %{
+                   bool: %{
+                     must: %{
+                       multi_match: %{
+                         type: "bool_prefix",
+                         fields: ["ngram_name*^3"],
+                         query: "bar",
+                         lenient: true,
+                         fuzziness: "AUTO"
+                       }
+                     }
+                   }
+                 },
+                 pit: %{id: "foo", keep_alive: "1m"},
+                 search_after: ["search after cursor"]
+               }
+
+        SearchHelpers.search_after_response([bcv2])
+      end)
+
+      expect(ElasticsearchMock, :request, fn _, :post, "/_search", query, _opts ->
+        assert query == %{
+                 size: 1,
+                 sort: "foo",
+                 query: %{
+                   bool: %{
+                     must: %{
+                       multi_match: %{
+                         type: "bool_prefix",
+                         fields: ["ngram_name*^3"],
+                         query: "bar",
+                         lenient: true,
+                         fuzziness: "AUTO"
+                       }
+                     }
+                   }
+                 },
+                 pit: %{id: "foo", keep_alive: "1m"},
+                 search_after: ["search after cursor"]
+               }
+
+        SearchHelpers.search_after_response([])
+      end)
+
+      expect(ElasticsearchMock, :request, fn _, :delete, "/_pit", %{"id" => "foo"}, opts ->
+        assert opts == []
+
+        {:ok,
+         %HTTPoison.Response{
+           status_code: 200,
+           body: %{"num_freed" => 1, "succeeded" => true},
+           headers: [
+             {"content-type", "application/json; charset=UTF-8"},
+             {"content-length", "32"}
+           ],
+           request_url: "http://elastic:9200/_pit",
+           request: %HTTPoison.Request{
+             method: :delete,
+             url: "http://elastic:9200/_pit",
+             headers: [{"Content-Type", "application/json"}],
+             body: "{\"id\":\"foo\"}",
+             params: %{},
+             options: [timeout: 5_000, recv_timeout: 40_000]
+           }
+         }}
+      end)
+
+      stream = Search.stream_all(claims, %{"sort" => "foo", "query" => "bar"}, 1)
+      assert concepts = [_ | _] = stream |> Enum.to_list() |> List.flatten()
+      assert Enum.count(concepts) == 2
+      assert Enum.find(concepts, &(Map.get(&1, "id") == bcv1.id))
+      assert Enum.find(concepts, &(Map.get(&1, "id") == bcv2.id))
+    end
+  end
 end
