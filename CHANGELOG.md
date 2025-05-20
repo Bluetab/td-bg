@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Added
+
+- [TD-6901] Added validation to check if enriched text is empty for add to cache
+
 ## [7.5.0] 2025-040-30
 
 ## Added
