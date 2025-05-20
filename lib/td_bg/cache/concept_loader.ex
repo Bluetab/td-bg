@@ -48,9 +48,6 @@ defmodule TdBg.Cache.ConceptLoader do
   def init(state) do
     unless Application.get_env(:td_bg, :env) == :test do
       Process.send_after(self(), :refresh_all, 200)
-    end
-
-    unless Application.get_env(:td_bg, :env) == :test do
       Process.send_after(self(), :put_ids, 200)
     end
 
@@ -65,7 +62,8 @@ defmodule TdBg.Cache.ConceptLoader do
     if acquire_lock?("TdBg.Cache.ConceptLoader:TD-3063", @seconds_in_day) ||
          acquire_lock?("TdBg.Cache.ConceptLoader:TD-6197") ||
          acquire_lock?("TdBg.Cache.ConceptLoader:TD-6735") ||
-         acquire_lock?("TdBg.Cache.ConceptLoader:TD-6469") do
+         acquire_lock?("TdBg.Cache.ConceptLoader:TD-6469") ||
+         acquire_lock?("TdBg.Cache.ConceptLoader:TD-6901") do
       Timer.time(
         fn ->
           BusinessConcepts.get_active_ids()
@@ -199,6 +197,7 @@ defmodule TdBg.Cache.ConceptLoader do
   defp get_business_concept_i18n(%BusinessConceptVersion{id: id}) do
     id
     |> I18nContents.get_all_i18n_content_by_bcv_id()
+    |> Enum.filter(&get_content/1)
     |> Enum.group_by(& &1.lang, &Map.take(&1, [:name, :content]))
     |> Enum.map(fn {lang, [i18n]} -> {lang, i18n} end)
     |> Map.new()
@@ -212,7 +211,7 @@ defmodule TdBg.Cache.ConceptLoader do
     |> Map.put(:i18n, get_business_concept_i18n(bcv))
   end
 
-  defp get_content(%BusinessConceptVersion{} = bcv) do
+  defp get_content(%{} = bcv) do
     bcv
     |> Map.get(:content, %{})
     |> Enum.filter(&valid_value?/1)
@@ -221,6 +220,10 @@ defmodule TdBg.Cache.ConceptLoader do
 
   defp valid_value?({_key, %{"value" => value}}) when is_binary(value) do
     valid?(value)
+  end
+
+  defp valid_value?({_key, %{"value" => %{"document" => document}}}) do
+    has_text?(document)
   end
 
   defp valid_value?({_key, [_ | _] = values}) do
@@ -234,6 +237,16 @@ defmodule TdBg.Cache.ConceptLoader do
   end
 
   defp valid?(_), do: false
+
+  def has_text?(%{"nodes" => nodes}) do
+    Enum.any?(nodes, &has_text?/1)
+  end
+
+  def has_text?(%{"object" => "text", "text" => text}) do
+    String.trim(text) != ""
+  end
+
+  def has_text?(_), do: false
 
   defp concept_props(%BusinessConcept{} = business_concept) do
     shared_to_ids =
