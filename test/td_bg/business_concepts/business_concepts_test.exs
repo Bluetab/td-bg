@@ -12,6 +12,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdCache.I18nCache
   alias TdCache.Redix
   alias TdCache.Redix.Stream
+  alias TdCluster.TestHelpers.TdAiMock.Embeddings
   alias TdCore.Search.IndexWorkerMock
   alias TdDfLib.Format
   alias TdDfLib.RichText
@@ -1508,6 +1509,102 @@ defmodule TdBg.BusinessConceptsTest do
                Stream.read(:redix, @stream, transform: true)
 
       assert %{"shared_to" => []} = Jason.decode!(payload)
+    end
+  end
+
+  describe "generate_vector/2" do
+    test "generates vector for business concept version" do
+      bcv = %{business_concept: business_concept} = insert(:business_concept_version)
+
+      Embeddings.generate_vector(
+        &Mox.expect/4,
+        "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id}",
+        nil,
+        {:ok, {"default", [54.0, 10.2, -2.0]}}
+      )
+
+      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
+    end
+
+    test "generates vector for business concept version including content descriptions and links" do
+      template = %{
+        id: 0,
+        name: "test_template",
+        label: "label",
+        scope: "test",
+        content: [
+          %{
+            "name" => "group",
+            "fields" => [
+              %{
+                "name" => "Field1",
+                "type" => "enriched_text",
+                "widget" => "enriched_text",
+                "cardinality" => "?",
+                "default" => %{"value" => "", "origin" => "user"}
+              }
+            ]
+          }
+        ]
+      }
+
+      on_exit(fn -> Templates.delete(template.id) end)
+
+      Templates.create_template(template)
+
+      content_description = "Field 1 description"
+
+      content = %{
+        "Field1" => %{"value" => RichText.to_rich_text(content_description), "origin" => "user"}
+      }
+
+      business_concept = build(:business_concept, type: template.name)
+
+      bcv =
+        %{business_concept: business_concept} =
+        insert(:business_concept_version, business_concept: business_concept, content: content)
+
+      link_name = "data structure name"
+      link_type = "data structure type"
+      link_description = "data structure description"
+
+      data_structure =
+        CacheHelpers.insert_data_structure(%{
+          name: link_name,
+          type: link_type,
+          description: link_description
+        })
+
+      CacheHelpers.insert_link(
+        data_structure.id,
+        "data_structure",
+        "business_concept",
+        business_concept.id
+      )
+
+      Embeddings.generate_vector(
+        &Mox.expect/4,
+        "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id} #{content_description} #{link_name} #{link_type} #{link_description}",
+        nil,
+        {:ok, {"default", [54.0, 10.2, -2.0]}}
+      )
+
+      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
+    end
+
+    test "generates vector for business concept version and collection" do
+      bcv = %{business_concept: business_concept} = insert(:business_concept_version)
+      collection_name = "collection"
+
+      Embeddings.generate_vector(
+        &Mox.expect/4,
+        "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id}",
+        collection_name,
+        {:ok, {collection_name, [54.0, 10.2, -2.0]}}
+      )
+
+      assert {collection_name, [54.0, 10.2, -2.0]} ==
+               BusinessConcepts.generate_vector(bcv, collection_name)
     end
   end
 

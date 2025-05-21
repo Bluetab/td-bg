@@ -27,3 +27,5 @@ config :td_cache, :audit, stream: "audit:events:test"
 config :td_cache, redis_host: "redis", port: 6380
 
 config :td_cache, :event_stream, streams: []
+
+config :td_cluster, TdCluster.ClusterHandler, MockClusterHandler

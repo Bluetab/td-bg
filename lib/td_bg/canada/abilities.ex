@@ -47,6 +47,18 @@ defmodule TdBg.Canada.Abilities do
       LinkAbilities.can?(claims, :create_structure_link, business_concept)
     end
 
+    def can?(%Claims{} = claims, :suggest_structure_link, %{business_concept: business_concept}) do
+      LinkAbilities.can?(claims, :suggest_structure_link, business_concept)
+    end
+
+    def can?(
+          %Claims{} = claims,
+          :suggest_structure_link,
+          %{"business_concept_id" => _} = business_concept
+        ) do
+      LinkAbilities.can?(claims, :suggest_structure_link, business_concept)
+    end
+
     def can?(%Claims{} = claims, :create_implementation, %{} = business_concept) do
       LinkAbilities.can?(claims, :create_implementation, business_concept)
     end

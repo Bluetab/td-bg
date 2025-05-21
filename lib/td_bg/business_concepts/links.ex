@@ -48,4 +48,9 @@ defmodule TdBg.BusinessConcepts.Links do
   def has_permissions?(claims, %{resource_type: :data_structure}) do
     can?(claims, view_data_structure(:no_domain))
   end
+
+  def get_rand_links(business_concept_id, source_type, target_type, count \\ 10) do
+    {:ok, links} = LinkCache.list_rand_links(source_type, business_concept_id, target_type, count)
+    links
+  end
 end

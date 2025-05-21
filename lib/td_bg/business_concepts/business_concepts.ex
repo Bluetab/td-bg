@@ -11,6 +11,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.Links
   alias TdBg.Cache.ConceptLoader
   alias TdBg.I18nContents.I18nContent
   alias TdBg.I18nContents.I18nContents
@@ -21,6 +22,8 @@ defmodule TdBg.BusinessConcepts do
   alias TdCache.EventStream.Publisher
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
+  alias TdCluster.Cluster.TdAi.Embeddings
+  alias TdDfLib.Format
   alias TdDfLib.Templates
   alias ValidationError
 
@@ -932,6 +935,70 @@ defmodule TdBg.BusinessConcepts do
   def get_requiered_langs do
     {:ok, required_langs} = I18nCache.get_required_locales()
     required_langs
+  end
+
+  def generate_vector(_version_or_params, collection_name \\ nil)
+
+  def generate_vector(
+        %BusinessConceptVersion{
+          name: name,
+          content: content,
+          business_concept: business_concept
+        },
+        collection_name
+      ) do
+    "#{name} #{business_concept.type} #{business_concept.domain.external_id}"
+    |> add_descriptions(content, business_concept)
+    |> add_links_to_vector(business_concept.id)
+    |> String.trim()
+    |> Embeddings.generate_vector(collection_name)
+    |> then(fn {:ok, vector} -> vector end)
+  end
+
+  def generate_vector(%{id: id, version: version}, collection_name) do
+    id
+    |> get_business_concept_version(version)
+    |> generate_vector(collection_name)
+  end
+
+  def generate_vector(nil, _collection_name), do: nil
+
+  defp add_descriptions(text, content, business_concept) do
+    case get_template(business_concept) do
+      nil ->
+        text
+
+      %{content: template_content} = template ->
+        description_fields =
+          template_content
+          |> Format.flatten_content_fields()
+          |> Enum.filter(&(&1["widget"] in ["enriched_text", "textarea"]))
+          |> Enum.map(& &1["name"])
+
+        descriptions =
+          content
+          |> Format.search_values(template, domain_id: business_concept.domain.id)
+          |> Map.take(description_fields)
+          |> Enum.map_join(" ", fn
+            {_field, %{"value" => value}} -> value
+            _other -> ""
+          end)
+
+        text <> " " <> descriptions
+    end
+  end
+
+  defp add_links_to_vector(text, business_concept_id) do
+    links_text =
+      business_concept_id
+      |> Links.get_rand_links("business_concept", "data_structure")
+      |> Enum.map_join(" ", &link_embedding/1)
+
+    text <> " " <> links_text
+  end
+
+  defp link_embedding(link) do
+    "#{Map.get(link, :name)} #{Map.get(link, :type)} #{Map.get(link, :description)}"
   end
 
   defp on_share({:ok, %{updated: %{id: id, shared_to: shared_to} = updated} = reply}) do

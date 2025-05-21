@@ -11,6 +11,7 @@ defmodule TdBg.Canada.LinkAbilities do
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
   alias TdCache.Link
+  alias TdCluster.Cluster.TdAi.Indices
 
   def can?(%Claims{role: "admin"}, :download_links), do: true
 
@@ -20,6 +21,14 @@ defmodule TdBg.Canada.LinkAbilities do
 
   def can?(%Claims{role: "admin"}, :create_concept_link, _resource), do: true
   def can?(%Claims{role: "admin"}, :create_structure_link, _resource), do: true
+
+  def can?(%Claims{role: "admin"}, :suggest_structure_link, _resource) do
+    case Indices.exists_enabled?() do
+      {:ok, enabled?} -> enabled?
+      _ -> false
+    end
+  end
+
   def can?(%Claims{role: "admin"}, _action, %Link{}), do: true
 
   def can?(
@@ -47,6 +56,13 @@ defmodule TdBg.Canada.LinkAbilities do
   def can?(%Claims{} = claims, :create_structure_link, %{} = concept) do
     domain_ids = BusinessConcepts.get_domain_ids(concept)
     Permissions.authorized?(claims, :manage_business_concept_links, domain_ids)
+  end
+
+  def can?(%Claims{} = claims, :suggest_structure_link, %{} = concept) do
+    domain_ids = BusinessConcepts.get_domain_ids(concept)
+    {:ok, enabled?} = Indices.exists_enabled?()
+
+    Permissions.authorized?(claims, :manage_business_concept_links, domain_ids) && enabled?
   end
 
   def can?(%Claims{} = claims, :create_implementation, %{} = concept) do
