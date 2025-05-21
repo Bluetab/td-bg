@@ -162,6 +162,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   setup _context do
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] -> {:ok, true} end)
+
     on_exit(fn ->
       IndexWorkerMock.clear()
       TdCache.Redix.del!("i18n:locales:*")
@@ -1031,6 +1033,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert Map.has_key?(actions, "create_structure_link")
+      assert Map.has_key?(actions, "suggest_structure_link")
       refute Map.has_key?(actions, "create_concept_link")
     end
 

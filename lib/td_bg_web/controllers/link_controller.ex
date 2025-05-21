@@ -63,4 +63,9 @@ defmodule TdBgWeb.BusinessConceptLinkController do
     # This method is only used to generate an action in the business_concept_version hypermedia response
     send_resp(conn, :accepted, "")
   end
+
+  def suggest_structure_link(conn, _params) do
+    # This method is only used to generate an action in the business_concept_version hypermedia response
+    send_resp(conn, :accepted, "")
+  end
 end
