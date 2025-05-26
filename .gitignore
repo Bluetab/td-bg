@@ -32,3 +32,4 @@ td_bg-*.tar
 .DS_Store
 .elixir_ls
 TODO.*
+mise.toml
