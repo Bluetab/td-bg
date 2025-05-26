@@ -55,6 +55,7 @@ defmodule TdBgWeb.Router do
       resources("/links", BusinessConceptLinkController, only: [:delete])
       post("/links/concepts", BusinessConceptLinkController, :create_concept_link)
       post("/links/structures", BusinessConceptLinkController, :create_structure_link)
+      post("/links/structures/suggest", BusinessConceptLinkController, :suggest_structure_link)
     end
 
     post("/business_concept_versions/links/download", BusinessConceptLinkController, :download)

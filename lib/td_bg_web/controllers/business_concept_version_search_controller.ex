@@ -244,10 +244,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
     do: business_concept_version
 
   defp add_links_actions(business_concept_version, claims) do
-    can_create_link = can?(claims, create_structure_link(business_concept_version))
-
     Map.put(business_concept_version, "_actions", %{
-      "can_create_structure_link" => can_create_link
+      "can_create_structure_link" => can?(claims, create_structure_link(business_concept_version))
     })
   end
 

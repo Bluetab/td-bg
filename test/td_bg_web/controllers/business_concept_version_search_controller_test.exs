@@ -160,6 +160,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
   end
 
   setup _context do
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] -> {:ok, true} end)
+
     on_exit(fn ->
       IndexWorkerMock.clear()
       TdCache.Redix.del!("i18n:locales:*")
