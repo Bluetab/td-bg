@@ -833,8 +833,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "completeness",
           "last_change_at",
           "inserted_at",
-          field_name,
-          "domain_inside_note_field"
+          [field_name, {:bg_color, "#ffe994"}],
+          ["domain_inside_note_field", {:bg_color, "#ffe994"}]
         ],
         [
           concept_id,
@@ -907,7 +907,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          field_name
+          [field_name, {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -999,7 +999,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          field_name
+          [field_name, {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -1088,7 +1088,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          field_name
+          [field_name, {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -1315,8 +1315,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "completeness",
           "last_change_at",
           "inserted_at",
-          url_field,
-          key_value_field
+          [url_field, {:bg_color, "#ffe994"}],
+          [key_value_field, {:bg_color, "#ffe994"}]
         ],
         [
           concept_id,
@@ -1413,8 +1413,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          url_field,
-          key_value_field
+          [url_field, {:bg_color, "#ffe994"}],
+          [key_value_field, {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -1499,7 +1499,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          url_field
+          [url_field, {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -1578,9 +1578,9 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "completeness",
           "last_change_at",
           "inserted_at",
-          "field1",
-          "field2",
-          "field3"
+          ["field1", {:bg_color, "#ffe994"}],
+          ["field2", {:bg_color, "#ffe994"}],
+          ["field3", {:bg_color, "#ffe994"}]
         ],
         [
           concept_id,
@@ -1659,9 +1659,9 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          "field1",
-          "field2",
-          "field3"
+          ["field1", {:bg_color, "#ffe994"}],
+          ["field2", {:bg_color, "#ffe994"}],
+          ["field3", {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -1772,11 +1772,11 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          "field1",
-          "field2",
-          "field3",
-          "field4",
-          "field5"
+          ["field1", {:bg_color, "#ffe994"}],
+          ["field2", {:bg_color, "#ffe994"}],
+          ["field3", {:bg_color, "#ffe994"}],
+          ["field4", {:bg_color, "#ffe994"}],
+          ["field5", {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -1869,9 +1869,9 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          "field1_name",
-          "field2_name",
-          "field3_name"
+          ["field1_name", {:bg_color, "#ffe994"}],
+          ["field2_name", {:bg_color, "#ffe994"}],
+          ["field3_name", {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
@@ -2025,10 +2025,10 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "last_change_at",
           "inserted_at",
           "link_to_concept",
-          "i18n_test.dropdown.fixed",
-          "i18n_test_no_translate",
-          "i18n_test.radio.fixed",
-          "i18n_test.checkbox.fixed_tuple"
+          ["i18n_test.dropdown.fixed", {:bg_color, "#ffe994"}],
+          ["i18n_test_no_translate", {:bg_color, "#ffe994"}],
+          ["i18n_test.radio.fixed", {:bg_color, "#ffe994"}],
+          ["i18n_test.checkbox.fixed_tuple", {:bg_color, "#ffe994"}]
         ],
         [
           business_concept_id,
