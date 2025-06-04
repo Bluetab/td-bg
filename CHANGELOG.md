@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Added
+
+- [TD-7221] Highlight the headers of the template fields in Concepts download file
+
 ## [7.5.1] 2025-05-26
 
 ## Added

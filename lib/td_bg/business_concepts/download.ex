@@ -46,7 +46,7 @@ defmodule TdBg.BusinessConcept.Download do
       all_headers =
         xlsx_headers
         |> get_all_headers(concept_url_schema)
-        |> highlight_headers()
+        |> highlight_headers(xlsx_headers)
 
       core =
         Enum.map(template_concepts, fn %{"content" => content} = concept ->
@@ -155,7 +155,7 @@ defmodule TdBg.BusinessConcept.Download do
   defp add_extra_fields(editable_fields, concept, concept_url_schema),
     do: editable_fields ++ [get_concept_url_schema(concept_url_schema, concept)]
 
-  defp highlight_headers(headers) do
+  defp highlight_headers(headers, template_headers) do
     %{required: requireds, update_required: update_requireds} = Upload.get_headers()
 
     headers
@@ -164,6 +164,7 @@ defmodule TdBg.BusinessConcept.Download do
         cond do
           h in requireds -> [h, bg_color: "#ffd428"]
           h in update_requireds -> [h, bg_color: "#ffe994"]
+          h in template_headers -> [h, bg_color: "#ffe994"]
           true -> h
         end
     end)
