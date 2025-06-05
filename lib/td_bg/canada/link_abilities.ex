@@ -60,9 +60,14 @@ defmodule TdBg.Canada.LinkAbilities do
 
   def can?(%Claims{} = claims, :suggest_structure_link, %{} = concept) do
     domain_ids = BusinessConcepts.get_domain_ids(concept)
-    {:ok, enabled?} = Indices.exists_enabled?()
 
-    Permissions.authorized?(claims, :manage_business_concept_links, domain_ids) && enabled?
+    case Indices.exists_enabled?() do
+      {:ok, enabled?} ->
+        Permissions.authorized?(claims, :manage_business_concept_links, domain_ids) && enabled?
+
+      _ ->
+        false
+    end
   end
 
   def can?(%Claims{} = claims, :create_implementation, %{} = concept) do

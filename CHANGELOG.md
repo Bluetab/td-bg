@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.5.2] 2025-06-05
+
+### Added
+
+- [TD-6219] Handle :nodedown for link ability
+
 ## [7.5.1] 2025-05-26
 
 ## Added
