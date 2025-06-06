@@ -20,8 +20,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     alias TdCache.TemplateCache
     alias TdCache.UserCache
     alias TdDfLib.Format
-
-    @translatable_widgets ~w(enriched_text string textarea)
+    alias TdDfLib.I18n
 
     @impl Elasticsearch.Document
     def id(%BusinessConceptVersion{id: id}), do: id
@@ -143,12 +142,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     defp put_i18n_content(content, _i18n, _template), do: content
 
     defp format_content_locale({locale, %{content: i18n_content}}, template, content) do
-      translatable_fields =
-        template
-        |> Map.get(:content)
-        |> Format.flatten_content_fields()
-        |> Enum.filter(&(&1["widget"] in @translatable_widgets))
-        |> Enum.map(& &1["name"])
+      translatable_fields = I18n.get_translatable_fields(template)
 
       i18n_content
       |> Format.search_values(template, apply_default_values?: false)

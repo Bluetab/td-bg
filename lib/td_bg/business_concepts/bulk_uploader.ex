@@ -20,10 +20,10 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def bulk_upload(file_hash, business_concepts_upload, claims, auto_publish, lang) do
+  def bulk_upload(file_hash, business_concepts_upload, claims, opts) do
     GenServer.call(
       __MODULE__,
-      {:bulk_upload, file_hash, business_concepts_upload, claims, auto_publish, lang},
+      {:bulk_upload, file_hash, business_concepts_upload, claims, opts},
       60_000
     )
   end
@@ -38,14 +38,14 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
 
   @impl true
   def handle_call(
-        {:bulk_upload, file_hash, business_concepts_upload, claims, auto_publish, lang},
+        {:bulk_upload, file_hash, business_concepts_upload, claims, opts},
         _from,
         state
       ) do
     %{reply: upload_state, state: new_state} =
       file_hash
       |> pending_upload()
-      |> launch_task(file_hash, state, business_concepts_upload, claims, auto_publish, lang)
+      |> launch_task(file_hash, state, business_concepts_upload, claims, opts)
 
     {:reply, upload_state, new_state}
   end
@@ -122,9 +122,10 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
          state,
          %{filename: filename} = business_concepts_upload,
          %{user_id: user_id} = claims,
-         auto_publish,
-         lang
+         opts
        ) do
+    auto_publish = Keyword.get(opts, :auto_publish, false)
+
     file = create_tmp_file(business_concepts_upload, file_hash)
 
     task =
@@ -132,10 +133,7 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
         TdBg.TaskSupervisor,
         fn ->
           with %{created: _, updated: _, error: _} = result <-
-                 Upload.bulk_upload(file, claims,
-                   auto_publish: auto_publish,
-                   lang: lang
-                 ) do
+                 Upload.bulk_upload(file, claims, opts) do
             result
           end
         end
@@ -174,8 +172,7 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
          state,
          _business_concepts_upload,
          _claims,
-         _auto_publish,
-         _lang
+         _opts
        ) do
     %{reply: update_state, state: state}
   end

@@ -1,14 +1,21 @@
 defmodule TdBg.BusinessConceptDownloadTests do
   use TdBg.DataCase
 
+  import TdBg.TestOperators
+
   alias Elixlsx.{Sheet, Workbook}
   alias TdBg.BusinessConcept.Download
+  alias TdCache.I18nCache
 
   @template_name "download_template"
   @concept_url_schema "https://test.io/concepts/:business_concept_id/versions/:id"
   @lang "es"
 
   setup context do
+    # Add as active locale "en" because "en" is the default locale
+    CacheHelpers.put_i18n_messages("en", [%{message_id: "foo", definition: "bar"}])
+    I18nCache.put_default_locale(@lang)
+
     case context[:template] do
       nil ->
         :ok
@@ -716,7 +723,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
            }
          ]
 
-    test "to_xlsx/2 return formatted links with names" do
+    test "to_csv/2 return formatted links with names" do
       template = @template_name
 
       url_field = "url_field"
@@ -778,7 +785,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_xlsx/2 return cvs content to download" do
+    test "to_xlsx/2 return xlsx content to download" do
       template = @template_name
       field_name = "field_name"
 
@@ -867,7 +874,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              "fields" => [%{"name" => "field_name", "type" => "list", "label" => "field_label"}]
            }
          ]
-    test "to_xlsx/2 return cvs content to download with url" do
+    test "to_xlsx/2 return xlsx content to download with url" do
       template = @template_name
       field_name = "field_name"
 
@@ -931,7 +938,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1023,7 +1030,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1044,7 +1051,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_xlsx/2 return enty table field if only headers" do
+    test "to_xlsx/2 return empty table field if only headers" do
       template = @template_name
       field_name = "field_name"
       business_concept_id = 123
@@ -1112,7 +1119,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     test "to_xlsx/2 return business concepts non-dynamic content when related template does not exist" do
@@ -1241,7 +1248,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1439,7 +1446,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1524,7 +1531,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                  }
                ]
              } =
-               Download.to_xlsx(concepts, @lang, @concept_url_schema)
+               Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1687,7 +1694,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1804,7 +1811,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1897,7 +1904,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
 
     @tag template: [
@@ -1924,6 +1931,15 @@ defmodule TdBg.BusinessConceptDownloadTests do
                  "default" => %{"value" => "", "origin" => "default"},
                  "label" => "label_i18n_test_no_translate",
                  "name" => "i18n_test_no_translate",
+                 "type" => "string",
+                 "values" => nil,
+                 "widget" => "string"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"value" => "", "origin" => "default"},
+                 "label" => "label_i18n_test_translated",
+                 "name" => "i18n_test_translated",
                  "type" => "string",
                  "values" => nil,
                  "widget" => "string"
@@ -1967,7 +1983,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
              ]
            }
          ]
-    test "to_editable_csv return editable csv translated" do
+    test "to_xlsx return editable xlsx translated with all locales if translations is true" do
       template = @template_name
 
       CacheHelpers.put_i18n_messages("es", [
@@ -1987,7 +2003,8 @@ defmodule TdBg.BusinessConceptDownloadTests do
 
       business_concept_id = 123
       business_concept_version_id = 456
-      name = "concept_name"
+      name_en = "concept_name"
+      name = "nombre_concepto"
       domain_ext_id = "domain_ext_id"
       domain_name = "Domain Name"
       status = "draft"
@@ -1999,11 +2016,203 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "business_concept_id" => business_concept_id,
           "id" => business_concept_version_id,
           "name" => name,
+          "name_en" => name_en,
           "template" => %{"name" => template},
           "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
           "content" => %{
             "i18n_test.dropdown.fixed" => "pear",
+            "i18n_test_no_translate_en" => "Test no translate",
             "i18n_test_no_translate" => "Test no translate",
+            "i18n_test_translated_en" => "English Text",
+            "i18n_test_translated" => "Texto Español",
+            "i18n_test.radio.fixed" => "banana",
+            "i18n_test.checkbox.fixed_tuple" => ["option_1", "option_2"]
+          },
+          "status" => status,
+          "inserted_at" => inserted_at,
+          "last_change_at" => last_change_at
+        }
+      ]
+
+      rows = [
+        [
+          ["id", {:bg_color, "#ffe994"}],
+          "current_version_id",
+          ["name_es", {:bg_color, "#ffd428"}],
+          ["name_en", {:bg_color, "#ffd428"}],
+          ["domain_external_id", {:bg_color, "#ffd428"}],
+          "domain_name",
+          "status",
+          "completeness",
+          "last_change_at",
+          "inserted_at",
+          "link_to_concept",
+          ["i18n_test.dropdown.fixed", {:bg_color, "#ffe994"}],
+          ["i18n_test_no_translate_es", {:bg_color, "#ffe994"}],
+          ["i18n_test_no_translate_en", {:bg_color, "#ffe994"}],
+          ["i18n_test_translated_es", {:bg_color, "#ffe994"}],
+          ["i18n_test_translated_en", {:bg_color, "#ffe994"}],
+          ["i18n_test.radio.fixed", {:bg_color, "#ffe994"}],
+          ["i18n_test.checkbox.fixed_tuple", {:bg_color, "#ffe994"}]
+        ],
+        [
+          business_concept_id,
+          business_concept_version_id,
+          name,
+          name_en,
+          domain_ext_id,
+          domain_name,
+          status,
+          100.0,
+          last_change_at,
+          inserted_at,
+          "https://test.io/concepts/123/versions/456",
+          "Pera",
+          "Test no translate",
+          "Test no translate",
+          "Texto Español",
+          "English Text",
+          "Platano",
+          "Pera|Platano"
+        ]
+      ]
+
+      assert %Workbook{
+               sheets: [
+                 %Sheet{
+                   name: ^template,
+                   rows: rows_downloaded
+                 }
+               ]
+             } =
+               Download.to_xlsx(concepts, @lang,
+                 concept_url_schema: @concept_url_schema,
+                 translations: true
+               )
+
+      Enum.with_index(rows, fn row, index ->
+        assert row ||| Enum.at(rows_downloaded, index)
+      end)
+    end
+
+    @tag template: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"value" => "", "origin" => "default"},
+                 "label" => "label_i18n_test.dropdown.fixed",
+                 "name" => "i18n_test.dropdown.fixed",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed" => [
+                     "pear",
+                     "banana"
+                   ]
+                 },
+                 "widget" => "dropdown"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"value" => "", "origin" => "default"},
+                 "label" => "label_i18n_test_no_translate",
+                 "name" => "i18n_test_no_translate",
+                 "type" => "string",
+                 "values" => nil,
+                 "widget" => "string"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"value" => "", "origin" => "default"},
+                 "label" => "label_i18n_test_translated",
+                 "name" => "i18n_test_translated",
+                 "type" => "string",
+                 "values" => nil,
+                 "widget" => "string"
+               },
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"value" => "", "origin" => "user"},
+                 "label" => "label_i18n_test.radio.fixed",
+                 "name" => "i18n_test.radio.fixed",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed" => [
+                     "pear",
+                     "banana"
+                   ]
+                 },
+                 "widget" => "radio"
+               },
+               %{
+                 "cardinality" => "*",
+                 "default" => %{"value" => "", "origin" => "user"},
+                 "label" => "label_i18n_test.checkbox.fixed_tuple",
+                 "name" => "i18n_test.checkbox.fixed_tuple",
+                 "subscribable" => false,
+                 "type" => "string",
+                 "values" => %{
+                   "fixed_tuple" => [
+                     %{
+                       "text" => "pear",
+                       "value" => "option_1"
+                     },
+                     %{
+                       "text" => "banana",
+                       "value" => "option_2"
+                     }
+                   ]
+                 },
+                 "widget" => "checkbox"
+               }
+             ]
+           }
+         ]
+    test "to_xlsx return editable xlsx translated without all locales if translations is false" do
+      template = @template_name
+
+      CacheHelpers.put_i18n_messages("es", [
+        %{message_id: "fields.label_i18n_test.dropdown.fixed", definition: "Dropdown Fijo"},
+        %{message_id: "fields.label_i18n_test.dropdown.fixed.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.dropdown.fixed.banana", definition: "Platano"},
+        %{message_id: "fields.label_i18n_test.radio.fixed", definition: "Radio Fijo"},
+        %{message_id: "fields.label_i18n_test.radio.fixed.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.radio.fixed.banana", definition: "Platano"},
+        %{
+          message_id: "fields.label_i18n_test.checkbox.fixed_tuple",
+          definition: "Checkbox Tupla Fija"
+        },
+        %{message_id: "fields.label_i18n_test.checkbox.fixed_tuple.pear", definition: "Pera"},
+        %{message_id: "fields.label_i18n_test.checkbox.fixed_tuple.banana", definition: "Platano"}
+      ])
+
+      business_concept_id = 123
+      business_concept_version_id = 456
+      name_en = "concept_name"
+      name = "nombre_concepto"
+      domain_ext_id = "domain_ext_id"
+      domain_name = "Domain Name"
+      status = "draft"
+      inserted_at = "2018-05-05"
+      last_change_at = "2018-05-06"
+
+      concepts = [
+        %{
+          "business_concept_id" => business_concept_id,
+          "id" => business_concept_version_id,
+          "name" => name,
+          "name_en" => name_en,
+          "template" => %{"name" => template},
+          "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
+          "content" => %{
+            "i18n_test.dropdown.fixed" => "pear",
+            "i18n_test_no_translate_en" => "Test no translate",
+            "i18n_test_no_translate" => "Test no translate",
+            "i18n_test_translated_en" => "English Text",
+            "i18n_test_translated" => "Texto Español",
             "i18n_test.radio.fixed" => "banana",
             "i18n_test.checkbox.fixed_tuple" => ["option_1", "option_2"]
           },
@@ -2027,6 +2236,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "link_to_concept",
           ["i18n_test.dropdown.fixed", {:bg_color, "#ffe994"}],
           ["i18n_test_no_translate", {:bg_color, "#ffe994"}],
+          ["i18n_test_translated", {:bg_color, "#ffe994"}],
           ["i18n_test.radio.fixed", {:bg_color, "#ffe994"}],
           ["i18n_test.checkbox.fixed_tuple", {:bg_color, "#ffe994"}]
         ],
@@ -2043,6 +2253,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           "https://test.io/concepts/123/versions/456",
           "Pera",
           "Test no translate",
+          "Texto Español",
           "Platano",
           "Pera|Platano"
         ]
@@ -2055,7 +2266,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
                    rows: ^rows
                  }
                ]
-             } = Download.to_xlsx(concepts, @lang, @concept_url_schema)
+             } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
   end
 end
