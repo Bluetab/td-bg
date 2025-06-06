@@ -7,6 +7,7 @@ defmodule TdBg.BusinessConcept.Download do
   alias TdBg.BusinessConcept.Upload
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
+  alias TdDfLib.I18n
   alias TdDfLib.Parser
   alias TdDfLib.Templates
 
@@ -22,41 +23,76 @@ defmodule TdBg.BusinessConcept.Download do
     "inserted_at"
   ]
 
+  @headers_translatable ["name"]
+
   @url_schema_headers [
     "link_to_concept"
   ]
 
-  def to_xlsx(concepts, lang, concept_url_schema \\ nil) do
+  def to_xlsx(concepts, lang, opts \\ []) do
+    concept_url_schema = Keyword.get(opts, :concept_url_schema, nil)
+    translations = Keyword.get(opts, :translations, false)
+
+    locales = I18nCache.get_active_locales!()
+
+    default_locale =
+      case I18nCache.get_default_locale() do
+        {:ok, locale} -> locale
+        _ -> "en"
+      end
+
     concepts
     |> Enum.group_by(&(&1 |> Map.get("template") |> Map.get("name")))
     |> Enum.map(fn {template_name, template_concepts} ->
-      template_fields =
+      [template_fields, translatable_fields] =
         case TemplateCache.get_by_name!(template_name) do
           nil ->
-            []
+            [[], []]
 
           template ->
-            template
-            |> type_fields()
-            |> Enum.uniq_by(&Map.get(&1, "name"))
+            fields =
+              template
+              |> type_fields()
+              |> Enum.uniq_by(&Map.get(&1, "name"))
+
+            translatable_fields = I18n.get_translatable_fields(template)
+
+            [fields, translatable_fields]
         end
 
-      xlsx_headers = Enum.map(template_fields, &Map.get(&1, "name"))
+      xlsx_headers =
+        template_fields
+        |> Enum.map(fn field ->
+          field_name = Map.get(field, "name")
+          get_field_name(locales, field_name, translatable_fields, translations)
+        end)
+        |> List.flatten()
 
       all_headers =
         xlsx_headers
-        |> get_all_headers(concept_url_schema)
-        |> highlight_headers(xlsx_headers)
+        |> get_all_headers(concept_url_schema, translations: translations, locales: locales)
+        |> highlight_headers(xlsx_headers, translations: translations, locales: locales)
 
       core =
         Enum.map(template_concepts, fn %{"content" => content} = concept ->
           @headers
-          |> Enum.map(&editable_concept_value(concept, &1, lang))
+          |> Enum.map(
+            &editable_concept_value(concept, &1,
+              lang: lang,
+              locales: locales,
+              default_locale: default_locale,
+              translations: translations
+            )
+          )
+          |> List.flatten()
           |> add_extra_fields(concept, concept_url_schema)
           |> Parser.append_parsed_fields(template_fields, content,
             domain_type: :with_domain_external_id,
             lang: lang,
-            xlsx: true
+            xlsx: true,
+            translations: translations,
+            locales: locales,
+            default_locale: default_locale
           )
         end)
 
@@ -71,6 +107,14 @@ defmodule TdBg.BusinessConcept.Download do
   end
 
   def to_csv(concepts, lang, concept_url_schema \\ nil) do
+    locales = I18nCache.get_active_locales!()
+
+    default_locale =
+      case I18nCache.get_default_locale() do
+        {:ok, locale} -> locale
+        _ -> "en"
+      end
+
     type_fields =
       concepts
       |> Enum.group_by(&(&1 |> Map.get("template") |> Map.get("name")))
@@ -88,7 +132,14 @@ defmodule TdBg.BusinessConcept.Download do
     core =
       Enum.map(concepts, fn %{"content" => content} = concept ->
         @headers
-        |> Enum.map(&editable_concept_value(concept, &1, lang))
+        |> Enum.map(
+          &editable_concept_value(concept, &1,
+            lang: lang,
+            translations: false,
+            locales: locales,
+            default_locale: default_locale
+          )
+        )
         |> add_extra_fields(concept, concept_url_schema)
         |> Parser.append_parsed_fields(type_fields, content,
           domain_type: :with_domain_external_id,
@@ -107,7 +158,7 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp type_fields(_type), do: []
 
-  defp editable_concept_value(concept, header, lang)
+  defp editable_concept_value(concept, header, opts)
 
   defp editable_concept_value(%{"template" => template}, "template", _),
     do: Map.get(template, "name")
@@ -124,8 +175,35 @@ defmodule TdBg.BusinessConcept.Download do
 
   defp editable_concept_value(%{"id" => id}, "current_version_id", _), do: id
 
-  defp editable_concept_value(%{"status" => status}, "status", lang),
-    do: I18nCache.get_definition(lang, "concepts.status.#{status}", default_value: status)
+  defp editable_concept_value(%{"status" => status}, "status", opts) do
+    lang = Keyword.get(opts, :lang)
+    I18nCache.get_definition(lang, "concepts.status.#{status}", default_value: status)
+  end
+
+  defp editable_concept_value(concept, field, opts) when field in @headers_translatable do
+    default_locale = Keyword.get(opts, :default_locale)
+    translations = Keyword.get(opts, :translations, false)
+
+    if translations do
+      opts
+      |> Keyword.get(:locales)
+      |> Enum.map(fn
+        locale when locale != default_locale ->
+          Map.get(concept, "#{field}_#{locale}")
+
+        _ ->
+          Map.get(concept, field)
+      end)
+    else
+      lang = Keyword.get(opts, :lang)
+
+      if lang == default_locale do
+        Map.get(concept, field)
+      else
+        Map.get(concept, "#{field}_#{lang}")
+      end
+    end
+  end
 
   defp editable_concept_value(concept, field, _), do: Map.get(concept, field)
 
@@ -150,16 +228,39 @@ defmodule TdBg.BusinessConcept.Download do
   defp get_all_headers(type_headers, _concepts_url_schema),
     do: @headers ++ @url_schema_headers ++ type_headers
 
+  defp get_all_headers(type_headers, nil, translations: false, locales: _),
+    do: @headers ++ type_headers
+
+  defp get_all_headers(type_headers, _concepts_url_schema, translations: false, locales: _),
+    do: @headers ++ @url_schema_headers ++ type_headers
+
+  defp get_all_headers(type_headers, nil, translations: true, locales: locales),
+    do: expand_translatable_header(@headers, locales) ++ type_headers
+
+  defp get_all_headers(type_headers, _concepts_url_schema, translations: true, locales: locales),
+    do: expand_translatable_header(@headers, locales) ++ @url_schema_headers ++ type_headers
+
+  defp expand_translatable_header(headers, locales) do
+    headers
+    |> Enum.map(fn
+      header when header in @headers_translatable ->
+        Enum.map(locales, &"#{header}_#{&1}")
+
+      header ->
+        header
+    end)
+    |> List.flatten()
+  end
+
   defp add_extra_fields(editable_fields, _, nil), do: editable_fields
 
   defp add_extra_fields(editable_fields, concept, concept_url_schema),
     do: editable_fields ++ [get_concept_url_schema(concept_url_schema, concept)]
 
-  defp highlight_headers(headers, template_headers) do
-    %{required: requireds, update_required: update_requireds} = Upload.get_headers()
+  defp highlight_headers(headers, template_headers, opts) do
+    %{required: requireds, update_required: update_requireds} = Upload.get_headers(opts)
 
-    headers
-    |> Enum.map(fn
+    Enum.map(headers, fn
       h ->
         cond do
           h in requireds -> [h, bg_color: "#ffd428"]
@@ -168,5 +269,13 @@ defmodule TdBg.BusinessConcept.Download do
           true -> h
         end
     end)
+  end
+
+  defp get_field_name(locales, field_name, translatable_fields, translations) do
+    if field_name in translatable_fields and translations do
+      Enum.map(locales, &"#{field_name}_#{&1}")
+    else
+      field_name
+    end
   end
 end

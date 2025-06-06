@@ -9,14 +9,17 @@ defmodule TdBg.BusinessConcept.Upload do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.Taxonomies
+  alias TdCache.I18nCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
+  alias TdDfLib.I18n
   alias TdDfLib.Parser
 
   require Logger
 
   @default_lang Application.compile_env(:td_cache, :lang)
   @headers ["id", "name", "domain_external_id", "domain_name", "type", "confidential"]
+  @headers_translatable ["name"]
   @required_headers ["name", "domain_external_id"]
   @required_update_headers ["id"]
   @ignored_headers [
@@ -40,29 +43,49 @@ defmodule TdBg.BusinessConcept.Upload do
     )
   end
 
-  def get_headers,
-    do: %{
-      required: @required_headers,
-      update_required: @required_update_headers,
-      ignored: @ignored_headers
-    }
+  def get_headers(opts) do
+    active_locales = Keyword.get(opts, :locales)
+    translations = Keyword.get(opts, :translations)
+
+    if translations do
+      %{
+        required: get_headers_with_locales(@required_headers, active_locales: active_locales),
+        update_required:
+          get_headers_with_locales(@required_update_headers, active_locales: active_locales),
+        ignored: get_headers_with_locales(@ignored_headers, active_locales: active_locales)
+      }
+    else
+      %{
+        required: @required_headers,
+        update_required: @required_update_headers,
+        ignored: @ignored_headers
+      }
+    end
+  end
 
   defp do_bulk_upload(business_concepts_upload, claims, opts) do
-    lang = Keyword.get(opts, :lang, @default_lang)
-    auto_publish = Keyword.get(opts, :auto_publish, false)
+    {:ok, required_locales} = I18nCache.get_required_locales()
+    active_locales = I18nCache.get_active_locales!()
+    {:ok, default_lang} = I18nCache.get_default_locale()
+
+    opts =
+      opts
+      |> Keyword.put(:required_locales, required_locales)
+      |> Keyword.put(:active_locales, active_locales)
+      |> Keyword.put(:default_lang, default_lang)
 
     with {:ok, data} <- read_xlsx(business_concepts_upload) do
       Enum.reduce(
         data,
         %{created: [], updated: [], errors: []},
         fn %{data: rows, headers: headers, template: template_name}, results ->
-          with :ok <- validate_headers(headers),
+          with :ok <- validate_headers(headers, opts),
                {:ok, template} <- validate_template(template_name) do
             rows
             |> Enum.with_index()
             |> Enum.reduce(results, fn row, type_results ->
               row
-              |> process_row(headers, claims, auto_publish, template, lang)
+              |> process_row(headers, claims, template, opts)
               |> put_results(type_results)
             end)
           else
@@ -122,18 +145,20 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp process_row({raw_data, index}, headers, claims, auto_publish, template, lang) do
+  defp process_row({raw_data, index}, headers, claims, template, opts) do
     # ndexing in the data doesn't account for headers, and in XLSX, rows start from 1. That's why
     # we're adding 2 to the index to align it with the XLSX sheet index
     index = index + 2
 
-    row_parsed = parse_row(raw_data, headers, claims, index, template)
+    auto_publish = Keyword.get(opts, :auto_publish, false)
+
+    row_parsed = parse_row(raw_data, headers, claims, index, template, opts)
 
     with {:ok, row_parsed} <- validate_and_set_domain(row_parsed),
          :ok <- can_bulk_actions(row_parsed, claims),
          {:ok, row_parsed} <- can_auto_publish(row_parsed, claims, auto_publish),
          :ok <- validate_business_concept_name(row_parsed, template),
-         {:ok, row_parsed} <- format_content(row_parsed, template, lang),
+         {:ok, row_parsed} <- format_content(row_parsed, template, opts),
          {:ok, row_parsed} <- validate_changeset(row_parsed, template, claims),
          {:ok, row_parsed} <- validate_template_content(row_parsed),
          {:ok, row_parsed} <- add_publish_status(row_parsed, claims),
@@ -257,8 +282,75 @@ defmodule TdBg.BusinessConcept.Upload do
     end
   end
 
-  defp format_content_values(content) do
-    Enum.map(content, fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
+  defp format_content_values(content, opts) do
+    default_lang = Keyword.get(opts, :default_lang)
+    i18n_locales = Keyword.get(opts, :active_locales) -- [default_lang]
+    initial_i18n_content = Map.new(i18n_locales, fn locale -> {locale, %{"content" => %{}}} end)
+
+    Enum.reduce(
+      content,
+      [content: %{}, i18n_content: initial_i18n_content],
+      fn {key, value}, [content: content, i18n_content: i18n_content] ->
+        case I18n.get_field_locale(key, opts) do
+          {field, nil} ->
+            [
+              content: Map.put(content, field, %{"value" => value, "origin" => "file"}),
+              i18n_content: i18n_content
+            ]
+
+          {field, locale} when locale != default_lang ->
+            [
+              content: content,
+              i18n_content:
+                put_in(i18n_content, [locale, "content", field], %{
+                  "value" => value,
+                  "origin" => "file"
+                })
+            ]
+
+          {field, _locale} ->
+            [
+              content: Map.put(content, field, %{"value" => value, "origin" => "file"}),
+              i18n_content: i18n_content
+            ]
+        end
+      end
+    )
+  end
+
+  defp split_i18n_params(params, default_lang) do
+    Enum.reduce(
+      params,
+      [params: %{}, i18n_params: %{}],
+      fn {key, value}, [params: params, i18n_params: i18n_params] ->
+        case I18n.get_field_locale(key) do
+          {field, nil} ->
+            [
+              params: Map.put(params, field, value),
+              i18n_params: i18n_params
+            ]
+
+          {field, locale} when locale != default_lang ->
+            field_i18n_params = Map.get(i18n_params, locale, %{})
+
+            [
+              params: params,
+              i18n_params:
+                Map.put(
+                  i18n_params,
+                  locale,
+                  Map.put(field_i18n_params, field, value)
+                )
+            ]
+
+          {field, _locale} ->
+            [
+              params: Map.put(params, field, value),
+              i18n_params: i18n_params
+            ]
+        end
+      end
+    )
   end
 
   defp to_valid_id(%{} = params) do
@@ -277,15 +369,45 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp to_valid_id(value) when is_number(value), do: value
 
-  defp parse_row(raw_data, headers, %{user_id: user_id}, index, %{name: template_name}) do
-    {params, df_content} =
+  defp parse_row(
+         raw_data,
+         headers,
+         %{user_id: user_id},
+         index,
+         %{name: template_name},
+         opts
+       ) do
+    default_lang = Keyword.get(opts, :default_lang, @default_lang)
+
+    {params, df_content, i18n_content} =
       headers
       |> Enum.zip(raw_data)
-      |> Enum.filter(fn {headers, _} -> headers not in @ignored_headers end)
-      |> Enum.split_with(fn {headers, _} -> headers in @headers end)
-      |> then(fn {params, content} -> {params, format_content_values(content)} end)
-      |> then(fn {params, content} -> {Map.new(params), Map.new(content)} end)
-      |> then(fn {params, content} -> {to_valid_id(params), content} end)
+      |> Enum.filter(fn {headers, _} ->
+        headers not in get_headers_with_locales(@ignored_headers, opts)
+      end)
+      |> Enum.split_with(fn {headers, _} ->
+        headers in get_headers_with_locales(@headers, opts)
+      end)
+      |> then(fn {params, content} ->
+        {split_i18n_params(params, default_lang), format_content_values(content, opts)}
+      end)
+      |> then(fn {[params: params, i18n_params: i18n_params],
+                  [content: content, i18n_content: i18n_content]} ->
+        i18n_content_with_params =
+          Enum.reduce(i18n_params, i18n_content, fn {locale, locale_params}, new_content ->
+            locale_content =
+              new_content
+              |> Map.get(locale, %{})
+              |> Map.merge(locale_params)
+
+            Map.put(new_content, locale, locale_content)
+          end)
+
+        {params, content, i18n_content_with_params}
+      end)
+      |> then(fn {params, content, i18n_content} ->
+        {to_valid_id(params), content, i18n_content}
+      end)
 
     action = (is_number(Map.get(params, "id", "")) && :update) || :create
 
@@ -294,6 +416,7 @@ defmodule TdBg.BusinessConcept.Upload do
       action: action,
       versioned: false,
       df_content: df_content,
+      i18n_content: i18n_content,
       changeset: nil,
       business_concept_version: nil,
       index: index,
@@ -304,7 +427,7 @@ defmodule TdBg.BusinessConcept.Upload do
     }
   end
 
-  defp parse_changeset(%{changeset: %{valid?: false} = changeset}, row_parsed) do
+  defp parse_changeset(%{changeset: %{valid?: false} = changeset} = params, row_parsed) do
     errors =
       changeset
       |> traverse_errors(row_parsed.in_progress)
@@ -322,13 +445,20 @@ defmodule TdBg.BusinessConcept.Upload do
       end)
 
     row_parsed
+    |> Map.put(:i18n_content, Map.get(params, :i18n_content, %{}))
     |> put_errors(errors)
     |> Map.put(:changeset, changeset)
     |> then(&{:ok, &1})
   end
 
-  defp parse_changeset(%{changeset: %{valid?: true} = changeset}, row_parsed),
-    do: {:ok, Map.put(row_parsed, :changeset, changeset)}
+  defp parse_changeset(%{changeset: %{valid?: true} = changeset} = params, row_parsed) do
+    row_parsed =
+      row_parsed
+      |> Map.put(:changeset, changeset)
+      |> Map.put(:i18n_content, Map.get(params, :i18n_content, %{}))
+
+    {:ok, row_parsed}
+  end
 
   defp traverse_errors(%{errors: errors} = changeset, in_progress) do
     if Keyword.has_key?(errors, :content) and in_progress do
@@ -357,33 +487,52 @@ defmodule TdBg.BusinessConcept.Upload do
   end
 
   defp format_content(
-         %{df_content: content, domain: %{id: domain_id}, params: params} = row_parsed,
+         %{
+           df_content: content,
+           i18n_content: i18n_content,
+           domain: %{id: domain_id},
+           params: params
+         } = row_parsed,
          %{content: content_schemas},
-         lang
+         opts
        ) do
-    fields = Map.keys(content)
+    default_lang = Keyword.get(opts, :default_lang, @default_lang)
+    lang = Keyword.get(opts, :lang, default_lang)
 
-    content_schema =
-      content_schemas
-      |> Format.flatten_content_fields(lang)
-      |> Enum.filter(&(Map.get(&1, "name") in fields))
+    content_schema = Format.flatten_content_fields(content_schemas, lang)
 
-    content =
-      Parser.format_content(%{
-        content: content,
-        content_schema: content_schema,
-        domain_ids: [domain_id],
-        lang: lang
-      })
+    contents =
+      i18n_content
+      |> Map.put("default", %{"content" => content})
+      |> Map.new(fn {key, %{"content" => cont} = i18n_cont} ->
+        fields = Map.keys(cont)
+
+        current_content_schema =
+          content_schemas
+          |> Format.flatten_content_fields(key)
+          |> Enum.filter(&(Map.get(&1, "name") in fields))
+
+        formatted_content =
+          Parser.format_content(%{
+            content: cont,
+            content_schema: current_content_schema,
+            domain_ids: [domain_id],
+            lang: lang
+          })
+
+        {key, Map.put(i18n_cont, "content", formatted_content)}
+      end)
 
     {:ok,
      %{
        row_parsed
        | params: %{
            params
-           | "content" => content,
-             "content_schema" => content_schema
-         }
+           | "content" => Map.get(Map.get(contents, "default"), "content"),
+             "content_schema" => content_schema,
+             "i18n_content" => Map.delete(contents, "default")
+         },
+         i18n_content: Map.delete(contents, "default")
      }}
   end
 
@@ -405,6 +554,7 @@ defmodule TdBg.BusinessConcept.Upload do
     |> Map.put("business_concept", business_concept_attrs)
     |> Map.put("content_schema", [])
     |> Map.put_new("content", %{})
+    |> Map.put_new("i18n_content", %{})
     |> Map.put("last_change_by", user_id)
     |> Map.put("last_change_at", DateTime.utc_now())
     |> Map.delete("id")
@@ -462,8 +612,22 @@ defmodule TdBg.BusinessConcept.Upload do
 
   defp can_auto_publish(row_parsed, _claims, false = _auto_publish), do: {:ok, row_parsed}
 
-  defp validate_headers(headers) do
+  defp get_headers_with_locales(headers, opts) do
+    active_locales = Keyword.get(opts, :active_locales)
+
+    Enum.flat_map(headers, fn header ->
+      add_locale_prefix(active_locales, header)
+    end)
+  end
+
+  defp validate_headers(headers, opts) do
+    active_locales = Keyword.get(opts, :active_locales)
+    required_locales = Keyword.get(opts, :required_locales)
+    default_locale = Keyword.get(opts, :default_lang, @default_lang)
+    optional_locales = (active_locales -- required_locales) -- [default_locale]
+
     @required_headers
+    |> get_headers_with_locales(opts)
     |> Enum.into(MapSet.new())
     |> MapSet.difference(Enum.into(headers, MapSet.new()))
     |> MapSet.to_list()
@@ -472,7 +636,16 @@ defmodule TdBg.BusinessConcept.Upload do
         :ok
 
       [_ | _] = missing_headers ->
-        {:missing_headers_error, missing_headers}
+        optional_locales_headers = Enum.map(optional_locales, &"#{@headers_translatable}_#{&1}")
+
+        missing_headers =
+          Enum.filter(missing_headers, fn header -> header not in optional_locales_headers end)
+
+        if missing_headers == [] do
+          :ok
+        else
+          {:missing_headers_error, missing_headers}
+        end
     end
   end
 
@@ -630,6 +803,7 @@ defmodule TdBg.BusinessConcept.Upload do
           |> Map.put("version", business_concept_version.version + 1)
           |> BusinessConcepts.attrs_keys_to_atoms()
           |> BusinessConcepts.merge_content_with_concept(business_concept_version)
+          |> BusinessConcepts.merge_i18n_content_with_concept(business_concept_version)
           |> BusinessConcepts.new_concept_validations(
             business_concept_version: business_concept_version,
             in_progress: row_parsed.in_progress
@@ -647,6 +821,7 @@ defmodule TdBg.BusinessConcept.Upload do
           params
           |> BusinessConcepts.attrs_keys_to_atoms()
           |> BusinessConcepts.merge_content_with_concept(business_concept_version)
+          |> BusinessConcepts.merge_i18n_content_with_concept(business_concept_version)
           |> BusinessConcepts.update_concept_validations(business_concept_version,
             in_progress: row_parsed.in_progress
           )
@@ -721,7 +896,7 @@ defmodule TdBg.BusinessConcept.Upload do
          } = row_parsed
        ) do
     with {:ok, %{current: %{id: id}}} <-
-           BusinessConcepts.version_concept(row_parsed) do
+           BusinessConcepts.version_concept(row_parsed, trigger: :bulk) do
       bcv = BusinessConcepts.get_business_concept_version!(id)
       BusinessConcepts.refresh_cache_and_elastic(bcv)
       {:ok, Map.put(row_parsed, :business_concept_version, bcv)}
@@ -828,4 +1003,10 @@ defmodule TdBg.BusinessConcept.Upload do
       %{body: _, error_type: _} = formated_error -> formated_error
     end)
   end
+
+  defp add_locale_prefix(active_locales, header) when header in @headers_translatable do
+    Enum.map(active_locales, fn lang -> "#{header}_#{lang}" end)
+  end
+
+  defp add_locale_prefix(_active_locales, header), do: [header]
 end
