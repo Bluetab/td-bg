@@ -7,6 +7,10 @@
 - [TD-7221] Highlight the headers of the template fields in Concepts download file
 - [TD-6468] Multi language upload and download business concepts
 
+## Fixed
+
+- [TD-7243] Indexing translatable fields without default value
+
 ## [7.5.2] 2025-06-05
 
 ### Added
