@@ -6,6 +6,10 @@
 
 - [TD-7221] Highlight the headers of the template fields in Concepts download file
 
+## Fixed
+
+- [TD-7243] Indexing translatable fields without default value
+
 ## [7.5.2] 2025-06-05
 
 ### Added
