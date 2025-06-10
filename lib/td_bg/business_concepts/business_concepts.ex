@@ -620,8 +620,30 @@ defmodule TdBg.BusinessConcepts do
   def merge_content_with_concept(params, %BusinessConceptVersion{} = business_concept_version) do
     content = Map.get(params, :content)
     concept_content = Map.get(business_concept_version, :content, %{})
-    new_content = Map.merge(concept_content, content)
-    Map.put(params, :content, new_content)
+    Map.put(params, :content, Map.merge(concept_content, content))
+  end
+
+  def merge_i18n_content_with_concept(params, %BusinessConceptVersion{id: id}) do
+    i18n_content = Map.get(params, :i18n_content)
+
+    concept_i18n_content =
+      Map.new(I18nContents.get_all_i18n_content_by_bcv_id(id) || [], &{&1.lang, &1})
+
+    updated_i18n_content =
+      Map.new(i18n_content, fn {lang, content} ->
+        existing_lang_content = Map.get(concept_i18n_content, lang, %{})
+        exsiting_name = Map.get(existing_lang_content, :name)
+        exsiting_content = Map.get(existing_lang_content, :content, %{})
+
+        updated_content =
+          content
+          |> Map.put_new("name", exsiting_name)
+          |> Map.update("content", %{}, &Map.merge(exsiting_content, &1))
+
+        {lang, updated_content}
+      end)
+
+    Map.put(params, :i18n_content, updated_i18n_content)
   end
 
   defp validate_concept_content(
@@ -631,7 +653,7 @@ defmodule TdBg.BusinessConcepts do
     # content might be updated at this point from BusinessConceptVersion.create_changeset/2
     bc_content = Changeset.get_field(changeset, :content, params.content)
     default_lang = get_default_lang()
-    required_langs = get_requiered_langs()
+    required_langs = get_required_langs()
     content_schema = Map.get(params, :content_schema)
 
     updated_changeset =
@@ -643,7 +665,7 @@ defmodule TdBg.BusinessConcepts do
           changeset =
             changeset
             |> Changeset.put_change(:in_progress, false)
-            |> Changeset.put_change(:content, content)
+            |> Changeset.force_change(:content, content)
             |> BusinessConceptVersion.validate_content()
 
           {lang, changeset}
@@ -681,11 +703,11 @@ defmodule TdBg.BusinessConcepts do
     invalid = Enum.find(i18_changesets, fn {_lang, %{valid?: valid}} -> !valid end)
 
     case invalid do
-      %Changeset{} ->
-        invalid
-
       nil ->
         find_default_i18n_changeset(i18_changesets)
+
+      {_locale, changeset = %Changeset{}} ->
+        changeset
     end
   end
 
@@ -801,19 +823,28 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.transaction()
   end
 
-  def version_concept(%{changeset: changeset} = params) do
+  def version_concept(%{changeset: changeset} = params, opts \\ []) do
     Multi.new()
     |> Multi.insert(:current, Changeset.change(changeset, current: false))
-    |> maybe_i18n_content_new_version(params)
+    |> i18_action_on_version_concept(params, opts)
     |> Multi.run(:audit, Audit, :business_concept_versioned, [])
     |> Repo.transaction()
   end
 
-  def publish_version_concept(%{
-        changeset: changeset,
-        params: %{"business_concept" => %{"id" => business_concept_id}},
-        action: action
-      }) do
+  defp i18_action_on_version_concept(multi, params, opts) do
+    case Keyword.get(opts, :trigger, :single) do
+      :single -> maybe_i18n_content_new_version(multi, params)
+      :bulk -> maybe_upsert_i18n_content(multi, params)
+    end
+  end
+
+  def publish_version_concept(
+        %{
+          changeset: changeset,
+          params: %{"business_concept" => %{"id" => business_concept_id}},
+          action: action
+        } = params
+      ) do
     query =
       from(
         c in BusinessConceptVersion,
@@ -825,6 +856,7 @@ defmodule TdBg.BusinessConcepts do
     Multi.new()
     |> Multi.update_all(:versioned, query, set: [status: "versioned", current: false])
     |> multi_upsert.(:published, Changeset.change(changeset, current: true))
+    |> maybe_upsert_i18n_content(params)
     |> Multi.run(:audit_published, Audit, :business_concept_published, [])
     |> Repo.transaction()
   end
@@ -932,7 +964,7 @@ defmodule TdBg.BusinessConcepts do
     lang
   end
 
-  def get_requiered_langs do
+  defp get_required_langs do
     {:ok, required_langs} = I18nCache.get_required_locales()
     required_langs
   end
@@ -1097,6 +1129,8 @@ defmodule TdBg.BusinessConcepts do
 
   defp get_bcv_from_multimap(%{updated: bcv}), do: bcv
   defp get_bcv_from_multimap(%{business_concept_version: bcv}), do: bcv
+  defp get_bcv_from_multimap(%{current: bcv}), do: bcv
+  defp get_bcv_from_multimap(%{published: bcv}), do: bcv
 
   defp merge_content_with_i18n_content(i18n_content, bc_content, content_schema) do
     not_string_template_keys =

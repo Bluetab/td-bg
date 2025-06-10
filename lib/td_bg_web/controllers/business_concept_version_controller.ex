@@ -38,7 +38,12 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     %{results: business_concept_versions} =
       Search.search_business_concept_versions(params, claims, 0, 10_000)
 
-    with workbook <- Download.to_xlsx(business_concept_versions, lang, concept_url_schema),
+    opts = [
+      concept_url_schema: concept_url_schema,
+      translations: can?(claims, upload(BusinessConcept))
+    ]
+
+    with workbook <- Download.to_xlsx(business_concept_versions, lang, opts),
          {:ok, {file_name, file_binary}} <- Elixlsx.write_to_memory(workbook, "concepts.xlsx") do
       conn
       |> put_resp_content_type(
@@ -81,8 +86,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
                file_hash,
                business_concepts_upload,
                claims,
-               auto_publish,
-               lang
+               auto_publish: auto_publish,
+               lang: lang
              ) do
           {:started, ^file_hash, task_reference} ->
             {

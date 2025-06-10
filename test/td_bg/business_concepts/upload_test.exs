@@ -6,8 +6,11 @@ defmodule TdBg.UploadTest do
   alias TdBg.BusinessConcept.Upload
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.I18nContents.I18nContent
+  alias TdBg.I18nContents.I18nContents
   alias TdBgWeb.Authentication
   alias TdCache.HierarchyCache
+  alias TdCache.I18nCache
   alias TdCore.Search.IndexWorkerMock
 
   @default_template %{
@@ -147,6 +150,26 @@ defmodule TdBg.UploadTest do
             "widget" => "string"
           },
           %{
+            "name" => "df_description",
+            "type" => "enriched_text",
+            "label" => "Description",
+            "values" => nil,
+            "widget" => "enriched_text",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "description" => "description",
+            "subscribable" => false,
+            "ai_suggestion" => true
+          },
+          %{
+            "cardinality" => "?",
+            "label" => "i18n_test.translate",
+            "name" => "i18n_test.translate",
+            "type" => "string",
+            "values" => nil,
+            "widget" => "string"
+          },
+          %{
             "cardinality" => "?",
             "label" => "i18n_test.Radio Fixed",
             "name" => "i18n_test.radio",
@@ -262,6 +285,7 @@ defmodule TdBg.UploadTest do
             "label" => "hierarchy name",
             "type" => "hierarchy",
             "cardinality" => "+",
+            "widget" => "dropdown",
             "values" => %{"hierarchy" => %{"id" => 1}}
           },
           %{
@@ -291,6 +315,7 @@ defmodule TdBg.UploadTest do
             "label" => "Table Field",
             "type" => "table",
             "cardinality" => "*",
+            "widget" => "table",
             "values" => %{
               "table_columns" => [
                 %{"mandatory" => true, "name" => "First Column"},
@@ -339,9 +364,11 @@ defmodule TdBg.UploadTest do
 
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
+    I18nCache.put_default_locale(@default_lang)
 
     on_exit(fn ->
       IndexWorkerMock.clear()
+      TdCache.Redix.del!("i18n:locales:*")
       Templates.delete(template_id)
       Templates.delete(i18n_template_id)
       Templates.delete(concept_template_id)
@@ -401,6 +428,222 @@ defmodule TdBg.UploadTest do
                },
                "role" => %{"origin" => "file", "value" => ["Role"]}
              }
+    end
+
+    test "updates i18n without changing values from removed columns" do
+      IndexWorkerMock.clear()
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{id: version_id} =
+        insert(:business_concept_version,
+          name: "original name",
+          status: "draft",
+          business_concept: concept,
+          in_progress: false,
+          content: %{"description" => %{"value" => ["test"], "origin" => "user"}}
+        )
+
+      i18n_content = %{"description" => %{"value" => ["prueba"], "origin" => "user"}}
+
+      %{id: content_id} =
+        insert(:i18n_content,
+          business_concept_version_id: version_id,
+          name: "nombre original",
+          content: i18n_content,
+          lang: "es"
+        )
+
+      business_concept_upload = %{path: "test/fixtures/upload_missing_column.xlsx"}
+
+      assert %{errors: [], created: [], updated: [updated_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      version = Repo.get!(BusinessConceptVersion, updated_id)
+      assert version.name == "name"
+      assert version.content["description"] == %{"origin" => "user", "value" => ["test"]}
+      content = Repo.get!(I18nContent, content_id)
+      assert content.name == "nombre"
+      assert content.content == i18n_content
+    end
+
+    test "version published concept on i18n content update" do
+      IndexWorkerMock.clear()
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{id: version_id, version: version_number} =
+        insert(:business_concept_version,
+          name: "original name",
+          status: "published",
+          business_concept: concept,
+          in_progress: false,
+          version: 1,
+          content: %{
+            "critical" => %{"origin" => "user", "value" => "Yes"},
+            "description" => %{"origin" => "user", "value" => ["test"]},
+            "input_float" => %{"origin" => "user", "value" => 12.5},
+            "input_integer" => %{"origin" => "user", "value" => 12},
+            "input_url" => %{
+              "origin" => "user",
+              "value" => [
+                %{"url_name" => "com", "url_value" => "www.com.com"},
+                %{"url_name" => "", "url_value" => "www.net.net"},
+                %{"url_name" => "", "url_value" => "www.org.org"}
+              ]
+            },
+            "role" => %{"origin" => "user", "value" => ["Role"]}
+          }
+        )
+
+      i18n_content = %{"description" => %{"value" => ["versionado"], "origin" => "user"}}
+
+      insert(:i18n_content,
+        business_concept_version_id: version_id,
+        name: "nombre original",
+        content: i18n_content,
+        lang: "es"
+      )
+
+      business_concept_upload = %{path: "test/fixtures/upload_version_on_content_update.xlsx"}
+
+      assert %{errors: [], created: [], updated: [updated_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      updated_version = Repo.get!(BusinessConceptVersion, updated_id)
+
+      assert updated_version.content["description"] == %{"value" => ["test"], "origin" => "file"}
+      assert updated_version.version == version_number + 1
+      content = Repo.get_by(I18nContent, business_concept_version_id: updated_id)
+      assert content.content["description"] == %{"value" => ["prueba"], "origin" => "file"}
+    end
+
+    test "version published concept on i18n content update when auto publish is true" do
+      IndexWorkerMock.clear()
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{id: version_id, version: version_number} =
+        insert(:business_concept_version,
+          name: "original name",
+          status: "published",
+          business_concept: concept,
+          in_progress: false,
+          version: 1,
+          content: %{
+            "critical" => %{"origin" => "user", "value" => "Yes"},
+            "description" => %{"origin" => "user", "value" => ["test"]},
+            "input_float" => %{"origin" => "user", "value" => 12.5},
+            "input_integer" => %{"origin" => "user", "value" => 12},
+            "input_url" => %{
+              "origin" => "user",
+              "value" => [
+                %{"url_name" => "com", "url_value" => "www.com.com"},
+                %{"url_name" => "", "url_value" => "www.net.net"},
+                %{"url_name" => "", "url_value" => "www.org.org"}
+              ]
+            },
+            "role" => %{"origin" => "user", "value" => ["Role"]}
+          }
+        )
+
+      i18n_content = %{"description" => %{"value" => ["versionado"], "origin" => "user"}}
+
+      insert(:i18n_content,
+        business_concept_version_id: version_id,
+        name: "nombre original",
+        content: i18n_content,
+        lang: "es"
+      )
+
+      business_concept_upload = %{path: "test/fixtures/upload_version_on_content_update.xlsx"}
+
+      assert %{errors: [], created: [], updated: [updated_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      updated_version = Repo.get!(BusinessConceptVersion, updated_id)
+
+      assert updated_version.version == version_number + 1
+      assert updated_version.content["description"] == %{"value" => ["test"], "origin" => "file"}
+      content = Repo.get_by(I18nContent, business_concept_version_id: updated_id)
+      assert content.content["description"] == %{"value" => ["prueba"], "origin" => "file"}
+    end
+
+    test "draft concept on i18n content update when auto publish is true" do
+      IndexWorkerMock.clear()
+      claims = build(:claims, role: "admin")
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{id: version_id, version: version_number} =
+        insert(:business_concept_version,
+          name: "original name",
+          status: "draft",
+          business_concept: concept,
+          in_progress: false,
+          version: 1,
+          content: %{
+            "critical" => %{"origin" => "user", "value" => "Yes"},
+            "description" => %{"origin" => "user", "value" => ["test"]},
+            "input_float" => %{"origin" => "user", "value" => 12.5},
+            "input_integer" => %{"origin" => "user", "value" => 12},
+            "input_url" => %{
+              "origin" => "user",
+              "value" => [
+                %{"url_name" => "com", "url_value" => "www.com.com"},
+                %{"url_name" => "", "url_value" => "www.net.net"},
+                %{"url_name" => "", "url_value" => "www.org.org"}
+              ]
+            },
+            "role" => %{"origin" => "user", "value" => ["Role"]}
+          }
+        )
+
+      i18n_content = %{}
+
+      insert(:i18n_content,
+        business_concept_version_id: version_id,
+        name: "nombre original",
+        content: i18n_content,
+        lang: "es"
+      )
+
+      business_concept_upload = %{path: "test/fixtures/upload_version_on_content_update.xlsx"}
+
+      assert %{errors: [], created: [], updated: [updated_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      updated_version = Repo.get!(BusinessConceptVersion, updated_id)
+
+      assert updated_version.version == version_number
+      assert updated_version.content["description"] == %{"value" => ["test"], "origin" => "file"}
+      content = Repo.get_by(I18nContent, business_concept_version_id: updated_id)
+      assert content.content["description"] == %{"value" => ["prueba"], "origin" => "file"}
     end
 
     test "bulk_upload/3 returns error under invalid number" do
@@ -582,12 +825,63 @@ defmodule TdBg.UploadTest do
       version = BusinessConcepts.get_business_concept_version!(concept_id)
       assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
 
+      i18n_content = I18nContents.get_all_i18n_content_by_bcv_id(version.id)
+
       assert %{
                "i18n_test.checkbox" => %{"value" => ["apple", "pear"], "origin" => "file"},
                "i18n_test.dropdown" => %{"value" => "pear", "origin" => "file"},
                "i18n_test.radio" => %{"value" => "banana", "origin" => "file"},
-               "i18n_test.no_translate" => %{"value" => "NO TRANSLATION", "origin" => "file"}
+               "i18n_test.no_translate" => %{"value" => "NO TRANSLATION", "origin" => "file"},
+               "i18n_test.translate" => %{
+                 "value" => "English Translation",
+                 "origin" => "file"
+               },
+               "df_description" => %{
+                 "origin" => "file",
+                 "value" => %{
+                   "document" => %{
+                     "nodes" => [
+                       %{
+                         "nodes" => [
+                           %{"leaves" => [%{"text" => "concept 1 en"}], "object" => "text"}
+                         ],
+                         "object" => "block",
+                         "type" => "paragraph"
+                       }
+                     ]
+                   }
+                 }
+               }
              } = Map.get(version, :content)
+
+      assert [
+               %{
+                 lang: "es",
+                 content: %{
+                   "i18n_test.translate" => %{
+                     "value" => "Traducción Español",
+                     "origin" => "file"
+                   },
+                   "df_description" => %{
+                     "origin" => "file",
+                     "value" => %{
+                       "document" => %{
+                         "nodes" => [
+                           %{
+                             "nodes" => [
+                               %{"leaves" => [%{"text" => "concept 1 es"}], "object" => "text"}
+                             ],
+                             "object" => "block",
+                             "type" => "paragraph"
+                           }
+                         ]
+                       }
+                     }
+                   }
+                 },
+                 name: "i18n_concept_1_es"
+               }
+             ] = i18n_content
     end
 
     test "bulk_upload/3 uploads business concept in differents status without auto publish" do
@@ -718,10 +1012,10 @@ defmodule TdBg.UploadTest do
                  lang: "en"
                )
 
-      assert %{name: "Prueba hora"} =
+      assert %{name: "Test time"} =
                BusinessConcepts.get_business_concept_version!(concept_1_version_id)
 
-      assert %{name: "Prueba hora new_name"} =
+      assert %{name: "Test time new_name"} =
                BusinessConcepts.get_business_concept_version!(concept_2_version_id)
 
       assert IndexWorkerMock.calls() == [
@@ -1079,7 +1373,7 @@ defmodule TdBg.UploadTest do
                errors: [
                  %{
                    body: %{
-                     context: %{headers: ["name"], type: "term"},
+                     context: %{headers: ["name_en"], type: "term"},
                      message: "concepts.upload.failed.header"
                    },
                    error_type: "missing_headers_error"
@@ -1463,12 +1757,20 @@ defmodule TdBg.UploadTest do
   end
 
   describe "get_headers?/0" do
-    test "returns headers grouped by required" do
+    test "returns headers grouped by required without translations" do
       assert %{
                required: ["name", "domain_external_id"],
                update_required: ["id"],
                ignored: ["domain_name" | _]
-             } = Upload.get_headers()
+             } = Upload.get_headers(locales: ["es"], translations: false)
+    end
+
+    test "returns headers grouped by required with translations" do
+      assert %{
+               required: ["name_es", "name_en", "domain_external_id"],
+               update_required: ["id"],
+               ignored: ["domain_name" | _]
+             } = Upload.get_headers(locales: ["es", "en"], translations: true)
     end
   end
 
@@ -1525,6 +1827,11 @@ defmodule TdBg.UploadTest do
       %{message_id: "fields.i18n_test.Checkbox Fixed.pear", definition: "pera"},
       %{message_id: "fields.i18n_test.Checkbox Fixed.banana", definition: "plátano"},
       %{message_id: "fields.i18n_test.Checkbox Fixed.apple", definition: "manzana"}
+    ])
+
+    # Add fake message to set english as active language
+    CacheHelpers.put_i18n_messages("en", [
+      %{message_id: "foo", definition: "bar"}
     ])
   end
 end
