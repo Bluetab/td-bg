@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.5.3] 2025-06-13
+
+### Added
+
+- [TD-7322] Fix Elastic encoding for empty i18n fields
+
 ## [7.5.2] 2025-06-05
 
 ### Added

@@ -96,7 +96,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:shared_to_names, shared_to_names)
     end
 
-    defp put_i18n_concept_property(bcv_to_index, property, %{} = i18n, default_locale) do
+    defp put_i18n_concept_property(bcv_to_index, property, i18n, default_locale) do
       original_value = Map.get(bcv_to_index, property)
 
       i18n
@@ -105,9 +105,6 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.new()
       |> Map.merge(bcv_to_index)
     end
-
-    defp put_i18n_concept_property(bcv_to_index, _property, _i18n, _default_locale),
-      do: bcv_to_index
 
     defp map_property_locale(
            {locale, i18n},
@@ -133,14 +130,12 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       String.to_atom("#{property}_#{locale}")
     end
 
-    defp put_i18n_content(content, %{} = i18n, template) do
+    defp put_i18n_content(content, i18n, template) do
       i18n
       |> Enum.map(&format_content_locale(&1, template, content))
       |> Enum.reduce(%{}, fn map, acc -> Map.merge(acc, map) end)
       |> Map.merge(content)
     end
-
-    defp put_i18n_content(content, _i18n, _template), do: content
 
     defp format_content_locale({locale, %{content: i18n_content}}, template, content) do
       translatable_fields =
@@ -165,13 +160,18 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     defp translatable_defaults(i18n_content, translatable_fields, content) do
       Enum.reduce(translatable_fields, i18n_content, fn field, acc ->
         original_value = Map.get(content, field)
-
-        case Map.get(acc, field) do
-          %{"value" => ""} -> Map.put(acc, field, original_value)
-          nil -> Map.put(acc, field, original_value)
-          _ -> acc
-        end
+        get_translatable_field(acc, field, original_value)
       end)
+    end
+
+    defp get_translatable_field(acc, _field, nil), do: acc
+
+    defp get_translatable_field(acc, field, original_value) do
+      case Map.get(acc, field) do
+        %{"value" => value} when value in [nil, ""] -> Map.put(acc, field, original_value)
+        nil -> Map.put(acc, field, original_value)
+        _ -> acc
+      end
     end
 
     defp default_for_active_langs(i18n_content, active_locales) do
