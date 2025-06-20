@@ -89,7 +89,8 @@ defmodule CacheHelpers do
   end
 
   @spec insert_link(any, any, any, any, any) :: :ok
-  def insert_link(source_id, source_type, target_type, target_id, tags \\ []) do
+
+  def insert_link(source_id, source_type, target_type, target_id, tags \\ [], origin \\ nil) do
     id = System.unique_integer([:positive])
     target_id = if is_nil(target_id), do: System.unique_integer([:positive]), else: target_id
 
@@ -101,6 +102,7 @@ defmodule CacheHelpers do
         target_type: target_type,
         target_id: target_id,
         tags: List.wrap(tags),
+        origin: origin,
         updated_at: DateTime.utc_now()
       },
       publish: false
