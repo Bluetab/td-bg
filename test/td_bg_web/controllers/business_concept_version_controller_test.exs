@@ -678,6 +678,55 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
     end
 
+    @tag authentication: [role: "admin"]
+    test "show links with origin", %{conn: conn} do
+      %{business_concept_id: business_concept_id, business_concept: business_concept} =
+        bcv = insert(:business_concept_version)
+
+      {:ok, _} = CacheHelpers.put_concept(business_concept, bcv)
+
+      %{id: structure_id_1} = CacheHelpers.insert_data_structure()
+      %{id: structure_id_2} = CacheHelpers.insert_data_structure()
+
+      CacheHelpers.insert_link(
+        business_concept_id,
+        "business_concept",
+        "data_structure",
+        structure_id_1,
+        [],
+        "test_origin"
+      )
+
+      CacheHelpers.insert_link(
+        business_concept_id,
+        "business_concept",
+        "data_structure",
+        structure_id_2
+      )
+
+      assert %{
+               "data" => %{
+                 "_embedded" => %{
+                   "links" => links
+                 }
+               }
+             } =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   "current"
+                 )
+               )
+               |> json_response(:ok)
+
+      assert Enum.count(links) == 2
+      assert Enum.any?(links, &(Map.get(&1, "origin") == nil))
+      assert Enum.any?(links, &(Map.get(&1, "origin") == "test_origin"))
+    end
+
     @tag authentication: [user_name: "not_an_admin"]
     test "show with actions", %{conn: conn, claims: claims} do
       %{id: domain_id} = CacheHelpers.insert_domain()
