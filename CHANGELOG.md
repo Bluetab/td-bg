@@ -1,13 +1,20 @@
 # Changelog
 
+## [7.7.0] 2025-06-30
+
+### Added
+
+- [TD-7299] Refactor gitlab-ci pipeline and add Trivy check
+- [TD-7300] Add Concept Link origin
+
 ## [7.6.0] 2025-06-10
 
-## Added
+### Added
 
 - [TD-7221] Highlight the headers of the template fields in Concepts download file
 - [TD-6468] Multi language upload and download business concepts
 
-## Fixed
+### Fixed
 
 - [TD-7243] Indexing translatable fields without default value
 
@@ -19,14 +26,14 @@
 
 ## [7.5.1] 2025-05-26
 
-## Added
+### Added
 
 - [TD-6219] Generate embeddings for business concept versions
 - [TD-6901] Added validation to check if enriched text is empty for add to cache
 
 ## [7.5.0] 2025-040-30
 
-## Added
+### Added
 
 - [TD-7074] Download links from concepts to structures
 
@@ -330,7 +337,7 @@
 
 ## [5.18.1] 2023-11-17
 
-## Fixed
+### Fixed
 
 - [TD-6191] New Concept Draft notification not being sent
 
@@ -342,7 +349,7 @@
 
 ## [5.17.1] 2023-11-17
 
-## Fixed
+### Fixed
 
 - [TD-6191] New Concept Draft notification not being sent
 
@@ -395,7 +402,7 @@
 
 - [TD-5891] Download csv i18n support
 
-## Changed
+### Changed
 
 - [TD-5913] Update td-df-lib to fix depends validation
 

@@ -341,7 +341,7 @@ defmodule TdBg.BusinessConcepts.SearchTest do
         assert opts == []
 
         {:ok,
-         %HTTPoison.Response{
+         %{
            status_code: 200,
            body: %{"num_freed" => 1, "succeeded" => true},
            headers: [
@@ -349,7 +349,7 @@ defmodule TdBg.BusinessConcepts.SearchTest do
              {"content-length", "32"}
            ],
            request_url: "http://elastic:9200/_pit",
-           request: %HTTPoison.Request{
+           request: %{
              method: :delete,
              url: "http://elastic:9200/_pit",
              headers: [{"Content-Type", "application/json"}],
