@@ -77,7 +77,6 @@ Ready to run in production? Please [check our deployment guides](http://www.phoe
 - [Ecto](http://www.phoenixframework.org/) - Phoenix and Ecto integration
 - [Postgrex](http://hexdocs.pm/postgrex/) - PostgreSQL driver for Elixir
 - [Cowboy](https://ninenines.eu) - HTTP server for Erlang/OTP
-- [httpoison](https://hex.pm/packages/httpoison) - HTTP client for Elixir
 - [credo](http://credo-ci.org/) - Static code analysis tool for the Elixir language
 - [guardian](https://github.com/ueberauth/guardian) - Authentication library
 - [canary](https://github.com/cpjk/canary) - Elixir authorization and resource-loading library
