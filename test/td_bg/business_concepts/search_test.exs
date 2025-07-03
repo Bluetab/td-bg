@@ -102,6 +102,8 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
       %{id: id} = bcv = insert(:business_concept_version, domain_id: domain_id2)
       CacheHelpers.put_default_permissions(["view_published_business_concepts"])
+      CacheHelpers.put_default_locale("en")
+      CacheHelpers.put_active_locales(~w(en es))
 
       put_session_permissions(claims, %{
         "view_approval_pending_business_concepts" => [domain_id3],
@@ -116,7 +118,13 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
           assert %{bool: %{must: [query_filter, confidential_filter, status_filter]}} = query
 
-          assert query_filter == %{simple_query_string: %{fields: ["name*"], query: "\"bar\""}}
+          assert query_filter == %{
+                   simple_query_string: %{
+                     fields: ["name", "name_es"],
+                     query: "\"bar\"",
+                     quote_field_suffix: ".exact"
+                   }
+                 }
 
           assert %{bool: %{should: should}} = status_filter
 
