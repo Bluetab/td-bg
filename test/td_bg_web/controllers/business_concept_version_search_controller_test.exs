@@ -3,7 +3,6 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
   import Mox
 
-  alias TdCache.I18nCache
   alias TdCore.Search.IndexWorkerMock
 
   @template_name "some_type"
@@ -263,6 +262,61 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
              ]
     end
 
+    @tag authentication: [user_name: "not_an_admin"]
+    test "user search for exact query", %{conn: conn} do
+      CacheHelpers.put_i18n_message("es", %{message_id: "foo", definition: "definition"})
+      CacheHelpers.put_default_permissions(["view_published_business_concepts"])
+
+      template = %{
+        id: System.unique_integer([:positive]),
+        label: "df_test",
+        name: "exact find",
+        scope: "bg",
+        content: @content
+      }
+
+      CacheHelpers.insert_template(template)
+
+      expect(
+        ElasticsearchMock,
+        :request,
+        fn _,
+           :post,
+           "/concepts/_search",
+           %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
+           _ ->
+          assert %{
+                   must: [
+                     %{
+                       simple_query_string: %{
+                         fields: [
+                           "name",
+                           "name_es",
+                           "content.Field1",
+                           "content.Field2",
+                           "content.Field1_es",
+                           "content.Field2_es"
+                         ],
+                         query: "\"foo\"",
+                         quote_field_suffix: ".exact"
+                       }
+                     },
+                     %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
+                     %{term: %{"status" => "published"}}
+                   ]
+                 } = bool
+
+          SearchHelpers.hits_response([])
+        end
+      )
+
+      params = %{query: "\"foo\""}
+
+      assert conn
+             |> post(Routes.business_concept_version_search_path(conn, :search), params)
+             |> json_response(:ok)
+    end
+
     @tag authentication: [role: "admin"]
     @tag :template
     test "show default lang content when conn locale is nil ", %{conn: conn} do
@@ -294,7 +348,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
     @tag authentication: [role: "admin"]
     test "return i18n content non-translatable fields ", %{conn: conn} do
-      I18nCache.put("es", %{message_id: "foo", definition: "definition"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "foo", definition: "definition"})
       template_name = "complete_template"
 
       template = %{
