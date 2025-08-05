@@ -200,7 +200,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
 
     @translatable_fields [:name, :ngram_name]
     @search_fields ~w(ngram_name*^3)
-    @simple_search_fields ~w(name*)
+    @simple_search_fields ~w(name)
 
     def mappings(_) do
       content_mappings = %{properties: get_dynamic_mappings("bg", add_locales?: true)}
@@ -208,7 +208,13 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       mapping_type =
         %{
           id: %{type: "long"},
-          name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
+          name: %{
+            type: "text",
+            fields: %{
+              raw: %{type: "keyword", normalizer: "sortable"},
+              exact: %{type: "text", analyzer: "exact_analyzer"}
+            }
+          },
           ngram_name: %{type: "search_as_you_type"},
           description: %{type: "text"},
           version: %{type: "long"},
@@ -264,10 +270,11 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     def query_data(_) do
       content_schema = Templates.content_schema_for_scope("bg")
       dynamic_fields = content_schema |> dynamic_search_fields("content") |> add_locales()
+      simple_search_fields = add_locales(@simple_search_fields) ++ dynamic_fields
 
       %{
         fields: @search_fields ++ dynamic_fields,
-        simple_search_fields: @simple_search_fields,
+        simple_search_fields: simple_search_fields,
         aggs: merged_aggregations(content_schema)
       }
     end

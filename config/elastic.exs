@@ -32,11 +32,22 @@ config :td_core, TdCore.Search.Cluster,
       # therefore allows all the settings you could post directly.
       settings: %{
         analysis: %{
+          tokenizer: %{
+            custom_split_tokenizer: %{
+              type: "pattern",
+              pattern: "[\\s\\-_.:/]+"
+            }
+          },
           analyzer: %{
             default: %{
               type: "custom",
               tokenizer: "whitespace",
               filter: ["lowercase", "word_delimiter", "asciifolding"]
+            },
+            exact_analyzer: %{
+              type: "custom",
+              tokenizer: "custom_split_tokenizer",
+              filter: ["lowercase", "asciifolding"]
             },
             es_analyzer: %{
               type: "custom",
