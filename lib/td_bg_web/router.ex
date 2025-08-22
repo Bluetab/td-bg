@@ -23,7 +23,6 @@ defmodule TdBgWeb.Router do
 
     resources "/domains", DomainController, except: [:new, :edit] do
       get("/business_concepts/:user_name/count", DomainController, :count_bc_in_domain_for_user)
-      get("/parentable_ids", DomainController, :parentable_ids)
     end
 
     resources("/business_concepts/comments", CommentController,
