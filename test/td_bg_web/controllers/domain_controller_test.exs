@@ -115,7 +115,7 @@ defmodule TdBgWeb.DomainControllerTest do
     end
   end
 
-  describe "GET /api/domains/:id/parentable_ids" do
+  describe "GET /api/domains/:id" do
     @tag authentication: [user_name: "non_admin_user"]
     test "includes parentable ids", %{
       conn: conn,
@@ -136,10 +136,11 @@ defmodule TdBgWeb.DomainControllerTest do
 
       assert %{"data" => data} =
                conn
-               |> get(Routes.domain_domain_path(conn, :parentable_ids, domain))
+               |> get(Routes.domain_path(conn, :show, domain))
                |> json_response(:ok)
 
-      assert_lists_equal(data, [parent_id, sibling_id])
+      assert %{"parentable_ids" => parentable_ids} = data
+      assert_lists_equal(parentable_ids, [parent_id, sibling_id])
     end
   end
 

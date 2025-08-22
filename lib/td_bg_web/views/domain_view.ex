@@ -32,10 +32,6 @@ defmodule TdBgWeb.DomainView do
     %{data: render_one(domain, DomainView, "domain.json")}
   end
 
-  def render("parentable_ids.json", %{parentable_ids: parentable_ids}) do
-    %{data: parentable_ids}
-  end
-
   def render("domain.json", %{domain: domain}) do
     domain
     |> Map.take([
@@ -45,6 +41,7 @@ defmodule TdBgWeb.DomainView do
       :type,
       :external_id,
       :description,
+      :parentable_ids,
       :domain_group,
       :parents
     ])
