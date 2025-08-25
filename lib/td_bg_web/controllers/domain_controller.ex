@@ -91,13 +91,21 @@ defmodule TdBgWeb.DomainController do
     claims = conn.assigns[:current_resource]
 
     with domain <- Taxonomies.get_domain!(id, [:parent, :domain_group]),
-         {:can, true} <- {:can, can?(claims, show(domain))},
-         parentable_ids <- Taxonomies.get_parentable_ids(claims, domain) do
+         {:can, true} <- {:can, can?(claims, show(domain))} do
       render(conn, "show.json",
         domain: enrich_group(domain),
-        parentable_ids: parentable_ids,
         hypermedia: hypermedia("domain", conn, domain)
       )
+    end
+  end
+
+  def parentable_ids(conn, %{"domain_id" => id}) do
+    claims = conn.assigns[:current_resource]
+
+    with domain <- Taxonomies.get_domain!(id, [:parent, :domain_group]),
+         {:can, true} <- {:can, can?(claims, show(domain))},
+         parentable_ids <- Taxonomies.get_parentable_ids(claims, domain) do
+      render(conn, "parentable_ids.json", parentable_ids: parentable_ids)
     end
   end
 

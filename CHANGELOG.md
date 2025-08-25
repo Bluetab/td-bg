@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.9.0] 2025-08-25
+
+### Changed
+
+- [TD-7366] Move Domain Parentable Ids to own endpoint
+
 ## [7.8.0] 2025-08-05
 
 ### Added
