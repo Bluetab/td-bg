@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 
+
+### Added
+
+- [TD-7175] The functionality to retrieve the concept by BCV name and domain.
+
 ## [7.9.0] 2025-08-25
 
 ### Changed

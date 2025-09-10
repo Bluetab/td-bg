@@ -1141,6 +1141,134 @@ defmodule TdBg.BusinessConceptsTest do
       business_concept = fixture()
       assert business_concept.id == BusinessConcepts.get_business_concept(business_concept.id).id
     end
+
+    test "get_concept_by_name_in_domain/2 with specific name" do
+      %{id: domain_id} = d1 = insert(:domain)
+
+      %{id: business_concept_id} =
+        business_concept =
+        insert(:business_concept, type: @template_name, domain: d1)
+
+      %{id: id1, version: version1} =
+        insert(:business_concept_version,
+          version: 1,
+          business_concept: business_concept,
+          status: "published",
+          name: "bcv1"
+        )
+
+      %{id: id2, version: version2} =
+        insert(:business_concept_version,
+          version: 2,
+          business_concept: business_concept,
+          status: "draft",
+          name: "bcv2"
+        )
+
+      assert %{
+               id: ^business_concept_id,
+               versions: [
+                 %{id: ^id2, version: ^version2},
+                 %{id: ^id1, version: ^version1}
+               ]
+             } =
+               BusinessConcepts.get_concept_by_name_in_domain("bcv2", domain_id)
+
+      assert %{
+               id: ^business_concept_id,
+               versions: [
+                 %{id: ^id2, version: ^version2},
+                 %{id: ^id1, version: ^version1}
+               ]
+             } =
+               BusinessConcepts.get_concept_by_name_in_domain("bcv1", domain_id)
+    end
+
+    test "get_concept_by_name_in_domain/2 with different name" do
+      %{id: domain_id} = d1 = insert(:domain)
+
+      business_concept =
+        insert(:business_concept, type: @template_name, domain: d1)
+
+      insert(:business_concept_version,
+        version: 1,
+        business_concept: business_concept,
+        status: "published",
+        name: "bcv1"
+      )
+
+      assert is_nil(BusinessConcepts.get_concept_by_name_in_domain("bcv2", domain_id))
+    end
+
+    test "get_concept_by_name_in_domain/2 with different domain" do
+      d1 = insert(:domain)
+      %{id: domain_id2} = insert(:domain)
+
+      business_concept =
+        insert(:business_concept, type: @template_name, domain: d1)
+
+      insert(:business_concept_version,
+        version: 1,
+        business_concept: business_concept,
+        status: "published",
+        name: "bcv1"
+      )
+
+      assert is_nil(BusinessConcepts.get_concept_by_name_in_domain("bcv1", domain_id2))
+    end
+
+    test "get_concept_by_name_in_domain/2 return nil if the name is nil" do
+      %{id: domain_id} = insert(:domain)
+
+      assert is_nil(BusinessConcepts.get_concept_by_name_in_domain(nil, domain_id))
+    end
+
+    test "get_concept_by_name_in_domain/2 with shared domain data" do
+      %{id: domain_id1} = d1 = insert(:domain)
+      %{id: domain_id2} = d2 = insert(:domain)
+
+      %{id: business_concept_id} =
+        business_concept =
+        insert(:business_concept, type: @template_name, domain: d1)
+
+      insert(:shared_concept, business_concept: business_concept, domain: d2)
+
+      %{id: id1, version: version1} =
+        insert(:business_concept_version,
+          version: 1,
+          business_concept: business_concept,
+          status: "published",
+          name: "bcv1"
+        )
+
+      %{id: id2, version: version2} =
+        insert(:business_concept_version,
+          version: 2,
+          business_concept: business_concept,
+          status: "draft",
+          name: "bcv2"
+        )
+
+      assert %{
+               id: ^business_concept_id,
+               versions: [
+                 %{id: ^id2, version: ^version2},
+                 %{id: ^id1, version: ^version1}
+               ],
+               shared_to: [%{id: ^domain_id2}]
+             } =
+               BusinessConcepts.get_concept_by_name_in_domain("bcv2", domain_id1)
+
+      assert %{
+               id: ^business_concept_id,
+               versions: [
+                 %{id: ^id2, version: ^version2},
+                 %{id: ^id1, version: ^version1}
+               ],
+               shared_to: [%{id: ^domain_id2}]
+             } =
+               BusinessConcepts.get_concept_by_name_in_domain("bcv1", domain_id1)
+    end
   end
 
   describe "business_concept_versions" do
