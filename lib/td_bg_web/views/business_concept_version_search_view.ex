@@ -17,6 +17,15 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
     })
   end
 
+  def render("list.json", %{business_concept_versions: business_concept_versions} = assigns) do
+    %{
+      data:
+        render_many(business_concept_versions, __MODULE__, "list_item.json", %{
+          lang: Map.get(assigns, :locale)
+        })
+    }
+  end
+
   def render(
         "list_item.json",
         %{business_concept_version_search: business_concept_version} = assigns
@@ -42,7 +51,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchView do
       "inserted_at",
       "updated_at",
       "domain_parents",
-      "in_progress"
+      "in_progress",
+      "similarity"
     ]
 
     type = get_in(business_concept_version, ["template", "name"])

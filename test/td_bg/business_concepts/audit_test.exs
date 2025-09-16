@@ -1,6 +1,8 @@
 defmodule TdBg.BusinessConcepts.AuditTest do
   use TdBg.DataCase
 
+  import Mox
+
   alias TdBg.BusinessConcepts
   alias TdCache.Redix
   alias TdCache.Redix.Stream
@@ -14,9 +16,15 @@ defmodule TdBg.BusinessConcepts.AuditTest do
   end
 
   setup do
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      {:ok, true}
+    end)
+
     on_exit(fn -> Redix.del!(@stream) end)
     :ok
   end
+
+  setup :set_mox_from_context
 
   describe "business_concepts_updated" do
     test "publish and event for domain updated" do

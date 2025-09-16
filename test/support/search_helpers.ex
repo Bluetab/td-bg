@@ -43,6 +43,6 @@ defmodule SearchHelpers do
       |> Jason.encode!()
       |> Jason.decode!()
 
-    %{"id" => id, "_source" => source, "sort" => ["search after cursor"]}
+    %{"id" => id, "_source" => source, "sort" => ["search after cursor"], "_score" => 1.0}
   end
 end

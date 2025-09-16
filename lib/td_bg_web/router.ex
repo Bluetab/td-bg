@@ -63,6 +63,7 @@ defmodule TdBgWeb.Router do
     get("/business_concept_versions", BusinessConceptVersionSearchController, :index)
     post("/business_concept_versions/search", BusinessConceptVersionSearchController, :search)
     get("/business_concept_versions/actions", BusinessConceptVersionSearchController, :actions)
+    post("/business_concept_versions/suggestions", SuggestionController, :search)
 
     get("/business_concept_filters", BusinessConceptFilterController, :index)
     post("/business_concept_filters/search", BusinessConceptFilterController, :search)
@@ -70,6 +71,7 @@ defmodule TdBgWeb.Router do
     get("/business_concept_user_filters/me", UserSearchFilterController, :index_by_user)
     resources("/business_concept_user_filters", UserSearchFilterController, except: [:new, :edit])
     get("/business_concepts/search/reindex_all", SearchController, :reindex_all)
+    post("/business_concepts/search/embeddings/_put", SearchController, :embeddings)
 
     resources("/business_concepts/bulk_upload_event", BulkUploadEventController, only: [:index])
   end

@@ -6,6 +6,8 @@ defmodule TdBg.BusinessConceptsTest do
 
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.BusinessConceptVersions.RecordEmbedding
+  alias TdBg.BusinessConcepts.BusinessConceptVersions.Workers.EmbeddingsUpsertBatch
   alias TdBg.BusinessConcepts.Workflow
   alias TdBg.I18nContents.I18nContents
   alias TdBg.Repo
@@ -13,6 +15,7 @@ defmodule TdBg.BusinessConceptsTest do
   alias TdCache.Redix
   alias TdCache.Redix.Stream
   alias TdCluster.TestHelpers.TdAiMock.Embeddings
+  alias TdCluster.TestHelpers.TdAiMock.Indices
   alias TdCore.Search.IndexWorkerMock
   alias TdDfLib.Format
   alias TdDfLib.RichText
@@ -146,6 +149,10 @@ defmodule TdBg.BusinessConceptsTest do
     on_exit(fn ->
       Redix.del!(@stream)
       IndexWorkerMock.clear()
+    end)
+
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      {:ok, true}
     end)
 
     case context[:template] do
@@ -1432,6 +1439,109 @@ defmodule TdBg.BusinessConceptsTest do
     end
   end
 
+  describe "get_all_versions_by_business_concept_ids/2" do
+    test "gets all business concept versions with default preloads" do
+      business_concept = insert(:business_concept)
+      v1 = insert(:business_concept_version, business_concept: business_concept, version: 0)
+      v2 = insert(:business_concept_version, business_concept: business_concept, version: 1)
+      other = insert(:business_concept_version)
+
+      versions = BusinessConcepts.get_all_versions_by_business_concept_ids([business_concept.id])
+
+      assert Enum.count(versions) == 2
+
+      for version <- [v1, v2] do
+        assert result = Enum.find(versions, &(&1.id == version.id))
+        assert result.business_concept.id == business_concept.id
+        assert result.business_concept.shared_to == []
+      end
+
+      refute Enum.find(versions, &(&1.id == other.id))
+
+      versions =
+        BusinessConcepts.get_all_versions_by_business_concept_ids([
+          business_concept.id,
+          other.business_concept.id
+        ])
+
+      for version <- [v1, v2, other] do
+        assert result = Enum.find(versions, &(&1.id == version.id))
+        assert result.business_concept.shared_to == []
+      end
+    end
+
+    test "gets all business concept versions with option preload" do
+      version = insert(:business_concept_version)
+
+      assert [result] =
+               BusinessConcepts.get_all_versions_by_business_concept_ids(
+                 [version.business_concept.id],
+                 preload: [business_concept: :domain]
+               )
+
+      assert result.business_concept.domain.id == version.business_concept.domain.id
+    end
+  end
+
+  describe "delete_business_concept_version/2" do
+    test "deletes business concept version" do
+      version = insert(:business_concept_version)
+      claims = build(:claims, role: "admin")
+
+      assert {:ok, %BusinessConceptVersion{id: id}} =
+               BusinessConcepts.delete_business_concept_version(version, claims)
+
+      refute Repo.get(BusinessConceptVersion, id)
+    end
+
+    test "deletes business concept version with associated embedding" do
+      record_embedding = %{business_concept_version: version} = insert(:record_embedding)
+      claims = build(:claims, role: "admin")
+
+      assert {:ok, %BusinessConceptVersion{id: id}} =
+               BusinessConcepts.delete_business_concept_version(version, claims)
+
+      refute Repo.get(BusinessConceptVersion, id)
+      refute Repo.get(RecordEmbedding, record_embedding.id)
+    end
+  end
+
+  describe "versions_with_outdated_embeddings/1" do
+    test "returns business concept ids with stale record embeddings" do
+      bcv_without_embedding = insert(:business_concept_version)
+      %{business_concept_version: updated_bcv} = insert(:record_embedding, collection: "default")
+      insert(:record_embedding, collection: "other", business_concept_version: updated_bcv)
+
+      %{business_concept_version: outdated_bcv} =
+        insert(:record_embedding,
+          updated_at: DateTime.add(DateTime.utc_now(), -1, :day),
+          collection: "default"
+        )
+
+      insert(:record_embedding,
+        updated_at: DateTime.add(DateTime.utc_now(), -1, :day),
+        collection: "other",
+        business_concept_version: outdated_bcv
+      )
+
+      %{business_concept_version: missing_other} = insert(:record_embedding)
+
+      ids = BusinessConcepts.versions_with_outdated_embeddings(["default", "other"])
+
+      assert MapSet.equal?(
+               MapSet.new(ids),
+               MapSet.new([
+                 outdated_bcv.business_concept_id,
+                 bcv_without_embedding.business_concept_id,
+                 missing_other.business_concept_id
+               ])
+             )
+
+      ids = BusinessConcepts.versions_with_outdated_embeddings(["default", "other"], limit: 1)
+      assert Enum.count(ids) == 1
+    end
+  end
+
   defp concept_taxonomy(_) do
     import CacheHelpers, only: [insert_domain: 0, insert_domain: 1]
 
@@ -1641,7 +1751,7 @@ defmodule TdBg.BusinessConceptsTest do
   end
 
   describe "generate_vector/2" do
-    test "generates vector for business concept version" do
+    test "generates vector for business concept version and triggers an upsert" do
       bcv = %{business_concept: business_concept} = insert(:business_concept_version)
 
       Embeddings.generate_vector(
@@ -1651,7 +1761,11 @@ defmodule TdBg.BusinessConceptsTest do
         {:ok, {"default", [54.0, 10.2, -2.0]}}
       )
 
+      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+
       assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
+      assert [job] = all_enqueued(worker: EmbeddingsUpsertBatch)
+      assert job.args["ids"] == [business_concept.id]
     end
 
     test "generates vector for business concept version including content descriptions and links" do
@@ -1717,6 +1831,8 @@ defmodule TdBg.BusinessConceptsTest do
         {:ok, {"default", [54.0, 10.2, -2.0]}}
       )
 
+      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+
       assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
     end
 
@@ -1731,8 +1847,45 @@ defmodule TdBg.BusinessConceptsTest do
         {:ok, {collection_name, [54.0, 10.2, -2.0]}}
       )
 
+      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+
       assert {collection_name, [54.0, 10.2, -2.0]} ==
                BusinessConcepts.generate_vector(bcv, collection_name)
+    end
+
+    test "uses existing business concept version embeddings" do
+      %{collection: collection, business_concept_version: bcv, embedding: embedding} =
+        insert(:record_embedding)
+
+      insert(:record_embedding, collection: "other", business_concept_version: bcv)
+      Indices.first_enabled(&Mox.expect/4, {:ok, %{collection_name: collection}})
+
+      assert {collection, embedding} ==
+               BusinessConcepts.generate_vector(%{id: bcv.business_concept_id, version: bcv.id})
+    end
+
+    test "triggers an upsert when the version doesn't have a record embedding for the collection" do
+      %{business_concept_version: bcv} = insert(:record_embedding)
+      collection = "other"
+      embedding = [54.0, 10.2, -2.0]
+
+      Embeddings.generate_vector(
+        &Mox.expect/4,
+        "#{bcv.name} #{bcv.business_concept.type} #{bcv.business_concept.domain.external_id}",
+        collection,
+        {:ok, {collection, embedding}}
+      )
+
+      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+
+      assert {collection, embedding} ==
+               BusinessConcepts.generate_vector(
+                 %{id: bcv.business_concept_id, version: bcv.id},
+                 collection
+               )
+
+      assert [job] = all_enqueued(worker: EmbeddingsUpsertBatch)
+      assert job.args["ids"] == [bcv.business_concept.id]
     end
   end
 

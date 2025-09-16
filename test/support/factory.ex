@@ -7,6 +7,7 @@ defmodule TdBg.Factory do
   alias TdBg.BusinessConcepts.BulkUploadEvent
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.BusinessConceptVersions.RecordEmbedding
   alias TdBg.Comments.Comment
   alias TdBg.Groups.DomainGroup
   alias TdBg.I18nContents.I18nContent
@@ -188,6 +189,16 @@ defmodule TdBg.Factory do
       name: sequence(:group, ["Europe", "Asia", "USA", "UK"]),
       description: "group_description"
     }
+  end
+
+  def record_embedding_factory(attrs) do
+    %RecordEmbedding{
+      collection: "default",
+      dims: 3,
+      embedding: [1.0, -47.5, 36.0],
+      business_concept_version: build(:business_concept_version)
+    }
+    |> merge_attributes(attrs)
   end
 
   defp default_assoc(attrs, id_key, key, build_attrs \\ %{}) do

@@ -4,6 +4,9 @@ if System.get_env("PHX_SERVER") do
   config :td_bg, TdBgWeb.Endpoint, server: true
 end
 
+config :td_bg, Oban, prefix: System.get_env("OBAN_DB_SCHEMA", "private")
+config :td_bg, create_oban_schema: System.get_env("OBAN_CREATE_SCHEMA", "true") == "true"
+
 if config_env() == :prod do
   get_ssl_option = fn env_var, option_key ->
     if System.get_env("DB_SSL", "") |> String.downcase() == "true" do
@@ -102,6 +105,29 @@ if config_env() == :prod do
     config :td_core, TdCore.Search.Cluster,
       default_headers: [{"Authorization", "ApiKey #{api_key}"}]
   end
+
+  # Oban configuration with environment variables
+  config :td_bg, Oban,
+    plugins: [
+      {Oban.Plugins.Pruner, max_age: 24 * 60 * 60},
+      {Oban.Plugins.Cron,
+       crontab: [
+         {System.get_env("OUTDATED_EMBEDDINGS_CRON", "0 */3 * * *"),
+          TdBg.BusinessConcepts.BusinessConceptVersions.Workers.OutdatedEmbeddings},
+         {System.get_env("EMBEDDINGS_DELETION_CRON", "@hourly"),
+          TdBg.BusinessConcepts.BusinessConceptVersions.Workers.EmbeddingsDeletion}
+       ]}
+    ],
+    engine: Oban.Engines.Basic,
+    notifier: Oban.Notifiers.Postgres,
+    queues: [
+      default: System.get_env("OBAN_QUEUE_DEFAULT", "5") |> String.to_integer(),
+      embedding_upserts:
+        System.get_env("OBAN_QUEUE_EMBEDDING_UPSERTS", "10") |> String.to_integer(),
+      embedding_deletion:
+        System.get_env("OBAN_QUEUE_EMBEDDING_DELETION", "5") |> String.to_integer()
+    ],
+    repo: TdBg.Repo
 end
 
 optional_ssl_options =
@@ -184,3 +210,7 @@ config :td_core, TdCore.Search.Cluster,
     "shared_to_names" => System.get_env("AGG_SHARED_TO_NAMES_SIZE", "500") |> String.to_integer(),
     "status" => System.get_env("AGG_STATUS_SIZE", "500") |> String.to_integer()
   }
+
+config :td_bg,
+       :limit_outdated_embeddings,
+       System.get_env("LIMIT_OUTDATED_EMBEDDINGS", "50000") |> String.to_integer()

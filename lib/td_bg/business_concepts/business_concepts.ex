@@ -11,7 +11,9 @@ defmodule TdBg.BusinessConcepts do
   alias TdBg.BusinessConcepts.Audit
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.BusinessConceptVersions.RecordEmbedding
   alias TdBg.BusinessConcepts.Links
+  alias TdBg.BusinessConcepts.RecordEmbeddings
   alias TdBg.Cache.ConceptLoader
   alias TdBg.I18nContents.I18nContent
   alias TdBg.I18nContents.I18nContents
@@ -23,6 +25,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
   alias TdCluster.Cluster.TdAi.Embeddings
+  alias TdCluster.Cluster.TdAi.Indices
   alias TdDfLib.Format
   alias TdDfLib.Templates
   alias ValidationError
@@ -118,12 +121,16 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.all()
   end
 
-  def get_all_versions_by_business_concept_ids([]), do: []
+  def get_all_versions_by_business_concept_ids(_business_concept_ids, _opts \\ [])
 
-  def get_all_versions_by_business_concept_ids(business_concept_ids) do
+  def get_all_versions_by_business_concept_ids([], _opts), do: []
+
+  def get_all_versions_by_business_concept_ids(business_concept_ids, opts) do
+    preloads = Keyword.get(opts, :preload, business_concept: [:shared_to])
+
     BusinessConceptVersion
     |> where([v], v.business_concept_id in ^business_concept_ids)
-    |> preload(business_concept: [:shared_to])
+    |> preload(^preloads)
     |> Repo.all()
   end
 
@@ -479,12 +486,15 @@ defmodule TdBg.BusinessConcepts do
       ** nil
 
   """
-  def get_business_concept_version(id, version) do
+  def get_business_concept_version(id, version, opts \\ []) do
+    preload =
+      Keyword.get(opts, :preload, business_concept: [{:domain, :domain_group}, :shared_to])
+
     BusinessConceptVersion
     |> join(:left, [v], _ in assoc(v, :business_concept))
     |> join(:left, [_, c], _ in assoc(c, :domain))
     |> join(:left, [_, _, d], _ in assoc(d, :domain_group))
-    |> preload([_, c, d, g], business_concept: [{:domain, :domain_group}, :shared_to])
+    |> preload([_, c, d, g], ^preload)
     |> where([_, c], c.id == ^id)
     |> where_version(version)
     |> Repo.one()
@@ -972,31 +982,99 @@ defmodule TdBg.BusinessConcepts do
     required_langs
   end
 
+  def embeddings([]), do: {:ok, []}
+
+  def embeddings(business_concept_versions) do
+    business_concept_versions
+    |> Enum.map(&embedding_attributes/1)
+    |> Embeddings.all()
+  end
+
   def generate_vector(_version_or_params, collection_name \\ nil)
 
   def generate_vector(
-        %BusinessConceptVersion{
-          name: name,
-          content: content,
-          business_concept: business_concept
-        },
-        collection_name
+        %BusinessConceptVersion{record_embeddings: [%RecordEmbedding{} = record]},
+        _collection_name
       ) do
-    "#{name} #{business_concept.type} #{business_concept.domain.external_id}"
-    |> add_descriptions(content, business_concept)
-    |> add_links_to_vector(business_concept.id)
-    |> String.trim()
+    {record.collection, record.embedding}
+  end
+
+  def generate_vector(%BusinessConceptVersion{} = version, collection_name) do
+    version
+    |> embedding_attributes()
     |> Embeddings.generate_vector(collection_name)
+    |> tap(fn {:ok, _vector} ->
+      RecordEmbeddings.upsert_from_concepts_async(version.business_concept_id)
+    end)
     |> then(fn {:ok, vector} -> vector end)
   end
 
   def generate_vector(%{id: id, version: version}, collection_name) do
+    collection_name = collection_name_or_default(collection_name)
+
+    preload = [
+      record_embeddings: where(RecordEmbedding, [re], re.collection == ^collection_name),
+      business_concept: [{:domain, :domain_group}, :shared_to]
+    ]
+
     id
-    |> get_business_concept_version(version)
+    |> get_business_concept_version(version, preload: preload)
     |> generate_vector(collection_name)
   end
 
   def generate_vector(nil, _collection_name), do: nil
+
+  def versions_with_outdated_embeddings(collections, opts \\ []) do
+    base =
+      Enum.reduce(opts, BusinessConceptVersion, fn
+        {:limit, limit}, q -> limit(q, ^limit)
+        _, q -> q
+      end)
+
+    outdated =
+      base
+      |> join(:left, [bcv, re], re in assoc(bcv, :record_embeddings))
+      |> where([bcv, re], is_nil(re.updated_at) or re.updated_at < bcv.updated_at)
+      |> select([bcv], bcv.business_concept_id)
+
+    join_collections_set =
+      from(cs in fragment("SELECT unnest(?::text[]) AS collection", ^collections),
+        select: %{collection: cs.collection}
+      )
+
+    missing =
+      base
+      |> join(:cross, [bcv, cs], cs in subquery(join_collections_set))
+      |> join(:left, [bcv, cs, re], re in RecordEmbedding,
+        on: re.business_concept_version_id == bcv.id and cs.collection == re.collection
+      )
+      |> where([bcv, cs, re], is_nil(re.id))
+      |> select([bcv], bcv.business_concept_id)
+
+    missing
+    |> union_all(^outdated)
+    |> distinct(true)
+    |> Repo.all()
+  end
+
+  defp collection_name_or_default(collection_name) when is_binary(collection_name),
+    do: collection_name
+
+  defp collection_name_or_default(nil) do
+    {:ok, %{collection_name: collection_name}} = Indices.first_enabled()
+    collection_name
+  end
+
+  defp embedding_attributes(%BusinessConceptVersion{
+         name: name,
+         content: content,
+         business_concept: business_concept
+       }) do
+    "#{name} #{business_concept.type} #{business_concept.domain.external_id}"
+    |> add_descriptions(content, business_concept)
+    |> add_links_to_vector(business_concept.id)
+    |> String.trim()
+  end
 
   defp add_descriptions(text, content, business_concept) do
     case get_template(business_concept) do

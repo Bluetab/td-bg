@@ -366,6 +366,10 @@ defmodule TdBg.UploadTest do
     HierarchyCache.put(hierarchy)
     I18nCache.put_default_locale(@default_lang)
 
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      {:ok, true}
+    end)
+
     on_exit(fn ->
       IndexWorkerMock.clear()
       TdCache.Redix.del!("i18n:locales:*")

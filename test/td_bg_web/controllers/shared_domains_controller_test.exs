@@ -2,11 +2,22 @@ defmodule TdBgWeb.SharedDomainControllerTest do
   use TdBgWeb.ConnCase
 
   import Assertions
+  import Mox
 
   setup_all do
     start_supervised!(TdBg.Cache.ConceptLoader)
     :ok
   end
+
+  setup do
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      {:ok, true}
+    end)
+
+    :ok
+  end
+
+  setup :set_mox_from_context
 
   describe "patch" do
     @tag authentication: [role: "admin"]
