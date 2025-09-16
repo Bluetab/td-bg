@@ -13,7 +13,8 @@ defmodule TdBg.Application do
         # Start the Ecto repository
         TdBg.Repo,
         # Start the endpoint when the application starts
-        TdBgWeb.Endpoint
+        TdBgWeb.Endpoint,
+        {Oban, Application.fetch_env!(:td_bg, Oban)}
       ] ++ workers(env)
 
     # See https://hexdocs.pm/elixir/Supervisor.html

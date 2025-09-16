@@ -17,7 +17,7 @@ defmodule TdBg.BusinessConcept.Search do
   def get_filter_values(%Claims{} = claims, params) do
     query_data = %{aggs: aggs} = ElasticDocumentProtocol.query_data(%BusinessConceptVersion{})
     query = build_query(claims, params, query_data)
-    search = %{query: query, aggs: aggs, size: 0}
+    search = %{query: query, aggs: aggs, size: 0, _source: %{excludes: ["embeddings"]}}
 
     {:ok, response} = Search.get_filters(search, @index)
 
@@ -61,7 +61,36 @@ defmodule TdBg.BusinessConcept.Search do
 
     sort = Map.get(params, "sort", ["_score", "name.raw"])
 
-    do_search(%{from: page * size, size: size, query: query, sort: sort}, params)
+    do_search(
+      %{
+        from: page * size,
+        size: size,
+        query: query,
+        sort: sort,
+        _source: %{excludes: ["embeddings"]}
+      },
+      params
+    )
+  end
+
+  def vector(%Claims{} = claims, params, opts \\ []) do
+    query_data = ElasticDocumentProtocol.query_data(%BusinessConceptVersion{})
+    bool_query = build_query(claims, params, query_data)
+
+    knn =
+      params
+      |> Map.take(["field", "query_vector", "k", "num_candidates", "similarity"])
+      |> Map.put("filter", bool_query)
+
+    %{knn: knn, _source: %{excludes: ["embeddings"]}, sort: ["_score"]}
+    |> Search.search(@index)
+    |> then(fn {:ok, %{results: results}} ->
+      Enum.map(results, fn result ->
+        result
+        |> map_result()
+        |> add_similarity(result, opts[:similarity])
+      end)
+    end)
   end
 
   defp build_query(%Claims{} = claims, params, query_data) do
@@ -151,4 +180,14 @@ defmodule TdBg.BusinessConcept.Search do
     search_after = results |> List.last() |> Map.get("sort")
     %{search_after: search_after, results: Enum.map(results, &map_result/1)}
   end
+
+  defp add_similarity(concept, record, :cosine) do
+    # We assume cosine similarity by default, but this may vary depending on the index configuration.
+    #  Adjust accordingly based on the actual setup
+    # https://www.elastic.co/docs/solutions/search/vector/knn#knn-similarity-search
+    similarity = 2 * record["_score"] - 1
+    Map.put(concept, "similarity", similarity)
+  end
+
+  defp add_similarity(concept, _record, _other), do: concept
 end

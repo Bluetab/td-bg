@@ -65,13 +65,15 @@ defmodule TdBg.Mixfile do
       {:xlsx_reader, "~> 0.8.7"},
       {:codepagex, "~> 0.1.9"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "7.4.0"},
-      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "7.10.0"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "7.10.2"},
       {:credo, "~> 1.7.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4.5", only: :dev, runtime: false},
       {:ex_machina, "~> 2.8", only: :test},
       {:assertions, "~> 0.20.1", only: :test},
       {:mox, "~> 1.2", only: :test},
-      {:sobelow, "~> 0.13", only: [:dev, :test]}
+      {:sobelow, "~> 0.13", only: [:dev, :test]},
+      {:oban, "~> 2.19"},
+      {:igniter, "~> 0.5"}
     ]
   end
 

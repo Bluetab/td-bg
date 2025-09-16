@@ -3,6 +3,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
   import Mox
 
+  alias TdCluster.TestHelpers.TdAiMock.Indices
   alias TdCore.Search.IndexWorkerMock
 
   @template_name "some_type"
@@ -159,11 +160,13 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
   end
 
   setup _context do
-    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] -> {:ok, true} end)
-
     on_exit(fn ->
       IndexWorkerMock.clear()
       TdCache.Redix.del!("i18n:locales:*")
+    end)
+
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      {:ok, true}
     end)
 
     :ok
@@ -348,6 +351,9 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
     @tag authentication: [role: "admin"]
     test "return i18n content non-translatable fields ", %{conn: conn} do
+      Indices.list_indices(&Mox.expect/4, [enabled: true], {:ok, []})
+      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+
       CacheHelpers.put_i18n_message("es", %{message_id: "foo", definition: "definition"})
       template_name = "complete_template"
 
@@ -419,7 +425,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
                      "name_es.raw" => "desc"
                    },
                    from: 0,
-                   query: %{bool: %{must: %{match_all: %{}}}}
+                   query: %{bool: %{must: %{match_all: %{}}}},
+                   _source: %{excludes: ["embeddings"]}
                  }
 
           SearchHelpers.hits_response([bcv])

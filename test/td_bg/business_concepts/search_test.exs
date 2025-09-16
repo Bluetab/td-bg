@@ -375,4 +375,123 @@ defmodule TdBg.BusinessConcepts.SearchTest do
       assert Enum.find(concepts, &(Map.get(&1, "id") == bcv2.id))
     end
   end
+
+  describe "Search.vector" do
+    @tag authentication: [role: "admin"]
+    test "puts vector search in elastic", %{claims: claims} do
+      expect(ElasticsearchMock, :request, fn _, :post, "/concepts/_search", request, _ ->
+        assert request == %{
+                 sort: ["_score"],
+                 _source: %{excludes: ["embeddings"]},
+                 knn: %{
+                   "field" => "embeddings.vector_foo",
+                   "filter" => %{
+                     bool: %{
+                       must: [
+                         %{
+                           terms: %{
+                             "status" => ["draft", "pending_approval", "published", "rejected"]
+                           }
+                         },
+                         %{term: %{"current" => true}}
+                       ],
+                       must_not: %{term: %{"business_concept_ids" => "1"}}
+                     }
+                   },
+                   "k" => 10,
+                   "num_candidates" => 200,
+                   "query_vector" => [54.0, 10.2, -2.0],
+                   "similarity" => 0.5
+                 }
+               }
+
+        SearchHelpers.hits_response([insert(:business_concept_version)], 1)
+      end)
+
+      params = %{
+        "field" => "embeddings.vector_foo",
+        "k" => 10,
+        "similarity" => 0.5,
+        "num_candidates" => 200,
+        "query_vector" => [54.0, 10.2, -2.0],
+        "must" => %{
+          "current" => true,
+          "status" => ["pending_approval", "draft", "rejected", "published"]
+        },
+        "must_not" => %{"business_concept_ids" => ["1"]}
+      }
+
+      assert [concept] = Search.vector(claims, params, similarity: :cosine)
+      assert concept["similarity"] == 1.0
+    end
+
+    @tag authentication: [role: "user"]
+    test "puts domain filters in vector search", %{claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+      bcv = insert(:business_concept_version, domain_id: domain_id)
+      CacheHelpers.put_default_permissions(["view_published_business_concepts"])
+      put_session_permissions(claims, %{"view_approval_pending_business_concepts" => [domain_id]})
+
+      expect(ElasticsearchMock, :request, fn _, :post, "/concepts/_search", request, _ ->
+        assert request == %{
+                 sort: ["_score"],
+                 _source: %{excludes: ["embeddings"]},
+                 knn: %{
+                   "field" => "embeddings.vector_foo",
+                   "filter" => %{
+                     bool: %{
+                       must: [
+                         %{
+                           terms: %{
+                             "status" => ["draft", "pending_approval", "published", "rejected"]
+                           }
+                         },
+                         %{term: %{"current" => true}},
+                         %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
+                         %{
+                           bool: %{
+                             should: [
+                               %{
+                                 bool: %{
+                                   filter: [
+                                     %{term: %{"status" => "pending_approval"}},
+                                     %{term: %{"domain_ids" => domain_id}}
+                                   ]
+                                 }
+                               },
+                               %{term: %{"status" => "published"}}
+                             ]
+                           }
+                         }
+                       ],
+                       must_not: %{term: %{"business_concept_ids" => "1"}}
+                     }
+                   },
+                   "k" => 10,
+                   "num_candidates" => 200,
+                   "query_vector" => [54.0, 10.2, -2.0],
+                   "similarity" => 0.5
+                 }
+               }
+
+        SearchHelpers.hits_response([bcv], 1)
+      end)
+
+      params = %{
+        "field" => "embeddings.vector_foo",
+        "k" => 10,
+        "similarity" => 0.5,
+        "num_candidates" => 200,
+        "query_vector" => [54.0, 10.2, -2.0],
+        "must" => %{
+          "current" => true,
+          "status" => ["pending_approval", "draft", "rejected", "published"]
+        },
+        "must_not" => %{"business_concept_ids" => ["1"]}
+      }
+
+      assert [concept] = Search.vector(claims, params, similarity: :cosine)
+      assert concept["similarity"] == 1.0
+    end
+  end
 end

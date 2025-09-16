@@ -21,4 +21,18 @@ defmodule TdBgWeb.SearchController do
       |> render("403.json")
     end
   end
+
+  def embeddings(conn, _params) do
+    claims = conn.assigns[:current_resource]
+
+    if can?(claims, put_embeddings(BusinessConcept)) do
+      Indexer.put_embeddings(:all)
+      send_resp(conn, :accepted, "")
+    else
+      conn
+      |> put_status(:forbidden)
+      |> put_view(ErrorView)
+      |> render("403.json")
+    end
+  end
 end
