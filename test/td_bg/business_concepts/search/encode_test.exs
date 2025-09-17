@@ -1,6 +1,8 @@
 defmodule TdBg.BusinessConcepts.Search.EncodeTest do
   use TdBg.DataCase
 
+  import Mox
+
   alias Elasticsearch.Document
 
   @template_name "some_type"
@@ -151,6 +153,10 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
 
   setup do
     CacheHelpers.insert_template(@df_template)
+
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      {:ok, true}
+    end)
 
     template =
       build(:template,

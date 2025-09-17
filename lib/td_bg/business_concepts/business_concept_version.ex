@@ -9,6 +9,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   alias TdBg.BusinessConcepts
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.BusinessConcepts.BusinessConceptVersions.RecordEmbedding
   alias TdBg.Taxonomies
   alias TdDfLib.Format
   alias TdDfLib.Validation
@@ -28,7 +29,9 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
     field(:in_progress, :boolean, default: false)
     field(:domain_ids, {:array, :integer}, virtual: true)
     field(:subscribable_fields, {:array, :string}, virtual: true)
+    field(:embeddings, :map, virtual: true)
     belongs_to(:business_concept, BusinessConcept, on_replace: :update)
+    has_many(:record_embeddings, RecordEmbedding)
 
     timestamps(type: :utc_datetime_usec)
   end
@@ -319,5 +322,15 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion do
   def deletable?(%BusinessConceptVersion{status: status} = bcv) do
     valid_statuses = ["draft", "rejected"]
     BusinessConcepts.last?(bcv) && Enum.member?(valid_statuses, status)
+  end
+
+  def vector_embeddings(%__MODULE__{record_embeddings: records}) do
+    vector_embeddings(records)
+  end
+
+  def vector_embeddings(records) when is_list(records) do
+    Map.new(records, fn %{collection: collection, embedding: embedding} ->
+      {"vector_#{collection}", embedding}
+    end)
   end
 end

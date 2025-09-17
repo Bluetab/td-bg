@@ -1,5 +1,16 @@
 # Changelog
 
+## [7.10.0] 2025-09-16
+
+### Added
+
+- [TD-7175] The functionality to retrieve the concept by BCV name and domain.
+- [TD-7345]:
+  - Store embeddings in postres.
+  - Use stored embeddings on reindex.
+  - Incrementaly update outdated embeddings.
+  - Remove stale embeddings.
+
 ## [7.9.0] 2025-08-25
 
 ### Changed

@@ -18,6 +18,7 @@ defmodule TdBg.DataCase do
 
   using do
     quote do
+      use Oban.Testing, repo: TdBg.Repo, prefix: Application.get_env(:td_bg, Oban)[:prefix]
       alias TdBg.Repo
 
       import Assertions

@@ -26,7 +26,13 @@ defmodule TdBg.Permissions do
     Enum.any?(permissions, &TdCache.Permissions.has_permission?(jti, &1))
   end
 
-  def authorized?(%Claims{jti: jti}, permission, domain_id) do
-    TdCache.Permissions.has_permission?(jti, permission, "domain", domain_id)
+  def authorized?(claims, permission, resource_ids \\ :any, resource_type \\ "domain")
+
+  def authorized?(%{jti: jti}, permission, :any, resource_type) do
+    TdCache.Permissions.has_permission?(jti, permission, resource_type)
+  end
+
+  def authorized?(%{jti: jti}, permission, resource_ids, resource_type) do
+    TdCache.Permissions.has_permission?(jti, permission, resource_type, resource_ids)
   end
 end

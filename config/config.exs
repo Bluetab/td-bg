@@ -5,6 +5,21 @@
 # is restricted to this project.
 import Config
 
+config :td_bg, Oban,
+  prefix: "private",
+  plugins: [
+    {Oban.Plugins.Pruner, max_age: 24 * 60 * 60},
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 */3 * * *", TdBg.BusinessConcepts.BusinessConceptVersions.Workers.OutdatedEmbeddings},
+       {"@hourly", TdBg.BusinessConcepts.BusinessConceptVersions.Workers.EmbeddingsDeletion}
+     ]}
+  ],
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  queues: [default: 5, embedding_upserts: 10, embedding_deletion: 5],
+  repo: TdBg.Repo
+
 # Environment
 config :td_bg, :env, Mix.env()
 config :td_cluster, :env, Mix.env()
@@ -98,6 +113,8 @@ config :td_bg, TdBg.Scheduler,
       run_strategy: Quantum.RunStrategy.Local
     ]
   ]
+
+config :td_bg, :limit_outdated_embeddings, 50_000
 
 # Import Elasticsearch config
 import_config "elastic.exs"

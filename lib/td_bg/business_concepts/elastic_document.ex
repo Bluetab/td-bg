@@ -28,6 +28,11 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     @impl Elasticsearch.Document
     def routing(_), do: false
 
+    def encode(%BusinessConceptVersion{embeddings: %{} = embeddings})
+        when map_size(embeddings) > 0 do
+      %{doc: %{embeddings: embeddings}}
+    end
+
     @impl Elasticsearch.Document
     def encode(%BusinessConceptVersion{id: bcv_id, business_concept: business_concept} = bcv) do
       %{
@@ -89,6 +94,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
       |> Map.put(:template, Map.take(template, [:name, :label, :scope, :subscope]))
       |> Map.put(:confidential, confidential)
       |> Map.put(:shared_to_names, shared_to_names)
+      |> add_embeddings(bcv)
     end
 
     defp put_i18n_concept_property(bcv_to_index, property, i18n, default_locale) do
@@ -193,6 +199,13 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     defp shared_to_names([]), do: nil
 
     defp shared_to_names(shared_to), do: Enum.map(shared_to, & &1.name)
+
+    defp add_embeddings(content, %{record_embeddings: [_ | _]} = bcv) do
+      embeddings = BusinessConceptVersion.vector_embeddings(bcv)
+      Map.put(content, :embeddings, embeddings)
+    end
+
+    defp add_embeddings(content, _business_concept_version), do: content
   end
 
   defimpl ElasticDocumentProtocol, for: BusinessConceptVersion do
@@ -251,7 +264,8 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
           shared_to_names: %{type: "text", fields: %{raw: %{type: "keyword", null_value: ""}}},
           link_tags: %{type: "keyword"},
           has_rules: %{type: "boolean"},
-          content: content_mappings
+          content: content_mappings,
+          embeddings: %{properties: get_embedding_mappings()}
         }
         |> add_locales_fields_mapping(@translatable_fields)
 

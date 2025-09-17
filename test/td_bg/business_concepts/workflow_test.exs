@@ -20,6 +20,10 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
   end
 
   setup do
+    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      {:ok, true}
+    end)
+
     on_exit(fn ->
       Redix.del!(@stream)
       IndexWorkerMock.clear()

@@ -29,14 +29,21 @@ defmodule TdBg.BusinessConcepts.BulkUploadEvent do
       :task_reference,
       :status,
       :message,
-      :filename
+      :filename,
+      :node
     ])
-    |> put_node()
+    |> maybe_put_node()
     |> validate_required([:user_id, :file_hash, :filename, :task_reference, :status, :node])
     |> validate_length(:message, max: 10_000)
   end
 
-  defp put_node(changeset) do
-    cast(changeset, %{node: Atom.to_string(Node.self())}, [:node])
+  defp maybe_put_node(changeset) do
+    case get_change(changeset, :node) do
+      nil ->
+        cast(changeset, %{node: Atom.to_string(Node.self())}, [:node])
+
+      _ ->
+        changeset
+    end
   end
 end

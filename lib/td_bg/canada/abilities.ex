@@ -10,13 +10,33 @@ defmodule TdBg.Canada.Abilities do
   alias TdBg.Permissions
   alias TdBg.Taxonomies.Domain
   alias TdCache.Link
+  alias TdCluster.Cluster.TdAi.Indices
 
   defimpl Canada.Can, for: Claims do
+    @embedding_actions ~w(put_embeddings suggest_concepts)a
+
+    def can?(%Claims{role: "admin"}, action, BusinessConcept) when action in @embedding_actions do
+      case Indices.exists_enabled?() do
+        {:ok, enabled?} -> enabled?
+        _ -> false
+      end
+    end
+
     def can?(%Claims{role: "admin"}, _action, BusinessConcept), do: true
     def can?(%Claims{role: "admin"}, _action, %BusinessConcept{}), do: true
     def can?(%Claims{role: "admin"}, _action, Domain), do: true
     def can?(%Claims{role: "admin"}, _action, %Domain{}), do: true
     def can?(%Claims{role: "admin"}, :manage_grant_requests, %{}), do: true
+
+    def can?(%Claims{}, :suggest_concepts, BusinessConcept) do
+      case Indices.exists_enabled?() do
+        {:ok, enabled?} ->
+          enabled?
+
+        _ ->
+          false
+      end
+    end
 
     def can?(%Claims{} = claims, :manage_grant_requests, %{}) do
       Permissions.has_any_permission?(claims, [

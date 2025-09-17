@@ -70,8 +70,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchController do
        }) do
     results =
       %{results: business_concept_versions} =
-      params
-      |> Search.search_business_concept_versions(claims, page, size)
+      Search.search_business_concept_versions(params, claims, page, size)
 
     bcv_with_links =
       business_concept_versions
