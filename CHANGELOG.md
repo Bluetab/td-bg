@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7446] Add content validation for list values
+
 ## [7.10.1] 2025-09-19
 
 ### Added
