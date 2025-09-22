@@ -226,6 +226,10 @@ defmodule TdBg.Cache.ConceptLoader do
     has_text?(document)
   end
 
+  defp valid_value?({_key, %{"value" => [_ | _] = values}}) do
+    Enum.all?(values, &valid?(&1))
+  end
+
   defp valid_value?({_key, [_ | _] = values}) do
     Enum.all?(values, &valid?(&1))
   end
