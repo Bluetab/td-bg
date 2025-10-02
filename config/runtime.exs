@@ -4,6 +4,10 @@ if System.get_env("PHX_SERVER") do
   config :td_bg, TdBgWeb.Endpoint, server: true
 end
 
+config :td_cache, :audit, maxlen: System.get_env("REDIS_AUDIT_STREAM_MAXLEN", "100")
+
+config :td_cache, :event_stream, maxlen: System.get_env("REDIS_STREAM_MAXLEN", "100")
+
 config :td_bg, Oban, prefix: System.get_env("OBAN_DB_SCHEMA", "private")
 config :td_bg, create_oban_schema: System.get_env("OBAN_CREATE_SCHEMA", "true") == "true"
 
