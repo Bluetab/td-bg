@@ -66,6 +66,7 @@ defmodule TdBg.Mixfile do
       {:codepagex, "~> 0.1.9"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "7.4.0"},
       {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "7.11.1"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "7.10.3"},
       {:credo, "~> 1.7.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4.5", only: :dev, runtime: false},
       {:ex_machina, "~> 2.8", only: :test},
