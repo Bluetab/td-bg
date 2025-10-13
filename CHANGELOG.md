@@ -1,5 +1,15 @@
 # Changelog
 
+## [7.11.0] 2025-10-13
+
+### Added
+
+- [TD-7446] Add content validation for list values
+
+### Changed
+
+- [TD-7401] Update `td-core` version
+
 ## [7.10.1] 2025-09-19
 
 ### Added
