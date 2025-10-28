@@ -249,7 +249,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert {:ok, [%{event: event, payload: payload, id: ^event_id}]} =
                Stream.read(:redix, @stream, transform: true)
 
-      assert event == "new_concept_draft"
+      assert event == "create_concept_draft"
 
       assert %{"subscribable_fields" => %{"foo" => %{"value" => "bar", "origin" => "user"}}} =
                Jason.decode!(payload)

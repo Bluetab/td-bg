@@ -2088,4 +2088,174 @@ defmodule TdBg.UploadTest do
       %{message_id: "foo", definition: "bar"}
     ])
   end
+
+  describe "audit: file upload with auto_publish events" do
+    setup [:set_mox_from_context]
+
+    test "file upload with auto_publish creates update and publish events with event_via='file'" do
+      TdCache.Redix.del!(TdCache.Audit.stream())
+      IndexWorkerMock.clear()
+
+      claims = build(:claims, role: "admin")
+
+      %{id: template_id} =
+        Templates.create_template(%{
+          id: 0,
+          name: "term",
+          label: "term",
+          scope: "test",
+          content: [
+            %{
+              "name" => "group",
+              "fields" => [
+                %{
+                  "cardinality" => "1",
+                  "default" => %{"value" => "", "origin" => "default"},
+                  "label" => "critical term",
+                  "name" => "critical",
+                  "type" => "string",
+                  "values" => %{"fixed" => ["Yes", "No"]}
+                },
+                %{
+                  "cardinality" => "+",
+                  "label" => "Role",
+                  "name" => "role",
+                  "type" => "user"
+                },
+                %{
+                  "cardinality" => "+",
+                  "label" => "Description",
+                  "name" => "description",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "default" => %{"value" => "", "origin" => "default"},
+                  "label" => "Number",
+                  "name" => "input_integer",
+                  "type" => "integer",
+                  "widget" => "number",
+                  "values" => nil
+                },
+                %{
+                  "cardinality" => "?",
+                  "default" => %{"value" => "", "origin" => "default"},
+                  "label" => "Number",
+                  "name" => "input_float",
+                  "type" => "float",
+                  "widget" => "number",
+                  "values" => nil
+                },
+                %{
+                  "cardinality" => "*",
+                  "default" => %{"origin" => "default", "value" => ""},
+                  "label" => "URL",
+                  "name" => "input_url",
+                  "type" => "url",
+                  "widget" => "pair_list",
+                  "values" => nil
+                }
+              ]
+            }
+          ]
+        })
+
+      on_exit(fn -> Templates.delete(template_id) end)
+
+      CacheHelpers.put_active_locales(~w(en es))
+      on_exit(fn -> TdCache.Redix.del!("i18n:locales:*") end)
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{id: version_id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          name: "original name",
+          status: "published",
+          business_concept: concept,
+          in_progress: false,
+          version: 1,
+          content: %{
+            "critical" => %{"origin" => "user", "value" => "Yes"},
+            "description" => %{"origin" => "user", "value" => ["test"]},
+            "input_float" => %{"origin" => "user", "value" => 12.5},
+            "input_integer" => %{"origin" => "user", "value" => 12},
+            "input_url" => %{
+              "origin" => "user",
+              "value" => [
+                %{"url_name" => "com", "url_value" => "www.com.com"},
+                %{"url_name" => "", "url_value" => "www.net.net"},
+                %{"url_name" => "", "url_value" => "www.org.org"}
+              ]
+            },
+            "role" => %{"origin" => "user", "value" => ["Role"]}
+          }
+        )
+
+      insert(:i18n_content,
+        business_concept_version_id: version_id,
+        name: "nombre original",
+        content: %{"description" => %{"value" => ["versionado"], "origin" => "user"}},
+        lang: "es"
+      )
+
+      business_concept_upload = %{path: "test/fixtures/upload_version_on_content_update.xlsx"}
+
+      Process.put(:event_via, "file")
+
+      assert %{errors: [], created: [], updated: [_updated_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: "en",
+                 auto_publish: true
+               )
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept"} ->
+            "#{resource_id}" == "#{business_concept_id}"
+
+          _ ->
+            false
+        end)
+
+      assert length(concept_events) >= 2
+
+      assert Enum.all?(concept_events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               decoded["event_via"] == "file"
+             end)
+
+      update_event =
+        Enum.find(concept_events, fn %{event: event} ->
+          event in ["update_concept", "update_concept_draft"]
+        end)
+
+      assert update_event != nil
+
+      update_payload = Jason.decode!(update_event.payload)
+      assert update_payload["event_via"] == "file"
+      assert Map.has_key?(update_payload, "content")
+
+      content = update_payload["content"]
+      assert Map.has_key?(content, "added")
+
+      added = content["added"]
+      assert Map.has_key?(added, "description")
+
+      publish_event =
+        Enum.find(concept_events, fn %{event: event} ->
+          event == "concept_published"
+        end)
+
+      assert publish_event != nil
+
+      publish_payload = Jason.decode!(publish_event.payload)
+      assert publish_payload["event_via"] == "file"
+    end
+  end
 end

@@ -4,6 +4,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
   import Mox
 
   alias TdBg.BusinessConcepts
+  alias TdBg.BusinessConcepts.Audit
   alias TdCache.Redix
   alias TdCache.Redix.Stream
 
@@ -68,6 +69,164 @@ defmodule TdBg.BusinessConcepts.AuditTest do
                  "id" => ^domain_old_id
                }
              } = Jason.decode!(payload)
+    end
+  end
+
+  describe "business_concept_version_updated" do
+    test "publish event update_concept_draft when a draft is updated" do
+      old_domain = CacheHelpers.insert_domain()
+      %{id: new_domain_id} = CacheHelpers.insert_domain()
+
+      concept = build(:business_concept, domain: old_domain)
+
+      %{business_concept: business_concept} =
+        business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          status: "draft",
+          content: %{}
+        )
+
+      changeset =
+        Ecto.Changeset.change(business_concept, %{domain_id: new_domain_id})
+
+      {:ok, _} =
+        Audit.business_concept_version_updated(
+          TdBg.Repo,
+          %{updated: business_concept_version},
+          changeset
+        )
+
+      assert {:ok, [%{event: event}]} = Stream.read(:redix, @stream, transform: true)
+
+      assert event == "update_concept_draft"
+    end
+
+    test "publish event update_concept_draft when a a published concept is updated" do
+      old_domain = CacheHelpers.insert_domain()
+      %{id: new_domain_id} = CacheHelpers.insert_domain()
+
+      concept = build(:business_concept, domain: old_domain)
+
+      %{business_concept: business_concept} =
+        business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          status: "published",
+          content: %{}
+        )
+
+      changeset =
+        Ecto.Changeset.change(business_concept, %{domain_id: new_domain_id})
+
+      {:ok, _} =
+        Audit.business_concept_version_updated(
+          TdBg.Repo,
+          %{updated: business_concept_version},
+          changeset
+        )
+
+      assert {:ok, [%{event: event}]} = Stream.read(:redix, @stream, transform: true)
+
+      assert event == "update_concept"
+    end
+  end
+
+  describe "business_concept_published" do
+    test "publish event concept_published when called without changeset (via web)" do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      concept = build(:business_concept, domain_id: domain_id)
+
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          status: "published",
+          content: %{}
+        )
+
+      {:ok, _} =
+        Audit.business_concept_published(
+          TdBg.Repo,
+          %{published: business_concept_version}
+        )
+
+      assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
+
+      assert length(events) == 1
+      assert [%{event: "concept_published"}] = events
+    end
+
+    test "publish multiple events when called with changeset (via file)" do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      concept = build(:business_concept, domain_id: domain_id)
+
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          status: "published",
+          content: %{"Field1" => %{"value" => "value1", "origin" => "user"}}
+        )
+
+      Process.put(:event_via, "file")
+
+      changeset =
+        Ecto.Changeset.change(business_concept_version, %{
+          content: %{"Field1" => %{"value" => "new_value", "origin" => "user"}}
+        })
+
+      {:ok, _} =
+        Audit.business_concept_published(
+          TdBg.Repo,
+          %{published: business_concept_version},
+          changeset
+        )
+
+      assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
+
+      assert length(events) >= 2
+
+      event_types = Enum.map(events, & &1.event)
+
+      assert "concept_published" in event_types
+      assert "new_concept_draft" in event_types or "update_concept" in event_types
+    end
+
+    test "all events have event_via='file' when published via file with changeset" do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      concept = build(:business_concept, domain_id: domain_id)
+
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          status: "published",
+          content: %{"Field1" => %{"value" => "value1", "origin" => "user"}}
+        )
+
+      Process.put(:event_via, "file")
+
+      changeset =
+        Ecto.Changeset.change(business_concept_version, %{
+          content: %{"Field1" => %{"value" => "new_value", "origin" => "user"}}
+        })
+
+      {:ok, _} =
+        Audit.business_concept_published(
+          TdBg.Repo,
+          %{published: business_concept_version},
+          changeset
+        )
+
+      assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
+
+      assert length(events) == 3
+
+      assert Enum.all?(events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               Map.get(decoded, "event_via") == "file"
+             end)
     end
   end
 end
