@@ -2331,4 +2331,372 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
              } = actions
     end
   end
+
+  describe "audit: event_via field in payload" do
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "create business_concept includes event_via='single_update' in audit payload", %{
+      conn: conn
+    } do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      creation_attrs = %{
+        "content" => %{},
+        "type" => "some_type",
+        "name" => "Test Concept",
+        "domain_id" => domain_id,
+        "in_progress" => false
+      }
+
+      assert %{"data" => %{"id" => _id, "business_concept_id" => _business_concept_id}} =
+               conn
+               |> post(
+                 Routes.business_concept_version_path(conn, :create),
+                 business_concept_version: creation_attrs
+               )
+               |> json_response(:created)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      assert Enum.any?(events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               Map.get(decoded, "event_via") == "single_update"
+             end)
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "update business_concept includes event_via='single_update' in audit payload", %{
+      conn: conn
+    } do
+      %{id: id, business_concept_id: business_concept_id} =
+        business_concept_version = insert(:business_concept_version, type: "some_type")
+
+      update_attrs = %{
+        "content" => %{
+          "Field1" => %{"value" => "New Value", "origin" => "user"}
+        },
+        "name" => "Updated Name"
+      }
+
+      assert %{"data" => %{"id" => ^id}} =
+               conn
+               |> put(
+                 Routes.business_concept_version_path(conn, :update, business_concept_version),
+                 business_concept_version: update_attrs
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept"} ->
+            "#{resource_id}" == "#{business_concept_id}"
+
+          _ ->
+            false
+        end)
+
+      assert Enum.all?(concept_events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               Map.get(decoded, "event_via") == "single_update"
+             end)
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "update domain includes event_via='single_update' in audit payload", %{
+      conn: conn
+    } do
+      business_concept_version = insert(:business_concept_version, type: "some_type")
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      assert %{"data" => _data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :update_domain,
+                   business_concept_version
+                 ),
+                 domain_id: domain_id
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      assert Enum.any?(events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               Map.get(decoded, "event_via") == "single_update"
+             end)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "publish business_concept includes event_via='single_update' in audit payload", %{
+      conn: conn
+    } do
+      %{name: template_name} = CacheHelpers.insert_template()
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      business_concept_version =
+        insert(:business_concept_version,
+          domain_id: domain_id,
+          status: "pending_approval",
+          type: template_name
+        )
+
+      assert %{"data" => _data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :publish,
+                   business_concept_version
+                 )
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      assert Enum.any?(events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               Map.get(decoded, "event_via") == "single_update"
+             end)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "deprecate business_concept includes event_via='single_update' in audit payload", %{
+      conn: conn
+    } do
+      %{name: template_name} = CacheHelpers.insert_template()
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      business_concept_version =
+        insert(:business_concept_version,
+          domain_id: domain_id,
+          status: "published",
+          type: template_name
+        )
+
+      assert %{"data" => _data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :deprecate,
+                   business_concept_version
+                 )
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      assert Enum.any?(events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               Map.get(decoded, "event_via") == "single_update"
+             end)
+    end
+
+    @tag authentication: [role: "admin"]
+    test "set_confidential includes event_via='single_update' in audit payload", %{
+      conn: conn
+    } do
+      %{user_id: user_id} = build(:claims)
+
+      business_concept_version = insert(:business_concept_version, last_change_by: user_id)
+
+      assert %{"data" => _data} =
+               conn
+               |> post(
+                 Routes.business_concept_version_business_concept_version_path(
+                   conn,
+                   :set_confidential,
+                   business_concept_version
+                 ),
+                 confidential: true
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      assert Enum.any?(events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               Map.get(decoded, "event_via") == "single_update"
+             end)
+    end
+  end
+
+  describe "audit: content field with template changes" do
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "update with content changes includes content field with diff in audit payload", %{
+      conn: conn
+    } do
+      %{business_concept_id: business_concept_id} =
+        business_concept_version =
+        insert(:business_concept_version,
+          type: "some_type",
+          content: %{
+            "Field1" => %{"value" => "Old Value 1", "origin" => "user"},
+            "Field2" => %{"value" => "Old Value 2", "origin" => "user"}
+          }
+        )
+
+      update_attrs = %{
+        "content" => %{
+          "Field1" => %{"value" => "New Value 1", "origin" => "user"},
+          "Field2" => %{"value" => "New Value 2", "origin" => "user"}
+        }
+      }
+
+      assert %{"data" => _data} =
+               conn
+               |> put(
+                 Routes.business_concept_version_path(conn, :update, business_concept_version),
+                 business_concept_version: update_attrs
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept", event: event} ->
+            "#{resource_id}" == "#{business_concept_id}" and
+              event in ["update_concept_draft", "update_concept"]
+
+          _ ->
+            false
+        end)
+
+      update_event = List.first(concept_events)
+
+      assert update_event != nil
+
+      payload = Jason.decode!(update_event.payload)
+
+      assert Map.has_key?(payload, "content")
+
+      content_diff = payload["content"]
+
+      assert Map.has_key?(content_diff, "changed")
+
+      changed_fields = content_diff["changed"]
+
+      assert Map.has_key?(changed_fields, "Field1")
+      assert Map.has_key?(changed_fields, "Field2")
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "update with partial content changes includes only changed fields in content diff", %{
+      conn: conn
+    } do
+      %{business_concept_id: business_concept_id} =
+        business_concept_version =
+        insert(:business_concept_version,
+          type: "some_type",
+          content: %{
+            "Field1" => %{"value" => "Value 1", "origin" => "user"},
+            "Field2" => %{"value" => "Value 2", "origin" => "user"}
+          }
+        )
+
+      update_attrs = %{
+        "content" => %{
+          "Field1" => %{"value" => "Updated Value 1", "origin" => "user"},
+          "Field2" => %{"value" => "Value 2", "origin" => "user"}
+        }
+      }
+
+      assert %{"data" => _data} =
+               conn
+               |> put(
+                 Routes.business_concept_version_path(conn, :update, business_concept_version),
+                 business_concept_version: update_attrs
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept", event: event} ->
+            "#{resource_id}" == "#{business_concept_id}" and
+              event in ["update_concept_draft", "update_concept"]
+
+          _ ->
+            false
+        end)
+
+      update_event = List.first(concept_events)
+      assert update_event != nil
+
+      payload = Jason.decode!(update_event.payload)
+
+      assert Map.has_key?(payload, "content")
+      content_diff = payload["content"]
+
+      assert Map.has_key?(content_diff, "changed")
+      changed_fields = content_diff["changed"]
+
+      assert Map.has_key?(changed_fields, "Field1")
+      refute Map.has_key?(changed_fields, "Field2")
+    end
+
+    @tag authentication: [role: "admin"]
+    @tag :template
+    test "update with name change but no content changes has no content field or empty content in audit payload",
+         %{conn: conn} do
+      %{business_concept_id: business_concept_id} =
+        business_concept_version =
+        insert(:business_concept_version,
+          type: "some_type",
+          content: %{"Field1" => %{"value" => "Value 1", "origin" => "user"}}
+        )
+
+      update_attrs = %{
+        "name" => "Updated Name Only",
+        "content" => %{"Field1" => %{"value" => "Value 1", "origin" => "user"}}
+      }
+
+      assert %{"data" => _data} =
+               conn
+               |> put(
+                 Routes.business_concept_version_path(conn, :update, business_concept_version),
+                 business_concept_version: update_attrs
+               )
+               |> json_response(:ok)
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept", event: event} ->
+            "#{resource_id}" == "#{business_concept_id}" and
+              event in ["update_concept_draft", "update_concept"]
+
+          _ ->
+            false
+        end)
+
+      update_event = List.first(concept_events)
+      assert update_event != nil
+
+      payload = Jason.decode!(update_event.payload)
+
+      content = Map.get(payload, "content", %{})
+      assert content == %{} or not Map.has_key?(payload, "content")
+    end
+  end
 end

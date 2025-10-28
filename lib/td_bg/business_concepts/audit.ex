@@ -31,7 +31,7 @@ defmodule TdBg.BusinessConcepts.Audit do
     |> select([v], map(v, ^audit_fields))
     |> Repo.all()
     |> Enum.map(&Map.pop(&1, :business_concept_id))
-    |> Enum.map(&business_concept_created/1)
+    |> Enum.map(fn {id, payload} -> business_concept_created({id, payload}) end)
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
     |> case do
       %{error: errors} -> {:error, errors}
@@ -58,7 +58,7 @@ defmodule TdBg.BusinessConcepts.Audit do
       |> Map.put(:subscribable_fields, fields)
       |> Map.put(:domain_ids, get_domain_ids(payload))
 
-    publish("new_concept_draft", "concept", id, user_id, payload)
+    publish("create_concept_draft", "concept", id, user_id, payload)
   end
 
   def business_concept_updated(_repo, _payload, %Changeset{changes: changes})
@@ -98,12 +98,29 @@ defmodule TdBg.BusinessConcepts.Audit do
   def business_concept_version_updated(_repo, %{updated: updated}, changeset) do
     %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} = updated
     changeset = do_changeset_updated(changeset, updated)
-    publish("update_concept_draft", "concept", id, user_id, changeset)
+
+    event =
+      cond do
+        Process.get(:event_via) == "file" ->
+          "update_concept_draft"
+
+        Map.get(updated, :status) == "published" ->
+          "update_concept"
+
+        true ->
+          "update_concept_draft"
+      end
+
+    publish(event, "concept", id, user_id, changeset)
   end
 
-  def business_concept_published(_repo, %{published: business_concept_version}) do
+  def business_concept_published(repo, %{published: business_concept_version}, changeset \\ nil) do
     case business_concept_version do
       %{business_concept_id: id, last_change_by: user_id} ->
+        if not is_nil(changeset) do
+          business_concept_versioned(repo, %{updated: business_concept_version}, changeset)
+        end
+
         payload = status_payload(business_concept_version)
         publish("concept_published", "concept", id, user_id, payload)
     end
@@ -117,11 +134,33 @@ defmodule TdBg.BusinessConcepts.Audit do
     end
   end
 
-  def business_concept_versioned(_repo, %{current: current}) do
-    case current do
+  def business_concept_versioned(repo, %{current: current}, changeset_or_map) do
+    changeset_or_map
+    |> unwrap_changeset()
+    |> do_business_concept_versioned(repo, current)
+  end
+
+  def business_concept_versioned(repo, %{updated: updated}, changeset_or_map) do
+    changeset_or_map
+    |> unwrap_changeset()
+    |> do_business_concept_versioned(repo, updated)
+  end
+
+  defp unwrap_changeset(%{changeset: changeset}), do: changeset
+  defp unwrap_changeset(%Changeset{} = changeset), do: changeset
+  defp unwrap_changeset(_), do: nil
+
+  defp do_business_concept_versioned(changeset, repo, version) do
+    case version do
       %{business_concept_id: id, last_change_by: user_id} ->
-        payload = status_payload(current)
-        publish("new_concept_draft", "concept", id, user_id, payload)
+        payload = status_payload(version)
+        {:ok, event_id} = publish("new_concept_draft", "concept", id, user_id, payload)
+
+        if Process.get(:event_via) == "file" and not is_nil(changeset) do
+          business_concept_version_updated(repo, %{updated: version}, changeset)
+        else
+          {:ok, event_id}
+        end
     end
   end
 
@@ -174,10 +213,16 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   defp status_payload(business_concept_version) do
-    business_concept_version
-    |> Map.take([:version, :id, :name])
-    |> Map.put(:domain_ids, get_domain_ids(business_concept_version))
-    |> Map.put(:subscribable_fields, subscribable_fields(business_concept_version))
+    payload =
+      business_concept_version
+      |> Map.take([:version, :id, :name])
+      |> Map.put(:domain_ids, get_domain_ids(business_concept_version))
+      |> Map.put(:subscribable_fields, subscribable_fields(business_concept_version))
+
+    case Process.get(:event_via) do
+      nil -> payload
+      event_via -> Map.put(payload, :event_via, event_via)
+    end
   end
 
   defp get_domain_ids(%{business_concept: business_concept}) do

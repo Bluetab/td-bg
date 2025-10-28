@@ -10,9 +10,23 @@ defmodule TdBg.Audit.AuditSupport do
   alias TdCache.TaxonomyCache
   alias TdDfLib.{MapDiff, Masks, Templates}
 
-  def publish(event, resource_type, resource_id, user_id, payload \\ %{})
+  def publish(
+        event,
+        resource_type,
+        resource_id,
+        user_id,
+        payload \\ %{}
+      )
 
-  def publish(event, resource_type, resource_id, user_id, %Changeset{changes: changes, data: data}) do
+  def publish(
+        event,
+        resource_type,
+        resource_id,
+        user_id,
+        %Changeset{changes: changes, data: data}
+      ) do
+    payload = payload(changes, data)
+
     if map_size(changes) == 0 do
       {:ok, :unchanged}
     else
@@ -21,7 +35,7 @@ defmodule TdBg.Audit.AuditSupport do
         resource_type: resource_type,
         resource_id: resource_id,
         user_id: user_id,
-        payload: payload(changes, data)
+        payload: add_event_via(payload)
       )
     end
   end
@@ -32,8 +46,15 @@ defmodule TdBg.Audit.AuditSupport do
       resource_type: resource_type,
       resource_id: resource_id,
       user_id: user_id,
-      payload: payload
+      payload: add_event_via(payload)
     )
+  end
+
+  defp add_event_via(payload) do
+    case Process.get(:event_via) do
+      nil -> payload
+      event_via -> Map.put(payload, :event_via, event_via)
+    end
   end
 
   def subscribable_fields(%Changeset{data: data} = _changeset) do
@@ -96,9 +117,18 @@ defmodule TdBg.Audit.AuditSupport do
     business_concept_changes =
       Map.drop(business_concept_changes, [:last_change_by, :last_change_at])
 
+    enriched_changes =
+      case Map.get(business_concept_changes, :domain_id) do
+        nil ->
+          business_concept_changes
+
+        _ ->
+          enrich_domain_changes(business_concept_changes, data)
+      end
+
     changes
     |> Map.delete(:business_concept)
-    |> Map.merge(business_concept_changes)
+    |> Map.merge(enriched_changes)
     |> payload(data)
   end
 
@@ -123,13 +153,15 @@ defmodule TdBg.Audit.AuditSupport do
     |> Map.put(:shared_to, updated)
   end
 
-  defp payload(%{domain_id: domain_id} = changes, data) do
+  defp payload(%{domain_id: _domain_id} = changes, data), do: enrich_domain_changes(changes, data)
+
+  defp payload(changes, _data), do: changes
+
+  defp enrich_domain_changes(%{domain_id: domain_id} = changes, data) do
     changes
     |> Map.put(:domain_new, get_domain(domain_id))
     |> Map.put(:domain_old, get_domain(data))
   end
-
-  defp payload(changes, _data), do: changes
 
   defp get_domain(%{business_concept: %{domain: %{id: domain_id}}}) do
     get_domain(domain_id)
