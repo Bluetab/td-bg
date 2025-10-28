@@ -713,6 +713,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp render_concept(conn, business_concept_version) do
     claims = conn.assigns[:current_resource]
     locale = conn.assigns[:locale]
+
     template = BusinessConcepts.get_template(business_concept_version)
 
     business_concept_version =

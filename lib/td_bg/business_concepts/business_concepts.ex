@@ -784,8 +784,10 @@ defmodule TdBg.BusinessConcepts do
 
     Enum.reject(content_errors, fn
       {_field, {_message, detail}} when is_list(detail) ->
-        detail[:validation] == :required or
-          Keyword.equal?(detail,
+        detail_base = Keyword.take(detail, [:validation, :kind, :type, :count])
+
+        detail_base[:validation] == :required or
+          Keyword.equal?(detail_base,
             validation: :length,
             kind: :min,
             type: :list,
