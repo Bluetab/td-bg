@@ -19,6 +19,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     alias TdCache.I18nCache
     alias TdCache.TemplateCache
     alias TdCache.UserCache
+    alias TdDfLib.Content
     alias TdDfLib.Format
     alias TdDfLib.I18n
 
@@ -61,7 +62,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
         |> Map.get(:content)
         |> Format.search_values(template, domain_id: domain.id)
         |> put_i18n_content(i18n_contents, template)
-        |> Enum.into(%{}, fn {field, %{"value" => value}} -> {field, value} end)
+        |> Content.to_legacy()
 
       {last_change_at, last_change_by} = BusinessConcepts.get_last_change(bcv)
 
