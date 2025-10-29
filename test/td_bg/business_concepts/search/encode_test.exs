@@ -139,6 +139,25 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
           "values" => %{"hierarchy" => %{"id" => 4, "min_depth" => "2"}},
           "widget" => "dropdown",
           "cardinality" => "?"
+        },
+        %{
+          "name" => "table",
+          "cardinality" => "*",
+          "type" => "dynamic_table",
+          "widget" => "dynamic_table",
+          "values" => %{
+            "table_columns" => [
+              %{"name" => "col1", "type" => "string", "cardinality" => "1"},
+              %{"name" => "col2", "type" => "string", "cardinality" => "+"},
+              %{
+                "cardinality" => "*",
+                "name" => "col3",
+                "type" => "user_group",
+                "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+                "widget" => "dropdown"
+              }
+            ]
+          }
         }
       ]
     }
@@ -251,7 +270,17 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
         },
         "basic_list" => %{"value" => "1", "origin" => "user"},
         "Identificador" => %{"value" => "foo", "origin" => "user"},
-        "text_area" => %{"value" => "default_foo", "origin" => "user"}
+        "text_area" => %{"value" => "default_foo", "origin" => "user"},
+        "table" => %{
+          "value" => [
+            %{
+              "col1" => %{"value" => "value1", "origin" => "user"},
+              "col2" => %{"value" => ["value2"], "origin" => "user"},
+              "col3" => %{"value" => ["John Doe"], "origin" => "user"}
+            }
+          ],
+          "origin" => "user"
+        }
       }
 
       %{id: bcv_id} =
@@ -297,7 +326,8 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
                "user1" => "",
                "empty test" => "",
                "enriched_text" => "",
-               "enriched_text_es" => ""
+               "enriched_text_es" => "",
+               "table" => [%{"col1" => "value1", "col2" => ["value2"], "col3" => ["John Doe"]}]
              } == content
     end
 

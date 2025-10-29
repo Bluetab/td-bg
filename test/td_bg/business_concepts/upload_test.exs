@@ -1,4 +1,5 @@
 defmodule TdBg.UploadTest do
+  alias TdCache.TemplateCache
   use TdBg.DataCase
 
   import Mox
@@ -318,8 +319,43 @@ defmodule TdBg.UploadTest do
             "widget" => "table",
             "values" => %{
               "table_columns" => [
-                %{"mandatory" => true, "name" => "First Column"},
-                %{"mandatory" => true, "name" => "Second Column"}
+                %{"name" => "First Column", "mandatory" => true},
+                %{"name" => "Second Column", "mandatory" => true}
+              ]
+            }
+          },
+          %{
+            "name" => "Multiple values",
+            "type" => "string",
+            "label" => "Multiple values",
+            "values" => %{"fixed" => ["v-1", "v-2", "v-3"]},
+            "widget" => "checkbox",
+            "cardinality" => "*"
+          }
+        ]
+      }
+    ],
+    scope: "test",
+    label: "table_template",
+    id: "6"
+  }
+
+  @dynamic_concept_table_validation %{
+    name: "Table Template",
+    content: [
+      %{
+        "name" => "group",
+        "fields" => [
+          %{
+            "name" => "Table Field",
+            "label" => "Table Field",
+            "type" => "dynamic_table",
+            "cardinality" => "*",
+            "widget" => "dynamic_table",
+            "values" => %{
+              "table_columns" => [
+                %{"name" => "First Column", "cardinality" => "1", "type" => "string"},
+                %{"name" => "Second Column", "cardinality" => "1", "type" => "string"}
               ]
             }
           },
@@ -360,7 +396,8 @@ defmodule TdBg.UploadTest do
     %{id: multiple_cardinality_template_id} =
       Templates.create_template(@concept_multiple_cardinality_validation)
 
-    %{id: table_template_id} = Templates.create_template(@concept_table_validation)
+    %{id: table_template_id} =
+      table_template = Templates.create_template(@concept_table_validation)
 
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
@@ -388,7 +425,8 @@ defmodule TdBg.UploadTest do
       i18n_template: i18n_template,
       concept_template: concept_template,
       user_group_template: user_group_template,
-      hierarchy: hierarchy
+      hierarchy: hierarchy,
+      table_template: table_template
     ]
   end
 
@@ -1660,6 +1698,42 @@ defmodule TdBg.UploadTest do
              }
     end
 
+    test "bulk_upload/3 upload dynamic table type values", %{table_template: table_template} do
+      TemplateCache.delete(table_template.id)
+      %{id: id} = Templates.create_template(@dynamic_concept_table_validation)
+      on_exit(fn -> TemplateCache.delete(id) end)
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      business_concept_upload = %{
+        path: "test/fixtures/upload_table.xlsx"
+      }
+
+      assert %{created: [version_id], errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      assert Repo.get!(BusinessConceptVersion, version_id).content == %{
+               "Multiple values" => %{"origin" => "file", "value" => ["v-1", "v-2"]},
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{
+                     "First Column" => %{"value" => "First Field", "origin" => "file"},
+                     "Second Column" => %{"value" => "Second Field", "origin" => "file"}
+                   },
+                   %{
+                     "First Column" => %{"value" => "Third Field", "origin" => "file"},
+                     "Second Column" => %{"value" => "Fourth Field", "origin" => "file"}
+                   }
+                 ]
+               }
+             }
+    end
+
     test "bulk_upload/3 invalid table values upload" do
       claims = build(:claims, role: "admin")
       insert(:domain, external_id: "Tests ext id")
@@ -1716,6 +1790,74 @@ defmodule TdBg.UploadTest do
       assert business_concept_version.in_progress
     end
 
+    test "bulk_upload/3 invalid dynamic table values upload", %{table_template: table_template} do
+      TemplateCache.delete(table_template.id)
+      %{id: id} = Templates.create_template(@dynamic_concept_table_validation)
+      on_exit(fn -> TemplateCache.delete(id) end)
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      business_concept_upload = %{
+        path: "test/fixtures/invalid_table_upload.xlsx"
+      }
+
+      # on auto publish required columns should be validated
+      assert %{created: [], errors: [error], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang,
+                 auto_publish: true
+               )
+
+      assert error == %{
+               body: %{
+                 context: %{
+                   error:
+                     "Table Field: First Column column in table row 0 can't be blank - Table Field: Second Column column in table row 1 can't be blank - Table Field: Second Column column in table row 2 can't be blank - Table Field: First Column column in table row 2 can't be blank",
+                   field: :content,
+                   row: 2,
+                   type: "Table Template"
+                 },
+                 message: "concepts.upload.failed.invalid_field_value"
+               },
+               error_type: "field_error"
+             }
+
+      # when auto publish is disabled, the version is saved in progress for further
+      assert %{created: [version_id], errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      business_concept_version = Repo.get!(BusinessConceptVersion, version_id)
+
+      assert business_concept_version.content == %{
+               "Multiple values" => %{"origin" => "file", "value" => ["v-1", "v-2"]},
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{
+                     "First Column" => %{"value" => "", "origin" => "file"},
+                     "Second Column" => %{"value" => "Second Field", "origin" => "file"}
+                   },
+                   %{
+                     "First Column" => %{"value" => "Third Field", "origin" => "file"},
+                     "Second Column" => %{"value" => "", "origin" => "file"}
+                   },
+                   %{
+                     "First Column" => %{"value" => "", "origin" => "file"},
+                     "Second Column" => %{"value" => "", "origin" => "file"}
+                   }
+                 ]
+               }
+             }
+
+      assert business_concept_version.in_progress
+    end
+
     test "bulk_upload/3 for table values upload" do
       claims = build(:claims, role: "admin")
       insert(:domain, external_id: "Tests ext id")
@@ -1757,6 +1899,114 @@ defmodule TdBg.UploadTest do
                  |> Map.get("Table Field")
                  |> Map.get("value")
       end)
+    end
+
+    test "bulk_upload/3 for dynamic table values upload", %{table_template: table_template} do
+      TemplateCache.delete(table_template.id)
+      %{id: id} = Templates.create_template(@dynamic_concept_table_validation)
+      on_exit(fn -> TemplateCache.delete(id) end)
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      business_concept_upload = %{
+        path: "test/fixtures/table_field_upload.xlsx"
+      }
+
+      assert %{created: version_ids, errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      expected_results = [
+        [],
+        [],
+        [],
+        [
+          %{
+            "First Column" => %{"value" => "Value A1", "origin" => "file"},
+            "Second Column" => %{"value" => "Value B1", "origin" => "file"}
+          }
+        ],
+        [
+          %{
+            "First Column" => %{"value" => "Value A1", "origin" => "file"},
+            "Second Column" => %{"value" => "Value B1", "origin" => "file"}
+          }
+        ],
+        [
+          %{
+            "First Column" => %{"value" => "Value A1", "origin" => "file"},
+            "Second Column" => %{"value" => "Value B1", "origin" => "file"}
+          },
+          %{
+            "First Column" => %{"value" => "Value A2", "origin" => "file"},
+            "Second Column" => %{"value" => "Value B2", "origin" => "file"}
+          }
+        ],
+        [
+          %{
+            "First Column" => %{"value" => "Value A1", "origin" => "file"},
+            "Second Column" => %{"value" => "Value B1", "origin" => "file"}
+          },
+          %{
+            "First Column" => %{"value" => "Value A2", "origin" => "file"},
+            "Second Column" => %{"value" => "Value B2", "origin" => "file"}
+          }
+        ]
+      ]
+
+      [version_ids, expected_results]
+      |> Enum.zip()
+      |> Enum.map(fn {version_id, expected_result} ->
+        assert expected_result ==
+                 BusinessConceptVersion
+                 |> Repo.get!(version_id)
+                 |> Map.get(:content)
+                 |> Map.get("Table Field")
+                 |> Map.get("value")
+      end)
+    end
+
+    test "bulk_upload/3 for dynamic table values with multiple cardinality upload", %{
+      table_template: table_template
+    } do
+      TemplateCache.delete(table_template.id)
+
+      template =
+        update_in(
+          @dynamic_concept_table_validation,
+          [:content, Access.at(0), "fields", Access.at(0), "values", "table_columns"],
+          fn fields ->
+            fields ++ [%{"name" => "Third Column", "cardinality" => "*", "type" => "string"}]
+          end
+        )
+
+      %{id: id} = Templates.create_template(template)
+      on_exit(fn -> TemplateCache.delete(id) end)
+
+      business_concept_upload = %{
+        path: "test/fixtures/table_field_upload_multiple.xlsx"
+      }
+
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "Tests ext id")
+
+      assert %{created: version_ids, errors: [], updated: []} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      for id <- version_ids do
+        BusinessConceptVersion
+        |> Repo.get!(id)
+        |> Map.get(:content)
+        |> Map.get("Table Field")
+        |> Map.get("value")
+      end
     end
   end
 
@@ -1837,5 +2087,175 @@ defmodule TdBg.UploadTest do
     CacheHelpers.put_i18n_messages("en", [
       %{message_id: "foo", definition: "bar"}
     ])
+  end
+
+  describe "audit: file upload with auto_publish events" do
+    setup [:set_mox_from_context]
+
+    test "file upload with auto_publish creates update and publish events with event_via='file'" do
+      TdCache.Redix.del!(TdCache.Audit.stream())
+      IndexWorkerMock.clear()
+
+      claims = build(:claims, role: "admin")
+
+      %{id: template_id} =
+        Templates.create_template(%{
+          id: 0,
+          name: "term",
+          label: "term",
+          scope: "test",
+          content: [
+            %{
+              "name" => "group",
+              "fields" => [
+                %{
+                  "cardinality" => "1",
+                  "default" => %{"value" => "", "origin" => "default"},
+                  "label" => "critical term",
+                  "name" => "critical",
+                  "type" => "string",
+                  "values" => %{"fixed" => ["Yes", "No"]}
+                },
+                %{
+                  "cardinality" => "+",
+                  "label" => "Role",
+                  "name" => "role",
+                  "type" => "user"
+                },
+                %{
+                  "cardinality" => "+",
+                  "label" => "Description",
+                  "name" => "description",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "default" => %{"value" => "", "origin" => "default"},
+                  "label" => "Number",
+                  "name" => "input_integer",
+                  "type" => "integer",
+                  "widget" => "number",
+                  "values" => nil
+                },
+                %{
+                  "cardinality" => "?",
+                  "default" => %{"value" => "", "origin" => "default"},
+                  "label" => "Number",
+                  "name" => "input_float",
+                  "type" => "float",
+                  "widget" => "number",
+                  "values" => nil
+                },
+                %{
+                  "cardinality" => "*",
+                  "default" => %{"origin" => "default", "value" => ""},
+                  "label" => "URL",
+                  "name" => "input_url",
+                  "type" => "url",
+                  "widget" => "pair_list",
+                  "values" => nil
+                }
+              ]
+            }
+          ]
+        })
+
+      on_exit(fn -> Templates.delete(template_id) end)
+
+      CacheHelpers.put_active_locales(~w(en es))
+      on_exit(fn -> TdCache.Redix.del!("i18n:locales:*") end)
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{id: version_id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          name: "original name",
+          status: "published",
+          business_concept: concept,
+          in_progress: false,
+          version: 1,
+          content: %{
+            "critical" => %{"origin" => "user", "value" => "Yes"},
+            "description" => %{"origin" => "user", "value" => ["test"]},
+            "input_float" => %{"origin" => "user", "value" => 12.5},
+            "input_integer" => %{"origin" => "user", "value" => 12},
+            "input_url" => %{
+              "origin" => "user",
+              "value" => [
+                %{"url_name" => "com", "url_value" => "www.com.com"},
+                %{"url_name" => "", "url_value" => "www.net.net"},
+                %{"url_name" => "", "url_value" => "www.org.org"}
+              ]
+            },
+            "role" => %{"origin" => "user", "value" => ["Role"]}
+          }
+        )
+
+      insert(:i18n_content,
+        business_concept_version_id: version_id,
+        name: "nombre original",
+        content: %{"description" => %{"value" => ["versionado"], "origin" => "user"}},
+        lang: "es"
+      )
+
+      business_concept_upload = %{path: "test/fixtures/upload_version_on_content_update.xlsx"}
+
+      Process.put(:event_via, "file")
+
+      assert %{errors: [], created: [], updated: [_updated_id]} =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: "en",
+                 auto_publish: true
+               )
+
+      assert {:ok, events} =
+               TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept"} ->
+            "#{resource_id}" == "#{business_concept_id}"
+
+          _ ->
+            false
+        end)
+
+      assert length(concept_events) >= 2
+
+      assert Enum.all?(concept_events, fn %{payload: payload} ->
+               decoded = Jason.decode!(payload)
+               decoded["event_via"] == "file"
+             end)
+
+      update_event =
+        Enum.find(concept_events, fn %{event: event} ->
+          event in ["update_concept", "update_concept_draft"]
+        end)
+
+      assert update_event != nil
+
+      update_payload = Jason.decode!(update_event.payload)
+      assert update_payload["event_via"] == "file"
+      assert Map.has_key?(update_payload, "content")
+
+      content = update_payload["content"]
+      assert Map.has_key?(content, "added")
+
+      added = content["added"]
+      assert Map.has_key?(added, "description")
+
+      publish_event =
+        Enum.find(concept_events, fn %{event: event} ->
+          event == "concept_published"
+        end)
+
+      assert publish_event != nil
+
+      publish_payload = Jason.decode!(publish_event.payload)
+      assert publish_payload["event_via"] == "file"
+    end
   end
 end

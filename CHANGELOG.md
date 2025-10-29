@@ -1,10 +1,18 @@
 # Changelog
 
+## [7.12.0] 2025-10-29
+
+### Added
+
+- [TD-7340] Support for `dynamic_table` template fields
+- [TD-7298] Add event origin tracking (`event_via`) and detailed field changes to concept audit events
+
 ## [7.11.0] 2025-10-13
 
 ### Added
 
 - [TD-7446] Add content validation for list values
+- [TD-7340] Support for `dynamic_table` template fields
 
 ### Changed
 

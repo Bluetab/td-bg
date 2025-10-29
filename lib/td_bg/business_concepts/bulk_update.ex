@@ -129,10 +129,8 @@ defmodule TdBg.BusinessConcept.BulkUpdate do
   defp content_fields(content, content_schema, domain_id, lang \\ @default_lang)
 
   defp content_fields(%{} = content, content_schema, domain_id, lang) do
-    template_fields = Enum.filter(content_schema, &(Map.get(&1, "type") != "table"))
-
     fields = Map.keys(content)
-    content_schema = Enum.filter(template_fields, &(Map.get(&1, "name") in fields))
+    content_schema = Enum.filter(content_schema, &(Map.get(&1, "name") in fields))
 
     Parser.format_content(%{
       content: Enum.reduce(content, Map.new(), &non_empty/2),

@@ -114,6 +114,28 @@ defmodule TdBg.BusinessConceptsTest do
     }
   ]
 
+  @dynamic_table_content [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          name: "table_field",
+          type: "dynamic_table",
+          label: "Table Field",
+          cardinality: "*",
+          subscribable: false,
+          values: %{
+            "table_columns" => [
+              %{"name" => "First Column", "cardinality" => "1"},
+              %{"name" => "Second Column", "cardinality" => "?"},
+              %{"name" => "Third Column", "cardinality" => "1"}
+            ]
+          }
+        }
+      ]
+    }
+  ]
+
   @content_with_identifier [
     %{
       "name" => "group",
@@ -227,7 +249,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert {:ok, [%{event: event, payload: payload, id: ^event_id}]} =
                Stream.read(:redix, @stream, transform: true)
 
-      assert event == "new_concept_draft"
+      assert event == "create_concept_draft"
 
       assert %{"subscribable_fields" => %{"foo" => %{"value" => "bar", "origin" => "user"}}} =
                Jason.decode!(payload)
@@ -623,6 +645,95 @@ defmodule TdBg.BusinessConceptsTest do
                    %{"First Column" => "Foo", "Second Column" => "Bar"},
                    %{"Second Column" => "Bar"},
                    %{"First Column" => "", "Second Column" => "Bar"}
+                 ]
+               }
+             }
+    end
+
+    @tag template: @dynamic_table_content
+    test "sets concept in progress when dynamic table field has blank columns" do
+      %{user_id: user_id} = build(:claims)
+      domain = insert(:domain)
+
+      attrs = %{
+        business_concept: %{
+          type: @template_name,
+          domain_id: domain.id,
+          last_change_by: user_id,
+          last_change_at: DateTime.utc_now()
+        },
+        content: %{
+          "table_field" => %{
+            "origin" => "user",
+            "value" => [
+              %{
+                "First Column" => %{"value" => nil, "origin" => "default"},
+                "Second Column" => %{"value" => "Bar", "origin" => "default"}
+              },
+              %{
+                "First Column" => %{"value" => "Foo", "origin" => "default"},
+                "Second Column" => %{"value" => "Bar", "origin" => "default"}
+              },
+              %{"Second Column" => %{"value" => "Bar", "origin" => "default"}},
+              %{
+                "First Column" => %{"value" => "", "origin" => "default"},
+                "Second Column" => %{"value" => "Bar", "origin" => "default"}
+              }
+            ]
+          }
+        },
+        name: "some name",
+        content_schema: [],
+        last_change_by: user_id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      # when in_progress: false => content is validated
+      assert {:error, :business_concept_version, changeset, %{}} =
+               BusinessConcepts.create_business_concept(attrs, in_progress: false)
+
+      assert {_message, content_errors} = changeset.errors[:content]
+
+      assert Enum.count(content_errors) == 7
+
+      for {:table_field, error} <- content_errors do
+        {message, validation} = error
+
+        assert message ==
+                 "#{validation[:column]} column in table row #{validation[:row]} can't be blank"
+
+        assert validation[:validation] == :required
+
+        case validation[:column] do
+          :"First Column" -> assert validation[:row] in [0, 2, 3]
+          :"Third Column" -> assert validation[:row] in [0, 1, 2, 3]
+        end
+      end
+
+      # set in progress as default behavior
+      assert {:ok, %{audit: _audit, business_concept_version: version}} =
+               BusinessConcepts.create_business_concept(attrs)
+
+      assert version.in_progress
+
+      assert version.content == %{
+               "table_field" => %{
+                 "origin" => "user",
+                 "value" => [
+                   %{
+                     "First Column" => %{"value" => nil, "origin" => "default"},
+                     "Second Column" => %{"value" => "Bar", "origin" => "default"}
+                   },
+                   %{
+                     "First Column" => %{"value" => "Foo", "origin" => "default"},
+                     "Second Column" => %{"value" => "Bar", "origin" => "default"}
+                   },
+                   %{"Second Column" => %{"value" => "Bar", "origin" => "default"}},
+                   %{
+                     "First Column" => %{"value" => "", "origin" => "default"},
+                     "Second Column" => %{"value" => "Bar", "origin" => "default"}
+                   }
                  ]
                }
              }

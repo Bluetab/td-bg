@@ -125,6 +125,7 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
          opts
        ) do
     auto_publish = Keyword.get(opts, :auto_publish, false)
+    event_via = Keyword.get(opts, :event_via, "file")
 
     file = create_tmp_file(business_concepts_upload, file_hash)
 
@@ -132,6 +133,8 @@ defmodule TdBg.BusinessConcepts.BulkUploader do
       Task.Supervisor.async_nolink(
         TdBg.TaskSupervisor,
         fn ->
+          Process.put(:event_via, event_via)
+
           with %{created: _, updated: _, error: _} = result <-
                  Upload.bulk_upload(file, claims, opts) do
             result

@@ -239,7 +239,10 @@ defmodule TdBg.BusinessConcepts do
     Updates business_concept attributes
   """
 
-  def update_business_concept(%BusinessConceptVersion{} = business_concept_version, params) do
+  def update_business_concept(
+        %BusinessConceptVersion{} = business_concept_version,
+        params
+      ) do
     result =
       params
       |> attrs_keys_to_atoms()
@@ -288,7 +291,7 @@ defmodule TdBg.BusinessConcepts do
       |> raise_error_if_no_content_schema()
       |> add_content_if_not_exist()
       |> update_concept_validations(business_concept_version)
-      |> update_concept()
+      |> update_concept(:business_concept_version_updated)
 
     case result do
       {:ok, _} ->
@@ -315,7 +318,7 @@ defmodule TdBg.BusinessConcepts do
       |> update_content_schema(params, business_concept_version)
       |> bulk_validate_concept(business_concept_version)
       |> validate_concept_content(Map.get(business_concept_version, :status) != "published")
-      |> update_concept()
+      |> update_concept(:business_concept_version_updated)
 
     case result do
       {:ok, _} ->
@@ -784,8 +787,10 @@ defmodule TdBg.BusinessConcepts do
 
     Enum.reject(content_errors, fn
       {_field, {_message, detail}} when is_list(detail) ->
-        detail[:validation] == :required or
-          Keyword.equal?(detail,
+        detail_base = Keyword.take(detail, [:validation, :kind, :type, :count])
+
+        detail_base[:validation] == :required or
+          Keyword.equal?(detail_base,
             validation: :length,
             kind: :min,
             type: :list,
@@ -837,7 +842,7 @@ defmodule TdBg.BusinessConcepts do
     Multi.new()
     |> Multi.insert(:current, Changeset.change(changeset, current: false))
     |> i18_action_on_version_concept(params, opts)
-    |> Multi.run(:audit, Audit, :business_concept_versioned, [])
+    |> Multi.run(:audit, Audit, :business_concept_versioned, [%{changeset: changeset}])
     |> Repo.transaction()
   end
 
@@ -867,7 +872,13 @@ defmodule TdBg.BusinessConcepts do
     |> Multi.update_all(:versioned, query, set: [status: "versioned", current: false])
     |> multi_upsert.(:published, Changeset.change(changeset, current: true))
     |> maybe_upsert_i18n_content(params)
-    |> Multi.run(:audit_published, Audit, :business_concept_published, [])
+    |> then(fn multi ->
+      if Process.get(:event_via) == "file" do
+        Multi.run(multi, :audit_published, Audit, :business_concept_published, [changeset])
+      else
+        Multi.run(multi, :audit_published, Audit, :business_concept_published, [])
+      end
+    end)
     |> Repo.transaction()
   end
 

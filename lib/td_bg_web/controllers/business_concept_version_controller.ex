@@ -87,7 +87,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
                business_concepts_upload,
                claims,
                auto_publish: auto_publish,
-               lang: lang
+               lang: lang,
+               event_via: "file"
              ) do
           {:started, ^file_hash, task_reference} ->
             {
@@ -114,7 +115,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def create(conn, %{"business_concept_version" => business_concept_params}) do
     %{user_id: user_id} = claims = conn.assigns[:current_resource]
-
+    Process.put(:event_via, "single_update")
     # validate fields that if not present are throwing internal server errors in bc creation
     validate_required_bc_fields(business_concept_params)
 
@@ -277,6 +278,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
+    Process.put(:event_via, "single_update")
+
     with {:can, true} <- {:can, can?(claims, delete(business_concept_version))},
          {:ok, %BusinessConceptVersion{}} <-
            BusinessConcepts.delete_business_concept_version(business_concept_version, claims) do
@@ -287,6 +290,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def send_for_approval(conn, %{"business_concept_version_id" => id}) do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+
+    Process.put(:event_via, "single_update")
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"draft", true} ->
@@ -304,6 +309,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
+    Process.put(:event_via, "single_update")
+
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"deprecated", true} ->
         do_publish(conn, claims, business_concept_version)
@@ -318,6 +325,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def publish(conn, %{"business_concept_version_id" => id}) do
     claims = conn.assigns[:current_resource]
+
+    Process.put(:event_via, "single_update")
+
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
@@ -337,6 +347,9 @@ defmodule TdBgWeb.BusinessConceptVersionController do
 
   def reject(conn, %{"business_concept_version_id" => id} = params) do
     claims = conn.assigns[:current_resource]
+
+    Process.put(:event_via, "single_update")
+
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
@@ -355,6 +368,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
+    Process.put(:event_via, "single_update")
+
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"rejected", true} ->
         undo_rejection(conn, claims, business_concept_version)
@@ -371,6 +386,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
+    Process.put(:event_via, "single_update")
+
     case {business_concept_version.status, BusinessConcepts.last?(business_concept_version)} do
       {"published", true} ->
         do_version(conn, claims, business_concept_version)
@@ -386,6 +403,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   def deprecate(conn, %{"business_concept_version_id" => id}) do
     claims = conn.assigns[:current_resource]
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
+
+    Process.put(:event_via, "single_update")
 
     case {business_concept_version.status, business_concept_version.current} do
       {"published", true} ->
@@ -501,6 +520,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       ) do
     %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
+    Process.put(:event_via, "single_update")
+
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     domain_group_id =
@@ -555,6 +576,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       ) do
     %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
+    Process.put(:event_via, "single_update")
+
     business_concept_version = BusinessConcepts.get_business_concept_version!(id)
 
     domain_before =
@@ -590,6 +613,8 @@ defmodule TdBgWeb.BusinessConceptVersionController do
         "confidential" => confidential
       }) do
     %{user_id: user_id} = claims = conn.assigns[:current_resource]
+
+    Process.put(:event_via, "single_update")
 
     %{business_concept: business_concept} =
       business_concept_version = BusinessConcepts.get_business_concept_version!(id)
@@ -629,9 +654,16 @@ defmodule TdBgWeb.BusinessConceptVersionController do
       }) do
     claims = conn.assigns[:current_resource]
 
+    Process.put(:event_via, "bulk_update")
+
     with {:can, true} <- {:can, can?(claims, bulk_update(BusinessConcept))},
          %{results: results} <- Search.search_all(claims, search_params),
-         {:ok, response} <- BulkUpdate.update_all(claims, results, update_attributes) do
+         {:ok, response} <-
+           BulkUpdate.update_all(
+             claims,
+             results,
+             update_attributes
+           ) do
       body = Jason.encode!(%{data: %{message: response}})
 
       conn
@@ -713,6 +745,7 @@ defmodule TdBgWeb.BusinessConceptVersionController do
   defp render_concept(conn, business_concept_version) do
     claims = conn.assigns[:current_resource]
     locale = conn.assigns[:locale]
+
     template = BusinessConcepts.get_template(business_concept_version)
 
     business_concept_version =
