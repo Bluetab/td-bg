@@ -41,4 +41,45 @@ defmodule TdBg.Taxonomies.TreeTest do
       assert ids ||| [parent_id | child_ids]
     end
   end
+
+  describe "ancestor_ids/2" do
+    test "returns a list of ancestor ids from a given graph" do
+      d1 = insert(:domain)
+      d2 = insert(:domain, parent_id: d1.id)
+      d3 = insert(:domain, parent_id: d2.id)
+
+      graph = Tree.graph()
+      ids = Tree.ancestor_ids(graph, d3.id)
+      assert ids == [d3.id, d2.id, d1.id]
+    end
+
+    test "returns empty list when domain has no ancestors" do
+      d1 = insert(:domain)
+
+      graph = Tree.graph()
+      ids = Tree.ancestor_ids(graph, d1.id)
+      assert length(ids) == 1
+      assert List.first(ids) == d1.id
+    end
+  end
+
+  describe "descendent_ids/2" do
+    test "returns a list of descendent ids from a given graph", %{
+      parent: %{id: parent_id},
+      children: children
+    } do
+      graph = Tree.graph()
+      child_ids = Enum.map(children, & &1.id)
+      ids = Tree.descendent_ids(graph, parent_id)
+      assert ids ||| [parent_id | child_ids]
+    end
+
+    test "returns single id when domain has no descendents" do
+      child = insert(:domain)
+
+      graph = Tree.graph()
+      ids = Tree.descendent_ids(graph, child.id)
+      assert ids == [child.id]
+    end
+  end
 end
