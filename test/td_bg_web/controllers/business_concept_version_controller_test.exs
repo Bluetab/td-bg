@@ -1002,6 +1002,105 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert Map.get(actions, "create_link_implementation") == %{"method" => "POST"}
     end
 
+    @tag authentication: [user_name: "not_an_admin"]
+    test "includes manage_quality_rule action if non-admin user has permission", %{
+      conn: conn,
+      claims: claims
+    } do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :view_draft_business_concepts,
+        :manage_quality_rule
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: domain_id)
+        )
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      assert Map.get(actions, "manage_quality_rule") == %{"method" => "POST"}
+    end
+
+    @tag authentication: [user_name: "not_an_admin"]
+    test "includes view_quality_rule action if non-admin user has permission", %{
+      conn: conn,
+      claims: claims
+    } do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :view_draft_business_concepts,
+        :view_quality_rule
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: domain_id)
+        )
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      assert Map.get(actions, "view_quality_rule") == %{"method" => "GET"}
+    end
+
+    @tag authentication: [user_name: "not_an_admin"]
+    test "includes both manage_quality_rule and view_quality_rule actions if user has both permissions",
+         %{conn: conn, claims: claims} do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      put_session_permissions(claims, domain_id, [
+        :view_draft_business_concepts,
+        :manage_quality_rule,
+        :view_quality_rule
+      ])
+
+      %{id: id, business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          business_concept: build(:business_concept, domain_id: domain_id)
+        )
+
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.business_concept_business_concept_version_path(
+                   conn,
+                   :show,
+                   business_concept_id,
+                   id
+                 )
+               )
+               |> json_response(:ok)
+
+      assert %{"actions" => actions} = data
+      assert Map.get(actions, "manage_quality_rule") == %{"method" => "POST"}
+      assert Map.get(actions, "view_quality_rule") == %{"method" => "GET"}
+    end
+
     @tag authentication: [
            user_name: "not_an_admin",
            permissions: [:update_business_concept, :view_draft_business_concepts]
