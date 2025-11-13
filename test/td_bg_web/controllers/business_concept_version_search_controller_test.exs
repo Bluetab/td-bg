@@ -268,6 +268,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
     @tag authentication: [user_name: "not_an_admin"]
     test "user search for exact query", %{conn: conn} do
       CacheHelpers.put_i18n_message("es", %{message_id: "foo", definition: "definition"})
+      CacheHelpers.put_default_locale("en")
+      CacheHelpers.put_active_locales(~w(en es))
       CacheHelpers.put_default_permissions(["view_published_business_concepts"])
 
       template = %{

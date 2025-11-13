@@ -171,6 +171,8 @@ defmodule TdBg.BusinessConcepts.Search.EncodeTest do
   }
 
   setup do
+    CacheHelpers.put_default_locale("en")
+
     CacheHelpers.insert_template(@df_template)
 
     stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
