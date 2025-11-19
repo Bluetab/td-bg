@@ -246,6 +246,21 @@ defmodule TdBgWeb.BusinessConceptVersionController do
     %{share: can_share_concepts(claims, concept)}
     |> maybe_add_implementation_actions(claims, concept)
     |> maybe_add_grant_requests_actions(claims)
+    |> maybe_add_rule_actions(claims, concept)
+  end
+
+  defp maybe_add_rule_actions(actions, claims, concept) do
+    rule_actions =
+      [
+        {:manage_quality_rule, %{method: "POST"}},
+        {:view_quality_rule, %{method: "GET"}}
+      ]
+      |> Enum.filter(fn {permission, _} -> can?(claims, permission, concept.domain) end)
+      |> Enum.reduce(%{}, fn {permission, method}, acc ->
+        Map.put(acc, permission, method)
+      end)
+
+    Map.merge(actions, rule_actions)
   end
 
   defp maybe_add_implementation_actions(actions, claims, concept) do

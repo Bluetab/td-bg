@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.13.0] 2025-11-18
+
+### Added
+
+- [TD-7607] Add manage_quality_rule and view_quality_rule permissions to concept retrieve
+- [TD-7627] Update and refactor test
+
 ## [7.12.0] 2025-10-29
 
 ### Added
