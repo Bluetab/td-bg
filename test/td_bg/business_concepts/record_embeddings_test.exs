@@ -11,9 +11,14 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
   alias TdCluster.TestHelpers.TdAiMock.Indices
   alias TdCore.Search.IndexWorkerMock
 
+  @index_type "suggestions"
+
   describe "upsert_from_concepts_async/1" do
     test "inserts batches of structure ids with embeddings to upsert" do
-      stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      stub(MockClusterHandler, :call, fn :ai,
+                                         TdAi.Indices,
+                                         :exists_enabled?,
+                                         [[index_type: @index_type]] ->
         {:ok, true}
       end)
 
@@ -41,7 +46,10 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
     end
 
     test "schedules the job for future execution if a time is specified" do
-      stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      stub(MockClusterHandler, :call, fn :ai,
+                                         TdAi.Indices,
+                                         :exists_enabled?,
+                                         [[index_type: @index_type]] ->
         {:ok, true}
       end)
 
@@ -62,7 +70,10 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
     end
 
     test "returns noop when there are not indices enabled" do
-      stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+      stub(MockClusterHandler, :call, fn :ai,
+                                         TdAi.Indices,
+                                         :exists_enabled?,
+                                         [[index_type: @index_type]] ->
         {:ok, false}
       end)
 
@@ -83,13 +94,14 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
       ids = Enum.map(versions, & &1.business_concept_id)
       vectors = Enum.map(1..5, fn _ -> [54.0, 10.2, -2.0] end)
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       Embeddings.list(
         &Mox.expect/4,
         Enum.map(versions, fn %{name: name, business_concept: %{type: type, domain: domain}} ->
           "#{name} #{type} #{domain.external_id}"
         end),
+        @index_type,
         {:ok, %{"default" => vectors, "other" => vectors}}
       )
 
@@ -121,13 +133,14 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
       %{business_concept_version: business_concept_version} =
         insert(:record_embedding, embedding: [-1, 1], dims: 2, collection: "default")
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       Embeddings.list(
         &Mox.expect/4,
         [
           "#{business_concept_version.name} #{business_concept_version.business_concept.type} #{business_concept_version.business_concept.domain.external_id}"
         ],
+        @index_type,
         {:ok, %{"default" => [[-2.0, 2.0, 3.0]]}}
       )
 
@@ -148,12 +161,12 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
     end
 
     test "returns 0 upserted records if concepts are not found" do
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
       assert {0, nil} = RecordEmbeddings.upsert_from_concepts([1])
     end
 
     test "returns noop when there aren't any indices enabled" do
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, false})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, false})
 
       assert :noop == RecordEmbeddings.upsert_from_concepts([1])
     end
@@ -167,7 +180,7 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
         {:ok, [%{collection_name: "default"}, %{collection_name: "other"}]}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       bcv_without_embedding = insert(:business_concept_version)
       %{business_concept_version: updated_bcv} = insert(:record_embedding, collection: "default")

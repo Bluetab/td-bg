@@ -162,7 +162,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   setup _context do
-    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] -> {:ok, true} end)
+    stub(MockClusterHandler, :call, fn :ai,
+                                       TdAi.Indices,
+                                       :exists_enabled?,
+                                       [[index_type: "suggestions"]] ->
+      {:ok, true}
+    end)
 
     on_exit(fn ->
       IndexWorkerMock.clear()

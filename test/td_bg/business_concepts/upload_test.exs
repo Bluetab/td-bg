@@ -403,7 +403,10 @@ defmodule TdBg.UploadTest do
     HierarchyCache.put(hierarchy)
     I18nCache.put_default_locale(@default_lang)
 
-    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+    stub(MockClusterHandler, :call, fn :ai,
+                                       TdAi.Indices,
+                                       :exists_enabled?,
+                                       [[index_type: "suggestions"]] ->
       {:ok, true}
     end)
 

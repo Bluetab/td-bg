@@ -22,7 +22,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   @stream TdCache.Audit.stream()
   @template_name "TestTemplate1234"
-
+  @index_type "suggestions"
   @content [
     %{
       "name" => "group",
@@ -173,7 +173,10 @@ defmodule TdBg.BusinessConceptsTest do
       IndexWorkerMock.clear()
     end)
 
-    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+    stub(MockClusterHandler, :call, fn :ai,
+                                       TdAi.Indices,
+                                       :exists_enabled?,
+                                       [[index_type: @index_type]] ->
       {:ok, true}
     end)
 
@@ -1868,13 +1871,14 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id}",
+        @index_type,
         nil,
         {:ok, {"default", [54.0, 10.2, -2.0]}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
-      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
+      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv, @index_type)
       assert [job] = all_enqueued(worker: EmbeddingsUpsertBatch)
       assert job.args["ids"] == [business_concept.id]
     end
@@ -1938,13 +1942,14 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id} #{content_description} #{link_name} #{link_type} #{link_description}",
+        @index_type,
         nil,
         {:ok, {"default", [54.0, 10.2, -2.0]}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
-      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
+      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv, @index_type)
     end
 
     test "generates vector for business concept version and collection" do
@@ -1954,14 +1959,15 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id}",
+        @index_type,
         collection_name,
         {:ok, {collection_name, [54.0, 10.2, -2.0]}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       assert {collection_name, [54.0, 10.2, -2.0]} ==
-               BusinessConcepts.generate_vector(bcv, collection_name)
+               BusinessConcepts.generate_vector(bcv, @index_type, collection_name)
     end
 
     test "uses existing business concept version embeddings" do
@@ -1969,10 +1975,18 @@ defmodule TdBg.BusinessConceptsTest do
         insert(:record_embedding)
 
       insert(:record_embedding, collection: "other", business_concept_version: bcv)
-      Indices.first_enabled(&Mox.expect/4, {:ok, %{collection_name: collection}})
+
+      Indices.first_enabled(
+        &Mox.expect/4,
+        [index_type: @index_type],
+        {:ok, %{collection_name: collection}}
+      )
 
       assert {collection, embedding} ==
-               BusinessConcepts.generate_vector(%{id: bcv.business_concept_id, version: bcv.id})
+               BusinessConcepts.generate_vector(
+                 %{id: bcv.business_concept_id, version: bcv.id},
+                 @index_type
+               )
     end
 
     test "triggers an upsert when the version doesn't have a record embedding for the collection" do
@@ -1983,15 +1997,17 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{bcv.business_concept.type} #{bcv.business_concept.domain.external_id}",
+        @index_type,
         collection,
         {:ok, {collection, embedding}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       assert {collection, embedding} ==
                BusinessConcepts.generate_vector(
                  %{id: bcv.business_concept_id, version: bcv.id},
+                 @index_type,
                  collection
                )
 

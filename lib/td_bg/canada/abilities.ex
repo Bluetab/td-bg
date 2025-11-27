@@ -14,9 +14,10 @@ defmodule TdBg.Canada.Abilities do
 
   defimpl Canada.Can, for: Claims do
     @embedding_actions ~w(put_embeddings suggest_concepts)a
+    @index_type "suggestions"
 
     def can?(%Claims{role: "admin"}, action, BusinessConcept) when action in @embedding_actions do
-      case Indices.exists_enabled?() do
+      case Indices.exists_enabled?(index_type: @index_type) do
         {:ok, enabled?} -> enabled?
         _ -> false
       end
@@ -29,7 +30,7 @@ defmodule TdBg.Canada.Abilities do
     def can?(%Claims{role: "admin"}, :manage_grant_requests, %{}), do: true
 
     def can?(%Claims{}, :suggest_concepts, BusinessConcept) do
-      case Indices.exists_enabled?() do
+      case Indices.exists_enabled?(index_type: @index_type) do
         {:ok, enabled?} ->
           enabled?
 

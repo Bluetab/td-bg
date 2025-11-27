@@ -4,13 +4,21 @@ defmodule TdBg.BusinessConcepts.Search.SuggestionsTest do
   alias TdBg.BusinessConcepts.Search.Suggestions
   alias TdCluster.TestHelpers.TdDdMock
 
+  @index_type "suggestions"
+
   describe "knn/2" do
     @tag authentication: [role: "admin"]
     test "knn search with default params", %{claims: claims} do
       id = 1
       resource = %{"type" => "structures", "id" => id}
 
-      TdDdMock.generate_vector(&Mox.expect/4, 1, nil, {:ok, {"default", [54.0, 10.2, -2.0]}})
+      TdDdMock.generate_vector(
+        &Mox.expect/4,
+        1,
+        @index_type,
+        nil,
+        {:ok, {"default", [54.0, 10.2, -2.0]}}
+      )
 
       Mox.expect(ElasticsearchMock, :request, fn _, :post, "/concepts/_search", request, _ ->
         assert request == %{
@@ -50,7 +58,13 @@ defmodule TdBg.BusinessConcepts.Search.SuggestionsTest do
       links = [%{"resource_id" => "1"}]
       resource = %{"type" => "structures", "id" => id, "links" => links}
 
-      TdDdMock.generate_vector(&Mox.expect/4, id, nil, {:ok, {"default", [54.0, 10.2, -2.0]}})
+      TdDdMock.generate_vector(
+        &Mox.expect/4,
+        id,
+        @index_type,
+        nil,
+        {:ok, {"default", [54.0, 10.2, -2.0]}}
+      )
 
       Mox.expect(ElasticsearchMock, :request, fn
         _, :post, "/concepts/_search", request, _ ->
@@ -101,7 +115,13 @@ defmodule TdBg.BusinessConcepts.Search.SuggestionsTest do
         "similarity" => 0.8
       }
 
-      TdDdMock.generate_vector(&Mox.expect/4, 1, "foo", {:ok, {"foo", [54.0, 10.2, -2.0]}})
+      TdDdMock.generate_vector(
+        &Mox.expect/4,
+        1,
+        "suggestions",
+        "foo",
+        {:ok, {"foo", [54.0, 10.2, -2.0]}}
+      )
 
       Mox.expect(ElasticsearchMock, :request, fn
         _, :post, "/concepts/_search", request, _ ->

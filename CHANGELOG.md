@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-7302] Update td-core lib
+
 ## [7.13.0] 2025-11-18
 
 ### Added

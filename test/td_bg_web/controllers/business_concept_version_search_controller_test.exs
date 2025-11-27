@@ -165,7 +165,10 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
       TdCache.Redix.del!("i18n:locales:*")
     end)
 
-    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+    stub(MockClusterHandler, :call, fn :ai,
+                                       TdAi.Indices,
+                                       :exists_enabled?,
+                                       [[index_type: "suggestions"]] ->
       {:ok, true}
     end)
 
@@ -353,8 +356,8 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
     @tag authentication: [role: "admin"]
     test "return i18n content non-translatable fields ", %{conn: conn} do
-      Indices.list_indices(&Mox.expect/4, [enabled: true], {:ok, []})
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.list_indices(&Mox.expect/4, [index_type: "suggestions", enabled: true], {:ok, []})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: "suggestions"], {:ok, true})
 
       CacheHelpers.put_i18n_message("es", %{message_id: "foo", definition: "definition"})
       template_name = "complete_template"
