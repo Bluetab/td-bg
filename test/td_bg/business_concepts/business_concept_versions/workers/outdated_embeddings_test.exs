@@ -11,7 +11,7 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersion.Workers.OutdatedEmbedding
         insert(:record_embedding, updated_at: DateTime.add(DateTime.utc_now(), -1, :day))
 
       Indices.list_indices(&Mox.expect/4, [enabled: true], {:ok, [%{collection_name: "default"}]})
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: "suggestions"], {:ok, true})
 
       assert :ok == perform_job(OutdatedEmbeddings, %{})
       assert [%Oban.Job{args: %{"ids" => ids}}] = all_enqueued(worker: EmbeddingsUpsertBatch)

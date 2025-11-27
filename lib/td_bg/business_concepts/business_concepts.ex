@@ -30,6 +30,7 @@ defmodule TdBg.BusinessConcepts do
   alias TdDfLib.Templates
   alias ValidationError
 
+  @index_type "suggestions"
   @doc """
   check business concept name availability
   """
@@ -998,29 +999,30 @@ defmodule TdBg.BusinessConcepts do
   def embeddings(business_concept_versions) do
     business_concept_versions
     |> Enum.map(&embedding_attributes/1)
-    |> Embeddings.all()
+    |> Embeddings.all(@index_type)
   end
 
-  def generate_vector(_version_or_params, collection_name \\ nil)
+  def generate_vector(_version_or_params, index_type, collection_name \\ nil)
 
   def generate_vector(
         %BusinessConceptVersion{record_embeddings: [%RecordEmbedding{} = record]},
+        _index_type,
         _collection_name
       ) do
     {record.collection, record.embedding}
   end
 
-  def generate_vector(%BusinessConceptVersion{} = version, collection_name) do
+  def generate_vector(%BusinessConceptVersion{} = version, index_type, collection_name) do
     version
     |> embedding_attributes()
-    |> Embeddings.generate_vector(collection_name)
+    |> Embeddings.generate_vector(index_type, collection_name)
     |> tap(fn {:ok, _vector} ->
       RecordEmbeddings.upsert_from_concepts_async(version.business_concept_id)
     end)
     |> then(fn {:ok, vector} -> vector end)
   end
 
-  def generate_vector(%{id: id, version: version}, collection_name) do
+  def generate_vector(%{id: id, version: version}, index_type, collection_name) do
     collection_name = collection_name_or_default(collection_name)
 
     preload = [
@@ -1030,10 +1032,10 @@ defmodule TdBg.BusinessConcepts do
 
     id
     |> get_business_concept_version(version, preload: preload)
-    |> generate_vector(collection_name)
+    |> generate_vector(index_type, collection_name)
   end
 
-  def generate_vector(nil, _collection_name), do: nil
+  def generate_vector(nil, _index_type, _collection_name), do: nil
 
   def versions_with_outdated_embeddings(collections, opts \\ []) do
     base =
@@ -1072,7 +1074,7 @@ defmodule TdBg.BusinessConcepts do
     do: collection_name
 
   defp collection_name_or_default(nil) do
-    {:ok, %{collection_name: collection_name}} = Indices.first_enabled()
+    {:ok, %{collection_name: collection_name}} = Indices.first_enabled(index_type: "suggestions")
     collection_name
   end
 
