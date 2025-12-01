@@ -134,7 +134,17 @@ defmodule TdBg.Audit.AuditSupport do
 
   defp payload(%{content: new_content} = changes, %{content: old_content} = _data)
        when is_map(new_content) or is_map(old_content) do
-    diff = MapDiff.diff(old_content, new_content, mask: &Masks.mask/1)
+    merged_content = Map.merge(old_content, new_content)
+
+    normalized_old = TdDfLib.Content.to_legacy(old_content)
+
+    normalized_new =
+      merged_content
+      |> TdDfLib.Content.to_legacy()
+      |> Enum.reject(fn {_k, v} -> v in [nil, ""] end)
+      |> Map.new()
+
+    diff = MapDiff.diff(normalized_old, normalized_new, mask: &Masks.mask/1)
 
     changes
     |> Map.delete(:content)
