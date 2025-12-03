@@ -842,6 +842,12 @@ defmodule TdBg.BusinessConcepts do
     Multi.new()
     |> Multi.insert(:current, Changeset.change(changeset, current: false))
     |> i18_action_on_version_concept(params, opts)
+    |> Multi.run(:old_content, fn _, _ ->
+      params
+      |> Map.get(:business_concept_version, %{})
+      |> Map.get(:content, %{})
+      |> then(&{:ok, &1})
+    end)
     |> Multi.run(:audit, Audit, :business_concept_versioned, [%{changeset: changeset}])
     |> Repo.transaction()
   end

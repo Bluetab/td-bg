@@ -95,7 +95,12 @@ defmodule TdBg.BusinessConcepts.Audit do
     {:ok, :unchanged}
   end
 
-  def business_concept_version_updated(_repo, %{updated: updated}, changeset) do
+  def business_concept_version_updated(
+        _repo,
+        %{updated: updated} = payload,
+        changeset
+      ) do
+    old_content = Map.get(payload, :old_content)
     %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} = updated
     changeset = do_changeset_updated(changeset, updated)
 
@@ -109,6 +114,13 @@ defmodule TdBg.BusinessConcepts.Audit do
 
         true ->
           "update_concept_draft"
+      end
+
+    changeset =
+      if old_content do
+        Map.update!(changeset, :changes, &Map.put(&1, :original_content, old_content))
+      else
+        changeset
       end
 
     publish(event, "concept", id, user_id, changeset)
@@ -134,30 +146,42 @@ defmodule TdBg.BusinessConcepts.Audit do
     end
   end
 
-  def business_concept_versioned(repo, %{current: current}, changeset_or_map) do
+  def business_concept_versioned(repo, %{current: current} = changes, changeset_or_map) do
+    old_content =
+      changes
+      |> Map.get(:old_content, %{})
+
     changeset_or_map
     |> unwrap_changeset()
-    |> do_business_concept_versioned(repo, current)
+    |> do_business_concept_versioned(repo, current, old_content)
   end
 
-  def business_concept_versioned(repo, %{updated: updated}, changeset_or_map) do
+  def business_concept_versioned(repo, %{updated: updated} = changes, changeset_or_map) do
+    old_content =
+      changes
+      |> Map.get(:old_content, %{})
+
     changeset_or_map
     |> unwrap_changeset()
-    |> do_business_concept_versioned(repo, updated)
+    |> do_business_concept_versioned(repo, updated, old_content)
   end
 
   defp unwrap_changeset(%{changeset: changeset}), do: changeset
   defp unwrap_changeset(%Changeset{} = changeset), do: changeset
   defp unwrap_changeset(_), do: nil
 
-  defp do_business_concept_versioned(changeset, repo, version) do
+  defp do_business_concept_versioned(changeset, repo, version, old_content) do
     case version do
       %{business_concept_id: id, last_change_by: user_id} ->
         payload = status_payload(version)
         {:ok, event_id} = publish("new_concept_draft", "concept", id, user_id, payload)
 
         if Process.get(:event_via) == "file" and not is_nil(changeset) do
-          business_concept_version_updated(repo, %{updated: version}, changeset)
+          business_concept_version_updated(
+            repo,
+            %{updated: version, old_content: old_content},
+            changeset
+          )
         else
           {:ok, event_id}
         end

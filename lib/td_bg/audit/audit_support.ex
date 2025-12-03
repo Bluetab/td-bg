@@ -134,6 +134,7 @@ defmodule TdBg.Audit.AuditSupport do
 
   defp payload(%{content: new_content} = changes, %{content: old_content} = _data)
        when is_map(new_content) or is_map(old_content) do
+    old_content = old_content || Map.get(changes, :original_content, %{})
     merged_content = Map.merge(old_content, new_content)
 
     normalized_old = TdDfLib.Content.to_legacy(old_content)
