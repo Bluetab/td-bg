@@ -841,13 +841,14 @@ defmodule TdBg.BusinessConcepts do
   def version_concept(%{changeset: changeset} = params, opts \\ []) do
     Multi.new()
     |> Multi.insert(:current, Changeset.change(changeset, current: false))
-    |> i18_action_on_version_concept(params, opts)
+    # Capture old_content before versioning for accurate audit diff calculation
     |> Multi.run(:old_content, fn _, _ ->
       params
       |> Map.get(:business_concept_version, %{})
       |> Map.get(:content, %{})
       |> then(&{:ok, &1})
     end)
+    |> i18_action_on_version_concept(params, opts)
     |> Multi.run(:audit, Audit, :business_concept_versioned, [%{changeset: changeset}])
     |> Repo.transaction()
   end
