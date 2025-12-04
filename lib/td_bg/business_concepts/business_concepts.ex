@@ -843,10 +843,7 @@ defmodule TdBg.BusinessConcepts do
     |> Multi.insert(:current, Changeset.change(changeset, current: false))
     # Capture old_content before versioning for accurate audit diff calculation
     |> Multi.run(:old_content, fn _, _ ->
-      params
-      |> Map.get(:business_concept_version, %{})
-      |> Map.get(:content, %{})
-      |> then(&{:ok, &1})
+      {:ok, get_in(params, [:business_concept_version, Access.key(:content)]) || %{}}
     end)
     |> i18_action_on_version_concept(params, opts)
     |> Multi.run(:audit, Audit, :business_concept_versioned, [%{changeset: changeset}])
