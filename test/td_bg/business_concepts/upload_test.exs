@@ -375,6 +375,44 @@ defmodule TdBg.UploadTest do
     id: "6"
   }
 
+  @date_template %{
+    name: "datefields",
+    label: "datefields",
+    scope: "bg",
+    id: "7",
+    content: [
+      %{
+        "name" => "",
+        "fields" => [
+          %{
+            "label" => "date",
+            "name" => "test_date",
+            "type" => "date",
+            "widget" => "date",
+            "cardinality" => "?",
+            "values" => nil,
+            "default" => %{
+              "value" => "",
+              "origin" => "default"
+            }
+          },
+          %{
+            "label" => "datetime",
+            "name" => "test_datetime",
+            "type" => "datetime",
+            "widget" => "datetime",
+            "cardinality" => "?",
+            "values" => nil,
+            "default" => %{
+              "value" => "",
+              "origin" => "default"
+            }
+          }
+        ]
+      }
+    ]
+  }
+
   @default_lang "en"
 
   setup_all do
@@ -399,6 +437,9 @@ defmodule TdBg.UploadTest do
     %{id: table_template_id} =
       table_template = Templates.create_template(@concept_table_validation)
 
+    %{id: date_template_id} =
+      date_template = Templates.create_template(@date_template)
+
     %{id: hierarchy_id} = hierarchy = create_hierarchy()
     HierarchyCache.put(hierarchy)
     I18nCache.put_default_locale(@default_lang)
@@ -420,6 +461,7 @@ defmodule TdBg.UploadTest do
       Templates.delete(multiple_user_group_template_id)
       Templates.delete(multiple_cardinality_template_id)
       Templates.delete(table_template_id)
+      Templates.delete(date_template_id)
       HierarchyCache.delete(hierarchy_id)
     end)
 
@@ -429,7 +471,8 @@ defmodule TdBg.UploadTest do
       concept_template: concept_template,
       user_group_template: user_group_template,
       hierarchy: hierarchy,
-      table_template: table_template
+      table_template: table_template,
+      date_template: date_template
     ]
   end
 
@@ -1674,6 +1717,70 @@ defmodule TdBg.UploadTest do
                "multiple_values: should have at least %{count} item(s) - hierarchy_name: can't be blank"
     end
 
+    test "bulk_upload/3 upload date and datetime type values" do
+      claims = build(:claims, role: "admin")
+      insert(:domain, external_id: "domain")
+
+      business_concept_upload = %{
+        path: "test/fixtures/upload_date.xlsx"
+      }
+
+      assert %{
+               created: [v_1_id, v_2_id, v_3_id, v_4_id, v_5_id, v_6_id],
+               errors: errors,
+               updated: []
+             } =
+               Upload.bulk_upload(
+                 business_concept_upload,
+                 claims,
+                 lang: @default_lang
+               )
+
+      assert Repo.get!(BusinessConceptVersion, v_1_id).content == %{
+               "test_date" => %{"origin" => "file", "value" => "2025-12-31"},
+               "test_datetime" => %{"origin" => "file", "value" => "2025-12-31T22:55:30"}
+             }
+
+      assert Repo.get!(BusinessConceptVersion, v_2_id).content == %{
+               "test_date" => %{"origin" => "file", "value" => "2025-12-31"},
+               "test_datetime" => %{"origin" => "file", "value" => "2025-12-31T22:55:30"}
+             }
+
+      assert Repo.get!(BusinessConceptVersion, v_3_id).content == %{
+               "test_date" => %{"origin" => "file", "value" => "2025-12-31"},
+               "test_datetime" => %{"origin" => "file", "value" => "2025-12-31T22:55:30"}
+             }
+
+      assert Repo.get!(BusinessConceptVersion, v_4_id).content == %{
+               "test_date" => %{"origin" => "file", "value" => "2025-12-31"},
+               "test_datetime" => %{"origin" => "file", "value" => "2025-12-31T22:55:30"}
+             }
+
+      assert Repo.get!(BusinessConceptVersion, v_5_id).content == %{
+               "test_date" => %{"origin" => "file", "value" => "2025-12-31"},
+               "test_datetime" => %{"origin" => "file", "value" => "2025-12-31T22:55:30"}
+             }
+
+      assert Repo.get!(BusinessConceptVersion, v_6_id).content == %{
+               "test_date" => %{"origin" => "file", "value" => ""},
+               "test_datetime" => %{"origin" => "file", "value" => ""}
+             }
+
+      assert Enum.count(errors) == 2
+
+      assert Enum.any?(errors, fn error ->
+               error.body.context.row == 8 and
+                 error.body.context.error =~ "test_date" and
+                 error.body.context.error =~ "test_datetime"
+             end)
+
+      assert Enum.any?(errors, fn error ->
+               error.body.context.row == 9 and
+                 error.body.context.error =~ "test_date" and
+                 error.body.context.error =~ "test_datetime"
+             end)
+    end
+
     test "bulk_upload/3 upload table type values" do
       claims = build(:claims, role: "admin")
       insert(:domain, external_id: "Tests ext id")
@@ -2031,67 +2138,6 @@ defmodule TdBg.UploadTest do
     end
   end
 
-  defp create_hierarchy do
-    hierarchy_id = 1
-
-    %{
-      id: hierarchy_id,
-      name: "name_#{hierarchy_id}",
-      nodes: [
-        build(:node, %{
-          node_id: 1,
-          parent_id: nil,
-          name: "father",
-          path: "/father",
-          hierarchy_id: hierarchy_id
-        }),
-        build(:node, %{
-          node_id: 2,
-          parent_id: 1,
-          name: "children_1",
-          path: "/father/children_1",
-          hierarchy_id: hierarchy_id
-        }),
-        build(:node, %{
-          node_id: 3,
-          parent_id: 1,
-          name: "children_2",
-          path: "/father/children_2",
-          hierarchy_id: hierarchy_id
-        }),
-        build(:node, %{
-          node_id: 4,
-          parent_id: nil,
-          name: "children_2",
-          path: "/children_2",
-          hierarchy_id: hierarchy_id
-        })
-      ]
-    }
-  end
-
-  defp insert_i18n_messages(_) do
-    CacheHelpers.put_i18n_messages("es", [
-      %{message_id: "fields.i18n_test.Dropdown Fixed", definition: "Dropdown Fijo"},
-      %{message_id: "fields.i18n_test.Dropdown Fixed.pear", definition: "pera"},
-      %{message_id: "fields.i18n_test.Dropdown Fixed.banana", definition: "plátano"},
-      %{message_id: "fields.i18n_test.Dropdown Fixed.apple", definition: "manzana"},
-      %{message_id: "fields.i18n_test.Radio Fixed", definition: "Radio Fijo"},
-      %{message_id: "fields.i18n_test.Radio Fixed.pear", definition: "pera"},
-      %{message_id: "fields.i18n_test.Radio Fixed.banana", definition: "plátano"},
-      %{message_id: "fields.i18n_test.Radio Fixed.apple", definition: "manzana"},
-      %{message_id: "fields.i18n_test.Checkbox Fixed", definition: "Checkbox Fijo"},
-      %{message_id: "fields.i18n_test.Checkbox Fixed.pear", definition: "pera"},
-      %{message_id: "fields.i18n_test.Checkbox Fixed.banana", definition: "plátano"},
-      %{message_id: "fields.i18n_test.Checkbox Fixed.apple", definition: "manzana"}
-    ])
-
-    # Add fake message to set english as active language
-    CacheHelpers.put_i18n_messages("en", [
-      %{message_id: "foo", definition: "bar"}
-    ])
-  end
-
   describe "audit: file upload with auto_publish events" do
     setup [:set_mox_from_context]
 
@@ -2260,5 +2306,66 @@ defmodule TdBg.UploadTest do
       publish_payload = Jason.decode!(publish_event.payload)
       assert publish_payload["event_via"] == "file"
     end
+  end
+
+  defp create_hierarchy do
+    hierarchy_id = 1
+
+    %{
+      id: hierarchy_id,
+      name: "name_#{hierarchy_id}",
+      nodes: [
+        build(:node, %{
+          node_id: 1,
+          parent_id: nil,
+          name: "father",
+          path: "/father",
+          hierarchy_id: hierarchy_id
+        }),
+        build(:node, %{
+          node_id: 2,
+          parent_id: 1,
+          name: "children_1",
+          path: "/father/children_1",
+          hierarchy_id: hierarchy_id
+        }),
+        build(:node, %{
+          node_id: 3,
+          parent_id: 1,
+          name: "children_2",
+          path: "/father/children_2",
+          hierarchy_id: hierarchy_id
+        }),
+        build(:node, %{
+          node_id: 4,
+          parent_id: nil,
+          name: "children_2",
+          path: "/children_2",
+          hierarchy_id: hierarchy_id
+        })
+      ]
+    }
+  end
+
+  defp insert_i18n_messages(_) do
+    CacheHelpers.put_i18n_messages("es", [
+      %{message_id: "fields.i18n_test.Dropdown Fixed", definition: "Dropdown Fijo"},
+      %{message_id: "fields.i18n_test.Dropdown Fixed.pear", definition: "pera"},
+      %{message_id: "fields.i18n_test.Dropdown Fixed.banana", definition: "plátano"},
+      %{message_id: "fields.i18n_test.Dropdown Fixed.apple", definition: "manzana"},
+      %{message_id: "fields.i18n_test.Radio Fixed", definition: "Radio Fijo"},
+      %{message_id: "fields.i18n_test.Radio Fixed.pear", definition: "pera"},
+      %{message_id: "fields.i18n_test.Radio Fixed.banana", definition: "plátano"},
+      %{message_id: "fields.i18n_test.Radio Fixed.apple", definition: "manzana"},
+      %{message_id: "fields.i18n_test.Checkbox Fixed", definition: "Checkbox Fijo"},
+      %{message_id: "fields.i18n_test.Checkbox Fixed.pear", definition: "pera"},
+      %{message_id: "fields.i18n_test.Checkbox Fixed.banana", definition: "plátano"},
+      %{message_id: "fields.i18n_test.Checkbox Fixed.apple", definition: "manzana"}
+    ])
+
+    # Add fake message to set english as active language
+    CacheHelpers.put_i18n_messages("en", [
+      %{message_id: "foo", definition: "bar"}
+    ])
   end
 end
