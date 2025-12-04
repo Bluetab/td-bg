@@ -147,9 +147,7 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   def business_concept_versioned(repo, %{current: current} = changes, changeset_or_map) do
-    old_content =
-      changes
-      |> Map.get(:old_content, %{})
+    old_content = Map.get(changes, :old_content, %{})
 
     changeset_or_map
     |> unwrap_changeset()
@@ -157,9 +155,7 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   def business_concept_versioned(repo, %{updated: updated} = changes, changeset_or_map) do
-    old_content =
-      changes
-      |> Map.get(:old_content, %{})
+    old_content = Map.get(changes, :old_content, %{})
 
     changeset_or_map
     |> unwrap_changeset()

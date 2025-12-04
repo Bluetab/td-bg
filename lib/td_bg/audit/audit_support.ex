@@ -132,24 +132,22 @@ defmodule TdBg.Audit.AuditSupport do
     |> payload(data)
   end
 
-  defp payload(%{content: new_content} = changes, %{content: old_content} = _data)
+  defp payload(%{original_content: old_content, content: new_content} = changes, %{content: nil})
        when is_map(new_content) or is_map(old_content) do
-    old_content = old_content || Map.get(changes, :original_content) || %{}
-    merged_content = Map.merge(old_content, new_content)
-
-    normalized_old = TdDfLib.Content.to_legacy(old_content)
-
-    normalized_new =
-      merged_content
-      |> TdDfLib.Content.to_legacy()
-      |> Enum.reject(fn {_k, v} -> v in [nil, ""] end)
-      |> Map.new()
-
-    diff = MapDiff.diff(normalized_old, normalized_new, mask: &Masks.mask/1)
+    content = merge_diff_content(old_content, new_content)
 
     changes
     |> Map.delete(:content)
-    |> Map.put(:content, diff)
+    |> Map.put(:content, content)
+  end
+
+  defp payload(%{content: new_content} = changes, %{content: old_content} = _data)
+       when is_map(new_content) or is_map(old_content) do
+    content = merge_diff_content(old_content, new_content)
+
+    changes
+    |> Map.delete(:content)
+    |> Map.put(:content, content)
   end
 
   defp payload(%{shared_to: shared_to} = changes, _data) do
@@ -188,4 +186,18 @@ defmodule TdBg.Audit.AuditSupport do
   end
 
   defp get_domain(_), do: nil
+
+  defp merge_diff_content(old_content, new_content) do
+    merged_content = Map.merge(old_content, new_content)
+
+    normalized_old = TdDfLib.Content.to_legacy(old_content)
+
+    normalized_new =
+      merged_content
+      |> TdDfLib.Content.to_legacy()
+      |> Enum.reject(fn {_k, v} -> v in [nil, ""] end)
+      |> Map.new()
+
+    MapDiff.diff(normalized_old, normalized_new, mask: &Masks.mask/1)
+  end
 end
