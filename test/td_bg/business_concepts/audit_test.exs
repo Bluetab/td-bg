@@ -277,8 +277,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
       payload = Jason.decode!(event.payload)
       content_diff = payload["content"]
 
-      assert content_diff["changed"] == %{"FieldA" => "fuu"}
-      assert content_diff["removed"] == %{"FieldD" => "zar"}
+      assert content_diff["changed"] == %{"FieldA" => "fuu", "FieldD" => ""}
       assert content_diff["added"] == %{"FieldE" => "faz"}
     end
   end

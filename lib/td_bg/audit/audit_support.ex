@@ -107,6 +107,19 @@ defmodule TdBg.Audit.AuditSupport do
     |> Map.put(:description, Masks.mask(description))
   end
 
+  defp payload(%{name: name, original_version: %{name: original_name}} = changes, data) do
+    if name == original_name do
+      changes
+      |> Map.delete(:name)
+      |> payload(data)
+    else
+      changes
+      |> Map.delete(:name)
+      |> payload(data)
+      |> Map.put(:name, name)
+    end
+  end
+
   defp payload(%{last_change_at: _} = changes, data) do
     changes
     |> Map.drop([:last_change_at, :last_change_by])
@@ -132,12 +145,14 @@ defmodule TdBg.Audit.AuditSupport do
     |> payload(data)
   end
 
-  defp payload(%{original_content: old_content, content: new_content} = changes, %{content: nil})
+  defp payload(%{original_version: %{content: old_content}, content: new_content} = changes, %{
+         content: nil
+       })
        when is_map(new_content) or is_map(old_content) do
     content = merge_diff_content(old_content, new_content)
 
     changes
-    |> Map.delete(:content)
+    |> Map.drop([:content, :original_version])
     |> Map.put(:content, content)
   end
 
@@ -191,12 +206,7 @@ defmodule TdBg.Audit.AuditSupport do
     merged_content = Map.merge(old_content, new_content)
 
     normalized_old = TdDfLib.Content.to_legacy(old_content)
-
-    normalized_new =
-      merged_content
-      |> TdDfLib.Content.to_legacy()
-      |> Enum.reject(fn {_k, v} -> v in [nil, ""] end)
-      |> Map.new()
+    normalized_new = TdDfLib.Content.to_legacy(merged_content)
 
     MapDiff.diff(normalized_old, normalized_new, mask: &Masks.mask/1)
   end

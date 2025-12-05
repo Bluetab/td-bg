@@ -574,6 +574,7 @@ defmodule TdBg.UploadTest do
 
     test "version published concept on i18n content update when auto publish is true" do
       IndexWorkerMock.clear()
+
       claims = build(:claims, role: "admin")
 
       domain = insert(:domain, external_id: "domain")
@@ -2241,11 +2242,7 @@ defmodule TdBg.UploadTest do
       assert update_payload["event_via"] == "file"
       assert Map.has_key?(update_payload, "content")
 
-      content = update_payload["content"]
-      assert Map.has_key?(content, "added")
-
-      added = content["added"]
-      assert Map.has_key?(added, "description")
+      assert update_payload["content"] == %{}
 
       publish_event =
         Enum.find(concept_events, fn %{event: event} ->
@@ -2367,8 +2364,7 @@ defmodule TdBg.UploadTest do
 
       content = update_payload["content"]
 
-      assert content["changed"] == %{"field_a" => "new"}
-      assert content["removed"] == %{"field_c" => "old"}
+      assert content["changed"] == %{"field_a" => "new", "field_c" => ""}
       assert content["added"] == %{"field_e" => "new"}
     end
 
@@ -2433,7 +2429,7 @@ defmodule TdBg.UploadTest do
 
       %{business_concept_id: business_concept_id} =
         insert(:business_concept_version,
-          name: "audit concept",
+          name: "Audit Concept",
           status: "published",
           business_concept: concept,
           version: 1,
@@ -2477,8 +2473,7 @@ defmodule TdBg.UploadTest do
 
       content = update_payload["content"]
 
-      assert content["changed"] == %{"field_a" => "new"}
-      assert content["removed"] == %{"field_c" => "old"}
+      assert content["changed"] == %{"field_a" => "new", "field_c" => ""}
       assert content["added"] == %{"field_e" => "new"}
     end
   end

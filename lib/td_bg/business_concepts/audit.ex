@@ -100,7 +100,7 @@ defmodule TdBg.BusinessConcepts.Audit do
         %{updated: updated} = payload,
         changeset
       ) do
-    old_content = Map.get(payload, :old_content)
+    old_version = Map.get(payload, :old_version)
     %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} = updated
     changeset = do_changeset_updated(changeset, updated)
 
@@ -117,8 +117,8 @@ defmodule TdBg.BusinessConcepts.Audit do
       end
 
     changeset =
-      if old_content do
-        Map.update!(changeset, :changes, &Map.put(&1, :original_content, old_content))
+      if old_version do
+        Map.update!(changeset, :changes, &Map.put(&1, :original_version, old_version))
       else
         changeset
       end
@@ -126,11 +126,21 @@ defmodule TdBg.BusinessConcepts.Audit do
     publish(event, "concept", id, user_id, changeset)
   end
 
-  def business_concept_published(repo, %{published: business_concept_version}, changeset \\ nil) do
+  def business_concept_published(
+        repo,
+        %{published: business_concept_version} = changes,
+        changeset \\ nil
+      ) do
     case business_concept_version do
       %{business_concept_id: id, last_change_by: user_id} ->
         if not is_nil(changeset) do
-          business_concept_versioned(repo, %{updated: business_concept_version}, changeset)
+          old_version = Map.get(changes, :old_version, %{})
+
+          business_concept_versioned(
+            repo,
+            %{updated: business_concept_version, old_version: old_version},
+            changeset
+          )
         end
 
         payload = status_payload(business_concept_version)
@@ -147,26 +157,26 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   def business_concept_versioned(repo, %{current: current} = changes, changeset_or_map) do
-    old_content = Map.get(changes, :old_content, %{})
+    old_version = Map.get(changes, :old_version, %{})
 
     changeset_or_map
     |> unwrap_changeset()
-    |> do_business_concept_versioned(repo, current, old_content)
+    |> do_business_concept_versioned(repo, current, old_version)
   end
 
   def business_concept_versioned(repo, %{updated: updated} = changes, changeset_or_map) do
-    old_content = Map.get(changes, :old_content, %{})
+    old_version = Map.get(changes, :old_version, %{})
 
     changeset_or_map
     |> unwrap_changeset()
-    |> do_business_concept_versioned(repo, updated, old_content)
+    |> do_business_concept_versioned(repo, updated, old_version)
   end
 
   defp unwrap_changeset(%{changeset: changeset}), do: changeset
   defp unwrap_changeset(%Changeset{} = changeset), do: changeset
   defp unwrap_changeset(_), do: nil
 
-  defp do_business_concept_versioned(changeset, repo, version, old_content) do
+  defp do_business_concept_versioned(changeset, repo, version, old_version) do
     case version do
       %{business_concept_id: id, last_change_by: user_id} ->
         payload = status_payload(version)
@@ -175,7 +185,7 @@ defmodule TdBg.BusinessConcepts.Audit do
         if Process.get(:event_via) == "file" and not is_nil(changeset) do
           business_concept_version_updated(
             repo,
-            %{updated: version, old_content: old_content},
+            %{updated: version, old_version: old_version},
             changeset
           )
         else
