@@ -28,7 +28,7 @@ defmodule TdBg.BusinessConcepts.Search.SuggestionsTest do
                    "field" => "embeddings.vector_default",
                    "filter" => %{
                      bool: %{
-                       must: [
+                       filter: [
                          %{
                            terms: %{
                              "status" => ["draft", "pending_approval", "published", "rejected"]
@@ -75,7 +75,7 @@ defmodule TdBg.BusinessConcepts.Search.SuggestionsTest do
                      "field" => "embeddings.vector_default",
                      "filter" => %{
                        bool: %{
-                         must: [
+                         filter: [
                            %{
                              terms: %{
                                "status" => ["draft", "pending_approval", "published", "rejected"]
@@ -132,7 +132,7 @@ defmodule TdBg.BusinessConcepts.Search.SuggestionsTest do
                      "field" => "embeddings.vector_foo",
                      "filter" => %{
                        bool: %{
-                         must: [
+                         filter: [
                            %{
                              terms: %{
                                "status" => ["draft", "pending_approval", "published", "rejected"]

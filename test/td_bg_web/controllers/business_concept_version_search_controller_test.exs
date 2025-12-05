@@ -237,14 +237,14 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
            _ ->
           assert %{
-                   must: [
-                     %{
-                       multi_match: %{
-                         fields: ["ngram_name*^3"],
-                         query: "foo",
-                         type: "bool_prefix"
-                       }
-                     },
+                   must: %{
+                     multi_match: %{
+                       fields: ["ngram_name*^3"],
+                       query: "foo",
+                       type: "bool_prefix"
+                     }
+                   },
+                   filter: [
                      %{term: %{"domain_id" => 1234}},
                      %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                      %{term: %{"status" => "published"}}
@@ -294,24 +294,24 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
            _ ->
           assert %{
-                   must: [
-                     %{
-                       simple_query_string: %{
-                         fields: [
-                           "name",
-                           "name_es",
-                           "content.Field1",
-                           "content.Field2",
-                           "content.Field1_es",
-                           "content.Field2_es"
-                         ],
-                         query: "\"foo\"",
-                         quote_field_suffix: ".exact"
-                       }
-                     },
+                   filter: [
                      %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                      %{term: %{"status" => "published"}}
-                   ]
+                   ],
+                   must: %{
+                     simple_query_string: %{
+                       fields: [
+                         "name^3",
+                         "name_es^3",
+                         "content.Field1",
+                         "content.Field2",
+                         "content.Field1_es",
+                         "content.Field2_es"
+                       ],
+                       query: "\"foo\"",
+                       quote_field_suffix: ".exact"
+                     }
+                   }
                  } = bool
 
           SearchHelpers.hits_response([])
@@ -430,7 +430,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
                      "name_es.raw" => "desc"
                    },
                    from: 0,
-                   query: %{bool: %{must: %{match_all: %{}}}},
+                   query: %{bool: %{filter: %{match_all: %{}}}},
                    _source: %{excludes: ["embeddings"]}
                  }
 
@@ -481,7 +481,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
              "/concepts/_search",
              %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
              _ ->
-            assert query == %{bool: %{must: %{terms: %{"status" => ["published", "rejected"]}}}}
+            assert query == %{bool: %{filter: %{terms: %{"status" => ["published", "rejected"]}}}}
             SearchHelpers.hits_response([bcv])
           end
         )
@@ -565,7 +565,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
 
       expect(ElasticsearchMock, :request, fn
         _, :post, "/concepts/_search", %{query: query}, _ ->
-          assert %{bool: %{must: [%{term: %{"domain_ids" => ^domain_id2}}, _, _]}} = query
+          assert %{bool: %{filter: [%{term: %{"domain_ids" => ^domain_id2}}, _, _]}} = query
           SearchHelpers.hits_response([bcv])
       end)
 
@@ -694,7 +694,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: [
+                     filter: [
                        %{term: %{"status" => "published"}},
                        %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                        %{
@@ -746,7 +746,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: [
+                     filter: [
                        %{term: %{"status" => "deprecated"}},
                        %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                        %{
@@ -837,7 +837,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: [
+                     filter: [
                        %{term: %{"status" => "published"}},
                        %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                        %{match_none: %{}}
@@ -880,7 +880,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: [
+                     filter: [
                        %{term: %{"status" => "deprecated"}},
                        %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                        %{match_none: %{}}
@@ -923,7 +923,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: [
+                     filter: [
                        %{terms: %{"status" => ["draft", "pending_approval", "rejected"]}},
                        %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}},
                        %{match_none: %{}}
@@ -961,7 +961,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: %{term: %{"status" => "published"}}
+                     filter: %{term: %{"status" => "published"}}
                    }
                  }
 
@@ -997,7 +997,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: %{term: %{"status" => "deprecated"}}
+                     filter: %{term: %{"status" => "deprecated"}}
                    }
                  }
 
@@ -1032,7 +1032,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            _ ->
           assert query == %{
                    bool: %{
-                     must: %{terms: %{"status" => ["draft", "pending_approval", "rejected"]}}
+                     filter: %{terms: %{"status" => ["draft", "pending_approval", "rejected"]}}
                    }
                  }
 
@@ -1075,18 +1075,18 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
            %{from: 0, query: %{bool: bool}, size: 50, sort: ["_score", "name.raw"]},
            _ ->
           assert %{
-                   must: [
-                     %{
-                       multi_match: %{
-                         fields: ["ngram_name*^3"],
-                         query: "foo",
-                         type: "bool_prefix"
-                       }
-                     },
+                   filter: [
                      %{term: %{"domain_id" => 1234}},
                      _status_filter,
                      _confidential_filter
-                   ]
+                   ],
+                   must: %{
+                     multi_match: %{
+                       fields: ["ngram_name*^3"],
+                       query: "foo",
+                       type: "bool_prefix"
+                     }
+                   }
                  } = bool
 
           SearchHelpers.hits_response([bcv])
@@ -1119,7 +1119,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
              "/concepts/_search",
              %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
              _ ->
-            assert query == %{bool: %{must: %{terms: %{"status" => ["published", "rejected"]}}}}
+            assert query == %{bool: %{filter: %{terms: %{"status" => ["published", "rejected"]}}}}
             SearchHelpers.hits_response([bcv])
           end
         )
@@ -1187,7 +1187,7 @@ defmodule TdBgWeb.BusinessConceptVersionSearchControllerTest do
                              [params: %{"track_total_hits" => "true"}] ->
         assert %{
                  bool: %{
-                   must: %{
+                   filter: %{
                      range: %{"last_change_at" => %{"gt" => ^now}}
                    }
                  }

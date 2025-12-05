@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-7711] Phrase prefix search to highlight stricter text matches
+
 ### Changed
 
 - [TD-7302] Update td-core lib

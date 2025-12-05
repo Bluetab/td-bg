@@ -40,6 +40,7 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                  sort: ["_id"],
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -48,7 +49,26 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                          lenient: true,
                          fuzziness: "AUTO"
                        }
-                     }
+                     },
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           boost: 4.0,
+                           lenient: true
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ]
                    }
                  },
                  pit: %{id: "foo", keep_alive: "1m"}
@@ -63,6 +83,7 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                  sort: ["_id"],
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -71,7 +92,26 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                          lenient: true,
                          fuzziness: "AUTO"
                        }
-                     }
+                     },
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           boost: 4.0,
+                           lenient: true
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ]
                    }
                  },
                  pit: %{id: "foo", keep_alive: "1m"},

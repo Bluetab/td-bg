@@ -32,9 +32,15 @@ defmodule TdBg.BusinessConcepts.SearchTest do
         _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
 
-          assert %{bool: %{must: [query_filter, confidential_filter, status_filter]}} = query
+          assert %{
+                   bool: %{
+                     filter: [confidential_filter, status_filter],
+                     must: must,
+                     should: should
+                   }
+                 } = query
 
-          assert query_filter == %{
+          assert must == %{
                    multi_match: %{
                      fields: ["ngram_name*^3"],
                      query: "bar",
@@ -43,6 +49,26 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                      fuzziness: "AUTO"
                    }
                  }
+
+          assert should == [
+                   %{
+                     multi_match: %{
+                       type: "phrase_prefix",
+                       fields: ["name^3"],
+                       query: "bar",
+                       lenient: true,
+                       boost: 4.0
+                     }
+                   },
+                   %{
+                     simple_query_string: %{
+                       fields: ["name^3"],
+                       query: "\"bar\"",
+                       quote_field_suffix: ".exact",
+                       boost: 4.0
+                     }
+                   }
+                 ]
 
           assert %{bool: %{should: should}} = status_filter
 
@@ -102,8 +128,6 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
       %{id: id} = bcv = insert(:business_concept_version, domain_id: domain_id2)
       CacheHelpers.put_default_permissions(["view_published_business_concepts"])
-      CacheHelpers.put_default_locale("en")
-      CacheHelpers.put_active_locales(~w(en es))
 
       put_session_permissions(claims, %{
         "view_approval_pending_business_concepts" => [domain_id3],
@@ -116,11 +140,11 @@ defmodule TdBg.BusinessConcepts.SearchTest do
         _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
 
-          assert %{bool: %{must: [query_filter, confidential_filter, status_filter]}} = query
+          assert %{bool: %{must: must, filter: [confidential_filter, status_filter]}} = query
 
-          assert query_filter == %{
+          assert must == %{
                    simple_query_string: %{
-                     fields: ["name", "name_es"],
+                     fields: ["name^3"],
                      query: "\"bar\"",
                      quote_field_suffix: ".exact"
                    }
@@ -197,9 +221,15 @@ defmodule TdBg.BusinessConcepts.SearchTest do
         _, :post, "/concepts/_search", %{from: 50, query: query, size: 10, sort: "foo"}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
 
-          assert %{bool: %{must: [ngram_query, confidential_filter, status_filter]}} = query
+          assert %{
+                   bool: %{
+                     must: must,
+                     should: should,
+                     filter: [confidential_filter, status_filter]
+                   }
+                 } = query
 
-          assert ngram_query == %{
+          assert must == %{
                    multi_match: %{
                      fields: ["ngram_name*^3"],
                      query: "bar",
@@ -208,6 +238,26 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                      fuzziness: "AUTO"
                    }
                  }
+
+          assert should == [
+                   %{
+                     multi_match: %{
+                       type: "phrase_prefix",
+                       fields: ["name^3"],
+                       query: "bar",
+                       lenient: true,
+                       boost: 4.0
+                     }
+                   },
+                   %{
+                     simple_query_string: %{
+                       fields: ["name^3"],
+                       query: "\"bar\"",
+                       quote_field_suffix: ".exact",
+                       boost: 4.0
+                     }
+                   }
+                 ]
 
           %{
             bool: %{
@@ -280,6 +330,26 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                  sort: "foo",
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           lenient: true,
+                           boost: 4.0
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ],
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -303,6 +373,26 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                  sort: "foo",
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           lenient: true,
+                           boost: 4.0
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ],
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -327,6 +417,26 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                  sort: "foo",
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           lenient: true,
+                           boost: 4.0
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ],
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -387,7 +497,7 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                    "field" => "embeddings.vector_foo",
                    "filter" => %{
                      bool: %{
-                       must: [
+                       filter: [
                          %{
                            terms: %{
                              "status" => ["draft", "pending_approval", "published", "rejected"]
@@ -440,7 +550,7 @@ defmodule TdBg.BusinessConcepts.SearchTest do
                    "field" => "embeddings.vector_foo",
                    "filter" => %{
                      bool: %{
-                       must: [
+                       filter: [
                          %{
                            terms: %{
                              "status" => ["draft", "pending_approval", "published", "rejected"]
