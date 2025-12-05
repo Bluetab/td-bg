@@ -102,7 +102,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
       assert event == "update_concept_draft"
     end
 
-    test "publish event update_concept_draft when a a published concept is updated" do
+    test "publish event update_concept when a a published concept is updated" do
       old_domain = CacheHelpers.insert_domain()
       %{id: new_domain_id} = CacheHelpers.insert_domain()
 

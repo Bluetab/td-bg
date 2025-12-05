@@ -105,13 +105,9 @@ defmodule TdBg.BusinessConcepts.Audit do
     changeset = do_changeset_updated(changeset, updated)
 
     event =
-      cond do
-        Map.get(updated, :status) == "published" ->
-          "update_concept"
-
-        true ->
-          "update_concept_draft"
-      end
+      if Map.get(updated, :status) == "published",
+        do: "update_concept",
+        else: "update_concept_draft"
 
     changeset =
       if old_version do
