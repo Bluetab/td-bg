@@ -43,6 +43,26 @@ defmodule TdBg.XLSX.DownloadTest do
                  sort: ["_id"],
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           lenient: true,
+                           boost: 4.0
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ],
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -66,6 +86,26 @@ defmodule TdBg.XLSX.DownloadTest do
                  sort: ["_id"],
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           lenient: true,
+                           boost: 4.0
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ],
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",

@@ -52,7 +52,7 @@ defmodule TdBgWeb.SuggestionControllerTest do
                    "field" => "embeddings.vector_default_collection_name",
                    "filter" => %{
                      bool: %{
-                       must: [
+                       filter: [
                          %{
                            terms: %{
                              "status" => ["draft", "pending_approval", "published", "rejected"]
