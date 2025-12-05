@@ -25,7 +25,11 @@ defmodule TdBg.Audit.AuditSupport do
         user_id,
         %Changeset{changes: changes, data: data}
       ) do
-    payload = payload(changes, data)
+    payload =
+      changes
+      |> payload(data)
+      |> add_event_via()
+      |> Map.drop([:original_version])
 
     if map_size(changes) == 0 do
       {:ok, :unchanged}
@@ -35,18 +39,23 @@ defmodule TdBg.Audit.AuditSupport do
         resource_type: resource_type,
         resource_id: resource_id,
         user_id: user_id,
-        payload: add_event_via(payload)
+        payload: payload
       )
     end
   end
 
   def publish(event, resource_type, resource_id, user_id, payload) do
+    payload =
+      payload
+      |> add_event_via()
+      |> Map.drop([:original_version])
+
     Audit.publish(
       event: event,
       resource_type: resource_type,
       resource_id: resource_id,
       user_id: user_id,
-      payload: add_event_via(payload)
+      payload: payload
     )
   end
 

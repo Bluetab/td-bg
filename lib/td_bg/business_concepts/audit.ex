@@ -106,9 +106,6 @@ defmodule TdBg.BusinessConcepts.Audit do
 
     event =
       cond do
-        Process.get(:event_via) == "file" ->
-          "update_concept_draft"
-
         Map.get(updated, :status) == "published" ->
           "update_concept"
 
@@ -177,20 +174,17 @@ defmodule TdBg.BusinessConcepts.Audit do
   defp unwrap_changeset(_), do: nil
 
   defp do_business_concept_versioned(changeset, repo, version, old_version) do
-    case version do
-      %{business_concept_id: id, last_change_by: user_id} ->
-        payload = status_payload(version)
-        {:ok, event_id} = publish("new_concept_draft", "concept", id, user_id, payload)
+    payload = status_payload(version)
+    response = maybe_publish_new_concept_draft(version, payload)
 
-        if Process.get(:event_via) == "file" and not is_nil(changeset) do
-          business_concept_version_updated(
-            repo,
-            %{updated: version, old_version: old_version},
-            changeset
-          )
-        else
-          {:ok, event_id}
-        end
+    if Process.get(:event_via) == "file" and not is_nil(changeset) do
+      business_concept_version_updated(
+        repo,
+        %{updated: version, old_version: old_version},
+        changeset
+      )
+    else
+      response
     end
   end
 
@@ -210,6 +204,17 @@ defmodule TdBg.BusinessConcepts.Audit do
     changeset
     |> Changeset.fetch_change!(:status)
     |> do_status_updated(business_concept_version)
+  end
+
+  defp maybe_publish_new_concept_draft(
+         %{status: "draft", last_change_by: user_id, business_concept_id: id},
+         payload
+       ) do
+    publish("new_concept_draft", "concept", id, user_id, payload)
+  end
+
+  defp maybe_publish_new_concept_draft(_version, _payload) do
+    {:ok, nil}
   end
 
   defp do_changeset_updated(changeset, updated) do

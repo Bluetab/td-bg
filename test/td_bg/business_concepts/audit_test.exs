@@ -221,7 +221,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
 
       assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
 
-      assert length(events) == 3
+      assert length(events) == 2
 
       assert Enum.all?(events, fn %{payload: payload} ->
                decoded = Jason.decode!(payload)
@@ -271,7 +271,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
 
       assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
 
-      event = Enum.find(events, &(&1.event == "update_concept_draft"))
+      event = Enum.find(events, &(&1.event == "update_concept"))
       assert event
 
       payload = Jason.decode!(event.payload)
