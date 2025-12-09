@@ -3,9 +3,14 @@ defmodule TdBg.XLSX.DownloadTest do
 
   import Mox
 
+  alias Elasticsearch.Document
+  alias Jason
+  alias TdBg.Repo
   alias TdBg.XLSX.Download
 
   setup do
+    CacheHelpers.insert_template(name: "some_type")
+
     bcv1 = insert(:business_concept_version)
     CacheHelpers.put_concept(bcv1.business_concept, bcv1)
     bcv2 = insert(:business_concept_version)
@@ -124,9 +129,7 @@ defmodule TdBg.XLSX.DownloadTest do
         SearchHelpers.search_after_response([])
       end)
 
-      expect(ElasticsearchMock, :request, fn _, :delete, "/_pit", %{"id" => "foo"}, opts ->
-        assert opts == []
-
+      expect(ElasticsearchMock, :request, fn _, :delete, "/_pit", %{"id" => "foo"}, [] ->
         {:ok,
          %{
            status_code: 200,
@@ -156,6 +159,7 @@ defmodule TdBg.XLSX.DownloadTest do
                "id",
                "current_version_id",
                "concept_name",
+               "concept_type",
                "domain_external_id",
                "domain_name",
                "structure_external_id",
@@ -171,10 +175,22 @@ defmodule TdBg.XLSX.DownloadTest do
                    row |> Enum.at(1) |> trunc() == bcv1.id
                end)
 
+      bcv1_preloaded =
+        Repo.preload(bcv1, business_concept: [:domain, :shared_to])
+
+      encoded_bcv1 =
+        bcv1_preloaded
+        |> Document.encode()
+        |> Jason.encode!()
+        |> Jason.decode!()
+
+      concept_type = get_in(encoded_bcv1, ["template", "name"])
+
       assert [
                bcv1.business_concept_id * 1.0,
                bcv1.id * 1.0,
                bcv1.name,
+               concept_type,
                bcv1.business_concept.domain.external_id,
                bcv1.business_concept.domain.name,
                Map.get(data_structure, :external_id, ""),
@@ -190,10 +206,21 @@ defmodule TdBg.XLSX.DownloadTest do
                    row |> Enum.at(1) |> trunc() == bcv2.id
                end)
 
+      bcv2_preloaded = Repo.preload(bcv2, business_concept: [:domain, :shared_to])
+
+      encoded_bcv2 =
+        bcv2_preloaded
+        |> Document.encode()
+        |> Jason.encode!()
+        |> Jason.decode!()
+
+      concept_type2 = get_in(encoded_bcv2, ["template", "name"])
+
       assert [
                bcv2.business_concept_id * 1.0,
                bcv2.id * 1.0,
                bcv2.name,
+               concept_type2,
                bcv2.business_concept.domain.external_id,
                bcv2.business_concept.domain.name
              ] == row

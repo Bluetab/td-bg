@@ -892,11 +892,11 @@ defmodule TdBg.BusinessConcepts do
     |> Repo.transaction()
   end
 
-  def get_concept_by_name_in_domain(name, domain_id) do
+  def get_unique_concept(name, domain_id, type) do
     BusinessConcept
     |> join(:inner, [c], v in assoc(c, :versions))
     |> join(:left, [c, v], d in assoc(c, :domain))
-    |> where([c, v], v.name == ^to_string(name) and c.domain_id == ^domain_id)
+    |> where([c, v], v.name == ^to_string(name) and c.domain_id == ^domain_id and c.type == ^type)
     |> preload([c, _v, d],
       domain: d,
       shared_to: [],

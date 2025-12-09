@@ -7,7 +7,7 @@ defmodule TdBg.XLSX.Download do
   alias TdBg.BusinessConcept.Search
   alias TdBg.BusinessConcepts.Links
 
-  @concept_headers ~w(id current_version_id concept_name domain_external_id domain_name)
+  @concept_headers ~w(id current_version_id concept_name concept_type domain_external_id domain_name)
   @structure_headers ~w(structure_external_id structure_name structure_system path link_type)
 
   def links(claims, search_params, opts \\ []) do
@@ -56,6 +56,7 @@ defmodule TdBg.XLSX.Download do
       concept["business_concept_id"],
       concept["id"],
       concept["name"],
+      get_in(concept, ["template", "name"]),
       concept["domain"]["external_id"],
       concept["domain"]["name"]
     ]
@@ -66,10 +67,18 @@ defmodule TdBg.XLSX.Download do
       Map.get(link, :external_id),
       Map.get(link, :name),
       get_in(link, [:system, :external_id]),
-      Enum.join(link.path, " > "),
-      Enum.join(link.tags, ", ")
+      Enum.join(Map.get(link, :path, []), " > "),
+      extract_link_type(link)
     ]
   end
+
+  defp extract_link_type(%{tags: [tag | _]}) when is_binary(tag), do: tag
+
+  defp extract_link_type(%{tags: tags}) when is_list(tags) and length(tags) > 0 do
+    List.first(tags) || ""
+  end
+
+  defp extract_link_type(_link), do: ""
 
   defp create_workbook(rows) do
     %Workbook{
