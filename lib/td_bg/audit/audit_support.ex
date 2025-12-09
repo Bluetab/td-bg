@@ -25,7 +25,11 @@ defmodule TdBg.Audit.AuditSupport do
         user_id,
         %Changeset{changes: changes, data: data}
       ) do
-    payload = payload(changes, data)
+    payload =
+      changes
+      |> payload(data)
+      |> add_event_via()
+      |> Map.drop([:original_version])
 
     if map_size(changes) == 0 do
       {:ok, :unchanged}
@@ -35,18 +39,23 @@ defmodule TdBg.Audit.AuditSupport do
         resource_type: resource_type,
         resource_id: resource_id,
         user_id: user_id,
-        payload: add_event_via(payload)
+        payload: payload
       )
     end
   end
 
   def publish(event, resource_type, resource_id, user_id, payload) do
+    payload =
+      payload
+      |> add_event_via()
+      |> Map.drop([:original_version])
+
     Audit.publish(
       event: event,
       resource_type: resource_type,
       resource_id: resource_id,
       user_id: user_id,
-      payload: add_event_via(payload)
+      payload: payload
     )
   end
 
@@ -107,6 +116,19 @@ defmodule TdBg.Audit.AuditSupport do
     |> Map.put(:description, Masks.mask(description))
   end
 
+  defp payload(%{name: name, original_version: %{name: original_name}} = changes, data) do
+    if name == original_name do
+      changes
+      |> Map.delete(:name)
+      |> payload(data)
+    else
+      changes
+      |> Map.delete(:name)
+      |> payload(data)
+      |> Map.put(:name, name)
+    end
+  end
+
   defp payload(%{last_change_at: _} = changes, data) do
     changes
     |> Map.drop([:last_change_at, :last_change_by])
@@ -132,13 +154,24 @@ defmodule TdBg.Audit.AuditSupport do
     |> payload(data)
   end
 
+  defp payload(%{original_version: %{content: old_content}, content: new_content} = changes, %{
+         content: nil
+       })
+       when is_map(new_content) or is_map(old_content) do
+    content = merge_diff_content(old_content, new_content)
+
+    changes
+    |> Map.drop([:content, :original_version])
+    |> Map.put(:content, content)
+  end
+
   defp payload(%{content: new_content} = changes, %{content: old_content} = _data)
        when is_map(new_content) or is_map(old_content) do
-    diff = MapDiff.diff(old_content, new_content, mask: &Masks.mask/1)
+    content = merge_diff_content(old_content, new_content)
 
     changes
     |> Map.delete(:content)
-    |> Map.put(:content, diff)
+    |> Map.put(:content, content)
   end
 
   defp payload(%{shared_to: shared_to} = changes, _data) do
@@ -177,4 +210,13 @@ defmodule TdBg.Audit.AuditSupport do
   end
 
   defp get_domain(_), do: nil
+
+  defp merge_diff_content(old_content, new_content) do
+    merged_content = Map.merge(old_content, new_content)
+
+    normalized_old = TdDfLib.Content.to_legacy(old_content)
+    normalized_new = TdDfLib.Content.to_legacy(merged_content)
+
+    MapDiff.diff(normalized_old, normalized_new, mask: &Masks.mask/1)
+  end
 end
