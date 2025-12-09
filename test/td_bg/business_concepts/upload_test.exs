@@ -620,6 +620,7 @@ defmodule TdBg.UploadTest do
 
     test "version published concept on i18n content update when auto publish is true" do
       IndexWorkerMock.clear()
+
       claims = build(:claims, role: "admin")
 
       domain = insert(:domain, external_id: "domain")
@@ -2290,11 +2291,7 @@ defmodule TdBg.UploadTest do
       assert update_payload["event_via"] == "file"
       assert Map.has_key?(update_payload, "content")
 
-      content = update_payload["content"]
-      assert Map.has_key?(content, "added")
-
-      added = content["added"]
-      assert Map.has_key?(added, "description")
+      assert update_payload["content"] == %{}
 
       publish_event =
         Enum.find(concept_events, fn %{event: event} ->
@@ -2305,6 +2302,228 @@ defmodule TdBg.UploadTest do
 
       publish_payload = Jason.decode!(publish_event.payload)
       assert publish_payload["event_via"] == "file"
+    end
+  end
+
+  describe "audit: payload" do
+    setup [:set_mox_from_context]
+
+    test "audit: correct diff when updating draft concept via upload" do
+      TdCache.Redix.del!(TdCache.Audit.stream())
+      IndexWorkerMock.clear()
+
+      claims = build(:claims, role: "admin")
+
+      %{id: template_id} =
+        Templates.create_template(%{
+          id: 0,
+          name: "term",
+          label: "term",
+          scope: "test",
+          content: [
+            %{
+              "name" => "group",
+              "fields" => [
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_a",
+                  "label" => "field_a",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_b",
+                  "label" => "field_b",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_c",
+                  "label" => "field_c",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_d",
+                  "label" => "field_d",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_e",
+                  "label" => "field_e",
+                  "type" => "string"
+                }
+              ]
+            }
+          ]
+        })
+
+      on_exit(fn -> Templates.delete(template_id) end)
+
+      CacheHelpers.put_active_locales(~w(en))
+      on_exit(fn -> TdCache.Redix.del!("i18n:locales:*") end)
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          name: "audit concept",
+          status: "draft",
+          business_concept: concept,
+          version: 1,
+          content: %{
+            "field_a" => %{"origin" => "user", "value" => "old"},
+            "field_b" => %{"origin" => "user", "value" => "old"},
+            "field_c" => %{"origin" => "user", "value" => "old"},
+            "field_d" => %{"origin" => "user", "value" => "old"}
+          }
+        )
+
+      business_concept_upload = %{path: "test/fixtures/audit_payload_content.xlsx"}
+
+      Process.put(:event_via, "file")
+
+      Upload.bulk_upload(
+        business_concept_upload,
+        claims,
+        lang: "en",
+        auto_publish: false
+      )
+
+      {:ok, events} =
+        TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept"} ->
+            "#{resource_id}" == "#{business_concept_id}"
+
+          _ ->
+            false
+        end)
+
+      update_event =
+        Enum.find(concept_events, fn %{event: event} ->
+          event in ["update_concept", "update_concept_draft"]
+        end)
+
+      update_payload = Jason.decode!(update_event.payload)
+
+      content = update_payload["content"]
+
+      assert content["changed"] == %{"field_a" => "new", "field_c" => ""}
+      assert content["added"] == %{"field_e" => "new"}
+    end
+
+    test "audit: correct diff when versioning published concept via upload" do
+      TdCache.Redix.del!(TdCache.Audit.stream())
+      IndexWorkerMock.clear()
+
+      claims = build(:claims, role: "admin")
+
+      %{id: template_id} =
+        Templates.create_template(%{
+          id: 0,
+          name: "term",
+          label: "term",
+          scope: "test",
+          content: [
+            %{
+              "name" => "group",
+              "fields" => [
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_a",
+                  "label" => "field_a",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_b",
+                  "label" => "field_b",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_c",
+                  "label" => "field_c",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_d",
+                  "label" => "field_d",
+                  "type" => "string"
+                },
+                %{
+                  "cardinality" => "?",
+                  "name" => "field_e",
+                  "label" => "field_e",
+                  "type" => "string"
+                }
+              ]
+            }
+          ]
+        })
+
+      on_exit(fn -> Templates.delete(template_id) end)
+
+      CacheHelpers.put_active_locales(~w(en))
+      on_exit(fn -> TdCache.Redix.del!("i18n:locales:*") end)
+
+      domain = insert(:domain, external_id: "domain")
+      concept = insert(:business_concept, domain: domain, type: "term", id: 1_000)
+
+      %{business_concept_id: business_concept_id} =
+        insert(:business_concept_version,
+          name: "Audit Concept",
+          status: "published",
+          business_concept: concept,
+          version: 1,
+          content: %{
+            "field_a" => %{"origin" => "user", "value" => "old"},
+            "field_b" => %{"origin" => "user", "value" => "old"},
+            "field_c" => %{"origin" => "user", "value" => "old"},
+            "field_d" => %{"origin" => "user", "value" => "old"}
+          }
+        )
+
+      business_concept_upload = %{path: "test/fixtures/audit_payload_content.xlsx"}
+
+      Process.put(:event_via, "file")
+
+      Upload.bulk_upload(
+        business_concept_upload,
+        claims,
+        lang: "en",
+        auto_publish: false
+      )
+
+      {:ok, events} =
+        TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      concept_events =
+        Enum.filter(events, fn
+          %{resource_id: resource_id, resource_type: "concept"} ->
+            "#{resource_id}" == "#{business_concept_id}"
+
+          _ ->
+            false
+        end)
+
+      update_event =
+        Enum.find(concept_events, fn %{event: event} ->
+          event in ["update_concept", "update_concept_draft"]
+        end)
+
+      update_payload = Jason.decode!(update_event.payload)
+
+      content = update_payload["content"]
+
+      assert content["changed"] == %{"field_a" => "new", "field_c" => ""}
+      assert content["added"] == %{"field_e" => "new"}
     end
   end
 

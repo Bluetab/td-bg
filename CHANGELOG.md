@@ -10,6 +10,10 @@
 
 - [TD-7302] Update td-core lib
 
+### Fixed
+
+- [TD-7646] Fix events when updating concepts
+
 ## [7.13.0] 2025-11-18
 
 ### Added
