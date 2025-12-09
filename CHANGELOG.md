@@ -9,6 +9,7 @@
 ### Changed
 
 - [TD-7302] Update td-core lib
+- [TD-7678] Update function for search a concept by name, domain and template
 
 ## [7.13.0] 2025-11-18
 
