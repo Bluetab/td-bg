@@ -10,10 +10,6 @@
 
 - [TD-7302] Update td-core lib
 
-### Fixed
-
-- [TD-7646] Fix events when updating concepts
-
 ## [7.13.0] 2025-11-18
 
 ### Added
@@ -24,6 +20,12 @@
 ### Fix
 
 - [TD-7619] Fix date and datetime format and validation
+
+## [7.12.1] 2025-12-09
+
+### Fixed
+
+- [TD-7646] Fix events when updating concepts
 
 ## [7.12.0] 2025-10-29
 
