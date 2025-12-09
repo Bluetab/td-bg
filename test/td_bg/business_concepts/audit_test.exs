@@ -105,7 +105,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
       assert event == "update_concept_draft"
     end
 
-    test "publish event update_concept_draft when a a published concept is updated" do
+    test "publish event update_concept when a a published concept is updated" do
       old_domain = CacheHelpers.insert_domain()
       %{id: new_domain_id} = CacheHelpers.insert_domain()
 
@@ -224,12 +224,64 @@ defmodule TdBg.BusinessConcepts.AuditTest do
 
       assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
 
-      assert length(events) == 3
+      assert length(events) == 2
 
       assert Enum.all?(events, fn %{payload: payload} ->
                decoded = Jason.decode!(payload)
                Map.get(decoded, "event_via") == "file"
              end)
+    end
+
+    test "publish event with correct diff when fields are updated, removed, added or origin changed" do
+      %{id: domain_id} = CacheHelpers.insert_domain()
+
+      concept = build(:business_concept, domain_id: domain_id)
+
+      initial_content = %{
+        "FieldA" => %{"value" => "foo", "origin" => "user"},
+        "FieldB" => %{"value" => "bar", "origin" => "user"},
+        "FieldC" => %{"value" => "baz", "origin" => "user"},
+        "FieldD" => %{"value" => "zar", "origin" => "user"}
+      }
+
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          status: "published",
+          content: initial_content
+        )
+
+      new_content = %{
+        "FieldA" => %{"value" => "fuu", "origin" => "file"},
+        "FieldB" => %{"value" => "bar", "origin" => "file"},
+        "FieldD" => %{"value" => "", "origin" => "file"},
+        "FieldE" => %{"value" => "faz", "origin" => "file"}
+      }
+
+      Process.put(:event_via, "file")
+
+      changeset =
+        Ecto.Changeset.change(business_concept_version, %{
+          content: new_content
+        })
+
+      {:ok, _} =
+        Audit.business_concept_published(
+          TdBg.Repo,
+          %{published: business_concept_version},
+          changeset
+        )
+
+      assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
+
+      event = Enum.find(events, &(&1.event == "update_concept"))
+      assert event
+
+      payload = Jason.decode!(event.payload)
+      content_diff = payload["content"]
+
+      assert content_diff["changed"] == %{"FieldA" => "fuu", "FieldD" => ""}
+      assert content_diff["added"] == %{"FieldE" => "faz"}
     end
   end
 end

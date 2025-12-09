@@ -840,8 +840,14 @@ defmodule TdBg.BusinessConcepts do
   end
 
   def version_concept(%{changeset: changeset} = params, opts \\ []) do
+    changeset = Changeset.change(changeset, current: false)
+
     Multi.new()
     |> Multi.insert(:current, Changeset.change(changeset, current: false))
+    # Capture version before versioning for accurate audit diff calculation
+    |> Multi.run(:old_version, fn _, _ ->
+      {:ok, Map.get(params, :business_concept_version) || %{}}
+    end)
     |> i18_action_on_version_concept(params, opts)
     |> Multi.run(:audit, Audit, :business_concept_versioned, [%{changeset: changeset}])
     |> Repo.transaction()
@@ -871,6 +877,9 @@ defmodule TdBg.BusinessConcepts do
 
     Multi.new()
     |> Multi.update_all(:versioned, query, set: [status: "versioned", current: false])
+    |> Multi.run(:old_version, fn _, _ ->
+      {:ok, Map.get(params, :business_concept_version) || %{}}
+    end)
     |> multi_upsert.(:published, Changeset.change(changeset, current: true))
     |> maybe_upsert_i18n_content(params)
     |> then(fn multi ->
