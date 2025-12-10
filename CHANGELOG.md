@@ -1,11 +1,26 @@
 # Changelog
 
+## [7.14.0] 2025-12-10
+
+### Added
+
+- [TD-7711] Phrase prefix search to highlight stricter text matches
+
+### Changed
+
+- [TD-7302] Update td-core lib
+- [TD-7678] Update function for search a concept by name, domain and template
+
 ## [7.13.0] 2025-11-18
 
 ### Added
 
 - [TD-7607] Add manage_quality_rule and view_quality_rule permissions to concept retrieve
 - [TD-7627] Update and refactor test
+
+### Fix
+
+- [TD-7619] Fix date and datetime format and validation
 
 ## [7.12.1] 2025-12-09
 

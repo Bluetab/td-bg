@@ -215,6 +215,7 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     @translatable_fields [:name, :ngram_name]
     @search_fields ~w(ngram_name*^3)
     @simple_search_fields ~w(name)
+    @exact_fields ~w(name)
 
     def mappings(_) do
       content_mappings = %{properties: get_dynamic_mappings("bg", add_locales?: true)}
@@ -285,11 +286,12 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     def query_data(_) do
       content_schema = Templates.content_schema_for_scope("bg")
       dynamic_fields = content_schema |> dynamic_search_fields("content") |> add_locales()
-      simple_search_fields = add_locales(@simple_search_fields) ++ dynamic_fields
+      simple = (@simple_search_fields |> add_locales() |> boost()) ++ dynamic_fields
+      as_you_type = @search_fields ++ dynamic_fields
+      exact = @exact_fields |> add_locales() |> boost()
 
       %{
-        fields: @search_fields ++ dynamic_fields,
-        simple_search_fields: simple_search_fields,
+        query: %{as_you_type: as_you_type, simple: simple, exact: exact},
         aggs: merged_aggregations(content_schema)
       }
     end
@@ -322,6 +324,10 @@ defmodule TdBg.BusinessConcepts.ElasticDocument do
     defp merged_aggregations(scope_or_schema) do
       native_aggregations = native_aggregations()
       merge_dynamic_aggregations(native_aggregations, scope_or_schema, "content")
+    end
+
+    defp boost(fields) do
+      Enum.map(fields, fn field -> "#{field}^3" end)
     end
   end
 end

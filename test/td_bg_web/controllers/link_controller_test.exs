@@ -3,8 +3,14 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
 
   import Mox
 
+  alias Elasticsearch.Document
+  alias Jason
+  alias TdBg.Repo
+
   describe "POST /api/business_concept_versions/links/download" do
     setup do
+      CacheHelpers.insert_template(name: "some_type")
+
       bcv = insert(:business_concept_version)
       CacheHelpers.put_concept(bcv.business_concept, bcv)
       data_structure = CacheHelpers.insert_data_structure()
@@ -40,6 +46,7 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                  sort: ["_id"],
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -48,7 +55,26 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                          lenient: true,
                          fuzziness: "AUTO"
                        }
-                     }
+                     },
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           boost: 4.0,
+                           lenient: true
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ]
                    }
                  },
                  pit: %{id: "foo", keep_alive: "1m"}
@@ -63,6 +89,7 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                  sort: ["_id"],
                  query: %{
                    bool: %{
+                     filter: %{match_all: %{}},
                      must: %{
                        multi_match: %{
                          type: "bool_prefix",
@@ -71,7 +98,26 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                          lenient: true,
                          fuzziness: "AUTO"
                        }
-                     }
+                     },
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "bar",
+                           boost: 4.0,
+                           lenient: true
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"bar\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ]
                    }
                  },
                  pit: %{id: "foo", keep_alive: "1m"},
@@ -114,6 +160,7 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                "id",
                "current_version_id",
                "concept_name",
+               "concept_type",
                "domain_external_id",
                "domain_name",
                "structure_external_id",
@@ -129,10 +176,21 @@ defmodule TdBgWeb.BusinessConceptLinkControllerTest do
                    row |> Enum.at(1) |> trunc() == bcv.id
                end)
 
+      bcv_preloaded = Repo.preload(bcv, business_concept: [:domain, :shared_to])
+
+      encoded_bcv =
+        bcv_preloaded
+        |> Document.encode()
+        |> Jason.encode!()
+        |> Jason.decode!()
+
+      concept_type = get_in(encoded_bcv, ["template", "name"])
+
       assert [
                bcv.business_concept_id * 1.0,
                bcv.id * 1.0,
                bcv.name,
+               concept_type,
                bcv.business_concept.domain.external_id,
                bcv.business_concept.domain.name,
                Map.get(data_structure, :external_id, ""),

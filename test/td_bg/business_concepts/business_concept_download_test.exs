@@ -2269,4 +2269,84 @@ defmodule TdBg.BusinessConceptDownloadTests do
              } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
     end
   end
+
+  @tag template: [
+         %{
+           "name" => "",
+           "fields" => [
+             %{"name" => "published_on", "type" => "date"},
+             %{"name" => "published_at", "type" => "datetime"}
+           ]
+         }
+       ]
+  test "to_xlsx/2 formats template date fields with excel styles" do
+    template = @template_name
+    business_concept_id = 321
+    business_concept_version_id = 654
+    name = "concept_with_dates"
+    domain_ext_id = "domain_ext_id"
+    domain_name = "Domain Name"
+    status = "draft"
+    inserted_at = "2018-05-05"
+    last_change_at = "2018-05-06"
+    published_on = "2025-12-31"
+    published_at = "2025-12-31T22:55:30"
+
+    concepts = [
+      %{
+        "business_concept_id" => business_concept_id,
+        "id" => business_concept_version_id,
+        "name" => name,
+        "template" => %{"name" => template},
+        "domain" => %{"external_id" => domain_ext_id, "name" => domain_name},
+        "content" => %{
+          "published_on" => published_on,
+          "published_at" => published_at
+        },
+        "status" => status,
+        "inserted_at" => inserted_at,
+        "last_change_at" => last_change_at
+      }
+    ]
+
+    rows = [
+      [
+        ["id", {:bg_color, "#ffe994"}],
+        "current_version_id",
+        ["name", {:bg_color, "#ffd428"}],
+        ["domain_external_id", {:bg_color, "#ffd428"}],
+        "domain_name",
+        "status",
+        "completeness",
+        "last_change_at",
+        "inserted_at",
+        "link_to_concept",
+        ["published_on", {:bg_color, "#ffe994"}],
+        ["published_at", {:bg_color, "#ffe994"}]
+      ],
+      [
+        business_concept_id,
+        business_concept_version_id,
+        name,
+        domain_ext_id,
+        domain_name,
+        status,
+        100.0,
+        last_change_at,
+        inserted_at,
+        "https://test.io/concepts/#{business_concept_id}/versions/#{business_concept_version_id}",
+        [{:excelts, 46_022}, {:num_format, "dd-mm-yyyy"}],
+        [{:excelts, 46_022.955208333333}, {:num_format, "dd-mm-yyyy hh:MM:ss"}]
+      ]
+    ]
+
+    assert %Workbook{
+             sheets: [
+               %Sheet{
+                 name: ^template,
+                 rows: ^rows
+               }
+             ]
+           } = Download.to_xlsx(concepts, @lang, concept_url_schema: @concept_url_schema)
+  end
 end

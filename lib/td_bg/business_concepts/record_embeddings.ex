@@ -12,9 +12,10 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddings do
   alias TdCluster.Cluster.TdAi.Indices
 
   @batch_size 128
+  @index_type "suggestions"
 
   def upsert_from_concepts_async(business_concept_ids, opts \\ []) do
-    case Indices.exists_enabled?() do
+    case Indices.exists_enabled?(index_type: @index_type) do
       {:ok, true} ->
         Repo.transaction(fn ->
           business_concept_ids
@@ -31,7 +32,7 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddings do
   end
 
   def upsert_from_concepts(business_concept_ids) do
-    case Indices.exists_enabled?() do
+    case Indices.exists_enabled?(index_type: @index_type) do
       {:ok, true} ->
         now = DateTime.utc_now()
 

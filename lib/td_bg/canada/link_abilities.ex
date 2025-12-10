@@ -13,6 +13,8 @@ defmodule TdBg.Canada.LinkAbilities do
   alias TdCache.Link
   alias TdCluster.Cluster.TdAi.Indices
 
+  @index_type "suggestions"
+
   def can?(%Claims{role: "admin"}, :download_links), do: true
 
   def can?(%Claims{} = claims, :download_links) do
@@ -23,7 +25,7 @@ defmodule TdBg.Canada.LinkAbilities do
   def can?(%Claims{role: "admin"}, :create_structure_link, _resource), do: true
 
   def can?(%Claims{role: "admin"}, :suggest_structure_link, _resource) do
-    case Indices.exists_enabled?() do
+    case Indices.exists_enabled?(index_type: @index_type) do
       {:ok, enabled?} -> enabled?
       _ -> false
     end
@@ -61,7 +63,7 @@ defmodule TdBg.Canada.LinkAbilities do
   def can?(%Claims{} = claims, :suggest_structure_link, %{} = concept) do
     domain_ids = BusinessConcepts.get_domain_ids(concept)
 
-    case Indices.exists_enabled?() do
+    case Indices.exists_enabled?(index_type: @index_type) do
       {:ok, enabled?} ->
         Permissions.authorized?(claims, :manage_business_concept_links, domain_ids) && enabled?
 

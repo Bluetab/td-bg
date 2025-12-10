@@ -22,7 +22,7 @@ defmodule TdBg.BusinessConceptsTest do
 
   @stream TdCache.Audit.stream()
   @template_name "TestTemplate1234"
-
+  @index_type "suggestions"
   @content [
     %{
       "name" => "group",
@@ -173,7 +173,10 @@ defmodule TdBg.BusinessConceptsTest do
       IndexWorkerMock.clear()
     end)
 
-    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] ->
+    stub(MockClusterHandler, :call, fn :ai,
+                                       TdAi.Indices,
+                                       :exists_enabled?,
+                                       [[index_type: @index_type]] ->
       {:ok, true}
     end)
 
@@ -1260,7 +1263,7 @@ defmodule TdBg.BusinessConceptsTest do
       assert business_concept.id == BusinessConcepts.get_business_concept(business_concept.id).id
     end
 
-    test "get_concept_by_name_in_domain/2 with specific name" do
+    test "get_unique_concept/2 with specific name" do
       %{id: domain_id} = d1 = insert(:domain)
 
       %{id: business_concept_id} =
@@ -1290,7 +1293,7 @@ defmodule TdBg.BusinessConceptsTest do
                  %{id: ^id1, version: ^version1}
                ]
              } =
-               BusinessConcepts.get_concept_by_name_in_domain("bcv2", domain_id)
+               BusinessConcepts.get_unique_concept("bcv2", domain_id, @template_name)
 
       assert %{
                id: ^business_concept_id,
@@ -1299,10 +1302,10 @@ defmodule TdBg.BusinessConceptsTest do
                  %{id: ^id1, version: ^version1}
                ]
              } =
-               BusinessConcepts.get_concept_by_name_in_domain("bcv1", domain_id)
+               BusinessConcepts.get_unique_concept("bcv1", domain_id, @template_name)
     end
 
-    test "get_concept_by_name_in_domain/2 with different name" do
+    test "get_unique_concept/2 with different name" do
       %{id: domain_id} = d1 = insert(:domain)
 
       business_concept =
@@ -1315,10 +1318,10 @@ defmodule TdBg.BusinessConceptsTest do
         name: "bcv1"
       )
 
-      assert is_nil(BusinessConcepts.get_concept_by_name_in_domain("bcv2", domain_id))
+      assert is_nil(BusinessConcepts.get_unique_concept("bcv2", domain_id, @template_name))
     end
 
-    test "get_concept_by_name_in_domain/2 with different domain" do
+    test "get_unique_concept/2 with different domain" do
       d1 = insert(:domain)
       %{id: domain_id2} = insert(:domain)
 
@@ -1332,16 +1335,83 @@ defmodule TdBg.BusinessConceptsTest do
         name: "bcv1"
       )
 
-      assert is_nil(BusinessConcepts.get_concept_by_name_in_domain("bcv1", domain_id2))
+      assert is_nil(BusinessConcepts.get_unique_concept("bcv1", domain_id2, @template_name))
     end
 
-    test "get_concept_by_name_in_domain/2 return nil if the name is nil" do
+    test "get_unique_concept/2 return nil if the name is nil" do
       %{id: domain_id} = insert(:domain)
 
-      assert is_nil(BusinessConcepts.get_concept_by_name_in_domain(nil, domain_id))
+      assert is_nil(BusinessConcepts.get_unique_concept(nil, domain_id, "foo"))
     end
 
-    test "get_concept_by_name_in_domain/2 with shared domain data" do
+    test "get_unique_concept/3 with correct type" do
+      %{id: domain_id} = d1 = insert(:domain)
+
+      business_concept =
+        insert(:business_concept, type: @template_name, domain: d1)
+
+      insert(:business_concept_version,
+        version: 1,
+        business_concept: business_concept,
+        status: "published",
+        name: "bcv1"
+      )
+
+      result = BusinessConcepts.get_unique_concept("bcv1", domain_id, @template_name)
+
+      assert result.id == business_concept.id
+      assert result.type == @template_name
+    end
+
+    test "get_unique_concept/3 with incorrect type" do
+      %{id: domain_id} = d1 = insert(:domain)
+
+      business_concept =
+        insert(:business_concept, type: @template_name, domain: d1)
+
+      insert(:business_concept_version,
+        version: 1,
+        business_concept: business_concept,
+        status: "published",
+        name: "bcv1"
+      )
+
+      assert is_nil(BusinessConcepts.get_unique_concept("bcv1", domain_id, "different_type"))
+    end
+
+    test "get_unique_concept/3 with same name but different type" do
+      %{id: domain_id} = d1 = insert(:domain)
+      template_name_2 = "different_template"
+
+      business_concept1 =
+        insert(:business_concept, type: @template_name, domain: d1)
+
+      business_concept2 =
+        insert(:business_concept, type: template_name_2, domain: d1)
+
+      insert(:business_concept_version,
+        version: 1,
+        business_concept: business_concept1,
+        status: "published",
+        name: "bcv1"
+      )
+
+      insert(:business_concept_version,
+        version: 1,
+        business_concept: business_concept2,
+        status: "published",
+        name: "bcv1"
+      )
+
+      result1 = BusinessConcepts.get_unique_concept("bcv1", domain_id, @template_name)
+      result2 = BusinessConcepts.get_unique_concept("bcv1", domain_id, template_name_2)
+
+      assert result1.id == business_concept1.id
+      assert result2.id == business_concept2.id
+      assert result1.id != result2.id
+    end
+
+    test "get_unique_concept/2 with shared domain data" do
       %{id: domain_id1} = d1 = insert(:domain)
       %{id: domain_id2} = d2 = insert(:domain)
 
@@ -1375,7 +1445,7 @@ defmodule TdBg.BusinessConceptsTest do
                ],
                shared_to: [%{id: ^domain_id2}]
              } =
-               BusinessConcepts.get_concept_by_name_in_domain("bcv2", domain_id1)
+               BusinessConcepts.get_unique_concept("bcv2", domain_id1, @template_name)
 
       assert %{
                id: ^business_concept_id,
@@ -1385,7 +1455,7 @@ defmodule TdBg.BusinessConceptsTest do
                ],
                shared_to: [%{id: ^domain_id2}]
              } =
-               BusinessConcepts.get_concept_by_name_in_domain("bcv1", domain_id1)
+               BusinessConcepts.get_unique_concept("bcv1", domain_id1, @template_name)
     end
   end
 
@@ -1868,13 +1938,14 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id}",
+        @index_type,
         nil,
         {:ok, {"default", [54.0, 10.2, -2.0]}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
-      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
+      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv, @index_type)
       assert [job] = all_enqueued(worker: EmbeddingsUpsertBatch)
       assert job.args["ids"] == [business_concept.id]
     end
@@ -1938,13 +2009,14 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id} #{content_description} #{link_name} #{link_type} #{link_description}",
+        @index_type,
         nil,
         {:ok, {"default", [54.0, 10.2, -2.0]}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
-      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv)
+      assert {"default", [54.0, 10.2, -2.0]} == BusinessConcepts.generate_vector(bcv, @index_type)
     end
 
     test "generates vector for business concept version and collection" do
@@ -1954,14 +2026,15 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{business_concept.type} #{business_concept.domain.external_id}",
+        @index_type,
         collection_name,
         {:ok, {collection_name, [54.0, 10.2, -2.0]}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       assert {collection_name, [54.0, 10.2, -2.0]} ==
-               BusinessConcepts.generate_vector(bcv, collection_name)
+               BusinessConcepts.generate_vector(bcv, @index_type, collection_name)
     end
 
     test "uses existing business concept version embeddings" do
@@ -1969,10 +2042,18 @@ defmodule TdBg.BusinessConceptsTest do
         insert(:record_embedding)
 
       insert(:record_embedding, collection: "other", business_concept_version: bcv)
-      Indices.first_enabled(&Mox.expect/4, {:ok, %{collection_name: collection}})
+
+      Indices.first_enabled(
+        &Mox.expect/4,
+        [index_type: @index_type],
+        {:ok, %{collection_name: collection}}
+      )
 
       assert {collection, embedding} ==
-               BusinessConcepts.generate_vector(%{id: bcv.business_concept_id, version: bcv.id})
+               BusinessConcepts.generate_vector(
+                 %{id: bcv.business_concept_id, version: bcv.id},
+                 @index_type
+               )
     end
 
     test "triggers an upsert when the version doesn't have a record embedding for the collection" do
@@ -1983,15 +2064,17 @@ defmodule TdBg.BusinessConceptsTest do
       Embeddings.generate_vector(
         &Mox.expect/4,
         "#{bcv.name} #{bcv.business_concept.type} #{bcv.business_concept.domain.external_id}",
+        @index_type,
         collection,
         {:ok, {collection, embedding}}
       )
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       assert {collection, embedding} ==
                BusinessConcepts.generate_vector(
                  %{id: bcv.business_concept_id, version: bcv.id},
+                 @index_type,
                  collection
                )
 

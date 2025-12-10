@@ -6,6 +6,8 @@ defmodule TdBgWeb.SuggestionControllerTest do
   alias TdCluster.TestHelpers.TdAiMock
   alias TdCluster.TestHelpers.TdDdMock
 
+  @index_type "suggestions"
+
   describe "search" do
     @tag authentication: [role: "user"]
     test "knn search for concept resource with default attrs", %{conn: conn, claims: claims} do
@@ -34,11 +36,12 @@ defmodule TdBgWeb.SuggestionControllerTest do
         ]
       }
 
-      TdAiMock.Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      TdAiMock.Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, true})
 
       TdDdMock.generate_vector(
         &Mox.expect/4,
         1,
+        @index_type,
         nil,
         {:ok, {"default_collection_name", [54.0, 10.2, -2.0]}}
       )
@@ -49,7 +52,7 @@ defmodule TdBgWeb.SuggestionControllerTest do
                    "field" => "embeddings.vector_default_collection_name",
                    "filter" => %{
                      bool: %{
-                       must: [
+                       filter: [
                          %{
                            terms: %{
                              "status" => ["draft", "pending_approval", "published", "rejected"]

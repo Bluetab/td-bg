@@ -6,17 +6,20 @@ defmodule TdBg.BusinessConcepts.BusinessConceptVersions.Workers.EmbeddingsUpsert
   alias TdCluster.TestHelpers.TdAiMock.Embeddings
   alias TdCluster.TestHelpers.TdAiMock.Indices
 
+  @index_type "suggestions"
+
   describe "EmbeddingsUpsertBatch.perform/1" do
     test "inserts a batch of record embeddings" do
       business_concept_version = insert(:business_concept_version)
 
-      Indices.exists_enabled?(&Mox.expect/4, {:ok, true})
+      Indices.exists_enabled?(&Mox.expect/4, [index_type: "suggestions"], {:ok, true})
 
       Embeddings.list(
         &Mox.expect/4,
         [
           "#{business_concept_version.name} #{business_concept_version.business_concept.type} #{business_concept_version.business_concept.domain.external_id}"
         ],
+        @index_type,
         {:ok, %{"default" => [[-2.0, 2.0, 3.0]]}}
       )
 

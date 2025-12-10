@@ -16,7 +16,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
       ElasticsearchMock
       |> expect(:request, fn
         _, :post, "/concepts/_search", %{aggs: _, size: 0, query: query}, [_] ->
-          assert %{bool: %{must: %{match_all: %{}}}} = query
+          assert %{bool: %{filter: %{match_all: %{}}}} = query
           aggs_response()
       end)
 
@@ -36,7 +36,7 @@ defmodule TdBgWeb.BusinessConceptFilterControllerTest do
       ElasticsearchMock
       |> expect(:request, fn
         _, :post, "/concepts/_search", %{aggs: _, size: 0, query: query}, [_] ->
-          assert %{bool: %{must: [_status_filter, _confidential_filter]}} = query
+          assert %{bool: %{filter: [_status_filter, _confidential_filter]}} = query
           aggs_response()
       end)
 

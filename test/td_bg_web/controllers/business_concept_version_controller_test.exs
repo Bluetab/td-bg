@@ -162,7 +162,12 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
   end
 
   setup _context do
-    stub(MockClusterHandler, :call, fn :ai, TdAi.Indices, :exists_enabled?, [] -> {:ok, true} end)
+    stub(MockClusterHandler, :call, fn :ai,
+                                       TdAi.Indices,
+                                       :exists_enabled?,
+                                       [[index_type: "suggestions"]] ->
+      {:ok, true}
+    end)
 
     on_exit(fn ->
       IndexWorkerMock.clear()
@@ -1402,7 +1407,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
           "/concepts/_search",
           %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
           _ ->
-            assert query == %{bool: %{must: %{match_all: %{}}}}
+            assert query == %{bool: %{filter: %{match_all: %{}}}}
             SearchHelpers.hits_response([bcv])
         end)
 
@@ -1621,7 +1626,27 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                          lenient: true,
                          fuzziness: "AUTO"
                        }
-                     }
+                     },
+                     filter: %{match_all: %{}},
+                     should: [
+                       %{
+                         multi_match: %{
+                           type: "phrase_prefix",
+                           fields: ["name^3"],
+                           query: "foo",
+                           boost: 4.0,
+                           lenient: true
+                         }
+                       },
+                       %{
+                         simple_query_string: %{
+                           fields: ["name^3"],
+                           query: "\"foo\"",
+                           quote_field_suffix: ".exact",
+                           boost: 4.0
+                         }
+                       }
+                     ]
                    }
                  }
 
@@ -1652,7 +1677,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
            %{from: 0, query: query, size: 50, sort: ["_score", "name.raw"]},
            _ ->
           assert query == %{
-                   bool: %{must: %{term: %{"business_concept_id" => business_concept_id}}}
+                   bool: %{filter: %{term: %{"business_concept_id" => business_concept_id}}}
                  }
 
           SearchHelpers.hits_response([bcv])
@@ -2319,7 +2344,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "/concepts/_search",
         %{from: 0, query: query, size: 10_000, sort: ["_score", "name.raw"]},
         _ ->
-          assert query == %{bool: %{must: %{term: %{"status" => "published"}}}}
+          assert query == %{bool: %{filter: %{term: %{"status" => "published"}}}}
           SearchHelpers.hits_response([bcv])
       end)
 
@@ -2372,7 +2397,7 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         "/concepts/_search",
         %{from: 0, query: query, size: 10_000, sort: ["_score", "name.raw"]},
         _ ->
-          assert query == %{bool: %{must: %{term: %{"status" => "published"}}}}
+          assert query == %{bool: %{filter: %{term: %{"status" => "published"}}}}
           SearchHelpers.hits_response([bcv])
       end)
 
