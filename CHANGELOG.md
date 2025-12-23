@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-7760] Optimization for xlsx donwload for Concepts and Structures notes
+
 ## [7.14.0] 2025-12-10
 
 ### Added
