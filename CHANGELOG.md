@@ -5,6 +5,7 @@
 ### Changed
 
 - [TD-7760] Optimization for xlsx donwload for Concepts and Structures notes
+- [TD-7676] Update td-df-lib. Fixed completeness calculation for conditional fields.
 
 ## [7.14.0] 2025-12-10
 
