@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [TD-7771]:
+ - Differences in audit payload
+ - Decouple the publishing of business concept version events 
+
 ### Changed
 
 - [TD-7760] Optimization for xlsx donwload for Concepts and Structures notes
