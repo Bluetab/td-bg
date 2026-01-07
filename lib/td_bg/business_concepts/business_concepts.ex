@@ -843,13 +843,12 @@ defmodule TdBg.BusinessConcepts do
     changeset = Changeset.change(changeset, current: false)
 
     Multi.new()
-    |> Multi.insert(:current, Changeset.change(changeset, current: false))
+    |> Multi.insert(:current, changeset)
     # Capture version before versioning for accurate audit diff calculation
-    |> Multi.run(:old_version, fn _, _ ->
-      {:ok, Map.get(params, :business_concept_version) || %{}}
-    end)
+    |> Multi.run(:old_version, fn _, _ -> {:ok, Map.get(params, :latest_version) || %{}} end)
     |> i18_action_on_version_concept(params, opts)
-    |> Multi.run(:audit, Audit, :business_concept_versioned, [%{changeset: changeset}])
+    |> Multi.run(:audit, Audit, :business_concept_versioned, [])
+    |> version_concept_events(changeset)
     |> Repo.transaction()
   end
 
@@ -876,19 +875,12 @@ defmodule TdBg.BusinessConcepts do
     multi_upsert = if action === :create, do: &Multi.insert/3, else: &Multi.update/3
 
     Multi.new()
+    |> Multi.run(:action, fn _, _ -> {:ok, action} end)
+    |> Multi.run(:old_version, fn _, _ -> {:ok, Map.get(params, :latest_version) || %{}} end)
     |> Multi.update_all(:versioned, query, set: [status: "versioned", current: false])
-    |> Multi.run(:old_version, fn _, _ ->
-      {:ok, Map.get(params, :business_concept_version) || %{}}
-    end)
     |> multi_upsert.(:published, Changeset.change(changeset, current: true))
     |> maybe_upsert_i18n_content(params)
-    |> then(fn multi ->
-      if Process.get(:event_via) == "file" do
-        Multi.run(multi, :audit_published, Audit, :business_concept_published, [changeset])
-      else
-        Multi.run(multi, :audit_published, Audit, :business_concept_published, [])
-      end
-    end)
+    |> publish_version_concept_events(changeset)
     |> Repo.transaction()
   end
 
@@ -1254,5 +1246,46 @@ defmodule TdBg.BusinessConcepts do
       new_data = Map.put(data, "content", new_content)
       Map.put(acc, lang, new_data)
     end)
+  end
+
+  defp version_concept_events(multi, changeset) do
+    if Process.get(:event_via) == "file" do
+      Multi.run(multi, :audit_version_updated, fn repo,
+                                                  %{current: current, old_version: old_version} ->
+        Audit.business_concept_version_updated(
+          repo,
+          %{updated: current, old_version: old_version},
+          changeset
+        )
+      end)
+    else
+      multi
+    end
+  end
+
+  defp publish_version_concept_events(multi, changeset) do
+    if Process.get(:event_via) == "file" do
+      multi
+      |> Multi.run(
+        :audit_versioned,
+        fn
+          repo, %{published: published, action: :create} ->
+            Audit.business_concept_versioned(repo, %{current: published})
+
+          _repo, _changes ->
+            {:ok, nil}
+        end
+      )
+      |> Multi.run(:audit_updated, fn repo, %{published: published, old_version: old_version} ->
+        Audit.business_concept_version_updated(
+          repo,
+          %{updated: published, old_version: old_version},
+          changeset
+        )
+      end)
+      |> Multi.run(:audit_published, Audit, :business_concept_published, [])
+    else
+      Multi.run(multi, :audit_published, Audit, :business_concept_published, [])
+    end
   end
 end

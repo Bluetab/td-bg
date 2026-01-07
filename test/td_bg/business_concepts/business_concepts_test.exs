@@ -31,7 +31,7 @@ defmodule TdBg.BusinessConceptsTest do
           name: "foo",
           type: "string",
           cardinality: "?",
-          values: %{"fixed" => ["bar"]},
+          values: %{"fixed" => ["bar", "xyz"]},
           subscribable: true
         },
         %{
@@ -1195,6 +1195,51 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert object.business_concept.id == business_concept_version.business_concept.id
       assert object.business_concept.last_change_by == 1000
+    end
+
+    @tag template: @content
+    test "publish event" do
+      TdCache.Redix.del!(TdCache.Audit.stream())
+      IndexWorkerMock.clear()
+
+      concept = build(:business_concept, type: @template_name)
+
+      business_concept_version =
+        insert(:business_concept_version,
+          business_concept: concept,
+          content: %{
+            "foo" => %{"value" => "bar", "origin" => "user"},
+            "xyz" => %{"value" => "", "origin" => "user"}
+          }
+        )
+
+      concept_attrs = %{
+        last_change_by: 1000,
+        last_change_at: DateTime.utc_now()
+      }
+
+      update_attrs = %{
+        business_concept: concept_attrs,
+        business_concept_id: business_concept_version.business_concept.id,
+        content: %{"foo" => %{"value" => "xyz", "origin" => "user"}},
+        name: "updated name",
+        last_change_at: DateTime.utc_now(),
+        version: 1,
+        content_schema: TdDfLib.Templates.content_schema(@template_name)
+      }
+
+      assert {:ok, %BusinessConceptVersion{} = object} =
+               BusinessConcepts.update_business_concept_version(
+                 business_concept_version,
+                 update_attrs
+               )
+
+      assert object.content == %{"foo" => %{"value" => "xyz", "origin" => "user"}}
+
+      {:ok, [%{payload: payload}]} =
+        TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
+
+      assert Jason.decode!(payload)["content"] == %{"changed" => %{"foo" => "xyz"}}
     end
   end
 
