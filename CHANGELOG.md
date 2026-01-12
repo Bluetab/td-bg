@@ -1,5 +1,18 @@
 # Changelog
 
+## [8.0.0] 2026-01-12
+
+### Fixed
+
+- [TD-7771]:
+  - Differences in audit payload
+  - Decouple the publishing of business concept version events
+
+### Changed
+
+- [TD-7760] Optimization for xlsx donwload for Concepts and Structures notes
+- [TD-7676] Update td-df-lib. Fixed completeness calculation for conditional fields.
+
 ## [7.14.0] 2025-12-10
 
 ### Added

@@ -8,7 +8,9 @@ defmodule TdBg.Audit.AuditSupport do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdCache.Audit
   alias TdCache.TaxonomyCache
-  alias TdDfLib.{MapDiff, Masks, Templates}
+  alias TdDfLib.{MapDiff, Masks, RichText, Templates}
+
+  @support_keys ~w(original_version content_schema)a
 
   def publish(
         event,
@@ -29,7 +31,7 @@ defmodule TdBg.Audit.AuditSupport do
       changes
       |> payload(data)
       |> add_event_via()
-      |> Map.drop([:original_version])
+      |> Map.drop(@support_keys)
 
     if map_size(changes) == 0 do
       {:ok, :unchanged}
@@ -154,11 +156,13 @@ defmodule TdBg.Audit.AuditSupport do
     |> payload(data)
   end
 
-  defp payload(%{original_version: %{content: old_content}, content: new_content} = changes, %{
-         content: nil
-       })
+  defp payload(
+         %{original_version: %{content: old_content}, content: new_content} = changes,
+         %{content: nil}
+       )
        when is_map(new_content) or is_map(old_content) do
-    content = merge_diff_content(old_content, new_content)
+    content_schema = Map.get(changes, :content_schema)
+    content = diff_content(old_content, new_content, content_schema)
 
     changes
     |> Map.drop([:content, :original_version])
@@ -167,7 +171,8 @@ defmodule TdBg.Audit.AuditSupport do
 
   defp payload(%{content: new_content} = changes, %{content: old_content} = _data)
        when is_map(new_content) or is_map(old_content) do
-    content = merge_diff_content(old_content, new_content)
+    content_schema = Map.get(changes, :content_schema)
+    content = diff_content(old_content, new_content, content_schema)
 
     changes
     |> Map.delete(:content)
@@ -211,12 +216,59 @@ defmodule TdBg.Audit.AuditSupport do
 
   defp get_domain(_), do: nil
 
-  defp merge_diff_content(old_content, new_content) do
-    merged_content = Map.merge(old_content, new_content)
+  defp diff_content(old_content, new_content, content_schema) do
+    formatted_old =
+      old_content
+      |> TdDfLib.Content.to_legacy()
+      |> format_values(content_schema)
 
-    normalized_old = TdDfLib.Content.to_legacy(old_content)
-    normalized_new = TdDfLib.Content.to_legacy(merged_content)
+    formatted_new =
+      new_content
+      |> TdDfLib.Content.to_legacy()
+      |> format_values(content_schema)
+
+    normalized_old = filter_empty_values(formatted_old, formatted_new)
+    normalized_new = filter_empty_values(formatted_new, formatted_old)
 
     MapDiff.diff(normalized_old, normalized_new, mask: &Masks.mask/1)
+  end
+
+  defp filter_empty_values(new_content, old_content) do
+    Map.reject(new_content, fn {key, value} ->
+      not Map.has_key?(old_content, key) and
+        value in [nil, "", [], %{}, [%{"url_name" => "", "url_value" => ""}]]
+    end)
+  end
+
+  defp format_values(content, [_ | _] = content_schema) do
+    enriched_text_fields =
+      content_schema
+      |> Enum.filter(&(&1["type"] == "enriched_text"))
+      |> Enum.map(& &1["name"])
+
+    Map.new(
+      content,
+      fn
+        {key, value} ->
+          if key in enriched_text_fields do
+            {key, RichText.to_plain_text(value)}
+          else
+            {key, value}
+          end
+      end
+    )
+  end
+
+  defp format_values(content, _content_schema) do
+    Map.new(
+      content,
+      fn
+        {key, %{"document" => %{"nodes" => _nodes}} = value} ->
+          {key, RichText.to_plain_text(value)}
+
+        {key, value} ->
+          {key, value}
+      end
+    )
   end
 end

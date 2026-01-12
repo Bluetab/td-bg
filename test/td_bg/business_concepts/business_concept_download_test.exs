@@ -25,7 +25,7 @@ defmodule TdBg.BusinessConceptDownloadTests do
           id: 0,
           name: @template_name,
           label: "label",
-          scope: "test",
+          scope: "bg",
           content: content
         })
     end
