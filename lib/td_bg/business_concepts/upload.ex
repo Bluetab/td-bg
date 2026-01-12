@@ -419,6 +419,7 @@ defmodule TdBg.BusinessConcept.Upload do
       i18n_content: i18n_content,
       changeset: nil,
       business_concept_version: nil,
+      latest_version: nil,
       index: index,
       template_name: template_name,
       auto_publish: false,
@@ -789,7 +790,8 @@ defmodule TdBg.BusinessConcept.Upload do
             | action: :create,
               versioned: true,
               business_concept_version: business_concept_version,
-              in_progress: !auto_publish and business_concept_version.status == "draft"
+              in_progress: !auto_publish and business_concept_version.status == "draft",
+              latest_version: business_concept_version
           }
 
           business_concept =
@@ -815,7 +817,8 @@ defmodule TdBg.BusinessConcept.Upload do
             | business_concept_version:
                 BusinessConcepts.get_business_concept_version(id, "current"),
               versioned: !Map.get(business_concept_version, :current),
-              in_progress: !auto_publish and business_concept_version.status == "draft"
+              in_progress: !auto_publish and business_concept_version.status == "draft",
+              latest_version: business_concept_version
           }
 
           params
@@ -943,7 +946,6 @@ defmodule TdBg.BusinessConcept.Upload do
          %{
            action: :update,
            auto_publish: true,
-           versioned: true,
            business_concept_version: old_business_concept_version,
            errors: [],
            changeset: %{valid?: true}

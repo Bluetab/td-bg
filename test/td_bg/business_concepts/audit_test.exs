@@ -105,7 +105,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
       assert event == "update_concept_draft"
     end
 
-    test "publish event update_concept when a a published concept is updated" do
+    test "publish event update_concept when a published concept is updated from a published status" do
       old_domain = CacheHelpers.insert_domain()
       %{id: new_domain_id} = CacheHelpers.insert_domain()
 
@@ -125,7 +125,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
       {:ok, _} =
         Audit.business_concept_version_updated(
           TdBg.Repo,
-          %{updated: business_concept_version},
+          %{updated: business_concept_version, old_version: business_concept_version},
           changeset
         )
 
@@ -136,7 +136,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
   end
 
   describe "business_concept_published" do
-    test "publish event concept_published when called without changeset (via web)" do
+    test "publish event concept_published when called via web" do
       %{id: domain_id} = CacheHelpers.insert_domain()
 
       concept = build(:business_concept, domain_id: domain_id)
@@ -160,7 +160,7 @@ defmodule TdBg.BusinessConcepts.AuditTest do
       assert [%{event: "concept_published"}] = events
     end
 
-    test "publish multiple events when called with changeset (via file)" do
+    test "events have event_via='file' when published via file" do
       %{id: domain_id} = CacheHelpers.insert_domain()
 
       concept = build(:business_concept, domain_id: domain_id)
@@ -174,114 +174,17 @@ defmodule TdBg.BusinessConcepts.AuditTest do
 
       Process.put(:event_via, "file")
 
-      changeset =
-        Ecto.Changeset.change(business_concept_version, %{
-          content: %{"Field1" => %{"value" => "new_value", "origin" => "user"}}
-        })
-
       {:ok, _} =
-        Audit.business_concept_published(
-          TdBg.Repo,
-          %{published: business_concept_version},
-          changeset
-        )
+        Audit.business_concept_published(TdBg.Repo, %{published: business_concept_version})
 
       assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
 
-      assert length(events) >= 2
-
-      event_types = Enum.map(events, & &1.event)
-
-      assert "concept_published" in event_types
-      assert "new_concept_draft" in event_types or "update_concept" in event_types
-    end
-
-    test "all events have event_via='file' when published via file with changeset" do
-      %{id: domain_id} = CacheHelpers.insert_domain()
-
-      concept = build(:business_concept, domain_id: domain_id)
-
-      business_concept_version =
-        insert(:business_concept_version,
-          business_concept: concept,
-          status: "published",
-          content: %{"Field1" => %{"value" => "value1", "origin" => "user"}}
-        )
-
-      Process.put(:event_via, "file")
-
-      changeset =
-        Ecto.Changeset.change(business_concept_version, %{
-          content: %{"Field1" => %{"value" => "new_value", "origin" => "user"}}
-        })
-
-      {:ok, _} =
-        Audit.business_concept_published(
-          TdBg.Repo,
-          %{published: business_concept_version},
-          changeset
-        )
-
-      assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
-
-      assert length(events) == 2
+      assert length(events) == 1
 
       assert Enum.all?(events, fn %{payload: payload} ->
                decoded = Jason.decode!(payload)
                Map.get(decoded, "event_via") == "file"
              end)
-    end
-
-    test "publish event with correct diff when fields are updated, removed, added or origin changed" do
-      %{id: domain_id} = CacheHelpers.insert_domain()
-
-      concept = build(:business_concept, domain_id: domain_id)
-
-      initial_content = %{
-        "FieldA" => %{"value" => "foo", "origin" => "user"},
-        "FieldB" => %{"value" => "bar", "origin" => "user"},
-        "FieldC" => %{"value" => "baz", "origin" => "user"},
-        "FieldD" => %{"value" => "zar", "origin" => "user"}
-      }
-
-      business_concept_version =
-        insert(:business_concept_version,
-          business_concept: concept,
-          status: "published",
-          content: initial_content
-        )
-
-      new_content = %{
-        "FieldA" => %{"value" => "fuu", "origin" => "file"},
-        "FieldB" => %{"value" => "bar", "origin" => "file"},
-        "FieldD" => %{"value" => "", "origin" => "file"},
-        "FieldE" => %{"value" => "faz", "origin" => "file"}
-      }
-
-      Process.put(:event_via, "file")
-
-      changeset =
-        Ecto.Changeset.change(business_concept_version, %{
-          content: new_content
-        })
-
-      {:ok, _} =
-        Audit.business_concept_published(
-          TdBg.Repo,
-          %{published: business_concept_version},
-          changeset
-        )
-
-      assert {:ok, events} = Stream.read(:redix, @stream, transform: true)
-
-      event = Enum.find(events, &(&1.event == "update_concept"))
-      assert event
-
-      payload = Jason.decode!(event.payload)
-      content_diff = payload["content"]
-
-      assert content_diff["changed"] == %{"FieldA" => "fuu", "FieldD" => ""}
-      assert content_diff["added"] == %{"FieldE" => "faz"}
     end
   end
 end

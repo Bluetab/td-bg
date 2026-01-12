@@ -5,6 +5,7 @@ defmodule TdBg.BusinessConcept.Download do
 
   alias Elixlsx.{Sheet, Workbook}
   alias TdBg.BusinessConcept.Upload
+  alias TdCache.DomainCache
   alias TdCache.I18nCache
   alias TdCache.TemplateCache
   alias TdDfLib.I18n
@@ -33,6 +34,11 @@ defmodule TdBg.BusinessConcept.Download do
     concept_url_schema = Keyword.get(opts, :concept_url_schema, nil)
     translations = Keyword.get(opts, :translations, false)
 
+    {:ok, templates} = TemplateCache.list_by_scope("bg")
+
+    templates_map =
+      Enum.into(templates, %{}, fn template -> {template.name, template} end)
+
     locales = I18nCache.get_active_locales!()
 
     default_locale =
@@ -41,11 +47,14 @@ defmodule TdBg.BusinessConcept.Download do
         _ -> "en"
       end
 
+    domains_name = DomainCache.id_to_name_map()
+    domains_external_id = DomainCache.id_to_external_id_map()
+
     concepts
     |> Enum.group_by(&(&1 |> Map.get("template") |> Map.get("name")))
     |> Enum.map(fn {template_name, template_concepts} ->
       [template_fields, translatable_fields] =
-        case TemplateCache.get_by_name!(template_name) do
+        case Map.get(templates_map, template_name) do
           nil ->
             [[], []]
 
@@ -73,6 +82,20 @@ defmodule TdBg.BusinessConcept.Download do
         |> get_all_headers(concept_url_schema, translations: translations, locales: locales)
         |> highlight_headers(xlsx_headers, translations: translations, locales: locales)
 
+      parser_opts = [
+        domain_type: :with_domain_external_id,
+        lang: lang,
+        xlsx: true,
+        translations: translations,
+        locales: locales,
+        default_locale: default_locale
+      ]
+
+      parsing_context =
+        template_fields
+        |> Parser.context_for_fields(:with_domain_external_id, domains_name, domains_external_id)
+        |> Map.put("lang", lang)
+
       core =
         Enum.map(template_concepts, fn %{"content" => content} = concept ->
           @headers
@@ -86,17 +109,11 @@ defmodule TdBg.BusinessConcept.Download do
           )
           |> List.flatten()
           |> add_extra_fields(concept, concept_url_schema)
-          |> Parser.append_parsed_fields(template_fields, content,
-            domain_type: :with_domain_external_id,
-            lang: lang,
-            xlsx: true,
-            translations: translations,
-            locales: locales,
-            default_locale: default_locale
-          )
+          |> Parser.append_parsed_fields(template_fields, content, parser_opts, parsing_context)
         end)
 
-      template_name = if template_name !== nil, do: template_name, else: "null"
+      template_name =
+        if template_name !== nil, do: sanitize_sheet_name(template_name), else: "null"
 
       %Sheet{
         name: template_name,
@@ -115,12 +132,21 @@ defmodule TdBg.BusinessConcept.Download do
         _ -> "en"
       end
 
+    {:ok, templates} = TemplateCache.list_by_scope("bg")
+
+    templates_map =
+      Enum.into(templates, %{}, fn template -> {template.name, template} end)
+
+    domains_name = DomainCache.id_to_name_map()
+    domains_external_id = DomainCache.id_to_external_id_map()
+
     type_fields =
       concepts
       |> Enum.group_by(&(&1 |> Map.get("template") |> Map.get("name")))
       |> Map.keys()
       |> Enum.flat_map(fn type ->
-        TemplateCache.get_by_name!(type)
+        templates_map
+        |> Map.get(type)
         |> type_fields()
         |> Enum.uniq_by(&Map.get(&1, "name"))
       end)
@@ -128,6 +154,18 @@ defmodule TdBg.BusinessConcept.Download do
     type_headers = Enum.map(type_fields, &Map.get(&1, "name"))
 
     all_headers = get_all_headers(type_headers, concept_url_schema)
+
+    parsing_context =
+      type_fields
+      |> Parser.context_for_fields(:with_domain_external_id, domains_name, domains_external_id)
+      |> Map.put("lang", lang)
+
+    parser_opts = [
+      domain_type: :with_domain_external_id,
+      lang: lang,
+      locales: locales,
+      default_locale: default_locale
+    ]
 
     core =
       Enum.map(concepts, fn %{"content" => content} = concept ->
@@ -141,10 +179,7 @@ defmodule TdBg.BusinessConcept.Download do
           )
         )
         |> add_extra_fields(concept, concept_url_schema)
-        |> Parser.append_parsed_fields(type_fields, content,
-          domain_type: :with_domain_external_id,
-          lang: lang
-        )
+        |> Parser.append_parsed_fields(type_fields, content, parser_opts, parsing_context)
       end)
 
     [all_headers | core]
@@ -278,4 +313,19 @@ defmodule TdBg.BusinessConcept.Download do
       field_name
     end
   end
+
+  defp sanitize_sheet_name(name) when is_binary(name) do
+    name
+    # Reemplazar caracteres no permitidos
+    |> String.replace(~r/[[\]:*?\/\\]/, "_")
+    # Limitar a 31 caracteres
+    |> String.slice(0, 31)
+    |> then(fn
+      # Si queda vacío, usar un nombre por defecto
+      "" -> "Sheet"
+      name -> name
+    end)
+  end
+
+  defp sanitize_sheet_name(_), do: "Sheet"
 end

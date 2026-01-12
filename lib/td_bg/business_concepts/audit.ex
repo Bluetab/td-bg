@@ -10,6 +10,7 @@ defmodule TdBg.BusinessConcepts.Audit do
   alias TdBg.BusinessConcepts.{BusinessConcept, BusinessConceptVersion}
   alias TdBg.Repo
   alias TdCache.TaxonomyCache
+  alias TdDfLib.Templates
 
   def business_concepts_created(concept_ids) do
     audit_fields = [
@@ -100,42 +101,21 @@ defmodule TdBg.BusinessConcepts.Audit do
         %{updated: updated} = payload,
         changeset
       ) do
-    old_version = Map.get(payload, :old_version)
     %BusinessConceptVersion{business_concept_id: id, last_change_by: user_id} = updated
-    changeset = do_changeset_updated(changeset, updated)
-
-    event =
-      if Map.get(updated, :status) == "published",
-        do: "update_concept",
-        else: "update_concept_draft"
 
     changeset =
-      if old_version do
-        Map.update!(changeset, :changes, &Map.put(&1, :original_version, old_version))
-      else
-        changeset
-      end
+      changeset
+      |> do_changeset_updated(updated)
+      |> version_payload(payload, updated)
 
-    publish(event, "concept", id, user_id, changeset)
+    payload
+    |> event_from_transition()
+    |> publish("concept", id, user_id, changeset)
   end
 
-  def business_concept_published(
-        repo,
-        %{published: business_concept_version} = changes,
-        changeset \\ nil
-      ) do
+  def business_concept_published(_repo, %{published: business_concept_version}) do
     case business_concept_version do
       %{business_concept_id: id, last_change_by: user_id} ->
-        if not is_nil(changeset) do
-          old_version = Map.get(changes, :old_version, %{})
-
-          business_concept_versioned(
-            repo,
-            %{updated: business_concept_version, old_version: old_version},
-            changeset
-          )
-        end
-
         payload = status_payload(business_concept_version)
         publish("concept_published", "concept", id, user_id, payload)
     end
@@ -149,39 +129,9 @@ defmodule TdBg.BusinessConcepts.Audit do
     end
   end
 
-  def business_concept_versioned(repo, %{current: current} = changes, changeset_or_map) do
-    old_version = Map.get(changes, :old_version, %{})
-
-    changeset_or_map
-    |> unwrap_changeset()
-    |> do_business_concept_versioned(repo, current, old_version)
-  end
-
-  def business_concept_versioned(repo, %{updated: updated} = changes, changeset_or_map) do
-    old_version = Map.get(changes, :old_version, %{})
-
-    changeset_or_map
-    |> unwrap_changeset()
-    |> do_business_concept_versioned(repo, updated, old_version)
-  end
-
-  defp unwrap_changeset(%{changeset: changeset}), do: changeset
-  defp unwrap_changeset(%Changeset{} = changeset), do: changeset
-  defp unwrap_changeset(_), do: nil
-
-  defp do_business_concept_versioned(changeset, repo, version, old_version) do
-    payload = status_payload(version)
-    response = maybe_publish_new_concept_draft(version, payload)
-
-    if Process.get(:event_via) == "file" and not is_nil(changeset) do
-      business_concept_version_updated(
-        repo,
-        %{updated: version, old_version: old_version},
-        changeset
-      )
-    else
-      response
-    end
+  def business_concept_versioned(_repo, %{current: current}) do
+    payload = status_payload(current)
+    maybe_publish_new_concept_version(current, payload)
   end
 
   def business_concept_deleted(
@@ -202,14 +152,21 @@ defmodule TdBg.BusinessConcepts.Audit do
     |> do_status_updated(business_concept_version)
   end
 
-  defp maybe_publish_new_concept_draft(
+  defp maybe_publish_new_concept_version(
          %{status: "draft", last_change_by: user_id, business_concept_id: id},
          payload
        ) do
     publish("new_concept_draft", "concept", id, user_id, payload)
   end
 
-  defp maybe_publish_new_concept_draft(_version, _payload) do
+  defp maybe_publish_new_concept_version(
+         %{status: "published", last_change_by: user_id, business_concept_id: id},
+         payload
+       ) do
+    publish("new_published_version", "concept", id, user_id, payload)
+  end
+
+  defp maybe_publish_new_concept_version(_version, _payload) do
     {:ok, nil}
   end
 
@@ -265,4 +222,36 @@ defmodule TdBg.BusinessConcepts.Audit do
   end
 
   defp get_domain_ids(_), do: []
+
+  defp event_from_transition(%{
+         updated: %{status: "published"},
+         old_version: %{status: "published"}
+       }) do
+    "update_concept"
+  end
+
+  defp event_from_transition(_), do: "update_concept_draft"
+
+  defp version_payload(changeset, %{old_version: %{} = old_version} = payload, updated) do
+    changeset
+    |> Map.update!(:changes, &Map.put(&1, :original_version, old_version))
+    |> version_payload(Map.delete(payload, :old_version), updated)
+  end
+
+  defp version_payload(
+         changeset,
+         _payload,
+         %BusinessConceptVersion{business_concept: %{type: type}}
+       )
+       when is_binary(type) do
+    Map.update!(
+      changeset,
+      :changes,
+      &Map.put(&1, :content_schema, Templates.content_schema(type))
+    )
+  end
+
+  defp version_payload(changeset, _payload, _updated) do
+    changeset
+  end
 end
