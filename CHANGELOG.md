@@ -1,12 +1,12 @@
 # Changelog
 
-## [Unreleased]
+## [8.0.0] 2026-01-12
 
 ### Fixed
 
 - [TD-7771]:
- - Differences in audit payload
- - Decouple the publishing of business concept version events 
+  - Differences in audit payload
+  - Decouple the publishing of business concept version events
 
 ### Changed
 
