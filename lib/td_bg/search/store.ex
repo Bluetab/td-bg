@@ -14,6 +14,8 @@ defmodule TdBg.Search.Store do
   alias TdCluster.Cluster.TdAi.Indices
   alias TdCluster.Cluster.TdDd.Tasks
 
+  @index_type "suggestions"
+
   @impl true
   def stream(BusinessConceptVersion = schema) do
     count = Repo.aggregate(BusinessConceptVersion, :count, :id)
@@ -37,7 +39,7 @@ defmodule TdBg.Search.Store do
   end
 
   def stream(BusinessConceptVersion, {:embeddings, ids}) do
-    case Indices.list(enabled: true) do
+    case Indices.list(enabled: true, index_type: @index_type) do
       {:ok, [_ | _] = indices} ->
         collections = Enum.map(indices, & &1.collection_name)
 

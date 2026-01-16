@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7775]:
+ - Update indices list to include index_type suggestions
+ - Adjusted the Oban queue configuration for embedding upserts to improve performance.
+ - Enhanced the `upsert_from_concepts_async` function to utilize the new delay configuration
+ - Add configuration for record embeddings batch size and delay
+
 ## [8.0.0] 2026-01-12
 
 ### Fixed

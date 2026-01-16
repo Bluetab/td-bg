@@ -1825,6 +1825,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
     test "renders business_concept_version when data is valid", %{
       conn: conn
     } do
+      IndexWorkerMock.clear()
+
       %{id: id, business_concept_id: business_concept_id} =
         business_concept_version = insert(:business_concept_version, type: @template_name)
 
