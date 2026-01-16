@@ -141,6 +141,17 @@ These environment variables control the force merge operation for ElasticSearch 
   - **Usage**: Used by the OutdatedEmbeddings worker (runs every 3 hours via cron) to limit the number of data structure versions processed when finding and updating missing or outdated record embeddings
   - **Performance**: Prevents memory issues and ensures system stability when processing large numbers of outdated embeddings
 
+- `RECORD_EMBEDDINGS_BATCH_SIZE`:
+  - **Purpose**: Controls the batch size used when processing record embeddings for business concepts
+  - **Default**: `100`
+  - **Usage**: Defines how many business concept IDs are processed together in each batch when generating or updating embeddings. Used by both synchronous and asynchronous embedding operations
+  - **Performance**: Adjusting this value can help balance memory usage and processing efficiency when handling large numbers of embeddings
+
+- `RECORD_EMBEDDINGS_DEFAULT_DELAY_MS`:
+  - **Purpose**: Controls the default delay in milliseconds between batches when processing record embeddings asynchronously
+  - **Default**: `500`
+  - **Usage**: Defines the delay applied between consecutive batches of embedding upsert jobs. Used by the `upsert_from_concepts_async/2` function to schedule jobs with a delay, preventing system overload when processing large numbers of embeddings
+  - **Performance**: Adjusting this value can help control the rate of embedding processing and prevent overwhelming the system or external embedding services
 
 
 ## Deployment

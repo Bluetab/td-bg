@@ -17,7 +17,7 @@ config :td_bg, Oban,
   ],
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 5, embedding_upserts: 10, embedding_deletion: 5],
+  queues: [default: 5, embedding_upserts: 1, embedding_deletion: 5],
   repo: TdBg.Repo
 
 # Environment
@@ -115,6 +115,8 @@ config :td_bg, TdBg.Scheduler,
   ]
 
 config :td_bg, :limit_outdated_embeddings, 50_000
+config :td_bg, :record_embeddings_batch_size, 50
+config :td_bg, :record_embeddings_default_delay_ms, 500
 
 # Import Elasticsearch config
 import_config "elastic.exs"

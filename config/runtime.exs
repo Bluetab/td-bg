@@ -127,7 +127,7 @@ if config_env() == :prod do
     queues: [
       default: System.get_env("OBAN_QUEUE_DEFAULT", "5") |> String.to_integer(),
       embedding_upserts:
-        System.get_env("OBAN_QUEUE_EMBEDDING_UPSERTS", "10") |> String.to_integer(),
+        System.get_env("OBAN_QUEUE_EMBEDDING_UPSERTS", "1") |> String.to_integer(),
       embedding_deletion:
         System.get_env("OBAN_QUEUE_EMBEDDING_DELETION", "5") |> String.to_integer()
     ],
@@ -222,3 +222,11 @@ config :td_core, TdCore.Search.Cluster,
 config :td_bg,
        :limit_outdated_embeddings,
        System.get_env("LIMIT_OUTDATED_EMBEDDINGS", "50000") |> String.to_integer()
+
+config :td_bg,
+       :record_embeddings_batch_size,
+       System.get_env("RECORD_EMBEDDINGS_BATCH_SIZE", "50") |> String.to_integer()
+
+config :td_bg,
+       :record_embeddings_default_delay_ms,
+       System.get_env("RECORD_EMBEDDINGS_DEFAULT_DELAY_MS", "500") |> String.to_integer()

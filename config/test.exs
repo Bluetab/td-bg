@@ -30,3 +30,6 @@ config :td_cache, redis_host: "redis", port: 6380
 config :td_cache, :event_stream, streams: []
 
 config :td_cluster, TdCluster.ClusterHandler, MockClusterHandler
+
+config :td_bg, :record_embeddings_batch_size, 128
+config :td_bg, :record_embeddings_default_delay_ms, 0

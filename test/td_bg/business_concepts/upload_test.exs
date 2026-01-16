@@ -2478,8 +2478,8 @@ defmodule TdBg.UploadTest do
     end
 
     test "audit: last version is published and auto publish is true we submit a concept update and versioned events" do
-      TdCache.Redix.del!(TdCache.Audit.stream())
       IndexWorkerMock.clear()
+      TdCache.Redix.del!(TdCache.Audit.stream())
 
       claims = build(:claims, role: "admin")
 
@@ -2518,6 +2518,7 @@ defmodule TdBg.UploadTest do
         TdCache.Redix.Stream.read(:redix, TdCache.Audit.stream(), transform: true)
 
       event = Enum.find(events, &(&1.event == "update_concept"))
+      assert event != nil, "Expected event 'update_concept' not found"
       assert Jason.decode!(event.payload)["name"] == "Audit Concept"
 
       assert Enum.find(events, &(&1.event == "concept_published"))
@@ -2526,8 +2527,8 @@ defmodule TdBg.UploadTest do
     end
 
     test "audit: last version is draft and we submit a draft update and new concept draft event" do
-      TdCache.Redix.del!(TdCache.Audit.stream())
       IndexWorkerMock.clear()
+      TdCache.Redix.del!(TdCache.Audit.stream())
 
       claims = build(:claims, role: "admin")
 
