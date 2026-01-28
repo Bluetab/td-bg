@@ -124,13 +124,17 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddings do
   end
 
   defp record_embeddings(embedding_by_collection, business_concept_versions) do
+    embedding_type = RecordEmbedding.__schema__(:type, :embedding)
+
     Enum.flat_map(embedding_by_collection, fn {collection_name, embeddings} ->
       business_concept_versions
       |> Enum.zip(embeddings)
       |> Enum.map(fn {business_concept_version, embedding} ->
+        {:ok, cast_embedding} = Ecto.Type.cast(embedding_type, embedding)
+
         %{
           business_concept_version_id: business_concept_version.id,
-          embedding: embedding,
+          embedding: cast_embedding,
           dims: length(embedding),
           collection: collection_name,
           inserted_at: {:placeholder, :now},
