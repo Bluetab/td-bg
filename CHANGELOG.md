@@ -1,5 +1,32 @@
 # Changelog
 
+## [8.1.0] 2026-02-03
+
+### Fixed
+
+- [TD-7771]:
+  - Differences in audit payload
+  - Decouple the publishing of business concept version events
+
+### Changed
+
+- [TD-7760] Optimization for xlsx donwload for Concepts and Structures notes
+- [TD-7676] Update td-df-lib. Fixed completeness calculation for conditional fields.
+
+## [7.14.0] 2025-12-10
+
+### Added
+
+- [TD-7775]:
+ - Update indices list to include index_type suggestions
+ - Adjusted the Oban queue configuration for embedding upserts to improve performance.
+ - Enhanced the `upsert_from_concepts_async` function to utilize the new delay configuration
+ - Add configuration for record embeddings batch size and delay
+
+ ### Fixed
+
+ - [TD-7775] Cast embeddings during bulk insert to prevent format errors during raw data insertion
+
 ## [8.0.0] 2026-01-12
 
 ### Fixed

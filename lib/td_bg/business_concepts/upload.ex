@@ -279,6 +279,19 @@ defmodule TdBg.BusinessConcept.Upload do
           end)
 
         put_errors(row_parsed, errors)
+
+      {:error, :i18n_content, :insert_i18n_content, _changes} ->
+        error =
+          {:i18n_content_error,
+           %{
+             context: %{
+               type: Map.get(template, :name),
+               row: index
+             },
+             message: "concepts.upload.failed.i18n_content_error"
+           }}
+
+        put_errors(row_parsed, error)
     end
   end
 

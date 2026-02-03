@@ -2,6 +2,7 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
   use TdBg.DataCase
 
   import Mox
+  import ExUnit.CaptureLog
 
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptVersions.RecordEmbedding
@@ -30,18 +31,19 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
       assert jobs = all_enqueued(worker: EmbeddingsUpsertBatch) |> Enum.sort_by(& &1.id)
 
       for chunk_id <- 0..9 do
+        init = chunk_id * 128
+        ending = (chunk_id + 1) * 128
+        expected = init..(ending - 1) |> Enum.to_list()
+
         assert %Oban.Job{
-                 args: %{"ids" => ids},
+                 args: %{"ids" => chunk_ids},
                  inserted_at: inserted_at,
                  scheduled_at: scheduled_at
                } =
                  Enum.at(jobs, chunk_id)
 
         assert DateTime.compare(inserted_at, scheduled_at) == :eq
-        init = chunk_id * 128
-        ending = (chunk_id + 1) * 128
-        expected = init..(ending - 1) |> Enum.to_list()
-        assert Enum.sort(ids) == Enum.sort(expected)
+        assert Enum.sort(chunk_ids) == Enum.sort(expected)
       end
     end
 
@@ -168,7 +170,9 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
     test "returns noop when there aren't any indices enabled" do
       Indices.exists_enabled?(&Mox.expect/4, [index_type: @index_type], {:ok, false})
 
-      assert :noop == RecordEmbeddings.upsert_from_concepts([1])
+      assert capture_log(fn ->
+               assert {:ok, false} == RecordEmbeddings.upsert_from_concepts([1])
+             end) =~ "Error generating embeddings for business concepts"
     end
   end
 
@@ -176,7 +180,7 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
     test "inserts jobs to upsert outdated concept record embeddings" do
       Indices.list_indices(
         &Mox.expect/4,
-        [enabled: true],
+        [enabled: true, index_type: @index_type],
         {:ok, [%{collection_name: "default"}, %{collection_name: "other"}]}
       )
 
@@ -215,7 +219,7 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
     end
 
     test "returns noop when there are no indices enabled" do
-      Indices.list_indices(&Mox.expect/4, [enabled: true], {:ok, []})
+      Indices.list_indices(&Mox.expect/4, [enabled: true, index_type: @index_type], {:ok, []})
       assert :noop == RecordEmbeddings.upsert_outdated_async()
     end
   end
@@ -230,7 +234,7 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
 
       Indices.list_indices(
         &Mox.expect/4,
-        [enabled: true],
+        [enabled: true, index_type: @index_type],
         {:ok, [%{collection_name: "default"}]}
       )
 
@@ -246,7 +250,7 @@ defmodule TdBg.BusinessConcepts.RecordEmbeddingsTest do
     end
 
     test "deletes all records if there are not enabled indices" do
-      Indices.list_indices(&Mox.expect/4, [enabled: true], {:ok, []})
+      Indices.list_indices(&Mox.expect/4, [enabled: true, index_type: @index_type], {:ok, []})
 
       record_embedding = insert(:record_embedding)
       assert {1, nil} = RecordEmbeddings.delete_stale_record_embeddings()

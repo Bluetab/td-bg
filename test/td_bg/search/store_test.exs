@@ -6,11 +6,13 @@ defmodule TdBg.Search.StoreTest do
   alias TdBg.Search.Store
   alias TdCluster.TestHelpers.TdAiMock.Indices
 
+  @index_type "suggestions"
+
   describe "stream/2 embeddings" do
     test "fetches business concept versions with embeddings by ids" do
       Indices.list_indices(
         &Mox.expect/4,
-        [enabled: true],
+        [enabled: true, index_type: @index_type],
         {:ok, [%{collection_name: "default"}, %{collection_name: "other"}]}
       )
 
@@ -69,7 +71,7 @@ defmodule TdBg.Search.StoreTest do
     end
 
     test "returns empty list when we don't have enabled indices" do
-      Indices.list_indices(&Mox.expect/4, [enabled: true], {:ok, []})
+      Indices.list_indices(&Mox.expect/4, [enabled: true, index_type: @index_type], {:ok, []})
 
       assert {:ok, []} ==
                Repo.transaction(fn ->
