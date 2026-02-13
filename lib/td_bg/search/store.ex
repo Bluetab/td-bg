@@ -7,6 +7,7 @@ defmodule TdBg.Search.Store do
 
   import Ecto.Query
 
+  alias Elasticsearch.Document
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.BusinessConceptVersions.RecordEmbedding
   alias TdBg.BusinessConcepts.BusinessConceptVersions.Workers.OutdatedEmbeddings
@@ -23,6 +24,7 @@ defmodule TdBg.Search.Store do
 
     result =
       schema
+      |> base_query()
       |> Repo.stream()
       |> Repo.stream_preload(1000, [:record_embeddings, business_concept: [:domain, :shared_to]])
       |> Stream.reject(&domain_deleted?/1)
@@ -77,19 +79,71 @@ defmodule TdBg.Search.Store do
     count = Repo.aggregate(BusinessConceptVersion, :count, :id)
     Tasks.log_start_stream(count)
 
-    from(bcv in schema,
-      where: bcv.business_concept_id in ^ids,
-      select: bcv
-    )
+    schema
+    |> base_query(ids)
+    |> select([bcv], bcv)
     |> Repo.stream()
     |> Repo.stream_preload(1000, [:record_embeddings, business_concept: [:domain, :shared_to]])
     |> Stream.reject(&domain_deleted?/1)
+  end
+
+  def fetch(BusinessConceptVersion = schema, :all) do
+    query_with_rank = base_query_with_rank(schema)
+
+    transaction(fn ->
+      schema
+      |> join(:inner, [bcv], ranked in subquery(query_with_rank),
+        on: bcv.id == ranked.id and ranked.row_number == 1
+      )
+      |> Repo.stream()
+      |> Repo.stream_preload(1000, [:record_embeddings, business_concept: [:domain, :shared_to]])
+      |> Stream.reject(&domain_deleted?/1)
+      |> Stream.map(&Document.encode/1)
+      |> Enum.to_list()
+    end)
+  end
+
+  def fetch(BusinessConceptVersion = schema, ids) do
+    query_with_rank = base_query_with_rank(schema, ids)
+
+    transaction(fn ->
+      schema
+      |> join(:inner, [bcv], ranked in subquery(query_with_rank),
+        on: bcv.id == ranked.id and ranked.row_number == 1
+      )
+      |> Repo.stream()
+      |> Repo.stream_preload(1000, [:record_embeddings, business_concept: [:domain, :shared_to]])
+      |> Stream.reject(&domain_deleted?/1)
+      |> Stream.map(&Document.encode/1)
+      |> Enum.to_list()
+    end)
   end
 
   def run(BusinessConceptVersion, {:embeddings, :all}) do
     %{}
     |> OutdatedEmbeddings.new()
     |> Oban.insert()
+  end
+
+  defp base_query(BusinessConceptVersion = schema, ids \\ []) do
+    if ids == [] do
+      schema
+    else
+      from(bcv in schema, where: bcv.business_concept_id in ^ids)
+    end
+  end
+
+  defp base_query_with_rank(BusinessConceptVersion = schema, ids \\ []) do
+    schema
+    |> base_query(ids)
+    |> where([bcv], bcv.status == "published" or bcv.current == true)
+    |> windows([bcv],
+      concepts_partition: [partition_by: bcv.business_concept_id, order_by: [desc: bcv.version]]
+    )
+    |> select([bcv], %{
+      id: bcv.id,
+      row_number: over(row_number(), :concepts_partition)
+    })
   end
 
   defp domain_deleted?(%{business_concept: %{domain: %{deleted_at: deleted_at}}})

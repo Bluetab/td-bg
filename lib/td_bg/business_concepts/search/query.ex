@@ -22,15 +22,15 @@ defmodule TdBg.BusinessConcepts.Search.Query do
   }
 
   def build_filters(%{} = permissions, opts \\ []) do
-    status_filter = status_filter(permissions)
-    confidential_filter = confidential_filter(permissions)
-    links_filter = if opts[:linkable], do: links_filter(permissions), else: nil
+    status_filter = status_filter(permissions, opts)
+    confidential_filter = confidential_filter(permissions, opts)
+    links_filter = if opts[:linkable], do: links_filter(permissions, opts), else: nil
 
     [status_filter, confidential_filter, links_filter]
     |> Enum.flat_map(&List.wrap/1)
   end
 
-  def status_filter(%{} = permissions) do
+  def status_filter(%{} = permissions, opts \\ []) do
     @permissions_to_status
     |> Map.keys()
     |> Enum.map(&{Map.get(permissions, &1, :none), &1})
@@ -38,10 +38,13 @@ defmodule TdBg.BusinessConcepts.Search.Query do
       fn {scope, _} -> scope end,
       fn {_, permission} -> Map.get(@permissions_to_status, permission) end
     )
-    |> do_status_filter()
+    |> do_status_filter(opts)
   end
 
-  defp do_status_filter(%{} = permissions_by_scope) when map_size(permissions_by_scope) <= 1 do
+  defp do_status_filter(%{} = permissions_by_scope, opts)
+       when map_size(permissions_by_scope) <= 1 do
+    field_prefix = Keyword.get(opts, :field_prefix, "")
+
     case Enum.at(permissions_by_scope, 0) do
       nil ->
         @match_none
@@ -54,13 +57,15 @@ defmodule TdBg.BusinessConcepts.Search.Query do
 
       {domain_ids, statuses} ->
         [
-          term_or_terms("status", statuses),
-          term_or_terms("domain_ids", domain_ids)
+          term_or_terms("#{field_prefix}status", statuses),
+          term_or_terms("#{field_prefix}domain_ids", domain_ids)
         ]
     end
   end
 
-  defp do_status_filter(permissions_by_scope) when map_size(permissions_by_scope) > 1 do
+  defp do_status_filter(permissions_by_scope, opts) when map_size(permissions_by_scope) > 1 do
+    field_prefix = Keyword.get(opts, :field_prefix, "")
+
     permissions_by_scope
     # :all < list < :none
     |> Enum.sort_by(fn
@@ -70,20 +75,20 @@ defmodule TdBg.BusinessConcepts.Search.Query do
     end)
     |> Enum.reduce(%{}, fn
       {:all, statuses}, acc ->
-        should(acc, term_or_terms("status", statuses))
+        should(acc, term_or_terms("#{field_prefix}status", statuses))
 
       {:none, _statuses}, acc when map_size(acc) > 0 ->
         # We can avoid a must_not clause if any other status clause exists
         acc
 
       {:none, statuses}, acc ->
-        must_not(acc, term_or_terms("status", statuses))
+        must_not(acc, term_or_terms("#{field_prefix}status", statuses))
 
       {domain_ids, statuses}, acc ->
         bool = %{
           filter: [
-            term_or_terms("status", statuses),
-            term_or_terms("domain_ids", domain_ids)
+            term_or_terms("#{field_prefix}status", statuses),
+            term_or_terms("#{field_prefix}domain_ids", domain_ids)
           ]
         }
 
@@ -92,39 +97,44 @@ defmodule TdBg.BusinessConcepts.Search.Query do
     |> maybe_bool_query()
   end
 
-  def confidential_filter(%{} = permissions) do
+  def confidential_filter(%{} = permissions, opts \\ []) do
     permissions
     |> Map.get("manage_confidential_business_concepts", :none)
-    |> do_confidential_filter()
+    |> do_confidential_filter(opts)
   end
 
-  defp do_confidential_filter(:all), do: nil
+  defp do_confidential_filter(:all, _opts), do: nil
 
-  defp do_confidential_filter(:none),
-    do: %{bool: %{must_not: [%{term: %{"confidential.raw" => true}}]}}
+  defp do_confidential_filter(:none, opts) do
+    field_prefix = Keyword.get(opts, :field_prefix, "")
+    %{bool: %{must_not: [%{term: %{"#{field_prefix}confidential.raw" => true}}]}}
+  end
 
-  defp do_confidential_filter(domain_ids) when is_list(domain_ids) do
+  defp do_confidential_filter(domain_ids, opts) when is_list(domain_ids) do
+    field_prefix = Keyword.get(opts, :field_prefix, "")
+
     %{
       bool: %{
         should: [
-          term_or_terms("domain_ids", domain_ids),
-          do_confidential_filter(:none)
+          term_or_terms("#{field_prefix}domain_ids", domain_ids),
+          do_confidential_filter(:none, opts)
         ]
       }
     }
   end
 
-  def links_filter(%{} = permissions) do
+  def links_filter(%{} = permissions, opts \\ []) do
     permissions
     |> Map.get("manage_business_concept_links", :none)
-    |> do_links_filter()
+    |> do_links_filter(opts)
   end
 
-  defp do_links_filter(:all), do: nil
-  defp do_links_filter(:none), do: %{match_none: %{}}
+  defp do_links_filter(:all, _opts), do: nil
+  defp do_links_filter(:none, _opts), do: %{match_none: %{}}
 
-  defp do_links_filter(domain_ids) when is_list(domain_ids) do
-    term_or_terms("domain_ids", domain_ids)
+  defp do_links_filter(domain_ids, opts) when is_list(domain_ids) do
+    field_prefix = Keyword.get(opts, :field_prefix, "")
+    term_or_terms("#{field_prefix}domain_ids", domain_ids)
   end
 
   defp maybe_bool_query(%{should: [single_clause]} = bool) when map_size(bool) == 1,

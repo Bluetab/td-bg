@@ -21,6 +21,13 @@ defmodule TdBg.BusinessConcepts.Search.QueryTest do
                %{term: %{"status" => "draft"}}
     end
 
+    test "returns a terms query to filter a single permitted status with a field prefix" do
+      permissions = %{"view_draft_business_concepts" => :all}
+
+      assert Query.status_filter(permissions, field_prefix: "foo.") ==
+               %{term: %{"foo.status" => "draft"}}
+    end
+
     test "returns a terms query to filter permitted statuses" do
       permissions = %{
         "view_draft_business_concepts" => :all,
@@ -108,6 +115,19 @@ defmodule TdBg.BusinessConcepts.Search.QueryTest do
                }
              }
     end
+
+    test "returns a bool query with two prefixed should clauses if the scope is a list of domain ids" do
+      permissions = %{"manage_confidential_business_concepts" => [1, 2]}
+
+      assert Query.confidential_filter(permissions, field_prefix: "foo.") == %{
+               bool: %{
+                 should: [
+                   %{terms: %{"foo.domain_ids" => [1, 2]}},
+                   %{bool: %{must_not: [%{term: %{"foo.confidential.raw" => true}}]}}
+                 ]
+               }
+             }
+    end
   end
 
   describe "links_filter/1" do
@@ -121,6 +141,13 @@ defmodule TdBg.BusinessConcepts.Search.QueryTest do
 
       assert Query.links_filter(permissions) ==
                %{terms: %{"domain_ids" => [1, 2]}}
+    end
+
+    test "returns a terms query with a field prefix if the scope is a list of domain ids" do
+      permissions = %{"manage_business_concept_links" => [1, 2]}
+
+      assert Query.links_filter(permissions, field_prefix: "foo.") ==
+               %{terms: %{"foo.domain_ids" => [1, 2]}}
     end
 
     test "returns a match_none query otherwise" do
@@ -174,6 +201,42 @@ defmodule TdBg.BusinessConcepts.Search.QueryTest do
                  }
                },
                %{term: %{"domain_ids" => 1}}
+             ]
+    end
+
+    test "returns a filter by domain id, status and linkable with a field prefix" do
+      permissions = %{
+        "view_published_business_concepts" => :all,
+        "view_draft_business_concepts" => [1, 2],
+        "manage_confidential_business_concepts" => [2],
+        "manage_business_concept_links" => [1]
+      }
+
+      assert Query.build_filters(permissions, linkable: true, field_prefix: "foo.") == [
+               %{
+                 bool: %{
+                   should: [
+                     %{
+                       bool: %{
+                         filter: [
+                           %{term: %{"foo.status" => "draft"}},
+                           %{terms: %{"foo.domain_ids" => [1, 2]}}
+                         ]
+                       }
+                     },
+                     %{term: %{"foo.status" => "published"}}
+                   ]
+                 }
+               },
+               %{
+                 bool: %{
+                   should: [
+                     %{term: %{"foo.domain_ids" => 2}},
+                     %{bool: %{must_not: [%{term: %{"foo.confidential.raw" => true}}]}}
+                   ]
+                 }
+               },
+               %{term: %{"foo.domain_ids" => 1}}
              ]
     end
   end

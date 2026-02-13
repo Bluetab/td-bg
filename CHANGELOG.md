@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7696]:
+  - Keep concept relations up to date
+  - Enable search data consumption for external services
+
 ## [8.1.0] 2026-02-03
 
 ### Fixed

@@ -900,7 +900,10 @@ defmodule TdBg.BusinessConceptsTest do
              } = Jason.decode!(payload)
 
       assert_lists_equal(domain_ids, [root_id, parent_id, domain_id])
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
+
       IndexWorkerMock.clear()
     end
 
@@ -995,7 +998,9 @@ defmodule TdBg.BusinessConceptsTest do
 
       assert Map.get(new_business_concept_version.content, "Field2") == nil
 
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
+
       IndexWorkerMock.clear()
     end
 
@@ -1576,7 +1581,7 @@ defmodule TdBg.BusinessConceptsTest do
 
       refute BusinessConcepts.get_business_concept_version(business_concept_id + 1, id)
 
-      assert [_, _, _] = IndexWorkerMock.calls()
+      assert [_, _, _, _, _, _] = IndexWorkerMock.calls()
       IndexWorkerMock.clear()
     end
 
@@ -1711,8 +1716,15 @@ defmodule TdBg.BusinessConceptsTest do
 
   describe "delete_business_concept_version/2" do
     test "deletes business concept version" do
-      version = insert(:business_concept_version)
+      version = %{business_concept_id: business_concept_id} = insert(:business_concept_version)
       claims = build(:claims, role: "admin")
+
+      Mox.expect(MockClusterHandler, :call, fn :lm,
+                                               TdLm.Resources,
+                                               :delete_stale_relations,
+                                               ["business_concept", [^business_concept_id]] ->
+        :ok
+      end)
 
       assert {:ok, %BusinessConceptVersion{id: id}} =
                BusinessConcepts.delete_business_concept_version(version, claims)
@@ -1721,8 +1733,18 @@ defmodule TdBg.BusinessConceptsTest do
     end
 
     test "deletes business concept version with associated embedding" do
-      record_embedding = %{business_concept_version: version} = insert(:record_embedding)
+      record_embedding =
+        %{business_concept_version: %{business_concept_id: business_concept_id} = version} =
+        insert(:record_embedding)
+
       claims = build(:claims, role: "admin")
+
+      Mox.expect(MockClusterHandler, :call, fn :lm,
+                                               TdLm.Resources,
+                                               :delete_stale_relations,
+                                               ["business_concept", [^business_concept_id]] ->
+        :ok
+      end)
 
       assert {:ok, %BusinessConceptVersion{id: id}} =
                BusinessConcepts.delete_business_concept_version(version, claims)

@@ -8,6 +8,7 @@ defmodule TdBg.BusinessConcepts.Links do
   alias TdBg.BusinessConcepts.BusinessConcept
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdCache.LinkCache
+  alias TdCluster.Cluster.TdLm
 
   def get(id) do
     LinkCache.get(id)
@@ -15,6 +16,10 @@ defmodule TdBg.BusinessConcepts.Links do
 
   def delete(id) do
     LinkCache.delete(id)
+  end
+
+  def delete_concept_links(business_concept_id) do
+    TdLm.delete_stale_relations("business_concept", [business_concept_id])
   end
 
   def get_links(concept, opts \\ [])
