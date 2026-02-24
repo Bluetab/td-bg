@@ -88,4 +88,58 @@ defmodule TdBg.Search.StoreTest do
       assert [_job] = all_enqueued(worker: OutdatedEmbeddings)
     end
   end
+
+  describe "fetch/2" do
+    setup do
+      business_concept_versions =
+        insert_list(10, :business_concept_version, status: "draft", version: 0, current: true)
+
+      business_concept = insert(:business_concept)
+
+      published_business_concept_version =
+        insert(:business_concept_version,
+          business_concept: business_concept,
+          status: "published",
+          version: 1
+        )
+
+      _business_concept_version =
+        insert(:business_concept_version,
+          business_concept: business_concept,
+          status: "draft",
+          version: 0
+        )
+
+      [
+        business_concept_versions: business_concept_versions,
+        published_business_concept_version: published_business_concept_version
+      ]
+    end
+
+    test "fetches current or published business concept versions encoded for Elasticsearch", %{
+      business_concept_versions: business_concept_versions,
+      published_business_concept_version: published_business_concept_version
+    } do
+      assert results = Store.fetch(BusinessConceptVersion, :all)
+      assert length(results) == 11
+      result_ids = Enum.map(results, & &1.id)
+      assert published_business_concept_version.id in result_ids
+
+      assert Enum.map(business_concept_versions, & &1.id) ==
+               result_ids -- [published_business_concept_version.id]
+    end
+
+    test "fetches current or published business concept versions encoded for Elasticsearch by ids",
+         %{
+           published_business_concept_version: published_business_concept_version
+         } do
+      assert results =
+               Store.fetch(BusinessConceptVersion, [
+                 published_business_concept_version.business_concept_id
+               ])
+
+      assert length(results) == 1
+      assert results |> Enum.map(& &1.id) == [published_business_concept_version.id]
+    end
+  end
 end

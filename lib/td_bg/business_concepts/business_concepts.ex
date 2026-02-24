@@ -556,6 +556,7 @@ defmodule TdBg.BusinessConcepts do
 
           ConceptCache.delete(business_concept_id)
           Indexer.delete([bcvid])
+          Links.delete_concept_links(business_concept_id)
 
           {:ok, version}
       end
@@ -570,6 +571,7 @@ defmodule TdBg.BusinessConcepts do
            business_concept_version: %BusinessConceptVersion{id: bcv_id}
          }} ->
           Indexer.delete([bcv_id])
+          Indexer.refresh_links([business_concept_id])
           {:ok, get_last_version_by_business_concept_id!(business_concept_id)}
       end
     end

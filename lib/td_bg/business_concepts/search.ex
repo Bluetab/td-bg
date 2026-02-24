@@ -3,12 +3,14 @@ defmodule TdBg.BusinessConcept.Search do
   Helper module to construct business concept search queries.
   """
 
+  alias Elasticsearch.Cluster.Config
   alias TdBg.Auth.Claims
   alias TdBg.BusinessConcepts.BusinessConceptVersion
   alias TdBg.BusinessConcepts.Search.Query
   alias TdBg.Permissions, as: TdBgPermissions
   alias TdBg.Taxonomies
   alias TdCore.Search
+  alias TdCore.Search.Cluster
   alias TdCore.Search.ElasticDocumentProtocol
   alias TdCore.Search.Permissions
 
@@ -110,6 +112,18 @@ defmodule TdBg.BusinessConcept.Search do
     %{query: query, size: 0}
     |> do_search()
     |> Map.get(:total)
+  end
+
+  def store do
+    cluster_config = Config.get(Cluster)
+    store = get_in(cluster_config, [:indexes, :concepts, :store])
+
+    schema =
+      cluster_config
+      |> get_in([:indexes, :concepts, :sources])
+      |> List.first()
+
+    %{store: store, schema: schema}
   end
 
   defp do_search(search, params \\ %{})

@@ -105,7 +105,9 @@ defmodule TdBg.I18nContents.I18nContestsTest do
   end
 
   describe "i18n_content" do
-    test "when gcv is deleted all i18n_content is deleted", %{bcv: %{id: bcv_id} = dsv} do
+    test "when gcv is deleted all i18n_content is deleted", %{
+      bcv: %{id: bcv_id, business_concept_id: business_concept_id} = bcv
+    } do
       claims = build(:claims, role: "admin")
 
       i18n_content_1 = insert(:i18n_content, business_concept_version_id: bcv_id)
@@ -115,7 +117,14 @@ defmodule TdBg.I18nContents.I18nContestsTest do
       assert [i18n_content_1, i18n_content_2] |||
                I18nContents.get_all_i18n_content_by_bcv_id(bcv_id)
 
-      BusinessConcepts.delete_business_concept_version(dsv, claims)
+      Mox.expect(MockClusterHandler, :call, fn :lm,
+                                               TdLm.Resources,
+                                               :delete_stale_relations,
+                                               ["business_concept", [^business_concept_id]] ->
+        :ok
+      end)
+
+      BusinessConcepts.delete_business_concept_version(bcv, claims)
       assert [] == I18nContents.get_all_i18n_content_by_bcv_id(bcv_id)
     end
   end

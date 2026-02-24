@@ -12,6 +12,7 @@ defmodule TdBg.Search.Indexer do
   def reindex(ids) do
     IndexWorker.reindex(@index, ids)
     upsert_record_embeddings(ids)
+    refresh_links(ids)
     :ok
   end
 
@@ -23,6 +24,10 @@ defmodule TdBg.Search.Indexer do
   def put_embeddings(ids) do
     IndexWorker.put_embeddings(@index, ids)
     :ok
+  end
+
+  def refresh_links(ids) do
+    IndexWorker.refresh_links(@index, ids)
   end
 
   defp upsert_record_embeddings(:all), do: :noop

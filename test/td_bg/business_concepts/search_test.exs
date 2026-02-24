@@ -5,6 +5,8 @@ defmodule TdBg.BusinessConcepts.SearchTest do
   import TdBg.TestOperators
 
   alias TdBg.BusinessConcept.Search
+  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdBg.Search.Store
 
   setup :verify_on_exit!
 
@@ -602,6 +604,14 @@ defmodule TdBg.BusinessConcepts.SearchTest do
 
       assert [concept] = Search.vector(claims, params, similarity: :cosine)
       assert concept["similarity"] == 1.0
+    end
+  end
+
+  describe "Search.store/0" do
+    test "returns the store and schema for the business concept versions index" do
+      assert %{store: store, schema: schema} = Search.store()
+      assert store == Store
+      assert schema == BusinessConceptVersion
     end
   end
 end

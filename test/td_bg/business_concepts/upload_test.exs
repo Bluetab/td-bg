@@ -496,7 +496,11 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+
+      assert IndexWorkerMock.calls() == [
+               {:reindex, :concepts, [version.business_concept.id]},
+               {:refresh_links, :concepts, [version.business_concept.id]}
+             ]
 
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
@@ -819,7 +823,11 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+
+      assert IndexWorkerMock.calls() == [
+               {:reindex, :concepts, [version.business_concept.id]},
+               {:refresh_links, :concepts, [version.business_concept.id]}
+             ]
 
       concept = Map.get(version, :business_concept)
       assert Map.get(concept, :confidential)
@@ -848,7 +856,9 @@ defmodule TdBg.UploadTest do
 
       assert IndexWorkerMock.calls() == [
                {:reindex, :concepts, [version_1.business_concept.id]},
-               {:reindex, :concepts, [version_2.business_concept.id]}
+               {:refresh_links, :concepts, [version_1.business_concept.id]},
+               {:reindex, :concepts, [version_2.business_concept.id]},
+               {:refresh_links, :concepts, [version_2.business_concept.id]}
              ]
 
       assert %{
@@ -912,7 +922,11 @@ defmodule TdBg.UploadTest do
                )
 
       version = BusinessConcepts.get_business_concept_version!(concept_id)
-      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [version.business_concept.id]}]
+
+      assert IndexWorkerMock.calls() == [
+               {:reindex, :concepts, [version.business_concept.id]},
+               {:refresh_links, :concepts, [version.business_concept.id]}
+             ]
 
       i18n_content = I18nContents.get_all_i18n_content_by_bcv_id(version.id)
 
@@ -1059,10 +1073,15 @@ defmodule TdBg.UploadTest do
 
       assert IndexWorkerMock.calls() == [
                {:reindex, :concepts, [bc_published.id]},
+               {:refresh_links, :concepts, [bc_published.id]},
                {:reindex, :concepts, [bc_deprecated.id]},
+               {:refresh_links, :concepts, [bc_deprecated.id]},
                {:reindex, :concepts, [bc_draft.id]},
+               {:refresh_links, :concepts, [bc_draft.id]},
                {:reindex, :concepts, [bc_pending_a.id]},
-               {:reindex, :concepts, [bc_rejected.id]}
+               {:refresh_links, :concepts, [bc_pending_a.id]},
+               {:reindex, :concepts, [bc_rejected.id]},
+               {:refresh_links, :concepts, [bc_rejected.id]}
              ]
     end
 
@@ -1109,7 +1128,9 @@ defmodule TdBg.UploadTest do
 
       assert IndexWorkerMock.calls() == [
                {:reindex, :concepts, [concept_1.id]},
-               {:reindex, :concepts, [concept_2.id]}
+               {:refresh_links, :concepts, [concept_1.id]},
+               {:reindex, :concepts, [concept_2.id]},
+               {:refresh_links, :concepts, [concept_2.id]}
              ]
     end
 
@@ -1232,15 +1253,25 @@ defmodule TdBg.UploadTest do
 
       assert IndexWorkerMock.calls() == [
                {:reindex, :concepts, [bc_published.id]},
+               {:refresh_links, :concepts, [bc_published.id]},
                {:reindex, :concepts, [bc_published.id]},
+               {:refresh_links, :concepts, [bc_published.id]},
                {:reindex, :concepts, [bc_deprecated.id]},
+               {:refresh_links, :concepts, [bc_deprecated.id]},
                {:reindex, :concepts, [bc_deprecated.id]},
+               {:refresh_links, :concepts, [bc_deprecated.id]},
                {:reindex, :concepts, [bc_draft.id]},
+               {:refresh_links, :concepts, [bc_draft.id]},
                {:reindex, :concepts, [bc_draft.id]},
+               {:refresh_links, :concepts, [bc_draft.id]},
                {:reindex, :concepts, [bc_pending_a.id]},
+               {:refresh_links, :concepts, [bc_pending_a.id]},
                {:reindex, :concepts, [bc_pending_a.id]},
+               {:refresh_links, :concepts, [bc_pending_a.id]},
                {:reindex, :concepts, [bc_rejected.id]},
-               {:reindex, :concepts, [bc_rejected.id]}
+               {:refresh_links, :concepts, [bc_rejected.id]},
+               {:reindex, :concepts, [bc_rejected.id]},
+               {:refresh_links, :concepts, [bc_rejected.id]}
              ]
     end
 

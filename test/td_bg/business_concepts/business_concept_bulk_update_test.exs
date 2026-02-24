@@ -167,7 +167,12 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
       assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, bc_versions, params)
       assert length(bcv_ids) == 2
 
-      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = IndexWorkerMock.calls()
+      assert [
+               {:reindex, :concepts, _},
+               {:refresh_links, :concepts, _},
+               {:reindex, :concepts, _},
+               {:refresh_links, :concepts, _}
+             ] = IndexWorkerMock.calls()
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
                d3.id
@@ -376,7 +381,13 @@ defmodule TdBg.BusinessConceptBulkUpdateTest do
 
       assert {:ok, bcv_ids} = BulkUpdate.update_all(claims, bc_versions, params)
       assert length(bcv_ids) == 2
-      assert [{:reindex, :concepts, _}, {:reindex, :concepts, _}] = IndexWorkerMock.calls()
+
+      assert [
+               {:reindex, :concepts, _},
+               {:refresh_links, :concepts, _},
+               {:reindex, :concepts, _},
+               {:refresh_links, :concepts, _}
+             ] = IndexWorkerMock.calls()
 
       assert BusinessConcepts.get_business_concept_version!(Enum.at(bcv_ids, 0)).business_concept.domain_id ==
                d3.id

@@ -1473,7 +1473,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -1758,7 +1760,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
         )
 
       assert json_response(conn, 201)["data"]
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1863,7 +1867,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       assert data["name"] == update_attrs["name"]
       assert data["content"] == %{"Field1" => "Foo", "Field2" => "bar"}
       assert data["dynamic_content"] == update_attrs["content"]
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -1924,7 +1930,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^domain_id}} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2012,7 +2020,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"domain" => %{"id" => ^id2}} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2048,7 +2058,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
       |> json_response(:ok)
 
       assert {:ok, %{id: ^bc_main_id}} = CacheHelpers.get_business_concept(bc_main_id)
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -2080,7 +2092,8 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                )
                |> json_response(:ok)
 
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [
@@ -2194,7 +2207,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"confidential" => true} = data
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2362,7 +2377,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -2415,7 +2432,9 @@ defmodule TdBgWeb.BusinessConceptVersionControllerTest do
 
       assert %{"message" => updated_ids} = data
       assert updated_ids == [id]
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
     end
 
     @tag authentication: [role: "admin"]

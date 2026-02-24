@@ -233,11 +233,11 @@ defmodule CacheHelpers do
       I18nCache.put(locale, %{message_id: "#{locale}_id", definition: "#{locale}"})
     end)
 
-    on_exit(fn -> Redix.del!("i18n:locales:*") end)
+    on_exit(fn -> Redix.del!("i18n:*") end)
   end
 
   def put_default_locale(locale) do
     I18nCache.put_default_locale(locale)
-    on_exit(fn -> Redix.del!("i18n:locales:*") end)
+    on_exit(fn -> Redix.del!("i18n:*") end)
   end
 end

@@ -94,7 +94,12 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
 
       assert %{current: %{current: false, business_concept_id: id}} = res
       assert BusinessConcepts.get_business_concept_version!(business_concept_version.id).current
-      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [id]}]
+
+      assert IndexWorkerMock.calls() == [
+               {:reindex, :concepts, [id]},
+               {:refresh_links, :concepts, [id]}
+             ]
+
       IndexWorkerMock.clear()
     end
 
@@ -131,7 +136,11 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
                }
              } = res
 
-      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [id]}]
+      assert IndexWorkerMock.calls() == [
+               {:reindex, :concepts, [id]},
+               {:refresh_links, :concepts, [id]}
+             ]
+
       IndexWorkerMock.clear()
     end
 
@@ -158,7 +167,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       refute BusinessConcepts.get_business_concept_version!(business_concept_version.id).current
       assert BusinessConcepts.get_business_concept_version!(res.published.id).current
 
-      assert [_, _, _] = IndexWorkerMock.calls()
+      assert [_, _, _, _, _, _] = IndexWorkerMock.calls()
       IndexWorkerMock.clear()
     end
 
@@ -172,7 +181,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
                Workflow.new_version(business_concept_version, %Claims{user_id: 1234})
 
       assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
-      assert [_] = IndexWorkerMock.calls()
+      assert [_, _] = IndexWorkerMock.calls()
       IndexWorkerMock.clear()
     end
 
@@ -195,7 +204,10 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
                Stream.read(:redix, @stream, transform: true)
 
       assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
+
       IndexWorkerMock.clear()
     end
   end
@@ -217,7 +229,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
                published
 
       assert DateTime.diff(last_change_at, ts, :microsecond) > 0
-      assert [{:reindex, :concepts, _}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, _}, {:refresh_links, :concepts, _}] = IndexWorkerMock.calls()
       IndexWorkerMock.clear()
     end
 
@@ -236,7 +248,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert %{id: ^event_id, payload: payload} = event
       assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
 
-      assert [{:reindex, :concepts, _}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, _}, {:refresh_links, :concepts, _}] = IndexWorkerMock.calls()
       IndexWorkerMock.clear()
     end
 
@@ -248,7 +260,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert {:ok, [event]} = Stream.read(:redix, @stream, transform: true)
       assert %{id: ^event_id, payload: payload} = event
       assert %{"subscribable_fields" => _} = Jason.decode!(payload)
-      assert [{:reindex, :concepts, _}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, _}, {:refresh_links, :concepts, _}] = IndexWorkerMock.calls()
       IndexWorkerMock.clear()
     end
   end
@@ -267,7 +279,9 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert %{status: "rejected", reject_reason: ^reason, business_concept_id: concept_id} =
                business_concept_version
 
-      assert [{:reindex, :concepts, [concept_id]}] == IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, [concept_id]}, {:refresh_links, :concepts, [concept_id]}] ==
+               IndexWorkerMock.calls()
+
       IndexWorkerMock.clear()
     end
 
@@ -287,7 +301,10 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert {:ok, [event]} = Stream.read(:redix, @stream, transform: true)
       assert %{id: ^event_id, payload: payload} = event
       assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
-      assert [{:reindex, :concepts, [_]}] = IndexWorkerMock.calls()
+
+      assert [{:reindex, :concepts, [_]}, {:refresh_links, :concepts, [_]}] =
+               IndexWorkerMock.calls()
+
       IndexWorkerMock.clear()
     end
   end
@@ -303,7 +320,10 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert {:ok, %{updated: %{business_concept_id: id} = business_concept_version}} =
                Workflow.submit_business_concept_version(business_concept_version, claims)
 
-      assert IndexWorkerMock.calls() == [{:reindex, :concepts, [id]}]
+      assert IndexWorkerMock.calls() == [
+               {:reindex, :concepts, [id]},
+               {:refresh_links, :concepts, [id]}
+             ]
 
       assert %{status: "pending_approval", last_change_by: ^user_id} = business_concept_version
       IndexWorkerMock.clear()
@@ -323,7 +343,7 @@ defmodule TdBg.BusinessConcepts.WorkflowTest do
       assert {:ok, [event]} = Stream.read(:redix, @stream, transform: true)
       assert %{id: ^event_id, payload: payload} = event
       assert %{"domain_ids" => ^domain_ids} = Jason.decode!(payload)
-      assert [{:reindex, :concepts, _}] = IndexWorkerMock.calls()
+      assert [{:reindex, :concepts, _}, {:refresh_links, :concepts, _}] = IndexWorkerMock.calls()
       IndexWorkerMock.clear()
     end
   end
