@@ -1,19 +1,6 @@
 # Changelog
 
-## [8.1.0] 2026-02-03
-
-### Fixed
-
-- [TD-7771]:
-  - Differences in audit payload
-  - Decouple the publishing of business concept version events
-
-### Changed
-
-- [TD-7760] Optimization for xlsx donwload for Concepts and Structures notes
-- [TD-7676] Update td-df-lib. Fixed completeness calculation for conditional fields.
-
-## [7.14.0] 2025-12-10
+## [8.2.0] 2026-02-24
 
 ### Added
 
@@ -22,19 +9,6 @@
   - Enable search data consumption for external services
 
 ## [8.1.0] 2026-02-03
-
-### Fixed
-
-- [TD-7771]:
-  - Differences in audit payload
-  - Decouple the publishing of business concept version events
-
-### Changed
-
-- [TD-7760] Optimization for xlsx donwload for Concepts and Structures notes
-- [TD-7676] Update td-df-lib. Fixed completeness calculation for conditional fields.
-
-## [7.14.0] 2025-12-10
 
 ### Added
 
@@ -72,6 +46,12 @@
 - [TD-7302] Update td-core lib
 - [TD-7678] Update function for search a concept by name, domain and template
 
+## [7.13.1] 2025-12-09
+
+### Fixed
+
+- [TD-7646] Fix events when updating concepts
+
 ## [7.13.0] 2025-11-18
 
 ### Added
@@ -82,12 +62,6 @@
 ### Fix
 
 - [TD-7619] Fix date and datetime format and validation
-
-## [7.12.1] 2025-12-09
-
-### Fixed
-
-- [TD-7646] Fix events when updating concepts
 
 ## [7.12.0] 2025-10-29
 
